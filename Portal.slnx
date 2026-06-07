@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Bedrock/">
+    <Project Path="src/Portal.Bedrock.Windows/Portal.Bedrock.Windows.csproj" />
+  </Folder>
   <Folder Name="/Module/">
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi/TioUi.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard.Tab/Tio.Avalonia.Standard.Tab.csproj" />
@@ -7,6 +10,7 @@
   <Folder Name="/Solution Item/">
     <File Path="src/Directory.Packages.props" />
   </Folder>
+  <Project Path="src/Portal.Base/Portal.Base.csproj" />
   <Project Path="src/Portal.Desktop/Portal.Desktop.csproj" />
   <Project Path="src/Portal/Portal.csproj" />
 </Solution>
