@@ -1,10 +1,12 @@
 using System;
 using System.Collections.ObjectModel;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Const;
+using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Platform;
 using Tio.Avalonia.Standard.Standard.Ui;
@@ -17,6 +19,12 @@ namespace Portal.Views;
 
 public partial class MainWindow : TioTabWindowBase
 {
+    public bool IsTabMaskVisible
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -27,6 +35,13 @@ public partial class MainWindow : TioTabWindowBase
         DataContext = this;
         Events();
         Keys();
+        NavScrollViewer.ScrollChanged += (_, _) => { IsTabMaskVisible = NavScrollViewer.Offset.X > 0; };
+        CreateNewTabFunc = () =>
+        {
+            var tab = new TabEntry(this, new NewTabPage());
+            AddTab(tab);
+            SelectTab(tab);
+        };
     }
 
     private void Events()
@@ -68,13 +83,23 @@ public partial class MainWindow : TioTabWindowBase
 
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
-        Tabs.Add(new TabEntry(new HHHH()));
+        Tabs.Add(new TabEntry(this, new NewTabPage()));
     }
 
-    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed) return;
         var c = ((Border)sender).Tag as TabEntry;
         c.Close();
+    }
+
+    private void InputElement_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        if (sender is not ScrollViewer scrollViewer) return;
+        scrollViewer.Offset = new Vector(
+            scrollViewer.Offset.X + e.Delta.Y * -20,
+            scrollViewer.Offset.Y
+        );
+        e.Handled = true;
     }
 }
