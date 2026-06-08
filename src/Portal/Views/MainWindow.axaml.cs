@@ -24,6 +24,7 @@ public partial class MainWindow : TioTabWindowBase
         Toast = new TioToastManager(this);
         Window = this;
         IsMainWindow = true;
+        DataContext = this;
         Events();
         Keys();
     }
@@ -68,5 +69,12 @@ public partial class MainWindow : TioTabWindowBase
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
         Tabs.Add(new TabEntry(new HHHH()));
+    }
+
+    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed) return;
+        var c = ((Border)sender).Tag as TabEntry;
+        c.Close();
     }
 }

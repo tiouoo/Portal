@@ -1,7 +1,28 @@
-﻿<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Button.tab-add-btn">
         <Style Selector="^:pointerover">
             <Setter Property="Background" Value="{DynamicResource ButtonDefaultPointeroverBackground}" />
+        </Style>
+    </Style>
+    <Style Selector="tio|SelectionListItem Border#ItemRoot">
+        <Setter Property="Background" Value="{DynamicResource TabBackground}" />
+        <Style Selector="^ Button#CloseButton">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+    </Style>
+    <Style Selector="tio|SelectionListItem:pointerover Border#ItemRoot">
+        <Setter Property="Background" Value="{DynamicResource TabHover}" />
+        <Style Selector="^ Button#CloseButton">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+    </Style>
+    <Style Selector="tio|SelectionListItem:selected Border#ItemRoot">
+        <Setter Property="Background" Value="{DynamicResource TabSelected}" />
+        <Style Selector="^ Button#CloseButton">
+            <Setter Property="Opacity" Value="1" />
         </Style>
     </Style>
 </Styles>

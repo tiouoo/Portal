@@ -1,16 +1,20 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:shared="clr-namespace:TioUi.Shared;assembly=TioUi"
+    xmlns:t="clr-namespace:TioUi.Shared"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Dark">
+        <ResourceDictionary x:Key="{x:Static shared:Themes.Mirage}">
             <SolidColorBrush
-                Color="#141821"
+                Color="#282e3b"
                 Opacity="{DynamicResource BackGroundOpacity}"
                 x:Key="TabBackground" />
             <SolidColorBrush
-                Color="#1e232d"
+                Color="#323a4d"
                 Opacity="{DynamicResource BackGroundOpacity}"
                 x:Key="TabHover" />
             <SolidColorBrush
-                Color="#252b38"
+                Color="#3d465f"
                 Opacity="{DynamicResource BackGroundOpacity}"
                 x:Key="TabSelected" />
         </ResourceDictionary>

@@ -4,7 +4,15 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Styles/Theme/Light.axaml" />
+                <ResourceInclude Source="/Styles/Theme/Dark.axaml" />
+                <ResourceInclude Source="/Styles/Theme/Mirage.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
     <Application.Styles>
         <tio:TioUiTheme />
         <StyleInclude Source="/Styles/Tab.axaml" />

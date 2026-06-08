@@ -1,5 +1,18 @@
-﻿<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Light" />
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush
+                Color="#eef0f2"
+                Opacity="{DynamicResource BackGroundOpacity}"
+                x:Key="TabBackground" />
+            <SolidColorBrush
+                Color="#e0e2e6"
+                Opacity="{DynamicResource BackGroundOpacity}"
+                x:Key="TabHover" />
+            <SolidColorBrush
+                Color="#d0d3d8"
+                Opacity="{DynamicResource BackGroundOpacity}"
+                x:Key="TabSelected" />
+        </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

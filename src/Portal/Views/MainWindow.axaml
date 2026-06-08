@@ -9,6 +9,8 @@
     IsMinBtnShow="{OnPlatform Default=True,
                               macOS=False}"
     Title="Portal"
+    TitleBarControlBtnMargin="0,0,5,0"
+    TitleBarHeight="40"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -25,56 +27,113 @@
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
     </tio:TioWindow.Resources>
     <tio:TioWindow.TitleBarLeftContent>
-        <Panel>
-            <StackPanel
-                Margin="{OnPlatform Default=8 0 0 0,
-                                    macOS=99 0 0 0}"
-                Orientation="Horizontal"
-                VerticalAlignment="Center">
-                <Rectangle
-                    Fill="Red"
-                    Height="22"
-                    Width="22" />
-                <TextBlock
-                    Margin="8,0,0,0"
-                    Text="Portal"
-                    VerticalAlignment="Center" />
-            </StackPanel>
-            <ScrollViewer>
-                <DockPanel>
-                    <tio:SelectionList ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
-                        <tio:SelectionList.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </tio:SelectionList.ItemsPanel>
-                        <tio:SelectionList.ItemTemplate>
-                            <DataTemplate DataType="entries:TabEntry">
-                                <Border Background="White" CornerRadius="{DynamicResource TioCornerRadius}">
-                                    <DockPanel>
-                                        <ContentControl Content="{Binding Content}" />
-                                    </DockPanel>
-                                </Border>
-                            </DataTemplate>
-                        </tio:SelectionList.ItemTemplate>
-                    </tio:SelectionList>
-                    <Button
-                        Classes="tab-add-btn"
-                        Click="Button_OnClick"
-                        CornerRadius="7"
-                        DockPanel.Dock="Right"
-                        Height="22"
-                        Margin="0,0,8,0"
-                        Theme="{StaticResource TransparentButton}"
-                        Width="22">
-                        <PathIcon
-                            Data="F1 M1024,1024z M0,0z M512,832A32,32,0,0,0,544,800L544,544 800,544A32,32,0,0,0,800,480L544,480 544,224A32,32,0,0,0,480,224L480,480 224,480A32,32,0,0,0,224,544L480,544 480,800A32,32,0,0,0,512,832"
-                            Height="20"
-                            Width="20" />
-                    </Button>
-                </DockPanel>
-            </ScrollViewer>
-        </Panel>
+        <StackPanel
+            Margin="{OnPlatform Default=8 0 0 0,
+                                macOS=99 0 0 0}"
+            Orientation="Horizontal"
+            VerticalAlignment="Center">
+            <Rectangle
+                Fill="Red"
+                Height="22"
+                Width="22" />
+            <TextBlock
+                Margin="8,0,0,0"
+                Text="Portal"
+                VerticalAlignment="Center" />
+        </StackPanel>
     </tio:TioWindow.TitleBarLeftContent>
-    hello
+    <Grid>
+        <ScrollViewer
+            Background="Transparent"
+            Classes="Flat"
+            Height="40"
+            HorizontalAlignment="Left"
+            HorizontalScrollBarVisibility="Auto"
+            Margin="85,-40,85,0"
+            VerticalAlignment="Top"
+            VerticalScrollBarVisibility="Disabled">
+            <DockPanel>
+                <tio:SelectionList
+                    Indicator="{x:Null}"
+                    ItemsSource="{Binding Tabs}"
+                    SelectedItem="{Binding SelectedTab}">
+                    <tio:SelectionList.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </tio:SelectionList.ItemsPanel>
+                    <tio:SelectionList.ItemTemplate>
+                        <DataTemplate DataType="entries:TabEntry">
+                            <Border
+                                BorderThickness="1"
+                                Classes="tab-root"
+                                CornerRadius="10"
+                                Height="30"
+                                Margin="3,1,3,0"
+                                MinWidth="{Binding MinWidth}"
+                                Name="ItemRoot"
+                                PointerReleased="OnPointerReleased"
+                                Tag="{Binding}">
+                                <DockPanel Margin="8,0,10,0" VerticalAlignment="Center">
+                                    <PathIcon
+                                        Data="{Binding Icon}"
+                                        Height="20"
+                                        IsVisible="{Binding IsIconVisible}"
+                                        Margin="0,0,4,0"
+                                        Width="20" />
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{Binding Header}"
+                                            Margin="0,0,0,0"
+                                            VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Grid
+                                        HorizontalAlignment="Right"
+                                        IsVisible="{Binding IsCloseable}"
+                                        Margin="0,0,-4,0">
+                                        <Button
+                                            Command="{Binding Close}"
+                                            HorizontalAlignment="Right"
+                                            Margin="20,0,4,0"
+                                            MaxHeight="14"
+                                            MaxWidth="16"
+                                            MinHeight="14"
+                                            Name="CloseButton"
+                                            Theme="{StaticResource TransparentButton}"
+                                            VerticalAlignment="Center">
+                                            <Button.Transitions>
+                                                <Transitions>
+                                                    <DoubleTransition Duration="0:0:0.07" Property="Opacity" />
+                                                </Transitions>
+                                            </Button.Transitions>
+                                            <PathIcon
+                                                Data="M13.41 12l4.3-4.29a1 1 0 1 0-1.42-1.42L12 10.59l-4.29-4.3a1 1 0 0 0-1.42 1.42l4.3 4.29-4.3 4.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l4.29-4.3 4.29 4.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z"
+                                                Height="10"
+                                                Width="10" />
+                                        </Button>
+                                    </Grid>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </tio:SelectionList.ItemTemplate>
+                </tio:SelectionList>
+                <Button
+                    Classes="tab-add-btn"
+                    Click="Button_OnClick"
+                    CornerRadius="10"
+                    DockPanel.Dock="Right"
+                    Height="30"
+                    Margin="5,0,0,0"
+                    Theme="{StaticResource TransparentButton}"
+                    Width="30">
+                    <PathIcon
+                        Data="F1 M1024,1024z M0,0z M512,832A32,32,0,0,0,544,800L544,544 800,544A32,32,0,0,0,800,480L544,480 544,224A32,32,0,0,0,480,224L480,480 224,480A32,32,0,0,0,224,544L480,544 480,800A32,32,0,0,0,512,832"
+                        Height="22"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="22" />
+                </Button>
+            </DockPanel>
+        </ScrollViewer>
+    </Grid>
 </tio:TioWindow>
