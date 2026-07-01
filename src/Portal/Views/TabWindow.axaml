@@ -6,6 +6,8 @@
                               macOS=False}"
     IsMinBtnShow="{OnPlatform Default=True,
                               macOS=False}"
+    MinHeight="380"
+    MinWidth="710"
     Title="Portal"
     TitleBarControlBtnMargin="0,0,10,0"
     TitleBarHeight="44"

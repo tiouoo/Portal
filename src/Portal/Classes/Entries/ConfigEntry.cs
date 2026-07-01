@@ -13,12 +13,13 @@ public partial class ConfigEntry : ObservableObject
     public ConfigEntry()
     {
         PropertyChanged += OnPropertyChanged;
+        MinecraftAccounts.CollectionChanged += (_, _) => App.Method.SaveConfig();
     }
 
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
     [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
     [ObservableProperty] public partial bool UseFilePicker { get; set; } = true;
-    public ObservableCollection<AccountBase> MinecraftAccounts = [];
+    public readonly ObservableCollection<AccountBase> MinecraftAccounts = [];
     [ObservableProperty] public partial AccountBase UsingMinecraftAccount { get; set; }
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)

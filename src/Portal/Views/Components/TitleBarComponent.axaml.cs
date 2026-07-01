@@ -30,14 +30,17 @@ public partial class TitleBarComponent : StackPanel
         };
     }
 
-    private void AccountButton_Click(object? sender, RoutedEventArgs e)
+    private async void AccountButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (Data.ConfigEntry.MinecraftAccounts.Count == 0)
+        if (Data.ConfigEntry.MinecraftAccounts.Count != 0)
         {
-            _ = AddAccount.Main(sender!);
+            AccountFlyout.Flyout.ShowAt(AccountButton);
             return;
         }
-
-        AccountFlyout.Flyout.ShowAt(AccountButton);
+        
+        var result = await AddAccount.Main(sender!);
+        if (result == null) return;
+        Data.ConfigEntry.MinecraftAccounts.Add(result);
+        Data.ConfigEntry.UsingMinecraftAccount = result;
     }
 }

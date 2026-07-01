@@ -145,7 +145,6 @@
                         <tio:TioExpander.Header>
                             <StackPanel Orientation="Horizontal">
                                 <Border
-                                    Background="Aquamarine"
                                     ClipToBounds="True"
                                     CornerRadius="10"
                                     Height="36"
@@ -156,10 +155,6 @@
                                 </StackPanel>
                             </StackPanel>
                         </tio:TioExpander.Header>
-                        <Rectangle
-                            Fill="Red"
-                            Height="500"
-                            Width="220" />
                     </tio:TioExpander>
                 </StackPanel>
             </Flyout>

@@ -8,10 +8,9 @@ namespace Portal.Core.Minecraft.Account;
 public class OfflineAccount() : AccountBase(AccountType.Offline), IEquatable<OfflineAccount>
 {
     public string Name { get; set; } = "OfflinePlayer";
-    public Guid? CustomUuid { get; set; }
-    [JsonIgnore] public Guid Uuid => CustomUuid ?? GetMinecraftOfflineUuid(Name);
+    public Guid? Uuid { get; init; }
 
-    private static Guid GetMinecraftOfflineUuid(string name)
+    public static Guid GetMinecraftOfflineUuid(string name)
     {
         if (string.IsNullOrEmpty(name)) return Guid.Empty;
         var bytes = Encoding.UTF8.GetBytes($"OfflinePlayer:{name}");

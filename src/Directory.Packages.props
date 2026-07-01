@@ -17,8 +17,10 @@
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="HotAvalonia" Version="3.1.3" />
     <PackageVersion Include="MinecraftLaunch" Version="4.0.6" />
+    <PackageVersion Include="MinecraftLaunch.Skin" Version="1.0.1" />
     <PackageVersion Include="ReactiveUI" Version="24.0.0-beta.2" />
     <PackageVersion Include="ReactiveUI.Fody" Version="19.5.41" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
   </ItemGroup>
 </Project>
