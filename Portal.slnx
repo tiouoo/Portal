@@ -4,6 +4,11 @@
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard.Tab/Tio.Avalonia.Standard.Tab.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard/Tio.Avalonia.Standard.csproj" />
   </Folder>
+  <Folder Name="/Module/LiteSkinViewer/">
+    <Project Path="module/LiteSkinViewer/LiteSkinViewer.2D/LiteSkinViewer.2D.csproj" />
+    <Project Path="module/LiteSkinViewer/LiteSkinViewer.3D/LiteSkinViewer.3D.csproj" />
+    <Project Path="module/LiteSkinViewer/LiteSkinViewer.Shared/LiteSkinViewer.Shared.csproj" />
+  </Folder>
   <Folder Name="/Solution Item/">
     <File Path="src/Directory.Packages.props" />
   </Folder>
