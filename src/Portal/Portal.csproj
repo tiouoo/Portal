@@ -33,4 +33,8 @@
       <None Remove="Const\Version.txt" />
       <EmbeddedResource Include="Const\Version.txt" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Classes\Interfaces\" />
+    </ItemGroup>
 </Project>

@@ -15,9 +15,13 @@
 
     <ItemGroup>
       <Folder Include="Minecraft\Account\Authenticator\" />
+      <Folder Include="Minecraft\Extensions\" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.2D\LiteSkinViewer.2D.csproj" />
+      <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.3D\LiteSkinViewer.3D.csproj" />
+      <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.Shared\LiteSkinViewer.Shared.csproj" />
       <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\module\TioUi.Avalonia\src\TioUi\TioUi.csproj" />
     </ItemGroup>
 

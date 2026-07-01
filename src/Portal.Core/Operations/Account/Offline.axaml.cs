@@ -50,7 +50,7 @@ public partial class OfflineAccountViewModel : ObservableObject, IDialogContext,
         }
         else
         {
-            Uuid = Minecraft.Account.OfflineAccount.GetMinecraftOfflineUuid(value).ToString();
+            Uuid = MinecraftAccount.GetMinecraftOfflineUuid(value).ToString();
         }
         
         (NextCommand as RelayCommand)?.NotifyCanExecuteChanged();
@@ -131,7 +131,7 @@ public partial class OfflineAccountViewModel : ObservableObject, IDialogContext,
     {
         if (Guid.TryParse(Uuid, out var uuid))
         {
-            RequestClose?.Invoke(this, new OfflineAccount()
+            RequestClose?.Invoke(this, new MinecraftAccount(AccountType.Offline)
             {
                 Name = RoleName,
                 Uuid = uuid

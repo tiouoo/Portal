@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Portal.Const;
+using Portal.Core.Minecraft.Account;
 using Portal.Core.Operations;
 
 namespace Portal.Views.Components;
@@ -14,7 +16,10 @@ public partial class TitleBarComponent : StackPanel
     public TitleBarComponent()
     {
         InitializeComponent();
+        DataContext = this;
     }
+    
+    public Data Data { get; set; } = Data.Instance;
 
     private void ThemeMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -37,10 +42,32 @@ public partial class TitleBarComponent : StackPanel
             AccountFlyout.Flyout.ShowAt(AccountButton);
             return;
         }
-        
+
         var result = await AddAccount.Main(sender!);
         if (result == null) return;
         Data.ConfigEntry.MinecraftAccounts.Add(result);
-        Data.ConfigEntry.UsingMinecraftAccount = result;
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
+    }
+
+    private async void AddAcountButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        AccountFlyout.Flyout.Hide();
+        var result = await AddAccount.Main(sender!);
+        if (result == null) return;
+        Data.ConfigEntry.MinecraftAccounts.Add(result);
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
+    }
+
+    public void DeleteAccount(MinecraftAccount account)
+    {
+        if (Data.ConfigEntry.UsingMinecraftMinecraftAccount == account)
+        {
+            Data.ConfigEntry.MinecraftAccounts.Remove(account);
+            Data.ConfigEntry.UsingMinecraftMinecraftAccount = Data.ConfigEntry.MinecraftAccounts.FirstOrDefault();
+        }
+        else
+        {
+            Data.ConfigEntry.MinecraftAccounts.Remove(account);
+        }
     }
 }

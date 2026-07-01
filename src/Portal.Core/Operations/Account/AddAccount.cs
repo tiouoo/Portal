@@ -12,7 +12,7 @@ namespace Portal.Core.Operations;
 
 public class AddAccount
 {
-    public static async Task<AccountBase?> Main(object sender)
+    public static async Task<MinecraftAccount?> Main(object sender)
     {
         var options = new OverlayDialogOptions()
         {
@@ -65,7 +65,7 @@ public class AddAccount
         return null;
     }
 
-    public static async Task<AccountBase?> Offline()
+    public static async Task<MinecraftAccount?> Offline()
     {
         var options = new OverlayDialogOptions()
         {
@@ -79,7 +79,7 @@ public class AddAccount
             OverrideOkButtonText = "下一步"
         };
 
-        var result = await OverlayDialog.ShowCustomAsync<Offline, OfflineAccountViewModel, AccountBase>(
+        var result = await OverlayDialog.ShowCustomAsync<Offline, OfflineAccountViewModel, MinecraftAccount>(
             new OfflineAccountViewModel(), hostId: null, options: options);
 
         return result;

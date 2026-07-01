@@ -20,7 +20,7 @@
     <PackageVersion Include="MinecraftLaunch.Skin" Version="1.0.1" />
     <PackageVersion Include="ReactiveUI" Version="24.0.0-beta.2" />
     <PackageVersion Include="ReactiveUI.Fody" Version="19.5.41" />
-    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp" Version="4.148.0" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
   </ItemGroup>
 </Project>
