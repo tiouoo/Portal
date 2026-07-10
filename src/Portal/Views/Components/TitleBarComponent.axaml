@@ -255,15 +255,15 @@
                                                 Grid.Column="2"
                                                 HorizontalAlignment="Left"
                                                 Margin="5,0"
-                                                Placement="BottomEdgeAlignedLeft"
+                                                Placement="BottomEdgeAlignedRight"
                                                 PopupContent="此修改将不可逆"
-                                                PopupHeader="是否要移除此账户？             "
+                                                PopupHeader="是否要移除此账户？           "
                                                 VerticalAlignment="Center">
                                                 <Button Classes="delete-btn" Theme="{StaticResource TransparentButton}">
                                                     <PathIcon
                                                         Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
                                                         Height="14"
-                                                        Width="14" />
+                                                        Width="10" />
                                                     <Button.Transitions>
                                                         <Transitions>
                                                             <DoubleTransition Duration="0:0:0.1" Property="Opacity" />

@@ -35,6 +35,7 @@ sealed class Program
             .UsePlatformDetect()
 #if DEBUG
             .UseHotReload()
+            // .WithDeveloperTools()
 #endif
             .WithInterFont()
             .LogToTrace();
