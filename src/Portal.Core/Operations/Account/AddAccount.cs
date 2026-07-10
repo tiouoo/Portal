@@ -8,7 +8,8 @@ namespace Portal.Core.Operations.Account;
 
 public class AddAccount
 {
-    public static async Task<MinecraftAccount?> Main(object sender, ObservableCollection<Minecraft.Account.AuthServer> authServers)
+    public static async Task<MinecraftAccount?> Main(object sender,
+        ObservableCollection<Minecraft.Account.AuthServer> authServers)
     {
         var options = new OverlayDialogOptions
         {
@@ -22,18 +23,20 @@ public class AddAccount
             VerticalAnchor = VerticalPosition.Top
         };
 
-        var result = await OverlayDialog.ShowCustomAsync<SelectAccountType, SelectAccountTypeViewModel, SelectAccountTypeResult>(
-            new SelectAccountTypeViewModel(authServers), hostId: null, options: options);
+        var result = await OverlayDialog
+            .ShowCustomAsync<SelectAccountType, SelectAccountTypeViewModel, SelectAccountTypeResult>(
+                new SelectAccountTypeViewModel(), hostId: null, options: options);
 
         if (result?.Action != SelectAccountTypeAction.Select || result.SelectedServer == null)
         {
             return null;
         }
 
-        return await HandleAccountType(result.SelectedServer);
+        return await HandleAccountType(result.SelectedServer, authServers);
     }
 
-    private static async Task<MinecraftAccount?> HandleAccountType(Minecraft.Account.AuthServer authServer)
+    private static async Task<MinecraftAccount?> HandleAccountType(Minecraft.Account.AuthServer authServer,
+        ObservableCollection<Minecraft.Account.AuthServer> authServers)
     {
         var options = new OverlayDialogOptions
         {
@@ -51,7 +54,7 @@ public class AddAccount
         {
             AccountType.Offline => await Offline(options),
             AccountType.Microsoft => await Microsoft(options),
-            AccountType.Yggdrasil => await Yggdrasil(options, authServer),
+            AccountType.Yggdrasil => await Yggdrasil(options, authServers),
             _ => null
         };
     }
@@ -78,8 +81,16 @@ public class AddAccount
     }
 
     public static async Task<MinecraftAccount?> Yggdrasil(OverlayDialogOptions options,
-        Minecraft.Account.AuthServer authServer)
+        ObservableCollection<Minecraft.Account.AuthServer> authServers)
     {
+        var result = await OverlayDialog.ShowCustomAsync<Yggdrasil, YggdrasilAccountViewModel, YggdrasilAccountResult>(
+            new YggdrasilAccountViewModel(authServers), hostId: null, options: options);
+
+        if (result == null)
+        {
+            return null;
+        }
+
         return null;
     }
 }
