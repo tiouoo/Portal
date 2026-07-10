@@ -1,55 +1,16 @@
+using System.Collections.ObjectModel;
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Templates;
-using Avalonia.Data;
-using Avalonia.Markup.Xaml.Templates;
 using Portal.Core.Minecraft.Account;
-using Portal.Core.Operations.Account;
 using TioUi.Common;
 using TioUi.Controls;
 
-namespace Portal.Core.Operations;
+namespace Portal.Core.Operations.Account;
 
 public class AddAccount
 {
-    public static async Task<MinecraftAccount?> Main(object sender)
+    public static async Task<MinecraftAccount?> Main(object sender, ObservableCollection<Minecraft.Account.AuthServer> authServers)
     {
-        var options = new OverlayDialogOptions()
-        {
-            Mode = DialogMode.None,
-            Buttons = DialogButton.OKCancel,
-            Title = "添加新账户",
-            VerticalOffset = 110,
-            VerticalAnchor = VerticalPosition.Top,
-            CanLightDismiss = false,
-            CanDragMove = true,
-            IsCloseButtonVisible = false,
-            CanResize = false,
-            OverrideOkButtonText = "下一步"
-        };
-        var items = new List<AuthServer>
-        {
-            new(AccountType.Offline, "离线模式"),
-            new(AccountType.Microsoft, "微软账户"),
-            new(AccountType.Yggdrasil, "外置登录"),
-            new(AccountType.Yggdrasil, "LittleSkin") { ServerUrl = "https://littleskin.cn/api/yggdrasil" }
-        };
-        var type = new ComboBox()
-        {
-            ItemsSource = items,
-            SelectedIndex = 0,
-            Width = 320,
-            Margin = new Thickness(0, 15),
-            ItemTemplate = new FuncDataTemplate<AuthServer>((data, _) =>
-                new TextBlock { Text = data.DisplayText })
-        };
-        var result = await OverlayDialog.ShowStandardAsync(type, vm: null, hostId: null, options: options);
-        if (result != DialogResult.OK)
-        {
-            return null;
-        }
-        
-        var options1 = new OverlayDialogOptions
+        var options = new OverlayDialogOptions
         {
             Mode = DialogMode.None,
             Buttons = DialogButton.None,
@@ -61,20 +22,38 @@ public class AddAccount
             VerticalAnchor = VerticalPosition.Top
         };
 
-        if (type.SelectedItem is AuthServer authServer)
+        var result = await OverlayDialog.ShowCustomAsync<SelectAccountType, SelectAccountTypeViewModel, SelectAccountTypeResult>(
+            new SelectAccountTypeViewModel(authServers), hostId: null, options: options);
+
+        if (result?.Action != SelectAccountTypeAction.Select || result.SelectedServer == null)
         {
-            switch (authServer.AuthType)
-            {
-                case AccountType.Offline:
-                    return await Offline(options1);
-                case AccountType.Microsoft:
-                    return await Microsoft(options1);
-                case AccountType.Yggdrasil:
-                    break;
-            }
+            return null;
         }
 
-        return null;
+        return await HandleAccountType(result.SelectedServer);
+    }
+
+    private static async Task<MinecraftAccount?> HandleAccountType(Minecraft.Account.AuthServer authServer)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalOffset = 110,
+            VerticalAnchor = VerticalPosition.Top
+        };
+
+        return authServer.AuthType switch
+        {
+            AccountType.Offline => await Offline(options),
+            AccountType.Microsoft => await Microsoft(options),
+            AccountType.Yggdrasil => await Yggdrasil(options, authServer),
+            _ => null
+        };
     }
 
     public static async Task<MinecraftAccount?> Offline(OverlayDialogOptions options)
@@ -84,7 +63,7 @@ public class AddAccount
 
         return result;
     }
-    
+
     public static async Task<MinecraftAccount?> Microsoft(OverlayDialogOptions options)
     {
         var result = await OverlayDialog.ShowCustomAsync<Account.Microsoft, MicrosoftAccountViewModel, object>(
@@ -94,6 +73,13 @@ public class AddAccount
         {
             return await Microsoft(options);
         }
+
         return result as MinecraftAccount;
+    }
+
+    public static async Task<MinecraftAccount?> Yggdrasil(OverlayDialogOptions options,
+        Minecraft.Account.AuthServer authServer)
+    {
+        return null;
     }
 }

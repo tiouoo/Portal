@@ -8,6 +8,7 @@ using Avalonia.Markup.Xaml;
 using Portal.Const;
 using Portal.Core.Minecraft.Account;
 using Portal.Core.Operations;
+using Portal.Core.Operations.Account;
 
 namespace Portal.Views.Components;
 
@@ -43,7 +44,7 @@ public partial class TitleBarComponent : StackPanel
             return;
         }
 
-        var result = await AddAccount.Main(sender!);
+        var result = await AddAccount.Main(sender!, Data.ConfigEntry.AuthServers);
         if (result == null) return;
         Data.ConfigEntry.MinecraftAccounts.Add(result);
         Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
@@ -52,7 +53,7 @@ public partial class TitleBarComponent : StackPanel
     private async void AddAcountButton_OnClick(object? sender, RoutedEventArgs e)
     {
         AccountFlyout.Flyout.Hide();
-        var result = await AddAccount.Main(sender!);
+        var result = await AddAccount.Main(sender!, Data.ConfigEntry.AuthServers);
         if (result == null) return;
         Data.ConfigEntry.MinecraftAccounts.Add(result);
         Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
