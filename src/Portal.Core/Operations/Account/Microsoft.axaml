@@ -47,23 +47,25 @@
                     </Border>
                 </tio:Skeleton>
             </Border>
-            <Expander
-                BorderBrush="{DynamicResource PopupBorderBrush}"
-                BorderThickness="1"
-                Header="验证页面网址"
-                IsVisible="{Binding !IsError}">
-                <tio:Skeleton
-                    IsActive="True"
-                    IsLoading="{Binding !IsReady}"
-                    Margin="20,10,20,20"
-                    VerticalAlignment="Center">
-                    <SelectableTextBlock
-                        HorizontalAlignment="Center"
-                        Text="{Binding Url}"
-                        TextWrapping="Wrap"
-                        VerticalAlignment="Center" />
-                </tio:Skeleton>
-            </Expander>
+            <Border IsVisible="{Binding !IsAuthing}">
+                <Expander
+                    BorderBrush="{DynamicResource PopupBorderBrush}"
+                    BorderThickness="1"
+                    Header="验证页面网址"
+                    IsVisible="{Binding !IsError}">
+                    <tio:Skeleton
+                        IsActive="True"
+                        IsLoading="{Binding !IsReady}"
+                        Margin="20,10,20,20"
+                        VerticalAlignment="Center">
+                        <SelectableTextBlock
+                            HorizontalAlignment="Center"
+                            Text="{Binding Url}"
+                            TextWrapping="Wrap"
+                            VerticalAlignment="Center" />
+                    </tio:Skeleton>
+                </Expander>
+            </Border>
             <TextBlock
                 Foreground="Red"
                 IsVisible="{Binding IsError}"

@@ -19,8 +19,8 @@ public class AddAccount
             Mode = DialogMode.None,
             Buttons = DialogButton.OKCancel,
             Title = "添加新账户",
-            VerticalOffset = 100,
-
+            VerticalOffset = 110,
+            VerticalAnchor = VerticalPosition.Top,
             CanLightDismiss = false,
             CanDragMove = true,
             IsCloseButtonVisible = false,
@@ -53,11 +53,12 @@ public class AddAccount
         {
             Mode = DialogMode.None,
             Buttons = DialogButton.None,
-            Title = "验证微软账户",
             CanLightDismiss = false,
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
+            VerticalOffset = 110,
+            VerticalAnchor = VerticalPosition.Top
         };
 
         if (type.SelectedItem is AuthServer authServer)

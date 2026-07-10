@@ -200,7 +200,7 @@
                             <ListBox
                                 DockPanel.Dock="Bottom"
                                 ItemsSource="{Binding Data.ConfigEntry.MinecraftAccounts}"
-                                Margin="5"
+                                Margin="10"
                                 SelectedItem="{Binding Data.ConfigEntry.UsingMinecraftMinecraftAccount}">
 
                                 <ListBox.Styles>
@@ -257,7 +257,7 @@
                                                 Margin="5,0"
                                                 Placement="BottomEdgeAlignedLeft"
                                                 PopupContent="此修改将不可逆"
-                                                PopupHeader="是否要移除此账户？"
+                                                PopupHeader="是否要移除此账户？             "
                                                 VerticalAlignment="Center">
                                                 <Button Classes="delete-btn" Theme="{StaticResource TransparentButton}">
                                                     <PathIcon
