@@ -58,8 +58,9 @@ public partial class TitleBarComponent : StackPanel
         Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
     }
 
-    public void DeleteAccount(MinecraftAccount account)
+    public void DeleteAccount(object parameter)
     {
+        if (parameter is not MinecraftAccount account) return;
         if (Data.ConfigEntry.UsingMinecraftMinecraftAccount == account)
         {
             Data.ConfigEntry.MinecraftAccounts.Remove(account);
