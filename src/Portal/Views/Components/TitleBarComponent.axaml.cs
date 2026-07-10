@@ -9,6 +9,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Account;
 using Portal.Core.Operations;
 using Portal.Core.Operations.Account;
+using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.Views.Components;
 
@@ -46,8 +47,8 @@ public partial class TitleBarComponent : StackPanel
 
         var result = await AddAccount.Main(sender!, Data.ConfigEntry.AuthServers);
         if (result == null) return;
-        Data.ConfigEntry.MinecraftAccounts.Add(result);
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
+        Data.ConfigEntry.MinecraftAccounts.AddRange(result);
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
     }
 
     private async void AddAcountButton_OnClick(object? sender, RoutedEventArgs e)
@@ -55,8 +56,8 @@ public partial class TitleBarComponent : StackPanel
         AccountFlyout.Flyout.Hide();
         var result = await AddAccount.Main(sender!, Data.ConfigEntry.AuthServers);
         if (result == null) return;
-        Data.ConfigEntry.MinecraftAccounts.Add(result);
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
+        Data.ConfigEntry.MinecraftAccounts.AddRange(result);
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
     }
 
     public void DeleteAccount(object parameter)

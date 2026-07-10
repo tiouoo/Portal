@@ -87,7 +87,7 @@ public partial class OfflineAccountViewModel : ObservableObject, IDialogContext,
             {
                 _errors[propertyName] = new List<string> { "玩家名称必须为3~15位字符" };
             }
-            else if (!MyRegex().IsMatch(value))
+            else if (!Regex().IsMatch(value))
             {
                 _errors[propertyName] = new List<string> { "玩家名称只能包含数字、大小写字母和下划线" };
             }
@@ -164,5 +164,5 @@ public partial class OfflineAccountViewModel : ObservableObject, IDialogContext,
     }
 
     [GeneratedRegex(@"^[a-zA-Z0-9_]+$")]
-    private static partial Regex MyRegex();
+    private static partial Regex Regex();
 }

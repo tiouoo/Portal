@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Avalonia;
+using MinecraftLaunch.Components.Authenticator;
 using Portal.Core.Minecraft.Account;
 using TioUi.Common;
 using TioUi.Controls;
@@ -8,7 +9,7 @@ namespace Portal.Core.Operations.Account;
 
 public class AddAccount
 {
-    public static async Task<MinecraftAccount?> Main(object sender,
+    public static async Task<MinecraftAccount[]?> Main(object sender,
         ObservableCollection<Minecraft.Account.AuthServer> authServers)
     {
         var options = new OverlayDialogOptions
@@ -35,7 +36,7 @@ public class AddAccount
         return await HandleAccountType(result.SelectedServer, authServers);
     }
 
-    private static async Task<MinecraftAccount?> HandleAccountType(Minecraft.Account.AuthServer authServer,
+    private static async Task<MinecraftAccount[]?> HandleAccountType(Minecraft.Account.AuthServer authServer,
         ObservableCollection<Minecraft.Account.AuthServer> authServers)
     {
         var options = new OverlayDialogOptions
@@ -59,15 +60,15 @@ public class AddAccount
         };
     }
 
-    public static async Task<MinecraftAccount?> Offline(OverlayDialogOptions options)
+    public static async Task<MinecraftAccount[]?> Offline(OverlayDialogOptions options)
     {
         var result = await OverlayDialog.ShowCustomAsync<Offline, OfflineAccountViewModel, MinecraftAccount>(
             new OfflineAccountViewModel(), hostId: null, options: options);
 
-        return result;
+        return [result];
     }
 
-    public static async Task<MinecraftAccount?> Microsoft(OverlayDialogOptions options)
+    public static async Task<MinecraftAccount[]?> Microsoft(OverlayDialogOptions options)
     {
         var result = await OverlayDialog.ShowCustomAsync<Account.Microsoft, MicrosoftAccountViewModel, object>(
             new MicrosoftAccountViewModel(), hostId: null, options: options);
@@ -77,13 +78,13 @@ public class AddAccount
             return await Microsoft(options);
         }
 
-        return result as MinecraftAccount;
+        return [result as MinecraftAccount];
     }
 
-    public static async Task<MinecraftAccount?> Yggdrasil(OverlayDialogOptions options,
+    public static async Task<MinecraftAccount[]?> Yggdrasil(OverlayDialogOptions options,
         ObservableCollection<Minecraft.Account.AuthServer> authServers)
     {
-        var result = await OverlayDialog.ShowCustomAsync<Yggdrasil, YggdrasilAccountViewModel, YggdrasilAccountResult>(
+        var result = await OverlayDialog.ShowCustomAsync<Yggdrasil, YggdrasilAccountViewModel, MinecraftAccount[]>(
             new YggdrasilAccountViewModel(authServers), hostId: null, options: options);
 
         if (result == null)
@@ -91,6 +92,6 @@ public class AddAccount
             return null;
         }
 
-        return null;
+        return result;
     }
 }
