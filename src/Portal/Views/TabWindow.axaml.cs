@@ -1,5 +1,5 @@
 using System;
-using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
@@ -9,19 +9,14 @@ using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.Input;
 using HotAvalonia;
 using Portal.Const;
-using Portal.Core.Operations.Account;
 using Portal.Module.DragDrop;
 using Portal.Views.Components;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Platform;
-using Tio.Avalonia.Standard.Standard.Ui;
-using Tio.Avalonia.Standard.Tab.Common;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
-using TioUi.Common.Helpers;
 using TioUi.Controls;
 
 namespace Portal.Views;
@@ -50,6 +45,7 @@ public partial class TabWindow : TioTabWindowBase
         DataContext = this;
         Events();
         Keys();
+        AttachDropDrag();
         CreateNewTabFunc = () =>
         {
             var tab = new TabEntry(this, new NewTabPage(), header: $"new tab {_index}");
@@ -157,7 +153,7 @@ public partial class TabWindow : TioTabWindowBase
             _doubleShiftLock = true;
 
             OpenAggregatedSearchDialog();
-            
+
             _lastShiftDown = DateTime.MinValue;
             Task.Run(async () =>
             {
@@ -254,5 +250,25 @@ public partial class TabWindow : TioTabWindowBase
     private void NM_OpenInNewWindow(object? sender, EventArgs e)
     {
         SelectedTab.MoveTabToNewWindow();
+    }
+
+    private void AttachDropDrag()
+    {
+        DragDrop.SetAllowDrop(this, true);
+
+        this.AddHandler(DragDrop.DragEnterEvent, OnDragHandler);
+        this.AddHandler(DragDrop.DragOverEvent, OnDragHandler);
+        this.AddHandler(DragDrop.DropEvent, OnDropHandler);
+    }
+
+    private void OnDragHandler(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = DragDropEffects.Copy;
+    }
+
+    private void OnDropHandler(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = DragDropEffects.Copy;
+        Handler.Handle(e, this);
     }
 }
