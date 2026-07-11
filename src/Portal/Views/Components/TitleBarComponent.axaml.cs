@@ -17,7 +17,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Components;
 
-public partial class TitleBarComponent : StackPanel
+public partial class TitleBarComponent : Grid
 {
     public TitleBarComponent()
     {
@@ -45,7 +45,7 @@ public partial class TitleBarComponent : StackPanel
     {
         if (Data.ConfigEntry.MinecraftAccounts.Count != 0)
         {
-            AccountFlyout.Flyout.ShowAt(AccountButton);
+            AccountFlyout.Flyout.ShowAt(AccountFlyoutPoint);
             return;
         }
 

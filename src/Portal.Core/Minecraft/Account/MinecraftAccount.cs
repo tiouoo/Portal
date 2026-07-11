@@ -21,10 +21,10 @@ public class MinecraftAccount(AccountType accountType)
     public DateTime? LastRefreshTime { get; set; } = DateTime.MinValue;
     public string? YggdrasilServerUrl { get; init; }
     public string? ServerNote { get; init; }
-    public string? ClientToken { get; set; } 
+    public string? ClientToken { get; set; }
     public Dictionary<string, string> MetaData { get; set; } = [];
 
-
+    [JsonIgnore]
     public string DisplayAccountNote
     {
         get
@@ -34,8 +34,10 @@ public class MinecraftAccount(AccountType accountType)
             return AccountType switch
             {
                 AccountType.Offline => "离线模式",
-                AccountType.Yggdrasil  =>
-                    ServerNote ?? (Uri.TryCreate(YggdrasilServerUrl, UriKind.Absolute, out var uri) ? uri.Host : "外置登录"),
+                AccountType.Yggdrasil =>
+                    ServerNote ?? (Uri.TryCreate(YggdrasilServerUrl, UriKind.Absolute, out var uri)
+                        ? uri.Host
+                        : "外置登录"),
                 AccountType.Microsoft => "微软账户",
                 _ => "未知"
             };
@@ -88,7 +90,7 @@ public class MinecraftAccount(AccountType accountType)
         var imageBytes = Convert.FromBase64String(Skin);
         return HeadCapturer.Default.Capture(SKBitmap.Decode(imageBytes)).ToBitmap(36);
     }
-    
+
     public static Guid GetMinecraftOfflineUuid(string name)
     {
         if (string.IsNullOrEmpty(name)) return Guid.Empty;
@@ -132,7 +134,7 @@ public class MinecraftAccount(AccountType accountType)
 
         if (AccountType != other.AccountType) return false;
 
-        if (AccountType == AccountType.Yggdrasil && 
+        if (AccountType == AccountType.Yggdrasil &&
             !string.Equals(YggdrasilServerUrl, other.YggdrasilServerUrl, StringComparison.OrdinalIgnoreCase))
         {
             return false;
@@ -145,17 +147,17 @@ public class MinecraftAccount(AccountType accountType)
 
         return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
     }
-    
+
     public override bool Equals(object? obj)
     {
         return Equals(obj as MinecraftAccount);
     }
-    
+
     public override int GetHashCode()
     {
         var hash = new HashCode();
         hash.Add(AccountType);
-        
+
         if (AccountType == AccountType.Yggdrasil && YggdrasilServerUrl != null)
         {
             hash.Add(YggdrasilServerUrl, StringComparer.OrdinalIgnoreCase);
@@ -165,7 +167,7 @@ public class MinecraftAccount(AccountType accountType)
         {
             hash.Add(Uuid.Value);
         }
-        
+
         return hash.ToHashCode();
     }
 
