@@ -1,10 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <!--If you are willing to use platform-specific APIs, use conditional compilation.
-        See https://docs.avaloniaui.net/docs/guides/platforms/platform-specific-code/dotnet for more details.-->
-        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+        <DefineConstants>WINDOWS</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <TargetFramework>net10.0</TargetFramework>
+        <DefineConstants>LINUX</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup>

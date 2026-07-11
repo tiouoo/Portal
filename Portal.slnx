@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Core/" />
+  <Folder Name="/Core/Bedrock/">
+    <Project Path="src/Portal.Bedrock.Windows/Portal.Bedrock.Windows.csproj" />
+  </Folder>
   <Folder Name="/Module/">
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi/TioUi.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard.Tab/Tio.Avalonia.Standard.Tab.csproj" />
