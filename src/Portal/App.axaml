@@ -17,6 +17,7 @@
     <Application.Styles>
         <tio:TioUiTheme />
         <StyleInclude Source="/Styles/Tab.axaml" />
+        <StyleInclude Source="/Styles/Style.axaml" />
     </Application.Styles>
     <NativeMenu.Menu>
         <NativeMenu>
