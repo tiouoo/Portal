@@ -60,7 +60,11 @@ public partial class TabWindow : TioTabWindowBase
             CreateNewTabFunc();
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            TabSelectionList.EnableTabDragDrop(this);
+        }
+        else
         {
             TabSelectionList.PointerPressed += (_, e) =>
             {
@@ -68,17 +72,15 @@ public partial class TabWindow : TioTabWindowBase
                 BeginMoveDrag(e);
             };
         }
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            TabSelectionList.EnableTabDragDrop(this);
-        }
     }
 
     [AvaloniaHotReload]
     public void Hot()
     {
-        TabSelectionList.EnableTabDragDrop(this);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            TabSelectionList.EnableTabDragDrop(this);
+        }
     }
 
     public TabWindow(bool isMainWindow)
@@ -180,6 +182,8 @@ public partial class TabWindow : TioTabWindowBase
             StyleClass = "undrag",
             CanResize = true,
             StartupLocation = WindowStartupLocation.CenterOwner,
+            DialogWindowMinWidth = 680,
+            DialogWindowMinHeight = 440
         };
 
         _ = Dialog.ShowCustomAsync<AggregatedSearchDialog, AggregatedSearchDialogViewModel, object>(
@@ -268,13 +272,13 @@ public partial class TabWindow : TioTabWindowBase
     {
         BarComponent.DropMsg = Handler.GetMsg(e);
     }
-    
+
     private void OnLeaveHandler(object? sender, DragEventArgs e)
     {
         e.DragEffects = DragDropEffects.None;
         BarComponent.DropMsg = null;
     }
-    
+
     private void OnDropHandler(object? sender, DragEventArgs e)
     {
         BarComponent.DropMsg = null;

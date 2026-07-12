@@ -29,8 +29,6 @@ public partial class AggregatedSearchDialog : UserControl
         TemplateApplied += (s, e) =>
         {
             var a = (s! as Control)!.GetTopLevel() as CustomDialogWindow;
-            a.MinWidth = 680;
-            a.MinHeight = 440;
             a.KeyDown += (_, e) =>
             {
                 if (e.Key == Key.Escape)
@@ -40,7 +38,6 @@ public partial class AggregatedSearchDialog : UserControl
             };
             a.Loaded += (_, e) =>
             {
-                
                 Data.UiProperty.AggregatedSearchResults.Clear();
                 Data.UiProperty.AggregatedSearchResults.AddRange(
                     Searcher.Search(

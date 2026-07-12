@@ -132,6 +132,8 @@ public partial class TitleBarComponent : Grid
             StyleClass = "undrag",
             CanResize = true,
             StartupLocation = WindowStartupLocation.CenterOwner,
+            DialogWindowMinWidth = 680,
+            DialogWindowMinHeight = 440
         };
 
         _ = Dialog.ShowCustomAsync<AggregatedSearchDialog, AggregatedSearchDialogViewModel, object>(

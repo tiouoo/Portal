@@ -24,6 +24,8 @@ public class Config
         if (!File.Exists(ConfigPath.SettingDataPath))
             File.WriteAllText(ConfigPath.SettingDataPath, new ConfigEntry().AsJson());
         
+        Logger.Info($"配置文件夹：{ConfigPath.UserDataRootPath}");
+        
         InitializationEvents.RaiseBeforeReadSettings();
 
         try
