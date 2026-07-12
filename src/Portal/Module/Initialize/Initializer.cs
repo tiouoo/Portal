@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls.Notifications;
 using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Core;
 using Portal.Core.Minecraft;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.Events;
@@ -36,6 +37,8 @@ public static class Initializer
         Functions.CreateNewTabWindowFunc = _ => new TabWindow(false);
         NotificationGateway.IsToastFunc = () => Data.ConfigEntry.NoticeWay == NoticeWay.Toast;
 
+        Events.CoreSaveSettings += Portal.App.Method.SaveConfig;
+        
         InitializationEvents.RaiseAfterUiLoaded();
     }
 }

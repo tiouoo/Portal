@@ -40,7 +40,7 @@
                         Text="总计" />
                 </Border>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock FontSize="42" Text="{Binding TotalSizeString}" />
+                    <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding TotalBytesRaw}" />
                 </StackPanel>
             </StackPanel>
 
@@ -64,7 +64,7 @@
                             Text="Portal" />
                     </Border>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="42" Text="{Binding PortalSizeString}" />
+                        <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding PortalBytesRaw}" />
                     </StackPanel>
                 </StackPanel>
                 <Rectangle
@@ -87,7 +87,7 @@
                             Text="游戏" />
                     </Border>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="42" Text="{Binding GameSizeString}" />
+                        <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding GameBytesRaw}" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
@@ -108,12 +108,11 @@
                             HorizontalAlignment="Left"
                             Margin="5,0,0,0"
                             Text="Portal 数据文件夹" />
-                        <TextBlock
+                        <settingPages:ByteSizeDisplayer
                             DockPanel.Dock="Right"
                             HorizontalAlignment="Right"
-                            Margin="0,0,5,0">
-                            <Run Text="{Binding PortalSizeString, Mode=OneWay}" />
-                        </TextBlock>
+                            Margin="0,0,5,0"
+                            Value="{Binding PortalBytesRaw}" />
                     </DockPanel>
 
                     <DockPanel Margin="0,4,0,0">
@@ -153,11 +152,11 @@
                                         HorizontalAlignment="Left"
                                         Margin="5,0,0,0"
                                         Text="{Binding FolderName}" />
-                                    <TextBlock
+                                    <settingPages:ByteSizeDisplayer
                                         DockPanel.Dock="Right"
                                         HorizontalAlignment="Right"
                                         Margin="0,0,5,0"
-                                        Text="{Binding SizeString}" />
+                                        Value="{Binding SizeBytes}" />
                                 </DockPanel>
 
                                 <DockPanel Margin="0,4,0,0">

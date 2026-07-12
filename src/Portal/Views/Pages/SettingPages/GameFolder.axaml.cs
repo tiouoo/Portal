@@ -44,4 +44,10 @@ public partial class GameFolder : DataUserControl
             FolderPath = result.FolderPath
         });
     }
+
+    private void Button1_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var folder = (sender as Control).Tag as MinecraftFolderEntry;
+        Data.ConfigEntry.MinecraftFolders.Remove(folder!);
+    }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -15,6 +16,7 @@ using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
 
@@ -53,7 +55,11 @@ public partial class StorageViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(TotalSizeString))]
     public partial double GameBytesRaw { get; set; }
 
-    public string TotalSizeString => (GameBytesRaw + PortalBytesRaw).ToHumanReadableSize(1);
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TotalSizeString))]
+    public partial double TotalBytesRaw { get; set; }
+
+    public string TotalSizeString => TotalBytesRaw.ToHumanReadableSize(1);
     public string PortalSizeString => PortalBytesRaw.ToHumanReadableSize(1);
     public string GameSizeString => GameBytesRaw.ToHumanReadableSize(1);
 
@@ -72,38 +78,43 @@ public partial class StorageViewModel : ObservableObject
         string portalPath = _portalDataPath;
         PortalBytesRaw = 0;
         GameBytesRaw = 0;
+        TotalBytesRaw = 0;
         var folders = Data.ConfigEntry.MinecraftFolders.ToList();
-        List<GameFolderStorageItem> items = [];
+
+        GameFolders.Clear();
+        foreach (var folder in folders)
+        {
+            GameFolders.Add(new GameFolderStorageItem(folder.FolderName, folder.FolderPath, 0));
+        }
+
         await Task.Run(() =>
         {
-            items.Clear();
             try
             {
                 long portalBytes = GetDirectorySize(portalPath);
                 PortalBytesRaw = portalBytes;
 
                 long totalGameBytes = 0;
-                items = folders.Select(folder =>
+                foreach (var folder in folders)
                 {
                     long size = GetDirectorySize(folder.FolderPath);
-                    GameBytesRaw += size;
-                    return new GameFolderStorageItem(folder.FolderName, folder.FolderPath, size);
-                }).ToList();
+                    totalGameBytes += size;
+
+                    var item = GameFolders.FirstOrDefault(x => x.FolderPath == folder.FolderPath);
+                    if (item != null)
+                    {
+                        item.SizeBytes = size;
+                    }
+                }
 
                 GameBytesRaw = totalGameBytes;
+                TotalBytesRaw = portalBytes + totalGameBytes;
             }
             catch (Exception ex)
             {
                 Logger.Error($"Error: {ex.Message}");
             }
         });
-        
-        GameFolders.Clear();
-        foreach (var item in items)
-        {
-            if (GameFolders.Any(x => x.FolderPath == item.FolderPath)) continue;
-            GameFolders.Add(item);
-        }
     }
 
     private long GetDirectorySize(string path)
@@ -168,6 +179,29 @@ public partial class GameFolderStorageItem : ObservableObject
         if (parameter is Control control)
         {
             _ = control.GetTopLevel().Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(FolderPath));
+        }
+    }
+}
+
+public class ByteSizeDisplayer : NumberDisplayer<double>
+{
+    protected override Type StyleKeyOverride { get; } = typeof(NumberDisplayerBase);
+
+    protected override InterpolatingAnimator<double> GetAnimator()
+    {
+        return new DoubleAnimator();
+    }
+
+    protected override string GetString(double value)
+    {
+        return value.ToHumanReadableSize(1);
+    }
+
+    private class DoubleAnimator : InterpolatingAnimator<double>
+    {
+        public override double Interpolate(double progress, double oldValue, double newValue)
+        {
+            return oldValue + (newValue - oldValue) * progress;
         }
     }
 }

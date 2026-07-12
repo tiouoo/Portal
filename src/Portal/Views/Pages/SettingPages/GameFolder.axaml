@@ -89,25 +89,47 @@
                             <tio:TioExpander.Content>
                                 <StackPanel>
                                     <Separator />
-                                    <Panel Margin="10">
+                                    <StackPanel Margin="10" Spacing="15">
+                                        <StackPanel Margin="5,0,0,0" Spacing="5">
+                                            <Panel>
+                                                <Label
+                                                    Content="启用版本隔离"
+                                                    FontSize="13"
+                                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                                    HorizontalAlignment="Left" />
+                                                <StackPanel
+                                                    HorizontalAlignment="Right"
+                                                    Margin="0,0,10,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="10"
+                                                    VerticalAlignment="Bottom">
+                                                    <HyperlinkButton
+                                                        Click="Button1_OnClick"
+                                                        Content="移除文件夹"
+                                                        FontSize="13"
+                                                        Foreground="Red"
+                                                        Tag="{Binding}"
+                                                        Theme="{StaticResource TransparentHyperlinkButton}" />
+                                                    <HyperlinkButton
+                                                        Command="{Binding OpenFolder}"
+                                                        CommandParameter="{Binding ElementName=Root}"
+                                                        Content="打开文件夹"
+                                                        FontSize="13"
+                                                        Theme="{StaticResource TransparentHyperlinkButton}" />
+                                                </StackPanel>
+                                            </Panel>
+
+                                            <ToggleSwitch IsChecked="{Binding EnableIndependentVersion}" />
+                                        </StackPanel>
                                         <StackPanel Margin="5,0,0,0" Spacing="5">
                                             <Label
-                                                Content="启用版本隔离"
+                                                Content="文件夹名称"
                                                 FontSize="13"
                                                 Foreground="{DynamicResource InnerForegroundColor}"
                                                 HorizontalAlignment="Left" />
-                                            <ToggleSwitch IsChecked="{Binding EnableIndependentVersion}" />
+                                            <TextBox Text="{Binding FolderName, Mode=TwoWay}" />
                                         </StackPanel>
-                                        <HyperlinkButton
-                                            Command="{Binding OpenFolder}"
-                                            CommandParameter="{Binding ElementName=Root}"
-                                            Content="打开文件夹"
-                                            FontSize="13"
-                                            HorizontalAlignment="Right"
-                                            Margin="5"
-                                            Theme="{StaticResource TransparentHyperlinkButton}"
-                                            VerticalAlignment="Top" />
-                                    </Panel>
+                                    </StackPanel>
                                 </StackPanel>
                             </tio:TioExpander.Content>
                         </tio:TioExpander>
