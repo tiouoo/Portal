@@ -135,17 +135,46 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <StackPanel Spacing="6">
-                <tio:PathPicker
-                    FileFilter="[ImageAll]"
-                    SelectedPathsText="{Binding BackgroundImagePath, Source={x:Static const:Data.ConfigEntry}}"
-                    Title="选择背景图片"
-                    UsePickerType="OpenFile" />
-                <TextBlock
-                    FontSize="12"
-                    Foreground="{DynamicResource SukiMuteText}"
-                    Text="{Binding BackgroundImagePath, Source={x:Static const:Data.ConfigEntry}}"
-                    TextTrimming="CharacterEllipsis"
-                    TextWrapping="NoWrap" />
+                <DockPanel>
+                    <ToggleSwitch
+                        DockPanel.Dock="Right"
+                        IsChecked="{Binding ImageEnabled, Source={x:Static const:Data.ConfigEntry}}" />
+                    <TextBlock Text="启用图片背景" VerticalAlignment="Center" />
+                </DockPanel>
+                <StackPanel
+                    IsVisible="{Binding ImageEnabled, Source={x:Static const:Data.ConfigEntry}}"
+                    Spacing="6">
+                    <tio:PathPicker
+                        FileFilter="[ImageAll]"
+                        SelectedPathsText="{Binding BackgroundImagePath, Source={x:Static const:Data.ConfigEntry}}"
+                        Title="选择背景图片"
+                        UsePickerType="OpenFile" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource SukiMuteText}"
+                        Text="{Binding BackgroundImagePath, Source={x:Static const:Data.ConfigEntry}}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap" />
+                    <StackPanel Spacing="3">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource SukiMuteText}"
+                            Text="亚克力化程度" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Slider
+                                Grid.Column="0"
+                                Maximum="1.0"
+                                Minimum="0.0"
+                                Value="{Binding ImageOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                Text="{Binding ImageOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                                VerticalAlignment="Center"
+                                Width="40" />
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
     </StackPanel>

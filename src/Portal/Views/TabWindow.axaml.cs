@@ -325,7 +325,8 @@ public partial class TabWindow : TioTabWindowBase
                         {
                             Stretch = Stretch.UniformToFill,
                             AlignmentX = AlignmentX.Center,
-                            AlignmentY = AlignmentY.Center
+                            AlignmentY = AlignmentY.Center,
+                            Opacity = 1.0 - entry.ImageOpacity
                         };
                     }
                     else
