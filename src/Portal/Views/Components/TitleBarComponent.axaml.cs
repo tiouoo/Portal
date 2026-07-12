@@ -11,6 +11,10 @@ using Portal.Const;
 using Portal.Core.Minecraft.Account;
 using Portal.Core.Operations;
 using Portal.Core.Operations.Account;
+using Portal.Views.Pages;
+using Tio.Avalonia.Standard.Tab.Entries;
+using Tio.Avalonia.Standard.Tab.Extensions;
+using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Components;
 
@@ -28,7 +32,7 @@ public partial class TitleBarComponent : StackPanel
 
     private void ThemeMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button btn || btn.Tag is not string themeName) return;
+        if (sender is not MenuItem menuItem || menuItem.Tag is not string themeName) return;
 
         Data.ConfigEntry.Theme = themeName switch
         {
@@ -40,18 +44,17 @@ public partial class TitleBarComponent : StackPanel
         };
     }
 
-    private void BackgroundMode_OnClick(object? sender, RoutedEventArgs e)
+    private void SettingMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button btn || btn.Tag is not string modeName) return;
+        var window = global::Avalonia.Controls.TopLevel.GetTopLevel(Root) as TioTabWindowBase;
+        var tabEntry = new TabEntry(window!, new SettingPage());
+        window?.CreateTab(tabEntry);
+        window?.SelectTab(tabEntry);
+    }
 
-        Data.ConfigEntry.BackgroundMode = modeName switch
-        {
-            "Default" => BackgroundMode.Default,
-            "Image" => BackgroundMode.Image,
-            "SolidColor" => BackgroundMode.SolidColor,
-            "Acrylic" => BackgroundMode.Acrylic,
-            _ => Data.ConfigEntry.BackgroundMode
-        };
+    private void AcrylicToggle_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Data.ConfigEntry.AcrylicEnabled = !Data.ConfigEntry.AcrylicEnabled;
     }
 
     private async void AccountButton_Click(object? sender, RoutedEventArgs e)

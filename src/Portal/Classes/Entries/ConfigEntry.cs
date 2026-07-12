@@ -27,6 +27,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
     [ObservableProperty] public partial double AcrylicOpacity { get; set; } = 0.2;
+    [ObservableProperty] public partial bool AcrylicEnabled { get; set; } = false;
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -43,6 +44,9 @@ public partial class ConfigEntry : ObservableObject
             case nameof(BackgroundSolidColor):
             case nameof(AcrylicOpacity):
                 TabWindow.ApplyBackgroundToAllWindows();
+                break;
+            case nameof(AcrylicEnabled):
+                BackgroundMode = AcrylicEnabled ? BackgroundMode.Acrylic : BackgroundMode.Default;
                 break;
         }
 
