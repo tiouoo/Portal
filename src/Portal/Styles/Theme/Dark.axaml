@@ -2,16 +2,16 @@
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush
-                Color="#141821"
-                Opacity="{DynamicResource BackGroundOpacity}"
+                Color="#1D232F"
+                Opacity="0.6"
                 x:Key="TabBackground" />
             <SolidColorBrush
-                Color="#1e232d"
-                Opacity="{DynamicResource BackGroundOpacity}"
+                Color="{DynamicResource SystemAccentColorLight3}"
+                Opacity="0.15"
                 x:Key="TabHover" />
             <SolidColorBrush
-                Color="#252b38"
-                Opacity="{DynamicResource BackGroundOpacity}"
+                Color="{DynamicResource SystemAccentColorLight3}"
+                Opacity="0.3"
                 x:Key="TabSelected" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>

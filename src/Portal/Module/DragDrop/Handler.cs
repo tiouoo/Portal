@@ -33,22 +33,28 @@ public class Handler
             }
         }
     }
-    
+
     public static string GetMsg(DragEventArgs e)
     {
         var data = e.DataTransfer;
+        DragDropEffects dropEffects = DragDropEffects.None;
+        string? msg = null;
         e.Handled = true;
-        if (!data.Contains(DataFormat.Text) && !data.Contains(DataFormat.Bitmap) && !data.Contains(DataFormat.File)) return null;
+        if (!data.Contains(DataFormat.Text) && !data.Contains(DataFormat.Bitmap) &&
+            !data.Contains(DataFormat.File)) return null;
         if (data.Contains(DataFormat.Text))
         {
             var text = data.TryGetText();
             if (TryParseAuthlibUrl(text, out var apiUrl, out var domain))
             {
                 e.Handled = true;
-                return "识别到验证服务器";
+                dropEffects = DragDropEffects.Link;
+                msg = "识别到验证服务器";
             }
         }
-        return "不支持的拖放内容";
+
+        e.DragEffects = dropEffects;
+        return msg ?? "不支持的拖放内容";
     }
 
     private static async Task HandleAuthServerUrlAsync(string url, string domain, TioTabWindowBase window)

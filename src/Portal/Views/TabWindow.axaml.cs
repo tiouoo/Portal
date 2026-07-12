@@ -109,14 +109,14 @@ public partial class TabWindow : TioTabWindowBase
             TitleBarThings.SizeChanged += (_, _) =>
             {
                 NavScrollViewer.Margin =
-                    new Thickness(TitleBarLogo.Bounds.Width + 10, -44, TitleBarThings.Bounds.Width, 0);
+                    new Thickness(TitleBarLogo.Bounds.Width + 3, -44, TitleBarThings.Bounds.Width, 0);
             };
         }
         else
         {
             TitleBarThings.SizeChanged += (_, _) =>
             {
-                NavScrollViewer.Margin = new Thickness(TitleBarLogo.Bounds.Width + 10, -44,
+                NavScrollViewer.Margin = new Thickness(TitleBarLogo.Bounds.Width + 3, -44,
                     90 + TitleBarThings.Bounds.Width, 0);
             };
         }
@@ -265,7 +265,6 @@ public partial class TabWindow : TioTabWindowBase
 
     private void OnDragHandler(object? sender, DragEventArgs e)
     {
-        e.DragEffects = DragDropEffects.Copy;
         BarComponent.DropMsg = Handler.GetMsg(e);
     }
     
@@ -277,7 +276,6 @@ public partial class TabWindow : TioTabWindowBase
     
     private void OnDropHandler(object? sender, DragEventArgs e)
     {
-        e.DragEffects = DragDropEffects.Copy;
         BarComponent.DropMsg = null;
         Handler.Handle(e, this);
     }

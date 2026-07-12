@@ -11,6 +11,24 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush
+                        Color="{DynamicResource SystemAccentColorLight3}"
+                        Opacity="0.6"
+                        x:Key="IndicatorBackground" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush
+                        Color="{DynamicResource SystemAccentColorLight3}"
+                        Opacity="1"
+                        x:Key="IndicatorBackground" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="tio|SelectionListItem:selected TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
@@ -31,10 +49,7 @@
                     </DataTemplate>
                 </tio:SelectionList.ItemTemplate>
                 <tio:SelectionList.Indicator>
-                    <Border
-                        Background="{DynamicResource SystemAccentColorLight3}"
-                        CornerRadius="10"
-                        Opacity="0.6" />
+                    <Border Background="{DynamicResource IndicatorBackground}" CornerRadius="10" />
                 </tio:SelectionList.Indicator>
                 <tio:SelectionList.ItemsPanel>
                     <ItemsPanelTemplate>

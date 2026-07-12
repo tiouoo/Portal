@@ -10,12 +10,12 @@
                 Opacity="{DynamicResource BackGroundOpacity}"
                 x:Key="TabBackground" />
             <SolidColorBrush
-                Color="#323a4d"
-                Opacity="{DynamicResource BackGroundOpacity}"
+                Color="{DynamicResource SystemAccentColorLight3}"
+                Opacity="0.15"
                 x:Key="TabHover" />
             <SolidColorBrush
-                Color="#3d465f"
-                Opacity="{DynamicResource BackGroundOpacity}"
+                Color="{DynamicResource SystemAccentColorLight3}"
+                Opacity="0.3"
                 x:Key="TabSelected" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
