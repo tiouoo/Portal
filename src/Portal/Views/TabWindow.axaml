@@ -202,6 +202,13 @@
                 </Button>
             </DockPanel>
         </ScrollViewer>
-        <ContentControl Content="{Binding SelectedTab.Content}" />
+        <TransitioningContentControl Content="{Binding SelectedTab.Content}">
+            <TransitioningContentControl.PageTransition>
+                <CompositePageTransition>
+                    <CrossFade Duration="0:0:0.2" />
+                    <!-- <PageSlide Duration="0:0:0.3" Orientation="Vertical" /> -->
+                </CompositePageTransition>
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
     </Grid>
 </tio:TioWindow>

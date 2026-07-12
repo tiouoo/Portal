@@ -194,7 +194,7 @@
                         <ListBox
                             DockPanel.Dock="Bottom"
                             ItemsSource="{Binding Data.ConfigEntry.MinecraftAccounts}"
-                            MaxHeight="218"
+                            MaxHeight="208"
                             MinWidth="245"
                             SelectedItem="{Binding Data.ConfigEntry.UsingMinecraftMinecraftAccount}">
 
