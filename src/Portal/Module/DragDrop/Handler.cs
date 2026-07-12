@@ -59,7 +59,7 @@ public class Handler
 
     private static async Task HandleAuthServerUrlAsync(string url, string domain, TioTabWindowBase window)
     {
-        var hostId = window.HostId;
+        var hostId = (string?)null;
         var options = new OverlayDialogOptions
         {
             Mode = DialogMode.None,

@@ -70,7 +70,7 @@
         </Style>
     </tio:TioWindow.Styles>
     <tio:TioWindow.TitleBarLeftContent>
-        <Border IsVisible="False" Name="TitleBarLogo">
+        <Border Name="TitleBarLogo">
             <StackPanel
                 IsHitTestVisible="False"
                 Margin="{OnPlatform Default=8 0 0 0,
@@ -87,17 +87,17 @@
     </tio:TioWindow.TitleBarLeftContent>
     <tio:TioWindow.TitleBarRightContent>
         <DockPanel Name="TitleBarThings" VerticalAlignment="Center">
-            <components:TitleBarComponent Name="BarComponent" />
+            <components:TitleBarComponent />
         </DockPanel>
     </tio:TioWindow.TitleBarRightContent>
-    <Grid>
+    <Grid Background="Transparent">
         <ScrollViewer
             Background="Transparent"
             Classes="Flat"
             Height="44"
             HorizontalAlignment="Left"
             HorizontalScrollBarVisibility="Auto"
-            Margin="3,-44,85,0"
+            Margin="75,-44,85,0"
             Name="NavScrollViewer"
             OpacityMask="{Binding IsTabMaskVisible, Converter={StaticResource NavScrollOpacityMaskConverter}}"
             PointerWheelChanged="InputElement_OnPointerWheelChanged"
@@ -134,12 +134,12 @@
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
                                         <PathIcon
                                             Data="{Binding Icon}"
-                                            Height="{Binding IconHeight}"
+                                            Height="17"
                                             HorizontalAlignment="Left"
                                             IsVisible="{Binding IsIconVisible}"
-                                            Margin="{Binding IconMargin}"
+                                            Margin="0,0,4,-1"
                                             VerticalAlignment="Center"
-                                            Width="{Binding IconWidth}" />
+                                            Width="17" />
                                         <ContentControl
                                             Content="{Binding Header}"
                                             FontSize="13"
@@ -202,6 +202,6 @@
                 </Button>
             </DockPanel>
         </ScrollViewer>
-        <ContentControl Content="{Binding SelectedTab.Content}" />
+        <ContentControl Background="Transparent" Content="{Binding SelectedTab.Content}" />
     </Grid>
 </tio:TioWindow>

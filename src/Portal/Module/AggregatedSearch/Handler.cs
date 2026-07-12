@@ -8,7 +8,6 @@ using Portal.Core.Minecraft.Account;
 using Portal.Core.Operations.Account;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using TioUi.Common;
-using TioUi.Common.Extensions;
 using TioUi.Controls;
 using TopLevel = Avalonia.Controls.TopLevel;
 
@@ -36,7 +35,7 @@ public class Handler
         var authServer = entry.Data as Core.Minecraft.Account.AuthServer;
         if (authServer == null) return;
 
-        var hostId = sender.TryGetHostId();
+        var hostId = (string?)null;
 
         var options = new OverlayDialogOptions
         {
