@@ -142,7 +142,46 @@
                                     <TextBlock Text="幻影" />
                                 </StackPanel>
                             </Button>
+                            <Button
+                                Click="BackgroundMode_OnClick"
+                                Padding="8,4"
+                                Tag="Acrylic"
+                                Theme="{StaticResource TransparentButton}">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <PathIcon
+                                        Data="F1 M640,640z M0,0z M530.8,134.1C545.1,144.5,548.3,164.5,537.9,178.8L281.9,530.8C276.4,538.4 267.9,543.1 258.5,543.9 249.1,544.7 240,541.2 233.4,534.6L105.4,406.6C92.9,394.1 92.9,373.8 105.4,361.3 117.9,348.8 138.2,348.8 150.7,361.3L252.2,462.8 486.2,141.1C496.6,126.8,516.6,123.6,530.9,134z"
+                                        Height="12"
+                                        IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}"
+                                        Width="12" />
+                                    <TextBlock Text="亚克力" />
+                                </StackPanel>
+                            </Button>
                         </WrapPanel>
+                        <Border
+                            IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}">
+                            <StackPanel Spacing="6">
+                                <ColorPicker
+                                    Color="{Binding BackgroundSolidColor, Source={x:Static const:Data.ConfigEntry}}"
+                                    HorizontalAlignment="Stretch" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource SukiMuteText}"
+                                    Text="亚克力不透明度" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Slider
+                                        Grid.Column="0"
+                                        Maximum="1.0"
+                                        Minimum="0.0"
+                                        Value="{Binding AcrylicOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Margin="6,0,0,0"
+                                        Text="{Binding AcrylicOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                                        VerticalAlignment="Center"
+                                        Width="40" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                         <Separator
                             Background="{DynamicResource PanelBorderBrush}"
                             Margin="0,4" />
@@ -195,20 +234,6 @@
                                     <TextBlock Text="纯色" />
                                 </StackPanel>
                             </Button>
-                            <Button
-                                Click="BackgroundMode_OnClick"
-                                Padding="8,4"
-                                Tag="Acrylic"
-                                Theme="{StaticResource TransparentButton}">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <PathIcon
-                                        Data="F1 M640,640z M0,0z M530.8,134.1C545.1,144.5,548.3,164.5,537.9,178.8L281.9,530.8C276.4,538.4 267.9,543.1 258.5,543.9 249.1,544.7 240,541.2 233.4,534.6L105.4,406.6C92.9,394.1 92.9,373.8 105.4,361.3 117.9,348.8 138.2,348.8 150.7,361.3L252.2,462.8 486.2,141.1C496.6,126.8,516.6,123.6,530.9,134z"
-                                        Height="12"
-                                        IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}"
-                                        Width="12" />
-                                    <TextBlock Text="亚克力" />
-                                </StackPanel>
-                            </Button>
                         </WrapPanel>
                         <Border
                             IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}">
@@ -231,31 +256,6 @@
                             <ColorPicker
                                 Color="{Binding BackgroundSolidColor, Source={x:Static const:Data.ConfigEntry}}"
                                 HorizontalAlignment="Stretch" />
-                        </Border>
-                        <Border
-                            IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}">
-                            <StackPanel Spacing="6">
-                                <ColorPicker
-                                    Color="{Binding BackgroundSolidColor, Source={x:Static const:Data.ConfigEntry}}"
-                                    HorizontalAlignment="Stretch" />
-                                <TextBlock
-                                    FontSize="12"
-                                    Foreground="{DynamicResource SukiMuteText}"
-                                    Text="亚克力不透明度" />
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Slider
-                                        Grid.Column="0"
-                                        Maximum="1.0"
-                                        Minimum="0.0"
-                                        Value="{Binding AcrylicOpacity, Source={x:Static const:Data.ConfigEntry}}" />
-                                    <TextBlock
-                                        Grid.Column="1"
-                                        Margin="6,0,0,0"
-                                        Text="{Binding AcrylicOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
-                                        VerticalAlignment="Center"
-                                        Width="40" />
-                                </Grid>
-                            </StackPanel>
                         </Border>
                     </StackPanel>
                 </tio:GlassCard>

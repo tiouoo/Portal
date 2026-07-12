@@ -49,12 +49,7 @@ public partial class TabWindow : TioTabWindowBase
         Keys();
         CreateNewTabFunc = () =>
         {
-            var tab = new TabEntry(this, new NewTabPage())
-            {
-                IconHeight = 17,
-                IconWidth = 17,
-                IconMargin = new Thickness(0,0,4,-1)
-            };
+            var tab = new TabEntry(this, new NewTabPage());
             AddTab(tab);
             SelectTab(tab);
             NavScrollViewer.Offset = new Vector(double.PositiveInfinity, 0);
