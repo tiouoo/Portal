@@ -2,46 +2,29 @@ using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Portal.Classes.Entries;
 using Portal.Const;
 using Portal.Core.Minecraft.Account;
 using Portal.Core.Operations;
-using Portal.Core.Operations.Account;
-using Tio.Avalonia.Standard.Modules.Extensions;
-using Tio.Avalonia.Standard.Tab.Extensions;
-using Tio.Avalonia.Standard.Tab.Interface;
-using TioUi.Common;
-using TioUi.Common.Classes;
-using TioUi.Common.Extensions;
-using TioUi.Controls;
 
 namespace Portal.Views.Components;
 
-public partial class TitleBarComponent : Grid
+public partial class TitleBarComponent : StackPanel
 {
     public TitleBarComponent()
     {
         InitializeComponent();
         DataContext = this;
     }
-
-    public static readonly StyledProperty<string?> DropMsgProperty =
-        AvaloniaProperty.Register<TitleBarComponent, string?>(nameof(DropMsg));
-
-    public string? DropMsg
-    {
-        get => GetValue(DropMsgProperty);
-        set => SetValue(DropMsgProperty, value);
-    }
-
+    
     public Data Data { get; set; } = Data.Instance;
 
     private void ThemeMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not MenuItem menuItem || menuItem.Tag is not string themeName) return;
+        if (sender is not Button btn || btn.Tag is not string themeName) return;
 
         Data.ConfigEntry.Theme = themeName switch
         {
@@ -53,45 +36,45 @@ public partial class TitleBarComponent : Grid
         };
     }
 
+    private void BackgroundMode_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string modeName) return;
+
+        Data.ConfigEntry.BackgroundMode = modeName switch
+        {
+            "Default" => BackgroundMode.Default,
+            "Image" => BackgroundMode.Image,
+            "SolidColor" => BackgroundMode.SolidColor,
+            "Acrylic" => BackgroundMode.Acrylic,
+            _ => Data.ConfigEntry.BackgroundMode
+        };
+    }
+
     private async void AccountButton_Click(object? sender, RoutedEventArgs e)
     {
         if (Data.ConfigEntry.MinecraftAccounts.Count != 0)
         {
-            AccountFlyout.Flyout.ShowAt(AccountFlyoutPoint);
+            AccountFlyout.Flyout.ShowAt(AccountButton);
             return;
         }
 
-        var result = await AddAccount.Main(((Control)sender!).TryGetHostId()!, Data.ConfigEntry.AuthServers);
-        if (result == null || result.Length == 0) return;
-        foreach (var minecraftAccount in result)
-        {
-            if (minecraftAccount is null) continue;
-            Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
-        }
-
-        if (result.Length == 1 && result[0] == null) return;
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
+        var result = await AddAccount.Main(sender!);
+        if (result == null) return;
+        Data.ConfigEntry.MinecraftAccounts.Add(result);
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
     }
 
     private async void AddAcountButton_OnClick(object? sender, RoutedEventArgs e)
     {
         AccountFlyout.Flyout.Hide();
-        var tryGetHostId = ((Control)Root!).TryGetHostId()!;
-        var result = await AddAccount.Main(tryGetHostId, Data.ConfigEntry.AuthServers);
-        if (result == null || result.Length == 0) return;
-        foreach (var minecraftAccount in result)
-        {
-            if (minecraftAccount is null) continue;
-            Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
-        }
-
-        if (result.Length == 1 && result[0] == null) return;
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
+        var result = await AddAccount.Main(sender!);
+        if (result == null) return;
+        Data.ConfigEntry.MinecraftAccounts.Add(result);
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
     }
 
-    public void DeleteAccount(object parameter)
+    public void DeleteAccount(MinecraftAccount account)
     {
-        if (parameter is not MinecraftAccount account) return;
         if (Data.ConfigEntry.UsingMinecraftMinecraftAccount == account)
         {
             Data.ConfigEntry.MinecraftAccounts.Remove(account);
@@ -101,43 +84,5 @@ public partial class TitleBarComponent : Grid
         {
             Data.ConfigEntry.MinecraftAccounts.Remove(account);
         }
-
-        Root.TryGetToast()?.Show(new NotificationOptions()
-        {
-            Content = $"已移除账户：{account.Name} ({account.DisplayAccountNote})",
-            Type = NotificationType.Success,
-            Expiration = TimeSpan.FromSeconds(3),
-            OperateButtons =
-            [
-                new OperateButtonEntry("撤销", _ =>
-                {
-                    Data.ConfigEntry.MinecraftAccounts.Add(account);
-                    Data.ConfigEntry.UsingMinecraftMinecraftAccount = account;
-                }, true),
-            ]
-        });
-
-        if (Data.ConfigEntry.MinecraftAccounts.Count == 0)
-            AccountFlyout.Flyout.Hide();
-    }
-
-    private void OpenSearch(object? sender, RoutedEventArgs e)
-    {
-        var options = new DialogOptions
-        {
-            Mode = DialogMode.None,
-            Buttons = DialogButton.None,
-            CanDragMove = true,
-            IsCloseButtonVisible = false,
-            StyleClass = "undrag",
-            CanResize = true,
-            StartupLocation = WindowStartupLocation.CenterOwner,
-            DialogWindowMinWidth = 680,
-            DialogWindowMinHeight = 440
-        };
-
-        _ = Dialog.ShowCustomAsync<AggregatedSearchDialog, AggregatedSearchDialogViewModel, object>(
-            new AggregatedSearchDialogViewModel((Root.GetTopLevel() as TioTabWindowBase)!), options: options,
-            owner: (Root.GetTopLevel() as TioTabWindowBase)!);
     }
 }
