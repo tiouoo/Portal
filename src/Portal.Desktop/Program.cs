@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Avalonia;
 using HotAvalonia;
 using Tio.Avalonia.Standard.Modules;
@@ -16,6 +17,13 @@ sealed class Program
     {
         Initializer.Program("Portal", "xyz.tiouo.Portal");
         Logger.Info("应用程序启动 Main()");
+        
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            Logger.Info("Running on Windows");
+        else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            Logger.Info("Running on Linux");
+        else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            Logger.Info("Running on macOS");
         
         try
         {

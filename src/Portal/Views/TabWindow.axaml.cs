@@ -106,10 +106,11 @@ public partial class TabWindow : TioTabWindowBase
                 if (e.PropertyName != nameof(WindowState)) return;
                 MacOsWindowHandler(nsWindow);
             };
+            SizeChanged += (_, _) => { MacOsWindowHandler(nsWindow); };
             TitleBarThings.SizeChanged += (_, _) =>
             {
                 NavScrollViewer.Margin =
-                    new Thickness(TitleBarLogo.Bounds.Width + 3, -44, TitleBarThings.Bounds.Width, 0);
+                    new Thickness(TitleBarLogo.Bounds.Width + 72, -44, TitleBarThings.Bounds.Width + 15, 0);
             };
         }
         else

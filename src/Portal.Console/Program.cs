@@ -1,4 +1,4 @@
-﻿using Portal.Bedrock;
+using Portal.Bedrock;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 

@@ -1,28 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(RuntimeIdentifier.Contains('win'))">
-        <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-        <DefineConstants>WINDOWS</DefineConstants>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(RuntimeIdentifier.Contains('osx'))">
-        <DefineConstants>MACOS</DefineConstants>
-        <UseMauiEssentials>false</UseMauiEssentials>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(RuntimeIdentifier.Contains('linux'))">
-        <DefineConstants>LINUX</DefineConstants>
-    </PropertyGroup>
-    
     <ItemGroup>
       <PackageReference Include="MinecraftLaunch" />
       <PackageReference Include="CommunityToolkit.Mvvm" />
@@ -45,8 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Portal.Bedrock.Windows\Portal.Bedrock.Windows.csproj"
-                          Condition="$([MSBuild]::IsOSPlatform('Windows'))"/>
+      <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,26 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+    <!-- TargetFramework / DefineConstants come from ../Directory.Build.props -->
     <PropertyGroup>
-        <Nullable>enable</Nullable>
-        <LangVersion>latest</LangVersion>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    </PropertyGroup>
-    
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(RuntimeIdentifier.Contains('win'))">
-        <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-        <DefineConstants>WINDOWS</DefineConstants>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(RuntimeIdentifier.Contains('osx'))">
-        <DefineConstants>MACOS</DefineConstants>
-        <UseMauiEssentials>false</UseMauiEssentials>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(RuntimeIdentifier.Contains('linux'))">
-        <DefineConstants>LINUX</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

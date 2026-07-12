@@ -15,6 +15,7 @@
     <Project Path="module/LiteSkinViewer/LiteSkinViewer.Shared/LiteSkinViewer.Shared.csproj" />
   </Folder>
   <Folder Name="/Solution Item/">
+    <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Packages.props" />
   </Folder>
   <Project Path="src/Portal.Console/Portal.Console.csproj" />
