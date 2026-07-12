@@ -1,23 +1,26 @@
 using System;
-using System.Linq;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using HotAvalonia;
+using Portal.Classes.Entries;
 using Portal.Const;
-using Portal.Module.DragDrop;
-using Portal.Views.Components;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Helper;
+using Tio.Avalonia.Standard.Modules.Platform;
+using Tio.Avalonia.Standard.Standard.Ui;
+using Tio.Avalonia.Standard.Tab.Common;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
-using TioUi.Common;
+using TioUi.Common.Helpers;
 using TioUi.Controls;
 
 namespace Portal.Views;
@@ -44,7 +47,6 @@ public partial class TabWindow : TioTabWindowBase
         DataContext = this;
         Events();
         Keys();
-        AttachDropDrag();
         CreateNewTabFunc = () =>
         {
             var tab = new TabEntry(this, new NewTabPage())
@@ -62,11 +64,7 @@ public partial class TabWindow : TioTabWindowBase
             CreateNewTabFunc();
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            TabSelectionList.EnableTabDragDrop(this);
-        }
-        else
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             TabSelectionList.PointerPressed += (_, e) =>
             {
@@ -74,15 +72,19 @@ public partial class TabWindow : TioTabWindowBase
                 BeginMoveDrag(e);
             };
         }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            TabSelectionList.EnableTabDragDrop(this);
+        }
+
+        Loaded += (_, _) => ApplyBackground();
     }
 
     [AvaloniaHotReload]
     public void Hot()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            TabSelectionList.EnableTabDragDrop(this);
-        }
+        TabSelectionList.EnableTabDragDrop(this);
     }
 
     public TabWindow(bool isMainWindow)
@@ -90,10 +92,6 @@ public partial class TabWindow : TioTabWindowBase
         IsMainWindow = isMainWindow;
         Build();
     }
-
-    private DateTime _lastShiftDown;
-    private const int DoubleShiftInterval = 280;
-    private bool _doubleShiftLock;
 
     private void Events()
     {
@@ -110,23 +108,21 @@ public partial class TabWindow : TioTabWindowBase
                 if (e.PropertyName != nameof(WindowState)) return;
                 MacOsWindowHandler(nsWindow);
             };
-            SizeChanged += (_, _) => { MacOsWindowHandler(nsWindow); };
             TitleBarThings.SizeChanged += (_, _) =>
             {
                 NavScrollViewer.Margin =
-                    new Thickness(TitleBarLogo.Bounds.Width + 72, -44, TitleBarThings.Bounds.Width + 15, 0);
+                    new Thickness(TitleBarLogo.Bounds.Width + 10, -44, TitleBarThings.Bounds.Width, 0);
             };
         }
         else
         {
             TitleBarThings.SizeChanged += (_, _) =>
             {
-                NavScrollViewer.Margin = new Thickness(TitleBarLogo.Bounds.Width + 3, -44,
+                NavScrollViewer.Margin = new Thickness(TitleBarLogo.Bounds.Width + 10, -44,
                     90 + TitleBarThings.Bounds.Width, 0);
             };
         }
 
-        KeyDown += OnWindowKeyDown_CheckDoubleShift;
         NavScrollViewer.ScrollChanged += (_, _) => { IsTabMaskVisible = NavScrollViewer.Offset.X > 0; };
         return;
 
@@ -143,53 +139,6 @@ public partial class TabWindow : TioTabWindowBase
                 Logger.Error(exception);
             }
         }
-    }
-
-    private void OnWindowKeyDown_CheckDoubleShift(object? sender, KeyEventArgs e)
-    {
-        if (e.Key is not Key.LeftShift and not Key.RightShift)
-            return;
-
-        var now = DateTime.Now;
-        if (_doubleShiftLock)
-            return;
-
-        if ((now - _lastShiftDown).TotalMilliseconds <= DoubleShiftInterval)
-        {
-            _doubleShiftLock = true;
-
-            OpenAggregatedSearchDialog();
-
-            _lastShiftDown = DateTime.MinValue;
-            Task.Run(async () =>
-            {
-                await Task.Delay(300);
-                _doubleShiftLock = false;
-            });
-        }
-        else
-        {
-            _lastShiftDown = now;
-        }
-    }
-
-    private void OpenAggregatedSearchDialog()
-    {
-        var options = new DialogOptions
-        {
-            Mode = DialogMode.None,
-            Buttons = DialogButton.None,
-            CanDragMove = true,
-            IsCloseButtonVisible = false,
-            StyleClass = "undrag",
-            CanResize = true,
-            StartupLocation = WindowStartupLocation.CenterOwner,
-            DialogWindowMinWidth = 680,
-            DialogWindowMinHeight = 440
-        };
-
-        _ = Dialog.ShowCustomAsync<AggregatedSearchDialog, AggregatedSearchDialogViewModel, object>(
-            new AggregatedSearchDialogViewModel(this), options: options, owner: this);
     }
 
     private void Keys()
@@ -240,6 +189,71 @@ public partial class TabWindow : TioTabWindowBase
         e.Handled = true;
     }
 
+    public static void ApplyBackgroundToAllWindows()
+    {
+        foreach (var windowBase in AllWindows)
+        {
+            if (windowBase is TabWindow tabWin)
+                tabWin.ApplyBackground();
+        }
+    }
+
+    public void ApplyBackground()
+    {
+        var entry = Data.ConfigEntry;
+
+        switch (entry.BackgroundMode)
+        {
+            case BackgroundMode.Default:
+                if (RootBorder != null)
+                    RootBorder.ClearValue(Border.BackgroundProperty);
+                ClearValue(BackgroundProperty);
+                ClearValue(TransparencyBackgroundFallbackProperty);
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                break;
+
+            case BackgroundMode.Image:
+                if (RootBorder != null)
+                {
+                    if (!string.IsNullOrEmpty(entry.BackgroundImagePath) && File.Exists(entry.BackgroundImagePath))
+                    {
+                        RootBorder.Background = new ImageBrush(new Bitmap(entry.BackgroundImagePath))
+                        {
+                            Stretch = Stretch.UniformToFill,
+                            AlignmentX = AlignmentX.Center,
+                            AlignmentY = AlignmentY.Center
+                        };
+                    }
+                    else
+                    {
+                        RootBorder.ClearValue(Border.BackgroundProperty);
+                    }
+                }
+                ClearValue(TransparencyBackgroundFallbackProperty);
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                break;
+
+            case BackgroundMode.SolidColor:
+                if (RootBorder != null)
+                    RootBorder.Background = new SolidColorBrush(entry.BackgroundSolidColor);
+                ClearValue(TransparencyBackgroundFallbackProperty);
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                break;
+
+            case BackgroundMode.Acrylic:
+                var color = entry.BackgroundSolidColor;
+                var alpha = (byte)((1.0 - entry.AcrylicOpacity) * 200 + 40);
+                var acrylicBrush = new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B));
+                if (RootBorder != null)
+                    RootBorder.Background = acrylicBrush;
+                TransparencyBackgroundFallback = acrylicBrush;
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
+                break;
+        }
+    }
+
+
+
     private void NM_NewTab(object? sender, EventArgs e)
     {
         CreateNewTabFunc();
@@ -258,32 +272,5 @@ public partial class TabWindow : TioTabWindowBase
     private void NM_OpenInNewWindow(object? sender, EventArgs e)
     {
         SelectedTab.MoveTabToNewWindow();
-    }
-
-    private void AttachDropDrag()
-    {
-        DragDrop.SetAllowDrop(this, true);
-
-        // this.AddHandler(DragDrop.DragEnterEvent, OnDragHandler);
-        this.AddHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
-        this.AddHandler(DragDrop.DragOverEvent, OnDragHandler);
-        this.AddHandler(DragDrop.DropEvent, OnDropHandler);
-    }
-
-    private void OnDragHandler(object? sender, DragEventArgs e)
-    {
-        BarComponent.DropMsg = Handler.GetMsg(e);
-    }
-
-    private void OnLeaveHandler(object? sender, DragEventArgs e)
-    {
-        e.DragEffects = DragDropEffects.None;
-        BarComponent.DropMsg = null;
-    }
-
-    private void OnDropHandler(object? sender, DragEventArgs e)
-    {
-        BarComponent.DropMsg = null;
-        Handler.Handle(e, this);
     }
 }
