@@ -5,10 +5,12 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using CommunityToolkit.Mvvm.Input;
 using Portal.Classes.Entries;
 using Portal.Const;
 using Portal.Core.Minecraft.Account;
 using Portal.Core.Operations;
+using Portal.Core.Operations.Account;
 
 namespace Portal.Views.Components;
 
@@ -18,9 +20,11 @@ public partial class TitleBarComponent : StackPanel
     {
         InitializeComponent();
         DataContext = this;
+        DeleteAccountCommand = new RelayCommand<MinecraftAccount>(DeleteAccount);
     }
     
     public Data Data { get; set; } = Data.Instance;
+    public RelayCommand<MinecraftAccount> DeleteAccountCommand { get; }
 
     private void ThemeMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -58,19 +62,21 @@ public partial class TitleBarComponent : StackPanel
             return;
         }
 
-        var result = await AddAccount.Main(sender!);
+        var result = await AddAccount.Main(null, Data.ConfigEntry.AuthServers);
         if (result == null) return;
-        Data.ConfigEntry.MinecraftAccounts.Add(result);
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
+        foreach (var acc in result)
+            Data.ConfigEntry.MinecraftAccounts.Add(acc);
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = Data.ConfigEntry.MinecraftAccounts.LastOrDefault();
     }
 
     private async void AddAcountButton_OnClick(object? sender, RoutedEventArgs e)
     {
         AccountFlyout.Flyout.Hide();
-        var result = await AddAccount.Main(sender!);
+        var result = await AddAccount.Main(null, Data.ConfigEntry.AuthServers);
         if (result == null) return;
-        Data.ConfigEntry.MinecraftAccounts.Add(result);
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result;
+        foreach (var acc in result)
+            Data.ConfigEntry.MinecraftAccounts.Add(acc);
+        Data.ConfigEntry.UsingMinecraftMinecraftAccount = Data.ConfigEntry.MinecraftAccounts.LastOrDefault();
     }
 
     public void DeleteAccount(MinecraftAccount account)

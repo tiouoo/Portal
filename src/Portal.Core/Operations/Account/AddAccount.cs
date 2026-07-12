@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using MinecraftLaunch.Components.Authenticator;
 using Portal.Core.Minecraft.Account;
 using TioUi.Common;
-using TioUi.Common.Extensions;
 using TioUi.Controls;
 
 namespace Portal.Core.Operations.Account;
