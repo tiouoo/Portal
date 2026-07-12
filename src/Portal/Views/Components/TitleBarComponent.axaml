@@ -378,7 +378,7 @@
                                             </StackPanel>
 
                                             <tio:PopConfirm
-                                                ConfirmCommand="{Binding #Root.DeleteAccount}"
+                                                ConfirmCommand="{Binding #Root.DeleteAccountCommand}"
                                                 ConfirmCommandParameter="{Binding}"
                                                 Grid.Column="2"
                                                 HorizontalAlignment="Left"
