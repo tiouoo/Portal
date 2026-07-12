@@ -134,12 +134,12 @@
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
                                         <PathIcon
                                             Data="{Binding Icon}"
-                                            Height="{Binding IconHeight}"
+                                            Height="17"
                                             HorizontalAlignment="Left"
                                             IsVisible="{Binding IsIconVisible}"
-                                            Margin="{Binding IconMargin}"
+                                            Margin="0,0,4,-1"
                                             VerticalAlignment="Center"
-                                            Width="{Binding IconWidth}" />
+                                            Width="17" />
                                         <ContentControl
                                             Content="{Binding Header}"
                                             FontSize="13"
