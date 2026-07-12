@@ -78,6 +78,8 @@ public partial class TabWindow : TioTabWindowBase
                 BeginMoveDrag(e);
             };
         }
+
+        Loaded += (_, _) => ApplyBackground();
     }
 
     [AvaloniaHotReload]

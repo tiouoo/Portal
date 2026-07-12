@@ -42,9 +42,13 @@ public partial class ConfigEntry : ObservableObject
                 ThemeHelper.SetThemeColor(ThemeColor);
                 break;
             case nameof(BackgroundMode):
-            case nameof(BackgroundImagePath):
             case nameof(BackgroundSolidColor):
             case nameof(AcrylicOpacity):
+                TabWindow.ApplyBackgroundToAllWindows();
+                break;
+            case nameof(BackgroundImagePath):
+                if (!string.IsNullOrEmpty(BackgroundImagePath))
+                    BackgroundMode = BackgroundMode.Image;
                 TabWindow.ApplyBackgroundToAllWindows();
                 break;
             case nameof(AcrylicEnabled):
