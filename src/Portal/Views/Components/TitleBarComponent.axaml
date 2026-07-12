@@ -162,6 +162,8 @@
                                    macOS=False}"
             Margin="5,0"
             Width="1" />
+
+
         <Button IsVisible="False" Name="AccountFlyout">
             <Button.Flyout>
                 <Flyout VerticalOffset="5">
