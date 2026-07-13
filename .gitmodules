@@ -5,4 +5,4 @@
 [submodule "module/LiteSkinViewer"]
 	path = module/LiteSkinViewer
 	url = git@github.com:tiouoo/LiteSkinViewer.git
-	branch = master
+	branch = main
