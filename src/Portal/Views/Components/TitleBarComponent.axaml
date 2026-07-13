@@ -26,7 +26,7 @@
                 BorderBrush="{DynamicResource PopupBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
-                IsVisible="{Binding Data.ConfigEntry.ShowDragDropPrompt}"
+                IsVisible="{Binding Data.ConfigEntry.ShowDragDropTip}"
                 Padding="8,3,8,2"
                 VerticalAlignment="Center">
                 <Panel>
@@ -39,7 +39,7 @@
         </Border>
         <Button
             Click="GoToAbout"
-            IsVisible="{Binding Data.ConfigEntry.ShowUpdatePrompt}"
+            IsVisible="{Binding Data.ConfigEntry.ShowUpdateTip}"
             Margin="3,0"
             Theme="{StaticResource TransparentButton}"
             VerticalAlignment="Center">
@@ -61,6 +61,7 @@
         </Button>
         <Button
             Click="AccountButton_Click"
+            IsVisible="{Binding Data.ConfigEntry.ShowUsingAccountTip}"
             Margin="3,0"
             Theme="{StaticResource TransparentButton}"
             VerticalAlignment="Center"
@@ -290,6 +291,7 @@
     </StackPanel>
     <Rectangle
         HorizontalAlignment="Right"
+        IsVisible="{Binding Data.ConfigEntry.ShowUsingAccountTip}"
         Margin="0,20,100,0"
         Name="AccountFlyoutPoint"
         VerticalAlignment="Center" />

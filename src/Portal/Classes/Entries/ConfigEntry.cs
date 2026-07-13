@@ -31,8 +31,9 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
-    [ObservableProperty] public partial bool ShowDragDropPrompt { get; set; } = true;
-    [ObservableProperty] public partial bool ShowUpdatePrompt { get; set; } = true;
+    [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
+    [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
+    [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
     [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
