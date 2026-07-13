@@ -20,22 +20,39 @@
             <converter:ThemeCompareConverter x:Key="ThemeCompareConverter" />
             <converter:IntCompareConverter x:Key="IntCompareConverter" />
         </StackPanel.Resources>
-        <Border
-            IsVisible="{Binding Data.ConfigEntry.ShowDragDropPrompt}"
-            Margin="5,0"
-            VerticalAlignment="Center">
-            <Button IsVisible="{Binding DropMsg, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}" Theme="{StaticResource TransparentButton}">
-                <Border
-                    Background="{DynamicResource PopupBackgroundColor}"
-                    BorderBrush="{DynamicResource PopupBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="999"
-                    Padding="8,2">
-                    <Panel>
-                        <TextBlock FontSize="13" Text="{Binding DropMsg}" />
-                    </Panel>
-                </Border>
-            </Button>
+        <Border IsVisible="{Binding DropMsg, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}">
+            <Border
+                Background="{DynamicResource PopupBackgroundColor}"
+                BorderBrush="{DynamicResource PopupBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999"
+                IsVisible="{Binding Data.ConfigEntry.ShowDragDropPrompt}"
+                Padding="8,3,8,2"
+                VerticalAlignment="Center">
+                <Panel>
+                    <TextBlock
+                        FontSize="13"
+                        Text="{Binding DropMsg}"
+                        VerticalAlignment="Center" />
+                </Panel>
+            </Border>
+        </Border>
+        <Border IsVisible="{Binding Data.ConfigEntry.ShowUpdatePrompt}">
+            <Border
+                Background="{DynamicResource PopupBackgroundColor}"
+                BorderBrush="{DynamicResource PopupBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999"
+                IsVisible="{Binding Data.UiProperty.FoundNewVersion}"
+                Padding="8,3,8,2"
+                VerticalAlignment="Center">
+                <Panel>
+                    <TextBlock
+                        FontSize="13"
+                        Text="发现新版本"
+                        VerticalAlignment="Center" />
+                </Panel>
+            </Border>
         </Border>
         <Button
             Click="AccountButton_Click"
@@ -48,12 +65,13 @@
                 BorderBrush="{DynamicResource PopupBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
-                Padding="8,2">
+                Padding="8,3,8,2">
                 <Panel>
                     <TextBlock
                         FontSize="13"
                         IsVisible="{Binding Data.ConfigEntry.MinecraftAccounts.Count, Converter={StaticResource IntCompareConverter}, ConverterParameter='== 0'}"
-                        Text="无账户" />
+                        Text="无账户"
+                        VerticalAlignment="Center" />
                     <TextBlock
                         FontSize="13"
                         IsVisible="{Binding Data.ConfigEntry.MinecraftAccounts.Count, Converter={StaticResource IntCompareConverter}, ConverterParameter='> 0'}"

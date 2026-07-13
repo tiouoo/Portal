@@ -24,6 +24,7 @@ using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
+using TioUi.Common.Extensions;
 using TioUi.Controls;
 
 namespace Portal.Views;
@@ -35,7 +36,7 @@ public partial class TabWindow : TioTabWindowBase
         get;
         set => SetField(ref field, value);
     }
-    
+
     public TabWindow()
     {
         Build();
@@ -57,7 +58,7 @@ public partial class TabWindow : TioTabWindowBase
             {
                 IconHeight = 17,
                 IconWidth = 17,
-                IconMargin = new Thickness(0,0,4,-1)
+                IconMargin = new Thickness(0, 0, 4, -1)
             };
             AddTab(tab);
             SelectTab(tab);
@@ -219,6 +220,19 @@ public partial class TabWindow : TioTabWindowBase
                 _ => TioUi.Shared.Theme.Light
             })
         });
+#if DEBUG
+        KeyBindings.Add(new KeyBinding
+        {
+            Gesture = KeyGesture.Parse("Shift+F12"),
+            Command = new RelayCommand(() =>
+            {
+                var tioTabWindowBase = this.GetTopLevel() as TioTabWindowBase;
+                var tabEntry = new TabEntry(tioTabWindowBase!, new DebugPage());
+                tioTabWindowBase.CreateTab(tabEntry);
+                tioTabWindowBase.SelectTab(tabEntry);
+            })
+        });
+#endif
     }
 
     private void Button_OnClick(object? sender, RoutedEventArgs e)

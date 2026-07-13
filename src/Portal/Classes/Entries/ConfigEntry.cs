@@ -33,7 +33,9 @@ public partial class ConfigEntry : ObservableObject
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
     [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
+    [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
     [ObservableProperty] public partial bool ShowDragDropPrompt { get; set; } = true;
+    [ObservableProperty] public partial bool ShowUpdatePrompt { get; set; } = true;
 
     [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }

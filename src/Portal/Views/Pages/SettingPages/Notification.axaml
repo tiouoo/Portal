@@ -24,7 +24,7 @@
                 <ComboBoxItem Content="卡片" />
             </ComboBox>
         </StackPanel>
-        <StackPanel Spacing="5">
+        <StackPanel Spacing="15">
             <Label
                 Content="通知权限"
                 FontSize="13"
@@ -40,6 +40,17 @@
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
                         IsChecked="{Binding Data.ConfigEntry.ShowDragDropPrompt}" />
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock
+                        DockPanel.Dock="Left"
+                        FontSize="14"
+                        HorizontalAlignment="Left"
+                        Text="更新提示" />
+                    <ToggleSwitch
+                        DockPanel.Dock="Right"
+                        HorizontalAlignment="Right"
+                        IsChecked="{Binding Data.ConfigEntry.ShowUpdatePrompt}" />
                 </DockPanel>
             </StackPanel>
         </StackPanel>

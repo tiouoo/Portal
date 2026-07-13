@@ -65,6 +65,7 @@ public class Config
             Commit = "000000",
             Type = "dev"
         };
+        Data.UiProperty.OverrideUpdateChannel = Data.Instance.Version.Type;
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);
         App.Method.SaveConfig();

@@ -21,7 +21,7 @@
     </Application.Styles>
     <NativeMenu.Menu>
         <NativeMenu>
-            <NativeMenuItem Header="设置" />
+            <NativeMenuItem Click="OpenSetting_OnClick" Header="设置" />
             <NativeMenuItem Header="主题">
                 <NativeMenuItem.Menu>
                     <NativeMenu>
@@ -33,7 +33,6 @@
                 </NativeMenuItem.Menu>
             </NativeMenuItem>
             <NativeMenuItemSeparator />
-            <NativeMenuItem Header="关于" />
         </NativeMenu>
     </NativeMenu.Menu>
 </Application>

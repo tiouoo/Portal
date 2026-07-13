@@ -1,0 +1,46 @@
+﻿<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DebugPage"
+    x:DataType="pages:DebugPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <WrapPanel Margin="10,5,10,10">
+        <StackPanel>
+            <Label
+                Content="版本信息"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Left" />
+            <tio:Form HorizontalAlignment="Stretch" LabelPosition="Top">
+                <tio:Form.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="-4" />
+                    </ItemsPanelTemplate>
+                </tio:Form.ItemsPanel>
+                <tio:FormItem Label="构建类型">
+                    <TextBox Text="{Binding Data.Version.Type}" />
+                </tio:FormItem>
+                <tio:FormItem Label="构建时间">
+                    <TextBox Text="{Binding Data.Version.BuildTime}" />
+                </tio:FormItem>
+                <tio:FormItem Label="构建版本">
+                    <TextBox Text="{Binding Data.Version.Version}" />
+                </tio:FormItem>
+                <tio:FormItem Label="构建Action">
+                    <TextBox Text="{Binding Data.Version.Action}" />
+                </tio:FormItem>
+                <tio:FormItem Label="构建提交">
+                    <TextBox Text="{Binding Data.Version.Commit}" />
+                </tio:FormItem>
+                <tio:FormItem Label="OverrideUpdateChannel">
+                    <TextBox Text="{Binding Data.UiProperty.OverrideUpdateChannel}" />
+                </tio:FormItem>
+            </tio:Form>
+        </StackPanel>
+    </WrapPanel>
+</UserControl>

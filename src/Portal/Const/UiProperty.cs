@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes.Entries;
 using Portal.Module.AggregatedSearch;
+using Portal.Views;
 using Portal.Views.Components;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Standard.Ui;
@@ -39,14 +40,19 @@ public partial class UiProperty : ObservableObject
 
     public static ObservableCollection<NotificationEntry> Notifications { get; } = [];
     public static ObservableCollection<NotificationEntry> HistoryNotifications { get; } = [];
-    public static TioToastManager Toast => ActiveWindow.Toast;
-
-    public static ITioWindow ActiveWindow => (Application.Current!.ApplicationLifetime as
-        IClassicDesktopStyleApplicationLifetime).Windows.FirstOrDefault
-        (x => x.IsActive) as ITioWindow ?? App.MainWindow;
-
+    public static IReadOnlyList<Window> Windows => (Application.Current!.ApplicationLifetime as
+        IClassicDesktopStyleApplicationLifetime).Windows;
+    public static ITioWindow? ActiveWindow => Windows.FirstOrDefault
+        (x => x.IsActive) as ITioWindow;   
+    public static TabWindow? TabWindow => Windows.FirstOrDefault
+        (x => x is TabWindow) as TabWindow;
+    
     [ObservableProperty] public partial string AggregatedSearchQuery { get; set; }
     [ObservableProperty] public partial bool ConfigLoaded { get; set; }
+    [ObservableProperty] public partial bool FoundNewVersion { get; set; }
+    [ObservableProperty] public partial bool IsLatestVersion { get; set; }
+    [ObservableProperty] public partial string NewVersion { get; set; }
+    [ObservableProperty] public partial string OverrideUpdateChannel { get; set; }
     public ObservableCollection<AggregatedSearchEntry> AggregatedSearchResults { get; set; } = [];
 
     [ObservableProperty] public partial AggregatedSearchType AggregatedSelectedType { get; set; } = AggregatedSearchTypes[0];

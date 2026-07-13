@@ -15,7 +15,7 @@
         <tio:NavMenu
             DockPanel.Dock="Left"
             HorizontalAlignment="Left"
-            Margin="7,0,10,10"
+            Margin="7,0,20,10"
             Width="230">
             <tio:NavMenuItem Header="Portal">
                 <tio:NavMenuItem
@@ -57,7 +57,7 @@
         <ScrollViewer Margin="0,0,5,0">
             <TransitioningContentControl
                 Content="{Binding CurrentPage}"
-                Margin="0,10,5,10"
+                Margin="0,10,10,10"
                 MaxWidth="800"
                 Name="Frame">
                 <TransitioningContentControl.PageTransition>

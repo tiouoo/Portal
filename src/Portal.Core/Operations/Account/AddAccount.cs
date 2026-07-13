@@ -82,7 +82,7 @@ public class AddAccount
 
     public static async Task<MinecraftAccount[]?> Offline(string? hostId, OverlayDialogOptions options)
     {
-        var result = await OverlayDialog.ShowCustomAsync<OpenFile.NewMinecraftFolder, OfflineAccountViewModel, MinecraftAccount>(
+        var result = await OverlayDialog.ShowCustomAsync<Offline, OfflineAccountViewModel, MinecraftAccount>(
             new OfflineAccountViewModel(), hostId: hostId, options: options);
 
         return [result];

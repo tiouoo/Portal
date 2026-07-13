@@ -8,10 +8,13 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Portal.Const;
 using Portal.Module.Initialize;
 using Portal.ViewModels;
 using Portal.Views;
+using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Tab.Entries;
 
 namespace Portal;
 
@@ -95,5 +98,14 @@ public partial class App : Application
         // {
         //     e.Handled = true;
         // }
+    }
+
+    private void OpenSetting_OnClick(object? sender, EventArgs e)
+    {
+        if(UiProperty.TabWindow is not { } window)  return;
+        var tabEntry = new TabEntry(window, new SettingPage());
+        window.CreateTab(tabEntry);
+        window.SelectTab(tabEntry);
+        window.Activate();
     }
 }

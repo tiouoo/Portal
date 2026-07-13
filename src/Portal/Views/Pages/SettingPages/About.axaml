@@ -5,66 +5,100 @@
     x:Class="Portal.Views.Pages.SettingPages.About"
     x:DataType="settingPages:AboutViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <converter:UpdateChannelToIndexConverter x:Key="UpdateChannelToIndexConverter" />
+    </UserControl.Resources>
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="关于" />
         <Border
-            Background="{DynamicResource PanelBackgroundColor}"
-            BorderBrush="{DynamicResource PanelBorderBrush}"
+            Background="{DynamicResource PopupBackgroundColor}"
+            BorderBrush="{DynamicResource PopupBorderBrush}"
             BorderThickness="1"
             CornerRadius="{DynamicResource TioCornerRadius}"
             Padding="10">
-            <Panel>
-                <StackPanel>
-                    <TextBlock
-                        FontSize="15"
-                        Margin="5,0,0,0"
-                        Text="Portal" />
+            <StackPanel>
+                <Panel>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                FontSize="15"
+                                Margin="5,0,0,0"
+                                Text="Portal" />
+                            <Border
+                                CornerRadius="10"
+                                HorizontalAlignment="Left"
+                                IsVisible="{Binding Data.UiProperty.IsLatestVersion}"
+                                Margin="10,0,0,0"
+                                Padding="6,3,6,1"
+                                VerticalAlignment="Top">
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="#17be74"
+                                    Text="最新版" />
+                                <Border.Background>
+                                    <SolidColorBrush Color="#18e086" Opacity="0.3" />
+                                </Border.Background>
+                            </Border>
+                        </StackPanel>
+                        <SelectableTextBlock
+                            FontSize="17"
+                            Margin="5,2,0,2"
+                            Text="{Binding Version}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="5,0,0,0">
+                            <Run Text="{Binding Data.Version.Type}" />
+                            <Run Text="|" />
+                            <Run Text="{Binding Data.Version.BuildTime, StringFormat='{}{0:yyyy-MM-dd}'}" />
+                        </TextBlock>
+                    </StackPanel>
+                    <HyperlinkButton
+                        Click="Button_OnClick"
+                        Content="检查更新"
+                        FontSize="12"
+                        HorizontalAlignment="Right"
+                        IsVisible="{Binding !IsDev}"
+                        Margin="0,2,5,0"
+                        Name="HyperlinkButton"
+                        Theme="{StaticResource TransparentHyperlinkButton}"
+                        VerticalAlignment="Top" />
+                </Panel>
+                <StackPanel IsVisible="{Binding Data.UiProperty.FoundNewVersion}">
+                    <Separator Background="{DynamicResource PopupBorderBrush}" Margin="0,8" />
+                    <Panel>
+                        <TextBlock
+                            FontSize="13"
+                            Margin="5,0,0,0"
+                            Text="发现新版本" />
+                        <HyperlinkButton
+                            Click="UpdateHyperlinkButton_OnClickButton_OnClick"
+                            Content="下载新版本"
+                            FontSize="12"
+                            HorizontalAlignment="Right"
+                            Margin="0,2,5,0"
+                            Name="UpdateHyperlinkButton"
+                            Theme="{StaticResource TransparentHyperlinkButton}"
+                            VerticalAlignment="Top" />
+                    </Panel>
                     <SelectableTextBlock
                         FontSize="17"
                         Margin="5,2,0,2"
-                        Text="{Binding Version}" />
-                    <TextBlock
-                        FontSize="13"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Margin="5,0,0,0">
-                        <Run Text="{Binding Data.Version.Type}" />
-                        <Run Text="|" />
-                        <Run Text="{Binding Data.Version.BuildTime, StringFormat='{}{0:yyyy-MM-dd}'}" />
-                    </TextBlock>
+                        Text="{Binding Data.UiProperty.NewVersion}" />
                 </StackPanel>
-                <Border
-                    CornerRadius="10"
-                    HorizontalAlignment="Right"
-                    IsVisible="{Binding IsLatest}"
-                    Padding="6,3,6,1"
-                    VerticalAlignment="Top">
-                    <TextBlock
-                        FontSize="11"
-                        Foreground="#17be74"
-                        Text="最新版" />
-                    <Border.Background>
-                        <SolidColorBrush Color="#18e086" Opacity="0.3" />
-                    </Border.Background>
-                </Border>
-                <HyperlinkButton
-                    Content="检查更新"
-                    FontSize="12"
-                    HorizontalAlignment="Right"
-                    Margin="0,0,5,0"
-                    Theme="{StaticResource TransparentHyperlinkButton}"
-                    VerticalAlignment="Bottom" />
-            </Panel>
+            </StackPanel>
         </Border>
         <StackPanel Spacing="5">
             <Label
                 Content="自动检查更新"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch HorizontalAlignment="Stretch" />
+            <ToggleSwitch HorizontalAlignment="Stretch" IsChecked="{Binding Data.ConfigEntry.EnableCheckAutoUpdate}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
@@ -79,13 +113,18 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Text=" *前往 设置-代理 开启GitHub代理可加快更新速度" />
         </StackPanel>
-        <StackPanel Spacing="5">
+        <StackPanel IsVisible="{Binding !IsDev}" Spacing="5">
             <Label
                 Content="更新通道"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="0">
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                Name="UpdateChannel"
+                SelectedIndex="{Binding Data.UiProperty.OverrideUpdateChannel, Converter={StaticResource UpdateChannelToIndexConverter}, Mode=TwoWay}"
+                SelectionChanged="UpdateChannel_OnSelectionChanged">
                 <ComboBoxItem Content="每日构建版本" />
+                <ComboBoxItem Content="提交构建版本" />
             </ComboBox>
         </StackPanel>
         <Separator />

@@ -28,13 +28,17 @@ jobs:
         id: meta
         run: |
           BASE_VERSION=$(cat ./src/version.txt | tr -d '[:space:]')
-          Y=$(TZ='Asia/Shanghai' date +'%Y')
+          Y_FULL=$(TZ='Asia/Shanghai' date +'%Y')
           MD=$(TZ='Asia/Shanghai' date +'%m%d')
           HM=$(TZ='Asia/Shanghai' date +'%H%M')
-          APP_VERSION="${Y}.${MD}.${HM}"
+          FULL_TIMESTAMP="${Y_FULL}${MD}${HM}"
+          START_EPOCH=$(date -d "2026-01-01 00:00:00" +%s)
+          NOW_EPOCH=$(date +%s)
+          TOTAL_HOURS=$(( (NOW_EPOCH - START_EPOCH) / 3600 ))
+          APP_VERSION="${BASE_VERSION}.${TOTAL_HOURS}"
           COMMIT_HASH=$(git rev-parse --short=6 HEAD)
           BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
-          JSON_STRING="{\"type\":\"nightly\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\"}"
+          JSON_STRING="{\"type\":\"commit\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\",\"timestamp\":\"${FULL_TIMESTAMP}\"}"
           echo "json=${JSON_STRING}" >> $GITHUB_OUTPUT
           echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
           echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
