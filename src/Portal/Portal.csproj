@@ -6,6 +6,9 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
+        <EmbeddedResource Include="..\Version.txt">
+            <Link>Version.txt</Link>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -25,12 +28,5 @@
       <ProjectReference Include="..\Portal.Core\Portal.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Remove="Const\Version.txt" />
-      <EmbeddedResource Include="Const\Version.txt" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Classes\Interfaces\" />
-    </ItemGroup>
+    
 </Project>

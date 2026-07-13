@@ -51,11 +51,12 @@ public class Config
         }
         if (FailedSettingKeys.Count > 0) Logger.Error($"Setting load with errors: {FailedSettingKeys.AsJson()}");
         
-        const string resourceName = "Portal.Const.Version.txt";
+        const string resourceName = "Portal.Version.txt";
         var assembly = Assembly.GetExecutingAssembly();
         var stream = assembly.GetManifestResourceStream(resourceName);
         using var reader = new StreamReader(stream!);
         var result = reader.ReadToEnd();
+        //TODO Get version from assembly
         Data.Instance.Version = $"v{result.Trim()}";
         
         Helper.ClearFolder(ConfigPath.TempFolderPath);
