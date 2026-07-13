@@ -11,5 +11,11 @@ public partial class Appearance : DataUserControl
     {
         InitializeComponent();
         DataContext = this;
+        Loaded += (_, _) => { ListBox.SelectedIndex = (int)Const.Data.ConfigEntry.Theme; };
+        ListBox.SelectionChanged += (_, _) =>
+        {
+            if (ListBox.SelectedIndex == -1) return;
+            Const.Data.ConfigEntry.Theme = (TioUi.Shared.Theme)ListBox.SelectedIndex;
+        };
     }
 }

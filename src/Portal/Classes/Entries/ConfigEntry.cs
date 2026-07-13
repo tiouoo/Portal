@@ -45,6 +45,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
     [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
+    [ObservableProperty] public partial double MicaOpacity { get; set; } = 0.8;
+    [ObservableProperty] public partial double BlurOpacity { get; set; } = 0.5;
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -66,6 +68,8 @@ public partial class ConfigEntry : ObservableObject
             case nameof(AcrylicOpacity):
             case nameof(ControlOpacity):
             case nameof(ImageBlurRadius):
+            case nameof(MicaOpacity):
+            case nameof(BlurOpacity):
                 TabWindow.ApplyBackgroundToAllWindows();
                 if (BackgroundMode == BackgroundMode.Default)
                     Application.Current.Resources.Remove("BackGroundOpacity");

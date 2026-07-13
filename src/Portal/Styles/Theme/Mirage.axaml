@@ -6,8 +6,8 @@
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="{x:Static shared:Themes.Mirage}">
             <SolidColorBrush
-                Color="#282e3b"
-                Opacity="{DynamicResource BackGroundOpacity}"
+                Color="White"
+                Opacity="0.12"
                 x:Key="TabBackground" />
             <SolidColorBrush
                 Color="{DynamicResource SystemAccentColorLight3}"

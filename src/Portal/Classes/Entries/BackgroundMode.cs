@@ -5,5 +5,7 @@ public enum BackgroundMode
     Default,
     Image,
     Color,
-    Acrylic
+    Acrylic,
+    Blur,
+    Mica
 }

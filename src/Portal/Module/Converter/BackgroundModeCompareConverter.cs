@@ -20,6 +20,8 @@ public class BackgroundModeCompareConverter : IValueConverter
             "Image" => currentMode == BackgroundMode.Image,
             "SolidColor" => currentMode == BackgroundMode.Color,
             "Acrylic" => currentMode == BackgroundMode.Acrylic,
+            "Blur" => currentMode == BackgroundMode.Blur,
+            "Mica" => currentMode == BackgroundMode.Mica,
             _ => false
         };
         return re ? !res : res;

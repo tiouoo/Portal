@@ -399,12 +399,35 @@ public partial class TabWindow : TioTabWindowBase
 
             case BackgroundMode.Acrylic:
                 var color = entry.BackgroundSolidColor;
-                var alpha = (byte)((1.0 - entry.AcrylicOpacity) * 80 + 160);
+                var alpha = (byte)(entry.AcrylicOpacity * 255);
                 var acrylicBrush = new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B));
+                Background = Brushes.Transparent;
                 if (RootBorder != null)
                     RootBorder.Background = acrylicBrush;
-                TransparencyBackgroundFallback = acrylicBrush;
+                TransparencyBackgroundFallback = new SolidColorBrush(Color.FromArgb(255, color.R, color.G, color.B));
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
+                break;
+
+            case BackgroundMode.Blur:
+                var blurColor = entry.BackgroundSolidColor;
+                var blurAlpha = (byte)(entry.BlurOpacity * 255);
+                var blurBrush = new SolidColorBrush(Color.FromArgb(blurAlpha, blurColor.R, blurColor.G, blurColor.B));
+                Background = Brushes.Transparent;
+                if (RootBorder != null)
+                    RootBorder.Background = blurBrush;
+                TransparencyBackgroundFallback = new SolidColorBrush(Color.FromArgb(255, blurColor.R, blurColor.G, blurColor.B));
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.Blur };
+                break;
+
+            case BackgroundMode.Mica:
+                var micaColor = entry.BackgroundSolidColor;
+                var micaAlpha = (byte)(entry.MicaOpacity * 255);
+                var micaBrush = new SolidColorBrush(Color.FromArgb(micaAlpha, micaColor.R, micaColor.G, micaColor.B));
+                Background = Brushes.Transparent;
+                if (RootBorder != null)
+                    RootBorder.Background = micaBrush;
+                TransparencyBackgroundFallback = new SolidColorBrush(Color.FromArgb(255, micaColor.R, micaColor.G, micaColor.B));
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.Mica };
                 break;
         }
     }

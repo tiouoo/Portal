@@ -2,8 +2,8 @@
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
             <SolidColorBrush
-                Color="#DCDCFE"
-                Opacity="0.6"
+                Color="#2E3238"
+                Opacity="0.05"
                 x:Key="TabBackground" />
             <SolidColorBrush
                 Color="{DynamicResource SystemAccentColorLight3}"

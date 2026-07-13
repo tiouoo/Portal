@@ -45,7 +45,7 @@ public partial class SettingPageViewModel : ObservableObject
     
     public SettingPageViewModel()
     {
-        NavigateType(typeof(About));
+        NavigateType(typeof(Appearance));
     }
     
     [RelayCommand]
