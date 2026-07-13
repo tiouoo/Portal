@@ -40,7 +40,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
-    [ObservableProperty] public partial double ControlOpacity { get; set; } = 0.15;
+    [ObservableProperty] public partial double ControlOpacity { get; set; } = 1;
     [ObservableProperty] public partial double AcrylicOpacity { get; set; } = 0.2;
     [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
     [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");

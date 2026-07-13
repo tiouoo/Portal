@@ -12,6 +12,7 @@ using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Skin.Class.Fetchers;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common;
 using TioUi.Common.Interfaces;
@@ -251,8 +252,17 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                 var i = 0;
                 foreach (var account in yggdrasilAccounts)
                 {
-                    YggdrasilSkinFetcher skinFetcher = new(ServerUrl!, account.Uuid.ToString());
-                    var base64 = (await skinFetcher.GetSkinAsync()).ToBase64();
+                    var base64 = MinecraftAccount.SteveSkin;
+                    try
+                    {
+                        YggdrasilSkinFetcher skinFetcher = new(ServerUrl!, account.Uuid.ToString());
+                        base64 = (await skinFetcher.GetSkinAsync()).ToBase64();
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error("获取皮肤失败 " + e.Message);
+                    }
+
                     var minecraftAccount = new MinecraftAccount(AccountType.Yggdrasil)
                     {
                         AccessToken = account.AccessToken,
@@ -266,6 +276,8 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                             BuiltInServers.FirstOrDefault(x => UrlHelper.AreUrlsEqual(x.ServerUrl, ServerUrl))
                                 .DisplayText,
                         MetaData = account.MetaData,
+                        Email = Username,
+                        Password = Password,
                     };
                     accounts.Add(minecraftAccount);
                     i++;

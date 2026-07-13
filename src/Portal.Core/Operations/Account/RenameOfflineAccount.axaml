@@ -1,0 +1,73 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Core.Operations.Account.RenameOfflineAccount"
+    x:DataType="account:RenameOfflineAccountViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:account="clr-namespace:Portal.Core.Operations.Account"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, *, Auto"
+        Width="510">
+        <TextBlock
+            FontSize="16"
+            FontWeight="600"
+            Grid.Row="0"
+            Text="重命名离线账户" />
+        <tio:Form
+            Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            LabelPosition="Top"
+            Margin="0,10,0,15">
+            <tio:FormItem Label="角色名称">
+                <StackPanel Spacing="4">
+                    <DataValidationErrors>
+                        <TextBox
+                            PlaceholderText="输入角色名称"
+                            Text="{Binding RoleName}"
+                            tio:FocusHelper.DialogFocusHint="True" />
+                    </DataValidationErrors>
+                    <CheckBox
+                        Content="重命名的同时同步修改 UUID"
+                        IsChecked="{Binding SyncUuid}" />
+                </StackPanel>
+            </tio:FormItem>
+            <Expander
+                BorderBrush="{DynamicResource PopupBorderBrush}"
+                BorderThickness="1"
+                Header="高级设置"
+                IsExpanded="{Binding SyncUuid}">
+                <StackPanel>
+                    <tio:FormItem Label="Uuid" Margin="15,5,15,15">
+                        <DataValidationErrors>
+                            <TextBox PlaceholderText="Uuid" Text="{Binding Uuid}" />
+                        </DataValidationErrors>
+                    </tio:FormItem>
+                    <tio:Banner
+                        Classes="Bordered"
+                        Content="修改 Uuid 可用于同步其他启动器的角色身份，以保留原有的背包和游戏进度。但如果修改不当，会导致游戏无法识别角色，从而丢失背包物品。除非明确知晓后果，否则请保持默认。"
+                        CornerRadius="10"
+                        Margin="15,0,15,15"
+                        Type="Warning">
+                        <tio:Banner.Header>
+                            <TextBlock FontSize="15" Text="警告" />
+                        </tio:Banner.Header>
+                    </tio:Banner>
+                </StackPanel>
+            </Expander>
+        </tio:Form>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding ConfirmCommand}" Content="完成" />
+        </StackPanel>
+    </Grid>
+</UserControl>

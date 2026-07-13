@@ -14,7 +14,7 @@
             <TextBlock FontSize="26" Text="存储" />
             <Button
                 Command="{Binding RefreshStorageDataAsync}"
-                Margin="5,0,0,2"
+                Margin="5,0,0,3"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Bottom">
                 <PathIcon

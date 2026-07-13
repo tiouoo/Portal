@@ -12,7 +12,7 @@ namespace Portal.Core.Operations.Account;
 
 public class AddAccount
 {
-    public static async Task<MinecraftAccount[]?> Main(string hostId,
+    public static async Task<MinecraftAccount?[]?> Main(string hostId,
         ObservableCollection<Minecraft.Classes.AuthServer> authServers)
     {
         var options = new OverlayDialogOptions
