@@ -97,13 +97,15 @@ jobs:
         shell: bash
 
       - name: Build & Package
-        run: |
-          cd ./src/Portal.Desktop
-          dotnet publish -c Release -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=true /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
-          cd ../../dist
-          Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.${{ matrix.rid }}.executable.exe" -Force
-          Compress-Archive -Path "Portal.${{ matrix.rid }}.executable.exe" -DestinationPath "../Portal.${{ matrix.rid }}.executable.zip" -Force
-
+          shell: pwsh
+          run: |
+            New-Item -ItemType Directory -Force -Path "../../dist"
+            cd ./src/Portal.Desktop
+            dotnet publish -c Release -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=true /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
+            cd "../../dist"
+            Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.${{ matrix.rid }}.executable.exe" -Force
+            Compress-Archive -Path "Portal.${{ matrix.rid }}.executable.exe" -DestinationPath "../Portal.${{ matrix.rid }}.executable.zip" -Force
+            
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
