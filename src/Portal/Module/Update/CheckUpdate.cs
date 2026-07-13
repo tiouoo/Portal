@@ -16,10 +16,14 @@ public class CheckUpdate
     {
         var channel = Data.UiProperty.OverrideUpdateChannel;
 
-        var current =
-            $"build-{Data.Instance.Version.Type}-{Data.Instance.Version.Version}.{Data.Instance.Version.BuildTime:yyyyMMdd}" +
-            $"-{Data.Instance.Version.Action}-{Data.Instance.Version.Commit}";
+        var shanghaiZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Shanghai");
+        var buildTimeInShanghai = TimeZoneInfo.ConvertTime(Data.Instance.Version.BuildTime, shanghaiZone);
+        var startEpoch = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        
+        var totalHours = (int)((buildTimeInShanghai - startEpoch).TotalSeconds / 3600);
+        var appVersion = $"{Data.Instance.Version.Version}.{totalHours}";
 
+        var current = $"build-{Data.Instance.Version.Type}-{appVersion}-{Data.Instance.Version.Action}-{Data.Instance.Version.Commit}";
         var tagName = $"publish-{channel}";
         var apiUrl = $"https://api.github.com/repos/tiouoo/Portal/releases/tags/{tagName}";
 
@@ -30,12 +34,11 @@ public class CheckUpdate
                 .GetStringAsync();
             
             var json = JObject.Parse(release);
-
             var remoteTitle = json["name"]?.ToString();
 
             if (!string.IsNullOrEmpty(remoteTitle))
             {
-                return remoteTitle == current ? "latest" : remoteTitle;
+                return remoteTitle.Trim() == current.Trim() ? "latest" : remoteTitle;
             }
         }
         catch (FlurlHttpException e)
