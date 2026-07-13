@@ -1,9 +1,7 @@
-name: publish/nightly
+name: publish/push
 
 on:
   push:
-    branches:
-      - push
   workflow_dispatch:
 
 jobs:
