@@ -71,7 +71,8 @@ public partial class About : DataUserControl
 
     private void UpdateChannel_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        _ = Check(sender!);
+        if (e.RemovedItems.Count > 0)
+            _ = Check(sender!);
     }
 
     private void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
