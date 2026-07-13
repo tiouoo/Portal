@@ -2,12 +2,33 @@
     <!-- TargetFramework / DefineConstants come from ../Directory.Build.props -->
     <PropertyGroup>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/tiouoo/Portal</RepositoryUrl>
+        <Description>Portal</Description>
+        <PackageReadmeFile>Readme.md</PackageReadmeFile>
+        <PackageIcon>Icon-Pattern-Shadow.png</PackageIcon>
+        <PackageProjectUrl>portal.tiouo.xyz</PackageProjectUrl>
+        <PackageTags>Portal</PackageTags>
+        <PackageVersion>0.0.0</PackageVersion>
+        <Copyright>https://github.com/tiouoo/Portal</Copyright>
+        <Authors>github.com/tiouoo/Portal</Authors>
+        <ApplicationIcon>Icon-Pattern.ico</ApplicationIcon>
+        <Title>Portal</Title>
     </PropertyGroup>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
         <EmbeddedResource Include="..\Version.txt">
             <Link>Version.txt</Link>
+        </EmbeddedResource>
+        <EmbeddedResource Include="..\..\Readme.md">
+            <Link>Readme.md</Link>
+        </EmbeddedResource>
+        <EmbeddedResource Include="..\..\assets\Icon-Pattern-Shadow.png">
+            <Link>Icon-Pattern-Shadow.png</Link>
+        </EmbeddedResource>
+        <EmbeddedResource Include="..\..\assets\Icon-Pattern.ico">
+            <Link>Icon-Pattern.ico</Link>
         </EmbeddedResource>
     </ItemGroup>
 
