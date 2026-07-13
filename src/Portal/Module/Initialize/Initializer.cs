@@ -33,6 +33,7 @@ public static class Initializer
 
         ThemeHelper.SetThemeColor(Data.ConfigEntry.ThemeColor);
         ThemeHelper.ToggleTheme(Data.ConfigEntry.Theme);
+        ThemeHelper.SetForegroundColor(Data.ConfigEntry.ForegroundColor);
 
         LoopGc.BeginLoop();
 

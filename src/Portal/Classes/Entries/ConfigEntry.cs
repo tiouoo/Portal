@@ -39,6 +39,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
     [ObservableProperty] public partial double AcrylicOpacity { get; set; } = 0.2;
     [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
+    [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -49,6 +50,9 @@ public partial class ConfigEntry : ObservableObject
                 break;
             case nameof(ThemeColor):
                 ThemeHelper.SetThemeColor(ThemeColor);
+                break;
+            case nameof(ForegroundColor):
+                ThemeHelper.SetForegroundColor(ForegroundColor);
                 break;
             case nameof(BackgroundMode):
             case nameof(BackgroundImagePath):
