@@ -159,7 +159,7 @@ jobs:
         shell: bash
       - name: Build
         run: |
-          cd ./Portal.Main/Portal.Desktop
+          cd ./src/Portal.Desktop
           dotnet publish -c Release -r win-x86 `
             /p:PublishSingleFile=true `
             /p:PublishReadyToRun=true `
@@ -192,7 +192,7 @@ jobs:
         shell: bash
       - name: Build
         run: |
-          cd ./Portal.Main/Portal.Desktop
+          cd ./src/Portal.Desktop
           dotnet publish -c Release -r win-arm64 `
             /p:PublishSingleFile=true `
             /p:PublishReadyToRun=true `
@@ -236,7 +236,7 @@ jobs:
         shell: bash
       - name: Build
         run: |
-          cd ./Portal.Main/Portal.Desktop
+          cd ./src/Portal.Desktop
           pupnet -r win-x64 -k setup -y -o Portal.win.x64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
           pupnet -r win-x86 -k setup -y -o Portal.win.x86.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
           pupnet -r win-arm64 -k setup -y -o Portal.win.arm64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
@@ -245,7 +245,7 @@ jobs:
         with:
           name: win-installer-artifacts
           path: |
-            ./Portal.Main/Portal.Desktop/Deploy/OUT/*
+            ./src/Portal.Desktop/Deploy/OUT/*
 
   mac-dmg:
     needs: [osxApp]
