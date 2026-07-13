@@ -33,6 +33,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
     [ObservableProperty] public partial bool ShowDragDropPrompt { get; set; } = true;
+    [ObservableProperty] public partial bool ShowUpdatePrompt { get; set; } = true;
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

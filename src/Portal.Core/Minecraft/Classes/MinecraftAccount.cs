@@ -62,7 +62,7 @@ public class MinecraftAccount(AccountType accountType)
                 AccountType.Microsoft => "微软",
                 _ => "未知"
             };
-            return $"{t} • {Name}";
+            return $"{t} · {Name}";
         }
     }
 

@@ -51,6 +51,13 @@ public partial class About : DataUserControl
         var result = await CheckUpdate.Main(sender!.AsTopLevel());
         HyperlinkButton.Content = "检查更新";
         HyperlinkButton.IsEnabled = true;
+        if (result == null)
+        {
+            Data.UiProperty.FoundNewVersion = false;
+            Data.UiProperty.IsLatestVersion = false;
+            return;
+        }
+
         if (result == "latest")
         {
             Data.UiProperty.IsLatestVersion = true;
@@ -65,6 +72,10 @@ public partial class About : DataUserControl
     private void UpdateChannel_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         _ = Check(sender!);
+    }
+
+    private void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
+    {
     }
 }
 
