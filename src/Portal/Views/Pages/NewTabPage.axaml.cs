@@ -126,48 +126,11 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     }
 }
 
-public class SortOption
+public partial class NewTabViewModel : InstanceListViewModelBase
 {
-    public string DisplayText { get; set; }
-    public InstanceSortType SortType { get; set; }
-}
-
-public partial class NewTabViewModel : ObservableObject
-{
-    public Data Data => Data.Instance;
-    public ObservableCollection<MinecraftInstance> FilteredMinecraftInstances { get; set; } = [];
-
-    public List<SortOption> SortOptions { get; } = new()
-    {
-        new SortOption { DisplayText = "名称", SortType = InstanceSortType.Name },
-        new SortOption { DisplayText = "游玩时间", SortType = InstanceSortType.PlayTime },
-        new SortOption { DisplayText = "文件夹名称", SortType = InstanceSortType.FolderName },
-        new SortOption { DisplayText = "加载器", SortType = InstanceSortType.Loader },
-        new SortOption { DisplayText = "版本", SortType = InstanceSortType.Version },
-    };
-
-    private SortOption? _selectedSortOption;
-
-    public SortOption? SelectedSortOption
-    {
-        get => _selectedSortOption;
-        set
-        {
-            if (SetProperty(ref _selectedSortOption, value))
-            {
-                if (value != null)
-                {
-                    Data.ConfigEntry.DefaultInstanceSortType = value.SortType;
-                }
-
-                ApplyFilterAndSort();
-            }
-        }
-    }
-
     public NewTabViewModel()
     {
-        _selectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
+        SelectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
         ApplyFilterAndSort();
     }
 
@@ -179,110 +142,5 @@ public partial class NewTabViewModel : ObservableObject
         instance.Config.IsFavorite = !instance.Config.IsFavorite;
         instance.SaveConfig();
         ApplyFilterAndSort();
-    }
-
-    public string SearchText
-    {
-        get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
-                ApplyFilterAndSort();
-            }
-        }
-    } = string.Empty;
-
-    public void ApplyFilterAndSort()
-    {
-        FilteredMinecraftInstances.Clear();
-        var query = InstanceManager.Instance.Instances.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(SearchText))
-        {
-            var keyword = SearchText.Trim();
-            query = query.Where(x =>
-                (x.FolderName != null && x.FolderName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrEmpty(x.InstanceName) &&
-                 x.InstanceName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (x.Config?.Note != null && x.Config.Note.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrEmpty(x.VersionId) &&
-                 x.VersionId.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrEmpty(x.VersionType) &&
-                 x.VersionType.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrEmpty(x.Description) &&
-                 x.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrEmpty(x.LoaderDescription) &&
-                 x.LoaderDescription.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-            );
-        }
-
-        var cultureInfo = CultureInfo.GetCultureInfo("zh-CN");
-        var stringComparer = StringComparer.Create(cultureInfo, true);
-
-        var sortType = SelectedSortOption?.SortType ?? InstanceSortType.Name;
-
-        // 三级排序结构：
-        // 第一级：收藏在前，未收藏在后
-        // 第二级：在收藏/未收藏各自组内，按选择的排序方式排列
-        // 第三级：第二级相同时，有 mod 加载器的在前，原版在后
-        IOrderedEnumerable<MinecraftInstance> sortedResult = sortType switch
-        {
-            InstanceSortType.Name => query
-                .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenBy(x => x.InstanceName ?? string.Empty, stringComparer)
-                .ThenBy(x => x.IsVanilla),
-
-            InstanceSortType.PlayTime => query
-                .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenByDescending(x => x.LastPlayTime == DateTime.MinValue ? 0 : 1)
-                .ThenByDescending(x => x.LastPlayTime)
-                .ThenBy(x => x.IsVanilla),
-
-            InstanceSortType.FolderName => query
-                .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenBy(x => x.FolderName ?? string.Empty, stringComparer)
-                .ThenBy(x => x.IsVanilla),
-
-            InstanceSortType.Loader => query
-                .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenByDescending(x => x.LoaderDescription, stringComparer)
-                .ThenBy(x => x.IsVanilla),
-
-            InstanceSortType.Version => query
-                .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenByDescending(x => ParseVersion(x.VersionId))
-                .ThenBy(x => x.IsVanilla),
-
-            _ => query
-                .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenBy(x => x.InstanceName ?? string.Empty, stringComparer)
-                .ThenBy(x => x.IsVanilla),
-        };
-
-        FilteredMinecraftInstances.AddRange(sortedResult);
-    }
-
-    private Version? ParseVersion(string? versionId)
-    {
-        if (string.IsNullOrEmpty(versionId)) return null;
-
-        var versionPart = versionId.Split('-')[0];
-        if (Version.TryParse(versionPart, out var version))
-        {
-            return version;
-        }
-
-        if (versionPart.StartsWith("1."))
-        {
-            var parts = versionPart.Split('.');
-            if (parts.Length >= 2 && int.TryParse(parts[1], out var minor))
-            {
-                var patch = parts.Length >= 3 && int.TryParse(parts[2], out var p) ? p : 0;
-                return new Version(1, minor, patch);
-            }
-        }
-
-        return null;
     }
 }

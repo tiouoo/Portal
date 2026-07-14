@@ -24,10 +24,14 @@
                 <ComboBox
                     ItemsSource="{Binding FolderFilterOptions}"
                     SelectedItem="{Binding SelectedFolderFilter}"
-                    Width="140">
+                    Width="200">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding DisplayText}" />
+                            <TextBlock
+                                MaxWidth="145"
+                                Text="{Binding DisplayText}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>

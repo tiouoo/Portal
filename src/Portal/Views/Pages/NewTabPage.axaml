@@ -104,37 +104,42 @@
                 </Border.Transitions>
                 <DockPanel>
                     <Panel DockPanel.Dock="Top" Margin="10">
-                        <Button
-                            Background="Transparent"
-                            Click="ButtonOpenInstance_OnClick"
+                        <StackPanel
                             HorizontalAlignment="Left"
-                            Theme="{StaticResource TransparentButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <PathIcon
-                                    Data="F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="21"
-                                    Margin="10,-1,0,0"
-                                    Width="21" />
-                                <TextBlock
-                                    FontSize="15"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Margin="5,0,0,0"
-                                    Text="实例"
-                                    VerticalAlignment="Center" />
-                                <Button
-                                    Click="RefreshInstance_Click"
-                                    Margin="5,0,0,0"
-                                    Theme="{StaticResource TransparentButton}"
-                                    VerticalAlignment="Center">
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                            <Button
+                                Background="Transparent"
+                                Click="ButtonOpenInstance_OnClick"
+                                Margin="10,0,0,0"
+                                Theme="{StaticResource TransparentButton}">
+                                <StackPanel Orientation="Horizontal">
                                     <PathIcon
-                                        Data="F1 M640,640z M0,0z M500.7,138.7L512,149.4 512,96C512,78.3 526.3,64 544,64 561.7,64 576,78.3 576,96L576,224C576,241.7,561.7,256,544,256L416,256C398.3,256 384,241.7 384,224 384,206.3 398.3,192 416,192L463.9,192 456.3,184.8C456.1,184.6 455.9,184.4 455.7,184.2 380.7,109.2 259.2,109.2 184.2,184.2 109.2,259.2 109.2,380.7 184.2,455.7 259.2,530.7 380.7,530.7 455.7,455.7 463.9,447.5 471.2,438.8 477.6,429.6 487.7,415.1 507.7,411.6 522.2,421.7 536.7,431.8 540.2,451.8 530.1,466.3 521.6,478.5 511.9,490.1 501,501 401,601 238.9,601 139,501 39.1,401 39,239 139,139 238.9,39.1 400.7,39 500.7,138.7z"
+                                        Data="F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z"
                                         Foreground="{DynamicResource InnerForegroundColor}"
-                                        Height="16"
-                                        Width="16" />
-                                </Button>
-                            </StackPanel>
-                        </Button>
+                                        Height="21"
+                                        Margin="0,-1,0,0"
+                                        Width="21" />
+                                    <TextBlock
+                                        FontSize="15"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="5,0,0,0"
+                                        Text="实例"
+                                        VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Click="RefreshInstance_Click"
+                                Margin="5,0,0,0"
+                                Theme="{StaticResource TransparentButton}"
+                                VerticalAlignment="Center">
+                                <PathIcon
+                                    Data="F1 M640,640z M0,0z M500.7,138.7L512,149.4 512,96C512,78.3 526.3,64 544,64 561.7,64 576,78.3 576,96L576,224C576,241.7,561.7,256,544,256L416,256C398.3,256 384,241.7 384,224 384,206.3 398.3,192 416,192L463.9,192 456.3,184.8C456.1,184.6 455.9,184.4 455.7,184.2 380.7,109.2 259.2,109.2 184.2,184.2 109.2,259.2 109.2,380.7 184.2,455.7 259.2,530.7 380.7,530.7 455.7,455.7 463.9,447.5 471.2,438.8 477.6,429.6 487.7,415.1 507.7,411.6 522.2,421.7 536.7,431.8 540.2,451.8 530.1,466.3 521.6,478.5 511.9,490.1 501,501 401,601 238.9,601 139,501 39.1,401 39,239 139,139 238.9,39.1 400.7,39 500.7,138.7z"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Height="16"
+                                    Width="16" />
+                            </Button>
+                        </StackPanel>
                         <StackPanel
                             HorizontalAlignment="Right"
                             Orientation="Horizontal"

@@ -30,10 +30,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
     [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
     [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
-
     [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
-    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.Name;
-
+    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
     [ObservableProperty] public partial bool EnableMinecraftMirror { get; set; }
