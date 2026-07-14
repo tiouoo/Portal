@@ -1,0 +1,108 @@
+﻿<tio:TioWindow
+    Height="535"
+    Title="崩溃窗口"
+    Topmost="True"
+    Width="880"
+    d:DesignHeight="524"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.CrashWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <tio:TioWindow.Resources>
+        <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
+    </tio:TioWindow.Resources>
+    <tio:TioWindow.TitleBarLeftContent>
+        <TextBlock
+            FontSize="16"
+            Margin="12,2,0,0"
+            Text="Portal"
+            VerticalAlignment="Center" />
+    </tio:TioWindow.TitleBarLeftContent>
+    <DockPanel>
+        <TextBlock
+            DockPanel.Dock="Top"
+            FontSize="24"
+            Margin="25,0,0,0"
+            Text="崩溃啦！ヾ(•ω•`)o" />
+        <TextBlock
+            DockPanel.Dock="Top"
+            Margin="25,2,0,0"
+            Text="Portal 遇到了没有处理的异常，可能无法继续运行，下方为异常的详细信息" />
+        <StackPanel
+            DockPanel.Dock="Bottom"
+            Margin="10"
+            Spacing="10">
+            <Separator />
+            <Panel>
+                <tio:IconButton
+                    Classes="Float"
+                    Click="Button_OnClick"
+                    Content="复制到剪贴板"
+                    HorizontalAlignment="Left">
+                    <tio:IconButton.Icon>
+                        <PathIcon
+                            Data="M192 0c-41.8 0-77.4 26.7-90.5 64L64 64C28.7 64 0 92.7 0 128L0 448c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64l-37.5 0C269.4 26.7 233.8 0 192 0zm0 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM112 192l160 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-160 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z"
+                            Height="16"
+                            Margin="0,-1,0,0"
+                            Width="14" />
+                    </tio:IconButton.Icon>
+                </tio:IconButton>
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="10">
+                    <tio:IconButton
+                        Classes="Float"
+                        Click="Continue_OnClick"
+                        Content="忽略错误，继续运行"
+                        Name="Continue">
+                        <tio:IconButton.Icon>
+                            <PathIcon
+                                Data="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"
+                                Height="13"
+                                Width="12" />
+                        </tio:IconButton.Icon>
+                    </tio:IconButton>
+                    <tio:IconButton
+                        Classes="Float"
+                        Click="Exit_OnClick"
+                        Content="退出"
+                        Name="Exit">
+                        <tio:IconButton.Icon>
+                            <PathIcon
+                                Data="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z"
+                                Height="15"
+                                Margin="0,0,-2,0"
+                                Width="15" />
+                        </tio:IconButton.Icon>
+                    </tio:IconButton>
+                    <tio:IconButton
+                        Background="{DynamicResource SystemAccentColor}"
+                        Classes="Float"
+                        Click="Restart_OnClick"
+                        Content="重新打开"
+                        Foreground="White"
+                        Name="Restart">
+                        <tio:IconButton.Icon>
+                            <PathIcon
+                                Data="M463.5 224l8.5 0c13.3 0 24-10.7 24-24l0-128c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8l119.5 0z"
+                                Foreground="White"
+                                Height="14"
+                                Margin="0,0,-2,0"
+                                Width="14" />
+                        </tio:IconButton.Icon>
+                    </tio:IconButton>
+                </StackPanel>
+            </Panel>
+        </StackPanel>
+        <ScrollViewer Classes="Flat" Margin="0,10,5,0">
+            <SelectableTextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Margin="25,0,5,0"
+                Name="SelectableTextBlock" />
+        </ScrollViewer>
+    </DockPanel>
+</tio:TioWindow>
