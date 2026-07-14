@@ -2,7 +2,7 @@ name: publish/commit
 
 on:
   workflow_dispatch:
-    push:
+  push:
 
 jobs:
   prepare:
