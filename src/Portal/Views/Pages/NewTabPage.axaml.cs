@@ -1,23 +1,34 @@
-﻿using Avalonia;
+﻿using System.Collections.ObjectModel;
+using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Const;
+using Portal.Core.Minecraft.Classes;
+using Portal.Core.Operations;
+using Portal.ViewModels;
+using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
+using Tio.Avalonia.Standard.Tab.Extensions;
+using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
+using TioUi.Common;
+using TioUi.Common.Extensions;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
-public partial class NewTabPage : UserControl, ITioTabPage
+public partial class NewTabPage : DataUserControl, ITioTabPage
 {
     public NewTabPage()
     {
         InitializeComponent();
-        SizeChanged += (s, e) =>
-        {
-            if (!_open)
-                Border.Margin = new Thickness(0, 0, 232, Bounds.Height - 205 - 15);
-        };
+        DataContext = new NewTabViewModel();
     }
 
     public PageInfo PageInfo { get; init; } = new()
@@ -29,21 +40,106 @@ public partial class NewTabPage : UserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; }
 
-    private bool _open;
+    private void InputElement_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        ScrollViewer.Offset = new Vector(
+            ScrollViewer.Offset.X + e.Delta.Y * -232,
+            ScrollViewer.Offset.Y
+        );
+        e.Handled = true;
+    }
 
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (!_open)
+        if (UiProperty.MinecraftInstances.Count == 0)
         {
-            Border.Margin = new Thickness(0);
-            StackPanel.Opacity = 0;
-            _open = true;
+            sender.AsTopLevel().Notice("还没有实例可以抽签哦", NotificationType.Error);
+            return;
         }
-        else
+
+        OverlayDialogOptions options = new()
         {
-            _open = false;
-            StackPanel.Opacity = 1;
-            Border.Margin = new Thickness(0, 0, 232, Bounds.Height - 205 - 15);
+            Title = "开奖啦！",
+            IsCloseButtonVisible = false,
+            Buttons = DialogButton.YesNoCancel,
+            OverrideNoButtonText = "再来亿次",
+            OverrideYesButtonText = "就它了",
+            OverrideCancelButtonText = "不玩了",
+            CanLightDismiss = false,
+            CanDragMove = true,
+            CanResize = true,
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110,
+        };
+        _ = Show();
+
+        return;
+
+        async Task Show()
+        {
+            var result = UiProperty.MinecraftInstances.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+            var feed = await OverlayDialog.ShowCustomAsync<RandomMinecraft, RandomMinecraftViewModle, string>(
+                new RandomMinecraftViewModle(result), sender.AsTopLevel().TryGetHostId(), options: options);
+
+            if (feed == "again")
+            {
+                _ = Show();
+                return;
+            }
+            
+            // TODO: Handle the result
         }
+    }
+}
+
+public partial class NewTabViewModel : ObservableObject
+{
+    public Data Data => Data.Instance;
+    public ObservableCollection<MinecraftInstance> FilteredMinecraftInstances { get; set; } = [];
+
+    public NewTabViewModel()
+    {
+        ApplyFilterAndSort();
+    }
+
+    public string SearchText
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                ApplyFilterAndSort();
+            }
+        }
+    } = string.Empty;
+
+    public void ApplyFilterAndSort()
+    {
+        FilteredMinecraftInstances.Clear();
+        var query = UiProperty.MinecraftInstances.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            var keyword = SearchText.Trim();
+            query = query.Where(x =>
+                (x.FolderName != null && x.FolderName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+                (x.MinecraftEntry?.Id != null &&
+                 x.MinecraftEntry.Id.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+                (x.Config?.Note != null && x.Config.Note.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+                (x.MinecraftEntry?.Version.VersionId != null &&
+                 x.MinecraftEntry.Version.VersionId.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+
+        var cultureInfo = CultureInfo.GetCultureInfo("zh-CN");
+        var stringComparer = StringComparer.Create(cultureInfo, true);
+
+        var sortedResult = query
+            .OrderByDescending(x => x.Config?.IsFavorite ?? false)
+            .ThenBy(x => x.MinecraftEntry?.IsVanilla ?? true)
+            .ThenBy(x => x.MinecraftEntry?.Id ?? string.Empty, stringComparer);
+
+        FilteredMinecraftInstances.AddRange(sortedResult);
     }
 }

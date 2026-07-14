@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using MinecraftLaunch.Components.Parser;
 using Newtonsoft.Json;
 using Portal.Classes.Entries;
 using Portal.Const;
+using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -70,12 +72,26 @@ public class Config
         using var reader1 = new StreamReader(stream1!);
         var result1 = reader1.ReadToEnd();
         Data.Instance.PackageType = string.IsNullOrEmpty(result1) ? "source-code" : result1;
-        
+
         Helper.ClearFolder(ConfigPath.TempFolderPath);
         App.Method.SaveConfig();
 
         Data.UiProperty.ConfigLoaded = true;
         ConfigIdentifyExtension.MinecraftFolder(Data.ConfigEntry);
+
+        foreach (var folder in Data.ConfigEntry.MinecraftFolders)
+        {
+            if (!Directory.Exists(folder.FolderPath)) continue;
+            MinecraftParser parser = new(folder.FolderPath);
+            var mc = parser.GetMinecrafts();
+            foreach (var e in mc)
+            {
+                UiProperty.MinecraftInstances.Add(new MinecraftInstance(e)
+                {
+                    FolderName = folder.FolderName
+                });
+            }
+        }
 
         InitializationEvents.RaiseBeforeUiLoaded();
     }

@@ -13,37 +13,38 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
     [ObservableProperty] public partial string FolderPath { get; set; }
 
     private int _instanceCount;
-    private bool _isDataLoaded;
-    private readonly Lock _lockObj = new();
+    private string _folderSize = "0.0";
+    private string _sizeUnit = "B";
+    private bool _isRefreshing;
 
     public string FolderSize
     {
         get
         {
-            EnsureDataLoaded();
-            return field;
+            _ = RefreshDataAsync();
+            return _folderSize;
         }
-        set => SetProperty(ref field, value);
-    } = "0.0";
+        private set => SetProperty(ref _folderSize, value);
+    }
 
     public string SizeUnit
     {
         get
         {
-            EnsureDataLoaded();
-            return field;
+            _ = RefreshDataAsync();
+            return _sizeUnit;
         }
-        set => SetProperty(ref field, value);
-    } = "B";
+        private set => SetProperty(ref _sizeUnit, value);
+    }
 
     public int InstanceCount
     {
         get
         {
-            EnsureDataLoaded();
+            _ = RefreshDataAsync();
             return _instanceCount;
         }
-        set => SetProperty(ref _instanceCount, value);
+        private set => SetProperty(ref _instanceCount, value);
     }
 
     public MinecraftFolderEntry()
@@ -57,57 +58,51 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
         };
     }
 
-    private void EnsureDataLoaded()
+    private async Task RefreshDataAsync()
     {
-        lock (_lockObj)
-        {
-            if (_isDataLoaded) return;
-        }
+        if (_isRefreshing || string.IsNullOrEmpty(FolderPath) || !Directory.Exists(FolderPath)) 
+            return;
 
-        lock (_lockObj)
-        {
-            if (_isDataLoaded) return;
+        _isRefreshing = true;
 
-            if (!string.IsNullOrEmpty(FolderPath) && Directory.Exists(FolderPath))
+        try
+        {
+            int freshCount = await Task.Run(() =>
             {
                 try
                 {
                     MinecraftParser parser = new(FolderPath);
-                    _instanceCount = parser.GetMinecrafts().Count;
+                    return parser.GetMinecrafts().Count;
                 }
                 catch
                 {
-                    _instanceCount = 0;
+                    return 0;
                 }
+            });
 
-                _ = CalculateSizeAsync();
-            }
+            var totalBytes = await Task.Run(() =>
+            {
+                try
+                {
+                    var di = new DirectoryInfo(FolderPath);
+                    return di.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
+                }
+                catch
+                {
+                    return 0L;
+                }
+            });
 
-            _isDataLoaded = true;
+            var a = ((double)totalBytes).GetReadableRaw(1);
+
+            InstanceCount = freshCount;
+            FolderSize = a.Value.ToString("F1");
+            SizeUnit = a.Unit;
         }
-    }
-
-    private async Task CalculateSizeAsync()
-    {
-        if (string.IsNullOrEmpty(FolderPath) || !Directory.Exists(FolderPath)) return;
-
-        var totalBytes = await Task.Run(() =>
+        finally
         {
-            try
-            {
-                var di = new DirectoryInfo(FolderPath);
-                return di.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
-            }
-            catch
-            {
-                return 0L;
-            }
-        });
-
-        var a = ((double)totalBytes).GetReadableRaw(1);
-        
-        FolderSize = a.Value.ToString("F1");
-        SizeUnit = a.Unit;
+            _isRefreshing = false;
+        }
     }
 
     public void OpenFolder(object parameter)

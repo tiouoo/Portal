@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes.Entries;
+using Portal.Core.Minecraft.Classes;
 using Portal.Module.AggregatedSearch;
 using Portal.Views;
 using Portal.Views.Components;
@@ -40,6 +41,7 @@ public partial class UiProperty : ObservableObject
 
     public static ObservableCollection<NotificationEntry> Notifications { get; } = [];
     public static ObservableCollection<NotificationEntry> HistoryNotifications { get; } = [];
+    public static ObservableCollection<MinecraftInstance> MinecraftInstances { get; } = [];
     public static IReadOnlyList<Window> Windows => (Application.Current!.ApplicationLifetime as
         IClassicDesktopStyleApplicationLifetime).Windows;
     public static ITioWindow? ActiveWindow => Windows.FirstOrDefault
