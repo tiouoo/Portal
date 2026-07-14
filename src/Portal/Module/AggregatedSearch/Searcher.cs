@@ -46,10 +46,36 @@ public class Searcher
             );
         }
 
-        return entries
+        var result = entries
             .OrderBy(e => GetTypeOrderIndex(e.Type))
             .ThenBy(e => e.Title, ChineseStringComparer)
             .ToList();
+
+        if (!string.IsNullOrWhiteSpace(query) && 
+            (!type.HasValue || type.Value.HasFlag(AggregatedSearchEntryType.NextLevelSearch)))
+        {
+            var trimmedQuery = query.Trim();
+            result.Insert(0, new AggregatedSearchEntry
+            {
+                Type = AggregatedSearchEntryType.NextLevelSearch,
+                Title = $@"在 Crossforge 上搜索 ""{trimmedQuery}""",
+                Description = "在 Crossforge 平台中搜索",
+                IconKey = "Crossforge",
+                TypeDescription = "下级搜索",
+                Data = ("crossforge", trimmedQuery)
+            });
+            result.Insert(1, new AggregatedSearchEntry
+            {
+                Type = AggregatedSearchEntryType.NextLevelSearch,
+                Title = $@"在 Modrinth 上搜索 ""{trimmedQuery}""",
+                Description = "在 Modrinth 平台中搜索",
+                IconKey = "Modrinth",
+                TypeDescription = "下级搜索",
+                Data = ("modrinth", trimmedQuery)
+            });
+        }
+
+        return result;
     }
 
     private static int GetTypeOrderIndex(AggregatedSearchEntryType type)
