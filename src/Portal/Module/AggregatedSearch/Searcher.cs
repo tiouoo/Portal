@@ -10,9 +10,11 @@ public class Searcher
 {
     public static List<AggregatedSearchEntryType> DisplayOrder { get; } =
     [
+        AggregatedSearchEntryType.NextLevelSearch,
+        AggregatedSearchEntryType.Page,
         AggregatedSearchEntryType.Account,
         AggregatedSearchEntryType.AuthServer,
-        AggregatedSearchEntryType.NextLevelSearch
+        AggregatedSearchEntryType.Instance,
     ];
 
     private static readonly StringComparer ChineseStringComparer = StringComparer.Create(
@@ -33,7 +35,8 @@ public class Searcher
             var queryLower = query.Trim().ToLowerInvariant();
             entries = entries.Where(e =>
                 e.Title.ToLowerInvariant().Contains(queryLower) ||
-                e.Description.ToLowerInvariant().Contains(queryLower)
+                e.Description.ToLowerInvariant().Contains(queryLower) ||
+                e.TypeDescription.ToLowerInvariant().Contains(queryLower)
             );
         }
 

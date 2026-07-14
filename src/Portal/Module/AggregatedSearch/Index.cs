@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.Reflection;
 using Portal.Classes.Entries;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Instance;
 
 namespace Portal.Module.AggregatedSearch;
 
@@ -22,6 +24,50 @@ public class Index
         {
             IndexedAggregatedSearchEntries.Add(CreateAuthServerEntry(authServer));
         }
+
+        foreach (var page in GetAllPages())
+        {
+            IndexedAggregatedSearchEntries.Add(page);
+        }
+
+        foreach (var instance in InstanceManager.Instance.Instances)
+        {
+            IndexedAggregatedSearchEntries.Add(CreateInstanceEntry(instance));
+        }
+    }
+
+    private static IEnumerable<AggregatedSearchEntry> GetAllPages()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+
+        foreach (var type in assembly.GetTypes())
+        {
+            var attr = type.GetCustomAttribute<AggregatedSearchPageAttribute>();
+            if (attr == null) continue;
+
+            yield return new AggregatedSearchEntry
+            {
+                Type = AggregatedSearchEntryType.Page,
+                Title = attr.Title,
+                Description = attr.Path,
+                IconKey = attr.IconKey,
+                Data = type,
+                TypeDescription = "页面"
+            };
+        }
+    }
+
+    private static AggregatedSearchEntry CreateInstanceEntry(MinecraftInstance instance)
+    {
+        return new AggregatedSearchEntry
+        {
+            Type = AggregatedSearchEntryType.Instance,
+            Title = instance.InstanceName,
+            Description = $"{instance.FolderName} · {instance.ShortDisplay}",
+            IconKey = instance.Type.ToString(),
+            Data = instance,
+            TypeDescription = "实例"
+        };
     }
 
     private static AggregatedSearchEntry CreateAccountEntry(MinecraftAccount account)

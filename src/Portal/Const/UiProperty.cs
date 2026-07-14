@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -7,6 +8,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Instance;
 using Portal.Module.AggregatedSearch;
 using Portal.Views;
 using Portal.Views.Components;
@@ -32,6 +34,19 @@ public partial class UiProperty : ObservableObject
                     AggregatedSelectedType.EnumFlag));
             }
         };
+
+        InstanceManager.Instance.Instances.CollectionChanged += OnInstancesChanged;
+    }
+
+    private void OnInstancesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (AggregatedSelectedType.EnumFlag.HasFlag(AggregatedSearchEntryType.Instance) ||
+            AggregatedSelectedType.EnumFlag == AggregatedSearchEntryType.All)
+        {
+            AggregatedSearchResults.Clear();
+            AggregatedSearchResults.AddRange(Searcher.Search(AggregatedSearchQuery,
+                AggregatedSelectedType.EnumFlag));
+        }
     }
 
     public static UiProperty Instance
@@ -61,6 +76,8 @@ public partial class UiProperty : ObservableObject
     public static List<AggregatedSearchType> AggregatedSearchTypes { get; set; } =
     [
         new() { DisplayText = "所有", EnumFlag = AggregatedSearchEntryType.All },
+        new() { DisplayText = "页面", EnumFlag = AggregatedSearchEntryType.Page },
+        new() { DisplayText = "实例", EnumFlag = AggregatedSearchEntryType.Instance },
         new() { DisplayText = "下级搜索", EnumFlag = AggregatedSearchEntryType.NextLevelSearch },
         new() { DisplayText = "账户", EnumFlag = AggregatedSearchEntryType.Account },
     ];

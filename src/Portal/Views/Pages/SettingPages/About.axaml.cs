@@ -1,10 +1,11 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Const;
+using Portal.Module.AggregatedSearch;
 using Portal.Module.Update;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -12,6 +13,7 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.SettingPages;
 
+[AggregatedSearchPage("关于", "设置/关于", "About")]
 public partial class About : DataUserControl
 {
     public readonly AboutViewModel AboutViewModel;

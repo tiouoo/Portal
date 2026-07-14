@@ -3,6 +3,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -136,8 +137,11 @@ public partial class TitleBarComponent : Grid
             StyleClass = "undrag",
             CanResize = true,
             StartupLocation = WindowStartupLocation.CenterOwner,
-            DialogWindowMinWidth = 680,
-            DialogWindowMinHeight = 440
+            DialogWindowMinWidth = 770,
+            DialogWindowMinHeight = 471,
+            DialogWindowWidth = 770,
+            DialogWindowHeight= 471,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
         };
 
         _ = Dialog.ShowCustomAsync<AggregatedSearchDialog, AggregatedSearchDialogViewModel, object>(

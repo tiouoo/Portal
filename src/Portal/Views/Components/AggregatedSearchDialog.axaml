@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -34,8 +34,11 @@
             <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
         </Style>
     </UserControl.Styles>
-    <StackPanel>
-        <DockPanel Background="Transparent" Name="DragMove">
+    <DockPanel>
+        <DockPanel
+            Background="Transparent"
+            DockPanel.Dock="Top"
+            Name="DragMove">
             <tio:SelectionList
                 DockPanel.Dock="Left"
                 HorizontalAlignment="Left"
@@ -72,35 +75,37 @@
             </Button>
         </DockPanel>
         <TextBox
+            DockPanel.Dock="Top"
             Margin="10,8,10,5"
             Name="SearchBox"
             PlaceholderText="输入搜索内容"
             Text="{Binding Data.UiProperty.AggregatedSearchQuery}" />
-        <ListBox
-            ItemsSource="{Binding Data.UiProperty.AggregatedSearchResults}"
-            Margin="10,0,10,10"
-            Name="ListBox"
-            SelectionChanged="SelectingItemsControl_OnSelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="entries:AggregatedSearchEntry">
-                    <StackPanel Margin="0,-4">
-                        <TextBlock Text="{Binding Title}" />
-                        <StackPanel
-                            Margin="0,-2,0,0"
-                            Orientation="Horizontal"
-                            Spacing="5">
-                            <TextBlock
-                                FontSize="12"
-                                Foreground="{DynamicResource InnerForegroundColor}"
-                                Text="{Binding TypeDescription}" />
-                            <TextBlock
-                                FontSize="12"
-                                Foreground="{DynamicResource InnerForegroundColor}"
-                                Text="{Binding Description}" />
+        <ScrollViewer Classes="Flat" Margin="10,0,10,10">
+            <ListBox
+                ItemsSource="{Binding Data.UiProperty.AggregatedSearchResults}"
+                Name="ListBox"
+                SelectionChanged="SelectingItemsControl_OnSelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="entries:AggregatedSearchEntry">
+                        <StackPanel Margin="0,-4">
+                            <TextBlock Text="{Binding Title}" />
+                            <StackPanel
+                                Margin="0,-2,0,0"
+                                Orientation="Horizontal"
+                                Spacing="5">
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="{Binding TypeDescription}" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="{Binding Description}" />
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
+    </DockPanel>
 </UserControl>

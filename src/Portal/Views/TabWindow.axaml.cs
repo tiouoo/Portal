@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -200,8 +201,11 @@ public partial class TabWindow : TioTabWindowBase
             StyleClass = "undrag",
             CanResize = true,
             StartupLocation = WindowStartupLocation.CenterOwner,
-            DialogWindowMinWidth = 680,
-            DialogWindowMinHeight = 440
+            DialogWindowMinWidth = 770,
+            DialogWindowMinHeight = 471,
+            DialogWindowWidth = 770,
+            DialogWindowHeight= 471,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
         };
 
         _ = Dialog.ShowCustomAsync<AggregatedSearchDialog, AggregatedSearchDialogViewModel, object>(

@@ -1,10 +1,12 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
+[AggregatedSearchPage("显示与外观", "设置/显示与外观", "Appearance")]
 public partial class Appearance : DataUserControl
 {
     public Appearance()

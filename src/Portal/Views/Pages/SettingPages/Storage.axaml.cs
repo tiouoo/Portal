@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Classes.Entries;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Module.AggregatedSearch;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
@@ -20,6 +21,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
 
+[AggregatedSearchPage("存储", "设置/存储", "Storage")]
 public partial class Storage : UserControl
 {
     public StorageViewModel ViewModel { get; }

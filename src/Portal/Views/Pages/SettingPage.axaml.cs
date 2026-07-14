@@ -1,4 +1,7 @@
-﻿using Avalonia;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -8,6 +11,7 @@ using Portal.Const;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
@@ -36,6 +40,30 @@ public partial class SettingPage : UserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; }
+
+    public void NavigateTo(Type pageType)
+    {
+        SettingPageViewModel.NavigateType(pageType);
+        SelectNavMenuItem(pageType);
+    }
+
+    private void SelectNavMenuItem(Type pageType)
+    {
+        var navMenu = this.FindControl<NavMenu>("NavMenu");
+        if (navMenu == null) return;
+
+        foreach (var topItem in navMenu.Items.OfType<NavMenuItem>())
+        {
+            foreach (var childItem in topItem.Items.OfType<NavMenuItem>())
+            {
+                if (childItem.CommandParameter is Type paramType && paramType == pageType)
+                {
+                    navMenu.SelectedItem = childItem;
+                    return;
+                }
+            }
+        }
+    }
 }
 
 public partial class SettingPageViewModel : ObservableObject

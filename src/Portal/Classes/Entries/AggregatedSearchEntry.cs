@@ -18,8 +18,10 @@ public enum AggregatedSearchEntryType
     NextLevelSearch = 1 << 0,
     MinecraftAccount = 1 << 1,
     AuthServer = 1 << 2,
+    Page = 1 << 3,
+    Instance = 1 << 4,
     
     
-    All = NextLevelSearch | MinecraftAccount | AuthServer,
+    All = NextLevelSearch | MinecraftAccount | AuthServer | Page | Instance,
     Account = MinecraftAccount | AuthServer,
 }

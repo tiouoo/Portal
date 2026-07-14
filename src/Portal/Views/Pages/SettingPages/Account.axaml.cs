@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
+using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -16,6 +17,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
+[AggregatedSearchPage("账户与档案", "设置/账户与档案", "Account")]
 public partial class Account : DataUserControl
 {
     public Account()

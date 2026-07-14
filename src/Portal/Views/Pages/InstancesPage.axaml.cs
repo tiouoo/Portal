@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -14,6 +15,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
+[AggregatedSearchPage("实例", "实例", "Instances")]
 public partial class InstancesPage : DataUserControl, ITioTabPage
 {
     public InstancesPageViewModel InstancesPageViewModel;

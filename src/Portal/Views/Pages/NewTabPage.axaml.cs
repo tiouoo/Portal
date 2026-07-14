@@ -16,6 +16,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Operations;
+using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -28,6 +29,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
+[AggregatedSearchPage("新标签页", "新标签页", "NewTab")]
 public partial class NewTabPage : DataUserControl, ITioTabPage
 {
     public NewTabViewModel NewTabViewModel;
