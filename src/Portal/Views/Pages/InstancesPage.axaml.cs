@@ -2,101 +2,38 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
-using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using MinecraftLaunch.Base.Enums;
-using Portal.Classes.Entries;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
-using Portal.Core.Operations;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Extensions;
-using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
-using TioUi.Common;
-using TioUi.Common.Extensions;
-using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
-public partial class NewTabPage : DataUserControl, ITioTabPage
+public partial class InstancesPage : DataUserControl, ITioTabPage
 {
-    public NewTabViewModel NewTabViewModel;
+    public InstancesPageViewModel InstancesPageViewModel;
 
-    public NewTabPage()
+    public InstancesPage()
     {
         InitializeComponent();
-        NewTabViewModel = new NewTabViewModel();
-        DataContext = NewTabViewModel;
+        InstancesPageViewModel = new InstancesPageViewModel();
+        DataContext = InstancesPageViewModel;
     }
 
     public PageInfo PageInfo { get; init; } = new()
     {
-        Title = "新标签页",
+        Title = "实例",
         Icon = StreamGeometry.Parse(
-            "F1 M640,640z M0,0z M96.5,160L96.5,309.5C96.5,326.5,103.2,342.8,115.2,354.8L307.2,546.8C332.2,571.8,372.7,571.8,397.7,546.8L547.2,397.3C572.2,372.3,572.2,331.8,547.2,306.8L355.2,114.8C343.2,102.7,327,96,310,96L160.5,96C125.2,96,96.5,124.7,96.5,160z M208.5,176C226.2,176 240.5,190.3 240.5,208 240.5,225.7 226.2,240 208.5,240 190.8,240 176.5,225.7 176.5,208 176.5,190.3 190.8,176 208.5,176z")
+            "F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z")
     };
 
     public TabEntry HostTab { get; set; }
-
-    private void InputElement_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        ScrollViewer.Offset = new Vector(
-            ScrollViewer.Offset.X + e.Delta.Y * -232,
-            ScrollViewer.Offset.Y
-        );
-        e.Handled = true;
-    }
-
-    private void Button_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (UiProperty.MinecraftInstances.Count == 0)
-        {
-            sender.AsTopLevel().Notice("还没有实例可以抽签哦", NotificationType.Error);
-            return;
-        }
-
-        OverlayDialogOptions options = new()
-        {
-            Title = "开奖啦！",
-            IsCloseButtonVisible = false,
-            Buttons = DialogButton.YesNoCancel,
-            OverrideNoButtonText = "再来亿次",
-            OverrideYesButtonText = "就它了",
-            OverrideCancelButtonText = "不玩了",
-            CanLightDismiss = false,
-            CanDragMove = true,
-            CanResize = true,
-            VerticalAnchor = VerticalPosition.Top,
-            VerticalOffset = 110,
-        };
-        _ = Show();
-
-        return;
-
-        async Task Show()
-        {
-            var result = UiProperty.MinecraftInstances.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
-            var feed = await OverlayDialog.ShowCustomAsync<RandomMinecraft, RandomMinecraftViewModle, string>(
-                new RandomMinecraftViewModle(result), sender.AsTopLevel().TryGetHostId(), options: options);
-
-            if (feed == "again")
-            {
-                _ = Show();
-                return;
-            }
-
-            // TODO: Handle the result
-        }
-    }
 
     private void FavoritedButton_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -105,25 +42,11 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
         instance.Config.IsFavorite = !instance.Config.IsFavorite;
         instance.SaveConfig();
-        NewTabViewModel.ApplyFilterAndSort();
-    }
-
-    private void ButtonOpenInstance_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var tab = new TabEntry(sender.AsTopLevel() as TioTabWindowBase, new InstancesPage());
-        var tioTabWindowBase = sender.AsTopLevel() as TioTabWindowBase;
-        tioTabWindowBase?.CreateTab(tab);
-        tioTabWindowBase?.SelectTab(tab);
+        InstancesPageViewModel.ApplyFilterAndSort();
     }
 }
 
-public class SortOption
-{
-    public string DisplayText { get; set; }
-    public InstanceSortType SortType { get; set; }
-}
-
-public partial class NewTabViewModel : ObservableObject
+public partial class InstancesPageViewModel : ObservableObject
 {
     public Data Data => Data.Instance;
     public ObservableCollection<MinecraftInstance> FilteredMinecraftInstances { get; set; } = [];
@@ -156,19 +79,9 @@ public partial class NewTabViewModel : ObservableObject
         }
     }
 
-    public NewTabViewModel()
+    public InstancesPageViewModel()
     {
         _selectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
-        ApplyFilterAndSort();
-    }
-
-    [RelayCommand]
-    public void ToggleFavorite(MinecraftInstance instance)
-    {
-        if (instance == null || instance.Config == null) return;
-
-        instance.Config.IsFavorite = !instance.Config.IsFavorite;
-        instance.SaveConfig();
         ApplyFilterAndSort();
     }
 
@@ -207,10 +120,6 @@ public partial class NewTabViewModel : ObservableObject
 
         var sortType = SelectedSortOption?.SortType ?? InstanceSortType.Name;
 
-        // 三级排序结构：
-        // 第一级：收藏在前，未收藏在后
-        // 第二级：在收藏/未收藏各自组内，按选择的排序方式排列
-        // 第三级：第二级相同时，有 mod 加载器的在前，原版在后
         IOrderedEnumerable<MinecraftInstance> sortedResult = sortType switch
         {
             InstanceSortType.Name => query
