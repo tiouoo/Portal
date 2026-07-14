@@ -194,11 +194,11 @@ public partial class NewTabViewModel : ObservableObject
             var keyword = SearchText.Trim();
             query = query.Where(x =>
                 (x.FolderName != null && x.FolderName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (x.MinecraftEntry?.Id != null &&
-                 x.MinecraftEntry.Id.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(x.InstanceName) &&
+                 x.InstanceName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
                 (x.Config?.Note != null && x.Config.Note.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                (x.MinecraftEntry?.Version.VersionId != null &&
-                 x.MinecraftEntry.Version.VersionId.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                (!string.IsNullOrEmpty(x.VersionId) &&
+                 x.VersionId.Contains(keyword, StringComparison.OrdinalIgnoreCase))
             );
         }
 
@@ -215,34 +215,34 @@ public partial class NewTabViewModel : ObservableObject
         {
             InstanceSortType.Name => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenBy(x => x.MinecraftEntry?.Id ?? string.Empty, stringComparer)
-                .ThenBy(x => x.MinecraftEntry?.IsVanilla ?? true),
+                .ThenBy(x => x.InstanceName ?? string.Empty, stringComparer)
+                .ThenBy(x => x.IsVanilla),
 
             InstanceSortType.PlayTime => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
                 .ThenByDescending(x => x.LastPlayTime == DateTime.MinValue ? 0 : 1)
                 .ThenByDescending(x => x.LastPlayTime)
-                .ThenBy(x => x.MinecraftEntry?.IsVanilla ?? true),
+                .ThenBy(x => x.IsVanilla),
 
             InstanceSortType.FolderName => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
                 .ThenBy(x => x.FolderName ?? string.Empty, stringComparer)
-                .ThenBy(x => x.MinecraftEntry?.IsVanilla ?? true),
+                .ThenBy(x => x.IsVanilla),
 
             InstanceSortType.Loader => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
                 .ThenByDescending(x => x.LoaderDescription, stringComparer)
-                .ThenBy(x => x.MinecraftEntry?.IsVanilla ?? true),
+                .ThenBy(x => x.IsVanilla),
 
             InstanceSortType.Version => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenByDescending(x => ParseVersion(x.MinecraftEntry?.Version.VersionId))
-                .ThenBy(x => x.MinecraftEntry?.IsVanilla ?? true),
+                .ThenByDescending(x => ParseVersion(x.VersionId))
+                .ThenBy(x => x.IsVanilla),
 
             _ => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
-                .ThenBy(x => x.MinecraftEntry?.Id ?? string.Empty, stringComparer)
-                .ThenBy(x => x.MinecraftEntry?.IsVanilla ?? true),
+                .ThenBy(x => x.InstanceName ?? string.Empty, stringComparer)
+                .ThenBy(x => x.IsVanilla),
         };
 
         FilteredMinecraftInstances.AddRange(sortedResult);

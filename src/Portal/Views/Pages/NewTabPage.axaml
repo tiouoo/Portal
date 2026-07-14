@@ -206,7 +206,7 @@
                                                 <TextBlock
                                                     Margin="2,4,0,0"
                                                     MaxLines="2"
-                                                    Text="{Binding MinecraftEntry.Id}"
+                                                    Text="{Binding InstanceName}"
                                                     TextTrimming="CharacterEllipsis"
                                                     TextWrapping="WrapWithOverflow"
                                                     Width="135" />

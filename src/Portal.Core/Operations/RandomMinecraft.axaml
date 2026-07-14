@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -23,7 +23,7 @@
                 Orientation="Horizontal"
                 Spacing="5">
                 <TextBlock Text="这次抽中了" />
-                <HyperlinkButton Content="{Binding Instance.MinecraftEntry.Id}" Theme="{StaticResource UnderlineHyperlinkButton}" />
+                <HyperlinkButton Content="{Binding Instance.InstanceName}" Theme="{StaticResource UnderlineHyperlinkButton}" />
                 <TextBlock Text="，快开始游戏吧！" />
             </StackPanel>
         </StackPanel>
