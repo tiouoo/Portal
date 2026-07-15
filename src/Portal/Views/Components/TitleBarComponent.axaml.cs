@@ -172,7 +172,7 @@ public partial class TitleBarComponent : Grid
     {
         if (sender is not Button btn || btn.Tag is not MinecraftAccount account) return;
 
-        var hostId = ((Control)sender!).TryGetHostId();
+        var hostId = ((Control)Root!).TryGetHostId();
         var result = await ChangeSkinDialog.Show(hostId, null);
         // TODO: handle result (skin path)
     }

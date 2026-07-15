@@ -42,6 +42,9 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
     [ObservableProperty] public partial Dictionary<string, string> MetaData { get; set; } = [];
 
     [JsonIgnore]
+    public bool IsOffline => AccountType == AccountType.Offline;
+
+    [JsonIgnore]
     public string DisplayAccountNote
     {
         get
