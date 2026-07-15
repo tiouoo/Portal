@@ -198,6 +198,19 @@
                     </Panel>
 
                 </Border>
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Height="76">
+                    <Button
+                        Click="OpenLitematicaPage_OnClick"
+                        Content="Litematica 分析"
+                        HorizontalAlignment="Stretch"
+                        Margin="10,0,10,10"
+                        VerticalAlignment="Bottom" />
+                </Border>
                 <StackPanel.Transitions>
                     <Transitions>
                         <DoubleTransition

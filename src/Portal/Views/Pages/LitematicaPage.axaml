@@ -1,0 +1,133 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.LitematicaPage"
+    x:DataType="pages:LitematicaPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer Classes="Flat" Margin="12">
+        <StackPanel Spacing="15" Margin="8" MaxWidth="900">
+            <TextBlock FontSize="22" Text="Litematica 投影分析" />
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="投影文件" />
+                    <DockPanel>
+                        <Button
+                            Command="{Binding LoadAndAnalyzeCommand}"
+                            Content="分析"
+                            DockPanel.Dock="Right"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Width="80" />
+                        <tio:PathPicker
+                            FileFilter="[Litematica, *.litematic]"
+                            SelectedPathsText="{Binding FilePath}"
+                            Title="选择 Litematica 投影文件"
+                            UsePickerType="OpenFile" />
+                    </DockPanel>
+                    <ProgressBar
+                        IsIndeterminate="{Binding IsLoading}"
+                        IsVisible="{Binding IsLoading}"
+                        Maximum="1"
+                        Value="{Binding Progress}" />
+                </StackPanel>
+            </Border>
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="{Binding HasData}"
+                Padding="16">
+                <StackPanel Spacing="6">
+                    <WrapPanel HorizontalAlignment="Stretch">
+                        <TextBlock>
+                            <Run FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Text="方块总数：" />
+                            <Run FontSize="14" FontWeight="DemiBold" Text="{Binding TotalBlocks, StringFormat={}{0:N0}}" />
+                        </TextBlock>
+                        <TextBlock>
+                            <Run FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Text="方块种类：" />
+                            <Run FontSize="14" FontWeight="DemiBold" Text="{Binding BlockTypes}" />
+                        </TextBlock>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="{Binding HasData}"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <ComboBox
+                        ItemsSource="{Binding Categories}"
+                        SelectedItem="{Binding SelectedCategory}"
+                        Width="160">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ScrollViewer
+                        Background="Transparent"
+                        Classes="Flat"
+                        MaxHeight="400">
+                        <DataGrid
+                            AutoGenerateColumns="False"
+                            ItemsSource="{Binding FilteredBlocks}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Binding="{Binding NameCn}"
+                                    Header="方块名称"
+                                    Width="180" />
+                                <DataGridTextColumn
+                                    Binding="{Binding Count, StringFormat={}{0:N0}}"
+                                    Header="数量"
+                                    Width="100" />
+                                <DataGridTextColumn
+                                    Binding="{Binding Category}"
+                                    Header="类别"
+                                    Width="100" />
+                                <DataGridTextColumn
+                                    Binding="{Binding Percent, StringFormat={}{0:P1}}"
+                                    Header="百分比"
+                                    Width="80" />
+                                <DataGridTextColumn
+                                    Binding="{Binding Units}"
+                                    Header="换算"
+                                    Width="250" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+            <WrapPanel
+                HorizontalAlignment="Stretch"
+                IsVisible="{Binding HasData}">
+                <Button
+                    Click="ExportTxt_Click"
+                    Content="导出 TXT"
+                    Width="100" />
+                <Button
+                    Click="ExportCsv_Click"
+                    Content="导出 CSV"
+                    Width="100" />
+            </WrapPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

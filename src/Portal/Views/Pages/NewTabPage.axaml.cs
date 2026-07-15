@@ -134,6 +134,14 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         );
         NewTabViewModel.ApplyFilterAndSort();
     }
+
+    private void OpenLitematicaPage_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var tab = new TabEntry(sender.AsTopLevel() as TioTabWindowBase, new LitematicaPage());
+        var tioTabWindowBase = sender.AsTopLevel() as TioTabWindowBase;
+        tioTabWindowBase?.CreateTab(tab);
+        tioTabWindowBase?.SelectTab(tab);
+    }
 }
 
 public partial class NewTabViewModel : InstanceListViewModelBase
