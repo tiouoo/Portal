@@ -19,6 +19,8 @@ namespace Portal.Core.Operations.Account;
 
 public partial class ChangeSkin : UserControl
 {
+    private float _initialY;
+
     public ChangeSkin()
     {
         InitializeComponent();
@@ -40,17 +42,18 @@ public partial class ChangeSkin : UserControl
         var prop = e.GetCurrentPoint(this).Properties;
         if (prop.IsLeftButtonPressed) type = Pointer.PointerLeft;
         else if (prop.IsRightButtonPressed) type = Pointer.PointerRight;
-        SkinViewer.UpdatePointerMoved(type, new Vector2((float)pos.X, (float)pos.Y));
+        SkinViewer.UpdatePointerMoved(type, new Vector2((float)pos.X * 2f, _initialY));
     }
 
     private void OnPointerPressed(object? s, PointerPressedEventArgs e)
     {
         var pos = e.GetPosition(this);
+        _initialY = (float)pos.Y;
         var prop = e.GetCurrentPoint(this).Properties;
         var type = Pointer.None;
         if (prop.IsLeftButtonPressed) type = Pointer.PointerLeft;
         else if (prop.IsRightButtonPressed) type = Pointer.PointerRight;
-        SkinViewer.UpdatePointerPressed(type, new Vector2((float)pos.X, (float)pos.Y));
+        SkinViewer.UpdatePointerPressed(type, new Vector2((float)pos.X, _initialY));
     }
 
     private void OnPointerReleased(object? s, PointerReleasedEventArgs e)
