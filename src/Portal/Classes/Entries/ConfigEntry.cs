@@ -40,6 +40,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
+    [ObservableProperty] public partial bool ShowMinecraftNews { get; set; } = true;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
     [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }

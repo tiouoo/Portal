@@ -9,7 +9,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("通知", "设置/通知", "Notification")]
+[AggregatedSearchPage("通知", "设置/通知与可选项", "Notification")]
 public partial class Notification : DataUserControl
 {
     public Notification()

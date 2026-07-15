@@ -137,7 +137,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
         SelectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
     }
 
-    public NewsPage NewsPage { get; } = new();
+    public NewsPage NewsPage { get; } = new(true);
     
     [RelayCommand]
     public void ToggleFavorite(MinecraftInstance instance)

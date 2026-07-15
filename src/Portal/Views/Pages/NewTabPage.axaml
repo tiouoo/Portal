@@ -446,9 +446,11 @@
                     </Border>
                 </StackPanel>
             </DockPanel>
-            <StackPanel IsVisible="{Binding NewsPage.NewsPageViewModel.IsVisible}" Spacing="8">
-                <ContentControl Content="{Binding NewsPage}" Name="NewsContentControl" />
-            </StackPanel>
+            <Border IsVisible="{Binding Data.ConfigEntry.ShowMinecraftNews}">
+                <StackPanel IsVisible="{Binding NewsPage.NewsPageViewModel.IsVisible}" Spacing="8">
+                    <ContentControl Content="{Binding NewsPage}" Name="NewsContentControl" />
+                </StackPanel>
+            </Border>
         </StackPanel>
     </smoothScroll:ScrollView>
 </UserControl>

@@ -36,7 +36,7 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
-                        Header="通知" />
+                        Header="通知与可选项" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Storage}"

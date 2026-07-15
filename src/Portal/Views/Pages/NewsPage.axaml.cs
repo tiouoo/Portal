@@ -1,9 +1,13 @@
+using Avalonia;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
+using SmoothScroll.Avalonia.Controls;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
-using Tio.Avalonia.Standard.Modules.Extensions; // 确保保留你原本的命名空间
+using Tio.Avalonia.Standard.Modules.Extensions;
+using Tio.Avalonia.Standard.Tab.Extensions; // 确保保留你原本的命名空间
 
 namespace Portal.Views.Pages;
 
@@ -12,14 +16,24 @@ public partial class NewsPage : DataUserControl, ITioTabPage
 {
     public NewsPageViewModel NewsPageViewModel { get; }
 
-    public NewsPage()
+    public NewsPage(bool isInset = false)
     {
         InitializeComponent();
-        
+
         NewsPageViewModel = NewsPageViewModel.Instance;
         DataContext = NewsPageViewModel;
+
+        if (!isInset)
+        {
+            Margin = new Thickness(10, 0, 10, 10);
+            ScrollView.VerticalScrollMode = ScrollMode.Enabled;
+            PathIcon.Width = 24;
+            PathIcon.Height = 24;
+            TextBlock.FontSize = 18;
+            Button.Margin = new Thickness(15, 2, 0, 0);
+        }
     }
-    
+
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = "新闻",
@@ -28,4 +42,13 @@ public partial class NewsPage : DataUserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; }
+
+    private void Button_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var tioTabPage = new NewsPage();
+        var tab = new TabEntry(sender.AsTopLevel() as TioTabWindowBase, tioTabPage);
+        var tioTabWindowBase = sender.AsTopLevel() as TioTabWindowBase;
+        tioTabWindowBase?.CreateTab(tab);
+        tioTabWindowBase?.SelectTab(tab);
+    }
 }
