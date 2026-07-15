@@ -81,6 +81,7 @@ public partial class LitematicaPageViewModel : ObservableObject
     [ObservableProperty] private double _progress;
 
     private AnalysisResult? _analysisResult;
+    private string? _projectName;
 
     [RelayCommand]
     private async Task LoadAndAnalyze()
@@ -95,6 +96,7 @@ public partial class LitematicaPageViewModel : ObservableObject
         {
             var parser = new LitematicParser();
             var file = parser.Load(FilePath);
+            _projectName = file.Name;
 
             var progress = new Progress<AnalysisProgress>(p =>
             {
@@ -175,7 +177,7 @@ public partial class LitematicaPageViewModel : ObservableObject
     public async Task ExportTxtAsync(Control sender)
     {
         if (_analysisResult == null) return;
-        var path = await PickSavePath(sender, "txt", "文本文件");
+        var path = await PickSavePath(sender, "txt", "文本文件", _projectName);
         if (path == null) return;
         new ExportService().Export(_analysisResult, path, ExportFormat.Txt);
         sender.AsTopLevel().Notice("已导出 TXT 文件", NotificationType.Success);
@@ -184,13 +186,13 @@ public partial class LitematicaPageViewModel : ObservableObject
     public async Task ExportCsvAsync(Control sender)
     {
         if (_analysisResult == null) return;
-        var path = await PickSavePath(sender, "csv", "CSV 文件");
+        var path = await PickSavePath(sender, "csv", "CSV 文件", _projectName);
         if (path == null) return;
         new ExportService().Export(_analysisResult, path, ExportFormat.Csv);
         sender.AsTopLevel().Notice("已导出 CSV 文件", NotificationType.Success);
     }
 
-    private static async Task<string?> PickSavePath(Control sender, string ext, string display)
+    private static async Task<string?> PickSavePath(Control sender, string ext, string display, string? suggestedFileName)
     {
         var storage = TopLevel.GetTopLevel(sender)?.StorageProvider;
         if (storage == null) return null;
@@ -198,6 +200,7 @@ public partial class LitematicaPageViewModel : ObservableObject
         {
             Title = $"导出 {display}",
             DefaultExtension = ext,
+            SuggestedFileName = suggestedFileName ?? "export",
             FileTypeChoices = [new FilePickerFileType(display) { Patterns = [$"*.{ext}"] }]
         });
         return file?.TryGetLocalPath();

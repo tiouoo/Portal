@@ -58,7 +58,7 @@
                             <Run FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Text="方块总数：" />
                             <Run FontSize="14" FontWeight="DemiBold" Text="{Binding TotalBlocks, StringFormat={}{0:N0}}" />
                         </TextBlock>
-                        <TextBlock>
+                        <TextBlock Margin="30,0,0,0">
                             <Run FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Text="方块种类：" />
                             <Run FontSize="14" FontWeight="DemiBold" Text="{Binding BlockTypes}" />
                         </TextBlock>
