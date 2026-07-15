@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Portal.LitematicaViewer</RootNamespace>
+    <AssemblyName>Portal.LitematicaViewer</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\setting.json" />
+    <EmbeddedResource Include="Resources\categories.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="fNbt" />
+  </ItemGroup>
+
+</Project>

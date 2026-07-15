@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 
-namespace LitematicaViewer.Core.Helpers;
+namespace Portal.LitematicaViewer.Helpers;
 
 public static class CnTranslateHelper
 {
@@ -33,7 +33,7 @@ public static class CnTranslateHelper
         _loaded = true;
 
         var assembly = Assembly.GetExecutingAssembly();
-        const string resourceName = "LitematicaViewer.Core.Resources.setting.json";
+        const string resourceName = "Portal.LitematicaViewer.Resources.setting.json";
 
         using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream == null) return;

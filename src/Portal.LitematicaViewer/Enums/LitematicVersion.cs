@@ -1,4 +1,4 @@
-namespace LitematicaViewer.Core.Enums;
+namespace Portal.LitematicaViewer.Enums;
 
 public enum LitematicVersion
 {

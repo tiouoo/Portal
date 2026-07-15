@@ -1,8 +1,8 @@
-using LitematicaViewer.Core.Enums;
-using LitematicaViewer.Core.Helpers;
-using LitematicaViewer.Core.Models;
+using Portal.LitematicaViewer.Enums;
+using Portal.LitematicaViewer.Helpers;
+using Portal.LitematicaViewer.Models;
 
-namespace LitematicaViewer.Core.Services;
+namespace Portal.LitematicaViewer.Services;
 
 public class AnalysisResult
 {

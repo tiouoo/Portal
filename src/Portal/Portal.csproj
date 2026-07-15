@@ -47,6 +47,7 @@
       <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\src\Tio.Avalonia.Standard.Tab\Tio.Avalonia.Standard.Tab.csproj" />
       <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\src\Tio.Avalonia.Standard\Tio.Avalonia.Standard.csproj" />
       <ProjectReference Include="..\Portal.Core\Portal.Core.csproj" />
+      <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj" />
     </ItemGroup>
 
     

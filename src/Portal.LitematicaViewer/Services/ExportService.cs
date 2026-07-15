@@ -1,7 +1,7 @@
 using System.Text;
-using LitematicaViewer.Core.Helpers;
+using Portal.LitematicaViewer.Helpers;
 
-namespace LitematicaViewer.Core.Services;
+namespace Portal.LitematicaViewer.Services;
 
 public enum ExportFormat
 {

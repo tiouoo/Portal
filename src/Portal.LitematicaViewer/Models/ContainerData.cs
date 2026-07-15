@@ -1,4 +1,4 @@
-namespace LitematicaViewer.Core.Models;
+namespace Portal.LitematicaViewer.Models;
 
 public class ContainerData
 {

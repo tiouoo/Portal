@@ -1,6 +1,6 @@
-using LitematicaViewer.Core.Models;
+using Portal.LitematicaViewer.Models;
 
-namespace LitematicaViewer.Core.Services;
+namespace Portal.LitematicaViewer.Services;
 
 public class StructureGenerator
 {

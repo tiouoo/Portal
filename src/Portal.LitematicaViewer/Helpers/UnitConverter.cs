@@ -1,4 +1,4 @@
-namespace LitematicaViewer.Core.Helpers;
+namespace Portal.LitematicaViewer.Helpers;
 
 public static class UnitConverter
 {

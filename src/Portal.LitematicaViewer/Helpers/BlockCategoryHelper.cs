@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Text.Json;
-using LitematicaViewer.Core.Enums;
+using Portal.LitematicaViewer.Enums;
 
-namespace LitematicaViewer.Core.Helpers;
+namespace Portal.LitematicaViewer.Helpers;
 
 public static class BlockCategoryHelper
 {
@@ -45,7 +45,7 @@ public static class BlockCategoryHelper
         if (_categoryRules != null) return;
 
         var assembly = Assembly.GetExecutingAssembly();
-        const string resourceName = "LitematicaViewer.Core.Resources.categories.json";
+        const string resourceName = "Portal.LitematicaViewer.Resources.categories.json";
 
         using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream == null)

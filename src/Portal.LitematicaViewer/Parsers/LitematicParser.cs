@@ -1,7 +1,7 @@
 using fNbt;
-using LitematicaViewer.Core.Models;
+using Portal.LitematicaViewer.Models;
 
-namespace LitematicaViewer.Core.Parsers;
+namespace Portal.LitematicaViewer.Parsers;
 
 public class LitematicParser
 {

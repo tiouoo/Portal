@@ -1,7 +1,7 @@
-using LitematicaViewer.Core.Enums;
-using LitematicaViewer.Core.Models;
+using Portal.LitematicaViewer.Enums;
+using Portal.LitematicaViewer.Models;
 
-namespace LitematicaViewer.Core.Services;
+namespace Portal.LitematicaViewer.Services;
 
 public class VersionConverter
 {
