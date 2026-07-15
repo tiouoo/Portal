@@ -301,25 +301,45 @@
                                                 VerticalAlignment="Bottom" />
                                         </StackPanel>
 
-                                        <Button
-                                            Classes="delete-btn"
-                                            Command="{Binding #Root.DeleteAccount}"
-                                            CommandParameter="{Binding}"
+                                        <StackPanel
                                             Grid.Column="2"
                                             HorizontalAlignment="Left"
                                             Margin="5,0"
-                                            Theme="{StaticResource TransparentButton}"
-                                            VerticalAlignment="Center">
-                                            <PathIcon
-                                                Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
-                                                Height="14"
-                                                Width="10" />
-                                            <Button.Transitions>
-                                                <Transitions>
-                                                    <DoubleTransition Duration="0:0:0.1" Property="Opacity" />
-                                                </Transitions>
-                                            </Button.Transitions>
-                                        </Button>
+                                            Orientation="Horizontal"
+                                            Spacing="3">
+                                            <Button
+                                                Classes="delete-btn"
+                                                Click="ChangeSkin_OnClick"
+                                                Tag="{Binding}"
+                                                Theme="{StaticResource TransparentButton}"
+                                                VerticalAlignment="Center">
+                                                <PathIcon
+                                                    Data="F1 M1024,1024z M0,0z M256,128C256,92.7 284.7,64 320,64L704,64C739.3,64 768,92.7 768,128L768,192C768,227.3 739.3,256 704,256L640,256 640,704C640,739.3 611.3,768 576,768L448,768C412.7,768 384,739.3 384,704L384,256 320,256C284.7,256 256,227.3 256,192L256,128z M320,256L384,256 384,704C384,721.7 398.3,736 416,736L608,736C625.7,736 640,721.7 640,704L640,256 704,256 704,128C704,119.2 696.8,112 688,112L336,112C327.2,112 320,119.2 320,128L320,256z M528,320L496,320C487.2,320 480,327.2 480,336L480,672C480,680.8 487.2,688 496,688L528,688C536.8,688 544,680.8 544,672L544,336C544,327.2,536.8,320,528,320z"
+                                                    Height="14"
+                                                    Width="14" />
+                                                <Button.Transitions>
+                                                    <Transitions>
+                                                        <DoubleTransition Duration="0:0:0.1" Property="Opacity" />
+                                                    </Transitions>
+                                                </Button.Transitions>
+                                            </Button>
+                                            <Button
+                                                Classes="delete-btn"
+                                                Command="{Binding #Root.DeleteAccount}"
+                                                CommandParameter="{Binding}"
+                                                Theme="{StaticResource TransparentButton}"
+                                                VerticalAlignment="Center">
+                                                <PathIcon
+                                                    Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
+                                                    Height="14"
+                                                    Width="10" />
+                                                <Button.Transitions>
+                                                    <Transitions>
+                                                        <DoubleTransition Duration="0:0:0.1" Property="Opacity" />
+                                                    </Transitions>
+                                                </Button.Transitions>
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

@@ -167,4 +167,13 @@ public partial class TitleBarComponent : Grid
         tioTabWindowBase.CreateTab(tabEntry);
         tioTabWindowBase.SelectTab(tabEntry);
     }
+
+    private async void ChangeSkin_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not MinecraftAccount account) return;
+
+        var hostId = ((Control)sender!).TryGetHostId();
+        var result = await ChangeSkinDialog.Show(hostId, null);
+        // TODO: handle result (skin path)
+    }
 }

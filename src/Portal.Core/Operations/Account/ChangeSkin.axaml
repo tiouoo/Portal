@@ -1,0 +1,61 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="550"
+    mc:Ignorable="d"
+    x:Class="Portal.Core.Operations.Account.ChangeSkin"
+    x:DataType="account:ChangeSkinViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:account="clr-namespace:Portal.Core.Operations.Account"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lsv="clr-namespace:LiteSkinViewer3D.Avalonia.Controls;assembly=LiteSkinViewer.3D"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, Auto, *, Auto"
+        Width="500">
+        <TextBlock
+            FontSize="16"
+            FontWeight="600"
+            Grid.Row="0"
+            Text="更换皮肤" />
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,12,0,10"
+            Spacing="4">
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource SukiMuteText}"
+                Text="选择皮肤文件（PNG）" />
+            <tio:PathPicker
+                FileFilter="[皮肤图片, *.png]"
+                SelectedPathsText="{Binding SkinPath}"
+                Title="选择皮肤图片"
+                UsePickerType="OpenFile" />
+        </StackPanel>
+        <Border
+            BorderBrush="{DynamicResource PanelBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Grid.Row="2"
+            Margin="0,0,0,12">
+            <lsv:SkinViewer3D
+                Height="420"
+                IsEnableAnimation="True"
+                IsUpperLayerVisible="True"
+                Name="SkinViewer"
+                Skin="{Binding SkinPath}"
+                Width="450" />
+        </Border>
+        <DockPanel Grid.Row="3">
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Command="{Binding CancelCommand}" Content="取消" />
+                <Button Command="{Binding ConfirmCommand}" Content="确定" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>
