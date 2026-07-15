@@ -6,6 +6,7 @@
     x:DataType="pages:InstancesPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:converters="clr-namespace:Portal.Module.Converter;assembly=Portal"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -15,8 +16,8 @@
     <UserControl.Resources>
         <converters:WidthToColumnsConverter x:Key="WidthToColumnsConv" />
     </UserControl.Resources>
-    <DockPanel Margin="12,0,12,10">
-        <Panel DockPanel.Dock="Top" Margin="0,0,0,10">
+    <DockPanel Margin="12,0,0,10">
+        <Panel DockPanel.Dock="Top" Margin="0,0,12,10">
             <StackPanel
                 HorizontalAlignment="Left"
                 Margin="5,0,0,0"
@@ -81,15 +82,15 @@
                 </TextBox>
             </StackPanel>
         </Panel>
-        <ScrollViewer
+        <controls:ScrollView
             Background="Transparent"
             Classes="Flat"
             DockPanel.Dock="Bottom"
-            Margin="0,0,0,5"
+            Margin="0,0,5,5"
             Name="MainScrollViewer">
             <ItemsControl
                 ItemsSource="{Binding FilteredMinecraftInstances}"
-                Margin="2,0,2,0"
+                Margin="2,0,9,0"
                 VerticalAlignment="Top">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -107,8 +108,8 @@
                             BorderThickness="1"
                             CornerRadius="10"
                             Height="125"
-                            Name="InstanceCard"
-                            ToolTip.Tip="{Binding FullInfo}">
+                            Name="InstanceCard">
+                            <!--  ToolTip.Tip="{Binding FullInfo}"  -->
                             <Border.Styles>
                                 <Style Selector="Border#InstanceCard">
                                     <Style Selector="^ Button#UnfavoritedButton">
@@ -228,6 +229,6 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </ScrollViewer>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>

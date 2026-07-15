@@ -38,6 +38,7 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
         <PackageReference Include="HotAvalonia" />
+        <PackageReference Include="SmoothScroll.Avalonia" />
     </ItemGroup>
 
     <ItemGroup>

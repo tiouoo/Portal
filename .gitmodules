@@ -1,8 +1,8 @@
 [submodule "module/Tio.Avalonia.Standard"]
 	path = module/Tio.Avalonia.Standard
-	url = git@github.com:tiouoo/Tio.Avalonia.Standard.git
+	url = https://github.com/tiouoo/Tio.Avalonia.Standard.git
 	branch = main
 [submodule "module/LiteSkinViewer"]
 	path = module/LiteSkinViewer
-	url = git@github.com:tiouoo/LiteSkinViewer.git
+	url = https://github.com/tiouoo/LiteSkinViewer.git
 	branch = main

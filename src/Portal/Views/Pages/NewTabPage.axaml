@@ -10,6 +10,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:smoothScroll="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -50,8 +51,9 @@
                             <DockPanel
                                 Background="Transparent"
                                 IsVisible="{Binding HasRecentInstance}"
-                                Margin="12,10"
-                                ToolTip.Tip="{Binding RecentInstance.FullInfo}">
+                                Margin="12,10">
+                                <!--  ToolTip.ShowDelay="3000"  -->
+                                <!--  ToolTip.Tip="{Binding RecentInstance.FullInfo}"  -->
                                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                                     <Border
                                         ClipToBounds="True"
@@ -100,6 +102,7 @@
                                 Content="继续游戏"
                                 FontSize="13"
                                 HorizontalAlignment="Right"
+                                IsVisible="{Binding HasRecentInstance}"
                                 Margin="0,0,12,7"
                                 Theme="{StaticResource TransparentHyperlinkButton}"
                                 VerticalAlignment="Bottom" />
@@ -302,14 +305,15 @@
                             </TextBox>
                         </StackPanel>
                     </Panel>
-                    <ScrollViewer
+                    <smoothScroll:ScrollView
                         Background="Transparent"
                         Classes="Flat"
+                        ContentOrientation="Horizontal"
                         DockPanel.Dock="Bottom"
                         HorizontalScrollBarVisibility="Auto"
-                        Margin="0,0,0,5"
+                        Margin="0,2,0,5"
                         Name="ScrollViewer"
-                        VerticalAlignment="Bottom">
+                        VerticalAlignment="Top">
                         <ItemsControl ItemsSource="{Binding FilteredMinecraftInstances}" Margin="12,0,12,7">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -326,8 +330,9 @@
                                         Height="130"
                                         Margin="0,0,0,0"
                                         Name="InstanceCard"
-                                        ToolTip.Tip="{Binding FullInfo}"
                                         Width="220">
+                                        <!--  ToolTip.ShowDelay="1000"  -->
+                                        <!--  ToolTip.Tip="{Binding FullInfo}"  -->
                                         <Border.Styles>
                                             <Style Selector="Border#InstanceCard">
                                                 <Style Selector="^ Button#UnfavoritedButton">
@@ -440,7 +445,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </ScrollViewer>
+                    </smoothScroll:ScrollView>
                 </DockPanel>
             </Border>
         </DockPanel>

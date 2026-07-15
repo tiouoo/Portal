@@ -6,6 +6,7 @@
     x:DataType="components:AggregatedSearchDialogViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:components="clr-namespace:Portal.Views.Components"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entries="clr-namespace:Portal.Classes.Entries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -80,12 +81,17 @@
             Name="SearchBox"
             PlaceholderText="输入搜索内容"
             Text="{Binding Data.UiProperty.AggregatedSearchQuery}" />
-        <ScrollViewer Classes="Flat" Margin="10,0,5,10">
+        <controls:ScrollView Classes="Flat" Margin="10,0,5,10">
             <ListBox
                 ItemsSource="{Binding Data.UiProperty.AggregatedSearchResults}"
                 Margin="0,0,5,0"
                 Name="ListBox"
                 SelectionChanged="SelectingItemsControl_OnSelectionChanged">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="entries:AggregatedSearchEntry">
                         <StackPanel Margin="0,-4">
@@ -107,6 +113,6 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </ScrollViewer>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>

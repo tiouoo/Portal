@@ -22,6 +22,7 @@
     xmlns:common="clr-namespace:Tio.Avalonia.Standard.Tab.Common;assembly=Tio.Avalonia.Standard.Tab"
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:const="clr-namespace:Portal.Const"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entries="clr-namespace:Tio.Avalonia.Standard.Tab.Entries;assembly=Tio.Avalonia.Standard.Tab"
@@ -137,9 +138,10 @@
         </DockPanel>
     </tio:TioWindow.TitleBarRightContent>
     <Grid Background="Transparent">
-        <ScrollViewer
+        <controls:ScrollView
             Background="Transparent"
             Classes="Flat"
+            ContentOrientation="Horizontal"
             Height="44"
             HorizontalAlignment="Left"
             HorizontalScrollBarVisibility="Auto"
@@ -247,7 +249,7 @@
                         Width="20" />
                 </Button>
             </DockPanel>
-        </ScrollViewer>
+        </controls:ScrollView>
         <TransitioningContentControl Background="Transparent" Content="{Binding SelectedTab.Content}">
             <TransitioningContentControl.PageTransition>
                 <CompositePageTransition>

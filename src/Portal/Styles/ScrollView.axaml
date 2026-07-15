@@ -1,0 +1,25 @@
+<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style Selector="controls|ScrollView.Flat /template/ ScrollBar#PART_HorizontalScrollBar:horizontal /template/ RepeatButton">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|ScrollView.Flat /template/ ScrollBar#PART_VerticalScrollBar:vertical /template/ RepeatButton">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|ScrollView.Flat /template/ ScrollBar#PART_HorizontalScrollBar:horizontal /template/ Thumb#thumb /template/ Border">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+    </Style>
+    <Style Selector="controls|ScrollView.Flat /template/ ScrollBar#PART_VerticalScrollBar:vertical /template/ Thumb#thumb /template/ Border">
+        <Setter Property="Width" Value="2" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+    <Style Selector="controls|ScrollView.Flat /template/ ScrollBar#PART_HorizontalScrollBar:horizontal">
+        <Setter Property="Height" Value="2" />
+    </Style>
+    <Style Selector="controls|ScrollView.Flat /template/ ScrollBar#PART_VerticalScrollBar:vertical">
+        <Setter Property="Width" Value="2" />
+    </Style>
+</Styles>
