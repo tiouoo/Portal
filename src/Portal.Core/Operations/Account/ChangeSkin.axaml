@@ -22,6 +22,7 @@
             Text="更换皮肤" />
         <StackPanel
             Grid.Row="1"
+            IsVisible="{Binding IsPreview, Converter={x:Static BoolConverters.Not}}"
             Margin="0,12,0,10"
             Spacing="4">
             <TextBlock
@@ -51,11 +52,18 @@
         <DockPanel Grid.Row="3">
             <StackPanel
                 HorizontalAlignment="Right"
+                IsVisible="{Binding IsPreview, Converter={x:Static BoolConverters.Not}}"
                 Orientation="Horizontal"
                 Spacing="8">
                 <Button Command="{Binding CancelCommand}" Content="取消" />
                 <Button Command="{Binding ConfirmCommand}" Content="确定" />
             </StackPanel>
+            <Button
+                Command="{Binding CancelCommand}"
+                Content="关闭"
+                HorizontalAlignment="Right"
+                IsVisible="{Binding IsPreview}"
+                Width="80" />
         </DockPanel>
     </Grid>
 </UserControl>

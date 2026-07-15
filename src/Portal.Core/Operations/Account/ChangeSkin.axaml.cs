@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Numerics;
 using System.Windows.Input;
 using Avalonia;
@@ -9,8 +10,8 @@ using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiteSkinViewer3D.Avalonia.Controls;
-using LiteSkinViewer3D.Shared.Enums;
 using Pointer = LiteSkinViewer3D.Shared.Enums.PointerType;
+using Portal.Core.Minecraft.Classes;
 using TioUi.Common;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
@@ -85,8 +86,31 @@ public static class ChangeSkinDialog
         };
 
         var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(
-            new ChangeSkinViewModel(currentSkinPath), hostId: hostId, options: options);
+            new ChangeSkinViewModel(currentSkinPath, false), hostId: hostId, options: options);
 
+        return result;
+    }
+
+    public static async Task<string?> Preview(string? hostId, MinecraftAccount account)
+    {
+        var skinPath = Path.Combine(Path.GetTempPath(), $"preview_{account.Name}.png");
+        await File.WriteAllBytesAsync(skinPath, Convert.FromBase64String(account.Skin));
+
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalAnchor = VerticalPosition.Center
+        };
+
+        var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(
+            new ChangeSkinViewModel(skinPath, true), hostId: hostId, options: options);
+
+        try { File.Delete(skinPath); } catch { }
         return result;
     }
 }
@@ -96,12 +120,16 @@ public partial class ChangeSkinViewModel : ObservableObject, IDialogContext
     [ObservableProperty]
     public partial string? SkinPath { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsPreview { get; set; }
+
     public ICommand ConfirmCommand { get; }
     public ICommand CancelCommand { get; }
 
-    public ChangeSkinViewModel(string? currentSkinPath)
+    public ChangeSkinViewModel(string? currentSkinPath, bool isPreview = false)
     {
         SkinPath = currentSkinPath;
+        IsPreview = isPreview;
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
         CancelCommand = new RelayCommand(Cancel);
     }

@@ -196,4 +196,28 @@ public partial class Account : DataUserControl
             account.AccountNote = result;
         }
     }
+
+    private async void PreviewSkin_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: MinecraftAccount account })
+            return;
+
+        var hostId = this.TryGetHostId()!;
+        var skinPath = await ChangeSkinDialog.Preview(hostId, account);
+    }
+
+    private async void ChangeSkin_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: MinecraftAccount account })
+            return;
+
+        var hostId = this.TryGetHostId()!;
+        var newSkinPath = await ChangeSkinDialog.Show(hostId, null);
+
+        if (!string.IsNullOrEmpty(newSkinPath) && System.IO.File.Exists(newSkinPath))
+        {
+            account.Skin = Convert.ToBase64String(await System.IO.File.ReadAllBytesAsync(newSkinPath));
+            this.AsTopLevel().Notice("皮肤已更新", NotificationType.Success);
+        }
+    }
 }
