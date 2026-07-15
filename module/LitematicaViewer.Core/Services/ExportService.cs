@@ -46,8 +46,7 @@ public class ExportService
         {
             var name = CnTranslateHelper.ToChinese(blockId);
             var units = UnitConverter.Convert(count, lang);
-            var id = blockId.StartsWith("minecraft:") ? blockId[10..] : blockId;
-            sb.AppendLine($"{count}[{units}] | {name} [{id}]");
+            sb.AppendLine($"{count}[{units}] | {name}");
         }
         return sb.ToString();
     }
@@ -55,13 +54,12 @@ public class ExportService
     private static string BuildCsv(List<KeyValuePair<string, long>> blocks, string lang)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Name,ID,Count,Units");
+        sb.AppendLine("名称,数量,换算");
         foreach (var (blockId, count) in blocks)
         {
             var name = CnTranslateHelper.ToChinese(blockId);
             var units = UnitConverter.Convert(count, lang);
-            var id = blockId.StartsWith("minecraft:") ? blockId[10..] : blockId;
-            sb.AppendLine($"{name},{id},{count},{units}");
+            sb.AppendLine($"{name},{count},{units}");
         }
         return sb.ToString();
     }
@@ -79,8 +77,7 @@ public class ExportService
             {
                 var name = CnTranslateHelper.ToChinese(blockId);
                 var units = UnitConverter.Convert(count, lang);
-                var id = blockId.StartsWith("minecraft:") ? blockId[10..] : blockId;
-                sb.AppendLine($"{count}[{units}] | {name} [{id}]");
+                sb.AppendLine($"{count}[{units}] | {name}");
             }
         }
         return sb.ToString();
@@ -89,15 +86,14 @@ public class ExportService
     private static string BuildCategorizedCsv(AnalysisResult result, string lang)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Category,Name,ID,Count,Units");
+        sb.AppendLine("类别,名称,数量,换算");
         foreach (var (category, blocks) in result.Categories)
         {
             foreach (var (count, blockId) in blocks)
             {
                 var name = CnTranslateHelper.ToChinese(blockId);
                 var units = UnitConverter.Convert(count, lang);
-                var id = blockId.StartsWith("minecraft:") ? blockId[10..] : blockId;
-                sb.AppendLine($"{category},{name},{id},{count},{units}");
+                sb.AppendLine($"{category},{name},{count},{units}");
             }
         }
         return sb.ToString();
