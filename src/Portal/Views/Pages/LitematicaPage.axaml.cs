@@ -150,7 +150,7 @@ public partial class LitematicaPageViewModel : ObservableObject
                 Blocks.Where(b => b.Category == SelectedCategory.Category));
     }
 
-    private static string GetCategoryDisplayName(BlockCategory category) => category switch
+    public static string GetCategoryDisplayName(BlockCategory category) => category switch
     {
         BlockCategory.Wool => "羊毛",
         BlockCategory.Wood => "木材",
@@ -213,7 +213,10 @@ public record BlockEntry(
     long Count,
     BlockCategory Category,
     double Percent,
-    string Units);
+    string Units)
+{
+    public string CategoryDisplay => LitematicaPageViewModel.GetCategoryDisplayName(Category);
+}
 
 public record BlockCategoryFilter(BlockCategory? Category, string DisplayText)
 {

@@ -100,7 +100,7 @@
                                     Header="数量"
                                     Width="100" />
                                 <DataGridTextColumn
-                                    Binding="{Binding Category}"
+                                    Binding="{Binding CategoryDisplay}"
                                     Header="类别"
                                     Width="100" />
                                 <DataGridTextColumn
