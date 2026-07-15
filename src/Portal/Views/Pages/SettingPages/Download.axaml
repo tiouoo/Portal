@@ -1,0 +1,92 @@
+﻿<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.SettingPages.Download"
+    x:DataType="settingPages:Download"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="15">
+        <TextBlock FontSize="26" Text="下载" />
+        <StackPanel Spacing="5">
+            <Label
+                Content="使用国内镜像源 BMCLAPI"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableMinecraftMirror}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="最大下载线程数"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Slider
+                    Grid.Column="0"
+                    IsSnapToTickEnabled="True"
+                    Maximum="512"
+                    Minimum="1"
+                    TickFrequency="1"
+                    Value="{Binding Data.ConfigEntry.DownloadMaxThreadCount}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="6,0,0,0"
+                    Text="{Binding Data.ConfigEntry.DownloadMaxThreadCount, StringFormat={}{0:0}}"
+                    VerticalAlignment="Center"
+                    Width="40" />
+            </Grid>
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="最大重试次数"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Slider
+                    Grid.Column="0"
+                    IsSnapToTickEnabled="True"
+                    Maximum="20"
+                    Minimum="0"
+                    TickFrequency="1"
+                    Value="{Binding Data.ConfigEntry.DownloadMaxRetryCount}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="6,0,0,0"
+                    Text="{Binding Data.ConfigEntry.DownloadMaxRetryCount, StringFormat={}{0:0}}"
+                    VerticalAlignment="Center"
+                    Width="40" />
+            </Grid>
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="启用分片下载"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableFragmentDownload}" />
+        </StackPanel>
+        <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableFragmentDownload}" Spacing="5">
+            <Label
+                Content="最大文件分片数"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Slider
+                    Grid.Column="0"
+                    IsSnapToTickEnabled="True"
+                    Maximum="512"
+                    Minimum="1"
+                    TickFrequency="1"
+                    Value="{Binding Data.ConfigEntry.DownloadMaxFragmentCount}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="6,0,0,0"
+                    Text="{Binding Data.ConfigEntry.DownloadMaxFragmentCount, StringFormat={}{0:0}}"
+                    VerticalAlignment="Center"
+                    Width="40" />
+            </Grid>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

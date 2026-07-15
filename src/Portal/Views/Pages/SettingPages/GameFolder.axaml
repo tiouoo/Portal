@@ -60,8 +60,8 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="classes:MinecraftFolderEntry">
                         <tio:TioExpander
-                            Background="{DynamicResource PopupBackgroundColor}"
-                            BorderBrush="{DynamicResource PopupBorderBrush}"
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
                             BorderThickness="1"
                             HeaderHeight="52"
                             IconHeight="14"
@@ -93,7 +93,7 @@
                                         <StackPanel Margin="5,0,0,0" Spacing="5">
                                             <Panel>
                                                 <Label
-                                                    Content="启用版本隔离"
+                                                    Content="文件夹名称"
                                                     FontSize="13"
                                                     Foreground="{DynamicResource InnerForegroundColor}"
                                                     HorizontalAlignment="Left" />
@@ -118,17 +118,29 @@
                                                         Theme="{StaticResource TransparentHyperlinkButton}" />
                                                 </StackPanel>
                                             </Panel>
-
-                                            <ToggleSwitch IsChecked="{Binding EnableIndependentVersion}" />
-                                        </StackPanel>
-                                        <StackPanel Margin="5,0,0,0" Spacing="5">
-                                            <Label
-                                                Content="文件夹名称"
-                                                FontSize="13"
-                                                Foreground="{DynamicResource InnerForegroundColor}"
-                                                HorizontalAlignment="Left" />
                                             <TextBox Text="{Binding FolderName, Mode=TwoWay}" />
                                         </StackPanel>
+                                        <Panel Margin="10,0">
+                                            <tio:Descriptions HorizontalAlignment="Left" LabelPosition="Top">
+                                                <tio:DescriptionsItem Label="实例数量">
+                                                    <TextBlock>
+                                                        <Run FontSize="32" Text="{Binding InstanceCount}" />
+                                                        <Run Text="个" />
+                                                    </TextBlock>
+                                                </tio:DescriptionsItem>
+                                            </tio:Descriptions>
+                                            <tio:Descriptions
+                                                HorizontalAlignment="Right"
+                                                LabelPosition="Top"
+                                                Margin="0,0,-60,0">
+                                                <tio:DescriptionsItem Label="文件夹大小">
+                                                    <TextBlock>
+                                                        <Run FontSize="32" Text="{Binding FolderSize}" />
+                                                        <Run Text="{Binding SizeUnit}" />
+                                                    </TextBlock>
+                                                </tio:DescriptionsItem>
+                                            </tio:Descriptions>
+                                        </Panel>
                                     </StackPanel>
                                 </StackPanel>
                             </tio:TioExpander.Content>

@@ -10,10 +10,8 @@ public class UpdateChannelToIndexConverter : IValueConverter
     {
         return value switch
         {
-            "dev" => -1,
-            "nightly" => 0,
             "commit" => 1,
-            _ => -1
+            _ => 0
         };
     }
 
@@ -21,10 +19,8 @@ public class UpdateChannelToIndexConverter : IValueConverter
     {
         return value switch
         {
-            -1 => "dev",
-            0 => "nightly",
             1 => "commit",
-            _ => "dev"
+            _ => "nightly"
         };
     }
 }

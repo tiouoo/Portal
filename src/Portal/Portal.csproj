@@ -20,6 +20,9 @@
         <EmbeddedResource Include="..\version-ci.txt">
             <Link>version-ci.txt</Link>
         </EmbeddedResource>
+        <EmbeddedResource Include="..\package-type.txt">
+            <Link>package-type.txt</Link>
+        </EmbeddedResource>
         <AvaloniaResource Include="Icon-Pattern.ico" />
         <AvaloniaResource Include="Icon-Pattern.png" />
         <AvaloniaResource Include="Icon-Pattern-Shadow.png" />

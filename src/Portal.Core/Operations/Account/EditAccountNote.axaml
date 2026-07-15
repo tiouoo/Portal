@@ -1,0 +1,48 @@
+﻿<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Core.Operations.Account.EditAccountNote"
+    x:DataType="account:EditAccountNoteViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:account="clr-namespace:Portal.Core.Operations.Account"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, *, Auto"
+        Width="510">
+        <TextBlock
+            FontSize="16"
+            FontWeight="600"
+            Grid.Row="0"
+            Text="编辑账户备注" />
+        <tio:Form
+            Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            LabelPosition="Top"
+            Margin="0,10,0,15">
+            <tio:FormItem Label="备注">
+                <StackPanel Spacing="4">
+                    <DataValidationErrors>
+                        <TextBox
+                            PlaceholderText="输入备注"
+                            Text="{Binding AccountNote}"
+                            tio:FocusHelper.DialogFocusHint="True" />
+                    </DataValidationErrors>
+                </StackPanel>
+            </tio:FormItem>
+        </tio:Form>
+        <DockPanel Grid.Row="2">
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Command="{Binding CancelCommand}" Content="取消" />
+                <Button Command="{Binding ConfirmCommand}" Content="确定修改" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

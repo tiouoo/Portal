@@ -1,0 +1,72 @@
+﻿<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.SettingPages.Advanced"
+    x:DataType="settingPages:Advanced"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="15">
+        <TextBlock FontSize="26" Text="高级" />
+        <StackPanel Spacing="5">
+            <Label
+                Content="Minecraft窗口标题"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox PlaceholderText="留空默认" Text="{Binding Data.ConfigEntry.OverrideMinecraftWindowTitle}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="Minecraft窗口大小"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Grid ColumnDefinitions="*,*" VerticalAlignment="Top">
+                <TextBox
+                    Grid.Column="0"
+                    InnerLeftContent="宽度 "
+                    Margin="0,0,10,0"
+                    Text="{Binding Data.ConfigEntry.MinecraftWindowWidth}"
+                    VerticalAlignment="Top" />
+                <TextBox
+                    Grid.Column="1"
+                    InnerLeftContent="高度 "
+                    Margin="10,0,0,0"
+                    Text="{Binding Data.ConfigEntry.MinecraftWindowHeight}"
+                    VerticalAlignment="Top" />
+            </Grid>
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="JVM虚拟机参数"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                PlaceholderText="默认留空"
+                Text="{Binding Data.ConfigEntry.JvmArgs}"
+                VerticalAlignment="Top" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="启动前执行命令"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                PlaceholderText="默认留空"
+                Text="{Binding Data.ConfigEntry.BeforeLaunchCommand}"
+                VerticalAlignment="Top" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="包装命令"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                PlaceholderText="默认留空 例：cmd /c {command}"
+                Text="{Binding Data.ConfigEntry.PackagedCommand}"
+                VerticalAlignment="Top" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

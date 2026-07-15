@@ -1,10 +1,11 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Const;
+using Portal.Module.AggregatedSearch;
 using Portal.Module.Update;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -12,6 +13,7 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.SettingPages;
 
+[AggregatedSearchPage("关于", "设置/关于", "About")]
 public partial class About : DataUserControl
 {
     public readonly AboutViewModel AboutViewModel;
@@ -21,8 +23,6 @@ public partial class About : DataUserControl
         InitializeComponent();
         AboutViewModel = new AboutViewModel();
         DataContext = AboutViewModel;
-        if (Data.Version.Type == "dev")
-            AboutViewModel.IsDev = true;
     }
 
     private async void Button_OnClick(object? sender, RoutedEventArgs e)
@@ -34,21 +34,15 @@ public partial class About : DataUserControl
     {
         Data.UiProperty.IsLatestVersion = false;
         Data.UiProperty.FoundNewVersion = false;
-        if (Data.UiProperty.OverrideUpdateChannel == "dev")
-        {
-            sender!.AsTopLevel().Notice("开发版本(dev)不能更新", NotificationType.Error);
-            return;
-        }
-
         var channel = Data.UiProperty.OverrideUpdateChannel;
-        if (channel != "nightly" && channel != "commit")
+        if (channel != "nightly" && channel != "commit" && channel != "dev")
         {
             return;
         }
 
         HyperlinkButton.Content = "检查更新中";
         HyperlinkButton.IsEnabled = false;
-        var result = await CheckUpdate.Main(sender!.AsTopLevel());
+        var result = await UpdateChecker.Check(sender!.AsTopLevel());
         HyperlinkButton.Content = "检查更新";
         HyperlinkButton.IsEnabled = true;
         if (result == null)
@@ -71,7 +65,8 @@ public partial class About : DataUserControl
 
     private void UpdateChannel_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        _ = Check(sender!);
+        if (e.RemovedItems.Count > 0 && Data.Version.Type != "dev")
+            _ = Check(sender!);
     }
 
     private void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
@@ -82,6 +77,5 @@ public partial class About : DataUserControl
 public partial class AboutViewModel : ObservableObject
 {
     public Data Data => Data.Instance;
-
-    [ObservableProperty] public partial bool IsDev { get; set; }
+    public string Info => $"{Data.Version.Type}.{Data.PackageType}";
 }

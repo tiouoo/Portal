@@ -14,19 +14,59 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid.Styles>
+        <Style Selector="Button.custom-title-bar-button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Height" Value="25" />
+            <Setter Property="Width" Value="25" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="7"
+                        Height="24"
+                        Name="bd"
+                        Width="24">
+                        <ContentControl
+                            Content="{TemplateBinding Content}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover">
+                <Style Selector="^ /template/ Border">
+                    <Setter Property="Background" Value="{DynamicResource TranslucentBackgroundColor}" />
+                </Style>
+                <Style Selector="^.close-button /template/ Border">
+                    <Setter Property="Background">
+                        <SolidColorBrush Color="Red" Opacity="{DynamicResource TranslucentBackGroundOpacity}" />
+                    </Setter>
+                </Style>
+                <Style Selector="^.close-button /template/ Border">
+                    <Style Selector="^ Path">
+                        <Setter Property="Fill" Value="White" />
+                    </Style>
+                </Style>
+            </Style>
+        </Style>
+    </Grid.Styles>
     <StackPanel Orientation="Horizontal">
         <StackPanel.Resources>
             <converter:StringIsNotWriteSpaceOrNullConverter x:Key="StringIsNotWriteSpaceOrNullConverter" />
             <converter:ThemeCompareConverter x:Key="ThemeCompareConverter" />
             <converter:IntCompareConverter x:Key="IntCompareConverter" />
         </StackPanel.Resources>
-        <Border IsVisible="{Binding DropMsg, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}">
+        <Border IsVisible="{Binding DropMsg, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}" Margin="3,0">
             <Border
-                Background="{DynamicResource PopupBackgroundColor}"
-                BorderBrush="{DynamicResource PopupBorderBrush}"
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
-                IsVisible="{Binding Data.ConfigEntry.ShowDragDropPrompt}"
+                IsVisible="{Binding Data.ConfigEntry.ShowDragDropTip}"
                 Padding="8,3,8,2"
                 VerticalAlignment="Center">
                 <Panel>
@@ -37,10 +77,15 @@
                 </Panel>
             </Border>
         </Border>
-        <Border IsVisible="{Binding Data.ConfigEntry.ShowUpdatePrompt}">
+        <Button
+            Click="GoToAbout"
+            IsVisible="{Binding Data.ConfigEntry.ShowUpdateTip}"
+            Margin="3,0"
+            Theme="{StaticResource TransparentButton}"
+            VerticalAlignment="Center">
             <Border
-                Background="{DynamicResource PopupBackgroundColor}"
-                BorderBrush="{DynamicResource PopupBorderBrush}"
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
                 IsVisible="{Binding Data.UiProperty.FoundNewVersion}"
@@ -53,16 +98,17 @@
                         VerticalAlignment="Center" />
                 </Panel>
             </Border>
-        </Border>
+        </Button>
         <Button
             Click="AccountButton_Click"
-            Margin="5,0"
+            IsVisible="{Binding Data.ConfigEntry.ShowUsingAccountTip}"
+            Margin="3,0"
             Theme="{StaticResource TransparentButton}"
             VerticalAlignment="Center"
             x:Name="AccountButton">
             <Border
-                Background="{DynamicResource PopupBackgroundColor}"
-                BorderBrush="{DynamicResource PopupBorderBrush}"
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
                 Padding="8,3,8,2">
@@ -82,6 +128,7 @@
         <Button
             Classes="custom-title-bar-button"
             Click="OpenSearch"
+            Margin="3,0,0,0"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="搜索">
             <PathIcon
@@ -284,6 +331,7 @@
     </StackPanel>
     <Rectangle
         HorizontalAlignment="Right"
+        IsVisible="{Binding Data.ConfigEntry.ShowUsingAccountTip}"
         Margin="0,20,100,0"
         Name="AccountFlyoutPoint"
         VerticalAlignment="Center" />

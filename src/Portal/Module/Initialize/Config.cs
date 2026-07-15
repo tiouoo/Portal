@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Newtonsoft.Json;
 using Portal.Classes.Entries;
 using Portal.Const;
+using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -59,19 +60,27 @@ public class Config
         var result = reader.ReadToEnd();
         Data.Instance.Version = JsonConvert.DeserializeObject<CiVersionInfo>(result) ?? new CiVersionInfo()
         {
-            Action = "local",
-            Version = "0.0.0",
-            BuildTime = DateTime.Now, 
-            Commit = "000000",
-            Type = "dev"
+            Type = "dev",
+            VersionTitle = "local-build"
         };
         Data.UiProperty.OverrideUpdateChannel = Data.Instance.Version.Type;
+
+        const string RESOURCE_NAME1 = "Portal.package-type.txt";
+        var assembly1 = Assembly.GetExecutingAssembly();
+        var stream1 = assembly1.GetManifestResourceStream(RESOURCE_NAME1);
+        using var reader1 = new StreamReader(stream1!);
+        var result1 = reader1.ReadToEnd();
+        Data.Instance.PackageType = string.IsNullOrEmpty(result1) ? "source-code" : result1;
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);
         App.Method.SaveConfig();
 
         Data.UiProperty.ConfigLoaded = true;
         ConfigIdentifyExtension.MinecraftFolder(Data.ConfigEntry);
+
+        InstanceManager.Instance.RefreshAll(
+            Data.ConfigEntry.MinecraftFolders.Select(f => (f.FolderPath, f.FolderName))
+        );
 
         InitializationEvents.RaiseBeforeUiLoaded();
     }

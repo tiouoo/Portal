@@ -11,9 +11,9 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Module.Update;
 
-public class CheckUpdate
+public static class UpdateChecker
 {
-    public static async Task<string?> Main(TopLevel sender)
+    public static async Task<string?> Check(TopLevel sender, bool noreply = false)
     {
         var channel = Data.UiProperty.OverrideUpdateChannel;
 
@@ -39,10 +39,12 @@ public class CheckUpdate
         }
         catch (FlurlHttpException e)
         {
+            if (noreply) return null;
             Dispatcher.UIThread.Post(() => sender.Notice($"网络请求错误: {e.StatusCode}\n{e.Message}", NotificationType.Error));
         }
         catch (Exception e)
         {
+            if (noreply) return null;
             Dispatcher.UIThread.Post(() => sender.Notice($"检查更新失败\n{e.Message}", NotificationType.Error));
         }
 

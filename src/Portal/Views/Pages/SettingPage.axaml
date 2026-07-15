@@ -12,59 +12,75 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <tio:NavMenu
+        <ScrollViewer
+            Classes="Flat"
             DockPanel.Dock="Left"
             HorizontalAlignment="Left"
-            Margin="7,0,20,10"
+            Margin="7,0,10,10"
             Width="230">
-            <tio:NavMenuItem Header="Portal">
-                <tio:NavMenuItem
-                    Command="{Binding NavigateTypeCommand}"
-                    CommandParameter="{x:Type p:Appearance}"
-                    Header="显示与外观"
-                    IsSelected="True" />
-                <tio:NavMenuItem
-                    Command="{Binding NavigateTypeCommand}"
-                    CommandParameter="{x:Type p:DefaultBehavior}"
-                    Header="默认行为" />
-                <tio:NavMenuItem
-                    Command="{Binding NavigateTypeCommand}"
-                    CommandParameter="{x:Type p:Notification}"
-                    Header="通知" />
-                <tio:NavMenuItem
-                    Command="{Binding NavigateTypeCommand}"
-                    CommandParameter="{x:Type p:Storage}"
-                    Header="存储" />
-                <tio:NavMenuItem
-                    Command="{Binding NavigateTypeCommand}"
-                    CommandParameter="{x:Type p:About}"
-                    Header="关于" />
-            </tio:NavMenuItem>
-            <tio:NavMenuItem Header="游戏">
-                <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="账户与档案" />
-                <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="Java 虚拟机与内存" />
-                <tio:NavMenuItem
-                    Command="{Binding NavigateTypeCommand}"
-                    CommandParameter="{x:Type p:GameFolder}"
-                    Header="游戏文件夹" />
-                <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="高级" />
-            </tio:NavMenuItem>
-            <tio:NavMenuItem Header="网络">
-                <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="下载" />
-                <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="代理" />
-            </tio:NavMenuItem>
-        </tio:NavMenu>
+            <tio:NavMenu
+                Margin="0,0,10,0"
+                Name="NavMenu"
+                Theme="{StaticResource FlatScrollBarTheme}">
+                <tio:NavMenuItem Header="Portal">
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Appearance}"
+                        Header="显示与外观"
+                        IsSelected="True" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:DefaultBehavior}"
+                        Header="默认行为" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Notification}"
+                        Header="通知" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Storage}"
+                        Header="存储" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:About}"
+                        Header="关于"
+                        Name="AboutItem" />
+                </tio:NavMenuItem>
+                <tio:NavMenuItem Header="游戏">
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Account}"
+                        Header="账户与档案" />
+                    <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="Java 虚拟机与内存" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:GameFolder}"
+                        Header="游戏文件夹" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Advanced}"
+                        Header="高级" />
+                </tio:NavMenuItem>
+                <tio:NavMenuItem Header="网络">
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Download}"
+                        Header="下载" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Agent}"
+                        Header="代理" />
+                </tio:NavMenuItem>
+            </tio:NavMenu>
+        </ScrollViewer>
         <ScrollViewer Margin="0,0,5,0">
             <TransitioningContentControl
                 Content="{Binding CurrentPage}"
                 Margin="0,10,10,10"
-                MaxWidth="800"
+                MaxWidth="790"
                 Name="Frame">
                 <TransitioningContentControl.PageTransition>
-                    <CompositePageTransition>
-                        <CrossFade Duration="0:0:0.2" />
-                        <!-- <PageSlide Duration="0:0:0.3" Orientation="Vertical" /> -->
-                    </CompositePageTransition>
+                    <CrossFade Duration="0:0:0.2" />
                 </TransitioningContentControl.PageTransition>
             </TransitioningContentControl>
         </ScrollViewer>

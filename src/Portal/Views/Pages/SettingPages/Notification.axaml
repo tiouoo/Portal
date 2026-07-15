@@ -35,11 +35,22 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
+                        Text="显示选中账户" />
+                    <ToggleSwitch
+                        DockPanel.Dock="Right"
+                        HorizontalAlignment="Right"
+                        IsChecked="{Binding Data.ConfigEntry.ShowUsingAccountTip}" />
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock
+                        DockPanel.Dock="Left"
+                        FontSize="14"
+                        HorizontalAlignment="Left"
                         Text="文件拖入提示" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
-                        IsChecked="{Binding Data.ConfigEntry.ShowDragDropPrompt}" />
+                        IsChecked="{Binding Data.ConfigEntry.ShowDragDropTip}" />
                 </DockPanel>
                 <DockPanel>
                     <TextBlock
@@ -50,7 +61,7 @@
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
-                        IsChecked="{Binding Data.ConfigEntry.ShowUpdatePrompt}" />
+                        IsChecked="{Binding Data.ConfigEntry.ShowUpdateTip}" />
                 </DockPanel>
             </StackPanel>
         </StackPanel>

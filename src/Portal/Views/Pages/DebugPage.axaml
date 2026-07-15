@@ -10,7 +10,15 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <WrapPanel Margin="10,5,10,10">
+    <WrapPanel ItemSpacing="20" Margin="10,5,10,10">
+        <StackPanel>
+            <Label
+                Content="操作"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Left"
+                Margin="0,0,0,10" />
+            <Button Click="Click1" Content="触发崩溃 (除以0)" />
+        </StackPanel>
         <StackPanel>
             <Label
                 Content="版本信息"

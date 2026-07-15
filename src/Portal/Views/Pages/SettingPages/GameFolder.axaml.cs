@@ -1,8 +1,9 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.OpenFile;
+using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -10,6 +11,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
 
+[AggregatedSearchPage("游戏文件夹", "设置/游戏文件夹", "GameFolder")]
 public partial class GameFolder : DataUserControl
 {
     public GameFolder()

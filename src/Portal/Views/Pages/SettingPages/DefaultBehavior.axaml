@@ -34,7 +34,7 @@
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *切换接管系统对话框需要重启程序" />
+                Text=" *需要重启程序" />
         </StackPanel>
     </StackPanel>
 </UserControl>

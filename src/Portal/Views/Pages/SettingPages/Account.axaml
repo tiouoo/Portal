@@ -1,0 +1,147 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.SettingPages.Account"
+    x:DataType="settingPages:Account"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
+    xmlns:converter="clr-namespace:Portal.Module.Converter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="15">
+        <StackPanel.Resources>
+            <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
+            <converter:AccountTypeToBoolConverter x:Key="AccountTypeToBoolConverter" />
+        </StackPanel.Resources>
+        <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+            <TextBlock FontSize="26" Text="账户与档案" />
+            <Button
+                Click="AddAccountClick"
+                Margin="5,0,0,2"
+                Theme="{StaticResource TransparentButton}"
+                VerticalAlignment="Bottom">
+                <PathIcon
+                    Data="F1 M640,640z M0,0z M352,128C352,110.3 337.7,96 320,96 302.3,96 288,110.3 288,128L288,288 128,288C110.3,288 96,302.3 96,320 96,337.7 110.3,352 128,352L288,352 288,512C288,529.7 302.3,544 320,544 337.7,544 352,529.7 352,512L352,352 512,352C529.7,352 544,337.7 544,320 544,302.3 529.7,288 512,288L352,288 352,128z"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Height="22"
+                    Width="22" />
+            </Button>
+        </StackPanel>
+        <ListBox
+            HorizontalAlignment="Center"
+            ItemsSource="{Binding Data.ConfigEntry.MinecraftAccounts}"
+            SelectedItem="{Binding Data.ConfigEntry.UsingMinecraftMinecraftAccount}"
+            Theme="{DynamicResource BorderListBox}">
+            <ListBox.Styles>
+                <Style Selector="ListBoxItem">
+                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListBox.Styles>
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel ItemSpacing="10" LineSpacing="20" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="classes:MinecraftAccount">
+                    <Border Background="Transparent" VerticalAlignment="Top">
+                        <Border.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem
+                                    Click="SaveSkin_Click"
+                                    CommandParameter="{Binding}"
+                                    Header="保存皮肤">
+                                    <MenuItem.Icon>
+                                        <PathIcon
+                                            Data="F1 M640,640z M0,0z M128,128C128,92.7,156.7,64,192,64L341.5,64C358.5,64,374.8,70.7,386.8,82.7L493.3,189.3C505.3,201.3,512,217.6,512,234.6L512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,128z M336,122.5L336,216C336,229.3,346.7,240,360,240L453.5,240 336,122.5z M256,320C256,302.3 241.7,288 224,288 206.3,288 192,302.3 192,320 192,337.7 206.3,352 224,352 241.7,352 256,337.7 256,320z M220.6,512L419.4,512C435.2,512 448,499.2 448,483.4 448,476.1 445.2,469 440.1,463.7L343.3,361.9C337.3,355.6,328.9,352,320.1,352L319.8,352C311,352,302.7,355.6,296.6,361.9L199.9,463.7C194.8,469 192,476.1 192,483.4 192,499.2 204.8,512 220.6,512z"
+                                            Height="16"
+                                            Width="16" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Click="RefreshInfo_Click"
+                                    CommandParameter="{Binding}"
+                                    Header="刷新信息"
+                                    IsVisible="{Binding AccountType, Converter={StaticResource AccountTypeToBoolConverter}, ConverterParameter=IsOnline}">
+                                    <MenuItem.Icon>
+                                        <PathIcon
+                                            Data="F1 M640,640z M0,0z M500.7,138.7L512,149.4 512,96C512,78.3 526.3,64 544,64 561.7,64 576,78.3 576,96L576,224C576,241.7,561.7,256,544,256L416,256C398.3,256 384,241.7 384,224 384,206.3 398.3,192 416,192L463.9,192 456.3,184.8C456.1,184.6 455.9,184.4 455.7,184.2 380.7,109.2 259.2,109.2 184.2,184.2 109.2,259.2 109.2,380.7 184.2,455.7 259.2,530.7 380.7,530.7 455.7,455.7 463.9,447.5 471.2,438.8 477.6,429.6 487.7,415.1 507.7,411.6 522.2,421.7 536.7,431.8 540.2,451.8 530.1,466.3 521.6,478.5 511.9,490.1 501,501 401,601 238.9,601 139,501 39.1,401 39,239 139,139 238.9,39.1 400.7,39 500.7,138.7z"
+                                            Height="16"
+                                            Width="16" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Click="Rename_Click"
+                                    CommandParameter="{Binding}"
+                                    Header="重命名"
+                                    IsVisible="{Binding AccountType, Converter={StaticResource AccountTypeToBoolConverter}, ConverterParameter=IsOffline}">
+                                    <MenuItem.Icon>
+                                        <PathIcon
+                                            Data="F1 M640,640z M0,0z M535.6,85.7C513.7,63.8,478.3,63.8,456.4,85.7L432,110.1 529.9,208 554.3,183.6C576.2,161.7,576.2,126.3,554.3,104.4L535.6,85.7z M236.4,305.7C230.3,311.8,225.6,319.3,222.9,327.6L193.3,416.4C190.4,425 192.7,434.5 199.1,441 205.5,447.5 215,449.7 223.7,446.8L312.5,417.2C320.7,414.5,328.2,409.8,334.4,403.7L496,241.9 398.1,144 236.4,305.7z M160,128C107,128,64,171,64,224L64,480C64,533,107,576,160,576L416,576C469,576,512,533,512,480L512,384C512,366.3 497.7,352 480,352 462.3,352 448,366.3 448,384L448,480C448,497.7,433.7,512,416,512L160,512C142.3,512,128,497.7,128,480L128,224C128,206.3,142.3,192,160,192L256,192C273.7,192 288,177.7 288,160 288,142.3 273.7,128 256,128L160,128z"
+                                            Height="16"
+                                            Width="16" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Click="Renote_Click"
+                                    CommandParameter="{Binding}"
+                                    Header="修改备注">
+                                    <MenuItem.Icon>
+                                        <PathIcon
+                                            Data="F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z"
+                                            Height="16"
+                                            Width="16" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Click="Remove_Click"
+                                    CommandParameter="{Binding}"
+                                    Header="移除账户">
+                                    <MenuItem.Icon>
+                                        <PathIcon
+                                            Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403,56.8,407.4,69.9L416,96 512,96C529.7,96 544,110.3 544,128 544,145.7 529.7,160 512,160L128,160C110.3,160 96,145.7 96,128 96,110.3 110.3,96 128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3 202.7,512 216,512 229.3,512 240,501.3 240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3 306.7,512 320,512 333.3,512 344,501.3 344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3 410.7,512 424,512 437.3,512 448,501.3 448,488L448,296C448,282.7,437.3,272,424,272z"
+                                            Height="16"
+                                            Width="16" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Border.ContextMenu>
+                        <StackPanel VerticalAlignment="Top">
+                            <Border
+                                Background="{Binding AccountType, Converter={StaticResource AccountTypeToBrushConverter}}"
+                                CornerRadius="6"
+                                Height="140"
+                                Margin="5,15,5,10"
+                                Width="140">
+                                <Image
+                                    Height="130"
+                                    Source="{Binding Cover}"
+                                    VerticalAlignment="Bottom"
+                                    Width="130" />
+                            </Border>
+                            <TextBlock
+                                FontSize="17"
+                                HorizontalAlignment="Left"
+                                Margin="5,0,0,0"
+                                MaxWidth="140"
+                                Text="{Binding Name}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="5,3,0,0"
+                                Text="{Binding DisplayAccountNote}"
+                                TextWrapping="Wrap" />
+                            <TextBlock Margin="5,-1,0,13">
+                                <Run Text="{Binding ShortType}" />
+                                <Run Text="•" />
+                                <Run Text="{Binding DisplayLastLoginTime}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
+</UserControl>

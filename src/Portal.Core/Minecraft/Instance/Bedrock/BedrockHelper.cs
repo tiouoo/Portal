@@ -1,6 +1,7 @@
-﻿using System.Xml;
+using System.Xml;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Entity;
+using Portal.Core.Minecraft.Classes;
 
 namespace Portal.Core.Minecraft.Instance.Bedrock;
 
@@ -35,7 +36,7 @@ public class BedrockHelper
     
     public static BedrockInstanceConfig GetInstanceConfig(string instanceFolder)
     {
-        if (InstanceManager.GetInstanceType(instanceFolder) != InstanceType.Bedrock)
+        if (InstanceManager.GetInstanceType(instanceFolder) != MinecraftInstanceType.Bedrock)
             throw new InvalidOperationException("指定的实例文件夹不是 Bedrock 实例");
         
         var configFile = Path.Combine(instanceFolder, ConfigFolder, "config.json");

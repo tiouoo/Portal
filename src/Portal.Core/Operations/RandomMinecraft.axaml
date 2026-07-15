@@ -1,0 +1,44 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Core.Operations.RandomMinecraft"
+    x:DataType="operations:RandomMinecraftViewModle"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:operations="clr-namespace:Portal.Core.Operations"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, *, Auto"
+        Width="510">
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock
+                FontSize="16"
+                FontWeight="600"
+                Text="开奖啦！" />
+            <StackPanel
+                Margin="0,5,0,0"
+                Orientation="Horizontal"
+                Spacing="5">
+                <TextBlock Text="这次抽中了" />
+                <HyperlinkButton Content="{Binding Instance.InstanceName}" Theme="{StaticResource UnderlineHyperlinkButton}" />
+                <TextBlock Text="，快开始游戏吧！" />
+            </StackPanel>
+        </StackPanel>
+        <Panel Grid.Row="2" Margin="0,30,0,0">
+            <Button
+                Command="{Binding Close}"
+                Content="不玩了"
+                HorizontalAlignment="Left" />
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Command="{Binding Again}" Content="再来一次" />
+                <Button Command="{Binding Complete}" Content="就它了" />
+            </StackPanel>
+        </Panel>
+    </Grid>
+</UserControl>

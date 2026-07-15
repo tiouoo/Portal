@@ -14,7 +14,7 @@
             <TextBlock FontSize="26" Text="存储" />
             <Button
                 Command="{Binding RefreshStorageDataAsync}"
-                Margin="5,0,0,2"
+                Margin="5,0,0,3"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Bottom">
                 <PathIcon
@@ -69,7 +69,8 @@
                 </StackPanel>
                 <Rectangle
                     Fill="{DynamicResource LineColor}"
-                    Margin="0,4,0,10"
+                    Margin="0,0,0,0"
+                    Opacity="0.5"
                     VerticalAlignment="Stretch"
                     Width="1" />
                 <StackPanel>
@@ -93,12 +94,15 @@
             </StackPanel>
         </DockPanel>
 
-        <Separator Background="{DynamicResource LineColor}" Margin="0,5,0,15" />
+        <Separator
+            Background="{DynamicResource LineColor}"
+            Margin="0,5,0,15"
+            Opacity="0.5" />
 
         <StackPanel Spacing="10">
             <Border
-                Background="{DynamicResource PopupBackgroundColor}"
-                BorderBrush="{DynamicResource PopupBorderBrush}"
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="10">
@@ -141,8 +145,8 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="settingPages:GameFolderStorageItem">
                         <Border
-                            Background="{DynamicResource PopupBackgroundColor}"
-                            BorderBrush="{DynamicResource PopupBorderBrush}"
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="10"
                             Padding="10">

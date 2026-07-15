@@ -1,6 +1,4 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -24,4 +22,11 @@ public partial class DebugPage : DataUserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; }
+
+    private void Click1(object? sender, RoutedEventArgs e)
+    {
+        var a = 0;
+        // ReSharper disable once IntDivisionByZero
+        _ = 1 / a;
+    }
 }

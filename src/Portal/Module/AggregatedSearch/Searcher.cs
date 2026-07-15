@@ -10,9 +10,11 @@ public class Searcher
 {
     public static List<AggregatedSearchEntryType> DisplayOrder { get; } =
     [
+        AggregatedSearchEntryType.NextLevelSearch,
+        AggregatedSearchEntryType.Page,
         AggregatedSearchEntryType.Account,
         AggregatedSearchEntryType.AuthServer,
-        AggregatedSearchEntryType.NextLevelSearch
+        AggregatedSearchEntryType.Instance,
     ];
 
     private static readonly StringComparer ChineseStringComparer = StringComparer.Create(
@@ -33,14 +35,47 @@ public class Searcher
             var queryLower = query.Trim().ToLowerInvariant();
             entries = entries.Where(e =>
                 e.Title.ToLowerInvariant().Contains(queryLower) ||
-                e.Description.ToLowerInvariant().Contains(queryLower)
+                e.Description.ToLowerInvariant().Contains(queryLower) ||
+                e.TypeDescription.ToLowerInvariant().Contains(queryLower) ||
+                e.TitlePinyins.Any(p => p.Contains(queryLower)) ||
+                e.TitleFirstLetters.Any(p => p.Contains(queryLower)) ||
+                e.DescriptionPinyins.Any(p => p.Contains(queryLower)) ||
+                e.DescriptionFirstLetters.Any(p => p.Contains(queryLower)) ||
+                e.TypeDescriptionPinyins.Any(p => p.Contains(queryLower)) ||
+                e.TypeDescriptionFirstLetters.Any(p => p.Contains(queryLower))
             );
         }
 
-        return entries
+        var result = entries
             .OrderBy(e => GetTypeOrderIndex(e.Type))
             .ThenBy(e => e.Title, ChineseStringComparer)
             .ToList();
+
+        if (!string.IsNullOrWhiteSpace(query) && 
+            (!type.HasValue || type.Value.HasFlag(AggregatedSearchEntryType.NextLevelSearch)))
+        {
+            var trimmedQuery = query.Trim();
+            result.Insert(0, new AggregatedSearchEntry
+            {
+                Type = AggregatedSearchEntryType.NextLevelSearch,
+                Title = $@"在 Crossforge 上搜索 ""{trimmedQuery}""",
+                Description = "在 Crossforge 平台中搜索",
+                IconKey = "Crossforge",
+                TypeDescription = "下级搜索",
+                Data = ("crossforge", trimmedQuery)
+            });
+            result.Insert(1, new AggregatedSearchEntry
+            {
+                Type = AggregatedSearchEntryType.NextLevelSearch,
+                Title = $@"在 Modrinth 上搜索 ""{trimmedQuery}""",
+                Description = "在 Modrinth 平台中搜索",
+                IconKey = "Modrinth",
+                TypeDescription = "下级搜索",
+                Data = ("modrinth", trimmedQuery)
+            });
+        }
+
+        return result;
     }
 
     private static int GetTypeOrderIndex(AggregatedSearchEntryType type)

@@ -16,8 +16,8 @@
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="关于" />
         <Border
-            Background="{DynamicResource PopupBackgroundColor}"
-            BorderBrush="{DynamicResource PopupBorderBrush}"
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
             BorderThickness="1"
             CornerRadius="{DynamicResource TioCornerRadius}"
             Padding="10">
@@ -49,28 +49,39 @@
                             FontSize="17"
                             Margin="5,2,0,2"
                             Text="{Binding Data.Version.VersionTitle}" />
-                        <TextBlock
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Margin="5,0,0,0">
-                            <Run Text="{Binding Data.Version.Type}" />
-                            <Run Text="|" />
-                            <Run Text="{Binding Data.Version.BuildTime, StringFormat='{}{0:yyyy-MM-dd}'}" />
-                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" Spacing="3">
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Margin="5,0,0,0"
+                                MaxLines="1">
+                                <Run Text="{Binding Info}" />
+                            </TextBlock>
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                MaxLines="1"
+                                Text="|" />
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Margin="0,1,0,0"
+                                MaxLines="1"
+                                Text="{Binding Data.Version.BuildTime, StringFormat='{}{0:yyyy-MM-dd HH:MM:ss}'}" />
+                        </StackPanel>
                     </StackPanel>
                     <HyperlinkButton
                         Click="Button_OnClick"
                         Content="检查更新"
                         FontSize="12"
                         HorizontalAlignment="Right"
-                        IsVisible="{Binding !IsDev}"
                         Margin="0,2,5,0"
                         Name="HyperlinkButton"
                         Theme="{StaticResource TransparentHyperlinkButton}"
                         VerticalAlignment="Top" />
                 </Panel>
                 <StackPanel IsVisible="{Binding Data.UiProperty.FoundNewVersion}">
-                    <Separator Background="{DynamicResource PopupBorderBrush}" Margin="0,8" />
+                    <Separator Background="{DynamicResource TranslucentBorderBrush}" Margin="0,8" />
                     <Panel>
                         <TextBlock
                             FontSize="13"
@@ -113,7 +124,7 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Text=" *前往 设置-代理 开启GitHub代理可加快更新速度" />
         </StackPanel>
-        <StackPanel IsVisible="{Binding !IsDev}" Spacing="5">
+        <StackPanel Spacing="5">
             <Label
                 Content="更新通道"
                 FontSize="13"
@@ -127,7 +138,7 @@
                 <ComboBoxItem Content="提交构建版本" />
             </ComboBox>
         </StackPanel>
-        <Separator />
+        <Separator Background="{DynamicResource TranslucentBorderBrush}" />
         <StackPanel Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="5">
                 <TextBlock Text="Source Code:" />

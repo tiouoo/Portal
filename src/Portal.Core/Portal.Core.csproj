@@ -4,10 +4,12 @@
       <PackageReference Include="MinecraftLaunch" />
       <PackageReference Include="CommunityToolkit.Mvvm" />
       <PackageReference Include="MinecraftLaunch.Skin" />
+      <PackageReference Include="PinYinConverterCore" />
       <PackageReference Include="SkiaSharp" />
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Assets\" />
       <Folder Include="Minecraft\Instance\Java\" />
       <Folder Include="Minecraft\Instance\Manifest\Bedrock\" />
     </ItemGroup>
@@ -30,6 +32,27 @@
         <DependentUpon>Offline.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Assets\McIcons\QuiltIcon.png" />
+      <EmbeddedResource Include="Assets\McIcons\QuiltIcon.png" />
+      <None Remove="Assets\McIcons\OptiFineIcon.png" />
+      <EmbeddedResource Include="Assets\McIcons\OptiFineIcon.png" />
+      <None Remove="Assets\McIcons\NeoForgeIcon.png" />
+      <EmbeddedResource Include="Assets\McIcons\NeoForgeIcon.png" />
+      <None Remove="Assets\McIcons\grass_block_side.png" />
+      <EmbeddedResource Include="Assets\McIcons\grass_block_side.png" />
+      <None Remove="Assets\McIcons\furnace_front.png" />
+      <EmbeddedResource Include="Assets\McIcons\furnace_front.png" />
+      <None Remove="Assets\McIcons\ForgeIcon.png" />
+      <EmbeddedResource Include="Assets\McIcons\ForgeIcon.png" />
+      <None Remove="Assets\McIcons\FabricIcon.png" />
+      <EmbeddedResource Include="Assets\McIcons\FabricIcon.png" />
+      <None Remove="Assets\McIcons\dirt_path_side.png" />
+      <EmbeddedResource Include="Assets\McIcons\dirt_path_side.png" />
+      <None Remove="Assets\McIcons\crafting_table_front.png" />
+      <EmbeddedResource Include="Assets\McIcons\crafting_table_front.png" />
     </ItemGroup>
 
 </Project>

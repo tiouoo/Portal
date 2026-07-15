@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Avalonia;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MinecraftLaunch;
 using Portal.Views;
 using Portal.Classes.Enums;
 using Portal.Const;
@@ -28,25 +29,43 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
     [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
     [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
+    [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
+    [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
+    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
+    [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
+    [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
+    [ObservableProperty] public partial bool EnableMinecraftMirror { get; set; }
+    [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
+    [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
+    [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
+    [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
+    [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
+    [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
+    [ObservableProperty] public partial string? CustomUserAgent { get; set; }
+    [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
+    [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
+    [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
+    [ObservableProperty] public partial string? JvmArgs { get; set; }
+    [ObservableProperty] public partial string? PackagedCommand { get; set; }
+    [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
+    [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
+    [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 256;
+    [ObservableProperty] public partial int DownloadMaxRetryCount { get; set; } = 4;
+    [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 128;
+    [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
+    [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
+    [ObservableProperty] public partial int MinecraftMaxMemory { get; set; } = 4096;
+    [ObservableProperty] public partial double ControlOpacity { get; set; } = 1;
+    [ObservableProperty] public partial double TranslucentControlOpacity { get; set; } = 1;
+    [ObservableProperty] public partial double AcrylicOpacity { get; set; } = 0.2;
+    [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
+    [ObservableProperty] public partial double MicaOpacity { get; set; } = 0.8;
+    [ObservableProperty] public partial double BlurOpacity { get; set; } = 0.5;
+    [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
+    [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
-    [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
-    [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
-    [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
-    [ObservableProperty] public partial bool ShowDragDropPrompt { get; set; } = true;
-    [ObservableProperty] public partial bool ShowUpdatePrompt { get; set; } = true;
-
-    [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
-    [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
-    [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
-    [ObservableProperty] public partial double ControlOpacity { get; set; } = 0.15;
-    [ObservableProperty] public partial double AcrylicOpacity { get; set; } = 0.2;
-    [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
-    [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
-    [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
-    [ObservableProperty] public partial double MicaOpacity { get; set; } = 0.8;
-    [ObservableProperty] public partial double BlurOpacity { get; set; } = 0.5;
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -62,19 +81,36 @@ public partial class ConfigEntry : ObservableObject
             case nameof(EnableCustomForegroundColor):
                 ApplyForegroundColor();
                 break;
-            case nameof(BackgroundMode):
             case nameof(BackgroundImagePath):
             case nameof(BackgroundSolidColor):
             case nameof(AcrylicOpacity):
-            case nameof(ControlOpacity):
             case nameof(ImageBlurRadius):
             case nameof(MicaOpacity):
             case nameof(BlurOpacity):
                 TabWindow.ApplyBackgroundToAllWindows();
-                if (BackgroundMode == BackgroundMode.Default)
-                    Application.Current.Resources.Remove("BackGroundOpacity");
-                else
-                    Application.Current.Resources["BackGroundOpacity"] = ControlOpacity;
+                break;
+            case nameof(ControlOpacity):
+            case nameof(TranslucentControlOpacity):
+                SetResource();
+                break;
+            case nameof(BackgroundMode):
+                TabWindow.ApplyBackgroundToAllWindows();
+                SetResource();
+                break;
+            case nameof(EnableFragmentDownload):
+                DownloadManager.IsEnableFragment = EnableFragmentDownload;
+                break;
+            case nameof(EnableMinecraftMirror):
+                DownloadManager.IsEnableMirror = EnableMinecraftMirror;
+                break;
+            case nameof(DownloadMaxThreadCount):
+                DownloadManager.MaxThread = DownloadMaxThreadCount;
+                break;
+            case nameof(DownloadMaxRetryCount):
+                DownloadManager.MaxRetryCount = DownloadMaxRetryCount;
+                break;
+            case nameof(DownloadMaxFragmentCount):
+                DownloadManager.MaxFragment = DownloadMaxFragmentCount;
                 break;
         }
 
@@ -84,6 +120,20 @@ public partial class ConfigEntry : ObservableObject
         }
 
         App.Method.SaveConfig();
+    }
+
+    private void SetResource()
+    {
+        if (BackgroundMode == BackgroundMode.Default)
+        {
+            Application.Current.Resources.Remove("BackGroundOpacity");
+            Application.Current.Resources.Remove("TranslucentBackGroundOpacity");
+        }
+        else
+        {
+            Application.Current.Resources["BackGroundOpacity"] = ControlOpacity;
+            Application.Current.Resources["TranslucentBackGroundOpacity"] = TranslucentControlOpacity;
+        }
     }
 
     private void ApplyForegroundColor()
@@ -105,7 +155,7 @@ public partial class ConfigEntry : ObservableObject
 
         app.Resources["ForegroundColor"] = new SolidColorBrush(color);
         app.Resources["InnerForegroundColor"] = new SolidColorBrush(
-            Color.FromRgb((byte)(color.R * 0.8), (byte)(color.G * 0.8), (byte)(color.B * 0.8)));
+            Color.FromRgb((byte)(color.R * 0.9), (byte)(color.G * 0.9), (byte)(color.B * 0.9)));
     }
 
     public static void ClearForegroundColor()

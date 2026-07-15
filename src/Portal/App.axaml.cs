@@ -71,33 +71,33 @@ public partial class App : Application
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         Logger.Fatal($"AppDomain 异常: {e}");
-        // try
-        // {
-        //     var win = new CrashWindow(e.ToString() ?? "Unhandled Exception");
-        //     win.Show();
-        // }
-        // catch (Exception ex)
-        // {
-        //     Logger.Fatal($"显示崩溃窗口失败: {ex}");
-        // }
+        try
+        {
+            var win = new CrashWindow(e.ToString() ?? "Unhandled Exception");
+            win.Show();
+        }
+        catch (Exception ex)
+        {
+            Logger.Fatal($"显示崩溃窗口失败: {ex}");
+        }
     }
 
     private void UIThread_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         Logger.Fatal($"UI线程异常: {e.Exception}");
-        // try
-        // {
-        //     var win = new CrashWindow(e.Exception);
-        //     win.Show();
-        // }
-        // catch (Exception ex)
-        // {
-        //     Logger.Fatal($"显示崩溃窗口失败: {ex}");
-        // }
-        // finally
-        // {
-        //     e.Handled = true;
-        // }
+        try
+        {
+            var win = new CrashWindow(e.Exception.ToString());
+            win.Show();
+        }
+        catch (Exception ex)
+        {
+            Logger.Fatal($"显示崩溃窗口失败: {ex}");
+        }
+        finally
+        {
+            e.Handled = true;
+        }
     }
 
     private void OpenSetting_OnClick(object? sender, EventArgs e)

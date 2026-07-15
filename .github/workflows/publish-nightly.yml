@@ -71,7 +71,9 @@ jobs:
           git submodule foreach --recursive 'git fetch origin main && git checkout -B main origin/main'
 
       - name: Write CI Config
-        run: echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+        run: |
+          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+          echo 'appimage' > ./src/package-type.txt
 
       - name: Dependency
         run: |
@@ -97,6 +99,13 @@ jobs:
     strategy:
       matrix:
         rid: [win-x64, win-x86, win-arm64]
+        include:
+          - rid: win-x64
+            output_rid: win.x64
+          - rid: win-x86
+            output_rid: win.x86
+          - rid: win-arm64
+            output_rid: win.arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -110,7 +119,9 @@ jobs:
         shell: bash
 
       - name: Write CI Config
-        run: echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+        run: |
+          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+          echo 'portable' > ./src/package-type.txt
         shell: bash
 
       - name: Build & Package
@@ -121,18 +132,28 @@ jobs:
           dotnet restore -r ${{ matrix.rid }}
           dotnet publish -c Release -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=true /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
           cd "../../dist"
-          Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.${{ matrix.rid }}.executable.exe" -Force
-          Compress-Archive -Path "Portal.${{ matrix.rid }}.executable.exe" -DestinationPath "../Portal.${{ matrix.rid }}.executable.zip" -Force
+          Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.${{ matrix.output_rid }}.portable.exe" -Force
+          Compress-Archive -Path "Portal.${{ matrix.output_rid }}.portable.exe" -DestinationPath "../Portal.${{ matrix.output_rid }}.portable.zip" -Force
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win-exe-${{ matrix.rid }}-artifacts
+          name: win-exe-${{ matrix.output_rid }}-artifacts
           path: ./Portal.*.zip
 
   win-installer:
     runs-on: windows-latest
     needs: prepare
+    strategy:
+      matrix:
+        rid: [win-x64, win-x86, win-arm64]
+        include:
+          - rid: win-x64
+            output_rid: win.x64
+          - rid: win-x86
+            output_rid: win.x86
+          - rid: win-arm64
+            output_rid: win.arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -154,20 +175,20 @@ jobs:
         run: Copy-Item "./assets/ChineseSimplified.isl" "C:\Program Files (x86)\Inno Setup 6\Default.isl" -Force
 
       - name: Write CI Config
-        run: echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+        run: |
+          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+          echo 'installer' > ./src/package-type.txt
         shell: bash
 
       - name: Build
         run: |
           cd ./src/Portal.Desktop
-          pupnet -r win-x64 -k setup -y -o Portal.win.x64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
-          pupnet -r win-x86 -k setup -y -o Portal.win.x86.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
-          pupnet -r win-arm64 -k setup -y -o Portal.win.arm64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
+          pupnet -r ${{ matrix.rid }} -k setup -y -o Portal.${{ matrix.output_rid }}.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win-installer-artifacts
+          name: win-installer-${{ matrix.output_rid }}-artifacts
           path: src/Portal.Desktop/Deploy/OUT/Portal.win.*.installer.exe
 
   mac-dmg:
@@ -193,7 +214,9 @@ jobs:
           git submodule foreach --recursive 'git fetch origin main && git checkout -B main origin/main'
 
       - name: Write CI Config
-        run: echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+        run: |
+          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+          echo 'dmg' > ./src/package-type.txt
 
       - name: Build macOS App
         run: |
