@@ -31,8 +31,7 @@ public static class ChangeSkinDialog
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalOffset = 80,
-            VerticalAnchor = VerticalPosition.Top
+            VerticalAnchor = VerticalPosition.Center
         };
 
         var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(

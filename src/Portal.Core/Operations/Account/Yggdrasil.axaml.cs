@@ -142,8 +142,7 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalOffset = 110,
-            VerticalAnchor = VerticalPosition.Top
+            VerticalAnchor = VerticalPosition.Center
         };
 
         var result = await OverlayDialog.ShowCustomAsync<AuthServer, AuthServerViewModel, Minecraft.Classes.AuthServer>(

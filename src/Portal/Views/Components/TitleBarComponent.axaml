@@ -306,7 +306,7 @@
                                             HorizontalAlignment="Left"
                                             Margin="5,0"
                                             Orientation="Horizontal"
-                                            Spacing="3">
+                                            Spacing="8">
                                             <Button
                                                 Classes="delete-btn"
                                                 Click="ChangeSkin_OnClick"

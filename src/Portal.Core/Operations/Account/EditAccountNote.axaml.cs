@@ -33,8 +33,7 @@ public static class EditAccountNoteDialog
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalOffset = 110,
-            VerticalAnchor = VerticalPosition.Top
+            VerticalAnchor = VerticalPosition.Center
         };
 
         var result = await OverlayDialog.ShowCustomAsync<EditAccountNote, EditAccountNoteViewModel, string?>(
