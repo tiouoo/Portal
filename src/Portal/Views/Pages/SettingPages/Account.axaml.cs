@@ -90,7 +90,7 @@ public partial class Account : DataUserControl
             }
             else if (account.AccountType == AccountType.Yggdrasil)
             {
-                refreshed = await AccountRefresher.RefreshYggdrasil(account);
+                refreshed = await AccountRefresher.RefreshYggdrasil(account, Data.ConfigEntry.MinecraftAccounts);
             }
 
             if (refreshed != null)
