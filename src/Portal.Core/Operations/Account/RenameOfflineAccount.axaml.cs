@@ -198,7 +198,7 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
         }
         else
         {
-            uuid = _originalAccount.Uuid ?? MinecraftAccount.GetMinecraftOfflineUuid(RoleName);
+            uuid = _originalAccount.Uuid ?? MinecraftAccount.GetMinecraftOfflineUuid(RoleName!);
         }
 
         var newAccount = new MinecraftAccount(AccountType.Offline)

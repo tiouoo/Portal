@@ -24,12 +24,14 @@ public class BedrockLaunch : IBedrockLaunch
             GameType = _instanceConfig.Type switch
             { 
                 BedrockInstanceReleaseType.Preview => MinecraftGameTypeVersion.Preview,
-                BedrockInstanceReleaseType.Release => MinecraftGameTypeVersion.Release
+                BedrockInstanceReleaseType.Release => MinecraftGameTypeVersion.Release,
+                _ => throw new ArgumentOutOfRangeException(nameof(_instanceConfig.Type), _instanceConfig.Type, null)
             },
             MinecraftBuildType = _instanceConfig.BuildType switch
             {
                 BedrockBuildType.GDK => MinecraftBuildTypeVersion.GDK,
-                BedrockBuildType.UWP => MinecraftBuildTypeVersion.UWP
+                BedrockBuildType.UWP => MinecraftBuildTypeVersion.UWP,
+                _ => throw new ArgumentOutOfRangeException(nameof(_instanceConfig.BuildType), _instanceConfig.BuildType, null)
             },
             RegisterProgress = new Progress<DeploymentProgress>(progress =>
             {

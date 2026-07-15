@@ -55,7 +55,9 @@ public class ConfigEntity<T> where T : new()
     {
         if (!File.Exists(Path))
         {
-            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path));
+            var directory = System.IO.Path.GetDirectoryName(Path);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
             Save();
             return;
         }

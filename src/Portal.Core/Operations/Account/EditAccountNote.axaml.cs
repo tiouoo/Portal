@@ -23,7 +23,7 @@ public partial class EditAccountNote : UserControl
 
 public static class EditAccountNoteDialog
 {
-    public static async Task<string?> Show(string hostId, string accountNote)
+    public static async Task<string?> Show(string hostId, string? accountNote)
     {
         var options = new OverlayDialogOptions
         {
@@ -52,7 +52,7 @@ public partial class EditAccountNoteViewModel : ObservableObject, IDialogContext
     public ICommand CancelCommand { get; }
 
 
-    public EditAccountNoteViewModel(string accountNote)
+    public EditAccountNoteViewModel(string? accountNote)
     {
         AccountNote = accountNote;
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);

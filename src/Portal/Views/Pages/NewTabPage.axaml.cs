@@ -65,7 +65,8 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     {
         if (InstanceManager.Instance.Instances.Count == 0)
         {
-            sender.AsTopLevel().Notice("还没有实例可以抽签哦", NotificationType.Error);
+            if (sender is not null)
+                sender.AsTopLevel()?.Notice("还没有实例可以抽签哦", NotificationType.Error);
             return;
         }
 
@@ -90,8 +91,11 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         async Task Show()
         {
             var result = InstanceManager.Instance.Instances.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+            if (result is null || sender is null || sender.AsTopLevel() is not { } topLevel)
+                return;
+
             var feed = await OverlayDialog.ShowCustomAsync<RandomMinecraft, RandomMinecraftViewModle, string>(
-                new RandomMinecraftViewModle(result), sender.AsTopLevel().TryGetHostId(), options: options);
+                new RandomMinecraftViewModle(result), topLevel.TryGetHostId(), options: options);
 
             if (feed == "again")
             {
@@ -115,10 +119,12 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
     private void ButtonOpenInstance_OnClick(object? sender, RoutedEventArgs e)
     {
-        var tab = new TabEntry(sender.AsTopLevel() as TioTabWindowBase, new InstancesPage());
-        var tioTabWindowBase = sender.AsTopLevel() as TioTabWindowBase;
-        tioTabWindowBase?.CreateTab(tab);
-        tioTabWindowBase?.SelectTab(tab);
+        if (sender is null || sender.AsTopLevel() is not TioTabWindowBase window)
+            return;
+
+        var tab = new TabEntry(window, new InstancesPage());
+        window.CreateTab(tab);
+        window.SelectTab(tab);
     }
 
     private void RefreshInstance_Click(object? sender, RoutedEventArgs e)

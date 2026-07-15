@@ -23,8 +23,10 @@ public class BedrockHelper
 
         if (identityNode != null)
         {
-            string version = identityNode.Attributes["Version"]?.Value;
-            string packName = identityNode.Attributes["Name"]?.Value;
+            string version = identityNode.Attributes["Version"]?.Value
+                ?? throw new InvalidDataException("Identity 节点缺少 Version 属性");
+            string packName = identityNode.Attributes["Name"]?.Value
+                ?? throw new InvalidDataException("Identity 节点缺少 Name 属性");
 
             return (version, packName);
         }

@@ -10,6 +10,10 @@ namespace Portal.Views;
 
 public partial class CrashWindow : TioWindow
 {
+    public CrashWindow() : this(string.Empty)
+    {
+    }
+
     public CrashWindow(string e)
     {
         InitializeComponent();

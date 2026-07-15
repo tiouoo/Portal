@@ -34,6 +34,10 @@ public partial class NewsPage : DataUserControl, ITioTabPage
         }
     }
 
+    public NewsPage() : this(false)
+    {
+    }
+
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = "新闻",
@@ -45,10 +49,11 @@ public partial class NewsPage : DataUserControl, ITioTabPage
 
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
-        var tioTabPage = new NewsPage();
-        var tab = new TabEntry(sender.AsTopLevel() as TioTabWindowBase, tioTabPage);
-        var tioTabWindowBase = sender.AsTopLevel() as TioTabWindowBase;
-        tioTabWindowBase?.CreateTab(tab);
-        tioTabWindowBase?.SelectTab(tab);
+        if (sender is null || sender.AsTopLevel() is not TioTabWindowBase window)
+            return;
+
+        var tab = new TabEntry(window, new NewsPage());
+        window.CreateTab(tab);
+        window.SelectTab(tab);
     }
 }

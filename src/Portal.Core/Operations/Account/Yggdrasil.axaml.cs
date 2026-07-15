@@ -243,9 +243,9 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                 ErrMsg = "验证服务器返回成功，但未接收到账户数据。";
             }
             
-            Logger.Info("验证成功 \n" + result.AsJson());
+            Logger.Info("验证成功 \n" + result!.AsJson());
 
-            var yggdrasilAccounts = result.ToList();
+            var yggdrasilAccounts = result!.ToList();
             if (yggdrasilAccounts.Any())
             {
                 FetchingMsg = $"正在获取账户信息，已完成：(0/{yggdrasilAccounts.Count})";
@@ -277,8 +277,9 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                         YggdrasilServerUrl = ServerUrl,
                         Skin = base64,
                         ServerNote = 
-                            BuiltInServers.FirstOrDefault(x => UrlHelper.AreUrlsEqual(x.ServerUrl, ServerUrl))
-                                .DisplayText,
+                            BuiltInServers.FirstOrDefault(x => x.ServerUrl is not null && ServerUrl is not null &&
+                                                                UrlHelper.AreUrlsEqual(x.ServerUrl, ServerUrl))
+                                ?.DisplayText ?? string.Empty,
                         MetaData = account.MetaData,
                         Email = Username,
                         Password = Password,

@@ -220,7 +220,7 @@ public partial class Account : DataUserControl
             return;
 
         var hostId = this.TryGetHostId()!;
-        var result = await EditAccountNoteDialog.Show(hostId, account.AccountNote);
+        var result = await EditAccountNoteDialog.Show(hostId, account.AccountNote ?? string.Empty);
 
         if (result != null)
         {
