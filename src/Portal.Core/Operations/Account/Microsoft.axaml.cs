@@ -13,7 +13,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Components.Authenticator;
-using MinecraftLaunch.Skin.Class.Fetchers;
+using MinecraftLaunch.Components.Provider;
 using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -89,9 +89,21 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
             Msg = "登录完成，正在获取账户信息。";
             IsAuthing = true;
             var account = await authenticator.AuthenticateAsync(oAuth2Token);
-            MicrosoftSkinFetcher skinFetcher = new(account.Uuid.ToString());
-            var bytes = await skinFetcher.GetSkinAsync();
-            var skin = bytes.ToBase64();
+
+            string skin = MinecraftAccount.SteveSkin;
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                await using var skinStream = await SkinProvider.GetMicrosoftSkinDataAsync(account, cts.Token);
+                using var ms = new MemoryStream();
+                await skinStream.CopyToAsync(ms, cts.Token);
+                skin = ms.ToArray().ToBase64();
+            }
+            catch
+            {
+                // 使用默认皮肤
+            }
+
             RequestClose.Invoke(this, new MinecraftAccount(AccountType.Microsoft)
             {
                 LastRefreshTime = DateTime.Now,

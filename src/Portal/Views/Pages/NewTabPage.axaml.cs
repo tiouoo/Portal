@@ -1,24 +1,16 @@
-using System.Collections.ObjectModel;
-using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MinecraftLaunch.Base.Enums;
-using Portal.Classes.Entries;
-using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Operations;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -39,8 +31,10 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         InitializeComponent();
         NewTabViewModel = new NewTabViewModel();
         DataContext = NewTabViewModel;
-        Loaded += (_, _) => NewTabViewModel.ApplyFilterAndSort();
-        
+        Loaded += (_, _) =>
+        {
+            NewTabViewModel.ApplyFilterAndSort();
+        };
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
     }
 
@@ -143,6 +137,8 @@ public partial class NewTabViewModel : InstanceListViewModelBase
         SelectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
     }
 
+    public NewsPage NewsPage { get; } = new(true);
+    
     [RelayCommand]
     public void ToggleFavorite(MinecraftInstance instance)
     {

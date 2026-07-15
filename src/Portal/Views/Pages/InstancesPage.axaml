@@ -88,19 +88,22 @@
             DockPanel.Dock="Bottom"
             Margin="0,0,5,5"
             Name="MainScrollViewer">
-            <ItemsControl
+            <ItemsRepeater
                 ItemsSource="{Binding FilteredMinecraftInstances}"
                 Margin="2,0,9,0"
                 VerticalAlignment="Top">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid
-                            ColumnSpacing="12"
-                            Columns="{Binding #MainScrollViewer.Bounds.Width, Converter={StaticResource WidthToColumnsConv}}"
-                            RowSpacing="12" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
+
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="12"
+                        MinItemHeight="125"
+                        MinItemWidth="270"
+                        MinRowSpacing="12"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+
+                <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="classes:MinecraftInstance">
                         <Border
                             Background="{DynamicResource TranslucentBackgroundColor}"
@@ -109,7 +112,7 @@
                             CornerRadius="10"
                             Height="125"
                             Name="InstanceCard">
-                            <!--  ToolTip.Tip="{Binding FullInfo}"  -->
+
                             <Border.Styles>
                                 <Style Selector="Border#InstanceCard">
                                     <Style Selector="^ Button#UnfavoritedButton">
@@ -122,6 +125,7 @@
                                     </Style>
                                 </Style>
                             </Border.Styles>
+
                             <DockPanel Margin="12,12,12,5">
                                 <DockPanel DockPanel.Dock="Top">
                                     <Border
@@ -143,6 +147,7 @@
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="Wrap" />
                                 </DockPanel>
+
                                 <StackPanel
                                     DockPanel.Dock="Bottom"
                                     Margin="0,0,0,5"
@@ -173,6 +178,7 @@
                                             DockPanel.Dock="Right"
                                             HorizontalAlignment="Right"
                                             Orientation="Horizontal">
+
                                             <Button
                                                 Background="Transparent"
                                                 BorderThickness="0"
@@ -197,6 +203,7 @@
                                                     </Transitions>
                                                 </Button.Transitions>
                                             </Button>
+
                                             <Button
                                                 Background="Transparent"
                                                 BorderThickness="0"
@@ -221,14 +228,15 @@
                                                         TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
                                             </Button>
+
                                         </StackPanel>
                                     </DockPanel>
                                 </StackPanel>
                             </DockPanel>
                         </Border>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
         </controls:ScrollView>
     </DockPanel>
 </UserControl>

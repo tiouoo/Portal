@@ -3,7 +3,6 @@
     <ItemGroup>
       <PackageReference Include="MinecraftLaunch" />
       <PackageReference Include="CommunityToolkit.Mvvm" />
-      <PackageReference Include="MinecraftLaunch.Skin" />
       <PackageReference Include="PinYinConverterCore" />
       <PackageReference Include="SkiaSharp" />
     </ItemGroup>

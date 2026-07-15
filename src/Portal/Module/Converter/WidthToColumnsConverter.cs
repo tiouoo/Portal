@@ -10,7 +10,7 @@ public class WidthToColumnsConverter : IValueConverter
     {
         if (value is not double width) return 4;
 
-        var minColumnWidth = 220;
+        var minColumnWidth = parameter is string s && int.TryParse(s, out var paramWidth) ? paramWidth : 220;
         var spacing = 12;
 
         var availableWidth = width - 24;

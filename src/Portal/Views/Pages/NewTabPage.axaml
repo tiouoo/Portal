@@ -5,160 +5,126 @@
     x:Class="Portal.Views.Pages.NewTabPage"
     x:DataType="pages:NewTabViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:converters="clr-namespace:Tio.Avalonia.Standard.Modules.Converters;assembly=Tio.Avalonia.Standard"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:entries="clr-namespace:Portal.Classes.Entries;assembly=Portal"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:portalConverters="clr-namespace:Portal.Module.Converter;assembly=Portal"
     xmlns:smoothScroll="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <converters:CharacterWrapConverter x:Key="CharWrapConv" />
+        <portalConverters:WidthToColumnsConverter x:Key="WidthToColumnsConv" />
+        <portalConverters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
     </UserControl.Resources>
-    <ScrollViewer Classes="Flat" Margin="12,2,12,10">
-        <DockPanel VerticalAlignment="Top">
-            <StackPanel
-                DockPanel.Dock="Right"
-                HorizontalAlignment="Right"
-                Margin="12,0,0,0"
-                Name="StackPanel"
-                Spacing="12"
-                VerticalAlignment="Top">
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="16"
-                    Height="110"
-                    Width="220">
-                    <Grid>
-                        <StackPanel
-                            IsVisible="{Binding !HasRecentInstance}"
-                            Margin="0,0,0,8"
-                            Spacing="5"
-                            VerticalAlignment="Center">
-                            <PathIcon
-                                Data="F1 M640,640z M0,0z M448,128C554,128 640,214 640,320 640,426 554,512 448,512L192,512C86,512 0,426 0,320 0,214 86,128 192,128L448,128z M192,240C178.7,240,168,250.7,168,264L168,296 136,296C122.7,296 112,306.7 112,320 112,333.3 122.7,344 136,344L168,344 168,376C168,389.3 178.7,400 192,400 205.3,400 216,389.3 216,376L216,344 248,344C261.3,344 272,333.3 272,320 272,306.7 261.3,296 248,296L216,296 216,264C216,250.7,205.3,240,192,240z M432,336C414.3,336 400,350.3 400,368 400,385.7 414.3,400 432,400 449.7,400 464,385.7 464,368 464,350.3 449.7,336 432,336z M496,240C478.3,240 464,254.3 464,272 464,289.7 478.3,304 496,304 513.7,304 528,289.7 528,272 528,254.3 513.7,240 496,240z"
-                                Foreground="{DynamicResource InnerForegroundColor}"
-                                Width="30" />
-                            <TextBlock
-                                Foreground="{DynamicResource InnerForegroundColor}"
-                                HorizontalAlignment="Center"
-                                Text="暂无最近游戏" />
-                        </StackPanel>
-                        <Panel>
-                            <DockPanel
-                                Background="Transparent"
-                                IsVisible="{Binding HasRecentInstance}"
-                                Margin="12,10">
-                                <!--  ToolTip.ShowDelay="3000"  -->
-                                <!--  ToolTip.Tip="{Binding RecentInstance.FullInfo}"  -->
-                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                                    <Border
-                                        ClipToBounds="True"
-                                        CornerRadius="8"
-                                        Height="36"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,0,8,0"
-                                        Width="36">
-                                        <Image
-                                            Height="36"
-                                            Source="{Binding RecentInstance.Icon}"
-                                            Width="36" />
-                                    </Border>
-                                    <TextBlock
-                                        Margin="2,3,0,0"
-                                        MaxLines="2"
-                                        Text="{Binding RecentInstance.InstanceName}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="WrapWithOverflow"
-                                        Width="140" />
-                                </StackPanel>
-                                <StackPanel
-                                    DockPanel.Dock="Bottom"
-                                    Margin="0,0,0,2"
-                                    Spacing="2"
-                                    VerticalAlignment="Bottom">
-                                    <TextBlock
-                                        FontSize="12"
-                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                        Margin="0,4,0,0"
-                                        Text="{Binding RecentInstance.FolderName}" />
-                                    <TextBlock
-                                        FontSize="12"
-                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                        Text="{Binding RecentInstance.ShortDisplay}" />
-                                    <Panel>
+    <smoothScroll:ScrollView Classes="Flat" Margin="12,2,5,10">
+        <StackPanel Margin="0,0,7,0" Spacing="12">
+            <DockPanel VerticalAlignment="Top">
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Margin="12,0,0,0"
+                    Name="StackPanel"
+                    Spacing="12"
+                    VerticalAlignment="Top">
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Height="130"
+                        Width="260">
+                        <Grid>
+                            <StackPanel
+                                IsVisible="{Binding !HasRecentInstance}"
+                                Margin="0,0,0,8"
+                                Spacing="5"
+                                VerticalAlignment="Center">
+                                <PathIcon
+                                    Data="F1 M640,640z M0,0z M448,128C554,128 640,214 640,320 640,426 554,512 448,512L192,512C86,512 0,426 0,320 0,214 86,128 192,128L448,128z M192,240C178.7,240,168,250.7,168,264L168,296 136,296C122.7,296 112,306.7 112,320 112,333.3 122.7,344 136,344L168,344 168,376C168,389.3 178.7,400 192,400 205.3,400 216,389.3 216,376L216,344 248,344C261.3,344 272,333.3 272,320 272,306.7 261.3,296 248,296L216,296 216,264C216,250.7,205.3,240,192,240z M432,336C414.3,336 400,350.3 400,368 400,385.7 414.3,400 432,400 449.7,400 464,385.7 464,368 464,350.3 449.7,336 432,336z M496,240C478.3,240 464,254.3 464,272 464,289.7 478.3,304 496,304 513.7,304 528,289.7 528,272 528,254.3 513.7,240 496,240z"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Width="30" />
+                                <TextBlock
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    HorizontalAlignment="Center"
+                                    Text="暂无最近游戏" />
+                            </StackPanel>
+                            <Panel>
+                                <DockPanel
+                                    Background="Transparent"
+                                    IsVisible="{Binding HasRecentInstance}"
+                                    Margin="12,10">
+                                    <!--  ToolTip.ShowDelay="3000"  -->
+                                    <!--  ToolTip.Tip="{Binding RecentInstance.FullInfo}"  -->
+                                    <StackPanel
+                                        DockPanel.Dock="Top"
+                                        Orientation="Horizontal"
+                                        Spacing="4">
+                                        <Border
+                                            ClipToBounds="True"
+                                            CornerRadius="12"
+                                            Height="42"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,0,8,0"
+                                            Width="42">
+                                            <Image
+                                                Height="42"
+                                                Source="{Binding RecentInstance.Icon}"
+                                                Width="42" />
+                                        </Border>
+                                        <TextBlock
+                                            Margin="2,3,0,0"
+                                            MaxLines="2"
+                                            Text="{Binding RecentInstance.InstanceName}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="WrapWithOverflow"
+                                            VerticalAlignment="Center"
+                                            Width="170" />
+                                    </StackPanel>
+                                    <StackPanel
+                                        DockPanel.Dock="Bottom"
+                                        Margin="5,5,0,2"
+                                        Spacing="2"
+                                        VerticalAlignment="Bottom">
                                         <TextBlock
                                             FontSize="12"
                                             Foreground="{DynamicResource InnerForegroundColor}"
-                                            HorizontalAlignment="Left"
-                                            Text="{Binding RecentInstance.DisplayLastPlayTime}" />
-                                    </Panel>
-                                </StackPanel>
-                            </DockPanel>
-                            <HyperlinkButton
-                                Content="继续游戏"
-                                FontSize="13"
-                                HorizontalAlignment="Right"
-                                IsVisible="{Binding HasRecentInstance}"
-                                Margin="0,0,12,7"
-                                Theme="{StaticResource TransparentHyperlinkButton}"
-                                VerticalAlignment="Bottom" />
-                        </Panel>
-                    </Grid>
-                </Border>
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="16"
-                    Height="76">
-                    <Panel>
-                        <Panel IsVisible="False">
-                            <StackPanel
-                                HorizontalAlignment="Left"
-                                IsVisible="False"
-                                Margin="15,12,0,0"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Top">
-                                <PathIcon
-                                    Data="F1 M640,640z M0,0z M434.8,54.1C446.7,62.7,451.1,78.3,445.7,91.9L367.3,288 512,288C525.5,288 537.5,296.4 542.1,309.1 546.7,321.8 542.8,336 532.5,344.6L244.5,584.6C233.2,594 217.1,594.5 205.2,585.9 193.3,577.3 188.9,561.7 194.3,548.1L272.7,352 128,352C114.5,352 102.5,343.6 97.9,330.9 93.3,318.2 97.2,304 107.5,295.4L395.5,55.4C406.8,46,422.9,45.5,434.8,54.1z"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="20"
-                                    Width="20" />
-                                <TextBlock
-                                    FontSize="15"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Margin="4,1,0,0"
-                                    Text="今天玩谁？" />
-                            </StackPanel>
-                            <StackPanel
-                                HorizontalAlignment="Left"
-                                IsVisible="False"
-                                Margin="15,12,0,0"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Top">
-                                <PathIcon
-                                    Data="F1 M640,640z M0,0z M434.8,54.1C446.7,62.7,451.1,78.3,445.7,91.9L367.3,288 512,288C525.5,288 537.5,296.4 542.1,309.1 546.7,321.8 542.8,336 532.5,344.6L244.5,584.6C233.2,594 217.1,594.5 205.2,585.9 193.3,577.3 188.9,561.7 194.3,548.1L272.7,352 128,352C114.5,352 102.5,343.6 97.9,330.9 93.3,318.2 97.2,304 107.5,295.4L395.5,55.4C406.8,46,422.9,45.5,434.8,54.1z"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="20"
-                                    Width="20" />
-                                <TextBlock
-                                    FontSize="15"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Margin="4,1,0,0"
-                                    Text="今天玩谁？" />
-                            </StackPanel>
-
-                            <Button
-                                Click="Button_OnClick"
-                                Content="抽签"
-                                HorizontalAlignment="Stretch"
-                                Margin="10,0,10,10"
-                                VerticalAlignment="Bottom" />
-                        </Panel>
+                                            Margin="0,4,0,0"
+                                            Text="{Binding RecentInstance.FolderName}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding RecentInstance.ShortDisplay}" />
+                                        <Panel>
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                HorizontalAlignment="Left"
+                                                Text="{Binding RecentInstance.DisplayLastPlayTime}" />
+                                        </Panel>
+                                    </StackPanel>
+                                </DockPanel>
+                                <HyperlinkButton
+                                    Content="继续游戏"
+                                    FontSize="13"
+                                    HorizontalAlignment="Right"
+                                    IsVisible="{Binding HasRecentInstance}"
+                                    Margin="0,0,16,10"
+                                    Theme="{StaticResource TransparentHyperlinkButton}"
+                                    VerticalAlignment="Bottom" />
+                            </Panel>
+                        </Grid>
+                    </Border>
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Height="87">
                         <StackPanel Margin="13,13,0,10">
                             <StackPanel
                                 Orientation="Horizontal"
@@ -175,13 +141,13 @@
                                     VerticalAlignment="Center" />
                             </StackPanel>
                             <StackPanel
-                                Margin="3,5,0,0"
+                                Margin="3,10,0,0"
                                 Orientation="Horizontal"
                                 Spacing="7">
                                 <TextBlock VerticalAlignment="Center">
-                                    <Run FontSize="22" Text="{Binding DisplayTotalPlayTime}" />
+                                    <Run FontSize="28" Text="{Binding DisplayTotalPlayTime}" />
                                     <Run
-                                        FontSize="16"
+                                        FontSize="18"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Text="{Binding PlayTimeUnit}" />
                                 </TextBlock>
@@ -190,251 +156,301 @@
                                     Margin="0,3"
                                     Width="1" />
                                 <TextBlock VerticalAlignment="Center">
-                                    <Run FontSize="22" Text="{Binding DisplayTotalPlaySessions}" />
+                                    <Run FontSize="28" Text="{Binding DisplayTotalPlaySessions}" />
                                     <Run
-                                        FontSize="13"
+                                        FontSize="14"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Text="次会话" />
                                 </TextBlock>
                             </StackPanel>
                         </StackPanel>
-                    </Panel>
-
-                </Border>
-                <StackPanel.Transitions>
-                    <Transitions>
-                        <DoubleTransition
-                            Duration="0:0:0.1"
-                            Easing="SineEaseOut"
-                            Property="Opacity" />
-                    </Transitions>
-                </StackPanel.Transitions>
-            </StackPanel>
-            <Border
-                Background="{DynamicResource TranslucentBackgroundColor}"
-                BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                BorderThickness="1"
-                ClipToBounds="True"
-                CornerRadius="16"
-                Name="Border"
-                PointerWheelChanged="InputElement_OnPointerWheelChanged">
-                <Border.Transitions>
-                    <Transitions>
-                        <ThicknessTransition
-                            Duration="0:0:0.1"
-                            Easing="SineEaseOut"
-                            Property="Margin" />
-                    </Transitions>
-                </Border.Transitions>
-                <DockPanel>
-                    <Panel DockPanel.Dock="Top" Margin="10">
-                        <StackPanel
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center">
-                            <Button
-                                Background="Transparent"
-                                Click="ButtonOpenInstance_OnClick"
-                                Margin="10,0,0,0"
-                                Theme="{StaticResource TransparentButton}">
-                                <StackPanel Orientation="Horizontal">
+                    </Border>
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Height="99">
+                        <Panel>
+                            <StackPanel Margin="15,12,0,0" Spacing="3">
+                                <StackPanel
+                                    HorizontalAlignment="Left"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Top">
                                     <PathIcon
-                                        Data="F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z"
+                                        Data="F1 M640,640z M0,0z M434.8,54.1C446.7,62.7,451.1,78.3,445.7,91.9L367.3,288 512,288C525.5,288 537.5,296.4 542.1,309.1 546.7,321.8 542.8,336 532.5,344.6L244.5,584.6C233.2,594 217.1,594.5 205.2,585.9 193.3,577.3 188.9,561.7 194.3,548.1L272.7,352 128,352C114.5,352 102.5,343.6 97.9,330.9 93.3,318.2 97.2,304 107.5,295.4L395.5,55.4C406.8,46,422.9,45.5,434.8,54.1z"
                                         Foreground="{DynamicResource InnerForegroundColor}"
-                                        Height="21"
-                                        Margin="0,-1,0,0"
-                                        Width="21" />
+                                        Height="20"
+                                        Width="20" />
                                     <TextBlock
                                         FontSize="15"
                                         Foreground="{DynamicResource InnerForegroundColor}"
-                                        Margin="5,0,0,0"
-                                        Text="实例"
-                                        VerticalAlignment="Center" />
+                                        Margin="4,1,0,0"
+                                        Text="今天玩谁？" />
                                 </StackPanel>
-                            </Button>
-                            <Button
-                                Click="RefreshInstance_Click"
-                                Margin="5,0,0,0"
-                                Theme="{StaticResource TransparentButton}"
-                                VerticalAlignment="Center">
-                                <PathIcon
-                                    Data="F1 M640,640z M0,0z M500.7,138.7L512,149.4 512,96C512,78.3 526.3,64 544,64 561.7,64 576,78.3 576,96L576,224C576,241.7,561.7,256,544,256L416,256C398.3,256 384,241.7 384,224 384,206.3 398.3,192 416,192L463.9,192 456.3,184.8C456.1,184.6 455.9,184.4 455.7,184.2 380.7,109.2 259.2,109.2 184.2,184.2 109.2,259.2 109.2,380.7 184.2,455.7 259.2,530.7 380.7,530.7 455.7,455.7 463.9,447.5 471.2,438.8 477.6,429.6 487.7,415.1 507.7,411.6 522.2,421.7 536.7,431.8 540.2,451.8 530.1,466.3 521.6,478.5 511.9,490.1 501,501 401,601 238.9,601 139,501 39.1,401 39,239 139,139 238.9,39.1 400.7,39 500.7,138.7z"
+                                <TextBlock
+                                    FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="16"
-                                    Width="16" />
-                            </Button>
-                        </StackPanel>
-                        <StackPanel
-                            HorizontalAlignment="Right"
-                            Orientation="Horizontal"
-                            Spacing="8">
-                            <ComboBox
-                                ItemsSource="{Binding SortOptions}"
-                                SelectedItem="{Binding SelectedSortOption}"
-                                Width="120">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding DisplayText}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <TextBox
-                                PlaceholderText="搜索"
-                                Text="{Binding SearchText}"
-                                Width="170">
-                                <TextBox.InnerRightContent>
-                                    <PathIcon
-                                        Data="F1 M512,512z M0,0z M416,208C416,253.9,401.1,296.3,376,330.7L502.6,457.4C515.1,469.9 515.1,490.2 502.6,502.7 490.1,515.2 469.8,515.2 457.3,502.7L330.7,376C296.3,401.1 253.9,416 208,416 93.1,416 0,322.9 0,208 0,93.1 93.1,0 208,0 322.9,0 416,93.1 416,208z M208,352A144,144,0,1,0,208,64A144,144,0,1,0,208,352z"
-                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                        Height="14"
-                                        Width="14" />
-                                </TextBox.InnerRightContent>
-                            </TextBox>
-                        </StackPanel>
-                    </Panel>
-                    <smoothScroll:ScrollView
-                        Background="Transparent"
-                        Classes="Flat"
-                        ContentOrientation="Horizontal"
-                        DockPanel.Dock="Bottom"
-                        HorizontalScrollBarVisibility="Auto"
-                        Margin="0,2,0,5"
-                        Name="ScrollViewer"
-                        VerticalAlignment="Top">
-                        <ItemsControl ItemsSource="{Binding FilteredMinecraftInstances}" Margin="12,0,12,7">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="12" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="classes:MinecraftInstance">
-                                    <Border
-                                        Background="{DynamicResource TranslucentBackgroundColor}"
-                                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="10"
-                                        Height="130"
-                                        Margin="0,0,0,0"
-                                        Name="InstanceCard"
-                                        Width="220">
-                                        <!--  ToolTip.ShowDelay="1000"  -->
-                                        <!--  ToolTip.Tip="{Binding FullInfo}"  -->
-                                        <Border.Styles>
-                                            <Style Selector="Border#InstanceCard">
-                                                <Style Selector="^ Button#UnfavoritedButton">
-                                                    <Setter Property="Opacity" Value="0" />
-                                                </Style>
-                                            </Style>
-                                            <Style Selector="Border#InstanceCard:pointerover">
-                                                <Style Selector="^ Button#UnfavoritedButton">
-                                                    <Setter Property="Opacity" Value="1" />
-                                                </Style>
-                                            </Style>
-                                        </Border.Styles>
-                                        <DockPanel Margin="15,15,15,5">
-                                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                                                <Border
-                                                    ClipToBounds="True"
-                                                    CornerRadius="10"
-                                                    Height="42"
-                                                    HorizontalAlignment="Left"
-                                                    Margin="0,0,10,0"
-                                                    Width="42">
-                                                    <Image
-                                                        Height="42"
-                                                        Source="{Binding Icon}"
-                                                        Width="42" />
-                                                </Border>
-                                                <TextBlock
-                                                    Margin="2,4,0,0"
-                                                    MaxLines="2"
-                                                    Text="{Binding InstanceName}"
-                                                    TextTrimming="CharacterEllipsis"
-                                                    TextWrapping="WrapWithOverflow"
-                                                    Width="135" />
-                                            </StackPanel>
-                                            <StackPanel
-                                                DockPanel.Dock="Bottom"
-                                                Margin="0,0,0,5"
-                                                Spacing="2"
-                                                VerticalAlignment="Bottom">
-                                                <TextBlock
-                                                    FontSize="13"
-                                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                                    Margin="0,6,0,0"
-                                                    Text="{Binding FolderName}" />
-                                                <TextBlock
-                                                    FontSize="13"
-                                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                                    Text="{Binding ShortDisplay}" />
-                                                <DockPanel>
-                                                    <TextBlock
-                                                        DockPanel.Dock="Left"
-                                                        FontSize="13"
-                                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                                        Text="{Binding DisplayLastPlayTime}" />
+                                    Text="从所有实例中随机抽取" />
+                            </StackPanel>
+
+                            <Button
+                                Click="Button_OnClick"
+                                Content="抽签"
+                                HorizontalAlignment="Stretch"
+                                Margin="10,0,10,10"
+                                VerticalAlignment="Bottom" />
+                        </Panel>
+                    </Border>
+                    <StackPanel.Transitions>
+                        <Transitions>
+                            <DoubleTransition
+                                Duration="0:0:0.1"
+                                Easing="SineEaseOut"
+                                Property="Opacity" />
+                        </Transitions>
+                    </StackPanel.Transitions>
+                </StackPanel>
+                <StackPanel Spacing="12">
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        ClipToBounds="True"
+                        CornerRadius="16"
+                        Height="340"
+                        Name="Border"
+                        PointerWheelChanged="InputElement_OnPointerWheelChanged">
+                        <Border.Transitions>
+                            <Transitions>
+                                <ThicknessTransition
+                                    Duration="0:0:0.1"
+                                    Easing="SineEaseOut"
+                                    Property="Margin" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <DockPanel>
+                            <Panel DockPanel.Dock="Top" Margin="10">
+                                <StackPanel
+                                    HorizontalAlignment="Left"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                                    <Button
+                                        Background="Transparent"
+                                        Click="ButtonOpenInstance_OnClick"
+                                        Margin="10,0,0,0"
+                                        Theme="{StaticResource TransparentButton}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Height="21"
+                                                Margin="0,-1,0,0"
+                                                Width="21" />
+                                            <TextBlock
+                                                FontSize="15"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Margin="5,0,0,0"
+                                                Text="实例"
+                                                VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button
+                                        Click="RefreshInstance_Click"
+                                        Margin="5,0,0,0"
+                                        Theme="{StaticResource TransparentButton}"
+                                        VerticalAlignment="Center">
+                                        <PathIcon
+                                            Data="F1 M640,640z M0,0z M500.7,138.7L512,149.4 512,96C512,78.3 526.3,64 544,64 561.7,64 576,78.3 576,96L576,224C576,241.7,561.7,256,544,256L416,256C398.3,256 384,241.7 384,224 384,206.3 398.3,192 416,192L463.9,192 456.3,184.8C456.1,184.6 455.9,184.4 455.7,184.2 380.7,109.2 259.2,109.2 184.2,184.2 109.2,259.2 109.2,380.7 184.2,455.7 259.2,530.7 380.7,530.7 455.7,455.7 463.9,447.5 471.2,438.8 477.6,429.6 487.7,415.1 507.7,411.6 522.2,421.7 536.7,431.8 540.2,451.8 530.1,466.3 521.6,478.5 511.9,490.1 501,501 401,601 238.9,601 139,501 39.1,401 39,239 139,139 238.9,39.1 400.7,39 500.7,138.7z"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Height="16"
+                                            Width="16" />
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <ComboBox
+                                        ItemsSource="{Binding SortOptions}"
+                                        SelectedItem="{Binding SelectedSortOption}"
+                                        Width="120">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding DisplayText}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <TextBox
+                                        PlaceholderText="搜索"
+                                        Text="{Binding SearchText}"
+                                        Width="170">
+                                        <TextBox.InnerRightContent>
+                                            <PathIcon
+                                                Data="F1 M512,512z M0,0z M416,208C416,253.9,401.1,296.3,376,330.7L502.6,457.4C515.1,469.9 515.1,490.2 502.6,502.7 490.1,515.2 469.8,515.2 457.3,502.7L330.7,376C296.3,401.1 253.9,416 208,416 93.1,416 0,322.9 0,208 0,93.1 93.1,0 208,0 322.9,0 416,93.1 416,208z M208,352A144,144,0,1,0,208,64A144,144,0,1,0,208,352z"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Height="14"
+                                                Width="14" />
+                                        </TextBox.InnerRightContent>
+                                    </TextBox>
+                                </StackPanel>
+                            </Panel>
+                            <smoothScroll:ScrollView
+                                Background="Transparent"
+                                Classes="Flat"
+                                DockPanel.Dock="Bottom"
+                                Margin="0,2,0,5"
+                                Name="ScrollViewer">
+                                <ItemsRepeater ItemsSource="{Binding FilteredMinecraftInstances}" Margin="12,0,10,7">
+
+                                    <ItemsRepeater.Layout>
+                                        <UniformGridLayout
+                                            ItemsStretch="Fill"
+                                            MinColumnSpacing="12"
+                                            MinItemHeight="130"
+                                            MinItemWidth="270"
+                                            MinRowSpacing="12"
+                                            Orientation="Horizontal" />
+                                    </ItemsRepeater.Layout>
+
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate DataType="classes:MinecraftInstance">
+                                            <Border
+                                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="10"
+                                                Height="130"
+                                                Margin="0,0,0,0"
+                                                Name="InstanceCard">
+
+                                                <Border.Styles>
+                                                    <Style Selector="Border#InstanceCard">
+                                                        <Style Selector="^ Button#UnfavoritedButton">
+                                                            <Setter Property="Opacity" Value="0" />
+                                                        </Style>
+                                                    </Style>
+                                                    <Style Selector="Border#InstanceCard:pointerover">
+                                                        <Style Selector="^ Button#UnfavoritedButton">
+                                                            <Setter Property="Opacity" Value="1" />
+                                                        </Style>
+                                                    </Style>
+                                                </Border.Styles>
+
+                                                <DockPanel Margin="15,15,15,5">
+                                                    <DockPanel DockPanel.Dock="Top">
+                                                        <Border
+                                                            ClipToBounds="True"
+                                                            CornerRadius="10"
+                                                            DockPanel.Dock="Left"
+                                                            Height="42"
+                                                            HorizontalAlignment="Left"
+                                                            Margin="0,0,10,0"
+                                                            Width="42">
+                                                            <Image
+                                                                Height="42"
+                                                                Source="{Binding Icon}"
+                                                                Width="42" />
+                                                        </Border>
+                                                        <TextBlock
+                                                            Margin="2,4,0,0"
+                                                            MaxLines="2"
+                                                            Text="{Binding InstanceName}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            TextWrapping="WrapWithOverflow" />
+                                                    </DockPanel>
+
                                                     <StackPanel
-                                                        DockPanel.Dock="Right"
-                                                        HorizontalAlignment="Right"
-                                                        Orientation="Horizontal">
-                                                        <Button
-                                                            Background="Transparent"
-                                                            BorderThickness="0"
-                                                            Click="FavoritedButton_OnClick"
-                                                            Cursor="Hand"
-                                                            IsVisible="{Binding !Config.IsFavorite}"
-                                                            Padding="4,0,4,0"
-                                                            Tag="{Binding}"
-                                                            Theme="{StaticResource TransparentButton}"
-                                                            x:Name="UnfavoritedButton">
-                                                            <PathIcon
-                                                                Data="F1 M640,640z M0,0z M320.1,32C329.1,32,337.4,37.1,341.5,45.1L415,189.3 574.9,214.7C583.8,216.1 591.2,222.4 594,231 596.8,239.6 594.5,249 588.2,255.4L473.7,369.9 499,529.8C500.4,538.7 496.7,547.7 489.4,553 482.1,558.3 472.4,559.1 464.4,555L320.1,481.6 175.8,555C167.8,559.1 158.1,558.3 150.8,553 143.5,547.7 139.8,538.8 141.2,529.8L166.4,369.9 52,255.4C45.6,249 43.4,239.6 46.2,231 49,222.4 56.3,216.1 65.3,214.7L225.2,189.3 298.8,45.1C302.9,37.1,311.2,32,320.2,32z M320.1,108.8L262.3,222C258.8,228.8,252.3,233.6,244.7,234.8L119.2,254.8 209,344.7C214.4,350.1,216.9,357.8,215.7,365.4L195.9,490.9 309.2,433.3C316,429.8,324.1,429.8,331,433.3L444.3,490.9 424.5,365.4C423.3,357.8,425.8,350.1,431.2,344.7L521,254.8 395.5,234.8C387.9,233.6,381.4,228.8,377.9,222L320.1,108.8z"
+                                                        DockPanel.Dock="Bottom"
+                                                        Margin="0,0,0,5"
+                                                        Spacing="2"
+                                                        VerticalAlignment="Bottom">
+                                                        <TextBlock
+                                                            FontSize="13"
+                                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                                            Margin="0,6,0,0"
+                                                            Text="{Binding FolderName}" />
+                                                        <TextBlock
+                                                            FontSize="13"
+                                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                                            Text="{Binding ShortDisplay}" />
+                                                        <DockPanel>
+                                                            <TextBlock
+                                                                DockPanel.Dock="Left"
+                                                                FontSize="13"
                                                                 Foreground="{DynamicResource InnerForegroundColor}"
-                                                                Height="15"
-                                                                Width="15" />
-                                                            <Button.Transitions>
-                                                                <Transitions>
-                                                                    <DoubleTransition
-                                                                        Duration="0:0:0.15"
-                                                                        Easing="SineEaseOut"
-                                                                        Property="Opacity" />
-                                                                </Transitions>
-                                                            </Button.Transitions>
-                                                        </Button>
-                                                        <Button
-                                                            Background="Transparent"
-                                                            BorderThickness="0"
-                                                            Click="FavoritedButton_OnClick"
-                                                            Cursor="Hand"
-                                                            IsVisible="{Binding Config.IsFavorite}"
-                                                            Padding="4,0,4,0"
-                                                            Tag="{Binding}"
-                                                            Theme="{StaticResource TransparentButton}"
-                                                            x:Name="FavoritedButton">
-                                                            <StackPanel Orientation="Horizontal" Spacing="2">
-                                                                <PathIcon
-                                                                    Data="F1 M640,640z M0,0z M341.5,45.1C337.4,37.1 329.1,32 320.1,32 311.1,32 302.8,37.1 298.7,45.1L225.1,189.3 65.2,214.7C56.3,216.1 48.9,222.4 46.1,231 43.3,239.6 45.6,249 51.9,255.4L166.3,369.9 141.1,529.8C139.7,538.7 143.4,547.7 150.7,553 158,558.3 167.6,559.1 175.7,555L320.1,481.6 464.4,555C472.4,559.1 482.1,558.3 489.4,553 496.7,547.7 500.4,538.8 499,529.8L473.7,369.9 588.1,255.4C594.5,249 596.7,239.6 593.9,231 591.1,222.4 583.8,216.1 574.8,214.7L415,189.3 341.5,45.1z"
-                                                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                                                    Height="15"
-                                                                    Width="15" />
-                                                                <TextBlock
-                                                                    FontSize="13"
-                                                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                                                    Text="已收藏" />
+                                                                Text="{Binding DisplayLastPlayTime}" />
+                                                            <StackPanel
+                                                                DockPanel.Dock="Right"
+                                                                HorizontalAlignment="Right"
+                                                                Orientation="Horizontal">
+
+                                                                <Button
+                                                                    Background="Transparent"
+                                                                    BorderThickness="0"
+                                                                    Click="FavoritedButton_OnClick"
+                                                                    Cursor="Hand"
+                                                                    IsVisible="{Binding !Config.IsFavorite}"
+                                                                    Padding="4,0,4,0"
+                                                                    Tag="{Binding}"
+                                                                    Theme="{StaticResource TransparentButton}"
+                                                                    x:Name="UnfavoritedButton">
+                                                                    <PathIcon
+                                                                        Data="F1 M640,640z M0,0z M320.1,32C329.1,32,337.4,37.1,341.5,45.1L415,189.3 574.9,214.7C583.8,216.1 591.2,222.4 594,231 596.8,239.6 594.5,249 588.2,255.4L473.7,369.9 499,529.8C500.4,538.7 496.7,547.7 489.4,553 482.1,558.3 472.4,559.1 464.4,555L320.1,481.6 175.8,555C167.8,559.1 158.1,558.3 150.8,553 143.5,547.7 139.8,538.8 141.2,529.8L166.4,369.9 52,255.4C45.6,249 43.4,239.6 46.2,231 49,222.4 56.3,216.1 65.3,214.7L225.2,189.3 298.8,45.1C302.9,37.1,311.2,32,320.2,32z M320.1,108.8L262.3,222C258.8,228.8,252.3,233.6,244.7,234.8L119.2,254.8 209,344.7C214.4,350.1,216.9,357.8,215.7,365.4L195.9,490.9 309.2,433.3C316,429.8,324.1,429.8,331,433.3L444.3,490.9 424.5,365.4C423.3,357.8,425.8,350.1,431.2,344.7L521,254.8 395.5,234.8C387.9,233.6,381.4,228.8,377.9,222L320.1,108.8z"
+                                                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                                                        Height="15"
+                                                                        Width="15" />
+                                                                    <Button.Transitions>
+                                                                        <Transitions>
+                                                                            <DoubleTransition
+                                                                                Duration="0:0:0.15"
+                                                                                Easing="SineEaseOut"
+                                                                                Property="Opacity" />
+                                                                        </Transitions>
+                                                                    </Button.Transitions>
+                                                                </Button>
+
+                                                                <Button
+                                                                    Background="Transparent"
+                                                                    BorderThickness="0"
+                                                                    Click="FavoritedButton_OnClick"
+                                                                    Cursor="Hand"
+                                                                    IsVisible="{Binding Config.IsFavorite}"
+                                                                    Padding="4,0,4,0"
+                                                                    Tag="{Binding}"
+                                                                    Theme="{StaticResource TransparentButton}"
+                                                                    x:Name="FavoritedButton">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="2">
+                                                                        <PathIcon
+                                                                            Data="F1 M640,640z M0,0z M341.5,45.1C337.4,37.1 329.1,32 320.1,32 311.1,32 302.8,37.1 298.7,45.1L225.1,189.3 65.2,214.7C56.3,216.1 48.9,222.4 46.1,231 43.3,239.6 45.6,249 51.9,255.4L166.3,369.9 141.1,529.8C139.7,538.7 143.4,547.7 150.7,553 158,558.3 167.6,559.1 175.7,555L320.1,481.6 464.4,555C472.4,559.1 482.1,558.3 489.4,553 496.7,547.7 500.4,538.8 499,529.8L473.7,369.9 588.1,255.4C594.5,249 596.7,239.6 593.9,231 591.1,222.4 583.8,216.1 574.8,214.7L415,189.3 341.5,45.1z"
+                                                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                                                            Height="15"
+                                                                            Width="15" />
+                                                                        <TextBlock
+                                                                            FontSize="13"
+                                                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                                                            Text="已收藏" />
+                                                                    </StackPanel>
+                                                                </Button>
+
                                                             </StackPanel>
-                                                        </Button>
+                                                        </DockPanel>
                                                     </StackPanel>
                                                 </DockPanel>
-                                            </StackPanel>
-                                        </DockPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </smoothScroll:ScrollView>
-                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                            </smoothScroll:ScrollView>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+            <Border IsVisible="{Binding Data.ConfigEntry.ShowMinecraftNews}">
+                <StackPanel IsVisible="{Binding NewsPage.NewsPageViewModel.IsVisible}" Spacing="8">
+                    <ContentControl Content="{Binding NewsPage}" Name="NewsContentControl" />
+                </StackPanel>
             </Border>
-        </DockPanel>
-    </ScrollViewer>
+        </StackPanel>
+    </smoothScroll:ScrollView>
 </UserControl>

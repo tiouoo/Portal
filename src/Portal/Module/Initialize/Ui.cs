@@ -6,6 +6,7 @@ using Portal.Classes.Entries;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core;
+using Portal.Core.Minecraft;
 using Portal.Module.Update;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.Events;
@@ -29,6 +30,8 @@ public static partial class Initializer
         {
             ConfigEntry.SetForegroundColor(Data.ConfigEntry.ForegroundColor);
         }
+        
+        NewsService.InitializeFromCache();
 
         LoopGc.BeginLoop();
 
@@ -50,6 +53,8 @@ public static partial class Initializer
 
         if (Data.ConfigEntry.EnableCheckAutoUpdate && Data.Instance.Version.Type != "dev")
             _ = CheckUpdate();
+        
+        _ = Task.Run(async () => await NewsService.FetchAndRefreshAsync());
 
         InitializationEvents.RaiseAfterUiLoaded();
     }

@@ -63,6 +63,10 @@ public class Handler
         {
             page = new InstancesPage();
         }
+        else if (pageType == typeof(NewsPage))
+        {
+            page = new NewsPage();
+        }
         else
         {
             var settingPage = new SettingPage();

@@ -140,7 +140,7 @@ public partial class TitleBarComponent : Grid
             DialogWindowMinWidth = 770,
             DialogWindowMinHeight = 471,
             DialogWindowWidth = 770,
-            DialogWindowHeight= 471,
+            DialogWindowHeight = 471,
             VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
         };
 
@@ -176,5 +176,16 @@ public partial class TitleBarComponent : Grid
         var hostId = ((Control)Root!).TryGetHostId();
         var result = await ChangeSkinDialog.Show(hostId, null);
         // TODO: handle result (skin path)
+    }
+    
+    private void InputElement_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        AccountFlyout.Flyout.Hide();
+        var tioTabWindowBase = Root.GetTopLevel() as TioTabWindowBase;
+        var tioTabPage = new SettingPage();
+        tioTabPage.NavigateTo(typeof(Account));
+        var tabEntry = new TabEntry(tioTabWindowBase!, tioTabPage);
+        tioTabWindowBase.CreateTab(tabEntry);
+        tioTabWindowBase.SelectTab(tabEntry);
     }
 }

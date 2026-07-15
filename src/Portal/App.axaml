@@ -20,6 +20,7 @@
         <StyleInclude Source="/Styles/Tab.axaml" />
         <StyleInclude Source="/Styles/Style.axaml" />
         <StyleInclude Source="/Styles/ScrollView.axaml" />
+        <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <smoothScroll:ScrollViewDefaultTheme />
     </Application.Styles>
     <NativeMenu.Menu>

@@ -1,7 +1,7 @@
 name: build/pr
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
@@ -26,19 +26,25 @@ jobs:
           git submodule update --init --recursive
           git submodule foreach --recursive 'git fetch origin main && git checkout -B main origin/main'
 
-      - name: Generate Meta
+      - name: Generate Meta and JSON
         id: meta
         run: |
           BASE_VERSION=$(cat ./src/version.txt | tr -d '[:space:]')
-          Y=$(TZ='Asia/Shanghai' date +'%Y')
+          Y_FULL=$(TZ='Asia/Shanghai' date +'%Y')
           MD=$(TZ='Asia/Shanghai' date +'%m%d')
           HM=$(TZ='Asia/Shanghai' date +'%H%M')
-          APP_VERSION="${Y}.${MD}.${HM}-PR${{ github.event.number }}"
+          FULL_TIMESTAMP="${Y_FULL}${MD}${HM}"
+          START_EPOCH=$(date -d "2026-01-01 00:00:00" +%s)
+          NOW_EPOCH=$(date +%s)
+          TOTAL_HOURS=$(( (NOW_EPOCH - START_EPOCH) / 3600 ))
+          APP_VERSION="${BASE_VERSION}.${TOTAL_HOURS}"
           COMMIT_HASH=$(git rev-parse --short=6 HEAD)
           BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
-          JSON_STRING="{\"type\":\"pr-test\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\"}"
+          VERSION_TITLE="build-commit-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
+          JSON_STRING="{\"type\":\"commit\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\",\"timestamp\":\"${FULL_TIMESTAMP}\",\"version_title\":\"${VERSION_TITLE}\"}"
+          echo "json=${JSON_STRING}" >> $GITHUB_OUTPUT
           echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
-          echo "version_json=${JSON_STRING}" >> $GITHUB_OUTPUT
+          echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
 
   win-x64-build:
     runs-on: windows-latest
@@ -56,8 +62,9 @@ jobs:
         shell: bash
 
       - name: Write CI Config
-        run: echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-        shell: bash
+        run: |
+          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
+          echo 'pr' > ./src/package-type.txt
 
       - name: Build & Package (Windows x64)
         shell: pwsh

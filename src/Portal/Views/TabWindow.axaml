@@ -1,5 +1,5 @@
 <tio:TioWindow
-    Height="650"
+    Height="710"
     Icon="/Icon-Pattern.ico"
     IsCloseBtnShow="{OnPlatform Default=True,
                                 macOS=False}"
@@ -12,7 +12,7 @@
     Title="Portal"
     TitleBarControlBtnMargin="0,0,10,0"
     TitleBarHeight="44"
-    Width="1100"
+    Width="1200"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"

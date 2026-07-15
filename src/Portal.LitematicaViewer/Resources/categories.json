@@ -1,0 +1,21 @@
+﻿{
+  "Wool": ["wool", "carpet"],
+  "Wood": ["plank", "log", "wood", "fence", "gate", "door", "stair", "slab", "trapdoor", "button", "pressure_plate", "sign", "stripped", "leaves", "sapling", "bamboo", "mangrove", "cherry", "hanging_sign", "beehive", "bee_nest", "honeycomb", "ladder", "bookshelf", "crafting_table", "barrel", "campfire", "daylight_detector", "scaffolding", "cartography", "fletching", "smithing", "loom"],
+  "Stone": ["stone", "cobblestone", "brick", "stone_brick", "andesite", "diorite", "granite", "tuff", "calcite", "basalt", "smooth_stone", "mossy"],
+  "Concrete": ["concrete"],
+  "Glass": ["glass", "glass_pane"],
+  "Terracotta": ["terracotta"],
+  "Redstone": ["piston", "observer", "redstone", "repeater", "comparator", "torch", "lamp", "dispenser", "dropper", "hopper", "note_block", "target", "lever", "tripwire", "rail", "powered_rail", "activator_rail", "detector_rail", "slime", "honey", "tnt"],
+  "Container": ["chest", "shulker", "furnace", "smoker", "blast_furnace", "brewing_stand", "enchanting_table", "anvil", "beacon", "grindstone", "composter", "jukebox", "lectern", "cauldron", "bell", "lodestone", "conduit", "respawn_anchor", "ender_chest", "dropper", "dispenser", "hopper", "barrel"],
+  "Ore": ["ore", "diamond", "emerald", "coal", "lapis", "netherite", "ancient_debris", "gold", "raw_iron", "raw_copper", "raw_gold"],
+  "Iron": ["iron", "chain", "lantern", "soul_lantern"],
+  "Quartz": ["quartz"],
+  "Clay": ["clay", "mud", "brick"],
+  "Prismarine": ["prismarine", "sea_lantern"],
+  "Liquid": ["water", "lava", "bubble_column"],
+  "End": ["end_stone", "chorus", "purpur", "end_rod", "dragon", "obsidian"],
+  "Nether": ["nether", "blackstone", "crimson", "warped", "soul", "glowstone", "magma", "nylium", "wart", "fungus", "shroomlight", "bone", "basalt", "netherrack"],
+  "Natural": ["dirt", "grass", "sand", "gravel", "ice", "snow", "packed_ice", "podzol", "mycelium", "cactus", "vine", "sugar_cane", "moss", "rooted", "hanging_roots", "spore", "dripleaf", "moss_carpet", "sculk", "amethyst", "dripstone", "pointed", "candle", "sea_pickle", "turtle_egg", "coral", "kelp", "seagrass", "lily", "froglight", "sponge", "cobweb"],
+  "Entity": ["bed", "painting", "item_frame", "armor_stand", "head", "skull", "banner", "flower_pot", "decorated_pot"],
+  "Other": []
+}
