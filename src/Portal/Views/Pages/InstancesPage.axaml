@@ -107,7 +107,8 @@
                             BorderThickness="1"
                             CornerRadius="10"
                             Height="125"
-                            Name="InstanceCard">
+                            Name="InstanceCard"
+                            ToolTip.Tip="{Binding FullInfo}">
                             <Border.Styles>
                                 <Style Selector="Border#InstanceCard">
                                     <Style Selector="^ Button#UnfavoritedButton">

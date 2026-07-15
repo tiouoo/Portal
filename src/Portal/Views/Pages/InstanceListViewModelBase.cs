@@ -72,16 +72,16 @@ public partial class InstanceListViewModelBase : ObservableObject
     }
 
     public string DisplayTotalPlayTime => FormatPlayTime(TotalPlayTimeSeconds);
-    public string DisplayTotalPlaySessions => FormatNumber(TotalPlaySessions);
+    public string DisplayTotalPlaySessions => TotalPlaySessions.ToString();
     public string PlayTimeUnit => GetPlayTimeUnit(TotalPlayTimeSeconds);
 
     public List<SortOption> SortOptions { get; } =
     [
-        new SortOption { DisplayText = "名称", SortType = InstanceSortType.Name },
-        new SortOption { DisplayText = "游玩时间", SortType = InstanceSortType.PlayTime },
-        new SortOption { DisplayText = "文件夹名称", SortType = InstanceSortType.FolderName },
-        new SortOption { DisplayText = "加载器", SortType = InstanceSortType.Loader },
-        new SortOption { DisplayText = "版本", SortType = InstanceSortType.Version },
+        new() { DisplayText = "名称", SortType = InstanceSortType.Name },
+        new() { DisplayText = "最近游玩", SortType = InstanceSortType.PlayTime },
+        new() { DisplayText = "文件夹名称", SortType = InstanceSortType.FolderName },
+        new() { DisplayText = "加载器", SortType = InstanceSortType.Loader },
+        new() { DisplayText = "版本", SortType = InstanceSortType.Version },
     ];
 
     public List<FolderFilterOption> FolderFilterOptions { get; set; } = [];

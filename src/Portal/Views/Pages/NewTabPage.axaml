@@ -46,49 +46,64 @@
                                 HorizontalAlignment="Center"
                                 Text="暂无最近游戏" />
                         </StackPanel>
-                        <DockPanel IsVisible="{Binding HasRecentInstance}" Margin="12,10">
-                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                                <Border
-                                    ClipToBounds="True"
-                                    CornerRadius="8"
-                                    Height="36"
-                                    HorizontalAlignment="Left"
-                                    Margin="0,0,8,0"
-                                    Width="36">
-                                    <Image
+                        <Panel>
+                            <DockPanel
+                                Background="Transparent"
+                                IsVisible="{Binding HasRecentInstance}"
+                                Margin="12,10"
+                                ToolTip.Tip="{Binding RecentInstance.FullInfo}">
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                                    <Border
+                                        ClipToBounds="True"
+                                        CornerRadius="8"
                                         Height="36"
-                                        Source="{Binding RecentInstance.Icon}"
-                                        Width="36" />
-                                </Border>
-                                <TextBlock
-                                    Margin="2,3,0,0"
-                                    MaxLines="2"
-                                    Text="{Binding RecentInstance.InstanceName}"
-                                    TextTrimming="CharacterEllipsis"
-                                    TextWrapping="WrapWithOverflow"
-                                    Width="140" />
-                            </StackPanel>
-                            <StackPanel
-                                DockPanel.Dock="Bottom"
-                                Margin="0,0,0,2"
-                                Spacing="2"
-                                VerticalAlignment="Bottom">
-                                <TextBlock
-                                    FontSize="12"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Margin="0,4,0,0"
-                                    Text="{Binding RecentInstance.FolderName}" />
-                                <TextBlock
-                                    FontSize="12"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="{Binding RecentInstance.ShortDisplay}" />
-                                <TextBlock
-                                    DockPanel.Dock="Left"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="{Binding RecentInstance.DisplayLastPlayTime}" />
-                            </StackPanel>
-                        </DockPanel>
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,8,0"
+                                        Width="36">
+                                        <Image
+                                            Height="36"
+                                            Source="{Binding RecentInstance.Icon}"
+                                            Width="36" />
+                                    </Border>
+                                    <TextBlock
+                                        Margin="2,3,0,0"
+                                        MaxLines="2"
+                                        Text="{Binding RecentInstance.InstanceName}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="WrapWithOverflow"
+                                        Width="140" />
+                                </StackPanel>
+                                <StackPanel
+                                    DockPanel.Dock="Bottom"
+                                    Margin="0,0,0,2"
+                                    Spacing="2"
+                                    VerticalAlignment="Bottom">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,4,0,0"
+                                        Text="{Binding RecentInstance.FolderName}" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Text="{Binding RecentInstance.ShortDisplay}" />
+                                    <Panel>
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            HorizontalAlignment="Left"
+                                            Text="{Binding RecentInstance.DisplayLastPlayTime}" />
+                                    </Panel>
+                                </StackPanel>
+                            </DockPanel>
+                            <HyperlinkButton
+                                Content="继续游戏"
+                                FontSize="13"
+                                HorizontalAlignment="Right"
+                                Margin="0,0,12,7"
+                                Theme="{StaticResource TransparentHyperlinkButton}"
+                                VerticalAlignment="Bottom" />
+                        </Panel>
                     </Grid>
                 </Border>
                 <Border
@@ -298,6 +313,7 @@
                                         Height="130"
                                         Margin="0,0,0,0"
                                         Name="InstanceCard"
+                                        ToolTip.Tip="{Binding FullInfo}"
                                         Width="220">
                                         <Border.Styles>
                                             <Style Selector="Border#InstanceCard">

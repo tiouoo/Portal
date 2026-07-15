@@ -62,11 +62,19 @@ public class MinecraftInstance : ObservableObject
     {
         get
         {
+            string id;
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                return MinecraftEntry.Id;
-            if (Type == MinecraftInstanceType.Bedrock && BedrockConfig != null)
-                return BedrockConfig.Name;
-            return string.Empty;
+                id = MinecraftEntry.Id;
+            else if (Type == MinecraftInstanceType.Bedrock && BedrockConfig != null)
+                id = BedrockConfig.Name;
+            else
+                return string.Empty;
+
+            var note = Config?.Note?.Trim();
+            if (!string.IsNullOrEmpty(note))
+                return $"{note} ({id})";
+
+            return id;
         }
     }
 
@@ -116,6 +124,65 @@ public class MinecraftInstance : ObservableObject
     }
 
     public string ShortDisplay => $"{LoaderDescription}·{VersionId}";
+
+    public string FullInfo
+    {
+        get
+        {
+            var info = new List<string>();
+            
+            string id;
+            if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
+                id = MinecraftEntry.Id;
+            else if (Type == MinecraftInstanceType.Bedrock && BedrockConfig != null)
+                id = BedrockConfig.Name;
+            else
+                id = string.Empty;
+
+            if (!string.IsNullOrEmpty(id))
+                info.Add($"ID: {id}");
+
+            var note = Config?.Note?.Trim();
+            if (!string.IsNullOrEmpty(note))
+                info.Add($"备注: {note}");
+
+            if (!string.IsNullOrEmpty(FolderName))
+                info.Add($"文件夹: {FolderName}");
+
+            if (!string.IsNullOrEmpty(LoaderDescription))
+                info.Add($"加载器: {LoaderDescription}");
+
+            if (!string.IsNullOrEmpty(VersionId))
+                info.Add($"版本: {VersionId}");
+
+            if (!string.IsNullOrEmpty(VersionType))
+                info.Add($"类型: {VersionType}");
+
+            if (!string.IsNullOrEmpty(DisplayLastPlayTime))
+                info.Add($"最近游玩: {DisplayLastPlayTime}");
+
+            if (Config != null)
+            {
+                var playTime = Config.PlayTimeSeconds;
+                if (playTime > 0)
+                {
+                    string timeStr;
+                    if (playTime < 60)
+                        timeStr = $"{playTime}秒";
+                    else if (playTime < 3600)
+                        timeStr = $"{playTime / 60.0:F1}分钟";
+                    else
+                        timeStr = $"{playTime / 3600.0:F1}小时";
+                    info.Add($"游玩时长: {timeStr}");
+                }
+
+                if (Config.PlaySessions > 0)
+                    info.Add($"会话次数: {Config.PlaySessions}次");
+            }
+
+            return string.Join("\n", info);
+        }
+    }
 
     public MinecraftInstance(MinecraftEntry e)
     {
