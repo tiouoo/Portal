@@ -59,33 +59,85 @@ public static class AccountRefresher
         }
     }
 
-  public static async Task<MinecraftAccount?> RefreshYggdrasil(
-    MinecraftAccount account, 
-    IEnumerable<MinecraftAccount> allAccounts)
-{
-    if (account.AccountType != AccountType.Yggdrasil ||
-        string.IsNullOrEmpty(account.YggdrasilServerUrl) ||
-        string.IsNullOrEmpty(account.AccessToken))
-        return null;
-
-    try
+    public static async Task<YggdrasilRefreshResult?> RefreshYggdrasil(
+        MinecraftAccount account,
+        IEnumerable<MinecraftAccount> allAccounts)
     {
-        var authenticator = new YggdrasilAuthenticator(
-            account.YggdrasilServerUrl,
-            account.Email,
-            account.Password);
-        
-        Logger.Debug("正在刷新账号 " + account.AsJson());
+        if (account.AccountType != AccountType.Yggdrasil ||
+            string.IsNullOrEmpty(account.YggdrasilServerUrl) ||
+            string.IsNullOrEmpty(account.Email) ||
+            string.IsNullOrEmpty(account.Password))
+        {
+            return null;
+        }
 
-        var result = await authenticator.RefreshAsync(new YggdrasilAccount(account.Name, (Guid)account.Uuid!,
-            account.AccessToken, account.YggdrasilServerUrl));
-        if (result == null) return null;
+        try
+        {
+            Logger.Debug("正在重新登录外置账户 " + account.AsJson());
 
-        string skinBase64 = MinecraftAccount.SteveSkin;
+            var normalizedUrl = UrlHelper.NormalizeUrl(account.YggdrasilServerUrl);
+            var existingAccounts = allAccounts
+                .Where(candidate => candidate.AccountType == AccountType.Yggdrasil &&
+                                    candidate.Email == account.Email &&
+                                    candidate.Password == account.Password &&
+                                    string.Equals(
+                                        UrlHelper.NormalizeUrl(candidate.YggdrasilServerUrl ?? string.Empty),
+                                        normalizedUrl,
+                                        StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var authenticator = new YggdrasilAuthenticator(account.YggdrasilServerUrl, account.Email, account.Password);
+            var authenticatedAccounts = await authenticator.AuthenticateAsync();
+            if (authenticatedAccounts == null)
+            {
+                return null;
+            }
+
+            var existingByUuid = existingAccounts
+                .Where(candidate => candidate.Uuid.HasValue)
+                .GroupBy(candidate => candidate.Uuid!.Value)
+                .ToDictionary(group => group.Key, group => group.First());
+            var refreshedAccounts = new List<MinecraftAccount>();
+            var refreshedUuids = new HashSet<Guid>();
+
+            foreach (var authenticatedAccount in authenticatedAccounts)
+            {
+                if (!refreshedUuids.Add(authenticatedAccount.Uuid))
+                {
+                    continue;
+                }
+
+                existingByUuid.TryGetValue(authenticatedAccount.Uuid, out var existingAccount);
+                refreshedAccounts.Add(await CreateYggdrasilAccount(
+                    authenticatedAccount,
+                    account,
+                    existingAccount));
+            }
+
+            var updated = refreshedAccounts.Where(candidate => existingByUuid.ContainsKey(candidate.Uuid!.Value)).ToList();
+            var added = refreshedAccounts.Where(candidate => !existingByUuid.ContainsKey(candidate.Uuid!.Value)).ToList();
+            var removed = existingAccounts.Where(candidate => !candidate.Uuid.HasValue || !refreshedUuids.Contains(candidate.Uuid.Value))
+                .ToList();
+
+            return new YggdrasilRefreshResult(existingAccounts, refreshedAccounts, updated, added, removed);
+        }
+        catch (Exception e)
+        {
+            Logger.Error("重新登录外置账户失败  " + e.Message);
+            return null;
+        }
+    }
+
+    private static async Task<MinecraftAccount> CreateYggdrasilAccount(
+        YggdrasilAccount authenticatedAccount,
+        MinecraftAccount loginAccount,
+        MinecraftAccount? existingAccount)
+    {
+        var skinBase64 = MinecraftAccount.SteveSkin;
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            await using var skinStream = await SkinProvider.GetYggdrasilSkinDataAsync(result, cts.Token);
+            await using var skinStream = await SkinProvider.GetYggdrasilSkinDataAsync(authenticatedAccount, cts.Token);
             using var ms = new MemoryStream();
             await skinStream.CopyToAsync(ms, cts.Token);
             skinBase64 = ms.ToArray().ToBase64();
@@ -95,49 +147,29 @@ public static class AccountRefresher
             Logger.Error("获取皮肤失败  " + e.Message);
         }
 
-        var newAccount = new MinecraftAccount(AccountType.Yggdrasil)
+        return new MinecraftAccount(AccountType.Yggdrasil)
         {
-            AccessToken = result.AccessToken,
-            ClientToken = result.ClientToken,
-            CreateAt = account.CreateAt,
-            LastLoginTime = account.LastLoginTime,
+            AccessToken = authenticatedAccount.AccessToken,
+            ClientToken = authenticatedAccount.ClientToken,
+            CreateAt = existingAccount?.CreateAt ?? DateTime.Now,
+            LastLoginTime = existingAccount?.LastLoginTime ?? DateTime.MinValue,
             LastRefreshTime = DateTime.Now,
-            Uuid = result.Uuid,
-            Name = result.Name,
-            YggdrasilServerUrl = account.YggdrasilServerUrl,
+            Uuid = authenticatedAccount.Uuid,
+            Name = authenticatedAccount.Name,
+            YggdrasilServerUrl = loginAccount.YggdrasilServerUrl,
             Skin = skinBase64,
-            AccountNote = account.AccountNote,
-            ServerNote = account.ServerNote,
-            MetaData = result.MetaData,
-            Email = account.Email,
-            Password = account.Password,
+            AccountNote = existingAccount?.AccountNote,
+            ServerNote = existingAccount?.ServerNote ?? loginAccount.ServerNote,
+            MetaData = authenticatedAccount.MetaData,
+            Email = loginAccount.Email,
+            Password = loginAccount.Password,
         };
-
-        var currentNormalizedUrl =UrlHelper.NormalizeUrl(account.YggdrasilServerUrl);
-
-        foreach (var acc in allAccounts)
-        {
-            if (acc == account) continue;
-
-            if (acc.AccountType == AccountType.Yggdrasil &&
-                acc.Email == account.Email &&
-                acc.Password == account.Password &&
-                UrlHelper.NormalizeUrl(acc.YggdrasilServerUrl!) == currentNormalizedUrl)
-            {
-                acc.AccessToken = result.AccessToken;
-                acc.ClientToken = result.ClientToken;
-                acc.LastRefreshTime = DateTime.Now;
-                
-                Logger.Debug($"已同步更新相同配置的账号 Token: {acc.Name}");
-            }
-        }
-
-        return newAccount;
-    }
-    catch (Exception e)
-    {
-        Logger.Error("刷新账号失败  " + e.Message);
-        return null;
     }
 }
-}
+
+public record YggdrasilRefreshResult(
+    IReadOnlyList<MinecraftAccount> Existing,
+    IReadOnlyList<MinecraftAccount> Refreshed,
+    IReadOnlyList<MinecraftAccount> Updated,
+    IReadOnlyList<MinecraftAccount> Added,
+    IReadOnlyList<MinecraftAccount> Removed);

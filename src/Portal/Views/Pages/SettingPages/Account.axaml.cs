@@ -82,19 +82,15 @@ public partial class Account : DataUserControl
 
         try
         {
-            MinecraftAccount? refreshed = null;
-
             if (account.AccountType == AccountType.Microsoft)
             {
-                refreshed = await AccountRefresher.RefreshMicrosoft(account);
-            }
-            else if (account.AccountType == AccountType.Yggdrasil)
-            {
-                refreshed = await AccountRefresher.RefreshYggdrasil(account, Data.ConfigEntry.MinecraftAccounts);
-            }
+                var refreshed = await AccountRefresher.RefreshMicrosoft(account);
+                if (refreshed == null)
+                {
+                    topLevel.Notice("更新失败", NotificationType.Error);
+                    return;
+                }
 
-            if (refreshed != null)
-            {
                 var index = Data.ConfigEntry.MinecraftAccounts.IndexOf(account);
                 if (index >= 0)
                 {
@@ -102,12 +98,47 @@ public partial class Account : DataUserControl
                 }
 
                 Data.ConfigEntry.UsingMinecraftMinecraftAccount = refreshed;
-
                 topLevel.Notice("账户信息已更新", NotificationType.Success);
             }
-            else
+            else if (account.AccountType == AccountType.Yggdrasil)
             {
-                topLevel.Notice("更新失败", NotificationType.Error);
+                var result = await AccountRefresher.RefreshYggdrasil(account, Data.ConfigEntry.MinecraftAccounts);
+                if (result == null)
+                {
+                    topLevel.Notice("重新登录失败", NotificationType.Error);
+                    return;
+                }
+
+                var usingAccount = Data.ConfigEntry.UsingMinecraftMinecraftAccount;
+                var usingAccountUuid = usingAccount?.Uuid;
+                foreach (var existing in result.Existing)
+                {
+                    Data.ConfigEntry.MinecraftAccounts.Remove(existing);
+                }
+
+                foreach (var refreshed in result.Refreshed)
+                {
+                    Data.ConfigEntry.MinecraftAccounts.Add(refreshed);
+                }
+
+                if (result.Existing.Contains(usingAccount))
+                {
+                    Data.ConfigEntry.UsingMinecraftMinecraftAccount = usingAccountUuid.HasValue
+                        ? result.Refreshed.FirstOrDefault(refreshed => refreshed.Uuid == usingAccountUuid)
+                        : null;
+                }
+
+                var changes = new List<string>();
+                if (result.Added.Count > 0)
+                    changes.Add($"新增：{string.Join("、", result.Added.Select(item => item.Name))}");
+                if (result.Removed.Count > 0)
+                    changes.Add($"删除：{string.Join("、", result.Removed.Select(item => item.Name))}");
+                if (result.Updated.Count > 0)
+                    changes.Add($"更新：{string.Join("、", result.Updated.Select(item => item.Name))}");
+
+                topLevel.Notice(
+                    changes.Count == 0 ? "重新登录完成，账户未变化" : string.Join("\n", changes),
+                    NotificationType.Success);
             }
         }
         catch (Exception ex)
