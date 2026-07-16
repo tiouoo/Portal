@@ -3,6 +3,7 @@ using MinecraftLaunch.Base.Models.Game;
 using Newtonsoft.Json;
 using System.IO;
 using System.Reflection;
+using System.Globalization;
 using Avalonia.Media.Imaging;
 using MinecraftLaunch.Base.Enums;
 using Portal.Bedrock.Standard.Manifest;
@@ -166,7 +167,7 @@ public class MinecraftInstance : ObservableObject
 
             if (Config != null)
             {
-                var playTime = Config.PlayTimeSeconds;
+                var playTime = GetTotalPlayTimeSeconds();
                 if (playTime > 0)
                 {
                     string timeStr;
@@ -257,8 +258,12 @@ public class MinecraftInstance : ObservableObject
 
     public void SaveConfig()
     {
-        var configPath = Path.Combine(MinecraftPath, "Portal.config.json");
-        File.WriteAllText(configPath, JsonConvert.SerializeObject(Config, Formatting.Indented));
+        lock (_timerLock)
+        {
+            FormatPlayTimeData();
+            var configPath = Path.Combine(MinecraftPath, "Portal.config.json");
+            File.WriteAllText(configPath, JsonConvert.SerializeObject(Config, Formatting.Indented));
+        }
     }
 
     /// <summary>
@@ -278,7 +283,7 @@ public class MinecraftInstance : ObservableObject
     /// <param name="saveImmediately">是否立即保存配置文件</param>
     public void AddPlayTime(long seconds, bool saveImmediately)
     {
-        Config.PlayTimeSeconds += seconds;
+        AddPlayTimeForDate(DateTime.Today, seconds);
         if (saveImmediately)
         {
             SaveConfig();
@@ -299,7 +304,7 @@ public class MinecraftInstance : ObservableObject
 
     private System.Threading.Timer? _playTimer;
     private readonly object _timerLock = new();
-    private long _unsavedSeconds;
+    private readonly Dictionary<string, long> _unsavedPlayTimeByDate = [];
 
     /// <summary>
     /// 开始计时（用于实时更新游玩时长）
@@ -318,13 +323,12 @@ public class MinecraftInstance : ObservableObject
                 {
                     lock (_timerLock)
                     {
-                        _unsavedSeconds++;
+                        AddUnsavedPlayTime(DateTime.Today, 1);
                         InstanceManager.Instance.NotifyStatisticsChanged();
 
-                        if (_unsavedSeconds >= 60)
+                        if (_unsavedPlayTimeByDate.Values.Sum() >= 60)
                         {
-                            Config.PlayTimeSeconds += _unsavedSeconds;
-                            _unsavedSeconds = 0;
+                            SaveUnsavedPlayTime();
                             SaveConfig();
                         }
                     }
@@ -346,10 +350,9 @@ public class MinecraftInstance : ObservableObject
             _playTimer?.Dispose();
             _playTimer = null;
 
-            if (_unsavedSeconds > 0)
+            if (_unsavedPlayTimeByDate.Count > 0)
             {
-                Config.PlayTimeSeconds += _unsavedSeconds;
-                _unsavedSeconds = 0;
+                SaveUnsavedPlayTime();
                 SaveConfig();
                 InstanceManager.Instance.NotifyStatisticsChanged();
             }
@@ -363,7 +366,66 @@ public class MinecraftInstance : ObservableObject
     {
         lock (_timerLock)
         {
-            return Config.PlayTimeSeconds + _unsavedSeconds;
+            return Config.ArchivedPlayTimeSeconds
+                + Config.LegacyPlayTimeSeconds
+                + GetDailyPlayTimeByDate().Values.Sum()
+                + _unsavedPlayTimeByDate.Values.Sum();
+        }
+    }
+
+    private void AddPlayTimeForDate(DateTime date, long seconds)
+    {
+        if (seconds <= 0)
+            return;
+
+        var playTimeByDate = GetDailyPlayTimeByDate();
+        var key = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        playTimeByDate[key] = playTimeByDate.GetValueOrDefault(key) + seconds;
+    }
+
+    private void AddUnsavedPlayTime(DateTime date, long seconds)
+    {
+        var key = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        _unsavedPlayTimeByDate[key] = _unsavedPlayTimeByDate.GetValueOrDefault(key) + seconds;
+    }
+
+    private void SaveUnsavedPlayTime()
+    {
+        foreach (var (date, seconds) in _unsavedPlayTimeByDate)
+        {
+            var playTimeByDate = GetDailyPlayTimeByDate();
+            playTimeByDate[date] = playTimeByDate.GetValueOrDefault(date) + seconds;
+        }
+
+        _unsavedPlayTimeByDate.Clear();
+    }
+
+    private Dictionary<string, long> GetDailyPlayTimeByDate()
+    {
+        return Config.PlayTimeByDate ??= [];
+    }
+
+    /// <summary>
+    /// 将旧版总时长迁移到历史汇总，并将一个月前的日记录合并，控制配置文件大小。
+    /// </summary>
+    private void FormatPlayTimeData()
+    {
+        if (Config.LegacyPlayTimeSeconds > 0)
+        {
+            Config.ArchivedPlayTimeSeconds += Config.LegacyPlayTimeSeconds;
+            Config.LegacyPlayTimeSeconds = 0;
+        }
+
+        var cutoffDate = DateTime.Today.AddMonths(-1);
+        var playTimeByDate = GetDailyPlayTimeByDate();
+        foreach (var (date, seconds) in playTimeByDate.ToArray())
+        {
+            if (DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out var day) && day < cutoffDate)
+            {
+                Config.ArchivedPlayTimeSeconds += seconds;
+                playTimeByDate.Remove(date);
+            }
         }
     }
 
@@ -528,7 +590,11 @@ public partial class MinecraftInstanceConfig : ObservableObject
     [ObservableProperty] public partial bool EnableOverrideMaxMemory { get; set; }
     [ObservableProperty] public partial DateTime LastPlayTime { get; set; } = DateTime.MinValue;
     [ObservableProperty] public partial int MinecraftMaxMemory { get; set; }
-    [ObservableProperty] public partial long PlayTimeSeconds { get; set; }
+    [ObservableProperty] public partial Dictionary<string, long> PlayTimeByDate { get; set; } = []; //string : Data (yyyy-MM-dd)
+    public bool ShouldSerializePlayTimeByDate() => PlayTimeByDate?.Count > 0;
+    public long ArchivedPlayTimeSeconds { get; set; }
+    [JsonProperty("PlayTimeSeconds", DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public long LegacyPlayTimeSeconds { get; set; }
     [ObservableProperty] public partial int PlaySessions { get; set; }
     [ObservableProperty] public partial JavaRuntimeEntry? SpecificJavaEntry { get; set; }
 }
