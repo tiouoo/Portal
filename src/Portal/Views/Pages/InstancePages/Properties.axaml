@@ -1,29 +1,101 @@
 <UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
     x:Class="Portal.Views.Pages.InstancePages.Properties"
     x:DataType="instancePages:Properties"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
-    mc:Ignorable="d">
+    xmlns:java="clr-namespace:Portal.Core.Minecraft.Instance.Java;assembly=Portal.Core"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel MaxWidth="1100" Spacing="16">
         <TextBlock FontSize="24" Text="实例设置" />
-        <StackPanel Spacing="5">
-            <Label Content="显示名称" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
-            <TextBox PlaceholderText="留空时使用原始实例名称" Text="{Binding Instance.Config.Note, Mode=TwoWay}" />
-        </StackPanel>
-        <StackPanel Spacing="5">
-            <Label Content="文件夹" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
-            <TextBlock Text="{Binding Instance.FolderName}" />
-        </StackPanel>
-        <ToggleSwitch IsChecked="{Binding Instance.Config.IsFavorite, Mode=TwoWay}" OffContent="普通实例" OnContent="已收藏" />
-        <ToggleSwitch IsChecked="{Binding Instance.Config.EnableIndependentInstance, Mode=TwoWay}" OffContent="使用共享游戏目录" OnContent="使用独立游戏目录" />
-        <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Click="Save_Click">保存设置</Button>
-            <Button Click="OpenFolder_Click" Theme="{StaticResource TransparentButton}">打开实例目录</Button>
-        </StackPanel>
+        <Border
+            Background="Transparent"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="0"
+            CornerRadius="12"
+            Padding="12">
+            <StackPanel Spacing="15">
+                <StackPanel Spacing="5">
+                    <Label
+                        Content="备注"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBox PlaceholderText="请输入备注" Text="{Binding Instance.Config.Note}" />
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <Label
+                        Content="独立实例"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <ToggleSwitch IsChecked="{Binding Instance.Config.EnableIndependentInstance}" />
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <Label
+                        Content="使用特定Java"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <ToggleSwitch IsChecked="{Binding Instance.Config.EnableSpecificJava}" />
+                </StackPanel>
+                <StackPanel IsVisible="{Binding Instance.Config.EnableSpecificJava}" Spacing="5">
+                    <Label
+                        Content="选择Java"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <ComboBox
+                        Height="46"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}"
+                        SelectedItem="{Binding Instance.Config.SpecificJavaEntry}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="java:JavaRuntimeEntry">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Text="{Binding JavaPath}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <Label
+                        Content="覆盖全局最大内存"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <ToggleSwitch IsChecked="{Binding Instance.Config.EnableOverrideMaxMemory}" />
+                </StackPanel>
+                <StackPanel IsVisible="{Binding Instance.Config.EnableOverrideMaxMemory}" Spacing="5">
+                    <Label
+                        Content="最大内存"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Slider
+                            Grid.Column="0"
+                            IsSnapToTickEnabled="True"
+                            Maximum="65536"
+                            Minimum="512"
+                            TickFrequency="256"
+                            Value="{Binding Instance.Config.MinecraftMaxMemory}" />
+                        <Border
+                            Grid.Column="1"
+                            Margin="15,0,0,0"
+                            Width="75">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Text="{Binding Instance.Config.MinecraftMaxMemory, StringFormat={}{0:0} MB}"
+                                VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

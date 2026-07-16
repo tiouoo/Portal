@@ -3,19 +3,25 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
+using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Properties : UserControl
+public partial class Properties : DataUserControl
 {
     public MinecraftInstance Instance { get; }
 
     public Properties(MinecraftInstance instance)
     {
         Instance = instance;
+        InitializeComponent();
+        DataContext = this;
+    }
+    public Properties()
+    {
         InitializeComponent();
         DataContext = this;
     }

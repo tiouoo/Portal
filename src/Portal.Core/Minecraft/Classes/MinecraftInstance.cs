@@ -192,11 +192,7 @@ public class MinecraftInstance : ObservableObject
         Type = MinecraftInstanceType.Java;
         MinecraftEntry = e;
         Config = GetInstanceConfig();
-        Config.PropertyChanged += (_, e) =>
-        {
-            SaveConfig();
-            OnPropertyChanged(e.PropertyName);
-        };
+        ObserveConfigChanges();
         InstanceFolderPath = Path.GetDirectoryName(e.ClientJarPath);
     }
 
@@ -229,6 +225,23 @@ public class MinecraftInstance : ObservableObject
         FolderName = folderName;
         FolderPath = folderPath;
         InstanceFolderPath = bedrockConfig.InstancePath;
+        ObserveConfigChanges();
+    }
+
+    private void ObserveConfigChanges()
+    {
+        Config.PropertyChanged += (_, e) =>
+        {
+            SaveConfig();
+            OnPropertyChanged(e.PropertyName);
+
+            if (e.PropertyName == nameof(MinecraftInstanceConfig.Note))
+            {
+                OnPropertyChanged(nameof(InstanceName));
+                OnPropertyChanged(nameof(Description));
+                OnPropertyChanged(nameof(FullInfo));
+            }
+        };
     }
 
     private MinecraftInstanceConfig GetInstanceConfig()

@@ -71,9 +71,11 @@
                         Text="{Binding Instance.ShortDisplay}"
                         TextWrapping="NoWrap" />
                     <TextBlock
+                        Cursor="Hand"
                         DockPanel.Dock="Top"
                         FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
+                        PointerPressed="OpenFolder_Click"
                         TextTrimming="CharacterEllipsis"
                         TextWrapping="NoWrap">
                         <Run Text="[" />
@@ -86,19 +88,19 @@
         </Border>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
         <Grid
-            ColumnDefinitions="*,*,*"
-            ColumnSpacing="12"
+            ColumnDefinitions="*,*,*,*"
+            ColumnSpacing="36"
             Margin="12,0,12,0">
             <tio:Descriptions LabelPosition="Top">
                 <tio:DescriptionsItem Label="游玩时长">
-                    <TextBlock>
+                    <TextBlock TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
                         <Run FontSize="24" Text="{Binding TotalPlayTime}" />
                     </TextBlock>
                 </tio:DescriptionsItem>
             </tio:Descriptions>
             <tio:Descriptions Grid.Column="1" LabelPosition="Top">
                 <tio:DescriptionsItem Label="会话次数">
-                    <TextBlock>
+                    <TextBlock TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
                         <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
                         <Run FontSize="24" Text="次" />
                     </TextBlock>
@@ -106,97 +108,162 @@
             </tio:Descriptions>
             <tio:Descriptions Grid.Column="2" LabelPosition="Top">
                 <tio:DescriptionsItem Label="上次启动">
-                    <TextBlock FontSize="24" Text="{Binding Instance.DisplayLastPlayTime}" />
+                    <TextBlock
+                        FontSize="24"
+                        Text="{Binding Instance.DisplayLastPlayTime}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap" />
+                </tio:DescriptionsItem>
+            </tio:Descriptions>
+            <tio:Descriptions Grid.Column="3" LabelPosition="Top">
+                <tio:DescriptionsItem Label="版本">
+                    <TextBlock TextTrimming="LeadingCharacterEllipsis" TextWrapping="NoWrap">
+                        <Run FontSize="24" Text="{Binding Instance.Type}" />
+                        <Run FontSize="24" Text="/" />
+                        <Run FontSize="24" Text="{Binding Instance.VersionId}" />
+                    </TextBlock>
                 </tio:DescriptionsItem>
             </tio:Descriptions>
         </Grid>
-        <Border
-            Background="Transparent"
-            BorderBrush="{DynamicResource TranslucentBorderBrush}"
-            BorderThickness="0"
-            CornerRadius="12"
-            Padding="12">
-            <StackPanel Spacing="12">
-                <TextBlock FontSize="18" Text="实例设置" />
-                <StackPanel Spacing="15">
-                    <StackPanel Spacing="5">
+        <Grid
+            ColumnDefinitions="*,*,*,*"
+            ColumnSpacing="12"
+            Margin="0,6,0,0">
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <StackPanel Margin="10">
+                    <DockPanel>
                         <Label
-                            Content="备注"
+                            Content="模组"
+                            DockPanel.Dock="Left"
                             FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <TextBox PlaceholderText="请输入备注" Text="{Binding Instance.Config.Note}" />
-                    </StackPanel>
-                    <StackPanel Spacing="5">
-                        <Label
-                            Content="独立实例"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Left"
+                            Margin="4,0,0,0" />
+                        <TextBlock
+                            DockPanel.Dock="Right"
                             FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.Config.EnableIndependentInstance}" />
-                    </StackPanel>
-                    <StackPanel Spacing="5">
-                        <Label
-                            Content="使用特定Java"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.Config.EnableSpecificJava}" />
-                    </StackPanel>
-                    <StackPanel IsVisible="{Binding Instance.Config.EnableSpecificJava}" Spacing="5">
-                        <Label
-                            Content="选择Java"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ComboBox
-                            Height="46"
-                            HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}"
-                            SelectedItem="{Binding Instance.Config.SpecificJavaEntry}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate DataType="java:JavaRuntimeEntry">
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                        <TextBlock
-                                            FontSize="12"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Text="{Binding JavaPath}"
-                                            TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Spacing="5">
-                        <Label
-                            Content="覆盖全局最大内存"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.Config.EnableOverrideMaxMemory}" />
-                    </StackPanel>
-                    <StackPanel IsVisible="{Binding Instance.Config.EnableOverrideMaxMemory}" Spacing="5">
-                        <Label
-                            Content="最大内存"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Slider
-                                Grid.Column="0"
-                                IsSnapToTickEnabled="True"
-                                Maximum="65536"
-                                Minimum="512"
-                                TickFrequency="256"
-                                Value="{Binding Instance.Config.MinecraftMaxMemory}" />
-                            <Border
-                                Grid.Column="1"
-                                Margin="15,0,0,0"
-                                Width="75">
-                                <TextBlock
-                                    HorizontalAlignment="Center"
-                                    Text="{Binding Instance.Config.MinecraftMaxMemory, StringFormat={}{0:0} MB}"
-                                    VerticalAlignment="Center" />
-                            </Border>
-                        </Grid>
-                    </StackPanel>
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Right"
+                            Margin="4,0,0,0">
+                            <Run FontSize="13" Text="6.33" />
+                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                    </DockPanel>
+                    <TextBlock Margin="4,4,0,0">
+                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
+                        <Run FontSize="24" Text="个" />
+                    </TextBlock>
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="4,0,0,0"
+                        Text="/version/mods" />
                 </StackPanel>
-            </StackPanel>
-        </Border>
+            </Border>
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Grid.Column="1">
+                <StackPanel Margin="10">
+                    <DockPanel>
+                        <Label
+                            Content="资源包"
+                            DockPanel.Dock="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Left"
+                            Margin="4,0,0,0" />
+                        <TextBlock
+                            DockPanel.Dock="Right"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Right"
+                            Margin="4,0,0,0">
+                            <Run FontSize="13" Text="6.33" />
+                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                    </DockPanel>
+                    <TextBlock Margin="4,4,0,0">
+                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
+                        <Run FontSize="24" Text="个" />
+                    </TextBlock>
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="4,0,0,0"
+                        Text="/version/mods" />
+                </StackPanel>
+            </Border>
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Grid.Column="2">
+                <StackPanel Margin="10">
+                    <DockPanel>
+                        <Label
+                            Content="光影包"
+                            DockPanel.Dock="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Left"
+                            Margin="4,0,0,0" />
+                        <TextBlock
+                            DockPanel.Dock="Right"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Right"
+                            Margin="4,0,0,0">
+                            <Run FontSize="13" Text="6.33" />
+                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                    </DockPanel>
+                    <TextBlock Margin="4,4,0,0">
+                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
+                        <Run FontSize="24" Text="个" />
+                    </TextBlock>
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="4,0,0,0"
+                        Text="/version/mods" />
+                </StackPanel>
+            </Border>
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Grid.Column="3">
+                <StackPanel Margin="10">
+                    <DockPanel>
+                        <Label
+                            Content="存档"
+                            DockPanel.Dock="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Left"
+                            Margin="4,0,0,0" />
+                        <TextBlock
+                            DockPanel.Dock="Right"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Right"
+                            Margin="4,0,0,0">
+                            <Run FontSize="13" Text="6.33" />
+                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                    </DockPanel>
+                    <TextBlock Margin="4,4,0,0">
+                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
+                        <Run FontSize="24" Text="个" />
+                    </TextBlock>
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="4,0,0,0"
+                        Text="/version/mods" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </StackPanel>
 </UserControl>
