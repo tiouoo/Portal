@@ -179,9 +179,10 @@
                                     HorizontalAlignment="Stretch"
                                     Margin="9,0,10,0"
                                     VerticalAlignment="Stretch">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
+                                    <DockPanel VerticalAlignment="Stretch">
                                         <PathIcon
                                             Data="{Binding Icon}"
+                                            DockPanel.Dock="Left"
                                             Height="{Binding IconHeight}"
                                             HorizontalAlignment="Left"
                                             IsVisible="{Binding IsIconVisible}"
@@ -191,9 +192,9 @@
                                         <ContentControl
                                             Content="{Binding Header}"
                                             FontSize="13"
-                                            Margin="2,0,0,0"
+                                            Margin="2,0,25,0"
                                             VerticalAlignment="Center" />
-                                    </StackPanel>
+                                    </DockPanel>
                                     <Grid
                                         HorizontalAlignment="Right"
                                         IsVisible="{Binding IsCloseable}"

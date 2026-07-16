@@ -1,0 +1,45 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstanceDetailPage"
+    x:DataType="pages:InstanceDetailPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <controls:ScrollView
+            Classes="Flat"
+            DockPanel.Dock="Left"
+            HorizontalAlignment="Left"
+            Margin="7,0,10,10"
+            Width="185">
+            <tio:NavMenu
+                Margin="0,0,10,0"
+                Name="NavMenu"
+                Theme="{StaticResource FlatScrollBarTheme}">
+                <tio:NavMenuItem
+                    Command="{Binding NavigateTypeCommand}"
+                    CommandParameter="{x:Type instancePages:Overview}"
+                    Header="概览"
+                    IsSelected="True" />
+                <tio:NavMenuItem
+                    Command="{Binding NavigateTypeCommand}"
+                    CommandParameter="{x:Type instancePages:Properties}"
+                    Header="属性" />
+            </tio:NavMenu>
+        </controls:ScrollView>
+        <controls:ScrollView Margin="0,0,5,0">
+            <TransitioningContentControl Content="{Binding CurrentPage}" Margin="0,10,10,10">
+                <TransitioningContentControl.PageTransition>
+                    <CrossFade Duration="0:0:0.2" />
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
+        </controls:ScrollView>
+    </DockPanel>
+</UserControl>

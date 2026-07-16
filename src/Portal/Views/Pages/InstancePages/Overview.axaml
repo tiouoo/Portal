@@ -1,0 +1,27 @@
+<UserControl
+    x:Class="Portal.Views.Pages.InstancePages.Overview"
+    x:DataType="instancePages:Overview"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <StackPanel Spacing="15">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <Border ClipToBounds="True" CornerRadius="10" Height="56" Width="56">
+                <Image Source="{Binding Instance.Icon}" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock FontSize="26" Text="{Binding Instance.InstanceName}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Instance.ShortDisplay}" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label Content="实例信息" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBlock Text="{Binding Instance.FullInfo}" TextWrapping="Wrap" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

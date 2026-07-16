@@ -1,0 +1,35 @@
+<UserControl
+    x:Class="Portal.Views.Pages.InstancePages.Properties"
+    x:DataType="instancePages:Properties"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <StackPanel Spacing="15">
+        <TextBlock FontSize="26" Text="属性" />
+        <StackPanel Spacing="5">
+            <Label Content="实例名称" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBlock Text="{Binding Instance.InstanceName}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label Content="文件夹" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBlock Text="{Binding Instance.FolderName}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label Content="路径" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
+            <SelectableTextBlock Text="{Binding Instance.InstanceFolderPath}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label Content="版本" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBlock Text="{Binding Instance.VersionId}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label Content="加载器" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBlock Text="{Binding Instance.LoaderDescription}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

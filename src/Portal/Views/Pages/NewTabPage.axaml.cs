@@ -4,6 +4,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
@@ -53,6 +54,18 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; }
+
+    private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+        if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() != null))
+            return;
+
+        if (sender is Control { DataContext: MinecraftInstance instance } &&
+            TopLevel.GetTopLevel(this) is { } topLevel)
+            InstanceDetailPage.Open(instance, topLevel);
+    }
 
     private void InputElement_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {

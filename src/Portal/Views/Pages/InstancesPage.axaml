@@ -111,7 +111,8 @@
                             BorderThickness="1"
                             CornerRadius="10"
                             Height="125"
-                            Name="InstanceCard">
+                            Name="InstanceCard"
+                            PointerPressed="InstanceCard_OnPointerPressed">
 
                             <Border.Styles>
                                 <Style Selector="Border#InstanceCard">

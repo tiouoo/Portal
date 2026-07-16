@@ -75,6 +75,7 @@ public class Handler
     {
         var instance = entry.Data as MinecraftInstance;
         if (instance == null) return;
+        InstanceDetailPage.Open(instance, sender);
     }
 
     private static async Task EditAuthServer(AggregatedSearchEntry entry, TopLevel sender)
