@@ -52,7 +52,10 @@
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Account}"
                         Header="账户与档案" />
-                    <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="Java 虚拟机与内存" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Java}"
+                        Header="Java 虚拟机与内存" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:GameFolder}"

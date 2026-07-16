@@ -8,6 +8,7 @@ using Portal.Views;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Instance.Java;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Helpers;
 using TioUi.Shared;
@@ -22,6 +23,7 @@ public partial class ConfigEntry : ObservableObject
         MinecraftAccounts.CollectionChanged += (_, _) => App.Method.SaveConfig();
         AuthServers.CollectionChanged += (_, _) => App.Method.SaveConfig();
         MinecraftFolders.CollectionChanged += (_, _) => App.Method.SaveConfig();
+        JavaRuntimes.CollectionChanged += (_, _) => App.Method.SaveConfig();
     }
 
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
@@ -37,6 +39,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool EnableMinecraftMirror { get; set; }
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
+    [ObservableProperty] public partial bool EnableAutoSelectJava { get; set; } = true;
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
@@ -64,9 +67,11 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial double BlurOpacity { get; set; } = 0.5;
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
     [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
+    [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
+    public ObservableCollection<JavaRuntimeEntry> JavaRuntimes { get; } = [];
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
