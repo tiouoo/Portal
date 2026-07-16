@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Spacing="16">
+    <StackPanel Spacing="12">
         <Border
             Background="Transparent"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -133,6 +133,7 @@
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
+                ClipToBounds="True"
                 CornerRadius="16">
                 <StackPanel Margin="10">
                     <DockPanel>
@@ -148,13 +149,16 @@
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             HorizontalAlignment="Right"
-                            Margin="4,0,0,0">
-                            <Run FontSize="13" Text="6.33" />
-                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                            Margin="4,0,0,0"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap">
+                            <Run FontSize="13" Text="{Binding Instance.StorageUsage.ModsDisplayText}" /></TextBlock>
                     </DockPanel>
-                    <TextBlock Margin="4,4,0,0">
-                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
-                        <Run FontSize="24" Text="个" />
+                    <TextBlock
+                        Margin="4,4,0,0"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap">
+                        <Run FontSize="24" Text="{Binding Instance.StorageUsage.ModsSizeText}" />
                     </TextBlock>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock
@@ -173,6 +177,7 @@
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
+                ClipToBounds="True"
                 CornerRadius="16"
                 Grid.Column="1">
                 <StackPanel Margin="10">
@@ -189,13 +194,16 @@
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             HorizontalAlignment="Right"
-                            Margin="4,0,0,0">
-                            <Run FontSize="13" Text="6.33" />
-                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                            Margin="4,0,0,0"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap">
+                            <Run FontSize="13" Text="{Binding Instance.StorageUsage.ResourcePacksDisplayText}" /></TextBlock>
                     </DockPanel>
-                    <TextBlock Margin="4,4,0,0">
-                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
-                        <Run FontSize="24" Text="个" />
+                    <TextBlock
+                        Margin="4,4,0,0"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap">
+                        <Run FontSize="24" Text="{Binding Instance.StorageUsage.ResourcePacksSizeText}" />
                     </TextBlock>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock
@@ -214,6 +222,7 @@
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
+                ClipToBounds="True"
                 CornerRadius="16"
                 Grid.Column="2">
                 <StackPanel Margin="10">
@@ -230,13 +239,16 @@
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             HorizontalAlignment="Right"
-                            Margin="4,0,0,0">
-                            <Run FontSize="13" Text="6.33" />
-                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                            Margin="4,0,0,0"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap">
+                            <Run FontSize="13" Text="{Binding Instance.StorageUsage.ShaderPacksDisplayText}" /></TextBlock>
                     </DockPanel>
-                    <TextBlock Margin="4,4,0,0">
-                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
-                        <Run FontSize="24" Text="个" />
+                    <TextBlock
+                        Margin="4,4,0,0"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap">
+                        <Run FontSize="24" Text="{Binding Instance.StorageUsage.ShaderPacksSizeText}" />
                     </TextBlock>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock
@@ -255,6 +267,7 @@
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
+                ClipToBounds="True"
                 CornerRadius="16"
                 Grid.Column="3">
                 <StackPanel Margin="10">
@@ -271,13 +284,16 @@
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             HorizontalAlignment="Right"
-                            Margin="4,0,0,0">
-                            <Run FontSize="13" Text="6.33" />
-                            <Run FontSize="13" Text="Mib / 12%" /></TextBlock>
+                            Margin="4,0,0,0"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap">
+                            <Run FontSize="13" Text="{Binding Instance.StorageUsage.SavesDisplayText}" /></TextBlock>
                     </DockPanel>
-                    <TextBlock Margin="4,4,0,0">
-                        <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
-                        <Run FontSize="24" Text="个" />
+                    <TextBlock
+                        Margin="4,4,0,0"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap">
+                        <Run FontSize="24" Text="{Binding Instance.StorageUsage.SavesSizeText}" />
                     </TextBlock>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock

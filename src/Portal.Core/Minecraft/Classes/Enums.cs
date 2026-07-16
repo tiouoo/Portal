@@ -7,7 +7,10 @@ public enum MinecraftSpecialFolder
     SavesFolder,
     ResourcePacksFolder,
     ShaderPacksFolder,
-    ScreenshotsFolder
+    ScreenshotsFolder,
+    ConfigFolder,
+    LogsFolder,
+    CrashReportsFolder
 }
 
 public enum MinecraftInstanceIconType

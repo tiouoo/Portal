@@ -23,7 +23,8 @@ public class AddAccount
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalAnchor = VerticalPosition.Center
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
         };
 
         var result = await OverlayDialog
@@ -66,7 +67,8 @@ public class AddAccount
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalAnchor = VerticalPosition.Center
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
         };
 
         return authServer.AuthType switch

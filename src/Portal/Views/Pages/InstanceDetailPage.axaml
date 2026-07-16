@@ -30,7 +30,7 @@
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Files}"
-                    Header="文件管理" />
+                    Header="存储" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Properties}"

@@ -10,7 +10,10 @@
     xmlns:java="clr-namespace:Portal.Core.Minecraft.Instance.Java;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel MaxWidth="1100" Spacing="16">
+    <StackPanel
+        Margin="10"
+        MaxWidth="1100"
+        Spacing="5">
         <TextBlock FontSize="24" Text="实例设置" />
         <Border
             Background="Transparent"

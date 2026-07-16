@@ -32,18 +32,50 @@ public partial class Files : UserControl
         DataContext = this;
     }
 
-    private void OpenInstanceFolder_Click(object? sender, RoutedEventArgs e) => OpenPath(sender as Control, Instance.InstanceFolderPath);
-
-    private void OpenFolder_Click(object? sender, RoutedEventArgs e)
+    public Files()
     {
-        if (sender is Control { Tag: InstanceFolderItem item } control)
-            OpenPath(control, item.Path);
+        InitializeComponent();
+        DataContext = this;
     }
 
-    private static void OpenPath(Control? control, string path)
+    private void OpenPath(string path)
     {
-        if (control != null)
-            _ = control.GetTopLevel().Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path));
+        _ = this.GetTopLevel().Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path));
+    }
+
+    private void MenuItem_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var tag = (sender as Control)?.Tag as string;
+        switch (tag)
+        {
+            case "root":
+                OpenPath(Instance.FolderPath);
+                break;
+            case "version":
+                OpenPath(Instance.MinecraftPath);
+                break;
+            case "mods":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder));
+                break;
+            case "resource":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.ResourcePacksFolder));
+                break;
+            case "shader":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder));
+                break;
+            case "saves":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder));
+                break;
+            case "screenshot":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.ScreenshotsFolder));
+                break;
+            case "logs":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.LogsFolder));
+                break;
+            case "config":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.ConfigFolder));
+                break;
+        }
     }
 }
 

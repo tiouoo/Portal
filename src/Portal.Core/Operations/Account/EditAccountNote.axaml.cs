@@ -33,7 +33,8 @@ public static class EditAccountNoteDialog
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalAnchor = VerticalPosition.Center
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
         };
 
         var result = await OverlayDialog.ShowCustomAsync<EditAccountNote, EditAccountNoteViewModel, string?>(
@@ -45,9 +46,8 @@ public static class EditAccountNoteDialog
 
 public partial class EditAccountNoteViewModel : ObservableObject, IDialogContext
 {
-    [ObservableProperty]
-    public partial string? AccountNote { get; set; }
-    
+    [ObservableProperty] public partial string? AccountNote { get; set; }
+
     public ICommand ConfirmCommand { get; }
     public ICommand CancelCommand { get; }
 
@@ -73,7 +73,7 @@ public partial class EditAccountNoteViewModel : ObservableObject, IDialogContext
     {
         RequestClose?.Invoke(this, AccountNote);
     }
-    
+
     private void Cancel()
     {
         RequestClose?.Invoke(this, null);

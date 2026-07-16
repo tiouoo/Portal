@@ -104,6 +104,9 @@ public class MinecraftInstance : ObservableObject
 
     public MinecraftInstanceConfig Config => field ??= GetInstanceConfig();
 
+    [JsonIgnore]
+    public InstanceStorageUsage StorageUsage => field ??= new InstanceStorageUsage(this);
+
     public Bitmap Icon => field ??= GetInstanceIcon(48);
 
     public string LoaderDescription
@@ -241,6 +244,12 @@ public class MinecraftInstance : ObservableObject
                 OnPropertyChanged(nameof(InstanceName));
                 OnPropertyChanged(nameof(Description));
                 OnPropertyChanged(nameof(FullInfo));
+            }
+
+            if (e.PropertyName == nameof(MinecraftInstanceConfig.EnableIndependentInstance))
+            {
+                StorageUsage.Refresh();
+                OnPropertyChanged(nameof(StorageUsage));
             }
         };
     }
@@ -461,15 +470,19 @@ public class MinecraftInstance : ObservableObject
     {
         if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
         {
-            var basePath = Path.Combine(MinecraftEntry.MinecraftFolderPath, "versions", MinecraftEntry.Id);
+            var instancePath = Path.Combine(MinecraftEntry.MinecraftFolderPath, "versions", MinecraftEntry.Id);
+            var basePath = Config.EnableIndependentInstance ? instancePath : MinecraftEntry.MinecraftFolderPath;
             var path = folder switch
             {
-                MinecraftSpecialFolder.InstanceFolder => basePath,
+                MinecraftSpecialFolder.InstanceFolder => instancePath,
                 MinecraftSpecialFolder.ModsFolder => Path.Combine(basePath, "mods"),
                 MinecraftSpecialFolder.ResourcePacksFolder => Path.Combine(basePath, "resourcepacks"),
                 MinecraftSpecialFolder.SavesFolder => Path.Combine(basePath, "saves"),
                 MinecraftSpecialFolder.ScreenshotsFolder => Path.Combine(basePath, "screenshots"),
                 MinecraftSpecialFolder.ShaderPacksFolder => Path.Combine(basePath, "shaderpacks"),
+                MinecraftSpecialFolder.ConfigFolder => Path.Combine(instancePath, "config"),
+                MinecraftSpecialFolder.LogsFolder => Path.Combine(instancePath, "logs"),
+                MinecraftSpecialFolder.CrashReportsFolder => Path.Combine(instancePath, "crash-reports"),
                 _ => basePath
             };
 

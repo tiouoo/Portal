@@ -114,7 +114,8 @@ public static class ChangeSkinDialog
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalAnchor = VerticalPosition.Center
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
         };
 
         var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(
@@ -136,7 +137,8 @@ public static class ChangeSkinDialog
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalAnchor = VerticalPosition.Center
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
         };
 
         var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(

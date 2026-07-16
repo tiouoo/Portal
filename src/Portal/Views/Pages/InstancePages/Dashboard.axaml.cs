@@ -35,6 +35,7 @@ public partial class Dashboard : DataUserControl
         InitializeComponent();
         DataContext = this;
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
+        Loaded += (_, _) => _ = Instance.StorageUsage.EnsureLoadedAsync();
     }
 
     public Dashboard()
