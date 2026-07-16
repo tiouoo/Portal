@@ -14,7 +14,70 @@
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="Java 虚拟机与内存" />
         <StackPanel Spacing="5">
-            <TextBlock FontSize="14" Text="自动选择适合游戏版本的 Java" />
+            <Label
+                Content="最大内存"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasMemoryStatus}">
+                <Slider
+                    Grid.Column="0"
+                    IsSnapToTickEnabled="True"
+                    Maximum="{Binding TotalMemoryMb}"
+                    Minimum="512"
+                    TickFrequency="256"
+                    Value="{Binding Data.ConfigEntry.MinecraftMaxMemory}" />
+                <Border
+                    Grid.Column="1"
+                    Margin="15,0,0,0"
+                    Width="75">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        Text="{Binding Data.ConfigEntry.MinecraftMaxMemory, StringFormat={}{0:0} MB}"
+                        VerticalAlignment="Center" />
+                </Border>
+            </Grid>
+            <Border
+                Background="{DynamicResource TranslucentBorderBrush}"
+                ClipToBounds="True"
+                CornerRadius="10"
+                Height="10"
+                IsVisible="{Binding HasMemoryStatus}"
+                Margin="0,3,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{Binding SystemMemoryWidth}" />
+                        <ColumnDefinition Width="{Binding MinecraftMemoryWidth}" />
+                        <ColumnDefinition Width="{Binding RemainingMemoryWidth}" />
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{DynamicResource SystemAccentColor}" CornerRadius="3,0,0,3" />
+                    <Border Background="{DynamicResource SystemAccentColorLight2}" Grid.Column="1" />
+                </Grid>
+            </Border>
+            <Grid
+                ColumnDefinitions="*,Auto"
+                IsVisible="{Binding HasMemoryStatus}"
+                Margin="0,1,0,0">
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Binding SystemMemoryDescription}" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Grid.Column="1"
+                    Text="{Binding MinecraftMemoryDescription}" />
+            </Grid>
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasMemoryWarning}"
+                Text=" *超出当前系统可用内存" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="自动选择适合游戏版本的 Java"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch DockPanel.Dock="Right" IsChecked="{Binding Data.ConfigEntry.EnableAutoSelectJava}" />
         </StackPanel>
         <StackPanel Spacing="5">
@@ -38,7 +101,7 @@
                 Content="Java 管理"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Margin="5,0,0,0" />
+                Margin="0,0,0,0" />
             <StackPanel
                 DockPanel.Dock="Right"
                 HorizontalAlignment="Right"
@@ -56,7 +119,10 @@
                     Theme="{StaticResource TransparentHyperlinkButton}" />
             </StackPanel>
         </DockPanel>
-        <ListBox ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}" SelectedItem="{Binding Data.ConfigEntry.DefaultJavaRuntime}">
+        <ListBox
+            ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}"
+            Margin="0,-5,0,0"
+            SelectedItem="{Binding Data.ConfigEntry.DefaultJavaRuntime}">
             <ListBox.Styles>
                 <Style Selector="ListBoxItem Button.delete-btn">
                     <Setter Property="Opacity" Value="0" />
@@ -80,13 +146,14 @@
                             Classes="delete-btn"
                             Click="RemoveJava_Click"
                             Grid.Column="1"
+                            Margin="0,0,8,0"
                             Tag="{Binding}"
                             Theme="{StaticResource TransparentButton}"
                             VerticalAlignment="Center">
                             <PathIcon
                                 Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
-                                Height="16"
-                                Width="16" />
+                                Height="14"
+                                Width="14" />
                         </Button>
                     </Grid>
                 </DataTemplate>

@@ -53,19 +53,11 @@ public class Handler
         var tabWindow = sender as TioTabWindowBase;
         if (tabWindow == null) return;
 
-        ITioTabPage? page = null;
+        ITioTabPage page;
 
-        if (pageType == typeof(NewTabPage))
+        if (Activator.CreateInstance(pageType) is ITioTabPage tabPage)
         {
-            page = new NewTabPage();
-        }
-        else if (pageType == typeof(InstancesPage))
-        {
-            page = new InstancesPage();
-        }
-        else if (pageType == typeof(NewsPage))
-        {
-            page = new NewsPage();
+            page = tabPage;
         }
         else
         {
@@ -74,12 +66,9 @@ public class Handler
             page = settingPage;
         }
 
-        if (page != null)
-        {
-            var tab = new TabEntry(tabWindow, page);
-            tabWindow.CreateTab(tab);
-            tabWindow.SelectTab(tab);
-        }
+        var tab = new TabEntry(tabWindow, page);
+        tabWindow.CreateTab(tab);
+        tabWindow.SelectTab(tab);
     }
 
     private static void HandleInstance(AggregatedSearchEntry entry, TopLevel sender)

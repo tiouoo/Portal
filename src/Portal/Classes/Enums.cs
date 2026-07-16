@@ -9,12 +9,6 @@ public enum InstanceSortType
     Version
 }
 
-public enum DefaultPage
-{
-    NewTabPage,
-    SettingPage
-}
-
 public enum FilePicker
 {
     System,

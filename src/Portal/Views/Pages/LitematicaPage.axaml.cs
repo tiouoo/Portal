@@ -17,6 +17,8 @@ using Portal.LitematicaViewer.Enums;
 using Portal.LitematicaViewer.Helpers;
 using Portal.LitematicaViewer.Parsers;
 using Portal.LitematicaViewer.Services;
+using Portal.Module.AggregatedSearch;
+using Portal.Module.DefaultPage;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -25,6 +27,8 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
+[AggregatedSearchPage("投影文件解析", "投影文件解析", "Litematica")]
+[DefaultPage("投影文件解析")]
 public partial class LitematicaPage : UserControl, ITioTabPage
 {
     private readonly LitematicaPageViewModel _vm;

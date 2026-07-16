@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Module.AggregatedSearch;
+using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using SmoothScroll.Avalonia.Controls;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -12,6 +13,7 @@ using Tio.Avalonia.Standard.Tab.Extensions; // 确保保留你原本的命名空
 namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("新闻", "新闻", "News")]
+[DefaultPage("新闻")]
 public partial class NewsPage : DataUserControl, ITioTabPage
 {
     public NewsPageViewModel NewsPageViewModel { get; }

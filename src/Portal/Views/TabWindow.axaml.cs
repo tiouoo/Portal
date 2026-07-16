@@ -13,8 +13,8 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using HotAvalonia;
 using Portal.Classes.Entries;
-using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Module.DefaultPage;
 using Portal.Module.DragDrop;
 using Portal.Views.Components;
 using Portal.Views.Pages;
@@ -67,12 +67,13 @@ public partial class TabWindow : TioTabWindowBase
         };
         if (IsMainWindow)
         {
-            var tab = Data.ConfigEntry.DefaultPage switch
-            {
-                DefaultPage.NewTabPage => new TabEntry(this, new NewTabPage()),
-                DefaultPage.SettingPage => new TabEntry(this, new SettingPage()),
-                _ => new TabEntry(this, new NewTabPage())
-            };
+            var pageType = DefaultPageRegistry.Pages
+                .FirstOrDefault(item => item.PageType.AssemblyQualifiedName == Data.ConfigEntry.DefaultPage)
+                ?.PageType;
+            var page = pageType != null && Activator.CreateInstance(pageType) is ITioTabPage tabPage
+                ? tabPage
+                : new NewTabPage();
+            var tab = new TabEntry(this, page);
             AddTab(tab);
             SelectTab(tab);
         }

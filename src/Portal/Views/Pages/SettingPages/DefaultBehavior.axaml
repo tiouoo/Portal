@@ -16,10 +16,11 @@
                 Content="默认页面"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.DefaultPage}">
-                <ComboBoxItem Content="新标签页" />
-                <ComboBoxItem Content="设置" />
-            </ComboBox>
+            <ComboBox
+                DisplayMemberBinding="{Binding Title}"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding DefaultPages}"
+                SelectedItem="{Binding SelectedDefaultPage}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label

@@ -8,6 +8,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Const;
+using Portal.Module.DefaultPage;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -15,6 +16,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
+[DefaultPage("设置")]
 public partial class SettingPage : UserControl, ITioTabPage
 {
     public SettingPageViewModel SettingPageViewModel;

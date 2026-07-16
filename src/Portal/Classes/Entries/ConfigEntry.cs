@@ -5,6 +5,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch;
 using Portal.Views;
+using Portal.Views.Pages;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
@@ -27,7 +28,7 @@ public partial class ConfigEntry : ObservableObject
     }
 
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
-    [ObservableProperty] public partial DefaultPage DefaultPage { get; set; } = DefaultPage.NewTabPage;
+    [ObservableProperty] public partial string DefaultPage { get; set; } = typeof(NewTabPage).AssemblyQualifiedName!;
     [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
     [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
     [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
@@ -58,6 +59,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 128;
     [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
     [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
+    // Stored as megabytes so it can be passed directly to the game's JVM arguments.
     [ObservableProperty] public partial int MinecraftMaxMemory { get; set; } = 4096;
     [ObservableProperty] public partial double ControlOpacity { get; set; } = 1;
     [ObservableProperty] public partial double TranslucentControlOpacity { get; set; } = 1;
