@@ -1,0 +1,73 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.StaticPages.ImageViewer"
+    x:DataType="staticPages:ImageViewer"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:staticPages="clr-namespace:Portal.Views.StaticPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <controls:ScrollView
+            Classes="Flat"
+            HorizontalContentAlignment="Stretch"
+            HorizontalScrollBarVisibility="Hidden"
+            IsZoomEnabled="True"
+            MaxZoomFactor="100"
+            MinZoomFactor="0.1"
+            VerticalContentAlignment="Stretch"
+            VerticalScrollBarVisibility="Hidden"
+            x:Name="ImageScrollView">
+            <Image
+                HorizontalAlignment="Center"
+                Source="{Binding Image}"
+                Stretch="Uniform"
+                VerticalAlignment="Center" />
+        </controls:ScrollView>
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="999"
+            HorizontalAlignment="Right"
+            Margin="0,0,16,16"
+            VerticalAlignment="Bottom">
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="4"
+                ZIndex="1">
+                <RepeatButton
+                    Click="ZoomOut_OnClick"
+                    Height="32"
+                    Theme="{StaticResource TransparentButton}"
+                    ToolTip.Tip="缩小 10%"
+                    Width="32">
+                    <PathIcon
+                        Data="F1 M640,640z M0,0z M96,320C96,302.3,110.3,288,128,288L512,288C529.7,288,544,302.3,544,320 544,337.7 529.7,352 512,352L128,352C110.3,352,96,337.7,96,320z"
+                        Height="16"
+                        Width="16" />
+                </RepeatButton>
+                <TextBlock
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Binding #ImageScrollView.ZoomFactor, StringFormat={}{0:P0}}"
+                    TextAlignment="Center"
+                    VerticalAlignment="Center"
+                    Width="52" />
+                <RepeatButton
+                    Click="ZoomIn_OnClick"
+                    Height="32"
+                    Theme="{StaticResource TransparentButton}"
+                    ToolTip.Tip="放大 10%"
+                    Width="32">
+                    <PathIcon
+                        Data="F1 M640,640z M0,0z M352,128C352,110.3 337.7,96 320,96 302.3,96 288,110.3 288,128L288,288 128,288C110.3,288 96,302.3 96,320 96,337.7 110.3,352 128,352L288,352 288,512C288,529.7 302.3,544 320,544 337.7,544 352,529.7 352,512L352,352 512,352C529.7,352 544,337.7 544,320 544,302.3 529.7,288 512,288L352,288 352,128z"
+                        Height="16"
+                        Width="16" />
+                </RepeatButton>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

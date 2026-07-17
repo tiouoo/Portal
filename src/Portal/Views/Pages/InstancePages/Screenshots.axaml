@@ -51,12 +51,14 @@
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="instancePages:ScreenshotItem">
                         <Grid Background="Transparent" RowDefinitions="*,Auto">
-                            <Border
-                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                                BorderThickness="1"
-                                ClipToBounds="True"
-                                CornerRadius="16">
-                                <asyncImageLoader:AdvancedImage
+                             <Border
+                                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                 BorderThickness="1"
+                                 ClipToBounds="True"
+                                 CornerRadius="16"
+                                 Cursor="Hand"
+                                 PointerPressed="OpenImageViewer_OnPointerPressed">
+                                 <asyncImageLoader:AdvancedImage
                                     CornerRadius="15"
                                     Loader="{Binding ImageLoader}"
                                     Source="{Binding FilePath}"

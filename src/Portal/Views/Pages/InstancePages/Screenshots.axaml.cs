@@ -6,11 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
+using Portal.Views.StaticPages;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.Views.Pages.InstancePages;
@@ -87,6 +89,17 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged
     }
 
     private static ScreenshotItem? GetItem(object? sender) => (sender as Control)?.Tag as ScreenshotItem;
+
+    private void OpenImageViewer_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
+            sender is not Control { DataContext: ScreenshotItem item } ||
+            TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
+
+        ImageViewer.Open(item.FilePath, topLevel);
+        e.Handled = true;
+    }
 
     private async void CopyScreenshot_OnClick(object? sender, RoutedEventArgs e)
     {
