@@ -1,0 +1,157 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="480"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Components.TaskListView"
+    x:DataType="components:TaskListView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:components="clr-namespace:Portal.Views.Components"
+    xmlns:converter="clr-namespace:Portal.Module.Converter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tasks="clr-namespace:Tio.Avalonia.Standard.Modules.Tasks;assembly=Tio.Avalonia.Standard"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <converter:ManagedTaskStatusToBrushConverter x:Key="TaskStatusBrush" />
+        <converter:ManagedTaskStatusToTextConverter x:Key="TaskStatusText" />
+        <converter:ManagedTaskStatusToCompletedBoolConverter x:Key="TaskCompleted" />
+        <converter:NullableDoubleToBoolConverter x:Key="UnknownProgress" />
+        <converter:IntCompareConverter x:Key="IntCompareConverter" />
+        <DataTemplate DataType="tasks:ManagedTask" x:Key="TaskTreeItemTemplate">
+            <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Ellipse
+                        Fill="{Binding Status, Converter={StaticResource TaskStatusBrush}}"
+                        Height="7"
+                        Margin="0,0,7,0"
+                        VerticalAlignment="Center"
+                        Width="7" />
+                    <StackPanel Grid.Column="1" Spacing="1">
+                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Binding Description}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Grid.Column="2"
+                        Text="{Binding Status, Converter={StaticResource TaskStatusText}}"
+                        VerticalAlignment="Center" />
+                </Grid>
+                <ItemsRepeater
+                    ItemTemplate="{StaticResource TaskTreeItemTemplate}"
+                    ItemsSource="{Binding Children}"
+                    Margin="14,0,0,0">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="6" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+    <ScrollViewer
+        ClipToBounds="True"
+        HorizontalScrollBarVisibility="Disabled"
+        Name="ScrollViewer">
+        <ItemsRepeater ItemsSource="{Binding Tasks.RootTasks}">
+            <ItemsRepeater.Layout>
+                <StackLayout Spacing="10" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate DataType="tasks:ManagedTask">
+                    <tio:TioExpander
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        Classes="no-transitions"
+                        HeaderHeight="72"
+                        HeaderPadding="0"
+                        IconHeight="12"
+                        IconMargin="0,0,10,0"
+                        IconWidth="12">
+                        <Expander.Header>
+                            <Grid Margin="0,8,10,8" RowDefinitions="Auto,Auto">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Grid.Row="0">
+                                    <Ellipse
+                                        Fill="{Binding Status, Converter={StaticResource TaskStatusBrush}}"
+                                        Height="9"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Width="9" />
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock
+                                            FontSize="15"
+                                            FontWeight="SemiBold"
+                                            Text="{Binding Name}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding DisplayDescription}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Grid.Column="2"
+                                        Text="{Binding Status, Converter={StaticResource TaskStatusText}}"
+                                        VerticalAlignment="Center" />
+                                    <HyperlinkButton
+                                        Click="RemoveCompletedTask"
+                                        Content="移除"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource SystemAccentColor}"
+                                        Grid.Column="3"
+                                        IsVisible="{Binding Status, Converter={StaticResource TaskCompleted}}"
+                                        Margin="8,0,0,0"
+                                        Tag="{Binding}"
+                                        Theme="{StaticResource TransparentHyperlinkButton}"
+                                        VerticalAlignment="Center" />
+                                </Grid>
+                                <ProgressBar
+                                    Grid.Row="1"
+                                    IsIndeterminate="{Binding AggregateProgress, Converter={StaticResource UnknownProgress}}"
+                                    Margin="0,7,0,0"
+                                    Maximum="1"
+                                    Value="{Binding AggregateProgress}" />
+                            </Grid>
+                        </Expander.Header>
+                        <tio:TioExpander.Content>
+                            <StackPanel Margin="20,0,20,14" Spacing="10">
+                                <Separator />
+                                <ItemsRepeater ItemTemplate="{StaticResource TaskTreeItemTemplate}" ItemsSource="{Binding Children}">
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Spacing="6" />
+                                    </ItemsRepeater.Layout>
+                                </ItemsRepeater>
+                                <StackPanel IsVisible="{Binding Actions.Count, Converter={StaticResource IntCompareConverter}, ConverterParameter='> 0'}">
+                                    <ItemsControl ItemsSource="{Binding Actions}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button
+                                                    Command="{Binding Command}"
+                                                    Content="{Binding Name}"
+                                                    IsEnabled="{Binding IsEnabled}"
+                                                    IsVisible="{Binding IsVisible}"
+                                                    Margin="0,0,6,6"
+                                                    ToolTip.Tip="{Binding Description}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </tio:TioExpander.Content>
+                    </tio:TioExpander>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+    </ScrollViewer>
+</UserControl>

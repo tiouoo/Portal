@@ -19,6 +19,23 @@
                 Margin="0,0,0,10" />
             <Button Click="Click1" Content="触发崩溃 (除以0)" />
         </StackPanel>
+        <StackPanel MaxWidth="260" Spacing="8">
+            <Label
+                Content="任务管理测试"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Left" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                FontSize="12"
+                Text="创建任务后可通过标题栏圆点打开抽屉，或从抽屉打开任务标签页。"
+                TextWrapping="Wrap" />
+            <Button Click="StartWorkflowTest" Content="开始完整下载流程" />
+            <Button Click="StartNestedWorkflowTest" Content="开始嵌套子任务流程" />
+            <Button Click="StartWaitingTest" Content="创建等待中的任务" />
+            <Button Click="StartFaultedTest" Content="创建失败任务" />
+            <Button Click="StartCancellableTest" Content="创建可取消任务" />
+            <Button Click="StartActionTest" Content="创建带操作按钮的任务" />
+        </StackPanel>
         <StackPanel>
             <Label
                 Content="版本信息"

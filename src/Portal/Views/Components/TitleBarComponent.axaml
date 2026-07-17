@@ -59,6 +59,8 @@
             <converter:StringIsNotWriteSpaceOrNullConverter x:Key="StringIsNotWriteSpaceOrNullConverter" />
             <converter:ThemeCompareConverter x:Key="ThemeCompareConverter" />
             <converter:IntCompareConverter x:Key="IntCompareConverter" />
+            <converter:ManagedTaskStatusToBrushConverter x:Key="TaskStatusBrush" />
+            <converter:ManagedTaskStatusToTextConverter x:Key="TaskStatusText" />
         </StackPanel.Resources>
         <Border IsVisible="{Binding DropMsg, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}" Margin="3,0">
             <Border
@@ -97,6 +99,31 @@
                         Text="发现新版本"
                         VerticalAlignment="Center" />
                 </Panel>
+            </Border>
+        </Button>
+        <Button
+            Click="OpenTasks"
+            Margin="3,0"
+            Theme="{StaticResource TransparentButton}"
+            ToolTip.Tip="任务"
+            VerticalAlignment="Center">
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999"
+                Padding="8,3,8,2">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Ellipse
+                        Fill="{Binding Tasks.CurrentStatus, Converter={StaticResource TaskStatusBrush}}"
+                        Height="8"
+                        VerticalAlignment="Center"
+                        Width="8" />
+                    <TextBlock
+                        FontSize="13"
+                        Text="{Binding Tasks.CurrentStatus, Converter={StaticResource TaskStatusText}}"
+                        VerticalAlignment="Center" />
+                </StackPanel>
             </Border>
         </Button>
         <Button

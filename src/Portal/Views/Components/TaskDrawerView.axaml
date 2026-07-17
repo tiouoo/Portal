@@ -1,0 +1,13 @@
+<UserControl
+    d:DesignHeight="500"
+    d:DesignWidth="450"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Components.TaskDrawerView"
+    x:DataType="components:TaskDrawerView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:components="clr-namespace:Portal.Views.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <components:TaskListView Width="500" />
+</UserControl>

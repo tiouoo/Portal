@@ -1,6 +1,10 @@
-﻿using Avalonia.Interactivity;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.ViewModels;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 
@@ -28,5 +32,228 @@ public partial class DebugPage : DataUserControl, ITioTabPage
         var a = 0;
         // ReSharper disable once IntDivisionByZero
         _ = 1 / a;
+    }
+
+    private async void StartWorkflowTest(object? sender, RoutedEventArgs e)
+    {
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = "测试：下载整合包",
+            Description = "正在准备下载任务",
+            Progress = 0
+        });
+        var manifest = task.CreateChild(new TaskOptions
+        {
+            Name = "获取版本清单",
+            Description = "等待下载开始",
+            Progress = 0
+        }, RunManifestAsync);
+        var download = task.CreateChild(new TaskOptions
+        {
+            Name = "下载游戏文件",
+            Description = "等待清单完成",
+            Progress = 0
+        }, RunDownloadAsync);
+        var verify = task.CreateChild(new TaskOptions
+        {
+            Name = "校验下载内容",
+            Description = "等待文件下载完成",
+            Progress = 0
+        }, RunVerifyAsync);
+
+        task.Start();
+        manifest.Start();
+        await manifest.Completion;
+        download.Start();
+        await download.Completion;
+        verify.Start();
+        await verify.Completion;
+        task.Complete();
+    }
+
+    private void StartWaitingTest(object? sender, RoutedEventArgs e)
+    {
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = "测试：等待网络",
+            Description = "正在等待网络连接"
+        }, async context =>
+        {
+            context.SetWaiting("正在等待测试网络恢复");
+            await Task.Delay(TimeSpan.FromSeconds(8), context.CancellationToken);
+            context.SetRunning("网络已恢复，正在完成任务");
+            context.ReportProgress(1);
+        });
+        task.Start();
+    }
+
+    private async void StartNestedWorkflowTest(object? sender, RoutedEventArgs e)
+    {
+        var root = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = "测试：嵌套安装流程",
+            Description = "正在构建多层任务树",
+            Progress = 0
+        });
+        var prepare = root.CreateChild(new TaskOptions
+        {
+            Name = "准备安装环境",
+            Description = "等待执行",
+            Progress = 0
+        }, context => RunStepsAsync(context, "准备环境", 3));
+        var downloadGroup = root.CreateChild(new TaskOptions
+        {
+            Name = "下载资源组",
+            Description = "包含客户端和资源文件",
+            Progress = 0
+        });
+        var client = downloadGroup.CreateChild(new TaskOptions
+        {
+            Name = "下载客户端",
+            Description = "等待资源组开始",
+            Progress = 0
+        }, context => RunStepsAsync(context, "下载客户端", 4));
+        var assetsGroup = downloadGroup.CreateChild(new TaskOptions
+        {
+            Name = "下载资源文件",
+            Description = "包含索引与对象文件",
+            Progress = 0
+        });
+        var index = assetsGroup.CreateChild(new TaskOptions
+        {
+            Name = "下载资源索引",
+            Description = "等待资源文件阶段",
+            Progress = 0
+        }, context => RunStepsAsync(context, "下载资源索引", 3));
+        var objects = assetsGroup.CreateChild(new TaskOptions
+        {
+            Name = "下载资源对象",
+            Description = "等待资源索引完成",
+            Progress = 0
+        }, context => RunStepsAsync(context, "下载资源对象", 5));
+        var verify = root.CreateChild(new TaskOptions
+        {
+            Name = "校验安装结果",
+            Description = "等待下载完成",
+            Progress = 0
+        }, context => RunStepsAsync(context, "校验文件", 3));
+
+        root.Start();
+        prepare.Start();
+        await prepare.Completion;
+        downloadGroup.Start();
+        client.Start();
+        await client.Completion;
+        assetsGroup.Start();
+        index.Start();
+        await index.Completion;
+        objects.Start();
+        await objects.Completion;
+        assetsGroup.Complete();
+        downloadGroup.Complete();
+        verify.Start();
+        await verify.Completion;
+        root.Complete();
+    }
+
+    private void StartFaultedTest(object? sender, RoutedEventArgs e)
+    {
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = "测试：下载失败",
+            Description = "将在短暂执行后模拟失败"
+        }, async context =>
+        {
+            context.SetRunning("正在请求不可用的测试资源");
+            context.ReportProgress(0.4);
+            await Task.Delay(TimeSpan.FromSeconds(2), context.CancellationToken);
+            throw new InvalidOperationException("测试用下载资源不可用。");
+        });
+        task.Start();
+    }
+
+    private void StartCancellableTest(object? sender, RoutedEventArgs e)
+    {
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = "测试：可取消的长任务",
+            Description = "可在任务卡片中点击“取消任务”"
+        }, async context =>
+        {
+            for (var step = 1; step <= 30; step++)
+            {
+                context.SetRunning($"正在执行第 {step}/30 个步骤");
+                context.ReportProgress(step / 30d);
+                await Task.Delay(TimeSpan.FromSeconds(1), context.CancellationToken);
+            }
+        });
+        task.Start();
+    }
+
+    private void StartActionTest(object? sender, RoutedEventArgs e)
+    {
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = "测试：带操作按钮的任务",
+            Description = "点击下方“模拟重试”验证任务操作",
+            Actions =
+            [
+                new TaskActionDefinition
+                {
+                    Name = "模拟重试",
+                    Description = "等待一秒并写入操作日志。",
+                    ExecuteAsync = async (managedTask, cancellationToken) =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                        // 操作日志可在任务导出的格式化日志中确认。
+                    }
+                }
+            ]
+        });
+        task.Start();
+    }
+
+    private static async Task RunManifestAsync(TaskExecutionContext context)
+    {
+        context.SetWaiting("正在等待版本服务响应");
+        await Task.Delay(TimeSpan.FromSeconds(1), context.CancellationToken);
+        context.SetRunning("正在下载版本清单");
+        for (var step = 1; step <= 4; step++)
+        {
+            context.ReportProgress(step / 4d);
+            await Task.Delay(TimeSpan.FromMilliseconds(350), context.CancellationToken);
+        }
+    }
+
+    private static async Task RunDownloadAsync(TaskExecutionContext context)
+    {
+        context.SetRunning("正在下载 client.jar");
+        for (var step = 1; step <= 10; step++)
+        {
+            context.SetDescription($"正在下载文件 {step}/10");
+            context.ReportProgress(step / 10d);
+            await Task.Delay(TimeSpan.FromMilliseconds(350), context.CancellationToken);
+        }
+    }
+
+    private static async Task RunVerifyAsync(TaskExecutionContext context)
+    {
+        context.SetRunning("正在校验文件哈希");
+        for (var step = 1; step <= 5; step++)
+        {
+            context.ReportProgress(step / 5d);
+            await Task.Delay(TimeSpan.FromMilliseconds(350), context.CancellationToken);
+        }
+    }
+
+    private static async Task RunStepsAsync(TaskExecutionContext context, string action, int steps)
+    {
+        context.SetRunning($"正在{action} 0/{steps}");
+        for (var step = 1; step <= steps; step++)
+        {
+            context.SetDescription($"正在{action} {step}/{steps}");
+            context.ReportProgress(step / (double)steps);
+            await Task.Delay(TimeSpan.FromMilliseconds(350), context.CancellationToken);
+        }
     }
 }

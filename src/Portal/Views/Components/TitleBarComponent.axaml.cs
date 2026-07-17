@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using CommunityToolkit.Mvvm.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -15,6 +16,7 @@ using Portal.Core.Operations.Account;
 using Portal.Views.Pages;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Modules.Extensions;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -23,6 +25,7 @@ using TioUi.Common;
 using TioUi.Common.Classes;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using TioUi.Controls.Options;
 
 namespace Portal.Views.Components;
 
@@ -44,6 +47,30 @@ public partial class TitleBarComponent : Grid
     }
 
     public Data Data { get; set; } = Data.Instance;
+
+    public TaskManager Tasks => TaskManager.Instance;
+
+    private void OpenTasks(object? sender, RoutedEventArgs e)
+    {
+        var hostId = Root.TryGetHostId();
+        _ = OverlayDrawer.ShowStandardAsync(new TaskDrawerView(), null, hostId, new DrawerOptions
+        {
+            Title = "任务",
+            TitleCommand = new RelayCommand(OpenTaskTab),
+            Buttons = DialogButton.None,
+            MinWidth = 500,
+            CanResize = false
+        });
+    }
+
+    private void OpenTaskTab()
+    {
+        if (Root.GetTopLevel() is not TioTabWindowBase window) return;
+
+        var tab = new TabEntry(window, new TaskPage());
+        window.CreateTab(tab);
+        window.SelectTab(tab);
+    }
 
     private void ThemeMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
