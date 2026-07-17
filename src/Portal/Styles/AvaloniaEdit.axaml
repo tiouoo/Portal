@@ -1,28 +1,29 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit.Rendering;assembly=AvaloniaEdit" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Styles.Resources>
         <ResourceDictionary>
             <x:Double x:Key="ControlContentThemeFontSize">14</x:Double>
             <FontFamily x:Key="ContentControlThemeFontFamily">avares://TioUi/Assets#AlimamaFangYuanTi</FontFamily>
             <Thickness x:Key="ToolTipBorderThemeThickness">1</Thickness>
+            <SolidColorBrush Color="{DynamicResource SystemAccentColor}" x:Key="TextViewLinkTextForeground" />
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="ToolTipBackground" Color="#FAFAFA" />
-                    <SolidColorBrush x:Key="ToolTipForeground" Color="#494C4F" />
-                    <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#26000000" />
+                    <SolidColorBrush Color="#FAFAFA" x:Key="ToolTipBackground" />
+                    <SolidColorBrush Color="#494C4F" x:Key="ToolTipForeground" />
+                    <SolidColorBrush Color="#26000000" x:Key="ToolTipBorderBrush" />
                     <Color x:Key="SystemChromeMediumColor">#F2F4F3</Color>
                     <Color x:Key="SystemBaseLowColor">#26000000</Color>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="ToolTipBackground" Color="#292B2E" />
-                    <SolidColorBrush x:Key="ToolTipForeground" Color="#E6E1CF" />
-                    <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#33FFFFFF" />
+                    <SolidColorBrush Color="#292B2E" x:Key="ToolTipBackground" />
+                    <SolidColorBrush Color="#E6E1CF" x:Key="ToolTipForeground" />
+                    <SolidColorBrush Color="#33FFFFFF" x:Key="ToolTipBorderBrush" />
                     <Color x:Key="SystemChromeMediumColor">#292B2E</Color>
                     <Color x:Key="SystemBaseLowColor">#33FFFFFF</Color>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Default">
-                    <SolidColorBrush x:Key="ToolTipBackground" Color="#FAFAFA" />
-                    <SolidColorBrush x:Key="ToolTipForeground" Color="#494C4F" />
-                    <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#26000000" />
+                    <SolidColorBrush Color="#FAFAFA" x:Key="ToolTipBackground" />
+                    <SolidColorBrush Color="#494C4F" x:Key="ToolTipForeground" />
+                    <SolidColorBrush Color="#26000000" x:Key="ToolTipBorderBrush" />
                     <Color x:Key="SystemChromeMediumColor">#F2F4F3</Color>
                     <Color x:Key="SystemBaseLowColor">#26000000</Color>
                 </ResourceDictionary>
@@ -30,4 +31,7 @@
         </ResourceDictionary>
     </Styles.Resources>
     <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+    <Style Selector="avaloniaEdit|TextView">
+        <Setter Property="LinkTextForegroundBrush" Value="{DynamicResource TextViewLinkTextForeground}" />
+    </Style>
 </Styles>

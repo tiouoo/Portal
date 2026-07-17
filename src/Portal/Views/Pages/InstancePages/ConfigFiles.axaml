@@ -19,7 +19,7 @@
         <Style Selector="ListBox.editor-tabs ListBoxItem">
             <Setter Property="Background" Value="{DynamicResource TabBackground}" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Margin" Value="5,0" />
+            <Setter Property="Margin" Value="5,0,5,5" />
             <Setter Property="Padding" Value="0" />
         </Style>
         <Style Selector="ListBox.editor-tabs ListBoxItem:pointerover">
@@ -27,6 +27,9 @@
         </Style>
         <Style Selector="ListBox.editor-tabs ListBoxItem:selected">
             <Setter Property="Background" Value="{DynamicResource TabSelected}" />
+        </Style>
+        <Style Selector="TreeView /template/ ScrollViewer">
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
         </Style>
     </UserControl.Styles>
 
@@ -38,9 +41,12 @@
                 Text="配置文件"
                 TextWrapping="NoWrap" />
             <TextBlock
+                Cursor="Hand"
                 FontSize="11"
                 Margin="0,4,0,0"
+                Name="Folder"
                 Opacity="0.65"
+                PointerPressed="Folder_OnPointerPressed"
                 Text="{Binding ConfigPath}"
                 TextTrimming="LeadingCharacterEllipsis"
                 TextWrapping="NoWrap"
@@ -61,6 +67,8 @@
             <TreeView
                 ItemsSource="{Binding RootItems}"
                 Margin="0,0,7,0"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                ScrollViewer.VerticalScrollBarVisibility="Disabled"
                 SelectionChanged="FileTree_OnSelectionChanged">
                 <TreeView.ItemTemplate>
                     <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="local:ConfigTreeItem">
@@ -70,7 +78,10 @@
                                 Height="14"
                                 Margin="0,0,7,0"
                                 Width="14" />
-                            <TextBlock Text="{Binding Name}" TextTrimming="LeadingCharacterEllipsis" />
+                            <TextBlock
+                                Text="{Binding Name}"
+                                TextTrimming="LeadingCharacterEllipsis"
+                                TextWrapping="WrapWithOverflow" />
                         </DockPanel>
                     </TreeDataTemplate>
                 </TreeView.ItemTemplate>
@@ -91,14 +102,17 @@
                 <controls:ScrollView
                     Classes="Flat"
                     HorizontalScrollBarVisibility="Auto"
+                    HorizontalScrollMode="Enabled"
                     Name="EditorTabsScrollViewer"
-                    OpacityMask="{Binding #EditorTabsScrollViewer.Offset, Converter={StaticResource NavScrollOpacityMaskConverter}}"
-                    PointerWheelChanged="EditorTabs_OnPointerWheelChanged"
+                    OpacityMask="{Binding #ListBox.Scroll.Offset, Converter={StaticResource NavScrollOpacityMaskConverter}}"
                     VerticalScrollBarVisibility="Disabled">
                     <ListBox
-                        Classes="editor-tabs"
+                        AutoScrollToSelectedItem="True"
+                        Classes="editor-tabs Flat"
                         ItemsSource="{Binding Tabs}"
-                        Margin="0,0,0,5"
+                        Name="ListBox"
+                        PointerWheelChanged="EditorTabs_OnPointerWheelChanged"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedTab}"
                         SelectionChanged="EditorTabs_OnSelectionChanged">
                         <ListBox.ItemsPanel>
@@ -108,7 +122,11 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="local:ConfigEditorTab">
-                                <DockPanel MinWidth="120">
+                                <DockPanel
+                                    Background="Transparent"
+                                    MinWidth="120"
+                                    PointerPressed="InputElement_OnPointerPressed"
+                                    Tag="{Binding}">
                                     <Button
                                         Click="CloseTab_OnClick"
                                         DockPanel.Dock="Right"
@@ -150,8 +168,11 @@
                         IsChecked="{Binding IsWordWrap}"
                         VerticalAlignment="Center" />
                     <TextBlock
+                        Background="Transparent"
                         Margin="0,0,16,0"
+                        Name="File"
                         Opacity="0.65"
+                        PointerPressed="File_OnPointerPressed"
                         Text="{Binding SelectedTab.FilePath}"
                         TextTrimming="LeadingCharacterEllipsis"
                         TextWrapping="NoWrap"
@@ -191,36 +212,44 @@
                         <avaloniaEdit:TextEditor.ContextMenu>
                             <ContextMenu>
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="Undo_OnClick"
                                     Header="撤销"
                                     InputGesture="Ctrl+Z" />
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="Redo_OnClick"
                                     Header="重做"
                                     InputGesture="Ctrl+Y" />
                                 <Separator />
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="Cut_OnClick"
                                     Header="剪切"
                                     InputGesture="Ctrl+X" />
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="Copy_OnClick"
                                     Header="复制"
                                     InputGesture="Ctrl+C" />
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="Paste_OnClick"
                                     Header="粘贴"
                                     InputGesture="Ctrl+V" />
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="SelectAll_OnClick"
                                     Header="全选"
                                     InputGesture="Ctrl+A" />
                                 <Separator />
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="Save_OnClick"
                                     Header="保存"
                                     InputGesture="Ctrl+S" />
                                 <MenuItem
+                                    Classes="hide-icon"
                                     Click="Format_OnClick"
                                     Header="格式化"
                                     InputGesture="Shift+Alt+F" />

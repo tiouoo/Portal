@@ -41,7 +41,9 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
         <PackageReference Include="HotAvalonia" />
+        <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="SmoothScroll.Avalonia" />
+        <PackageReference Include="Tomlyn" />
     </ItemGroup>
 
     <ItemGroup>

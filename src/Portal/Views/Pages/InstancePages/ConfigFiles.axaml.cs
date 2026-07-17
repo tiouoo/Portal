@@ -2,20 +2,22 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Json;
 using System.Xml;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Newtonsoft.Json;
 using Portal.Core.Minecraft.Classes;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using Tomlyn;
 
 namespace Portal.Views.Pages.InstancePages;
 
@@ -52,11 +54,13 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
             _selectedTab = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(HasOpenTabs));
+            OnPropertyChanged(nameof(CanFormatSelectedFile));
             ApplySelectedTab(value);
         }
     }
 
     public bool HasOpenTabs => SelectedTab != null;
+    public bool CanFormatSelectedFile => SelectedTab != null && IsFormatSupported(SelectedTab.FilePath);
 
     public ConfigFiles()
     {
@@ -108,7 +112,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
             yield break;
         }
 
-        foreach (var entry in entries.OrderByDescending(x => x is DirectoryInfo).ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
+        foreach (var entry in entries.OrderByDescending(x => x is DirectoryInfo)
+                     .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
         {
             if (entry is DirectoryInfo childDirectory)
             {
@@ -129,7 +134,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         if (e.AddedItems.OfType<ConfigTreeItem>().FirstOrDefault() is not { IsDirectory: false } item)
             return;
 
-        var existing = Tabs.FirstOrDefault(x => string.Equals(x.FilePath, item.FullPath, StringComparison.OrdinalIgnoreCase));
+        var existing =
+            Tabs.FirstOrDefault(x => string.Equals(x.FilePath, item.FullPath, StringComparison.OrdinalIgnoreCase));
         if (existing != null)
         {
             SelectedTab = existing;
@@ -139,13 +145,15 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         try
         {
             var tab = await ConfigEditorTab.LoadAsync(item.FullPath);
-            existing = Tabs.FirstOrDefault(x => string.Equals(x.FilePath, item.FullPath, StringComparison.OrdinalIgnoreCase));
+            existing = Tabs.FirstOrDefault(x =>
+                string.Equals(x.FilePath, item.FullPath, StringComparison.OrdinalIgnoreCase));
             if (existing != null)
             {
                 tab.Dispose();
                 SelectedTab = existing;
                 return;
             }
+
             Tabs.Add(tab);
             SelectedTab = tab;
         }
@@ -168,11 +176,24 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
             SelectedTab = listBox.SelectedItem as ConfigEditorTab;
     }
 
+
     private void EditorTabs_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        if (sender is not ScrollViewer scrollViewer || e.Delta.Y == 0) return;
+        if (sender is not Control || e.Delta.Y == 0) return;
+        ListBox.Scroll.Offset = new Avalonia.Vector(
+            Math.Clamp(ListBox.Scroll.Offset.X - e.Delta.Y * 40, 0, ListBox.Scroll.Extent.Width),
+            ListBox.Scroll.Offset.Y);
+        e.Handled = true;
+    }
+
+    public void FileTree_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        if (!e.KeyModifiers.HasFlag(KeyModifiers.Alt) || sender is not ScrollViewer scrollViewer || e.Delta.Y == 0)
+            return;
+
+        var maxOffset = Math.Max(0, scrollViewer.Extent.Width - scrollViewer.Viewport.Width);
         scrollViewer.Offset = new Avalonia.Vector(
-            Math.Clamp(scrollViewer.Offset.X - e.Delta.Y * 40, 0, scrollViewer.Extent.Width),
+            Math.Clamp(scrollViewer.Offset.X - e.Delta.Y * 40, 0, maxOffset),
             scrollViewer.Offset.Y);
         e.Handled = true;
     }
@@ -208,7 +229,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
             e.Handled = true;
             _ = SaveAsync(SelectedTab);
         }
-        else if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Shift | KeyModifiers.Alt))
+        else if (CanFormatSelectedFile && e.Key == Key.F &&
+                 e.KeyModifiers.HasFlag(KeyModifiers.Shift | KeyModifiers.Alt))
         {
             e.Handled = true;
             _ = FormatAsync();
@@ -232,31 +254,52 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         if (SelectedTab != null)
             _ = SaveAsync(SelectedTab);
     }
-
+    private void OpenPath(string path)
+    {
+        _ = this.GetTopLevel().Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path));
+    }
     private void Format_OnClick(object? sender, RoutedEventArgs e) => _ = FormatAsync();
 
     private async Task FormatAsync()
     {
-        if (SelectedTab == null) return;
-        if (!Path.GetExtension(SelectedTab.FilePath).Equals(".json", StringComparison.OrdinalIgnoreCase))
-        {
-            await ShowErrorAsync("目前只支持格式化 JSON 文件，其他配置格式不会被自动改写。");
-            return;
-        }
+        if (SelectedTab == null || !IsFormatSupported(SelectedTab.FilePath)) return;
 
         try
         {
-            using var document = JsonDocument.Parse(SelectedTab.Document.Text);
-            var formatted = JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-            SelectedTab.Document.Text = formatted + Environment.NewLine;
+            var extension = Path.GetExtension(SelectedTab.FilePath);
+            var formatted = extension.Equals(".toml", StringComparison.OrdinalIgnoreCase)
+                ? Toml.FromModel(Toml.ToModel(SelectedTab.Document.Text, SelectedTab.FilePath))
+                : FormatJson(SelectedTab.Document.Text);
+            SelectedTab.Document.Text = formatted.TrimEnd() + Environment.NewLine;
         }
         catch (JsonException exception)
         {
             await ShowErrorAsync($"JSON 格式错误：{exception.Message}");
         }
+        catch (TomlException exception)
+        {
+            await ShowErrorAsync($"TOML 格式错误：{exception.Message}");
+        }
+    }
+
+    private static bool IsFormatSupported(string filePath)
+    {
+        return Path.GetExtension(filePath).ToLowerInvariant() is ".json" or ".jsonc" or ".json5" or ".mcmeta"
+            or ".toml";
+    }
+
+    private static string FormatJson(string text)
+    {
+        using var reader = new JsonTextReader(new StringReader(text));
+        using var stringWriter = new StringWriter();
+        using var writer = new JsonTextWriter(stringWriter)
+        {
+            Formatting = Newtonsoft.Json.Formatting.Indented,
+            Indentation = 2
+        };
+        while (reader.Read())
+            writer.WriteToken(reader, true);
+        return stringWriter.ToString();
     }
 
     private async Task<bool> SaveAsync(ConfigEditorTab tab)
@@ -286,7 +329,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         if (action == UnsavedFilesAction.Discard) return true;
 
         foreach (var tab in dirtyTabs)
-            if (!await SaveAsync(tab)) return false;
+            if (!await SaveAsync(tab))
+                return false;
         return true;
     }
 
@@ -332,6 +376,24 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private async void InputElement_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.Properties.IsMiddleButtonPressed) return;
+        if (sender is DockPanel { Tag: ConfigEditorTab tab })
+            await CloseTabAsync(tab);
+        e.Handled = true;
+    }
+
+    private void Folder_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        OpenPath(ConfigPath);
+    }
+
+    private void File_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _ = this.GetTopLevel().Launcher.LaunchFileInfoAsync(new FileInfo(SelectedTab.FilePath));
     }
 }
 
