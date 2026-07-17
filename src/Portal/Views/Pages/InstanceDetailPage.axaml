@@ -35,7 +35,10 @@
                 <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="资源包" />
                 <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="光影包" />
                 <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="存档" />
-                <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" Header="截图" />
+                <tio:NavMenuItem
+                    Command="{Binding NavigateTypeCommand}"
+                    CommandParameter="{x:Type instancePages:Screenshots}"
+                    Header="截图" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:ConfigFiles}"

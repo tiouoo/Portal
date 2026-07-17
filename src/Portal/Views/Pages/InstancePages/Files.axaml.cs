@@ -102,7 +102,7 @@ public partial class Files : UserControl
         }
         else if (tag == "screenshot")
         {
-            _parent.NavigateTo(null);
+            _parent.NavigateTo(typeof(Screenshots));
         }
         else if (tag == "logs")
         {

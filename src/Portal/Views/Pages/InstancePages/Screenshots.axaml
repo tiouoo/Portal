@@ -1,0 +1,135 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstancePages.Screenshots"
+    x:DataType="instancePages:Screenshots"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="10,10,0,10">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
+            <Button
+                Click="OpenFolder_OnClick"
+                Content="打开文件夹"
+                DockPanel.Dock="Right" />
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock FontSize="24" Text="截图" />
+                <TextBlock
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="10,8,0,0"
+                    Text="{Binding ScreenshotCountText}" />
+            </DockPanel>
+            <TextBlock
+                DockPanel.Dock="Top"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoading}"
+                Margin="0,8,0,0"
+                Text="正在读取截图..." />
+            <TextBlock
+                DockPanel.Dock="Top"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsEmpty}"
+                Margin="0,8,0,0"
+                Text="此实例还没有截图" />
+        </DockPanel>
+        <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
+            <ItemsRepeater ItemsSource="{Binding ScreenshotList}" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="16"
+                        MinItemHeight="210"
+                        MinItemWidth="240"
+                        MinRowSpacing="16"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="instancePages:ScreenshotItem">
+                        <Grid Background="Transparent" RowDefinitions="*,Auto">
+                            <Border
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                ClipToBounds="True"
+                                CornerRadius="16">
+                                <asyncImageLoader:AdvancedImage
+                                    CornerRadius="15"
+                                    Loader="{Binding ImageLoader}"
+                                    Source="{Binding FilePath}"
+                                    Stretch="UniformToFill" />
+                                <Border.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuItem
+                                            Click="CopyScreenshot_OnClick"
+                                            Header="复制图像"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M448,96L439.4,96C428.4,76.9,407.7,64,384,64L256,64C232.3,64,211.6,76.9,200.6,96L192,96C156.7,96,128,124.7,128,160L128,512C128,547.3,156.7,576,192,576L448,576C483.3,576,512,547.3,512,512L512,160C512,124.7,483.3,96,448,96z M264,176C250.7,176 240,165.3 240,152 240,138.7 250.7,128 264,128L376,128C389.3,128 400,138.7 400,152 400,165.3 389.3,176 376,176L264,176z"
+                                                    Height="16"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="OpenScreenshot_OnClick"
+                                            Header="用默认方式打开"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M480,96C515.3,96,544,124.7,544,160L544,480C544,515.3,515.3,544,480,544L160,544C124.7,544,96,515.3,96,480L96,160C96,124.7,124.7,96,160,96L480,96z M368,360C368,373.3 378.7,384 392,384 405.3,384 416,373.3 416,360L416,248C416,234.7,405.3,224,392,224L280,224C266.7,224,256,234.7,256,248 256,261.3 266.7,272 280,272L334.1,272 231.1,375C221.7,384.4 221.7,399.6 231.1,408.9 240.5,418.2 255.7,418.3 265,408.9L368,305.9 368,360z"
+                                                    Height="16"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="SaveScreenshotAs_OnClick"
+                                            Header="另存为"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M128,128C128,92.7,156.7,64,192,64L341.5,64C358.5,64,374.8,70.7,386.8,82.7L493.3,189.3C505.3,201.3,512,217.6,512,234.6L512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,128z M336,122.5L336,216C336,229.3,346.7,240,360,240L453.5,240 336,122.5z M256,320C256,302.3 241.7,288 224,288 206.3,288 192,302.3 192,320 192,337.7 206.3,352 224,352 241.7,352 256,337.7 256,320z M220.6,512L419.4,512C435.2,512 448,499.2 448,483.4 448,476.1 445.2,469 440.1,463.7L343.3,361.9C337.3,355.6,328.9,352,320.1,352L319.8,352C311,352,302.7,355.6,296.6,361.9L199.9,463.7C194.8,469 192,476.1 192,483.4 192,499.2 204.8,512 220.6,512z"
+                                                    Height="16"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator />
+                                        <MenuItem
+                                            Click="DeleteScreenshot_OnClick"
+                                            Header="删除图像"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403,56.8,407.4,69.9L416,96 512,96C529.7,96 544,110.3 544,128 544,145.7 529.7,160 512,160L128,160C110.3,160 96,145.7 96,128 96,110.3 110.3,96 128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3 202.7,512 216,512 229.3,512 240,501.3 240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3 306.7,512 320,512 333.3,512 344,501.3 344,488L344,296C344,282.7,306.7,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3 410.7,512 424,512 437.3,512 448,501.3 448,488L448,296C448,282.7,410.7,272,424,272z"
+                                                    Height="16"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </MenuFlyout>
+                                </Border.ContextFlyout>
+                            </Border>
+                            <TextBlock
+                                Grid.Row="1"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Margin="4,7,4,0"
+                                Text="{Binding FileName}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip.Tip="{Binding FileName}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
+    </DockPanel>
+</UserControl>
