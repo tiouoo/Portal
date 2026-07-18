@@ -30,8 +30,11 @@ public sealed class BedrockBehaviorPacks(MinecraftInstance instance) : BedrockFo
     ("行为包", MinecraftSpecialFolder.BehaviorPacksFolder)
 ]);
 
-public sealed class BedrockWorlds(MinecraftInstance instance) : BedrockFolderPage(instance, "世界与模板", "基岩版世界位于 minecraftWorlds，世界模板位于 world_templates", [
-    ("世界", MinecraftSpecialFolder.SavesFolder),
+public sealed class BedrockWorlds(MinecraftInstance instance) : BedrockFolderPage(instance, "世界", "管理基岩版世界目录", [
+    ("世界", MinecraftSpecialFolder.SavesFolder)
+]);
+
+public sealed class BedrockWorldTemplates(MinecraftInstance instance) : BedrockFolderPage(instance, "世界模板", "管理基岩版世界模板目录", [
     ("世界模板", MinecraftSpecialFolder.WorldTemplatesFolder)
 ]);
 
