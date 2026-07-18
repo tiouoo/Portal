@@ -16,7 +16,7 @@ public class InstanceManager
 
     public ObservableCollection<MinecraftInstance> Instances { get; } = [];
 
-    public List<string> VersionFolders { get; } = new() { "versions", "bedrock_versions" };
+    public List<string> VersionFolders { get; } = new() { "versions" };
 
     /// <summary>
     /// 当实例统计数据发生变化时触发的事件
@@ -28,7 +28,11 @@ public class InstanceManager
     /// </summary>
     public event EventHandler<MinecraftInstance>? InstanceIconChanged;
 
-    private InstanceManager() { }
+    private InstanceManager()
+    {
+        if (OperatingSystem.IsWindows())
+            VersionFolders.Add("bedrock_versions");
+    }
 
     /// <summary>
     /// 通知统计数据已更新
