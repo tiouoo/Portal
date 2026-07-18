@@ -1,39 +1,227 @@
 <UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
     x:Class="Portal.Views.Pages.InstancePages.ResourcePacks"
+    x:DataType="local:ResourcePacks"
     xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Styles>
+        <Style Selector="Border.resource-pack-card">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.resource-pack-card.selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+        <Style Selector="Border.resource-pack-card-inner.selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+    </UserControl.Styles>
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
                 Content="打开文件夹"
+                DockPanel.Dock="Right" />
+            <TextBox
                 DockPanel.Dock="Right"
-                VerticalAlignment="Top" />
+                Margin="0,0,8,0"
+                PlaceholderText="搜索资源包"
+                TextChanged="SearchBox_OnTextChanged"
+                Width="180" />
+            <DropDownButton
+                Content="选择"
+                DockPanel.Dock="Right"
+                Margin="0,0,8,0">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="SelectAll_OnClick"
+                            Header="全选" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="ClearSelection_OnClick"
+                            Header="全不选" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="InvertSelection_OnClick"
+                            Header="反选" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </DropDownButton>
+            <DropDownButton
+                Content="{Binding SelectedCountText}"
+                DockPanel.Dock="Right"
+                IsVisible="{Binding HasMultipleSelection}"
+                Margin="0,0,8,0">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="DeleteSelected_OnClick"
+                            Header="删除所选资源包" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </DropDownButton>
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"
                     FontSize="24"
-                    Name="Title"
+                    MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="资源包" />
+                    Text="资源包"
+                    TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
-                    Text="0 个" />
+                    Text="{Binding ResourcePackCountText}" />
             </DockPanel>
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="False"
+                IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
                 Text="正在读取资源包..." />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
                 Text="此实例没有可识别的资源包" />
         </DockPanel>
-        <Border />
+        <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
+            <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="16"
+                        MinItemHeight="117"
+                        MinItemWidth="300"
+                        MinRowSpacing="16"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="local:ResourcePackItem">
+                        <Border
+                            Classes.resource-pack-card="True"
+                            Classes.selected="{Binding IsSelected}"
+                            CornerRadius="11"
+                            Cursor="Hand"
+                            PointerPressed="ResourcePackCard_OnPointerPressed">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem
+                                        Click="ShowResourcePackDetails_OnClick"
+                                        Header="查看详情"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M320,576C461.4,576 576,461.4 576,320 576,178.6 461.4,64 320,64 178.6,64 64,178.6 64,320 64,461.4 178.6,576 320,576z M288,224C288,206.3 302.3,192 320,192 337.7,192 352,206.3 352,224 352,241.7 337.7,256 320,256 302.3,256 288,241.7 288,224z M280,288L328,288C341.3,288,352,298.7,352,312L352,400 360,400C373.3,400 384,410.7 384,424 384,437.3 373.3,448 360,448L280,448C266.7,448 256,437.3 256,424 256,410.7 266.7,400 280,400L304,400 304,336 280,336C266.7,336 256,325.3 256,312 256,298.7 266.7,288 280,288z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <Separator />
+                                    <MenuItem
+                                        Click="OpenResourcePackFolder_OnClick"
+                                        Header="在文件夹中打开"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M480,96C515.3,96,544,124.7,544,160L544,480C544,515.3,515.3,544,480,544L160,544C124.7,544,96,515.3,96,480L96,160C96,124.7,124.7,96,160,96L480,96z M368,360C368,373.3 378.7,384 392,384 405.3,384 416,373.3 416,360L416,248C416,234.7,405.3,224,392,224L280,224C266.7,224,256,234.7,256,248 256,261.3 266.7,272 280,272L334.1,272 231.1,375C221.7,384.4 221.7,399.6 231.1,408.9 240.5,418.2 255.7,418.3 265,408.9L368,305.9 368,360z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="DeleteResourcePack_OnClick"
+                                        Header="删除"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403.7,56.8,407.4,69.9L416,96 512,96C529.7,96,544,110.3,544,128 544,145.7 529.7,160 512,160L128,160C110.3,160,96,145.7,96,128 96,110.3,110.3,96,128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3,202.7,512,216,512 229.3,512,240,501.3,240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3,306.7,512 320,512 333.3,512,344,501.3,344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3,410.7,512 424,512 437.3,512,448,501.3,448,488L448,296C448,282.7,437.3,272,424,272z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+                            <Border
+                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                Classes.resource-pack-card-inner="True"
+                                Classes.selected="{Binding IsSelected}"
+                                CornerRadius="10"
+                                Padding="10">
+                                <DockPanel>
+                                    <DockPanel Dock="Top">
+                                        <Border
+                                            Background="{DynamicResource TranslucentBorderBrush}"
+                                            ClipToBounds="True"
+                                            CornerRadius="12"
+                                            DockPanel.Dock="Left"
+                                            Height="56"
+                                            Margin="2,0,0,0"
+                                            Width="56">
+                                            <Grid>
+                                                <Image
+                                                    Height="56"
+                                                    IsVisible="{Binding HasIcon}"
+                                                    Source="{Binding Icon}"
+                                                    Stretch="UniformToFill"
+                                                    Width="56" />
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58,308.6,58,289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L27.7,282.7C15.1,306.1,23.9,335.2,47.3,347.8L80.3,365.5 80.3,418.8C80.3,441.8,92.7,463.1,112.7,474.5L288.7,574.2C308.3,585.3,332.2,585.3,351.8,574.2L527.8,474.5C547.9,463.1,560.2,441.9,560.2,418.8L560.2,301.3z M320.3,291.4L170.2,208 320.3,124.6 470.4,208 320.3,291.4z M278.8,341.6L257.5,387.8 91.7,299 117.1,251.8 278.8,341.6z"
+                                                    Height="32"
+                                                    IsVisible="{Binding !HasIcon}"
+                                                    Width="32" />
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">
+                                            <TextBlock
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                MaxLines="1"
+                                                Text="{Binding DisplayName}"
+                                                TextTrimming="CharacterEllipsis"
+                                                ToolTip.Tip="{Binding FileName}" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Margin="0,2,0,0"
+                                                MaxLines="1"
+                                                Text="{Binding FileName}"
+                                                TextTrimming="LeadingCharacterEllipsis" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Margin="0,1,0,0">
+                                                <Run Text="支持格式:" />
+                                                <Run Text="{Binding SupportedFormatsText}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="3,5,3,0"
+                                        MaxLines="2"
+                                        Text="{Binding DescriptionText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="WrapWithOverflow" />
+                                </DockPanel>
+                            </Border>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>
