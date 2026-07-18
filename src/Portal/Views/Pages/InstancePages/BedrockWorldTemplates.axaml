@@ -1,39 +1,190 @@
 <UserControl
     x:Class="Portal.Views.Pages.InstancePages.BedrockWorldTemplates"
+    x:DataType="local:BedrockWorldTemplates"
     xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Styles>
+        <Style Selector="Border.world-template-card">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.world-template-card.selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+        <Style Selector="Border.world-template-card-inner.selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+    </UserControl.Styles>
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
                 Content="打开文件夹"
+                DockPanel.Dock="Right" />
+            <TextBox
                 DockPanel.Dock="Right"
-                VerticalAlignment="Top" />
+                Margin="0,0,8,0"
+                PlaceholderText="搜索世界模板"
+                TextChanged="SearchBox_OnTextChanged"
+                Width="180" />
+            <DropDownButton
+                Content="选择"
+                DockPanel.Dock="Right"
+                Margin="0,0,8,0">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="SelectAll_OnClick"
+                            Header="全选" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="ClearSelection_OnClick"
+                            Header="全不选" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="InvertSelection_OnClick"
+                            Header="反选" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </DropDownButton>
+            <DropDownButton
+                Content="{Binding SelectedCountText}"
+                DockPanel.Dock="Right"
+                IsVisible="{Binding HasMultipleSelection}"
+                Margin="0,0,8,0">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="DeleteSelected_OnClick"
+                            Header="删除所选" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </DropDownButton>
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"
                     FontSize="24"
-                    Name="Title"
+                    MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="世界模板" />
+                    Text="世界模板"
+                    TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
-                    Text="0 个" />
+                    Text="{Binding CountText}" />
             </DockPanel>
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="False"
+                IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
                 Text="正在读取世界模板..." />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
                 Text="此实例没有可识别的世界模板" />
         </DockPanel>
-        <Border />
+        <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
+            <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="16"
+                        MinItemHeight="244"
+                        MinItemWidth="300"
+                        MinRowSpacing="16"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="local:WorldTemplateItem">
+                        <Border
+                            Classes.selected="{Binding IsSelected}"
+                            Classes.world-template-card="True"
+                            CornerRadius="11"
+                            Cursor="Hand"
+                            PointerPressed="WorldTemplateCard_OnPointerPressed">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem
+                                        Click="ShowWorldTemplateDetails_OnClick"
+                                        Header="查看详情"
+                                        Tag="{Binding}" />
+                                    <Separator />
+                                    <MenuItem
+                                        Click="OpenWorldTemplateFolder_OnClick"
+                                        Header="在文件夹中打开"
+                                        Tag="{Binding}" />
+                                    <MenuItem
+                                        Click="DeleteWorldTemplate_OnClick"
+                                        Header="删除"
+                                        Tag="{Binding}" />
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+                            <Border
+                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                Classes.selected="{Binding IsSelected}"
+                                Classes.world-template-card-inner="True"
+                                CornerRadius="10"
+                                Padding="10">
+                                <StackPanel>
+                                    <Border
+                                        Background="{DynamicResource TranslucentBorderBrush}"
+                                        ClipToBounds="True"
+                                        CornerRadius="7"
+                                        Height="120">
+                                        <Grid>
+                                            <Image
+                                                IsVisible="{Binding HasIcon}"
+                                                Source="{Binding Icon}"
+                                                Stretch="UniformToFill" />
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58,308.6,58,289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L27.7,282.7C15.1,306.1,23.9,335.2,47.3,347.8L80.3,365.5 80.3,418.8C80.3,441.8,92.7,463.1,112.7,474.5L288.7,574.2C308.3,585.3,332.2,585.3,351.8,574.2L527.8,474.5C547.9,463.1,560.2,441.9,560.2,418.8L560.2,301.3z"
+                                                Height="32"
+                                                IsVisible="{Binding !HasIcon}"
+                                                Width="32" />
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Margin="3,8,3,0"
+                                        MaxLines="1"
+                                        Text="{Binding DisplayName}"
+                                        TextTrimming="CharacterEllipsis"
+                                        ToolTip.Tip="{Binding FileName}" />
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="3,2,3,0"
+                                        MaxLines="1"
+                                        Text="{Binding PackSummary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="3,1,3,0"><Run Text="基础游戏版本：" /><Run Text="{Binding BaseGameVersionText}" /></TextBlock>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="3,5,3,0"
+                                        MaxLines="2"
+                                        Text="{Binding DescriptionText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="WrapWithOverflow" />
+                                </StackPanel>
+                            </Border>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>
