@@ -10,6 +10,11 @@
 *.userosscache
 *.sln.docstates
 
+# Local credentials
+.env
+.env.*
+!.env.example
+
 /import
 
 # User-specific files (MonoDevelop/Xamarin Studio)

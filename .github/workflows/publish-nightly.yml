@@ -59,6 +59,9 @@ jobs:
   appImage:
     runs-on: ubuntu-22.04
     needs: prepare
+    env:
+      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+      MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,6 +99,9 @@ jobs:
   win-exe:
     runs-on: windows-latest
     needs: prepare
+    env:
+      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+      MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     strategy:
       matrix:
         rid: [win-x64, win-x86, win-arm64]
@@ -144,6 +150,9 @@ jobs:
   win-installer:
     runs-on: windows-latest
     needs: prepare
+    env:
+      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+      MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     strategy:
       matrix:
         rid: [win-x64, win-x86, win-arm64]
@@ -194,6 +203,9 @@ jobs:
   mac-dmg:
     runs-on: macos-latest
     needs: prepare
+    env:
+      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+      MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     strategy:
       matrix:
         rid: [osx-x64, osx-arm64]
