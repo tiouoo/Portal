@@ -50,6 +50,7 @@
                 <tio:NavMenuItem Header="游戏规则" Tag="{x:Static local:WorldSaveDetailsPage.GameRules}" />
                 <tio:NavMenuItem Header="天气" Tag="{x:Static local:WorldSaveDetailsPage.Weather}" />
                 <tio:NavMenuItem Header="世界时钟" Tag="{x:Static local:WorldSaveDetailsPage.Clocks}" />
+                <tio:NavMenuItem Header="积分榜管理" Tag="{x:Static local:WorldSaveDetailsPage.Scoreboard}" />
             </tio:NavMenu>
         </controls:ScrollView>
         <Rectangle
@@ -62,6 +63,7 @@
             <local:WorldSaveGameRules IsVisible="{Binding IsGameRules}" />
             <local:WorldSaveWeather IsVisible="{Binding IsWeather}" />
             <local:WorldSaveClocks IsVisible="{Binding IsClocks}" />
+            <local:WorldSaveScoreboard IsVisible="{Binding IsScoreboard}" />
         </Grid>
     </DockPanel>
 </UserControl>

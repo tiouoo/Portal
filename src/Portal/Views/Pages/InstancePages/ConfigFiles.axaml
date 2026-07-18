@@ -146,6 +146,7 @@
                                     PointerPressed="InputElement_OnPointerPressed"
                                     Tag="{Binding}">
                                     <Button
+                                        Background="Transparent"
                                         Click="CloseTab_OnClick"
                                         DockPanel.Dock="Right"
                                         Height="28"

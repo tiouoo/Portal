@@ -200,6 +200,7 @@
                                         IsVisible="{Binding IsCloseable}"
                                         Margin="0,0,-4,0">
                                         <Button
+                                            Background="Transparent"
                                             Command="{Binding Close}"
                                             Height="28"
                                             HorizontalAlignment="Right"

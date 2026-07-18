@@ -47,13 +47,31 @@ public partial class WorldSaveClocks : UserControl
     public WorldSaveClocks() => InitializeComponent();
 }
 
-public enum WorldSaveDetailsPage { Overview, GameRules, Weather, Clocks }
+public partial class WorldSaveScoreboard : UserControl
+{
+    public WorldSaveScoreboard() => InitializeComponent();
+
+    private void RemoveObjective_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.DataContext is WorldScoreboardObjectiveSetting objective && DataContext is WorldSaveDetailsViewModel viewModel)
+            viewModel.ScoreboardObjectives.Remove(objective);
+    }
+
+    private void RemoveScore_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.DataContext is WorldScoreboardScoreSetting score && DataContext is WorldSaveDetailsViewModel viewModel)
+            viewModel.ScoreboardScores.Remove(score);
+    }
+}
+
+public enum WorldSaveDetailsPage { Overview, GameRules, Weather, Clocks, Scoreboard }
 
 public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContext
 {
     private readonly WorldSaveInfo _info;
     private readonly WorldGameRuleService _gameRuleService = new();
     private readonly WorldEnvironmentService _environmentService = new();
+    private readonly WorldScoreboardService _scoreboardService = new();
     private readonly WorldSaveService _worldSaveService = new();
     private WorldGameRules? _rules;
 
@@ -62,6 +80,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     [ObservableProperty] private bool _hasGameRules;
     [ObservableProperty] private bool _hasWeather;
     [ObservableProperty] private bool _hasClocks;
+    [ObservableProperty] private bool _hasScoreboard;
     [ObservableProperty] private bool _raining;
     [ObservableProperty] private bool _thundering;
     [ObservableProperty] private string _rainTime = "0";
@@ -71,6 +90,8 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public ObservableCollection<WorldBooleanSetting> BooleanRules { get; } = [];
     public ObservableCollection<WorldNumberSetting> IntegerRules { get; } = [];
     public ObservableCollection<WorldNumberSetting> ClockSettings { get; } = [];
+    public ObservableCollection<WorldScoreboardObjectiveSetting> ScoreboardObjectives { get; } = [];
+    public ObservableCollection<WorldScoreboardScoreSetting> ScoreboardScores { get; } = [];
     public string DisplayName => string.IsNullOrWhiteSpace(_info.LevelName) ? _info.FolderName : _info.LevelName;
     public string FolderName => _info.FolderName;
     public string CreationTime => _info.CreationTime.ToString("yyyy-MM-dd HH:mm");
@@ -85,6 +106,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public bool IsGameRules => SelectedPage == WorldSaveDetailsPage.GameRules;
     public bool IsWeather => SelectedPage == WorldSaveDetailsPage.Weather;
     public bool IsClocks => SelectedPage == WorldSaveDetailsPage.Clocks;
+    public bool IsScoreboard => SelectedPage == WorldSaveDetailsPage.Scoreboard;
 
     public WorldSaveDetailsViewModel(WorldSaveInfo info)
     {
@@ -98,6 +120,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         OnPropertyChanged(nameof(IsGameRules));
         OnPropertyChanged(nameof(IsWeather));
         OnPropertyChanged(nameof(IsClocks));
+        OnPropertyChanged(nameof(IsScoreboard));
     }
 
     private async Task LoadAsync()
@@ -131,6 +154,16 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
                 foreach (var (dimension, ticks) in clocks.TotalTicks.OrderBy(x => x.Key))
                     ClockSettings.Add(new WorldNumberSetting(dimension, dimension, ticks));
                 HasClocks = true;
+            }
+
+            var scoreboard = await _scoreboardService.LoadAsync(_info.FolderPath);
+            if (scoreboard != null)
+            {
+                foreach (var objective in scoreboard.Objectives)
+                    ScoreboardObjectives.Add(new WorldScoreboardObjectiveSetting(objective.Name, objective.CriteriaName, objective.DisplayName));
+                foreach (var score in scoreboard.Scores)
+                    ScoreboardScores.Add(new WorldScoreboardScoreSetting(score.Objective, score.Name, score.DisplayName, score.Score, score.Locked));
+                HasScoreboard = true;
             }
         }
         catch (Exception ex)
@@ -183,6 +216,50 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         await SaveAsync(() => _environmentService.SaveClocksAsync(_info.FolderPath, new WorldClockSettings(clocks.ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal))));
     }
 
+    [RelayCommand]
+    private void AddObjective() => ScoreboardObjectives.Add(new WorldScoreboardObjectiveSetting("", "dummy", ""));
+
+    [RelayCommand]
+    private void AddScore() => ScoreboardScores.Add(new WorldScoreboardScoreSetting("", "", "", 0, false));
+
+    [RelayCommand]
+    private async Task SaveScoreboard()
+    {
+        if (!HasScoreboard || !await CanSaveAsync()) return;
+        var objectives = ScoreboardObjectives.Select(x => new WorldScoreboardObjective(x.Name.Trim(), x.CriteriaName.Trim(), x.DisplayName.Trim())).ToArray();
+        if (objectives.Any(x => string.IsNullOrWhiteSpace(x.Name) || string.IsNullOrWhiteSpace(x.CriteriaName)))
+        {
+            ShowNotice("积分榜目标名称和统计条件不能为空", NotificationType.Warning);
+            return;
+        }
+        if (objectives.GroupBy(x => x.Name, StringComparer.Ordinal).Any(x => x.Count() > 1))
+        {
+            ShowNotice("积分榜目标名称不能重复", NotificationType.Warning);
+            return;
+        }
+        var scores = new List<WorldScoreboardScore>();
+        foreach (var setting in ScoreboardScores)
+        {
+            if (string.IsNullOrWhiteSpace(setting.Objective) || string.IsNullOrWhiteSpace(setting.Name) || !int.TryParse(setting.Score, out var value))
+            {
+                ShowNotice("玩家分数需要目标、玩家名称和有效的 32 位整数分数", NotificationType.Warning);
+                return;
+            }
+            if (!objectives.Any(x => x.Name == setting.Objective.Trim()))
+            {
+                ShowNotice("玩家分数引用了不存在的积分榜目标", NotificationType.Warning);
+                return;
+            }
+            scores.Add(new WorldScoreboardScore(setting.Objective.Trim(), setting.Name.Trim(), setting.DisplayName.Trim(), value, setting.Locked));
+        }
+        if (scores.GroupBy(x => (x.Objective, x.Name)).Any(x => x.Count() > 1))
+        {
+            ShowNotice("同一积分榜目标中的玩家名称不能重复", NotificationType.Warning);
+            return;
+        }
+        await SaveAsync(() => _scoreboardService.SaveAsync(_info.FolderPath, new WorldScoreboard(objectives, scores)));
+    }
+
     private async Task<bool> CanSaveAsync()
     {
         if (await _worldSaveService.IsWorldLockedAsync(_info.FolderPath))
@@ -214,9 +291,13 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     private async Task SaveAsync(Func<Task> save)
     {
         try { await save(); ShowNotice("设置已保存", NotificationType.Success); }
+        catch (IOException ex) when (IsFileLocked(ex)) { ShowNotice("世界被 Minecraft 实例锁定，不能保存更改", NotificationType.Warning); }
         catch (IOException ex) { ShowNotice($"保存失败：{ex.Message}", NotificationType.Error); }
         catch (UnauthorizedAccessException) { ShowNotice("没有修改此世界设置的权限", NotificationType.Error); }
     }
+
+    private static bool IsFileLocked(IOException exception) => (exception.HResult & 0xffff) is 32 or 33;
+
     private void ShowNotice(string message, NotificationType type)
     {
         if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime { MainWindow: { } window })
@@ -238,4 +319,20 @@ public partial class WorldNumberSetting(string key, string label, long value) : 
     public string Key { get; } = key;
     public string Label { get; } = label;
     [ObservableProperty] private string _value = value.ToString();
+}
+
+public partial class WorldScoreboardObjectiveSetting(string name, string criteriaName, string displayName) : ObservableObject
+{
+    [ObservableProperty] private string _name = name;
+    [ObservableProperty] private string _criteriaName = criteriaName;
+    [ObservableProperty] private string _displayName = displayName;
+}
+
+public partial class WorldScoreboardScoreSetting(string objective, string name, string displayName, int score, bool locked) : ObservableObject
+{
+    [ObservableProperty] private string _objective = objective;
+    [ObservableProperty] private string _name = name;
+    [ObservableProperty] private string _displayName = displayName;
+    [ObservableProperty] private string _score = score.ToString();
+    [ObservableProperty] private bool _locked = locked;
 }
