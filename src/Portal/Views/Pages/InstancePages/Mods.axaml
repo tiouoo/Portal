@@ -1,39 +1,127 @@
 <UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
     x:Class="Portal.Views.Pages.InstancePages.Mods"
+    x:DataType="local:Mods"
     xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
                 Content="打开文件夹"
+                DockPanel.Dock="Right" />
+            <TextBox
                 DockPanel.Dock="Right"
-                VerticalAlignment="Top" />
+                Margin="0,0,8,0"
+                Name="SearchBox"
+                PlaceholderText="搜索模组"
+                TextChanged="SearchBox_OnTextChanged"
+                Width="180" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"
                     FontSize="24"
-                    Name="Title"
                     PointerPressed="Title_OnPointerPressed"
                     Text="模组" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
-                    Text="0 个" />
+                    Text="{Binding ModCountText}" />
             </DockPanel>
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="False"
+                IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
                 Text="正在读取模组..." />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
                 Text="此实例没有可识别的模组" />
         </DockPanel>
-        <Border />
+        <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
+            <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="16"
+                        MinItemHeight="83"
+                        MinItemWidth="300"
+                        MinRowSpacing="16"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="local:ModItem">
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="12">
+                            <DockPanel>
+                                <Border
+                                    Background="{DynamicResource TranslucentBorderBrush}"
+                                    CornerRadius="12"
+                                    DockPanel.Dock="Left"
+                                    Height="56"
+                                    Margin="2,0,0,0"
+                                    VerticalAlignment="Top"
+                                    Width="56">
+                                    <PathIcon
+                                        Data="F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58,308.6,58,289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L27.7,282.7C15.1,306.1,23.9,335.2,47.3,347.8L80.3,365.5 80.3,418.8C80.3,441.8,92.7,463.1,112.7,474.5L288.7,574.2C308.3,585.3,332.2,585.3,351.8,574.2L527.8,474.5C547.9,463.1,560.2,441.9,560.2,418.8L560.2,301.3z M320.3,291.4L170.2,208 320.3,124.6 470.4,208 320.3,291.4z M278.8,341.6L257.5,387.8 91.7,299 117.1,251.8 278.8,341.6z"
+                                        Height="32"
+                                        Width="32" />
+                                </Border>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <DockPanel ToolTip.Tip="{Binding FileName}">
+                                        <TextBlock
+                                            DockPanel.Dock="Left"
+                                            FontSize="13"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            IsVisible="{Binding IsDisabled}"
+                                            Margin="0,0,5,0"
+                                            MaxLines="1"
+                                            Text="已禁用"
+                                            VerticalAlignment="Center" />
+                                        <TextBlock
+                                            FontSize="16"
+                                            FontWeight="SemiBold"
+                                            MaxLines="1"
+                                            Text="{Binding DisplayName}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap"
+                                            VerticalAlignment="Center" />
+                                    </DockPanel>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,2,0,0"
+                                        MaxLines="1"
+                                        Text="{Binding DescriptionText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,1,0,0"
+                                        MaxLines="1"
+                                        Text="{Binding FileName}"
+                                        TextTrimming="LeadingCharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>
