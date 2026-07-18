@@ -31,7 +31,7 @@
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="搜索资源包"
+                PlaceholderText="{Binding SearchPlaceholder}"
                 TextChanged="SearchBox_OnTextChanged"
                 Width="180" />
             <DropDownButton
@@ -65,7 +65,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="删除所选资源包" />
+                            Header="删除所选" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -75,7 +75,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="资源包"
+                    Text="{Binding PackName}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -87,13 +87,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取资源包..." />
+                Text="{Binding LoadingText}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例没有可识别的资源包" />
+                Text="{Binding EmptyText}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -197,13 +197,13 @@
                                                 Foreground="{DynamicResource InnerForegroundColor}"
                                                 Margin="0,2,0,0"
                                                 MaxLines="1"
-                                                Text="{Binding FileName}"
+                                                Text="{Binding SecondaryText}"
                                                 TextTrimming="LeadingCharacterEllipsis" />
                                             <TextBlock
                                                 FontSize="13"
                                                 Foreground="{DynamicResource InnerForegroundColor}"
                                                 Margin="0,1,0,0">
-                                                <Run Text="支持格式:" />
+                                                <Run Text="{Binding VersionLabel}" />
                                                 <Run Text="{Binding SupportedFormatsText}" />
                                             </TextBlock>
                                         </StackPanel>

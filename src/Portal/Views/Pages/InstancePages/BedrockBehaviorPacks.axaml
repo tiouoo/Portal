@@ -3,37 +3,5 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <DockPanel Margin="10,10,0,10">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
-            <Button
-                Click="OpenFolder_OnClick"
-                Content="打开文件夹"
-                DockPanel.Dock="Right"
-                VerticalAlignment="Top" />
-            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-                <TextBlock
-                    Cursor="Hand"
-                    FontSize="24"
-                    Name="Title"
-                    PointerPressed="Title_OnPointerPressed"
-                    Text="行为包" />
-                <TextBlock
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Margin="10,8,0,0"
-                    Text="0 个" />
-            </DockPanel>
-            <TextBlock
-                DockPanel.Dock="Top"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="False"
-                Margin="0,8,0,0"
-                Text="正在读取行为包..." />
-            <TextBlock
-                DockPanel.Dock="Top"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Margin="0,8,0,0"
-                Text="此实例没有可识别的行为包" />
-        </DockPanel>
-        <Border />
-    </DockPanel>
+    <ContentControl Name="BehaviorPacksContent" />
 </UserControl>

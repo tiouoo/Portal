@@ -53,7 +53,7 @@
                     Header="日志" />
                     <tio:NavMenuItem IsVisible="{Binding IsBedrock}"
                         Command="{Binding NavigateTypeCommand}"
-                        CommandParameter="{x:Type instancePages:BedrockResourcePacks}"
+                        CommandParameter="{x:Type instancePages:ResourcePacks}"
                         Header="资源包" />
                     <tio:NavMenuItem IsVisible="{Binding IsBedrock}"
                         Command="{Binding NavigateTypeCommand}"

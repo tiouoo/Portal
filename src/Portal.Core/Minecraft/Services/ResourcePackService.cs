@@ -7,18 +7,22 @@ namespace Portal.Core.Minecraft.Services;
 public sealed class ResourcePackService
 {
     public Task<IReadOnlyList<ResourcePackInfo>> ScanAsync(MinecraftInstance instance,
+        MinecraftSpecialFolder folder = MinecraftSpecialFolder.ResourcePacksFolder,
         CancellationToken cancellationToken = default) =>
-        Task.Run(() => Scan(instance, cancellationToken), cancellationToken);
+        Task.Run(() => Scan(instance, folder, cancellationToken), cancellationToken);
 
-    private static IReadOnlyList<ResourcePackInfo> Scan(MinecraftInstance instance, CancellationToken cancellationToken)
+    private static IReadOnlyList<ResourcePackInfo> Scan(MinecraftInstance instance, MinecraftSpecialFolder folder,
+        CancellationToken cancellationToken)
     {
-        if (instance.Type != MinecraftInstanceType.Java)
-            return [];
-
         try
         {
-            return Directory.EnumerateFiles(instance.GetSpecialFolder(MinecraftSpecialFolder.ResourcePacksFolder), "*.zip")
-                .Select(path => ReadPack(path, cancellationToken))
+            var root = instance.GetSpecialFolder(folder);
+            var packs = instance.Type == MinecraftInstanceType.Java
+                ? Directory.EnumerateFiles(root, "*.zip").Select(path => ReadJavaPack(path, cancellationToken))
+                : Directory.EnumerateDirectories(root)
+                    .Where(path => File.Exists(Path.Combine(path, "manifest.json")))
+                    .Select(path => ReadBedrockPack(path, cancellationToken));
+            return packs
                 .OrderBy(pack => pack.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(pack => pack.FileName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
@@ -27,7 +31,7 @@ public sealed class ResourcePackService
         catch (UnauthorizedAccessException) { return []; }
     }
 
-    private static ResourcePackInfo ReadPack(string path, CancellationToken cancellationToken)
+    private static ResourcePackInfo ReadJavaPack(string path, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var file = new FileInfo(path);
@@ -61,7 +65,97 @@ public sealed class ResourcePackService
         catch (UnauthorizedAccessException) { }
 
         return new ResourcePackInfo(path, fileName, displayName, description, supportedFormats, file.Length,
-            file.LastWriteTime, iconData);
+            file.LastWriteTime, iconData, false, null, null, [], [], [], [], []);
+    }
+
+    private static ResourcePackInfo ReadBedrockPack(string path, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var directory = new DirectoryInfo(path);
+        var fileName = directory.Name;
+        var displayName = fileName;
+        string? description = null;
+        string? version = null;
+        string? minEngineVersion = null;
+        string? uuid = null;
+        var authors = new List<string>();
+        var subpacks = new List<string>();
+        var capabilities = new List<string>();
+        var modules = new List<string>();
+        var dependencies = new List<string>();
+
+        try
+        {
+            using var stream = File.OpenRead(Path.Combine(path, "manifest.json"));
+            using var document = JsonDocument.Parse(stream, new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
+            var root = document.RootElement;
+            if (root.TryGetProperty("header", out var header) && header.ValueKind == JsonValueKind.Object)
+            {
+                displayName = GetString(header, "name") ?? displayName;
+                description = GetString(header, "description");
+                version = GetVersion(header, "version");
+                minEngineVersion = GetVersion(header, "min_engine_version");
+                uuid = GetString(header, "uuid");
+            }
+            if (root.TryGetProperty("metadata", out var metadata) && metadata.ValueKind == JsonValueKind.Object &&
+                metadata.TryGetProperty("authors", out var authorValues) && authorValues.ValueKind == JsonValueKind.Array)
+                authors.AddRange(authorValues.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.String)
+                    .Select(value => value.GetString()).OfType<string>().Where(value => !string.IsNullOrWhiteSpace(value)));
+            if (root.TryGetProperty("subpacks", out var subpackValues) && subpackValues.ValueKind == JsonValueKind.Array)
+                subpacks.AddRange(subpackValues.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.Object)
+                    .Select(value => GetString(value, "name") ?? GetString(value, "folder_name")).OfType<string>());
+            if (root.TryGetProperty("capabilities", out var capabilityValues) && capabilityValues.ValueKind == JsonValueKind.Array)
+                capabilities.AddRange(capabilityValues.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.String)
+                    .Select(value => value.GetString()).OfType<string>().Where(value => !string.IsNullOrWhiteSpace(value)));
+            if (root.TryGetProperty("modules", out var moduleValues) && moduleValues.ValueKind == JsonValueKind.Array)
+                modules.AddRange(moduleValues.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.Object)
+                    .Select(value => GetString(value, "type")).OfType<string>());
+            if (root.TryGetProperty("dependencies", out var dependencyValues) && dependencyValues.ValueKind == JsonValueKind.Array)
+                dependencies.AddRange(dependencyValues.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.Object)
+                    .Select(value => GetString(value, "module_name") ?? GetString(value, "uuid")).OfType<string>());
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        catch (JsonException) { }
+
+        return new ResourcePackInfo(path, fileName, displayName, description, version, GetDirectorySize(directory, cancellationToken),
+            directory.LastWriteTime, ReadIcon(Path.Combine(path, "pack_icon.png")), true, minEngineVersion, uuid, authors, subpacks, capabilities, modules, dependencies);
+    }
+
+    private static string? GetString(JsonElement element, string property) => element.TryGetProperty(property, out var value) &&
+        value.ValueKind == JsonValueKind.String ? value.GetString()?.Trim() : null;
+
+    private static string? GetVersion(JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out var value))
+            return null;
+        if (value.ValueKind == JsonValueKind.String)
+            return value.GetString()?.Trim();
+        if (value.ValueKind != JsonValueKind.Array)
+            return null;
+        var version = string.Join('.', value.EnumerateArray().Where(part => part.ValueKind == JsonValueKind.Number).Select(part => part.GetRawText()));
+        return string.IsNullOrEmpty(version) ? null : version;
+    }
+
+    private static byte[]? ReadIcon(string path)
+    {
+        try { return File.Exists(path) ? File.ReadAllBytes(path) : null; }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
+    }
+
+    private static long GetDirectorySize(DirectoryInfo directory, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return directory.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return file.Length;
+            });
+        }
+        catch (IOException) { return 0; }
+        catch (UnauthorizedAccessException) { return 0; }
     }
 
     private static (string? Description, string? SupportedFormats) ReadMetadata(ZipArchiveEntry entry)
@@ -131,4 +225,12 @@ public sealed record ResourcePackInfo(
     string? SupportedFormats,
     long FileSize,
     DateTime LastWriteTime,
-    byte[]? IconData);
+    byte[]? IconData,
+    bool IsBedrock,
+    string? MinEngineVersion,
+    string? Uuid,
+    IReadOnlyList<string> Authors,
+    IReadOnlyList<string> Subpacks,
+    IReadOnlyList<string> Capabilities,
+    IReadOnlyList<string> Modules,
+    IReadOnlyList<string> Dependencies);
