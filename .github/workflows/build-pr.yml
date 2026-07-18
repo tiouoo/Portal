@@ -72,7 +72,7 @@ jobs:
           cd ./src/Portal.Desktop
           New-Item -ItemType Directory -Force -Path "../../dist"
           dotnet restore -r win-x64
-          dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=true /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
+          dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=false /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
           cd "../../dist"
           Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.win-x64.PR-${{ github.event.number }}.exe" -Force
           Compress-Archive -Path "Portal.win-x64.PR-${{ github.event.number }}.exe" -DestinationPath "../Portal.win-x64.PR-${{ github.event.number }}.zip" -Force

@@ -123,7 +123,7 @@ jobs:
           cd ./src/Portal.Desktop
           New-Item -ItemType Directory -Force -Path "../../dist"
           dotnet restore -r ${{ matrix.rid }}
-          dotnet publish -c Release -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=true /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
+          dotnet publish -c Release -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=false /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
           cd "../../dist"
           Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.${{ matrix.output_rid }}.portable.exe" -Force
           Compress-Archive -Path "Portal.${{ matrix.output_rid }}.portable.exe" -DestinationPath "../Portal.${{ matrix.output_rid }}.portable.zip" -Force
