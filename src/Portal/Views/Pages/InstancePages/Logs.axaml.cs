@@ -84,6 +84,17 @@ public partial class Logs : UserControl
             LogEditor.Document.Text = await ReadLogAsync(path);
             LogEditor.ScrollToHome();
         }
+        catch (IOException ex) when (IsFileLocked(ex) &&
+                                     Path.GetFileName(path).Equals("latest.log", StringComparison.OrdinalIgnoreCase))
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel != null)
+                NotificationGateway.Notice(topLevel, "latest.log 被锁定", NotificationType.Warning);
+
+            var nextLog = LogFiles.FirstOrDefault(file => !string.Equals(file.Path, path, StringComparison.OrdinalIgnoreCase));
+            if (nextLog != null)
+                LogFileSelector.SelectedItem = nextLog;
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -102,6 +113,8 @@ public partial class Logs : UserControl
         using var reader = new StreamReader(gzipStream);
         return await reader.ReadToEndAsync();
     }
+
+    private static bool IsFileLocked(IOException exception) => (exception.HResult & 0xffff) is 32 or 33;
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e) => _ = RefreshLogFilesAsync();
 

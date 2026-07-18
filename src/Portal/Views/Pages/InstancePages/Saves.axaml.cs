@@ -4,15 +4,20 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncImageLoader;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Views.StaticPages;
+using SkiaSharp;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -27,8 +32,11 @@ public partial class Saves : UserControl, INotifyPropertyChanged
     private readonly MinecraftInstance? _instance;
     private readonly string? _savesPath;
     private readonly WorldSaveService _saveService = new();
+    private readonly DispatcherTimer _lockRefreshTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private bool _hasLoaded;
     private bool _isLoading;
+    private bool _isRefreshingLockStates;
+    private bool _isAttached;
     private string _filter = string.Empty;
 
     public ObservableCollection<SaveItem> Items { get; } = [];
@@ -52,13 +60,35 @@ public partial class Saves : UserControl, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
+        _lockRefreshTimer.Tick += async (_, _) => await RefreshLockStatesAsync();
     }
 
     public Saves(MinecraftInstance instance) : this()
     {
         _instance = instance;
         _savesPath = instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder);
-        AttachedToVisualTree += async (_, _) => await LoadAsync();
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _isAttached = true;
+        _ = LoadAsync();
+        UpdateLockRefreshTimer();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        _isAttached = false;
+        _lockRefreshTimer.Stop();
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == Visual.IsVisibleProperty)
+            UpdateLockRefreshTimer();
     }
 
     private async Task LoadAsync()
@@ -76,6 +106,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged
         ApplyFilter();
         IsLoading = false;
         RaiseListProperties();
+        await RefreshLockStatesAsync();
     }
 
     private void ApplyFilter()
@@ -102,6 +133,84 @@ public partial class Saves : UserControl, INotifyPropertyChanged
             await TopLevel.GetTopLevel(this).Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(item.Info.FolderPath));
     }
 
+    private async void ChangeIcon_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetItem(sender) is not { } item || !Directory.Exists(item.Info.FolderPath))
+            return;
+        if (item.Info.IsLocked)
+        {
+            await ShowLockedAsync();
+            return;
+        }
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "选择世界图标",
+            AllowMultiple = false,
+            FileTypeFilter =
+                [new FilePickerFileType("图片") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp"] }]
+        });
+        if (files.Count == 0)
+            return;
+
+        var iconPath = Path.Combine(item.Info.FolderPath, "icon.png");
+        var temporaryIconPath = Path.Combine(item.Info.FolderPath, $".{Guid.NewGuid():N}.png");
+        try
+        {
+            await using var input = await files[0].OpenReadAsync();
+            using var image = SKBitmap.Decode(input) ?? throw new InvalidDataException("无法读取所选图片。");
+            var cropSize = Math.Min(image.Width, image.Height);
+            var source = new SKRectI((image.Width - cropSize) / 2, (image.Height - cropSize) / 2,
+                (image.Width + cropSize) / 2, (image.Height + cropSize) / 2);
+            using var surface = SKSurface.Create(new SKImageInfo(64, 64)) ?? throw new InvalidOperationException("无法创建图标。");
+            surface.Canvas.DrawBitmap(image, source, new SKRect(0, 0, 64, 64), new SKSamplingOptions());
+            using var png = surface.Snapshot().Encode(SKEncodedImageFormat.Png, 100);
+            await using (var output = File.Create(temporaryIconPath))
+                png.SaveTo(output);
+
+            File.Move(temporaryIconPath, iconPath, true);
+            RefreshItem(item, item.Info with { IconPath = iconPath });
+            await RefreshSavesAsync();
+            ShowNotice("世界图标已更换", NotificationType.Success);
+        }
+        catch (IOException ex) when (IsFileLocked(ex))
+        {
+            await ShowLockedAsync();
+        }
+        catch (IOException ex)
+        {
+            ShowNotice($"更换世界图标失败：{ex.Message}", NotificationType.Error);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            ShowNotice("没有更换此世界图标的权限。", NotificationType.Error);
+        }
+        catch (Exception ex)
+        {
+            ShowNotice($"更换世界图标失败：{ex.Message}", NotificationType.Error);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(temporaryIconPath))
+                    File.Delete(temporaryIconPath);
+            }
+            catch (IOException)
+            {
+                // The temporary file can only remain when another process locked it.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // The temporary file can only remain when another process locked it.
+            }
+        }
+    }
+
     private async void ShowInfo_OnClick(object? sender, RoutedEventArgs e)
     {
         if (GetItem(sender) is not { } item)
@@ -120,6 +229,11 @@ public partial class Saves : UserControl, INotifyPropertyChanged
     {
         if (GetItem(sender) is not { } item || !Directory.Exists(item.Info.FolderPath))
             return;
+        if (item.Info.IsLocked)
+        {
+            await ShowLockedAsync();
+            return;
+        }
         var result = await OverlayDialog.ShowStandardAsync(
             new TextBlock
             {
@@ -134,22 +248,34 @@ public partial class Saves : UserControl, INotifyPropertyChanged
             Directory.Delete(item.Info.FolderPath, true);
             Items.Remove(item);
             ApplyFilter();
+            ShowNotice("存档已删除", NotificationType.Success);
         }
-        catch (IOException)
+        catch (IOException ex) when (IsFileLocked(ex))
         {
-            await ShowErrorAsync("存档正在被其他程序使用，无法删除。");
+            await ShowLockedAsync();
+        }
+        catch (IOException ex)
+        {
+            ShowNotice($"无法删除存档：{ex.Message}", NotificationType.Error);
         }
         catch (UnauthorizedAccessException)
         {
-            await ShowErrorAsync("没有删除此存档的权限。");
+            ShowNotice("没有删除此存档的权限。", NotificationType.Error);
         }
     }
 
-    private Task ShowErrorAsync(string message) => OverlayDialog.ShowStandardAsync(
-        new TextBlock { Margin = new Avalonia.Thickness(24), Text = message, TextWrapping = TextWrapping.Wrap }, null,
-        this.TryGetHostId(),
-        new OverlayDialogOptions
-            { Title = "存档", Mode = DialogMode.Error, Buttons = DialogButton.OK, CanLightDismiss = false });
+    private Task ShowLockedAsync()
+    {
+        ShowNotice("世界被Minecraft实例锁定", NotificationType.Warning);
+        return Task.CompletedTask;
+    }
+
+    private void ShowNotice(string message, NotificationType type)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel != null)
+            NotificationGateway.Notice(topLevel, message, type);
+    }
 
     private static OverlayDialogOptions CreateDeleteConfirmationOptions(string title) => new()
     {
@@ -164,6 +290,59 @@ public partial class Saves : UserControl, INotifyPropertyChanged
 
     private static SaveItem? GetItem(object? sender) => (sender as Control)?.Tag as SaveItem;
 
+    private static bool IsFileLocked(IOException exception) => (exception.HResult & 0xffff) is 32 or 33;
+
+    private async Task RefreshLockStatesAsync()
+    {
+        if (_isRefreshingLockStates || !IsVisible || Items.Count == 0)
+            return;
+
+        _isRefreshingLockStates = true;
+        try
+        {
+            var items = Items.ToArray();
+            var lockStates = await Task.WhenAll(items.Select(async item =>
+                (Item: item, IsLocked: await _saveService.IsWorldLockedAsync(item.Info.FolderPath))));
+            var changed = false;
+            foreach (var (item, isLocked) in lockStates)
+            {
+                if (item.Info.IsLocked == isLocked)
+                    continue;
+
+                RefreshItem(item, item.Info with { IsLocked = isLocked });
+                changed = true;
+            }
+
+            if (changed)
+                ApplyFilter();
+        }
+        finally
+        {
+            _isRefreshingLockStates = false;
+        }
+    }
+
+    private void UpdateLockRefreshTimer()
+    {
+        if (!_isAttached || !IsVisible)
+        {
+            _lockRefreshTimer.Stop();
+            return;
+        }
+
+        _lockRefreshTimer.Start();
+        _ = RefreshLockStatesAsync();
+    }
+
+    private void RefreshItem(SaveItem item, WorldSaveInfo info)
+    {
+        var index = Items.IndexOf(item);
+        if (index < 0)
+            return;
+
+        Items[index] = new SaveItem(info);
+    }
+
     private void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e)
     {
         _filter = (sender as TextBox)?.Text ?? string.Empty;
@@ -172,8 +351,13 @@ public partial class Saves : UserControl, INotifyPropertyChanged
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        _ = RefreshSavesAsync();
+    }
+
+    private async Task RefreshSavesAsync()
+    {
         _hasLoaded = false;
-        _ = LoadAsync();
+        await LoadAsync();
     }
 
     private void RaiseListProperties()
@@ -197,10 +381,14 @@ public sealed class SaveItem(WorldSaveInfo info)
     public WorldSaveInfo Info { get; } = info;
     public string FolderName => Info.FolderName;
     public string DisplayName => string.IsNullOrWhiteSpace(Info.LevelName) ? Info.FolderName : Info.LevelName;
+    public string FolderNameSuffix => string.Equals(DisplayName, FolderName, StringComparison.Ordinal) ? string.Empty :
+        $"{FolderName}";
     public string? IconPath => Info.IconPath;
     public bool HasIcon => IconPath != null;
     public IAsyncImageLoader ImageLoader { get; } = new SaveImageLoader();
-    public string Summary => $"{Info.Version ?? "未知版本"}·{GetGameModeText(Info.GameMode)}";
+    public string Summary => $"{Info.Version ?? "未知版本"}·{GetGameModeText(Info.GameMode)}" +
+                             (Info.AllowCommands == true ? "·允许作弊" : string.Empty) +
+                             (Info.IsLocked ? "·锁定中" : string.Empty);
     public string LastPlayedText => $"最近游玩：{(Info.LastPlayedTime ?? Info.LastWriteTime):yyyy-MM-dd HH:mm}";
 
     public string Details =>

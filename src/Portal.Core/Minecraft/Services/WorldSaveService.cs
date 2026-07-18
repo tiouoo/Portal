@@ -11,6 +11,8 @@ public sealed class WorldSaveService
         return Task.Run(() => Scan(instance, cancellationToken), cancellationToken);
     }
 
+    public Task<bool> IsWorldLockedAsync(string worldPath) => Task.Run(() => IsWorldLocked(worldPath));
+
     private static IReadOnlyList<WorldSaveInfo> Scan(MinecraftInstance instance, CancellationToken cancellationToken)
     {
         if (instance.Type != MinecraftInstanceType.Java)
@@ -77,7 +79,35 @@ public sealed class WorldSaveService
             gameMode,
             allowCommands,
             CountFiles(Path.Combine(worldPath, "playerdata"), "*.dat"),
-            CountFiles(Path.Combine(worldPath, "datapacks"), "*.zip"));
+            CountFiles(Path.Combine(worldPath, "datapacks"), "*.zip"),
+            IsWorldLocked(worldPath));
+    }
+
+    private static bool IsWorldLocked(string worldPath)
+    {
+        var lockPath = Path.Combine(worldPath, "session.lock");
+        if (!File.Exists(lockPath))
+            return false;
+
+        try
+        {
+            using var stream = new FileStream(lockPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite);
+            stream.Lock(0, long.MaxValue);
+            stream.Unlock(0, long.MaxValue);
+            return false;
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return true;
+        }
     }
 
     private static int CountFiles(string path, string searchPattern)

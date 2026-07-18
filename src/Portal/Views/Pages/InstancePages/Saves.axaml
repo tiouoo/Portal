@@ -24,7 +24,7 @@
                 PlaceholderText="搜索存档"
                 TextChanged="SearchBox_OnTextChanged"
                 Width="180" />
-            <DockPanel LastChildFill="False">
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"
                     FontSize="24"
@@ -41,118 +41,139 @@
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
                 Text="正在读取存档..." />
-        </DockPanel>
-        <Panel>
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
                 Text="此实例还没有可识别的存档" />
-            <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
-                <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
-                    <ItemsRepeater.Layout>
-                        <UniformGridLayout
-                            ItemsStretch="Fill"
-                            MinColumnSpacing="16"
-                            MinItemHeight="83"
-                            MinItemWidth="284"
-                            MinRowSpacing="16"
-                            Orientation="Horizontal" />
-                    </ItemsRepeater.Layout>
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate x:DataType="instancePages:SaveItem">
-                            <Border
-                                Background="{DynamicResource TranslucentBackgroundColor}"
-                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Cursor="Hand"
-                                Padding="12"
-                                PointerPressed="InputElement_OnPointerPressed">
-                                <Border.ContextFlyout>
-                                    <MenuFlyout>
-                                        <MenuItem
-                                            Click="OpenWorldFolder_OnClick"
-                                            Header="打开文件夹"
-                                            Tag="{Binding}">
-                                            <MenuItem.Icon>
-                                                <PathIcon
-                                                    Data="F1 M640,640z M0,0z M480,96C515.3,96,544,124.7,544,160L544,480C544,515.3,515.3,544,480,544L160,544C124.7,544,96,515.3,96,480L96,160C96,124.7,124.7,96,160,96L480,96z M368,360C368,373.3 378.7,384 392,384 405.3,384 416,373.3 416,360L416,248C416,234.7,405.3,224,392,224L280,224C266.7,224,256,234.7,256,248 256,261.3 266.7,272 280,272L334.1,272 231.1,375C221.7,384.4 221.7,399.6 231.1,408.9 240.5,418.2 255.7,418.3 265,408.9L368,305.9 368,360z"
-                                                    Height="16"
-                                                    Width="16" />
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem
-                                            Click="ShowInfo_OnClick"
-                                            Header="查看详情"
-                                            Tag="{Binding}">
-                                            <MenuItem.Icon>
-                                                <PathIcon
-                                                    Data="F1 M640,640z M0,0z M544,269.8C529.2,279.6 512.2,287.5 494.5,293.8 447.5,310.6 385.8,320 320,320 254.2,320 192.4,310.5 145.5,293.8 127.9,287.5 110.8,279.6 96,269.8L96,352C96,396.2 196.3,432 320,432 443.7,432 544,396.2 544,352L544,269.8z M544,192L544,144C544,99.8 443.7,64 320,64 196.3,64 96,99.8 96,144L96,192C96,236.2 196.3,272 320,272 443.7,272 544,236.2 544,192z M494.5,453.8C447.6,470.5 385.9,480 320,480 254.1,480 192.4,470.5 145.5,453.8 127.9,447.5 110.8,439.6 96,429.8L96,496C96,540.2 196.3,576 320,576 443.7,576 544,540.2 544,496L544,429.8C529.2,439.6,512.2,447.5,494.5,453.8z"
-                                                    Height="16"
-                                                    Width="16" />
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <Separator />
-                                        <MenuItem
-                                            Click="DeleteWorld_OnClick"
-                                            Header="删除存档"
-                                            Tag="{Binding}">
-                                            <MenuItem.Icon>
-                                                <PathIcon
-                                                    Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403.7,56.8,407.4,69.9L416,96 512,96C529.7,96,544,110.3,544,128 544,145.7,529.7,160,512,160L128,160C110.3,160,96,145.7,96,128 96,110.3,110.3,96,128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3,202.7,512,216,512 229.3,512,240,501.3,240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3,306.7,512,320,512 333.3,512,344,501.3,344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3,410.7,512,424,512 437.3,512,448,501.3,448,488L448,296C448,282.7,437.3,272,424,272z"
-                                                    Height="16"
-                                                    Width="16" />
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                    </MenuFlyout>
-                                </Border.ContextFlyout>
-                                <DockPanel>
-                                    <Border
-                                        Background="{DynamicResource TranslucentBorderBrush}"
+        </DockPanel>
+        <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
+            <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="16"
+                        MinItemHeight="83"
+                        MinItemWidth="284"
+                        MinRowSpacing="16"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="instancePages:SaveItem">
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Cursor="Hand"
+                            Padding="12"
+                            PointerPressed="InputElement_OnPointerPressed">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem
+                                        Click="OpenWorldFolder_OnClick"
+                                        Header="打开文件夹"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M480,96C515.3,96,544,124.7,544,160L544,480C544,515.3,515.3,544,480,544L160,544C124.7,544,96,515.3,96,480L96,160C96,124.7,124.7,96,160,96L480,96z M368,360C368,373.3 378.7,384 392,384 405.3,384 416,373.3 416,360L416,248C416,234.7,405.3,224,392,224L280,224C266.7,224,256,234.7,256,248 256,261.3 266.7,272 280,272L334.1,272 231.1,375C221.7,384.4 221.7,399.6 231.1,408.9 240.5,418.2 255.7,418.3 265,408.9L368,305.9 368,360z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="ChangeIcon_OnClick"
+                                        Header="更换图标"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M500.7,138.7L512,149.4 512,96C512,78.3 526.3,64 544,64 561.7,64 576,78.3 576,96L576,224C576,241.7,561.7,256,544,256L416,256C398.3,256 384,241.7 384,224 384,206.3 398.3,192 416,192L463.9,192 456.3,184.8C456.1,184.6 455.9,184.4 455.7,184.2 380.7,109.2 259.2,109.2 184.2,184.2 109.2,259.2 109.2,380.7 184.2,455.7 259.2,530.7 380.7,530.7 455.7,455.7 463.9,447.5 471.2,438.8 477.6,429.6 487.7,415.1 507.7,411.6 522.2,421.7 536.7,431.8 540.2,451.8 530.1,466.3 521.6,478.5 511.9,490.1 501,501 401,601 238.9,601 139,501 39.1,401 39,239 139,139 238.9,39.1 400.7,39 500.7,138.7z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="ShowInfo_OnClick"
+                                        Header="查看详情"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M544,269.8C529.2,279.6 512.2,287.5 494.5,293.8 447.5,310.6 385.8,320 320,320 254.2,320 192.4,310.5 145.5,293.8 127.9,287.5 110.8,279.6 96,269.8L96,352C96,396.2 196.3,432 320,432 443.7,432 544,396.2 544,352L544,269.8z M544,192L544,144C544,99.8 443.7,64 320,64 196.3,64 96,99.8 96,144L96,192C96,236.2 196.3,272 320,272 443.7,272 544,236.2 544,192z M494.5,453.8C447.6,470.5 385.9,480 320,480 254.1,480 192.4,470.5 145.5,453.8 127.9,447.5 110.8,439.6 96,429.8L96,496C96,540.2 196.3,576 320,576 443.7,576 544,540.2 544,496L544,429.8C529.2,439.6,512.2,447.5,494.5,453.8z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <Separator />
+                                    <MenuItem
+                                        Click="DeleteWorld_OnClick"
+                                        Header="删除存档"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403.7,56.8,407.4,69.9L416,96 512,96C529.7,96,544,110.3,544,128 544,145.7,529.7,160,512,160L128,160C110.3,160,96,145.7,96,128 96,110.3,110.3,96,128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3,202.7,512,216,512 229.3,512,240,501.3,240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3,306.7,512,320,512 333.3,512,344,501.3,344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3,410.7,512,424,512 437.3,512,448,501.3,448,488L448,296C448,282.7,437.3,272,424,272z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+                            <DockPanel>
+                                <Border
+                                    Background="{DynamicResource TranslucentBorderBrush}"
+                                    CornerRadius="12"
+                                    DockPanel.Dock="Left"
+                                    Height="56"
+                                    Margin="2,0,0,0"
+                                    VerticalAlignment="Top"
+                                    Width="56">
+                                    <asyncImageLoader:AdvancedImage
                                         CornerRadius="12"
-                                        DockPanel.Dock="Left"
-                                        Height="56"
-                                        Margin="2,0,0,0"
-                                        VerticalAlignment="Top"
-                                        Width="56">
-                                        <asyncImageLoader:AdvancedImage
-                                            CornerRadius="12"
-                                            IsVisible="{Binding HasIcon}"
-                                            Loader="{Binding ImageLoader}"
-                                            Source="{Binding IconPath}"
-                                            Stretch="UniformToFill" />
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Center" Margin="10,0,0,0">
+                                        IsVisible="{Binding HasIcon}"
+                                        Loader="{Binding ImageLoader}"
+                                        Source="{Binding IconPath}"
+                                        Stretch="UniformToFill" />
+                                </Border>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <DockPanel ToolTip.Tip="{Binding FolderName}">
                                         <TextBlock
+                                            DockPanel.Dock="Left"
                                             FontSize="16"
                                             FontWeight="SemiBold"
                                             Text="{Binding DisplayName}"
                                             TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap" />
+                                        <TextBlock
+                                            DockPanel.Dock="Right"
+                                            FontSize="13"
+                                            FontWeight="Normal"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Margin="5,0,0,1"
+                                            Text="{Binding FolderNameSuffix}"
+                                            TextTrimming="LeadingCharacterEllipsis"
                                             TextWrapping="NoWrap"
-                                            ToolTip.Tip="{Binding FolderName}" />
-                                        <TextBlock
-                                            FontSize="13"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Margin="0,2,0,0"
-                                            Text="{Binding Summary}"
-                                            TextTrimming="CharacterEllipsis"
-                                            TextWrapping="NoWrap" />
-                                        <TextBlock
-                                            FontSize="13"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Margin="0,1,0,0"
-                                            Text="{Binding LastPlayedText}"
-                                            TextTrimming="CharacterEllipsis"
-                                            TextWrapping="NoWrap" />
-                                    </StackPanel>
-                                </DockPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-            </controls:ScrollView>
-        </Panel>
+                                            VerticalAlignment="Bottom" />
+                                    </DockPanel>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,2,0,0"
+                                        Text="{Binding Summary}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,1,0,0"
+                                        Text="{Binding LastPlayedText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>

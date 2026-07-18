@@ -13,4 +13,5 @@ public sealed record WorldSaveInfo(
     int? GameMode,
     bool? AllowCommands,
     int PlayerDataCount,
-    int DataPackArchiveCount);
+    int DataPackArchiveCount,
+    bool IsLocked);
