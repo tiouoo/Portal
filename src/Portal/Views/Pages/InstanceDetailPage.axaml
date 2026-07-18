@@ -27,9 +27,18 @@
                     CommandParameter="{x:Type instancePages:Dashboard}"
                     Header="仪表盘"
                     IsSelected="True" />
-                    <tio:NavMenuItem IsVisible="{Binding IsJava}" Command="{Binding NavigateTypeCommand}" Header="模组" />
-                    <tio:NavMenuItem IsVisible="{Binding IsJava}" Command="{Binding NavigateTypeCommand}" Header="资源包" />
-                    <tio:NavMenuItem IsVisible="{Binding IsJava}" Command="{Binding NavigateTypeCommand}" Header="光影包" />
+                    <tio:NavMenuItem IsVisible="{Binding IsJava}"
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type instancePages:Mods}"
+                        Header="模组" />
+                    <tio:NavMenuItem IsVisible="{Binding IsJava}"
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type instancePages:ResourcePacks}"
+                        Header="资源包" />
+                    <tio:NavMenuItem IsVisible="{Binding IsJava}"
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type instancePages:ShaderPacks}"
+                        Header="光影包" />
                     <tio:NavMenuItem IsVisible="{Binding IsJava}"
                         Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Saves}"

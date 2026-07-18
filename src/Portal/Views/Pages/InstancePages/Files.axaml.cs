@@ -86,15 +86,15 @@ public partial class Files : UserControl
         var tag = (sender as Control).Tag as  string;
         if (tag == "mods")
         {
-            _parent.NavigateTo(null);
+            _parent.NavigateTo(typeof(Mods));
         }
         else if (tag == "resource")
         {
-            _parent.NavigateTo(null);
+            _parent.NavigateTo(typeof(ResourcePacks));
         }
         else if (tag == "shader")
         {
-            _parent.NavigateTo(null);
+            _parent.NavigateTo(typeof(ShaderPacks));
         }
         else if (tag == "saves")
         {

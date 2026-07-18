@@ -16,7 +16,8 @@
             <Button
                 Click="OpenFolder_OnClick"
                 Content="打开文件夹"
-                DockPanel.Dock="Right" />
+                DockPanel.Dock="Right"
+                VerticalAlignment="Top" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"
@@ -40,7 +41,7 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例还没有截图" />
+                Text="此实例没有可识别的存档" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding ScreenshotList}" Margin="0,0,10,0">
