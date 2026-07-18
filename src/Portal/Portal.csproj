@@ -53,5 +53,12 @@
       <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Views\Components\RandomMinecraft.axaml.cs">
+        <DependentUpon>RandomMinecraft.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
     
 </Project>

@@ -24,8 +24,8 @@
                     IsSnapToTickEnabled="True"
                     Maximum="{Binding TotalMemoryMb}"
                     Minimum="512"
-                    TickFrequency="256"
-                    Value="{Binding Data.ConfigEntry.MinecraftMaxMemory}" />
+                    Name="Slider"
+                    TickFrequency="256" />
                 <Border
                     Grid.Column="1"
                     Margin="15,0,0,0"

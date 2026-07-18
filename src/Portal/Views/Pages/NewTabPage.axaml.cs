@@ -16,6 +16,7 @@ using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.Services;
 using Portal.ViewModels;
+using Portal.Views.Components;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -23,6 +24,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using RandomMinecraft = Portal.Views.Components.RandomMinecraft;
 
 namespace Portal.Views.Pages;
 

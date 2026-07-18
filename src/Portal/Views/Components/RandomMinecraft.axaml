@@ -2,9 +2,10 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
-    x:Class="Portal.Core.Operations.RandomMinecraft"
-    x:DataType="operations:RandomMinecraftViewModle"
+    x:Class="Portal.Views.Components.RandomMinecraft"
+    x:DataType="components:RandomMinecraftViewModle"
     xmlns="https://github.com/avaloniaui"
+    xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:operations="clr-namespace:Portal.Core.Operations"
@@ -23,7 +24,11 @@
                 Orientation="Horizontal"
                 Spacing="5">
                 <TextBlock Text="这次抽中了" />
-                <HyperlinkButton Content="{Binding Instance.InstanceName}" Theme="{StaticResource UnderlineHyperlinkButton}" />
+                <HyperlinkButton
+                    Click="Button_OnClick"
+                    Content="{Binding Instance.InstanceName}"
+                    Tag="{Binding Instance}"
+                    Theme="{StaticResource UnderlineHyperlinkButton}" />
                 <TextBlock Text="，快开始游戏吧！" />
             </StackPanel>
         </StackPanel>

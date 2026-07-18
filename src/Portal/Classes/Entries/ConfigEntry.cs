@@ -59,7 +59,6 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 128;
     [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
     [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
-    // Stored as megabytes so it can be passed directly to the game's JVM arguments.
     [ObservableProperty] public partial int MinecraftMaxMemory { get; set; } = 4096;
     [ObservableProperty] public partial double ControlOpacity { get; set; } = 1;
     [ObservableProperty] public partial double TranslucentControlOpacity { get; set; } = 1;

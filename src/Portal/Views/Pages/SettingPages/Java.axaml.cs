@@ -49,6 +49,8 @@ public partial class Java : DataUserControl, INotifyPropertyChanged
         DataContext = this;
         _memoryRefreshTimer.Tick += (_, _) => RefreshMemoryStatus();
         Data.ConfigEntry.PropertyChanged += ConfigEntry_PropertyChanged;
+        Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
+        Slider.ValueChanged += (_, _) => Data.ConfigEntry.MinecraftMaxMemory = (int)Slider.Value;
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -100,7 +102,15 @@ public partial class Java : DataUserControl, INotifyPropertyChanged
         }
         catch (Exception)
         {
-            // System memory is optional UI information; leave it hidden when unavailable.
+            HasMemoryStatus = false;
+        }
+
+        if (!HasMemoryStatus)
+        {
+            _totalMemoryMb = 65536;
+            _availableMemoryMb = 65536;
+        
+            HasMemoryStatus = false; 
         }
 
         OnPropertyChanged(nameof(HasMemoryStatus));
