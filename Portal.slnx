@@ -1,14 +1,13 @@
 <Solution>
-  <Folder Name="/Core/" />
-  <Folder Name="/Core/Bedrock/">
-    <Project Path="src/Portal.Bedrock.Standard/Portal.Bedrock.Standard.csproj" />
-    <Project Path="src/Portal.Bedrock.Windows/Portal.Bedrock.Windows.csproj" />
-  </Folder>
   <Folder Name="/Module/">
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi/TioUi.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard.Tab/Tio.Avalonia.Standard.Tab.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard/Tio.Avalonia.Standard.csproj" />
     <Project Path="src/Portal.LitematicaViewer/LitematicaViewer.csproj" />
+  </Folder>
+  <Folder Name="/Module/Bedrock/">
+    <Project Path="src/Portal.Bedrock.Standard/Portal.Bedrock.Standard.csproj" />
+    <Project Path="src/Portal.Bedrock.Windows/Portal.Bedrock.Windows.csproj" />
   </Folder>
   <Folder Name="/Module/LiteSkinViewer/">
     <Project Path="module/LiteSkinViewer/LiteSkinViewer.2D/LiteSkinViewer.2D.csproj" />
