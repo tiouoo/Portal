@@ -17,6 +17,8 @@ public sealed class BedrockWorldService
         {
             return Directory.EnumerateDirectories(BedrockDataPathResolver.GetWorldsFolder(config, userId))
                 .Select(path => Read(path, cancellationToken))
+                .Where(world => world != null)
+                .Cast<BedrockWorldInfo>()
                 .OrderByDescending(world => world.LastWriteTime)
                 .ThenBy(world => world.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
@@ -25,9 +27,11 @@ public sealed class BedrockWorldService
         catch (UnauthorizedAccessException) { return []; }
     }
 
-    private static BedrockWorldInfo Read(string path, CancellationToken cancellationToken)
+    private static BedrockWorldInfo? Read(string path, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (!File.Exists(Path.Combine(path, "level.dat"))) return null;
+
         var directory = new DirectoryInfo(path);
         var folderName = directory.Name;
         var levelName = ReadLevelName(Path.Combine(path, "levelname.txt"));
