@@ -185,6 +185,14 @@ public partial class TitleBarComponent : Grid
         tioTabWindowBase.SelectTab(tabEntry);
     }
 
+    private void DownloadButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var tioTabWindowBase = Root.GetTopLevel() as TioTabWindowBase;
+        var tabEntry = new TabEntry(tioTabWindowBase!, new DownloadPage());
+        tioTabWindowBase.CreateTab(tabEntry);
+        tioTabWindowBase.SelectTab(tabEntry);
+    }
+
     private void GoToAbout(object? sender, RoutedEventArgs e)
     {
         var tioTabWindowBase = Root.GetTopLevel() as TioTabWindowBase;

@@ -223,7 +223,7 @@
         </Button>
         <Button
             Classes="custom-title-bar-button"
-            Click="SettingMenuItem_OnClick"
+            Click="DownloadButton_OnClick"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="下载">
             <PathIcon
