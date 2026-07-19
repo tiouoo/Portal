@@ -26,7 +26,7 @@ public partial class NewsPageViewModel : ObservableObject
 
     [ObservableProperty] public partial bool IsVisible { get; set; }
     [ObservableProperty] public partial NewsFilterOption? SelectedFilter { get; set; }
-    [ObservableProperty] public partial DateTime? SelectedStartDate { get; set; } = DateTime.Now.AddMonths(-3);
+    [ObservableProperty] public partial DateTime? SelectedStartDate { get; set; } = DateTime.Now.AddMonths(-1);
 
     // 2. 将构造函数私有化，确保只能通过 Instance 访问
     private NewsPageViewModel()
