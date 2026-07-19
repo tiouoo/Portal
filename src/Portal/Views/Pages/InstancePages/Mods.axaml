@@ -28,18 +28,21 @@
             <Button
                 Click="OpenFolder_OnClick"
                 Content="打开文件夹"
-                DockPanel.Dock="Right" />
+                DockPanel.Dock="Right"
+                VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 Name="SearchBox"
                 PlaceholderText="搜索模组"
                 TextChanged="SearchBox_OnTextChanged"
+                VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
                 Content="选择"
                 DockPanel.Dock="Right"
-                Margin="0,0,8,0">
+                Margin="0,0,8,0"
+                VerticalAlignment="Top">
                 <Button.Flyout>
                     <MenuFlyout>
                         <MenuItem
@@ -64,7 +67,8 @@
                 Content="{Binding SelectedCountText}"
                 DockPanel.Dock="Right"
                 IsVisible="{Binding HasMultipleSelection}"
-                Margin="0,0,8,0">
+                Margin="0,0,8,0"
+                VerticalAlignment="Top">
                 <Button.Flyout>
                     <MenuFlyout>
                         <MenuItem
@@ -97,6 +101,11 @@
                     MaxLines="1"
                     Text="{Binding ModCountText}"
                     TextWrapping="NoWrap" />
+                <TextBlock
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    IsVisible="{Binding IsLoadingMetadata}"
+                    Margin="0,8,0,0"
+                    Text="·元数据加载中" />
             </DockPanel>
             <TextBlock
                 DockPanel.Dock="Top"

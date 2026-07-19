@@ -18,7 +18,8 @@ internal static class CacheDatabase
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                SELECT display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched
+                SELECT display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug,
+                       friendly_name_is_wiki
                 FROM mod_cache WHERE fingerprint = $fingerprint;
                 """;
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
@@ -32,8 +33,10 @@ internal static class CacheDatabase
                 IconUrl = reader.IsDBNull(2) ? null : reader.GetString(2),
                 ProjectId = reader.IsDBNull(3) ? null : reader.GetInt32(3),
                 FileId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                FriendlyName = reader.IsDBNull(5) ? null : reader.GetString(5),
-                MetadataFetched = reader.GetInt64(6) != 0
+                FriendlyName = reader.GetInt64(8) != 0 && !reader.IsDBNull(5) ? reader.GetString(5) : null,
+                MetadataFetched = reader.GetInt64(6) != 0,
+                CurseForgeSlug = reader.IsDBNull(7) ? null : reader.GetString(7),
+                IsWikiFriendlyName = reader.GetInt64(8) != 0
             };
         }
         catch (SqliteException) { return null; }
@@ -47,12 +50,13 @@ internal static class CacheDatabase
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                INSERT INTO mod_cache (fingerprint, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched)
-                VALUES ($fingerprint, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched)
+                INSERT INTO mod_cache (fingerprint, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki)
+                VALUES ($fingerprint, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName)
                 ON CONFLICT(fingerprint) DO UPDATE SET
                     display_name = excluded.display_name, description = excluded.description, icon_url = excluded.icon_url,
                     project_id = excluded.project_id, file_id = excluded.file_id, friendly_name = excluded.friendly_name,
-                    metadata_fetched = excluded.metadata_fetched;
+                    metadata_fetched = excluded.metadata_fetched, curseforge_slug = excluded.curseforge_slug,
+                    friendly_name_is_wiki = excluded.friendly_name_is_wiki;
                 """;
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
             command.Parameters.AddWithValue("$displayName", (object?)entry.DisplayName ?? DBNull.Value);
@@ -62,6 +66,8 @@ internal static class CacheDatabase
             command.Parameters.AddWithValue("$fileId", (object?)entry.FileId ?? DBNull.Value);
             command.Parameters.AddWithValue("$friendlyName", (object?)entry.FriendlyName ?? DBNull.Value);
             command.Parameters.AddWithValue("$metadataFetched", entry.MetadataFetched == true ? 1 : 0);
+            command.Parameters.AddWithValue("$curseForgeSlug", (object?)entry.CurseForgeSlug ?? DBNull.Value);
+            command.Parameters.AddWithValue("$isWikiFriendlyName", entry.IsWikiFriendlyName ? 1 : 0);
             command.ExecuteNonQuery();
         }
         catch (SqliteException) { }
@@ -177,7 +183,8 @@ internal static class CacheDatabase
                 PRAGMA busy_timeout = 5000;
                 CREATE TABLE IF NOT EXISTS mod_cache (
                     fingerprint INTEGER PRIMARY KEY, display_name TEXT NULL, description TEXT NULL, icon_url TEXT NULL,
-                    project_id INTEGER NULL, file_id INTEGER NULL, friendly_name TEXT NULL, metadata_fetched INTEGER NOT NULL
+                    project_id INTEGER NULL, file_id INTEGER NULL, friendly_name TEXT NULL, metadata_fetched INTEGER NOT NULL,
+                    curseforge_slug TEXT NULL, friendly_name_is_wiki INTEGER NOT NULL DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS news_cache_entry (
                     edition TEXT NOT NULL, id TEXT NOT NULL, title TEXT NOT NULL, version TEXT NOT NULL, type TEXT NOT NULL,
@@ -188,8 +195,31 @@ internal static class CacheDatabase
                     ON news_cache_entry (edition, published_at DESC);
                 """;
             command.ExecuteNonQuery();
+            EnsureModCacheColumns(connection);
             MigrateLegacyNews(connection);
             _initialized = true;
+        }
+    }
+
+    private static void EnsureModCacheColumns(SqliteConnection connection)
+    {
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(mod_cache);";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            columns.Add(reader.GetString(1));
+
+        reader.Close();
+        if (!columns.Contains("curseforge_slug"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN curseforge_slug TEXT NULL;";
+            command.ExecuteNonQuery();
+        }
+        if (!columns.Contains("friendly_name_is_wiki"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN friendly_name_is_wiki INTEGER NOT NULL DEFAULT 0;";
+            command.ExecuteNonQuery();
         }
     }
 

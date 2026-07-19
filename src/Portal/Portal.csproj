@@ -23,6 +23,9 @@
         <EmbeddedResource Include="..\package-type.txt">
             <Link>package-type.txt</Link>
         </EmbeddedResource>
+        <EmbeddedResource Include="..\..\assets\WikiEntries.txt">
+            <Link>WikiEntries.txt</Link>
+        </EmbeddedResource>
         <AvaloniaResource Include="Icon-Pattern.ico" />
         <AvaloniaResource Include="Icon-Pattern.png" />
         <AvaloniaResource Include="Icon-Pattern-Shadow.png" />

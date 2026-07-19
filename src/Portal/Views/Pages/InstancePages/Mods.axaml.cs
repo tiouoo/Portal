@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -32,6 +34,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private readonly ModService _modService = new();
     private bool _hasLoaded;
     private bool _isLoading;
+    private bool _isLoadingMetadata;
     private bool _isDisposed;
     private string _filter = string.Empty;
     private readonly CancellationTokenSource _disposeCancellation = new();
@@ -51,7 +54,17 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string ModCountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string ModCountText => $"{FilteredItems.Count} 个";
+    public bool IsLoadingMetadata
+    {
+        get => _isLoadingMetadata;
+        private set
+        {
+            if (_isLoadingMetadata == value) return;
+            _isLoadingMetadata = value;
+            RaisePropertyChanged(nameof(IsLoadingMetadata));
+        }
+    }
     public int SelectedCount => Items.Count(item => item.IsSelected);
     public string SelectedCountText => $"批量操作{SelectedCount}个";
     public bool HasMultipleSelection => SelectedCount >= 1;
@@ -97,11 +110,12 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
         _hasLoaded = true;
         IsLoading = true;
+        Items.Clear();
+        ApplyFilter();
         RaiseListProperties();
         var mods = await _modService.ScanAsync(_instance, _disposeCancellation.Token);
         if (_isDisposed)
             return;
-        Items.Clear();
         foreach (var mod in mods)
             Items.Add(new ModItem(mod));
         ApplyFilter();
@@ -117,25 +131,22 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (_isDisposed)
             return;
 
+        _ = CacheFriendlyNamesQuietlyAsync(_disposeCancellation.Token);
+    }
+
+    private async Task CacheFriendlyNamesQuietlyAsync(CancellationToken cancellationToken)
+    {
         try
         {
-            await _modService.TranslateFriendlyNamesAsync(Items.Select(item => item.Info), updated =>
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            await _modService.CacheFriendlyNamesAsync(Items.Select(item => item.Info).ToArray(), WikiEntries.FindChineseName,
+                updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    if (_isDisposed)
-                        return;
-                    Items.FirstOrDefault(item => item.Info.FilePath == updated.FilePath)?.Update(updated);
+                    if (!_isDisposed)
+                        Items.FirstOrDefault(item => item.Info.FilePath == updated.FilePath)?.Update(updated);
                 }), cancellationToken);
         }
         catch (OperationCanceledException) { }
-        catch (HttpRequestException exception)
-        {
-            Logger.Error($"翻译模组名称失败: {exception.Message}");
-        }
-        catch (Exception exception)
-        {
-            Logger.Error($"翻译模组名称失败: {exception.Message}");
-        }
+        catch (Exception) { }
     }
 
     private async Task RefreshMetadataAsync(IReadOnlyList<ModInfo> mods, CancellationToken cancellationToken)
@@ -143,12 +154,16 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         try
         {
             await _modService.RefreshMetadataAsync(mods, updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                if (_isDisposed)
-                    return;
-                var item = Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath);
-                item?.Update(updated);
-            }), cancellationToken);
+                {
+                    if (_isDisposed)
+                        return;
+                    var item = Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath);
+                    item?.Update(updated);
+                }), isLoading => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (!_isDisposed)
+                        IsLoadingMetadata = isLoading;
+                }), cancellationToken);
         }
         catch (OperationCanceledException) { }
         catch (FlurlHttpException exception)
@@ -169,6 +184,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             : Items.Where(item =>
                 item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
                 item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+                item.FriendlyName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
                 item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
         foreach (var item in filtered)
@@ -237,7 +253,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (result != DialogResult.Yes)
             return;
 
-        await RunSelectedFileActionAsync(selected, item => File.Delete(item.Info.FilePath), "删除");
+        await RunSelectedFileActionAsync(selected, item => File.Delete(item.Info.FilePath), null, "删除");
     }
 
     private async void ShowModDetails_OnClick(object? sender, RoutedEventArgs e)
@@ -272,7 +288,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             TextWrapping = Avalonia.Media.TextWrapping.Wrap
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
-            await RunSelectedFileActionAsync([item], mod => File.Delete(mod.Info.FilePath), "删除");
+            await RunSelectedFileActionAsync([item], mod => File.Delete(mod.Info.FilePath), null, "删除");
     }
 
     private async void OpenModFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -300,6 +316,10 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         {
             var destination = disabled ? item.Info.FilePath + ".disabled" : item.Info.FilePath[..^".disabled".Length];
             File.Move(item.Info.FilePath, destination);
+        }, item => item.Info with
+        {
+            FilePath = disabled ? item.Info.FilePath + ".disabled" : item.Info.FilePath[..^".disabled".Length],
+            IsDisabled = disabled
         }, disabled ? "禁用" : "启用");
     }
 
@@ -307,10 +327,14 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         ? Task.CompletedTask
         : RunSelectedFileActionAsync([item], mod => File.Move(mod.Info.FilePath,
                 disabled ? mod.Info.FilePath + ".disabled" : mod.Info.FilePath[..^".disabled".Length]),
-            disabled ? "禁用" : "启用");
+            mod => mod.Info with
+            {
+                FilePath = disabled ? mod.Info.FilePath + ".disabled" : mod.Info.FilePath[..^".disabled".Length],
+                IsDisabled = disabled
+            }, disabled ? "禁用" : "启用");
 
-    private async Task RunSelectedFileActionAsync(IEnumerable<ModItem> selected, Action<ModItem> action,
-        string actionName)
+    private Task RunSelectedFileActionAsync(IEnumerable<ModItem> selected, Action<ModItem> action,
+        Func<ModItem, ModInfo>? localUpdate, string actionName)
     {
         var failed = 0;
         foreach (var item in selected)
@@ -318,6 +342,16 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             try
             {
                 action(item);
+                if (localUpdate == null)
+                {
+                    item.Dispose();
+                    Items.Remove(item);
+                }
+                else
+                {
+                    item.Update(localUpdate(item));
+                    item.IsSelected = false;
+                }
             }
             catch (IOException)
             {
@@ -329,10 +363,11 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             }
         }
 
-        _hasLoaded = false;
-        await LoadAsync();
+        ApplyFilter();
+        RaiseSelectionProperties();
         ShowNotice(failed == 0 ? $"已{actionName}所选模组" : $"{actionName}完成，但有 {failed} 个模组操作失败",
             failed == 0 ? NotificationType.Success : NotificationType.Warning);
+        return Task.CompletedTask;
     }
 
     private ModItem[] GetSelectedItems() => Items.Where(item => item.IsSelected).ToArray();
@@ -392,6 +427,55 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     }
 }
 
+internal static class WikiEntries
+{
+    private static readonly Lazy<Dictionary<string, string>> Entries = new(Load);
+
+    public static string? FindChineseName(string curseForgeSlug) =>
+        Entries.Value.GetValueOrDefault(curseForgeSlug);
+
+    private static Dictionary<string, string> Load()
+    {
+        var entries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Portal.WikiEntries.txt");
+        if (stream == null)
+            return entries;
+
+        using var reader = new StreamReader(stream);
+        while (reader.ReadLine() is { } line)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            foreach (var entry in line.Split('¨'))
+            {
+                var separator = entry.IndexOf('|');
+                if (separator <= 0 || separator == entry.Length - 1)
+                    continue;
+
+                var slugs = entry[..separator];
+                if (slugs.StartsWith('@'))
+                    continue;
+
+                var curseForgeSlug = slugs.Split('@')[0];
+                var chineseName = GetChineseName(entry[(separator + 1)..], curseForgeSlug);
+                if (!string.IsNullOrWhiteSpace(curseForgeSlug) && !string.IsNullOrWhiteSpace(chineseName))
+                    entries.TryAdd(curseForgeSlug, chineseName);
+            }
+        }
+
+        return entries;
+    }
+
+    private static string GetChineseName(string chineseName, string curseForgeSlug)
+    {
+        var englishName = string.Join(' ', curseForgeSlug.Split('-')
+            .Where(word => word.Length > 0)
+            .Select(word => char.ToUpperInvariant(word[0]) + word[1..]));
+        return Regex.Replace(chineseName.Replace("*", $" ({englishName})"), @"\s*\([^)]*\)\s*$", string.Empty).Trim();
+    }
+}
+
 public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
 {
     private bool _isSelected;
@@ -421,7 +505,8 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
     public void Update(ModInfo info)
     {
         _info = info;
-        foreach (var propertyName in new[] { nameof(DisplayName), nameof(FriendlyName), nameof(DescriptionText), nameof(IconUrl), nameof(HasIcon) })
+        foreach (var propertyName in new[] { nameof(DisplayName), nameof(FriendlyName), nameof(FileName), nameof(DescriptionText),
+                     nameof(IconUrl), nameof(HasIcon), nameof(IsDisabled), nameof(IsEnabled) })
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
