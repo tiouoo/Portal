@@ -26,7 +26,10 @@
                         CommandParameter="{x:Type downloadPages:VanillaInstallation}"
                         Header="游戏本体"
                         IsSelected="True" />
-                    <tio:NavMenuItem Header="模组" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type downloadPages:ModSearchPage}"
+                        Header="模组" />
                     <tio:NavMenuItem Header="整合包" />
                     <tio:NavMenuItem Header="材质包" />
                     <tio:NavMenuItem Header="光影包" />

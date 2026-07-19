@@ -424,7 +424,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     }
 }
 
-internal static class WikiEntries
+public static class WikiEntries
 {
     private static readonly Lazy<Dictionary<string, string>> Entries = new(Load);
 
@@ -518,7 +518,7 @@ public sealed class ModImageLoader : IAsyncImageLoader
     private static readonly HttpClient Client = new();
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> DownloadLocks = new();
 
-    public async Task<Avalonia.Media.Imaging.Bitmap?> ProvideImageAsync(string url)
+    public async Task<Bitmap?> ProvideImageAsync(string url)
     {
         try
         {
