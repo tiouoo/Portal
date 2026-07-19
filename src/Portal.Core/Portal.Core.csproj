@@ -14,7 +14,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MinecraftLaunch" />
       <PackageReference Include="Microsoft.Data.Sqlite.Core" />
       <PackageReference Include="CommunityToolkit.Mvvm" />
       <PackageReference Include="fNbt" />
@@ -32,6 +31,7 @@
       <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.2D\LiteSkinViewer.2D.csproj" />
       <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.3D\LiteSkinViewer.3D.csproj" />
       <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.Shared\LiteSkinViewer.Shared.csproj" />
+      <ProjectReference Include="..\..\module\MinecraftLaunch\src\MinecraftLaunch\MinecraftLaunch.csproj" />
       <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\module\TioUi.Avalonia\src\TioUi\TioUi.csproj" />
       <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\src\Tio.Avalonia.Standard.Tab\Tio.Avalonia.Standard.Tab.csproj" />
       <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj" />

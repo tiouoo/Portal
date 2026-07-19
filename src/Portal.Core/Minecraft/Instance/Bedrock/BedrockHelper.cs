@@ -1,4 +1,5 @@
 using System.Xml;
+using System.Text.Json;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Entity;
 using Portal.Core.Minecraft.Classes;
@@ -8,6 +9,8 @@ namespace Portal.Core.Minecraft.Instance.Bedrock;
 public class BedrockHelper
 {
     public static readonly string ConfigFolder = Path.Combine("config", "Portal");
+    private const string InstanceConfigFileName = "instance.json";
+    private const string PreloadConfigFileName = "config.json";
     private static readonly string LegacyConfigFolder = Path.Combine("config", "Portal.Desktop");
     public static (string Version,string PackName) GetInstanceVersion(string instanceFolder)
     {
@@ -43,7 +46,8 @@ public class BedrockHelper
             throw new InvalidOperationException("指定的实例文件夹不是 Bedrock 实例");
 
         MigrateLegacyConfigFolder(instanceFolder);
-        var configFile = Path.Combine(instanceFolder, ConfigFolder, "config.json");
+        MigrateInstanceConfig(instanceFolder);
+        var configFile = Path.Combine(instanceFolder, ConfigFolder, InstanceConfigFileName);
         ConfigEntity<BedrockInstanceConfig> configEntity;
 
         if (!File.Exists(configFile))
@@ -73,7 +77,8 @@ public class BedrockHelper
     {
         ArgumentNullException.ThrowIfNull(config);
         MigrateLegacyConfigFolder(config.InstancePath);
-        var configFile = Path.Combine(config.InstancePath, ConfigFolder, "config.json");
+        MigrateInstanceConfig(config.InstancePath);
+        var configFile = Path.Combine(config.InstancePath, ConfigFolder, InstanceConfigFileName);
         new ConfigEntity<BedrockInstanceConfig>(configFile) { Data = config }.Save();
     }
 
@@ -83,6 +88,27 @@ public class BedrockHelper
         var legacyConfigFolder = Path.Combine(instanceFolder, LegacyConfigFolder);
         if (!Directory.Exists(configFolder) && Directory.Exists(legacyConfigFolder))
             Directory.Move(legacyConfigFolder, configFolder);
+    }
+
+    private static void MigrateInstanceConfig(string instanceFolder)
+    {
+        var configFolder = Path.Combine(instanceFolder, ConfigFolder);
+        var instanceConfigFile = Path.Combine(configFolder, InstanceConfigFileName);
+        var preloadConfigFile = Path.Combine(configFolder, PreloadConfigFileName);
+        if (File.Exists(instanceConfigFile) || !File.Exists(preloadConfigFile))
+            return;
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(preloadConfigFile));
+            // Only move Portal instance metadata; config.json now belongs to PreloadCpp.
+            if (document.RootElement.TryGetProperty("name", out _))
+                File.Move(preloadConfigFile, instanceConfigFile);
+        }
+        catch (JsonException)
+        {
+            // Invalid legacy data is handled by ConfigEntity when a new instance config is created.
+        }
     }
 
     public static BedrockInstanceReleaseType GetVersionTypeWithPackName(string packName)

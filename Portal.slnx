@@ -15,6 +15,10 @@
     <Project Path="module/LiteSkinViewer/LiteSkinViewer.3D/LiteSkinViewer.3D.csproj" />
     <Project Path="module/LiteSkinViewer/LiteSkinViewer.Shared/LiteSkinViewer.Shared.csproj" />
   </Folder>
+  <Folder Name="/Module/MinecraftLaunch/">
+    <Project Path="module/MinecraftLaunch/src/MinecraftLaunch.Base/MinecraftLaunch.Base.csproj" />
+    <Project Path="module/MinecraftLaunch/src/MinecraftLaunch/MinecraftLaunch.csproj" />
+  </Folder>
   <Folder Name="/Solution Item/">
     <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Packages.props" />

@@ -6,3 +6,7 @@
 	path = module/LiteSkinViewer
 	url = https://github.com/tiouoo/LiteSkinViewer.git
 	branch = main
+[submodule "module/MinecraftLaunch"]
+	path = module/MinecraftLaunch
+	url = https://github.com/tiouoo/MinecraftLaunch.git
+	branch = main
