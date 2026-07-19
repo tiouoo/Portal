@@ -348,6 +348,7 @@
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
                         HorizontalAlignment="Left"
+                        IsVisible="False"
                         Margin="6,0,0,0"
                         Text="{Binding Instance.BedrockDataScope}" />
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">

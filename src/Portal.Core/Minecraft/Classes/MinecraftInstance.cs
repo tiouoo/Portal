@@ -79,10 +79,10 @@ public class MinecraftInstance : ObservableObject
 
     public string BedrockDataScope => (EnableIndependentBedrockVersion, EnableLauncherSharedBedrockData) switch
     {
-        (true, false) => "实例隔离数据",
-        (false, false) => "Portal 用户数据",
-        (true, true) => "实例目录共享数据",
-        (false, true) => "Windows 用户数据"
+        (true, false) => "Portal 实例隔离数据文件夹",
+        (false, false) => "Portal 数据文件夹",
+        (true, true) => "用户目录共享文件夹",
+        (false, true) => "实例隔离数据文件夹"
     };
 
     public string InstanceName
