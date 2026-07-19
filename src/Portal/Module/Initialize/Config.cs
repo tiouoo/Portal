@@ -22,6 +22,7 @@ public class Config
     {
         Helper.TryCreateFolder(ConfigPath.UserDataRootPath);
         Helper.TryCreateFolder(ConfigPath.TempFolderPath);
+        Helper.TryCreateFolder(ConfigPath.UpdateFolderPath);
         BedrockDataPathResolver.EnsurePortalDataDirectories();
 
         if (!File.Exists(ConfigPath.SettingDataPath))
@@ -72,7 +73,7 @@ public class Config
         var stream1 = assembly1.GetManifestResourceStream(RESOURCE_NAME1);
         using var reader1 = new StreamReader(stream1!);
         var result1 = reader1.ReadToEnd();
-        Data.Instance.PackageType = string.IsNullOrEmpty(result1) ? "source-code" : result1;
+        Data.Instance.PackageType = string.IsNullOrWhiteSpace(result1) ? "portable" : result1.Trim().ToLowerInvariant();
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);
         App.Method.SaveConfig();

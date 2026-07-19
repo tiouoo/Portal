@@ -50,8 +50,8 @@ jobs:
           APP_VERSION="${BASE_VERSION}.${TOTAL_HOURS}"
           COMMIT_HASH=$(git rev-parse --short=6 HEAD)
           BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
-          VERSION_TITLE="build-commit-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
-          JSON_STRING="{\"type\":\"commit\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\",\"timestamp\":\"${FULL_TIMESTAMP}\",\"version_title\":\"${VERSION_TITLE}\"}"
+          VERSION_TITLE="build-nightly-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
+          JSON_STRING="{\"type\":\"nightly\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\",\"timestamp\":\"${FULL_TIMESTAMP}\",\"version_title\":\"${VERSION_TITLE}\"}"
           echo "json=${JSON_STRING}" >> $GITHUB_OUTPUT
           echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
           echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
@@ -220,7 +220,7 @@ jobs:
       - name: Write CI Config
         run: |
           echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo 'dmg' > ./src/package-type.txt
+          echo 'app' > ./src/package-type.txt
 
       - name: Build macOS App
         run: |
@@ -232,7 +232,7 @@ jobs:
       - name: Package APP to ZIP
         run: |
           cd ./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/
-          zip -r ../../../../../../../Portal.osx.mac.${{ matrix.dmg_arch }}.app.zip Portal.app
+          /usr/bin/ditto -c -k --keepParent Portal.app ../../../../../../../Portal.osx.mac.${{ matrix.dmg_arch }}.app.zip
 
       - name: Build DMG
         uses: L-Super/create-dmg-actions@v1.0.3

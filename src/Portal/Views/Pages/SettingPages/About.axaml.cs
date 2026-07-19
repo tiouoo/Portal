@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Const;
 using Portal.Module.AggregatedSearch;
@@ -10,6 +11,9 @@ using Portal.Module.Update;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using TioUi.Common;
+using TioUi.Common.Extensions;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
 
@@ -69,8 +73,36 @@ public partial class About : DataUserControl
             _ = Check(sender!);
     }
 
-    private void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
+    private async void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (sender is not Control control) return;
+        UpdateHyperlinkButton.IsEnabled = false;
+        UpdateHyperlinkButton.Content = "正在准备更新";
+        var update = await UpdateApp.Prepare(control.GetTopLevel()!);
+        UpdateHyperlinkButton.Content = "下载新版本";
+        UpdateHyperlinkButton.IsEnabled = true;
+        if (update is null) return;
+
+        var result = await OverlayDialog.ShowStandardAsync(
+            new TextBlock
+            {
+                Margin = new Thickness(24),
+                Text = update.RunsInstaller
+                    ? "更新安装程序已下载并校验完成。是否立即退出 Portal 并运行安装程序？"
+                    : "更新已下载并准备完成。是否立即重启 Portal 并安装更新？",
+                TextWrapping = TextWrapping.Wrap
+            },
+            null, this.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = "更新准备完成",
+                Mode = DialogMode.Question,
+                Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = update.RunsInstaller ? "退出并安装" : "立即重启",
+                OverrideNoButtonText = "稍后",
+                CanLightDismiss = false,
+                CanResize = false
+            });
+        if (result == DialogResult.Yes) await UpdateApp.Apply(update);
     }
 }
 

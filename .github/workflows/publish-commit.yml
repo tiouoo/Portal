@@ -207,7 +207,7 @@ jobs:
       - name: Write CI Config
         run: |
           echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo 'dmg' > ./src/package-type.txt
+          echo 'app' > ./src/package-type.txt
 
       - name: Build macOS App
         run: |
@@ -219,7 +219,7 @@ jobs:
       - name: Package APP to ZIP
         run: |
           cd ./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/
-          zip -r ../../../../../../../Portal.osx.mac.${{ matrix.dmg_arch }}.app.zip Portal.app
+          /usr/bin/ditto -c -k --keepParent Portal.app ../../../../../../../Portal.osx.mac.${{ matrix.dmg_arch }}.app.zip
 
       - name: Build DMG
         uses: L-Super/create-dmg-actions@v1.0.3
