@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
+using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
@@ -95,7 +97,16 @@ internal class FolderScanner
         var instances = new List<MinecraftInstance>();
 
         MinecraftParser minecraftParser = _gameRootFolder;
-        var javaEntries = minecraftParser.GetMinecrafts().ToDictionary(e => e.Id);
+        var parsedJavaEntries = minecraftParser.GetMinecrafts();
+        var internalBaseIds = parsedJavaEntries
+            .OfType<ModifiedMinecraftEntry>()
+            .Select(entry => entry.InheritedMinecraft)
+            .Where(entry => entry is not null && HasClientVersionMetadata(entry))
+            .Select(entry => entry.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var javaEntries = parsedJavaEntries
+            .Where(entry => !internalBaseIds.Contains(entry.Id))
+            .ToDictionary(entry => entry.Id);
 
         var processedFolders = new HashSet<string>();
 
@@ -145,5 +156,25 @@ internal class FolderScanner
         }
 
         return instances;
+    }
+
+    private static bool HasClientVersionMetadata(MinecraftEntry entry)
+    {
+        try
+        {
+            using var stream = File.OpenRead(entry.ClientJsonPath);
+            using var document = JsonDocument.Parse(stream);
+            return document.RootElement.TryGetProperty("clientVersion", out var clientVersion) &&
+                   clientVersion.ValueKind == JsonValueKind.String &&
+                   !string.IsNullOrWhiteSpace(clientVersion.GetString());
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 }

@@ -6,6 +6,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MinecraftLaunch.Base.Enums;
+using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Interfaces;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
@@ -15,6 +17,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
+using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -32,26 +35,12 @@ public partial class MinecraftInstallationPage : UserControl, ITioTabPage
                 "F1 M640,640z M0,0z M217.6,544L451.3,544 566.7,339.8 268.4,397.2 217.6,544z M569,304.1L451.4,96 219.9,96 424.5,331.9 569,304.1z M188.6,112.8L71.5,320 187.5,525.2 289.9,229.6 188.6,112.8z")
         };
         DataContext = _viewModel = new MinecraftInstallationViewModel(entry);
+        Loaded += async (_, _) => await _viewModel.PreloadLoadersAsync();
     }
 
     public PageInfo PageInfo { get; init; }
 
     public TabEntry HostTab { get; set; } = null!;
-
-    private async void FabricExpander_OnExpanded(object? sender, RoutedEventArgs e) =>
-        await _viewModel.LoadAsync(LoaderKind.Fabric);
-
-    private async void ForgeExpander_OnExpanded(object? sender, RoutedEventArgs e) =>
-        await _viewModel.LoadAsync(LoaderKind.Forge);
-
-    private async void NeoForgeExpander_OnExpanded(object? sender, RoutedEventArgs e) =>
-        await _viewModel.LoadAsync(LoaderKind.NeoForge);
-
-    private async void QuiltExpander_OnExpanded(object? sender, RoutedEventArgs e) =>
-        await _viewModel.LoadAsync(LoaderKind.Quilt);
-
-    private async void OptifineExpander_OnExpanded(object? sender, RoutedEventArgs e) =>
-        await _viewModel.LoadAsync(LoaderKind.OptiFine);
 
     private void FabricOption_OnTapped(object? sender, TappedEventArgs e) =>
         _viewModel.Select((sender as Control)?.DataContext as LoaderOption);
@@ -68,7 +57,11 @@ public partial class MinecraftInstallationPage : UserControl, ITioTabPage
     private void OptifineOption_OnTapped(object? sender, TappedEventArgs e) =>
         _viewModel.Select((sender as Control)?.DataContext as LoaderOption);
 
-    private async void Install_OnClick(object? sender, RoutedEventArgs e) => await _viewModel.InstallAsync();
+    private void Install_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = _viewModel.InstallAsync();
+        HostTab.Close();
+    }
 }
 
 public partial class MinecraftInstallationViewModel : ObservableObject, INotifyDataErrorInfo
@@ -91,7 +84,6 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     [ObservableProperty] public partial MinecraftFolderEntry? SelectedMinecraftFolder { get; set; }
     [ObservableProperty] public partial JavaRuntimeEntry? SelectedJavaRuntime { get; set; }
     [ObservableProperty] public partial string CustomVersionId { get; set; } = string.Empty;
-    [ObservableProperty] public partial string StatusText { get; set; } = "选择加载器后将按需获取可用版本。";
     [ObservableProperty] public partial bool IsInstalling { get; set; }
 
     public bool HasModLoader => _selectedPrimary is not null || _selectedOptifine is not null;
@@ -121,7 +113,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     partial void OnCustomVersionIdChanged(string value) => UpdateVersionState();
     partial void OnIsInstallingChanged(bool value) => OnPropertyChanged(nameof(CanInstall));
 
-    public async Task LoadAsync(LoaderKind kind)
+    public Task PreloadLoadersAsync() => Task.WhenAll(Enum.GetValues<LoaderKind>().Select(LoadAsync));
+
+    private async Task LoadAsync(LoaderKind kind)
     {
         var target = GetOptions(kind);
         if (target.Count > 0) return;
@@ -163,45 +157,145 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     public async Task InstallAsync()
     {
         if (!CanInstall || SelectedMinecraftFolder is null) return;
-        if (RequiresJava && (SelectedJavaRuntime is null || !File.Exists(SelectedJavaRuntime.JavaPath)))
-        {
-            StatusText = "所选安装方案需要有效的 Java 运行时。";
-            return;
-        }
-
         var versionId = EffectiveVersionId();
-        if (VersionDirectoryExists(versionId) || (HasModLoader && VersionDirectoryExists($"{versionId}-base")))
-        {
-            StatusText = $"实例 ID “{versionId}”或其内部父版本目录已存在于所选文件夹，请更换名称。";
-            return;
-        }
-
+        var folder = SelectedMinecraftFolder;
         IsInstalling = true;
-        StatusText = "正在安装...";
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = $"安装 Minecraft Java {versionId}",
+            Description = "正在创建安装任务",
+            Progress = 0,
+            Actions =
+            [
+                new TaskActionDefinition
+                {
+                    Name = "取消安装",
+                    Description = "取消尚未开始的安装步骤。",
+                    IconKey = "Cancel",
+                    ExecuteAsync = (managedTask, _) =>
+                    {
+                        managedTask.RequestCancellation();
+                        return Task.CompletedTask;
+                    },
+                    CanExecute = managedTask => managedTask.CanBeCancelled,
+                    IsVisible = managedTask => !managedTask.IsTerminal
+                }
+            ]
+        }, context => RunInstallationAsync(context, folder, versionId));
+        task.Start();
         try
         {
-            var entries = new List<IInstallEntry> { _vanilla };
-            if (_selectedPrimary is not null) entries.Add(_selectedPrimary.Entry);
-            if (_selectedOptifine is not null) entries.Add(_selectedOptifine.Entry);
-            if (entries.Count == 1)
-                await VanillaInstaller.Create(SelectedMinecraftFolder.FolderPath, _vanilla, versionId).InstallAsync();
-            else
-                await CompositeInstaller.Create(entries, SelectedMinecraftFolder.FolderPath,
-                    SelectedJavaRuntime?.JavaPath, versionId).InstallAsync();
-
-            InstanceManager.Instance.RefreshAll(
-                Data.ConfigEntry.MinecraftFolders.Select(x => (x.FolderPath, x.FolderName)));
-            StatusText = $"已安装 {versionId}。";
-        }
-        catch (Exception exception)
-        {
-            StatusText = $"安装失败：{exception.Message}";
+            await task.Completion;
         }
         finally
         {
             IsInstalling = false;
             UpdateVersionState();
         }
+    }
+
+    private async Task RunInstallationAsync(TaskExecutionContext context, MinecraftFolderEntry folder, string versionId)
+    {
+        await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
+        {
+            if (RequiresJava && (SelectedJavaRuntime is null || !File.Exists(SelectedJavaRuntime.JavaPath)))
+                throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
+            if (VersionDirectoryExists(versionId) || (HasModLoader && VersionDirectoryExists($"{versionId}-base")))
+                throw new InvalidOperationException($"实例 ID “{versionId}”或其内部父版本目录已存在于所选文件夹，请更换名称。");
+            step.ReportProgress(1);
+            await Task.CompletedTask;
+        });
+
+        var entries = new List<IInstallEntry> { _vanilla };
+        if (_selectedPrimary is not null) entries.Add(_selectedPrimary.Entry);
+        if (_selectedOptifine is not null) entries.Add(_selectedOptifine.Entry);
+        var installationName = entries.Count == 1 ? "安装原版 Minecraft 文件" : "安装复合加载器版本";
+        await RunStepAsync(context, installationName, $"正在安装 {versionId} 的游戏与加载器文件", async step =>
+        {
+            step.SetDescription(entries.Count == 1
+                ? $"正在下载并安装 Minecraft {versionId}"
+                : $"正在组合安装 {string.Join(" + ", entries.Skip(1).Select(x => x.DisplayVersion))}");
+            if (entries.Count == 1)
+            {
+                var installer = VanillaInstaller.Create(folder.FolderPath, _vanilla, versionId);
+                installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
+                await installer.InstallAsync(step.CancellationToken);
+            }
+            else
+            {
+                var installer = CompositeInstaller.Create(entries, folder.FolderPath, SelectedJavaRuntime?.JavaPath, versionId);
+                installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
+                await installer.InstallAsync(step.CancellationToken);
+            }
+            step.SetDescription($"已写入 {versionId} 的安装文件");
+            step.ReportProgress(1);
+        });
+
+        await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+        {
+            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders.Select(x => (x.FolderPath, x.FolderName)));
+            step.SetDescription($"已刷新实例列表，{versionId} 已可用");
+            step.ReportProgress(1);
+            return Task.CompletedTask;
+        });
+        context.SetDescription($"已完成 Minecraft Java {versionId} 的安装");
+    }
+
+    private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
+        Func<TaskExecutionContext, Task> operation)
+    {
+        context.CancellationToken.ThrowIfCancellationRequested();
+        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 }, operation);
+        step.Start();
+        await step.Completion;
+        if (step.Exception is not null) throw new InvalidOperationException(step.Exception.Message, step.Exception);
+        context.CancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private static void ReportInstallerProgress(TaskExecutionContext context, InstallProgressChangedEventArgs progress)
+    {
+        context.ReportProgress(progress.Progress);
+        var count = progress.TotalStepTaskCount > 0
+            ? $" {progress.FinishedStepTaskCount}/{progress.TotalStepTaskCount}"
+            : string.Empty;
+        var speed = progress.IsStepSupportSpeed && progress.Speed >= 0
+            ? $"，{FormatDownloadSpeed(progress.Speed)}"
+            : string.Empty;
+        context.SetDescription($"{GetInstallStepDescription(progress.StepName)}{count}{speed}");
+    }
+
+    private static string GetInstallStepDescription(InstallStep step) => step switch
+    {
+        InstallStep.Started => "正在准备安装器",
+        InstallStep.ParseInstaller => "正在解析复合安装方案",
+        InstallStep.InstallVanilla => "正在安装原版 Minecraft",
+        InstallStep.InstallPrimaryModLoader => "正在安装主加载器",
+        InstallStep.InstallSecondaryModLoader => "正在安装附加加载器",
+        InstallStep.DownloadVersionJson => "正在下载版本元数据",
+        InstallStep.ParseMinecraft => "正在解析 Minecraft 版本信息",
+        InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
+        InstallStep.DownloadLibraries => "正在下载游戏依赖文件",
+        InstallStep.DownloadPackage => "正在下载加载器安装包",
+        InstallStep.ParsePackage => "正在解析加载器安装包",
+        InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入版本与依赖配置",
+        InstallStep.RunInstallProcessor => "正在运行加载器安装处理器",
+        InstallStep.RanToCompletion => "安装文件已完成",
+        InstallStep.Interrupted => "安装已中断",
+        _ => "正在安装游戏文件"
+    };
+
+    private static string FormatDownloadSpeed(double bytesPerSecond)
+    {
+        string[] units = ["B/s", "KiB/s", "MiB/s", "GiB/s"];
+        var value = bytesPerSecond;
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+
+        return $"{value:0.##} {units[unit]}";
     }
 
     private async Task<IReadOnlyList<LoaderOption>> FetchAsync(LoaderKind kind) => kind switch

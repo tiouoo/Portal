@@ -100,8 +100,7 @@
                 <Expander
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    Expanded="FabricExpander_OnExpanded">
+                    BorderThickness="1">
                     <Expander.Header>
                         <TextBlock Margin="5,11,0,10" Text="{Binding FabricHeader}" />
                     </Expander.Header>
@@ -136,8 +135,7 @@
                 <Expander
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    Expanded="ForgeExpander_OnExpanded">
+                    BorderThickness="1">
                     <Expander.Header>
                         <TextBlock Margin="5,11,0,10" Text="{Binding ForgeHeader}" />
                     </Expander.Header>
@@ -172,8 +170,7 @@
                 <Expander
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    Expanded="NeoForgeExpander_OnExpanded">
+                    BorderThickness="1">
                     <Expander.Header>
                         <TextBlock Margin="5,11,0,10" Text="{Binding NeoForgeHeader}" />
                     </Expander.Header>
@@ -208,8 +205,7 @@
                 <Expander
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    Expanded="QuiltExpander_OnExpanded">
+                    BorderThickness="1">
                     <Expander.Header>
                         <TextBlock Margin="5,11,0,10" Text="{Binding QuiltHeader}" />
                     </Expander.Header>
@@ -244,8 +240,7 @@
                 <Expander
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    Expanded="OptifineExpander_OnExpanded">
+                    BorderThickness="1">
                     <Expander.Header>
                         <TextBlock Margin="5,11,0,10" Text="{Binding OptiFineHeader}" />
                     </Expander.Header>

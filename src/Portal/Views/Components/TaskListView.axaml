@@ -27,10 +27,14 @@
                         VerticalAlignment="Center"
                         Width="7" />
                     <StackPanel Grid.Column="1" Spacing="1">
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock
+                            MaxLines="1"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis" />
                         <TextBlock
                             FontSize="11"
                             Foreground="{DynamicResource InnerForegroundColor}"
+                            MaxLines="1"
                             Text="{Binding Description}"
                             TextTrimming="CharacterEllipsis" />
                     </StackPanel>
@@ -38,7 +42,9 @@
                         FontSize="11"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         Grid.Column="2"
+                        MaxLines="1"
                         Text="{Binding Status, Converter={StaticResource TaskStatusText}}"
+                        TextTrimming="CharacterEllipsis"
                         VerticalAlignment="Center" />
                 </Grid>
                 <ItemsRepeater
@@ -85,10 +91,13 @@
                                         <TextBlock
                                             FontSize="15"
                                             FontWeight="SemiBold"
-                                            Text="{Binding Name}" />
+                                            MaxLines="1"
+                                            Text="{Binding Name}"
+                                            TextTrimming="CharacterEllipsis" />
                                         <TextBlock
                                             FontSize="12"
                                             Foreground="{DynamicResource InnerForegroundColor}"
+                                            MaxLines="1"
                                             Text="{Binding DisplayDescription}"
                                             TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
@@ -96,7 +105,9 @@
                                         FontSize="12"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Grid.Column="2"
+                                        MaxLines="1"
                                         Text="{Binding Status, Converter={StaticResource TaskStatusText}}"
+                                        TextTrimming="CharacterEllipsis"
                                         VerticalAlignment="Center" />
                                     <HyperlinkButton
                                         Click="RemoveTerminalTask"

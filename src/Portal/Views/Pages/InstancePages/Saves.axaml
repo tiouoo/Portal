@@ -16,13 +16,15 @@
             <Button
                 Click="OpenFolder_OnClick"
                 Content="打开文件夹"
-                DockPanel.Dock="Right" />
+                DockPanel.Dock="Right"
+                VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 Name="SearchBox"
                 PlaceholderText="搜索存档"
                 TextChanged="SearchBox_OnTextChanged"
+                VerticalAlignment="Top"
                 Width="180" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
