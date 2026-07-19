@@ -230,7 +230,7 @@ private:
     void SetDefaultValues()
     {
         m_allData.clear();
-        m_allData["config"]["isConsole"] = "false";
+        m_allData["config"]["isConsole"] = "true";
         m_allData["config"]["isVersionIsolated"] = "true";
         m_allData["config"]["isDetailedLog"] = "false";
         m_isValid = true;

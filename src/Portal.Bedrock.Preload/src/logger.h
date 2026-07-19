@@ -231,7 +231,7 @@ public:
         fileEnabled = logFile.is_open();
     }
 
-    static void Log(LogLevel level, const std::string& message, const std::string& context = "BedrockBoot") {
+    static void Log(LogLevel level, const std::string& message, const std::string& context = "Portal") {
         LogTask task{ level, message, GetTimestamp(), context };
         {
             std::lock_guard<std::mutex> lock(queueMutex);
@@ -240,19 +240,19 @@ public:
         cv.notify_one();
     }
 
-    static void Info(const std::string& msg, const std::string& context = "BedrockBoot") {
+    static void Info(const std::string& msg, const std::string& context = "Portal") {
         Log(LogLevel::INFO, msg, context);
     }
 
-    static void Warning(const std::string& msg, const std::string& context = "BedrockBoot") {
+    static void Warning(const std::string& msg, const std::string& context = "Portal") {
         Log(LogLevel::WARNING, msg, context);
     }
 
-    static void Error(const std::string& msg, const std::string& context = "BedrockBoot") {
+    static void Error(const std::string& msg, const std::string& context = "Portal") {
         Log(LogLevel::ERR, msg, context);
     }
 
-    static void Success(const std::string& msg, const std::string& context = "BedrockBoot") {
+    static void Success(const std::string& msg, const std::string& context = "Portal") {
         Log(LogLevel::SUCCESS, msg, context);
     }
 };

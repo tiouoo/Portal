@@ -15,7 +15,7 @@ BEGIN
         BLOCK "040904B0"
         BEGIN
             VALUE "CompanyName", "Round-Studio"
-            VALUE "FileDescription", "PreLoadCpp - BedrockBoot DLL Preloader"
+            VALUE "FileDescription", "PreLoadCpp - Portal DLL Preloader"
             VALUE "FileVersion", PRELOADCPP_VERSION
             VALUE "ProductVersion", PRELOADCPP_VERSION
             VALUE "OriginalFilename", "PreloadCpp.dll"

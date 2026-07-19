@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <shellapi.h>
+#include <shlobj.h>
 #include <algorithm>
 #include <iostream>
 #include <stdio.h>
@@ -12,12 +13,15 @@
 #include "ConfigManager.h"
 #include "version.h"
 #pragma comment(lib, "detours.lib")
+#pragma comment(lib, "Shell32.lib")
 fs::path g_logicalBaseDir;
 HANDLE g_localDataHandle = INVALID_HANDLE_VALUE;
 std::mutex g_handleMutex;
 bool g_hooksInstalled = false;
 ConfigManager g_configManager;
 bool isOutFileHook = g_configManager.GetBoolConfig("isDetailedLog");
+
+std::string bbFolder = "config/Portal/isolation";
 
 NtCreateFile_t OriginalNtCreateFile = nullptr;
 NtOpenFile_t OriginalNtOpenFile = nullptr;
@@ -134,8 +138,38 @@ void InitializeBaseDir()
 	GetModuleFileNameW(nullptr, modulePath, MAX_PATH);
 	fs::path exePath = modulePath;
 
-	// Isolated instance data always remains within the version folder.
-	g_logicalBaseDir = exePath.parent_path() / "config" / "Portal" / "isolation";
+	const std::string folderPolicy = g_configManager.GetStringConfig("folderPolicyString");
+
+	if (folderPolicy == "shares")
+	{
+		int versionType = g_configManager.GetInfoInt("versionType");
+		if (versionType == 0 || versionType == 2)
+		{
+			g_logicalBaseDir = exePath.parent_path() / "Minecraft Bedrock Preview";
+		}
+		else if (versionType == 1)
+		{
+			g_logicalBaseDir = exePath.parent_path() / "Minecraft Bedrock";
+		}
+	}
+
+	if (folderPolicy == "independence" || folderPolicy.empty())
+	{
+		g_logicalBaseDir = exePath.parent_path() / bbFolder;
+	}
+
+	if (folderPolicy == "portal")
+	{
+		wchar_t appDataPath[MAX_PATH];
+		if (SUCCEEDED(SHGetFolderPathW(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, appDataPath)))
+		{
+			g_logicalBaseDir = fs::path(appDataPath) / "xyz.tiouo.Portal" / "Bedrock";
+		}
+		else
+		{
+			g_logicalBaseDir = exePath.parent_path() / bbFolder;
+		}
+	}
 
 	if (!fs::exists(g_logicalBaseDir))
 	{
@@ -536,7 +570,7 @@ typedef BOOL(WINAPI* DLL_MAIN_PROC)(
 
 extern "C" __declspec(dllexport) void Load()
 {
-	Logger::Info("BedrockBoot Injecting!");
+	Logger::Info("Portal Injecting!");
 }
 
 int LoadPreloadDlls(HINSTANCE hinstDLL,
@@ -681,7 +715,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 			PrintBanner();
 			PrintVersionInfo();
 
-			Logger::Success("BedrockBoot is free software licensed under GPLv3");
+			Logger::Success("Portal is free software licensed under GPLv3");
 			Logger::Success("Submit issues and submit PR: https://github.com/Round-Studio/BedrockBoot");
 			Logger::Success("Submit issues and submit PR: https://github.com/Round-Studio/PreLoadCpp");
 		}

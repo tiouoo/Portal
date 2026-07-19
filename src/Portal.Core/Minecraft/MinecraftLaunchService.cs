@@ -374,15 +374,16 @@ public static class MinecraftLaunchService
         var process = launcher.GetProcess()
                       ?? throw new InvalidOperationException("基岩版启动器未返回进程信息。");
 
-        ObserveBedrockProcess(instance, topLevel, process, task);
+        ObserveBedrockProcess(instance, topLevel, process, task, context);
         processStarted(process);
         context.ReportProgress(1);
     }
 
     private static void ObserveBedrockProcess(MinecraftInstance instance, TopLevel? topLevel, Process process,
-        ManagedTask task)
+        ManagedTask task, TaskExecutionContext context)
     {
         instance.Config.LastPlayTime = DateTime.Now;
+        context.SetRunning("启动完成，正在监视 Minecraft 进程");
         instance.IncrementPlaySessions();
         instance.StartPlayTimer();
 
@@ -396,6 +397,7 @@ public static class MinecraftLaunchService
                     task.Complete();
             });
         };
+        process.EnableRaisingEvents = true;
 
         if (!IsProcessRunning(process))
         {

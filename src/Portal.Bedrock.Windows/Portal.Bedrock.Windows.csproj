@@ -16,7 +16,7 @@
 
     <ItemGroup>
       <EmbeddedResource Include="..\Portal.Bedrock.Preload\PreloadCpp.dll"
-                        LogicalName="Portal.Bedrock.PreloadCpp.dll" />
+                        LogicalName="PreloadCpp.dll" />
     </ItemGroup>
 
 </Project>

@@ -11,14 +11,11 @@ namespace Portal.Bedrock;
 
 internal static class BedrockDataIsolation
 {
-    private const string PreloadDllName = "PreloadCpp.dll";
-    private const string PreloadResourceName = "Portal.Bedrock.PreloadCpp.dll";
+    private const string PreloadDllName = "PreloadCpp.dll"; //PreloadCpp.dll
+    private const string PreloadResourceName = "PreloadCpp.dll";
 
     public static void Prepare(BedrockInstanceConfig config)
     {
-        if (!config.EnableIndependentInstance)
-            return;
-
         var gameExecutable = Path.Combine(config.InstancePath, "Minecraft.Windows.exe");
         if (!File.Exists(gameExecutable))
             throw new FileNotFoundException("未找到用于启用数据隔离的基岩版主程序。", gameExecutable);
@@ -36,10 +33,12 @@ internal static class BedrockDataIsolation
         var nativePath = Path.Combine(nativeFolder, PreloadDllName);
         Directory.CreateDirectory(nativeFolder);
 
-        using var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(PreloadResourceName)
-            ?? throw new InvalidOperationException("未找到内嵌的基岩版数据隔离组件。请重新安装 Portal。");
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream(PreloadResourceName)
+                           ?? throw new InvalidOperationException("未找到内嵌的基岩版数据隔离组件。请重新安装 Portal。");
+
         using var file = new FileStream(nativePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-        resource.CopyTo(file);
+        stream.CopyTo(file);
 
         return nativePath;
     }
@@ -54,8 +53,10 @@ internal static class BedrockDataIsolation
             config = new
             {
                 isConsole = false,
-                isVersionIsolated = true,
-                isDetailedLog = false
+                // Native Windows sharing must bypass the file hooks entirely.
+                isVersionIsolated = !config.EnableLauncherSharedData,
+                isDetailedLog = false,
+                folderPolicyString = GetFolderPolicy(config)
             },
             info = new
             {
@@ -65,6 +66,14 @@ internal static class BedrockDataIsolation
 
         var configPath = Path.Combine(configFolder, "config.json");
         File.WriteAllText(configPath, JsonSerializer.Serialize(preloadConfig));
+    }
+
+    private static string GetFolderPolicy(BedrockInstanceConfig config)
+    {
+        if (config.EnableIndependentInstance)
+            return config.EnableLauncherSharedData ? "shares" : "independence";
+
+        return config.EnableLauncherSharedData ? "native" : "portal";
     }
 
     private static void AddPreloadImport(string gameExecutable)

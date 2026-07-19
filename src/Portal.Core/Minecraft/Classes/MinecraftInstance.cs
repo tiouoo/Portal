@@ -70,9 +70,20 @@ public class MinecraftInstance : ObservableObject
             config.EnableIndependentInstance = value);
     }
 
-    public string BedrockDataScope => EnableIndependentBedrockVersion
-        ? "独立数据"
-        : "用户数据";
+    public bool EnableLauncherSharedBedrockData
+    {
+        get => BedrockConfig?.EnableLauncherSharedData ?? false;
+        set => UpdateBedrockDataSetting(nameof(EnableLauncherSharedBedrockData), config =>
+            config.EnableLauncherSharedData = value);
+    }
+
+    public string BedrockDataScope => (EnableIndependentBedrockVersion, EnableLauncherSharedBedrockData) switch
+    {
+        (true, false) => "实例隔离数据",
+        (false, false) => "Portal 用户数据",
+        (true, true) => "实例目录共享数据",
+        (false, true) => "Windows 用户数据"
+    };
 
     public string InstanceName
     {
