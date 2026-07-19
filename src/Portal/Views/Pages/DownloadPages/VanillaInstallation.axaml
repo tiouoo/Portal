@@ -75,7 +75,8 @@
                             BorderThickness="1"
                             CornerRadius="10"
                             Cursor="Hand"
-                            Padding="12">
+                            Padding="12"
+                            PointerPressed="VersionCard_OnPointerPressed">
                             <StackPanel Spacing="5">
                                 <DockPanel>
                                     <TextBlock

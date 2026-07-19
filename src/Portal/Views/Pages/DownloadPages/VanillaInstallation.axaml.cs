@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Const;
+using Tio.Avalonia.Standard.Tab.Extensions;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -14,6 +16,19 @@ public partial class VanillaInstallation : UserControl
         InitializeComponent();
         DataContext = new VanillaInstallationViewModel();
         Loaded += async (_, _) => await ((VanillaInstallationViewModel)DataContext).LoadVersionsAsync();
+    }
+
+    private void VersionCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(sender as Control).Properties.IsLeftButtonPressed)
+            return;
+        if (sender is not Control { DataContext: MinecraftVersionListItem item } ||
+            item.Entry is null || TopLevel.GetTopLevel(this) is not Tio.Avalonia.Standard.Tab.Interface.TioTabWindowBase window)
+            return;
+
+        var tab = new Tio.Avalonia.Standard.Tab.Entries.TabEntry(window, new MinecraftInstallationPage(item.Entry));
+        window.CreateTab(tab);
+        window.SelectTab(tab);
     }
 }
 
@@ -77,7 +92,8 @@ public partial class VanillaInstallationViewModel : ObservableObject
 
 public sealed record MinecraftVersionFilterOption(string DisplayText, string? Type);
 
-public sealed record MinecraftVersionListItem(string Name, string RawType, string Type, DateTime ReleaseTime)
+public sealed record MinecraftVersionListItem(string Name, string RawType, string Type, DateTime ReleaseTime,
+    VersionManifestEntry? Entry = null)
 {
     public const string AprilFoolsType = "april_fools";
 
@@ -103,7 +119,7 @@ public sealed record MinecraftVersionListItem(string Name, string RawType, strin
             {
                 "release" => "正式版", "snapshot" => "快照版", "old_beta" => "旧 Beta", "old_alpha" => "旧 Alpha",
                 _ => entry.Type
-            }, entry.ReleaseTime);
+            }, entry.ReleaseTime, entry);
 
     public static bool IsAprilFoolsVersion(string versionId) => AprilFoolsVersionIds.Contains(versionId);
 

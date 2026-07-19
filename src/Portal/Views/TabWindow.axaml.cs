@@ -118,7 +118,6 @@ public partial class TabWindow : TioTabWindowBase
             var nsWindow = platform.Handle;
             if (nsWindow == IntPtr.Zero) return;
             Loaded += (_, _) => { MacOsWindowHandler(nsWindow); };
-            // SizeChanged += (_, _) => { MacOsWindowHandler(nsWindow); };
             PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName != nameof(WindowState)) return;
