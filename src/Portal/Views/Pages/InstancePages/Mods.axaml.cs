@@ -268,8 +268,9 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             return;
         }
 
-        ModDetailsPage.Open(topLevel, new ModDetailsTarget(detailSource.Value, projectId, item.DisplayName,
-            item.FriendlyName, item.Info.Description ?? string.Empty, item.Info.IconUrl));
+        // Source and project ID were restored from the installed file's metadata cache.
+        // ModDetailsPage fetches the current project record from that provider.
+        ModDetailsPage.Open(topLevel, new ModDetailsTarget(detailSource.Value, projectId), item.FriendlyName);
     }
 
     private async void EnableMod_OnClick(object? sender, RoutedEventArgs e) =>

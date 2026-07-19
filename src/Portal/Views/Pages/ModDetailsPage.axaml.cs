@@ -19,18 +19,13 @@ public enum ModDetailsSource
     CurseForge
 }
 
-public sealed record ModDetailsTarget(
-    ModDetailsSource Source,
-    string ProjectId,
-    string Name,
-    string FriendlyName,
-    string Summary,
-    string? IconUrl);
+// Instance entries use only the provider identity cached for their installed file.
+// All display data is fetched from the provider project endpoint.
+public sealed record ModDetailsTarget(ModDetailsSource Source, string ProjectId);
 
 public partial class ModDetailsPage : UserControl, ITioTabPage
 {
-    public ModDetailsPage() : this(new ModDetailsTarget(ModDetailsSource.Modrinth, string.Empty, "模组", "模组",
-        string.Empty, null))
+    public ModDetailsPage() : this(new ModDetailsTarget(ModDetailsSource.Modrinth, string.Empty))
     {
     }
 
@@ -41,8 +36,9 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         DataContext = ViewModel;
         PageInfo = new PageInfo
         {
-            Title = target.FriendlyName,
-            Icon = StreamGeometry.Parse("F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58,308.6,58,289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L27.7,282.7C15.1,306.1,23.9,335.2,47.3,347.8L80.3,365.5 80.3,418.8C80.3,441.8,92.7,463.1,112.7,474.5L288.7,574.2C308.3,585.3,332.2,585.3,351.8,574.2L527.8,474.5C547.9,463.1,560.2,441.9,560.2,418.8L560.2,301.3z M320.3,291.4L170.2,208 320.3,124.6 470.4,208 320.3,291.4z M278.8,341.6L257.5,387.8 91.7,299 117.1,251.8 278.8,341.6z")
+            Title = "模组详情",
+            Icon = StreamGeometry.Parse(
+                "F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58,308.6,58,289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L27.7,282.7C15.1,306.1,23.9,335.2,47.3,347.8L80.3,365.5 80.3,418.8C80.3,441.8,92.7,463.1,112.7,474.5L288.7,574.2C308.3,585.3,332.2,585.3,351.8,574.2L527.8,474.5C547.9,463.1,560.2,441.9,560.2,418.8L560.2,301.3z M320.3,291.4L170.2,208 320.3,124.6 470.4,208 320.3,291.4z M278.8,341.6L257.5,387.8 91.7,299 117.1,251.8 278.8,341.6z")
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }
@@ -51,11 +47,13 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
 
-    public static void Open(TopLevel sender, ModDetailsTarget target)
+    public static void Open(TopLevel sender, ModDetailsTarget target, string? title = null)
     {
         if (sender is not TioTabWindowBase window || string.IsNullOrWhiteSpace(target.ProjectId))
             return;
-        var tab = new TabEntry(window, new ModDetailsPage(target));
+        var tab = title is null
+            ? new TabEntry(window, new ModDetailsPage(target))
+            : new TabEntry(window, new ModDetailsPage(target), title: title);
         window.CreateTab(tab);
         window.SelectTab(tab);
     }
@@ -72,11 +70,11 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     public ObservableCollection<string> Screenshots { get; } = [];
     public ObservableCollection<int> ScreenshotIndices { get; } = [];
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
-    [ObservableProperty] public partial string Name { get; set; } = target.Name;
-    [ObservableProperty] public partial string FriendlyName { get; set; } = target.FriendlyName;
-    [ObservableProperty] public partial string Summary { get; set; } = target.Summary;
+    [ObservableProperty] public partial string Name { get; set; } = string.Empty;
+    [ObservableProperty] public partial string FriendlyName { get; set; } = string.Empty;
+    [ObservableProperty] public partial string Summary { get; set; } = string.Empty;
     [ObservableProperty] public partial string Metadata { get; set; } = string.Empty;
-    [ObservableProperty] public partial string? IconUrl { get; set; } = target.IconUrl;
+    [ObservableProperty] public partial string? IconUrl { get; set; }
     [ObservableProperty] public partial bool IsLoading { get; set; }
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial ModMinecraftVersionFilter? SelectedVersionFilter { get; set; }
@@ -179,6 +177,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             Screenshots.Add(url);
             ScreenshotIndices.Add(ScreenshotIndices.Count);
         }
+
         OnPropertyChanged(nameof(HasScreenshots));
     }
 

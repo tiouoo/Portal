@@ -39,7 +39,7 @@ public partial class ModSearchPage : UserControl
             (sender as Control)?.DataContext is not ModSearchResultItem item || TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
-        ModDetailsPage.Open(topLevel, item.Target);
+        ModDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
         e.Handled = true;
     }
 }
@@ -91,7 +91,20 @@ public partial class ModSearchPageViewModel : ObservableObject
     partial void OnSelectedSourceChanged(ModSearchSource? value)
     {
         SelectedCategory = value?.Categories.FirstOrDefault();
+        SelectedSort = SortOptions[0];
+        GameVersion = string.Empty;
         OnPropertyChanged(nameof(Categories));
+
+        if (!_initialized)
+            return;
+
+        if (CurrentPage != 1)
+        {
+            CurrentPage = 1;
+            return;
+        }
+
+        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
     }
 
     partial void OnCurrentPageChanged(int value)
@@ -298,14 +311,14 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Name = item.Name; FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name; Summary = item.Summary;
         var timestamp = sort is SearchSort.Newest ? item.DateModified : item.Updated;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(timestamp)}·{item.DownloadCount:N0} 下载";
-        Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId, item.Name, FriendlyName, item.Summary, item.IconUrl);
+        Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId);
     }
 
     public ModSearchResultItem(CurseforgeResource item)
     {
         Name = item.Name; FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name; Summary = item.Summary;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
-        Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString(), item.Name, FriendlyName, item.Summary, item.IconUrl);
+        Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString());
     }
 
     internal ModSearchResultItem(CachedSearchItem item)

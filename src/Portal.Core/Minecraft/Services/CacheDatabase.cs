@@ -129,6 +129,42 @@ internal static class CacheDatabase
         catch (IOException) { }
     }
 
+    public static void WriteMod(uint fingerprint, string sha1, ModCacheEntry entry)
+    {
+        try
+        {
+            using var connection = OpenConnection();
+            using var transaction = connection.BeginTransaction();
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            // fingerprint and sha1 have independent unique constraints. Remove any stale rows
+            // matched by either key before creating their single canonical cache entry.
+            command.CommandText = "DELETE FROM mod_cache WHERE fingerprint = $fingerprint OR sha1 = $sha1;";
+            command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
+            command.Parameters.AddWithValue("$sha1", sha1);
+            command.ExecuteNonQuery();
+
+            command.Parameters.Clear();
+            command.CommandText = """
+                INSERT INTO mod_cache (fingerprint, sha1, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug)
+                VALUES ($fingerprint, $sha1, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug);
+                """;
+            command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
+            command.Parameters.AddWithValue("$sha1", sha1);
+            AddModParameters(command, entry);
+            command.ExecuteNonQuery();
+            transaction.Commit();
+
+            lock (ModCacheLock)
+            {
+                ModCache[fingerprint] = entry;
+                ModSha1Cache[sha1] = entry;
+            }
+        }
+        catch (SqliteException) { }
+        catch (IOException) { }
+    }
+
     public static List<NewsEntry> ReadNews(NewsEdition edition)
     {
         try

@@ -206,9 +206,10 @@ public sealed class ModService
             if (GetFriendlyNameSlug(cached) is { } slug && findFriendlyName?.Invoke(slug) is { } friendlyName)
                 cached = cached with { FriendlyName = friendlyName, IsWikiFriendlyName = true };
 
-            WriteCache(item.Sha1, cached);
             if (item.Fingerprint is { } cacheFingerprint)
-                WriteCache(cacheFingerprint, cached);
+                WriteCache(cacheFingerprint, item.Sha1, cached);
+            else
+                WriteCache(item.Sha1, cached);
             metadataUpdated(ApplyMetadata(item.Mod, cached));
         }
     }
@@ -467,6 +468,9 @@ public sealed class ModService
     private static void WriteCache(uint fingerprint, ModCacheEntry entry) => CacheDatabase.WriteMod(fingerprint, entry);
 
     private static void WriteCache(string sha1, ModCacheEntry entry) => CacheDatabase.WriteMod(sha1, entry);
+
+    private static void WriteCache(uint fingerprint, string sha1, ModCacheEntry entry) =>
+        CacheDatabase.WriteMod(fingerprint, sha1, entry);
 
     private static string GetFileName(string path)
     {
