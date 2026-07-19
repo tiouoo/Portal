@@ -38,7 +38,7 @@
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
                         IsVisible="{Binding HasResults}"
-            PageSize="40"
+                        PageSize="40"
                         TotalCount="{Binding TotalCount}" />
                 </DockPanel>
                 <DockPanel Margin="0,10,0,0">

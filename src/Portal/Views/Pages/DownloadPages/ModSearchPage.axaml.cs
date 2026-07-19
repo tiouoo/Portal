@@ -90,10 +90,10 @@ public partial class ModSearchPageViewModel : ObservableObject
 
     partial void OnSelectedSourceChanged(ModSearchSource? value)
     {
+        OnPropertyChanged(nameof(Categories));
         SelectedCategory = value?.Categories.FirstOrDefault();
         SelectedSort = SortOptions[0];
         GameVersion = string.Empty;
-        OnPropertyChanged(nameof(Categories));
 
         if (!_initialized)
             return;
