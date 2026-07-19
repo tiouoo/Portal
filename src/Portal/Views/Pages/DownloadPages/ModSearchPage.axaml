@@ -118,7 +118,9 @@
                             BorderBrush="{DynamicResource TranslucentBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="10"
-                            Padding="10">
+                            Cursor="Hand"
+                            Padding="10"
+                            PointerPressed="Result_OnPointerPressed">
                             <DockPanel>
                                 <DockPanel DockPanel.Dock="Top">
                                     <Border

@@ -1,0 +1,203 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.ModDetailsPage"
+    x:DataType="local:ModDetailsPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="12,0,12,12">
+        <StackPanel DockPanel.Dock="Top">
+            <DockPanel>
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    IsVisible="{Binding HasScreenshots}"
+                    Margin="0,0,5,0"
+                    Spacing="8"
+                    Width="260">
+                    <Border
+                        ClipToBounds="True"
+                        CornerRadius="10"
+                        Height="150">
+                        <Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex, Mode=TwoWay}">
+                            <Carousel.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <asyncImageLoader:AdvancedImage
+                                        Loader="{Binding $parent[UserControl].DataContext.ImageLoader}"
+                                        Source="{Binding}"
+                                        Stretch="UniformToFill" />
+                                </DataTemplate>
+                            </Carousel.ItemTemplate>
+                        </Carousel>
+                    </Border>
+                    <ListBox
+                        HorizontalAlignment="Center"
+                        ItemContainerTheme="{DynamicResource CarouselIndicatorDotListBoxItem}"
+                        ItemsSource="{Binding ScreenshotIndices}"
+                        SelectedIndex="{Binding SelectedScreenshotIndex, Mode=TwoWay}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                    </ListBox>
+                </StackPanel>
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
+                        <Border
+                            Background="{DynamicResource TranslucentBorderBrush}"
+                            CornerRadius="14"
+                            Height="72"
+                            Width="72">
+                            <asyncImageLoader:AdvancedImage
+                                CornerRadius="14"
+                                Loader="{Binding ImageLoader}"
+                                Source="{Binding IconUrl}" />
+                        </Border>
+                        <StackPanel Margin="12,1,12,0" Spacing="3">
+                            <TextBlock
+                                FontSize="22"
+                                FontWeight="SemiBold"
+                                Text="{Binding FriendlyName}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding Name}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding Metadata}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock
+                        DockPanel.Dock="Top"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Height="52"
+                        Margin="2,6,0,0"
+                        MaxLines="3"
+                        Text="{Binding Summary}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
+                    <StackPanel
+                        IsVisible="{Binding HasVersions}"
+                        Margin="0,6,0,0"
+                        Orientation="Horizontal"
+                        Spacing="10">
+                        <ComboBox
+                            ItemsSource="{Binding VersionFilters}"
+                            SelectedItem="{Binding SelectedVersionFilter}"
+                            Width="180">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:ModMinecraftVersionFilter">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <ComboBox
+                            ItemsSource="{Binding LoaderFilters}"
+                            SelectedItem="{Binding SelectedLoaderFilter}"
+                            Width="150">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:ModLoaderFilter">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </DockPanel>
+            </DockPanel>
+
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoading}"
+                Margin="0,12,0,0"
+                Text="正在加载模组详情与所有版本..." />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasError}"
+                Margin="0,12,0,0"
+                Text="无法加载模组详情，请检查网络" />
+            <Border IsVisible="{Binding !HasError}">
+                <Border IsVisible="{Binding !IsLoading}">
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding IsEmpty}"
+                        Margin="0,12,0,0"
+                        Text="该筛选条件下没有可用文件" />
+                </Border>
+            </Border>
+        </StackPanel>
+        <Separator
+            Background="{DynamicResource TranslucentBorderBrush}"
+            DockPanel.Dock="Top"
+            Margin="0,10,0,-2" />
+        <ScrollViewer Margin="0,14,0,0">
+            <ItemsControl ItemsSource="{Binding VersionGroups}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="10" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:ModVersionGroup">
+                        <tio:TioExpander
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            HeaderHeight="46"
+                            HeaderPadding="0">
+                            <Expander.Header>
+                                <DockPanel Margin="5,0,14,0">
+                                    <TextBlock
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding Title}"
+                                        VerticalAlignment="Center" />
+                                    <TextBlock
+                                        DockPanel.Dock="Right"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        HorizontalAlignment="Right"
+                                        Text="{Binding FileCountText}"
+                                        VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Expander.Header>
+                            <tio:TioExpander.Content>
+                                <ItemsControl ItemsSource="{Binding Files}" Margin="14,0,14,12">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="local:ModVersionFileItem">
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding DisplayName}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                                        Text="{Binding Details}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                                    Grid.Column="1"
+                                                    Text="{Binding ReleaseTypeText}"
+                                                    VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </tio:TioExpander.Content>
+                        </tio:TioExpander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

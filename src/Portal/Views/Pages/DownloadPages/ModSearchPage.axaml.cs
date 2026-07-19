@@ -11,6 +11,7 @@ using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Provider;
 using Portal.Const;
 using Portal.Views.Pages.InstancePages;
+using Portal.Views.Pages;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -29,6 +30,16 @@ public partial class ModSearchPage : UserControl
             return;
 
         viewModel.SearchCommand.Execute(null);
+        e.Handled = true;
+    }
+
+    private void Result_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(sender as Control).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed ||
+            (sender as Control)?.DataContext is not ModSearchResultItem item || TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
+
+        ModDetailsPage.Open(topLevel, item.Target);
         e.Handled = true;
     }
 }
@@ -280,23 +291,28 @@ public sealed partial class ModSearchResultItem : ObservableObject
     [ObservableProperty] public partial string Metadata { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
 
+    public ModDetailsTarget Target { get; private set; }
+
     public ModSearchResultItem(ModrinthResource item, SearchSort sort = SearchSort.Relevance)
     {
         Name = item.Name; FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name; Summary = item.Summary;
         var timestamp = sort is SearchSort.Newest ? item.DateModified : item.Updated;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(timestamp)}·{item.DownloadCount:N0} 下载";
+        Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId, item.Name, FriendlyName, item.Summary, item.IconUrl);
     }
 
     public ModSearchResultItem(CurseforgeResource item)
     {
         Name = item.Name; FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name; Summary = item.Summary;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
+        Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString(), item.Name, FriendlyName, item.Summary, item.IconUrl);
     }
 
     internal ModSearchResultItem(CachedSearchItem item)
     {
         Name = item.Name; FriendlyName = item.FriendlyName; Summary = item.Summary;
         IconUrl = item.IconUrl; Metadata = item.Metadata;
+        Target = item.Target;
     }
 
     public void Update(ModSearchResultItem item)
@@ -306,6 +322,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Summary = item.Summary;
         IconUrl = item.IconUrl;
         Metadata = item.Metadata;
+        Target = item.Target;
     }
 
     private static string FormatRelativeTime(DateTime timestamp)
@@ -339,11 +356,12 @@ internal static class ModSearchCache
     public static void Set(SearchRequest request, CachedSearchPage page) => Entries[request] = page;
 }
 
-internal sealed record CachedSearchItem(string Name, string FriendlyName, string Summary, string? IconUrl, string Metadata);
+internal sealed record CachedSearchItem(string Name, string FriendlyName, string Summary, string? IconUrl, string Metadata,
+    ModDetailsTarget Target);
 internal sealed record CachedSearchPage(IReadOnlyList<CachedSearchItem> Items, int TotalCount)
 {
     public static CachedSearchPage From(SearchPageData page) => new(page.Items
-        .Select(item => new CachedSearchItem(item.Name, item.FriendlyName, item.Summary, item.IconUrl, item.Metadata)).ToList(), page.TotalCount);
+        .Select(item => new CachedSearchItem(item.Name, item.FriendlyName, item.Summary, item.IconUrl, item.Metadata, item.Target)).ToList(), page.TotalCount);
 
     public SearchPageData ToPageData() => new(Items.Select(item => new ModSearchResultItem(item)).ToList(), TotalCount);
 }

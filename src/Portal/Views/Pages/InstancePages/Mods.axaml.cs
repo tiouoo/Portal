@@ -17,6 +17,7 @@ using AsyncImageLoader;
 using CommunityToolkit.Mvvm.Input;
 using Flurl.Http;
 using Portal.Const;
+using Portal.Views.Pages;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -253,19 +254,22 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         await RunSelectedFileActionAsync(selected, item => File.Delete(item.Info.FilePath), null, "删除");
     }
 
-    private async void ShowModDetails_OnClick(object? sender, RoutedEventArgs e)
+    private void ShowModDetails_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (GetModItem(sender) is not { } item)
+        if (GetModItem(sender) is not { Info.ProjectId: { Length: > 0 } projectId, Info.Source: { } source } item ||
+            TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
-        await OverlayDialog.ShowStandardAsync(new TextBlock
-            {
-                Margin = new Thickness(24),
-                Text =
-                    $"名称：{item.DisplayName}\n文件：{item.FileName}\n状态：{(item.IsDisabled ? "已禁用" : "已启用")}\n\n{item.DescriptionText}",
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
-            }, null, this.TryGetHostId(),
-            new OverlayDialogOptions { Title = "模组详情", Buttons = DialogButton.OK, CanResize = false });
+        var detailSource = source == "Modrinth" ? ModDetailsSource.Modrinth :
+            source == "CurseForge" ? ModDetailsSource.CurseForge : (ModDetailsSource?)null;
+        if (detailSource is null)
+        {
+            ShowNotice("尚未识别此模组的平台信息，暂时无法查看详情", NotificationType.Warning);
+            return;
+        }
+
+        ModDetailsPage.Open(topLevel, new ModDetailsTarget(detailSource.Value, projectId, item.DisplayName,
+            item.FriendlyName, item.Info.Description ?? string.Empty, item.Info.IconUrl));
     }
 
     private async void EnableMod_OnClick(object? sender, RoutedEventArgs e) =>

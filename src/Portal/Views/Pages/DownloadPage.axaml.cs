@@ -12,10 +12,19 @@ namespace Portal.Views.Pages;
 [DefaultPage("下载")]
 public partial class DownloadPage : UserControl, ITioTabPage
 {
+    public DownloadPageViewModel DownloadPageViewModel;
+
     public DownloadPage()
     {
         InitializeComponent();
-        DataContext = new DownloadPageViewModel();
+        DownloadPageViewModel = new DownloadPageViewModel();
+        DataContext = DownloadPageViewModel;
+        Loaded += (s, e) =>
+        {
+            var a = DownloadPageViewModel.CurrentPage;
+            DownloadPageViewModel.CurrentPage = null;
+            DownloadPageViewModel.CurrentPage = a;
+        };
     }
 
     public PageInfo PageInfo { get; init; } = new()
