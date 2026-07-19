@@ -60,6 +60,62 @@
             <converter:ThemeCompareConverter x:Key="ThemeCompareConverter" />
             <converter:IntCompareConverter x:Key="IntCompareConverter" />
             <converter:ManagedTaskStatusToBrushConverter x:Key="TaskStatusBrush" />
+
+            <GeometryGroup FillRule="NonZero" x:Key="download__Geometry">
+                <StreamGeometry>
+                    M853.333333,682.666667
+                    A42.666667,42.666667 0 0 1 895.701333,720.341333
+                    L896,725.333333
+                    L896,810.666667
+                    A128,128 0 0 1 775.509333,938.453333
+                    L768,938.666667
+                    L256,938.666667
+                    A128,128 0 0 1 128.213333,818.176
+                    L128,810.666667
+                    L128,725.333333
+                    A42.666667,42.666667 0 0 1 213.034667,720.341333
+                    L213.333333,725.333333
+                    L213.333333,810.666667
+                    A42.666667,42.666667 0 0 0 251.008,853.034667
+                    L256,853.333333
+                    L768,853.333333
+                    A42.666667,42.666667 0 0 0 810.368,815.658667
+                    L810.666667,810.666667
+                    L810.666667,725.333333
+                    A42.666667,42.666667 0 0 1 853.333333,682.666667
+                    Z
+                </StreamGeometry>
+
+                <StreamGeometry>
+                    M268.501333,439.168
+                    A42.666667,42.666667 0 0 1 324.821333,435.626667
+                    L328.832,439.168
+                    L512,622.293333
+                    L695.168,439.168
+                    A42.666667,42.666667 0 0 1 751.488,435.626667
+                    L755.498667,439.168
+                    A42.666667,42.666667 0 0 1 759.04,495.488
+                    L755.498667,499.498667
+                    L542.165333,712.832
+                    A42.666667,42.666667 0 0 1 485.845333,716.373333
+                    L481.834667,712.832
+                    L268.501333,499.498667
+                    A42.666667,42.666667 0 0 1 268.501333,439.168
+                    Z
+                </StreamGeometry>
+
+                <StreamGeometry>
+                    M512,128
+                    A42.666667,42.666667 0 0 1 554.368,165.674667
+                    L554.666667,170.666667
+                    L554.666667,682.666667
+                    A42.666667,42.666667 0 0 1 469.632,687.658667
+                    L469.333333,682.666667
+                    L469.333333,170.666667
+                    A42.666667,42.666667 0 0 1 512,128
+                    Z
+                </StreamGeometry>
+            </GeometryGroup>
         </StackPanel.Resources>
         <Border IsVisible="{Binding DropMsg, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}" Margin="3,0">
             <Border
@@ -164,6 +220,19 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Width="16" />
+        </Button>
+        <Button
+            Classes="custom-title-bar-button"
+            Click="SettingMenuItem_OnClick"
+            ToolTip.ShowDelay="900"
+            ToolTip.Tip="下载">
+            <PathIcon
+                Data="{StaticResource download__Geometry}"
+                Height="13"
+                HorizontalAlignment="Center"
+                Margin="0,-1,0,0"
+                VerticalAlignment="Center"
+                Width="13" />
         </Button>
         <Button
             Classes="custom-title-bar-button"
