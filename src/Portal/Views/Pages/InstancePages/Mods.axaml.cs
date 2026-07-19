@@ -166,11 +166,11 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         catch (FlurlHttpException exception)
         {
             var statusCode = exception.Call.Response?.StatusCode;
-            Logger.Error($"获取 CurseForge 模组信息失败 ({statusCode?.ToString() ?? "网络错误"}): {exception.Message}");
+            Logger.Error($"获取模组平台信息失败 ({statusCode?.ToString() ?? "网络错误"}): {exception.Message}");
         }
         catch (Exception exception)
         {
-            Logger.Error($"获取 CurseForge 模组信息失败: {exception.Message}");
+            Logger.Error($"获取模组平台信息失败: {exception.Message}");
         }
     }
 

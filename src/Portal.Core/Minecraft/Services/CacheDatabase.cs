@@ -9,6 +9,7 @@ internal static class CacheDatabase
     private static readonly object InitializationLock = new();
     private static readonly object ModCacheLock = new();
     private static readonly Dictionary<uint, ModCacheEntry?> ModCache = [];
+    private static readonly Dictionary<string, ModCacheEntry?> ModSha1Cache = new(StringComparer.OrdinalIgnoreCase);
     private static bool _initialized;
     private static string DatabasePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "xyz.tiouo.Portal", "Cache", "cache.db");
@@ -25,7 +26,7 @@ internal static class CacheDatabase
             using var command = connection.CreateCommand();
             command.CommandText = """
                 SELECT display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug,
-                       friendly_name_is_wiki
+                       friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug
                 FROM mod_cache WHERE fingerprint = $fingerprint;
                 """;
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
@@ -36,18 +37,7 @@ internal static class CacheDatabase
             }
             else
             {
-                entry = new ModCacheEntry
-                {
-                    DisplayName = reader.IsDBNull(0) ? null : reader.GetString(0),
-                    Description = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    IconUrl = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    ProjectId = reader.IsDBNull(3) ? null : reader.GetInt32(3),
-                    FileId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                    FriendlyName = reader.GetInt64(8) != 0 && !reader.IsDBNull(5) ? reader.GetString(5) : null,
-                    MetadataFetched = reader.GetInt64(6) != 0,
-                    CurseForgeSlug = reader.IsDBNull(7) ? null : reader.GetString(7),
-                    IsWikiFriendlyName = reader.GetInt64(8) != 0
-                };
+                entry = ReadModEntry(reader);
             }
         }
         catch (SqliteException) { return null; }
@@ -58,6 +48,33 @@ internal static class CacheDatabase
         return entry;
     }
 
+    public static ModCacheEntry? ReadMod(string sha1)
+    {
+        lock (ModCacheLock)
+            if (ModSha1Cache.TryGetValue(sha1, out var cached)) return cached;
+
+        ModCacheEntry? entry;
+        try
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug,
+                       friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug
+                FROM mod_cache WHERE sha1 = $sha1;
+                """;
+            command.Parameters.AddWithValue("$sha1", sha1);
+            using var reader = command.ExecuteReader();
+            entry = reader.Read() ? ReadModEntry(reader) : null;
+        }
+        catch (SqliteException) { return null; }
+        catch (IOException) { return null; }
+
+        lock (ModCacheLock)
+            ModSha1Cache[sha1] = entry;
+        return entry;
+    }
+
     public static void WriteMod(uint fingerprint, ModCacheEntry entry)
     {
         try
@@ -65,27 +82,48 @@ internal static class CacheDatabase
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                INSERT INTO mod_cache (fingerprint, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki)
-                VALUES ($fingerprint, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName)
+                INSERT INTO mod_cache (fingerprint, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug)
+                VALUES ($fingerprint, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug)
                 ON CONFLICT(fingerprint) DO UPDATE SET
                     display_name = excluded.display_name, description = excluded.description, icon_url = excluded.icon_url,
                     project_id = excluded.project_id, file_id = excluded.file_id, friendly_name = excluded.friendly_name,
                     metadata_fetched = excluded.metadata_fetched, curseforge_slug = excluded.curseforge_slug,
-                    friendly_name_is_wiki = excluded.friendly_name_is_wiki;
+                    friendly_name_is_wiki = excluded.friendly_name_is_wiki, metadata_source = excluded.metadata_source,
+                    modrinth_project_id = excluded.modrinth_project_id, modrinth_version_id = excluded.modrinth_version_id,
+                    modrinth_slug = excluded.modrinth_slug;
                 """;
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
-            command.Parameters.AddWithValue("$displayName", (object?)entry.DisplayName ?? DBNull.Value);
-            command.Parameters.AddWithValue("$description", (object?)entry.Description ?? DBNull.Value);
-            command.Parameters.AddWithValue("$iconUrl", (object?)entry.IconUrl ?? DBNull.Value);
-            command.Parameters.AddWithValue("$projectId", (object?)entry.ProjectId ?? DBNull.Value);
-            command.Parameters.AddWithValue("$fileId", (object?)entry.FileId ?? DBNull.Value);
-            command.Parameters.AddWithValue("$friendlyName", (object?)entry.FriendlyName ?? DBNull.Value);
-            command.Parameters.AddWithValue("$metadataFetched", entry.MetadataFetched == true ? 1 : 0);
-            command.Parameters.AddWithValue("$curseForgeSlug", (object?)entry.CurseForgeSlug ?? DBNull.Value);
-            command.Parameters.AddWithValue("$isWikiFriendlyName", entry.IsWikiFriendlyName ? 1 : 0);
+            AddModParameters(command, entry);
             command.ExecuteNonQuery();
             lock (ModCacheLock)
                 ModCache[fingerprint] = entry;
+        }
+        catch (SqliteException) { }
+        catch (IOException) { }
+    }
+
+    public static void WriteMod(string sha1, ModCacheEntry entry)
+    {
+        try
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                INSERT INTO mod_cache (sha1, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug)
+                VALUES ($sha1, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug)
+                ON CONFLICT(sha1) DO UPDATE SET
+                    display_name = excluded.display_name, description = excluded.description, icon_url = excluded.icon_url,
+                    project_id = excluded.project_id, file_id = excluded.file_id, friendly_name = excluded.friendly_name,
+                    metadata_fetched = excluded.metadata_fetched, curseforge_slug = excluded.curseforge_slug,
+                    friendly_name_is_wiki = excluded.friendly_name_is_wiki, metadata_source = excluded.metadata_source,
+                    modrinth_project_id = excluded.modrinth_project_id, modrinth_version_id = excluded.modrinth_version_id,
+                    modrinth_slug = excluded.modrinth_slug;
+                """;
+            command.Parameters.AddWithValue("$sha1", sha1);
+            AddModParameters(command, entry);
+            command.ExecuteNonQuery();
+            lock (ModCacheLock)
+                ModSha1Cache[sha1] = entry;
         }
         catch (SqliteException) { }
         catch (IOException) { }
@@ -201,7 +239,9 @@ internal static class CacheDatabase
                 CREATE TABLE IF NOT EXISTS mod_cache (
                     fingerprint INTEGER PRIMARY KEY, display_name TEXT NULL, description TEXT NULL, icon_url TEXT NULL,
                     project_id INTEGER NULL, file_id INTEGER NULL, friendly_name TEXT NULL, metadata_fetched INTEGER NOT NULL,
-                    curseforge_slug TEXT NULL, friendly_name_is_wiki INTEGER NOT NULL DEFAULT 0
+                    curseforge_slug TEXT NULL, friendly_name_is_wiki INTEGER NOT NULL DEFAULT 0,
+                    sha1 TEXT NULL UNIQUE, metadata_source TEXT NULL, modrinth_project_id TEXT NULL, modrinth_version_id TEXT NULL,
+                    modrinth_slug TEXT NULL
                 );
                 CREATE TABLE IF NOT EXISTS news_cache_entry (
                     edition TEXT NOT NULL, id TEXT NOT NULL, title TEXT NOT NULL, version TEXT NOT NULL, type TEXT NOT NULL,
@@ -238,6 +278,67 @@ internal static class CacheDatabase
             command.CommandText = "ALTER TABLE mod_cache ADD COLUMN friendly_name_is_wiki INTEGER NOT NULL DEFAULT 0;";
             command.ExecuteNonQuery();
         }
+        if (!columns.Contains("sha1"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN sha1 TEXT NULL;";
+            command.ExecuteNonQuery();
+            command.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_cache_sha1 ON mod_cache (sha1);";
+            command.ExecuteNonQuery();
+        }
+        if (!columns.Contains("metadata_source"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN metadata_source TEXT NULL;";
+            command.ExecuteNonQuery();
+        }
+        if (!columns.Contains("modrinth_project_id"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN modrinth_project_id TEXT NULL;";
+            command.ExecuteNonQuery();
+        }
+        if (!columns.Contains("modrinth_version_id"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN modrinth_version_id TEXT NULL;";
+            command.ExecuteNonQuery();
+        }
+        if (!columns.Contains("modrinth_slug"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN modrinth_slug TEXT NULL;";
+            command.ExecuteNonQuery();
+        }
+    }
+
+    private static ModCacheEntry ReadModEntry(SqliteDataReader reader) => new()
+    {
+        DisplayName = reader.IsDBNull(0) ? null : reader.GetString(0),
+        Description = reader.IsDBNull(1) ? null : reader.GetString(1),
+        IconUrl = reader.IsDBNull(2) ? null : reader.GetString(2),
+        ProjectId = reader.IsDBNull(3) ? null : reader.GetInt32(3),
+        FileId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
+        FriendlyName = reader.GetInt64(8) != 0 && !reader.IsDBNull(5) ? reader.GetString(5) : null,
+        MetadataFetched = reader.GetInt64(6) != 0,
+        CurseForgeSlug = reader.IsDBNull(7) ? null : reader.GetString(7),
+        IsWikiFriendlyName = reader.GetInt64(8) != 0,
+        Source = reader.IsDBNull(9) ? null : reader.GetString(9),
+        ModrinthProjectId = reader.IsDBNull(10) ? null : reader.GetString(10),
+        ModrinthVersionId = reader.IsDBNull(11) ? null : reader.GetString(11),
+        ModrinthSlug = reader.IsDBNull(12) ? null : reader.GetString(12)
+    };
+
+    private static void AddModParameters(SqliteCommand command, ModCacheEntry entry)
+    {
+        command.Parameters.AddWithValue("$displayName", (object?)entry.DisplayName ?? DBNull.Value);
+        command.Parameters.AddWithValue("$description", (object?)entry.Description ?? DBNull.Value);
+        command.Parameters.AddWithValue("$iconUrl", (object?)entry.IconUrl ?? DBNull.Value);
+        command.Parameters.AddWithValue("$projectId", (object?)entry.ProjectId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$fileId", (object?)entry.FileId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$friendlyName", (object?)entry.FriendlyName ?? DBNull.Value);
+        command.Parameters.AddWithValue("$metadataFetched", entry.MetadataFetched == true ? 1 : 0);
+        command.Parameters.AddWithValue("$curseForgeSlug", (object?)entry.CurseForgeSlug ?? DBNull.Value);
+        command.Parameters.AddWithValue("$isWikiFriendlyName", entry.IsWikiFriendlyName ? 1 : 0);
+        command.Parameters.AddWithValue("$metadataSource", (object?)entry.Source ?? DBNull.Value);
+        command.Parameters.AddWithValue("$modrinthProjectId", (object?)entry.ModrinthProjectId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$modrinthVersionId", (object?)entry.ModrinthVersionId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$modrinthSlug", (object?)entry.ModrinthSlug ?? DBNull.Value);
     }
 
     private static void MigrateLegacyNews(SqliteConnection connection)
