@@ -1,0 +1,112 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.VanillaInstallation"
+    x:DataType="downloadPages:VanillaInstallationViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <DockPanel
+            DockPanel.Dock="Top"
+            Margin="0,0,0,12"
+            VerticalAlignment="Top">
+            <StackPanel
+                HorizontalAlignment="Left"
+                Orientation="Horizontal"
+                VerticalAlignment="Bottom">
+                <TextBlock
+                    FontSize="20"
+                    FontWeight="SemiBold"
+                    Text="Java 版游戏本体" />
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="8,9,0,0"
+                    Text="{Binding StatusText}"
+                    VerticalAlignment="Top" />
+            </StackPanel>
+            <StackPanel
+                DockPanel.Dock="Right"
+                HorizontalAlignment="Right"
+                Margin="0,0,0,0"
+                Orientation="Horizontal"
+                Spacing="8"
+                VerticalAlignment="Top">
+                <ComboBox
+                    ItemsSource="{Binding FilterOptions}"
+                    SelectedItem="{Binding SelectedFilter}"
+                    VerticalAlignment="Top"
+                    Width="105">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="downloadPages:MinecraftVersionFilterOption">
+                            <TextBlock Text="{Binding DisplayText}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBox
+                    PlaceholderText="搜索版本名称"
+                    Text="{Binding SearchText}"
+                    VerticalAlignment="Top"
+                    Width="170" />
+            </StackPanel>
+        </DockPanel>
+
+        <controls:ScrollView>
+            <ItemsRepeater ItemsSource="{Binding FilteredVersions}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="10"
+                        MinItemHeight="65"
+                        MinItemWidth="270"
+                        MinRowSpacing="10"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="downloadPages:MinecraftVersionListItem">
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Cursor="Hand"
+                            Padding="12">
+                            <StackPanel Spacing="5">
+                                <DockPanel>
+                                    <TextBlock
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding Name}"
+                                        TextTrimming="CharacterEllipsis"
+                                        VerticalAlignment="Center" />
+                                    <Border
+                                        Background="{DynamicResource PopupBackgroundColor}"
+                                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        DockPanel.Dock="Right"
+                                        HorizontalAlignment="Right"
+                                        Padding="5,3,5,1"
+                                        VerticalAlignment="Top">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding Type}" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock FontSize="12" Foreground="{DynamicResource InnerForegroundColor}">
+                                    <Run Text="{Binding RelativeReleaseTime}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
+    </DockPanel>
+</UserControl>
