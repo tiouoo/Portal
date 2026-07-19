@@ -109,10 +109,6 @@ public partial class TabWindow : TioTabWindowBase
         Build();
     }
 
-    private DateTime _lastShiftDown;
-    private const int DoubleShiftInterval = 280;
-    private bool _doubleShiftLock;
-
     private void Events()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -144,7 +140,6 @@ public partial class TabWindow : TioTabWindowBase
             };
         }
 
-        KeyDown += OnWindowKeyDown_CheckDoubleShift;
         NavScrollViewer.ScrollChanged += (_, _) => { IsTabMaskVisible = NavScrollViewer.Offset.X > 0; };
         return;
 
@@ -160,34 +155,6 @@ public partial class TabWindow : TioTabWindowBase
             {
                 Logger.Error(exception);
             }
-        }
-    }
-
-    private void OnWindowKeyDown_CheckDoubleShift(object? sender, KeyEventArgs e)
-    {
-        if (e.Key is not Key.LeftShift and not Key.RightShift)
-            return;
-
-        var now = DateTime.Now;
-        if (_doubleShiftLock)
-            return;
-
-        if ((now - _lastShiftDown).TotalMilliseconds <= DoubleShiftInterval)
-        {
-            _doubleShiftLock = true;
-
-            OpenAggregatedSearchDialog();
-
-            _lastShiftDown = DateTime.MinValue;
-            Task.Run(async () =>
-            {
-                await Task.Delay(300);
-                _doubleShiftLock = false;
-            });
-        }
-        else
-        {
-            _lastShiftDown = now;
         }
     }
 
@@ -238,6 +205,11 @@ public partial class TabWindow : TioTabWindowBase
             })
         });
 #endif
+        KeyBindings.Add(new KeyBinding
+        {
+            Gesture = KeyGesture.Parse("Shift+S"),
+            Command = new RelayCommand(OpenAggregatedSearchDialog)
+        });
     }
 
     private void Button_OnClick(object? sender, RoutedEventArgs e)
