@@ -127,18 +127,15 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private async Task RefreshMetadataAndFriendlyNamesAsync(IReadOnlyList<ModInfo> mods,
         CancellationToken cancellationToken)
     {
+        _ = CacheFriendlyNamesQuietlyAsync(mods, cancellationToken);
         await RefreshMetadataAsync(mods, cancellationToken);
-        if (_isDisposed)
-            return;
-
-        _ = CacheFriendlyNamesQuietlyAsync(_disposeCancellation.Token);
     }
 
-    private async Task CacheFriendlyNamesQuietlyAsync(CancellationToken cancellationToken)
+    private async Task CacheFriendlyNamesQuietlyAsync(IEnumerable<ModInfo> mods, CancellationToken cancellationToken)
     {
         try
         {
-            await _modService.CacheFriendlyNamesAsync(Items.Select(item => item.Info).ToArray(), WikiEntries.FindChineseName,
+            await _modService.CacheFriendlyNamesAsync(mods, WikiEntries.FindChineseName,
                 updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (!_isDisposed)
@@ -153,7 +150,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     {
         try
         {
-            await _modService.RefreshMetadataAsync(mods, updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            await _modService.RefreshMetadataAsync(mods, WikiEntries.FindChineseName, updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (_isDisposed)
                         return;

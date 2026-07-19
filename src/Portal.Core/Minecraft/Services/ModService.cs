@@ -59,8 +59,8 @@ public sealed class ModService
             .ToArray();
     }
 
-    public async Task RefreshMetadataAsync(IEnumerable<ModInfo> mods, Action<ModInfo> metadataUpdated,
-        Action<bool>? loadingChanged = null, CancellationToken cancellationToken = default)
+    public async Task RefreshMetadataAsync(IEnumerable<ModInfo> mods, Func<string, string?>? findFriendlyName,
+        Action<ModInfo> metadataUpdated, Action<bool>? loadingChanged = null, CancellationToken cancellationToken = default)
     {
         if (ServiceCredentials.CurseForgeApiKey is null)
             return;
@@ -106,7 +106,7 @@ public sealed class ModService
                 await semaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    await FetchBatchAsync(batch, metadataUpdated, cancellationToken);
+                    await FetchBatchAsync(batch, findFriendlyName, metadataUpdated, cancellationToken);
                 }
                 finally
                 {
@@ -177,8 +177,8 @@ public sealed class ModService
         MetadataFetched = false
     };
 
-    private static async Task FetchBatchAsync((ModInfo Mod, uint Fingerprint)[] batch, Action<ModInfo> metadataUpdated,
-        CancellationToken cancellationToken)
+    private static async Task FetchBatchAsync((ModInfo Mod, uint Fingerprint)[] batch,
+        Func<string, string?>? findFriendlyName, Action<ModInfo> metadataUpdated, CancellationToken cancellationToken)
     {
         var entries = await FetchMetadataBatchAsync(batch.Select(item => item.Fingerprint).ToArray(), cancellationToken);
 
@@ -190,6 +190,8 @@ public sealed class ModService
                 FriendlyName = null,
                 IsWikiFriendlyName = false
             };
+            if (!string.IsNullOrWhiteSpace(cached.CurseForgeSlug) && findFriendlyName?.Invoke(cached.CurseForgeSlug) is { } friendlyName)
+                cached = cached with { FriendlyName = friendlyName, IsWikiFriendlyName = true };
 
             WriteCache(item.Fingerprint, cached);
             metadataUpdated(ApplyMetadata(item.Mod, cached));
