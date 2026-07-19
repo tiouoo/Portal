@@ -6,6 +6,7 @@
     <Project Path="src/Portal.LitematicaViewer/LitematicaViewer.csproj" />
   </Folder>
   <Folder Name="/Module/Bedrock/">
+    <Project Path="src/Portal.Bedrock.PeNet/src/PeNet/Portal.Bedrock.PeNet.csproj" />
     <Project Path="src/Portal.Bedrock.Standard/Portal.Bedrock.Standard.csproj" />
     <Project Path="src/Portal.Bedrock.Windows/Portal.Bedrock.Windows.csproj" />
   </Folder>

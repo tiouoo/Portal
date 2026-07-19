@@ -34,13 +34,6 @@
                             Foreground="{DynamicResource InnerForegroundColor}" />
                         <ToggleSwitch IsChecked="{Binding Instance.EnableIndependentBedrockVersion}" />
                     </StackPanel>
-                    <StackPanel IsVisible="{Binding Instance.EnableIndependentBedrockVersion}" Spacing="5">
-                        <Label
-                            Content="与其他启动器共享数据"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.ShareBedrockDataWithOtherLaunchers}" />
-                    </StackPanel>
                 </StackPanel>
                 <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
                     <TextBlock FontSize="18" Text="Java 版配置" />

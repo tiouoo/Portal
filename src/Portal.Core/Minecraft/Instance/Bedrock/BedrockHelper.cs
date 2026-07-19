@@ -7,7 +7,8 @@ namespace Portal.Core.Minecraft.Instance.Bedrock;
 
 public class BedrockHelper
 {
-    public static readonly string ConfigFolder = Path.Combine("config", "Portal.Desktop");
+    public static readonly string ConfigFolder = Path.Combine("config", "Portal");
+    private static readonly string LegacyConfigFolder = Path.Combine("config", "Portal.Desktop");
     public static (string Version,string PackName) GetInstanceVersion(string instanceFolder)
     {
         var manifestPath = Path.Combine(instanceFolder, "appxmanifest.xml");
@@ -40,7 +41,8 @@ public class BedrockHelper
     {
         if (InstanceManager.GetInstanceType(instanceFolder) != MinecraftInstanceType.Bedrock)
             throw new InvalidOperationException("指定的实例文件夹不是 Bedrock 实例");
-        
+
+        MigrateLegacyConfigFolder(instanceFolder);
         var configFile = Path.Combine(instanceFolder, ConfigFolder, "config.json");
         ConfigEntity<BedrockInstanceConfig> configEntity;
 
@@ -70,8 +72,17 @@ public class BedrockHelper
     public static void SaveInstanceConfig(BedrockInstanceConfig config)
     {
         ArgumentNullException.ThrowIfNull(config);
+        MigrateLegacyConfigFolder(config.InstancePath);
         var configFile = Path.Combine(config.InstancePath, ConfigFolder, "config.json");
         new ConfigEntity<BedrockInstanceConfig>(configFile) { Data = config }.Save();
+    }
+
+    private static void MigrateLegacyConfigFolder(string instanceFolder)
+    {
+        var configFolder = Path.Combine(instanceFolder, ConfigFolder);
+        var legacyConfigFolder = Path.Combine(instanceFolder, LegacyConfigFolder);
+        if (!Directory.Exists(configFolder) && Directory.Exists(legacyConfigFolder))
+            Directory.Move(legacyConfigFolder, configFolder);
     }
 
     public static BedrockInstanceReleaseType GetVersionTypeWithPackName(string packName)

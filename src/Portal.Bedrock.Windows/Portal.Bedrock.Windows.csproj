@@ -11,6 +11,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj" />
+      <ProjectReference Include="..\Portal.Bedrock.PeNet\src\PeNet\Portal.Bedrock.PeNet.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="..\Portal.Bedrock.Preload\PreloadCpp.dll"
+                        LogicalName="Portal.Bedrock.PreloadCpp.dll" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.Management.Deployment;
 using BedrockLauncher.Core;
 using BedrockLauncher.Core.CoreOption;
@@ -18,6 +20,8 @@ public class BedrockLaunch : IBedrockLaunch
 
     public override async Task Launch()
     {
+        BedrockDataIsolation.Prepare(_instanceConfig);
+
         var options = new LaunchOptions
         {
             GameFolder = _instanceConfig.InstancePath,

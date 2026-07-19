@@ -91,14 +91,10 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     strategy:
       matrix:
-        rid: [win-x64, win-x86, win-arm64]
+        rid: [win-x64]
         include:
           - rid: win-x64
             output_rid: win.x64
-          - rid: win-x86
-            output_rid: win.x86
-          - rid: win-arm64
-            output_rid: win.arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -142,14 +138,10 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     strategy:
       matrix:
-        rid: [win-x64, win-x86, win-arm64]
+        rid: [win-x64]
         include:
           - rid: win-x64
             output_rid: win.x64
-          - rid: win-x86
-            output_rid: win.x86
-          - rid: win-arm64
-            output_rid: win.arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

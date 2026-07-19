@@ -10,15 +10,13 @@ public static class BedrockDataPathResolver
         ArgumentNullException.ThrowIfNull(config);
 
         if (config.EnableIndependentInstance)
-            return config.ShareDataWithOtherLaunchers
-                ? Path.Combine(config.InstancePath, "Minecraft Bedrock")
-                : GetPortalIsolationRoot(config.InstancePath);
+            return GetPortalIsolationRoot(config.InstancePath);
 
         return GetPortalDataRoot();
     }
 
     private static string GetPortalIsolationRoot(string instancePath) =>
-        Path.Combine(instancePath, "config", "Portal.Desktop", "isolation");
+        Path.Combine(instancePath, "config", "Portal", "isolation");
 
     public static string GetMojangDataRoot(BedrockInstanceConfig config, string userId = "Shared")
     {

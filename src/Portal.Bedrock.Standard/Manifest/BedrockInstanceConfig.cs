@@ -10,6 +10,5 @@ public class BedrockInstanceConfig
     [JsonPropertyName("buildType")] public BedrockBuildType BuildType { get; set; }
     [JsonPropertyName("type")] public BedrockInstanceReleaseType Type { get; set; }
     [JsonPropertyName("enableIndependentInstance")] public bool EnableIndependentInstance { get; set; } = false;
-    [JsonPropertyName("shareDataWithOtherLaunchers")] public bool ShareDataWithOtherLaunchers { get; set; } = true;
     [JsonIgnore] public string InstancePath { get; set; }
 }

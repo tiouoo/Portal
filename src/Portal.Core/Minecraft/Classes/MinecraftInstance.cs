@@ -70,22 +70,9 @@ public class MinecraftInstance : ObservableObject
             config.EnableIndependentInstance = value);
     }
 
-    public bool ShareBedrockDataWithOtherLaunchers
-    {
-        get => BedrockConfig?.ShareDataWithOtherLaunchers ?? false;
-        set => UpdateBedrockDataSetting(nameof(ShareBedrockDataWithOtherLaunchers), config =>
-            config.ShareDataWithOtherLaunchers = value);
-    }
-
-    public bool UsesSharedBedrockData => Type == MinecraftInstanceType.Bedrock &&
-                                         BedrockConfig?.EnableIndependentInstance == true &&
-                                         BedrockConfig.ShareDataWithOtherLaunchers;
-
     public string BedrockDataScope => EnableIndependentBedrockVersion
-        ? (UsesSharedBedrockData
-            ? "独立数据(启动器间共享)"
-            : "独立数据")
-        : "共享数据";
+        ? "独立数据"
+        : "用户数据";
 
     public string InstanceName
     {
@@ -303,7 +290,6 @@ public class MinecraftInstance : ObservableObject
         BedrockHelper.SaveInstanceConfig(BedrockConfig);
         StorageUsage.Refresh();
         OnPropertyChanged(propertyName);
-        OnPropertyChanged(nameof(UsesSharedBedrockData));
         OnPropertyChanged(nameof(BedrockDataScope));
         OnPropertyChanged(nameof(StorageUsage));
     }

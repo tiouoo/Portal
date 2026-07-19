@@ -67,8 +67,7 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged
 
     private void Instance_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(MinecraftInstance.EnableIndependentBedrockVersion) or
-            nameof(MinecraftInstance.ShareBedrockDataWithOtherLaunchers))
+        if (e.PropertyName == nameof(MinecraftInstance.EnableIndependentBedrockVersion))
         {
             _hasLoaded = false;
             _ = LoadAsync();
