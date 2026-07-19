@@ -124,6 +124,11 @@ public partial class TabWindow : TioTabWindowBase
                 MacOsWindowHandler(nsWindow);
             };
             SizeChanged += (_, _) => { MacOsWindowHandler(nsWindow); };
+            Data.ConfigEntry.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName != nameof(Data.ConfigEntry.Theme)) return;
+                MacOsWindowHandler(nsWindow);
+            };
             TitleBarThings.SizeChanged += (_, _) =>
             {
                 NavScrollViewer.Margin =
