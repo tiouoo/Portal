@@ -26,7 +26,6 @@
     <ItemGroup>
       <Folder Include="Assets\" />
       <Folder Include="Minecraft\Instance\Java\" />
-      <Folder Include="Minecraft\Instance\Manifest\Bedrock\" />
     </ItemGroup>
 
     <ItemGroup>
