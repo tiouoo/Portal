@@ -77,9 +77,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
     private void RefreshInstance_Click(object? sender, RoutedEventArgs e)
     {
-        InstanceManager.Instance.RefreshAll(
-            Data.ConfigEntry.MinecraftFolders.Select(f => (f.FolderPath, f.FolderName))
-        );
+        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
         InstancesPageViewModel.ApplyFilterAndSort();
     }
 }

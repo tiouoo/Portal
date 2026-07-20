@@ -81,9 +81,7 @@ public class Config
         Data.UiProperty.ConfigLoaded = true;
         ConfigIdentifyExtension.MinecraftFolder(Data.ConfigEntry);
 
-        InstanceManager.Instance.RefreshAll(
-            Data.ConfigEntry.MinecraftFolders.Select(f => (f.FolderPath, f.FolderName))
-        );
+        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
 
         InitializationEvents.RaiseBeforeUiLoaded();
     }

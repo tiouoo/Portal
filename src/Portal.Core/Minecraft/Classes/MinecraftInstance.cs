@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Reflection;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using Avalonia.Media.Imaging;
 using MinecraftLaunch.Base.Enums;
 using Portal.Bedrock.Standard.Manifest;
@@ -25,6 +27,10 @@ public class MinecraftInstance : ObservableObject
     public string FolderPath { get; init; }
 
     public string InstanceFolderPath { get; init; }
+    public MinecraftInstanceLayout? Layout { get; init; }
+    public string? ExternalDisplayName { get; init; }
+    public string FolderTypeDescription => Layout?.KindDisplayName ?? "传统 .minecraft";
+    public bool IsExternallyManaged => Layout != null;
 
     public DateTime LastPlayTime => Config?.LastPlayTime ?? DateTime.MinValue;
 
@@ -55,7 +61,7 @@ public class MinecraftInstance : ObservableObject
         get
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                return Path.GetDirectoryName(MinecraftEntry.ClientJarPath);
+                return Layout?.InstanceRoot ?? Path.GetDirectoryName(MinecraftEntry.ClientJarPath);
             return InstanceFolderPath;
         }
     }
@@ -91,7 +97,7 @@ public class MinecraftInstance : ObservableObject
         {
             string id;
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                id = MinecraftEntry.Id;
+                id = ExternalDisplayName ?? MinecraftEntry.Id;
             else if (Type == MinecraftInstanceType.Bedrock && BedrockConfig != null)
                 id = BedrockConfig.Name;
             else
@@ -224,12 +230,19 @@ public class MinecraftInstance : ObservableObject
     }
 
     public MinecraftInstance(MinecraftEntry e)
+        : this(e, null)
+    {
+    }
+
+    public MinecraftInstance(MinecraftEntry e, MinecraftInstanceLayout? layout)
     {
         Type = MinecraftInstanceType.Java;
         MinecraftEntry = e;
+        Layout = layout;
+        InstanceFolderPath = layout?.InstanceRoot ?? e.VersionDirectoryPath ??
+                             Path.Combine(e.MinecraftFolderPath, "versions", e.Id);
         Config = GetInstanceConfig();
         ObserveConfigChanges();
-        InstanceFolderPath = Path.Combine(e.MinecraftFolderPath, "versions", e.Id);
     }
 
     public string Description
@@ -307,7 +320,7 @@ public class MinecraftInstance : ObservableObject
 
     private MinecraftInstanceConfig GetInstanceConfig()
     {
-        var configPath = Path.Combine(MinecraftPath, "Portal.config.json");
+        var configPath = GetConfigPath();
         if (File.Exists(configPath))
         {
             var loadedConfig = Type == MinecraftInstanceType.Java
@@ -320,6 +333,7 @@ public class MinecraftInstance : ObservableObject
         MinecraftInstanceConfig config = Type == MinecraftInstanceType.Java
             ? new JavaInstanceConfig()
             : new MinecraftInstanceConfig();
+        Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
         File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
         return config;
     }
@@ -329,9 +343,21 @@ public class MinecraftInstance : ObservableObject
         lock (_timerLock)
         {
             FormatPlayTimeData();
-            var configPath = Path.Combine(MinecraftPath, "Portal.config.json");
+            var configPath = GetConfigPath();
+            Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             File.WriteAllText(configPath, JsonConvert.SerializeObject(Config, Formatting.Indented));
         }
+    }
+
+    private string GetConfigPath()
+    {
+        if (Layout == null)
+            return Path.Combine(MinecraftPath, "Portal.config.json");
+
+        var identity = $"{Layout.Kind}|{Path.GetFullPath(Layout.InstanceRoot)}";
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "xyz.tiouo.Portal", "Instances", $"{hash}.json");
     }
 
     /// <summary>
@@ -532,8 +558,11 @@ public class MinecraftInstance : ObservableObject
     {
         if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
         {
-            var instancePath = Path.Combine(MinecraftEntry.MinecraftFolderPath, "versions", MinecraftEntry.Id);
-            var basePath = JavaConfig?.EnableIndependentInstance == true ? instancePath : MinecraftEntry.MinecraftFolderPath;
+            var instancePath = Layout?.InstanceRoot ?? MinecraftEntry.VersionDirectoryPath ??
+                               Path.Combine(MinecraftEntry.MinecraftFolderPath, "versions", MinecraftEntry.Id);
+            var basePath = Layout?.GameDirectory ?? (JavaConfig?.EnableIndependentInstance == true
+                ? instancePath
+                : MinecraftEntry.MinecraftFolderPath);
             var path = folder switch
             {
                 MinecraftSpecialFolder.InstanceFolder => instancePath,
@@ -568,7 +597,8 @@ public class MinecraftInstance : ObservableObject
 
     public void SetIcon(Bitmap icon)
     {
-        var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
+        var instanceFolder = GetIconOverrideFolder();
+        Directory.CreateDirectory(instanceFolder);
         using (var stream = File.Create(Path.Combine(instanceFolder, "Icon.png")))
         {
             icon.Save(stream, PngBitmapEncoderOptions.Default);
@@ -579,12 +609,11 @@ public class MinecraftInstance : ObservableObject
 
     public void ResetIcon()
     {
-        var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
+        var instanceFolder = GetIconOverrideFolder();
         foreach (var iconPath in new[]
                  {
                      Path.Combine(instanceFolder, "Icon.png"),
-                     Path.Combine(instanceFolder, "icon.png"),
-                     Path.Combine(instanceFolder, "PCL", "Logo.png")
+                      Path.Combine(instanceFolder, "icon.png")
                  }.Distinct(StringComparer.Ordinal))
         {
             if (File.Exists(iconPath))
@@ -609,9 +638,12 @@ public class MinecraftInstance : ObservableObject
     private Bitmap GetSourceIcon()
     {
         var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
-        var customIcon = GetCustomIconPath(instanceFolder);
+        var customIcon = GetCustomIconPath(GetIconOverrideFolder()) ?? GetCustomIconPath(instanceFolder);
         if (customIcon != null)
             return new Bitmap(customIcon);
+
+        if (Layout?.NativeIconPath is { } nativeIcon && File.Exists(nativeIcon))
+            return new Bitmap(nativeIcon);
 
         if (Type == MinecraftInstanceType.Bedrock)
             return LoadBitmapFromAssembly("01_grass_block_side.png");
@@ -629,10 +661,16 @@ public class MinecraftInstance : ObservableObject
     private Bitmap GetInstanceIcon(int width)
     {
         var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
-        var customIcon = GetCustomIconPath(instanceFolder);
+        var customIcon = GetCustomIconPath(GetIconOverrideFolder()) ?? GetCustomIconPath(instanceFolder);
         if (customIcon != null)
         {
             using var s = File.OpenRead(customIcon);
+            return Bitmap.DecodeToWidth(s, width);
+        }
+
+        if (Layout?.NativeIconPath is { } nativeIcon && File.Exists(nativeIcon))
+        {
+            using var s = File.OpenRead(nativeIcon);
             return Bitmap.DecodeToWidth(s, width);
         }
 
@@ -660,6 +698,13 @@ public class MinecraftInstance : ObservableObject
 
         var legacyIconPath = Path.Combine(instanceFolder, "icon.png");
         return File.Exists(legacyIconPath) ? legacyIconPath : null;
+    }
+
+    private string GetIconOverrideFolder()
+    {
+        if (Layout == null)
+            return GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
+        return Path.Combine(Path.GetDirectoryName(GetConfigPath())!, Path.GetFileNameWithoutExtension(GetConfigPath()));
     }
 
     private static Bitmap LoadBitmapFromAssembly(string fileName, int width)

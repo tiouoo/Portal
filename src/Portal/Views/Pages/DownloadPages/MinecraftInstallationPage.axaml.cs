@@ -86,7 +86,8 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     public MinecraftInstallationViewModel(VersionManifestEntry vanilla)
     {
         _vanilla = vanilla;
-        foreach (var folder in Data.ConfigEntry.MinecraftFolders) MinecraftFolders.Add(folder);
+        foreach (var folder in Data.ConfigEntry.MinecraftFolders.Where(x => x.SupportsTraditionalInstallation))
+            MinecraftFolders.Add(folder);
         foreach (var java in Data.ConfigEntry.JavaRuntimes) JavaRuntimes.Add(java);
         SelectedMinecraftFolder = Data.ConfigEntry.DefaultMinecraftFolder ?? MinecraftFolders.FirstOrDefault();
         SelectedJavaRuntime = Data.ConfigEntry.DefaultJavaRuntime ?? JavaRuntimes.FirstOrDefault();
@@ -289,7 +290,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
 
         await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
         {
-            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders.Select(x => (x.FolderPath, x.FolderName)));
+            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
             step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
             step.ReportProgress(1);
             return Task.CompletedTask;

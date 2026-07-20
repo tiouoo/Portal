@@ -8,29 +8,36 @@ public class ConfigIdentifyExtension
 {
     public static void MinecraftFolder(ConfigEntry entry)
     {
-        if (entry.MinecraftFolders.Count == 0)
+        var traditionalFolders = entry.MinecraftFolders.Where(IsTraditionalFolder).ToList();
+        if (traditionalFolders.Count == 0)
         {
-            Helper.TryCreateFolder(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "portal.minecraft"));
-            entry.MinecraftFolders.Add(new MinecraftFolderEntry
-            {
-                FolderName = "Portal 默认文件夹",
-                FolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "portal.minecraft")
-            });
-            entry.DefaultMinecraftFolder = entry.MinecraftFolders[0];
-            return;
+            var defaultFolder = CreateDefaultMinecraftFolder();
+            entry.MinecraftFolders.Insert(0, defaultFolder);
+            traditionalFolders.Add(defaultFolder);
         }
 
-        if (entry.DefaultMinecraftFolder == null)
+        if (entry.DefaultMinecraftFolder == null ||
+            !entry.MinecraftFolders.Contains(entry.DefaultMinecraftFolder) ||
+            !IsTraditionalFolder(entry.DefaultMinecraftFolder))
         {
-            entry.DefaultMinecraftFolder = entry.MinecraftFolders[0];
-            return;
+            entry.DefaultMinecraftFolder = traditionalFolders[0];
         }
+    }
 
-        if (!entry.MinecraftFolders.Contains(entry.DefaultMinecraftFolder))
+    private static bool IsTraditionalFolder(MinecraftFolderEntry folder)
+    {
+        return folder.DetectedLayout.Kind == MinecraftFolderKind.Standard;
+    }
+
+    private static MinecraftFolderEntry CreateDefaultMinecraftFolder()
+    {
+        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "portal.minecraft");
+        Helper.TryCreateFolder(path);
+        return new MinecraftFolderEntry
         {
-            entry.DefaultMinecraftFolder = entry.MinecraftFolders[0];
-        }
+            FolderName = "Portal 默认文件夹",
+            FolderPath = path,
+            FolderKind = MinecraftFolderKind.Standard
+        };
     }
 }

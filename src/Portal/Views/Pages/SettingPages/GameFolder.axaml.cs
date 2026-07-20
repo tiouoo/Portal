@@ -1,5 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.OpenFile;
@@ -8,6 +10,7 @@ using Portal.ViewModels;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.SettingPages;
 
@@ -40,16 +43,22 @@ public partial class GameFolder : DataUserControl
                     => x.FolderPath).ToList()), hostId: (sender as Control)!.TryGetHostId(), options: options);
 
         if (result == null) return;
-        Data.ConfigEntry.MinecraftFolders.Add(new MinecraftFolderEntry
-        {
-            FolderName = result.FolderName,
-            FolderPath = result.FolderPath
-        });
+        Data.ConfigEntry.MinecraftFolders.Add(result);
     }
 
     private void Button1_OnClick(object? sender, RoutedEventArgs e)
     {
         var folder = (sender as Control).Tag as MinecraftFolderEntry;
-        Data.ConfigEntry.MinecraftFolders.Remove(folder!);
+        if (folder == null)
+            return;
+        var restoresDefaultFolder = folder.DetectedLayout.Kind == MinecraftFolderKind.Standard &&
+                                    Data.ConfigEntry.TraditionalMinecraftFolders.Count() == 1;
+        Data.ConfigEntry.MinecraftFolders.Remove(folder);
+        if (restoresDefaultFolder)
+        {
+            Dispatcher.UIThread.Post(() => NotificationGateway.Notice(this.GetTopLevel(),
+                "至少保留一个 .minecraft 传统文件夹",
+                NotificationType.Warning));
+        }
     }
 }

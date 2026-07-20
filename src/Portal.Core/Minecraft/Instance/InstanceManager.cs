@@ -4,6 +4,7 @@ using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Core.Minecraft.Instance.Java;
 
 namespace Portal.Core.Minecraft.Instance;
 
@@ -49,16 +50,19 @@ public class InstanceManager
         InstanceIconChanged?.Invoke(this, instance);
     }
 
-    public void RefreshAll(IEnumerable<(string FolderPath, string FolderName)> folders)
+    public void RefreshAll(IEnumerable<MinecraftFolderEntry> folders)
     {
         Instances.Clear();
 
-        foreach (var (folderPath, folderName) in folders)
+        foreach (var folder in folders)
         {
+            var folderPath = folder.FolderPath;
             if (!Directory.Exists(folderPath)) continue;
 
-            var scanner = new FolderScanner(folderPath, folderName, VersionFolders);
-            var instances = scanner.Scan();
+            var layout = folder.DetectedLayout;
+            var instances = layout.Kind == MinecraftFolderKind.Standard
+                ? new FolderScanner(layout.RootPath, folder.FolderName, VersionFolders).Scan()
+                : ExternalMinecraftScanner.Scan(folder).ToList();
             foreach (var instance in instances)
             {
                 Instances.Add(instance);

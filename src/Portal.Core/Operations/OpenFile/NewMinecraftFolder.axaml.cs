@@ -19,6 +19,22 @@ public partial class NewMinecraftFolder : UserControl
     {
         InitializeComponent();
     }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (DataContext is not NewMinecraftFolderViewModel viewModel ||
+            ImportLauncherDropDown.Flyout is not MenuFlyout menu)
+            return;
+
+        menu.Items.Clear();
+        foreach (var launcher in viewModel.DetectedLaunchers)
+        {
+            var item = new MenuItem { Header = launcher.Name, Tag = launcher };
+            item.Click += (_, _) => viewModel.Import(launcher);
+            menu.Items.Add(item);
+        }
+    }
 }
 
 public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogContext
@@ -30,6 +46,10 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     [ObservableProperty] public partial bool Warning { get; set; }
     [ObservableProperty] public partial bool NoExist { get; set; }
     [ObservableProperty] public partial bool Contain { get; set; }
+    [ObservableProperty] public partial string FolderTypeDescription { get; set; } = "请选择 Minecraft 文件夹";
+    [ObservableProperty] public partial bool IsFolderRecognized { get; set; }
+    public IReadOnlyList<DetectedLauncherFolder> DetectedLaunchers { get; }
+    public bool HasImports => DetectedLaunchers.Count > 0;
 
     public ICommand NextCommand { get; }
     public ICommand CancelCommand { get; }
@@ -39,6 +59,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     public NewMinecraftFolderViewModel(List<string> paths)
     {
         _paths = paths;
+        DetectedLaunchers = FindInstalledLaunchers(paths);
         NextCommand = new RelayCommand(Next, CanNext);
         CancelCommand = new RelayCommand(Cancel);
     }
@@ -50,19 +71,23 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
             Warning = false;
             NoExist = true;
             Contain = false;
+            FolderTypeDescription = "请选择一个存在的 Minecraft 文件夹";
+            IsFolderRecognized = false;
             return;
         }
 
         var folderPath = value.Trim();
-        FolderName = Directory.GetParent(folderPath)?.Name;
+        var layout = MinecraftFolderLayout.Detect(folderPath);
+        FolderName = new DirectoryInfo(layout.SelectedPath).Name;
+        FolderTypeDescription = layout.DisplayName;
+        IsFolderRecognized = layout.Kind != MinecraftFolderKind.Unknown;
         Contain = _paths.Contains(folderPath);
 
         NoExist = false;
 
         try
         {
-            var subDirPath = Path.Combine(folderPath, ".minecraft");
-            Warning = Directory.Exists(subDirPath);
+            Warning = false;
         }
         catch (Exception)
         {
@@ -89,8 +114,38 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         RequestClose?.Invoke(this, new MinecraftFolderEntry()
         {
             FolderName = FolderName.Trim(),
-            FolderPath = FolderPath.Trim()
+            FolderPath = FolderPath.Trim(),
+            FolderKind = MinecraftFolderLayout.Detect(FolderPath.Trim()).Kind
         });
+    }
+
+    public void Import(DetectedLauncherFolder launcher)
+    {
+        var layout = MinecraftFolderLayout.Detect(launcher.Path);
+        RequestClose?.Invoke(this, new MinecraftFolderEntry
+        {
+            FolderName = launcher.Name,
+            FolderPath = layout.SelectedPath,
+            FolderKind = layout.Kind
+        });
+    }
+
+    private static IReadOnlyList<DetectedLauncherFolder> FindInstalledLaunchers(IEnumerable<string> configuredPaths)
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var existing = configuredPaths.Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(Path.GetFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return new[]
+        {
+            new DetectedLauncherFolder("Modrinth App", Path.Combine(appData, "ModrinthApp")),
+            new DetectedLauncherFolder("CurseForge App", Path.Combine(userProfile, "curseforge", "minecraft")),
+            new DetectedLauncherFolder("BakaXL", Path.Combine(appData, ".BakaXL", "minecraft"))
+        }
+        .Where(launcher => Directory.Exists(launcher.Path))
+        .Where(launcher => MinecraftFolderLayout.Detect(launcher.Path).Kind != MinecraftFolderKind.Unknown)
+        .Where(launcher => !existing.Contains(Path.GetFullPath(launcher.Path)))
+        .ToArray();
     }
 
     private void Cancel()
@@ -105,3 +160,5 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
     public event EventHandler<object?>? RequestClose;
 }
+
+public sealed record DetectedLauncherFolder(string Name, string Path);

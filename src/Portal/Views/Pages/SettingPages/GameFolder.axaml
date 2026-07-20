@@ -21,7 +21,7 @@
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
-                ItemsSource="{Binding Data.ConfigEntry.MinecraftFolders}"
+                ItemsSource="{Binding Data.ConfigEntry.TraditionalMinecraftFolders}"
                 SelectedItem="{Binding Data.ConfigEntry.DefaultMinecraftFolder}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="classes:MinecraftFolderEntry">
@@ -77,7 +77,15 @@
                                         VerticalAlignment="Center"
                                         Width="24" />
                                     <StackPanel Margin="10,8,0,8" Spacing="2">
-                                        <TextBlock Text="{Binding FolderName}" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding FolderName}" />
+                                            <TextBlock Text="·" VerticalAlignment="Center" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding FolderTypeDescription}"
+                                                VerticalAlignment="Center" />
+                                        </StackPanel>
                                         <Label
                                             Content="{Binding FolderPath}"
                                             FontSize="13"

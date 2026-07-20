@@ -127,11 +127,16 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged
         if (result != DialogResult.Yes)
             return;
 
+        if (Instance.IsExternallyManaged)
+        {
+            NotificationGateway.Notice(topLevel, "外部启动器实例请在对应启动器中删除。", NotificationType.Warning);
+            return;
+        }
+
         try
         {
             Directory.Delete(Instance.InstanceFolderPath, true);
-            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders
-                .Select(folder => (folder.FolderPath, folder.FolderName)));
+            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
             NotificationGateway.Notice(topLevel, "实例已删除", NotificationType.Success);
             _parent.HostTab.Close();
         }

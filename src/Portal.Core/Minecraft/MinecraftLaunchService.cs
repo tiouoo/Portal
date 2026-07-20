@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
+using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Extensions;
 using MinecraftLaunch.Launch;
 using Portal.Bedrock.Standard.Interface;
@@ -196,6 +197,12 @@ public static class MinecraftLaunchService
         LaunchConfig config, RecentPlayTarget? target, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
         Action<Process> processStarted)
     {
+        if (instance.Layout != null)
+        {
+            context.SetRunning("正在检查外部实例依赖");
+            var downloader = new MinecraftResourceDownloader(instance.MinecraftEntry!);
+            await downloader.VerifyAndDownloadDependenciesAsync(cancellationToken: context.CancellationToken);
+        }
         context.SetRunning("正在启动 Minecraft 进程");
         var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
         var mcProcess = await new MinecraftRunner(config, parser)

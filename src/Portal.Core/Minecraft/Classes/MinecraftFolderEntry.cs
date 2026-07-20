@@ -11,6 +11,21 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
 {
     [ObservableProperty] public partial string FolderName { get; set; }
     [ObservableProperty] public partial string FolderPath { get; set; }
+    [ObservableProperty] public partial MinecraftFolderKind FolderKind { get; set; } = MinecraftFolderKind.Auto;
+
+    public MinecraftFolderLayout DetectedLayout
+    {
+        get
+        {
+            var detected = MinecraftFolderLayout.Detect(FolderPath);
+            return detected.Kind == MinecraftFolderKind.Unknown && FolderKind == MinecraftFolderKind.Standard
+                ? new MinecraftFolderLayout(MinecraftFolderKind.Standard, FolderPath, FolderPath,
+                    "传统 .minecraft 文件夹")
+                : detected;
+        }
+    }
+    public string FolderTypeDescription => DetectedLayout.DisplayName;
+    public bool SupportsTraditionalInstallation => DetectedLayout.SupportsTraditionalInstallation;
 
     private int _instanceCount;
     private string _folderSize = "0.0";
@@ -51,8 +66,14 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
     {
         PropertyChanged += (_, e) => 
         { 
-            if (e.PropertyName is nameof(FolderPath) or nameof(FolderName))
+            if (e.PropertyName is nameof(FolderPath) or nameof(FolderName) or nameof(FolderKind))
             {
+                if (e.PropertyName == nameof(FolderPath))
+                {
+                    OnPropertyChanged(nameof(DetectedLayout));
+                    OnPropertyChanged(nameof(FolderTypeDescription));
+                    OnPropertyChanged(nameof(SupportsTraditionalInstallation));
+                }
                 Events.RaiseCoreSaveSettings(); 
             }
         };
@@ -71,8 +92,24 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
             {
                 try
                 {
-                    MinecraftParser parser = new(FolderPath);
-                    return parser.GetMinecrafts().Count;
+                    var layout = DetectedLayout;
+                    return layout.Kind switch
+                    {
+                        MinecraftFolderKind.Standard => new MinecraftParser(layout.RootPath).GetMinecrafts().Count +
+                                                       CountBedrockInstances(layout.RootPath),
+                        MinecraftFolderKind.ModrinthApp => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
+                        MinecraftFolderKind.ModrinthProfile => 1,
+                        MinecraftFolderKind.MultiMc => CountInstances(Path.Combine(layout.RootPath, "instances"),
+                            "mmc-pack.json"),
+                        MinecraftFolderKind.MultiMcInstance => 1,
+                        MinecraftFolderKind.BakaXl => CountInstances(Path.Combine(layout.RootPath, "instances"),
+                            "package.info"),
+                        MinecraftFolderKind.BakaXlInstance => 1,
+                        MinecraftFolderKind.CurseForge => CountInstances(Path.Combine(layout.RootPath, "Instances"),
+                            "minecraftinstance.json"),
+                        MinecraftFolderKind.CurseForgeInstance => 1,
+                        _ => 0
+                    };
                 }
                 catch
                 {
@@ -104,6 +141,17 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
             _isRefreshing = false;
         }
     }
+
+    private static int CountDirectories(string path) => Directory.Exists(path)
+        ? Directory.GetDirectories(path).Length
+        : 0;
+
+    private static int CountInstances(string path, string marker) => Directory.Exists(path)
+        ? Directory.GetDirectories(path).Count(directory => File.Exists(Path.Combine(directory, marker)))
+        : 0;
+
+    private static int CountBedrockInstances(string rootPath) => CountInstances(
+        Path.Combine(rootPath, "bedrock_versions"), "appxmanifest.xml");
 
     public void OpenFolder(object parameter)
     {

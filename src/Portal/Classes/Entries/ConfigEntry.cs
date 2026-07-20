@@ -20,6 +20,7 @@ namespace Portal.Classes.Entries;
 public partial class ConfigEntry : ObservableObject
 {
     private bool _isMinecraftFolderRecoveryScheduled;
+    private readonly HashSet<MinecraftFolderEntry> _observedMinecraftFolders = [];
 
     public ConfigEntry()
     {
@@ -75,6 +76,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
+    public IEnumerable<MinecraftFolderEntry> TraditionalMinecraftFolders =>
+        MinecraftFolders.Where(folder => folder.DetectedLayout.Kind == MinecraftFolderKind.Standard);
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
     public ObservableCollection<JavaRuntimeEntry> JavaRuntimes { get; } = [];
 
@@ -125,8 +128,8 @@ public partial class ConfigEntry : ObservableObject
                 break;
         }
 
-        if (Data.UiProperty.ConfigLoaded &&
-            (e.PropertyName != nameof(DefaultMinecraftFolder) || MinecraftFolders.Count > 0))
+        if (Data.UiProperty.ConfigLoaded && e.PropertyName == nameof(DefaultMinecraftFolder) &&
+            MinecraftFolders.Count > 0)
         {
             ConfigIdentifyExtension.MinecraftFolder(this);
         }
@@ -136,6 +139,23 @@ public partial class ConfigEntry : ObservableObject
 
     private void OnMinecraftFoldersChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
+        if (e.OldItems != null)
+        {
+            foreach (MinecraftFolderEntry folder in e.OldItems)
+            {
+                folder.PropertyChanged -= OnMinecraftFolderPropertyChanged;
+                _observedMinecraftFolders.Remove(folder);
+            }
+        }
+        if (e.NewItems != null)
+        {
+            foreach (MinecraftFolderEntry folder in e.NewItems)
+            {
+                if (_observedMinecraftFolders.Add(folder))
+                    folder.PropertyChanged += OnMinecraftFolderPropertyChanged;
+            }
+        }
+        OnPropertyChanged(nameof(TraditionalMinecraftFolders));
         App.Method.SaveConfig();
         if (!Data.UiProperty.ConfigLoaded || _isMinecraftFolderRecoveryScheduled)
             return;
@@ -148,6 +168,14 @@ public partial class ConfigEntry : ObservableObject
             _isMinecraftFolderRecoveryScheduled = false;
             ConfigIdentifyExtension.MinecraftFolder(this);
         });
+    }
+
+    private void OnMinecraftFolderPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (!Data.UiProperty.ConfigLoaded || e.PropertyName != nameof(MinecraftFolderEntry.FolderPath))
+            return;
+        OnPropertyChanged(nameof(TraditionalMinecraftFolders));
+        ConfigIdentifyExtension.MinecraftFolder(this);
     }
 
     private void SetResource()

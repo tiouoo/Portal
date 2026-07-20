@@ -53,10 +53,15 @@
                     </tio:PathPicker>
                     <TextBlock
                         FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="1,0,0,0"
+                        Text="{Binding FolderTypeDescription}" />
+                    <TextBlock
+                        FontSize="12"
                         Foreground="Red"
                         IsVisible="{Binding Warning}"
                         Margin="1,0,0,0"
-                        Text="*在当前目录下发现.minecraft子文件夹，请确保选择正确的文件夹" />
+                        Text="*当前文件夹需要进一步确认" />
                     <TextBlock
                         FontSize="12"
                         Foreground="Red"
@@ -77,6 +82,14 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
+            <DropDownButton
+                Content="导入"
+                IsVisible="{Binding HasImports}"
+                Name="ImportLauncherDropDown">
+                <DropDownButton.Flyout>
+                    <MenuFlyout />
+                </DropDownButton.Flyout>
+            </DropDownButton>
             <Button Command="{Binding CancelCommand}" Content="取消" />
             <Button Command="{Binding NextCommand}" Content="添加" />
         </StackPanel>
