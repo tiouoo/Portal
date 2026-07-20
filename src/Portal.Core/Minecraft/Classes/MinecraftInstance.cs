@@ -229,7 +229,7 @@ public class MinecraftInstance : ObservableObject
         MinecraftEntry = e;
         Config = GetInstanceConfig();
         ObserveConfigChanges();
-        InstanceFolderPath = Path.GetDirectoryName(e.ClientJarPath);
+        InstanceFolderPath = Path.Combine(e.MinecraftFolderPath, "versions", e.Id);
     }
 
     public string Description

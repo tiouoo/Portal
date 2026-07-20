@@ -22,10 +22,10 @@ installer.ProgressChanged += (_, arg) =>
 var minecraft = await installer.InstallAsync();
 Console.WriteLine(minecraft.Id);
 
-var entry1 = (await ForgeInstaller.EnumerableForgeAsync("1.21.8"))
+var entry1 = (await OptifineInstaller.EnumerableOptifineAsync("1.21.8"))
     .First();
 
-var installer1 = ForgeInstaller.Create(@"D:\Temp\mc",@"D:\Minecraft\jdk\openjdk-25_windows-x64_bin\jdk-25\bin\java.exe", entry1);
+var installer1 = OptifineInstaller.Create(@"D:\Temp\mc",@"D:\Minecraft\jdk\openjdk-25_windows-x64_bin\jdk-25\bin\java.exe", entry1);
 installer1.ProgressChanged += (_, arg) =>
     Console.WriteLine($"{arg.StepName} - {arg.FinishedStepTaskCount}/{arg.TotalStepTaskCount} - {(arg.IsStepSupportSpeed ? $"{DefaultDownloader.FormatSize(arg.Speed, true)} - {arg.Progress * 100:0.00}%" : $"{arg.Progress * 100:0.00}%")}");
 

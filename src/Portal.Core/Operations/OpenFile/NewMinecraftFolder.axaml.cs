@@ -53,13 +53,15 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
             return;
         }
 
-        Contain = _paths.Contains(FolderPath.Trim());
+        var folderPath = value.Trim();
+        FolderName = Directory.GetParent(folderPath)?.Name;
+        Contain = _paths.Contains(folderPath);
 
         NoExist = false;
 
         try
         {
-            var subDirPath = Path.Combine(value.Trim(), ".minecraft");
+            var subDirPath = Path.Combine(folderPath, ".minecraft");
             Warning = Directory.Exists(subDirPath);
         }
         catch (Exception)

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
@@ -9,6 +10,7 @@ using Avalonia.Threading;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using MinecraftLaunch.Base.Models.Game;
+using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
@@ -91,6 +93,56 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged
                 if (topLevel != null)
                     MinecraftLogPage.Open(logSession, topLevel);
             }));
+    }
+
+    private void OpenInstanceFolder_Click(object? sender, RoutedEventArgs e)
+    {
+        _ = TopLevel.GetTopLevel(this)?.Launcher
+            .LaunchDirectoryInfoAsync(new DirectoryInfo(Instance.InstanceFolderPath));
+    }
+
+    private async void DeleteInstance_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null || !Directory.Exists(Instance.InstanceFolderPath))
+            return;
+
+        var result = await OverlayDialog.ShowStandardAsync(
+            new TextBlock
+            {
+                Margin = new Thickness(24),
+                Text = $"确定要永久删除实例“{Instance.InstanceName}”吗？此操作无法撤销。",
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            },
+            null, this.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = "删除实例",
+                Mode = DialogMode.Error,
+                Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = "删除",
+                OverrideNoButtonText = "取消",
+                CanLightDismiss = false,
+                CanResize = false
+            });
+        if (result != DialogResult.Yes)
+            return;
+
+        try
+        {
+            Directory.Delete(Instance.InstanceFolderPath, true);
+            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders
+                .Select(folder => (folder.FolderPath, folder.FolderName)));
+            NotificationGateway.Notice(topLevel, "实例已删除", NotificationType.Success);
+            _parent.HostTab.Close();
+        }
+        catch (IOException ex)
+        {
+            NotificationGateway.Notice(topLevel, $"无法删除实例：{ex.Message}", NotificationType.Error);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            NotificationGateway.Notice(topLevel, "无法删除实例：没有删除此实例的权限。", NotificationType.Error);
+        }
     }
 
     private void OnStatisticsChanged(object? sender, EventArgs e)
