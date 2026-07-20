@@ -72,6 +72,7 @@ public partial class UiProperty : ObservableObject
     [ObservableProperty] public partial bool IsLatestVersion { get; set; }
     [ObservableProperty] public partial string NewVersion { get; set; }
     [ObservableProperty] public partial string OverrideUpdateChannel { get; set; }
+    [ObservableProperty] public partial string? LastModInstallInstancePath { get; set; }
     public ObservableCollection<AggregatedSearchEntry> AggregatedSearchResults { get; set; } = [];
 
     [ObservableProperty] public partial AggregatedSearchType AggregatedSelectedType { get; set; } = AggregatedSearchTypes[0];

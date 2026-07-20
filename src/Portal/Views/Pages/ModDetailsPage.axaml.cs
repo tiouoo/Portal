@@ -377,7 +377,22 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     }
 
     private static string FormatMetadata(DateTime updated, int downloadCount, string source) =>
-        $"{source}·更新于 {updated.ToLocalTime():yyyy-MM-dd}·{downloadCount:N0} 下载";
+        $"{source}·{FormatRelativeTime(updated)}·{downloadCount:N0} 下载";
+
+    private static string FormatRelativeTime(DateTime timestamp)
+    {
+        var localTime = timestamp.Kind == DateTimeKind.Utc ? timestamp.ToLocalTime() : timestamp;
+        var elapsed = DateTime.Now - localTime;
+        if (elapsed < TimeSpan.FromMinutes(1)) return "刚刚";
+        if (elapsed < TimeSpan.FromHours(1)) return $"{Math.Max(1, (int)elapsed.TotalMinutes)} 分钟前";
+        if (elapsed < TimeSpan.FromDays(1)) return $"{Math.Max(1, (int)elapsed.TotalHours)} 小时前";
+        if (elapsed < TimeSpan.FromDays(2)) return "1 天前";
+        if (elapsed < TimeSpan.FromDays(7)) return $"{(int)elapsed.TotalDays} 天前";
+        if (elapsed < TimeSpan.FromDays(14)) return "1 周前";
+        if (elapsed < TimeSpan.FromDays(30)) return $"{Math.Max(2, (int)(elapsed.TotalDays / 7))} 周前";
+        if (elapsed < TimeSpan.FromDays(365)) return $"{Math.Max(1, (int)(elapsed.TotalDays / 30))} 个月前";
+        return $"{Math.Max(1, (int)(elapsed.TotalDays / 365))} 年前";
+    }
 
     private static string? GetVersionFamily(string version)
     {

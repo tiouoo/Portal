@@ -27,7 +27,13 @@
             Grid.Row="1"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="安装目标实例" />
+            <DockPanel LastChildFill="False">
+                <CheckBox
+                    Content="显示所有实例"
+                    DockPanel.Dock="Right"
+                    IsChecked="{Binding ShowAllInstances}" />
+                <TextBlock Text="安装目标实例" VerticalAlignment="Center" />
+            </DockPanel>
             <ComboBox
                 HorizontalAlignment="Stretch"
                 ItemsSource="{Binding Instances}"
