@@ -73,7 +73,8 @@
                             <TextBlock
                                 Foreground="{DynamicResource InnerForegroundColor}"
                                 Text="{Binding Metadata}"
-                                TextTrimming="CharacterEllipsis" />
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
                         </StackPanel>
                     </DockPanel>
                     <TextBlock
@@ -142,7 +143,7 @@
             <ItemsControl ItemsSource="{Binding VersionGroups}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Spacing="10" />
+                        <VirtualizingStackPanel />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
@@ -152,7 +153,8 @@
                             BorderBrush="{DynamicResource TranslucentBorderBrush}"
                             BorderThickness="1"
                             HeaderHeight="46"
-                            HeaderPadding="0">
+                            HeaderPadding="0"
+                            Margin="0,0,0,10">
                             <Expander.Header>
                                 <DockPanel Margin="5,0,14,0">
                                     <TextBlock
@@ -169,30 +171,38 @@
                                 </DockPanel>
                             </Expander.Header>
                             <tio:TioExpander.Content>
-                                <ItemsControl ItemsSource="{Binding Files}" Margin="14,0,14,12">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="local:ModVersionFileItem">
-                                            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                                                <StackPanel Spacing="2">
+                                <StackPanel Margin="14,0,14,12">
+                                    <ItemsControl ItemsSource="{Binding VisibleFiles}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:ModVersionFileItem">
+                                                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                                    <StackPanel Spacing="2">
+                                                        <TextBlock
+                                                            FontWeight="SemiBold"
+                                                            Text="{Binding DisplayName}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                                            Text="{Binding Details}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
                                                     <TextBlock
-                                                        FontWeight="SemiBold"
-                                                        Text="{Binding DisplayName}"
-                                                        TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock
-                                                        FontSize="12"
                                                         Foreground="{DynamicResource InnerForegroundColor}"
-                                                        Text="{Binding Details}"
-                                                        TextTrimming="CharacterEllipsis" />
-                                                </StackPanel>
-                                                <TextBlock
-                                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                                    Grid.Column="1"
-                                                    Text="{Binding ReleaseTypeText}"
-                                                    VerticalAlignment="Center" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                                        Grid.Column="1"
+                                                        Text="{Binding ReleaseTypeText}"
+                                                        VerticalAlignment="Center" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button
+                                        Command="{Binding LoadMoreCommand}"
+                                        Content="{Binding LoadMoreText}"
+                                        HorizontalAlignment="Left"
+                                        IsVisible="{Binding HasMore}"
+                                        Margin="0,10,0,0" />
+                                </StackPanel>
                             </tio:TioExpander.Content>
                         </tio:TioExpander>
                     </DataTemplate>

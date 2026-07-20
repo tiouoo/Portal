@@ -4,6 +4,7 @@ using AsyncImageLoader;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Provider;
@@ -21,7 +22,8 @@ public enum ModDetailsSource
 
 // Instance entries use only the provider identity cached for their installed file.
 // All display data is fetched from the provider project endpoint.
-public sealed record ModDetailsTarget(ModDetailsSource Source, string ProjectId);
+public sealed record ModDetailsTarget(ModDetailsSource Source, string ProjectId, string GameVersion = "",
+    ModLoaderType Loader = ModLoaderType.Any);
 
 public partial class ModDetailsPage : UserControl, ITioTabPage
 {
@@ -47,6 +49,8 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
 
+    public void OnClose() => ViewModel.Dispose();
+
     public static void Open(TopLevel sender, ModDetailsTarget target, string? title = null)
     {
         if (sender is not TioTabWindowBase window || string.IsNullOrWhiteSpace(target.ProjectId))
@@ -59,14 +63,19 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     }
 }
 
-public partial class ModDetailsPageViewModel(ModDetailsTarget target) : ObservableObject
+public partial class ModDetailsPageViewModel(ModDetailsTarget target) : ObservableObject, IDisposable
 {
     private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseforge = new();
     private bool _loaded;
+    private bool _buildingFilters;
+    private bool _disposed;
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private CancellationTokenSource? _filterCancellation;
+    private CancellationTokenSource? _filterDebounce;
     public ObservableCollection<ModMinecraftVersionFilter> VersionFilters { get; } = [];
     public ObservableCollection<ModLoaderFilter> LoaderFilters { get; } = [];
-    public ObservableCollection<ModVersionGroup> VersionGroups { get; } = [];
+    [ObservableProperty] public partial ObservableCollection<ModVersionGroup> VersionGroups { get; set; } = [];
     public ObservableCollection<string> Screenshots { get; } = [];
     public ObservableCollection<int> ScreenshotIndices { get; } = [];
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
@@ -84,7 +93,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     public bool HasVersions => VersionFilters.Count > 0;
     public bool HasScreenshots => Screenshots.Count > 0;
     public bool IsEmpty => !IsLoading && !HasError && VersionGroups.Count == 0;
-    private List<ModVersionFileItem> Files { get; } = [];
+    private IReadOnlyList<ModVersionFileItem> Files { get; set; } = [];
 
     public async Task LoadAsync()
     {
@@ -93,32 +102,35 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         IsLoading = true;
         try
         {
+            var cancellationToken = _disposeCancellation.Token;
             if (target.Source == ModDetailsSource.Modrinth)
             {
-                var project = await _modrinth.SearchByProjectIdAsync(target.ProjectId);
+                var project = await _modrinth.SearchByProjectIdAsync(target.ProjectId, cancellationToken);
                 Name = project.Name;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
                 Summary = project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata = FormatMetadata(project.Updated, project.DownloadCount, "Modrinth");
                 AddScreenshots(project.Screenshots);
-                Files.AddRange(
-                    (await _modrinth.GetModFilesByProjectIdAsync(target.ProjectId)).Select(ModVersionFileItem.From));
+                Files = await Task.Run(async () => (await _modrinth.GetModFilesByProjectIdAsync(target.ProjectId,
+                    cancellationToken)).Select(ModVersionFileItem.From).ToArray(), cancellationToken);
             }
             else
             {
-                var project = (await _curseforge.GetResourcesByModIdsAsync([long.Parse(target.ProjectId)])).First();
+                var project = (await _curseforge.GetResourcesByModIdsAsync([long.Parse(target.ProjectId)], cancellationToken)).First();
                 Name = project.Name;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
                 Summary = project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata = FormatMetadata(project.DateModified, project.DownloadCount, "CurseForge");
                 AddScreenshots(project.Screenshots);
-                Files.AddRange((await _curseforge.GetModFilesAsync(project.Id)).Select(ModVersionFileItem.From));
+                Files = await Task.Run(async () => (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
+                    .Select(ModVersionFileItem.From).ToArray(), cancellationToken);
             }
 
-            BuildFilters();
+            await BuildFiltersAsync(cancellationToken);
         }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested) { }
         catch (Exception)
         {
             HasError = true;
@@ -130,43 +142,94 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         }
     }
 
-    partial void OnSelectedVersionFilterChanged(ModMinecraftVersionFilter? value) => ApplyFilter();
-    partial void OnSelectedLoaderFilterChanged(ModLoaderFilter? value) => ApplyFilter();
-
-    private void BuildFilters()
+    partial void OnSelectedVersionFilterChanged(ModMinecraftVersionFilter? value)
     {
-        var families = Files.SelectMany(file => file.MinecraftVersions).Select(GetVersionFamily)
-            .Where(family => family != null).Distinct().OrderByDescending(family => MinecraftVersionKey.Parse(family!));
-        VersionFilters.Clear();
-        VersionFilters.Add(new ModMinecraftVersionFilter("全部", null));
-        foreach (var family in families) VersionFilters.Add(new ModMinecraftVersionFilter(family!, family));
-        var loaders = Files.SelectMany(file => file.GroupKeys).Select(key => key.Loader).Distinct().Order();
-        LoaderFilters.Clear();
-        LoaderFilters.Add(new ModLoaderFilter("全部", null));
-        foreach (var loader in loaders) LoaderFilters.Add(new ModLoaderFilter(loader, loader));
-        SelectedVersionFilter = VersionFilters[0];
-        SelectedLoaderFilter = LoaderFilters[0];
-        OnPropertyChanged(nameof(HasVersions));
+        if (!_buildingFilters) DebounceFilter();
     }
 
-    private void ApplyFilter()
+    partial void OnSelectedLoaderFilterChanged(ModLoaderFilter? value)
+    {
+        if (!_buildingFilters) DebounceFilter();
+    }
+
+    private void DebounceFilter()
+    {
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
+        var previous = Interlocked.Exchange(ref _filterDebounce, cts);
+        previous?.Cancel();
+        _ = ApplyFilterDebouncedAsync(cts.Token);
+    }
+
+    private async Task ApplyFilterDebouncedAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(100, cancellationToken);
+            await ApplyFilterAsync();
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task BuildFiltersAsync(CancellationToken cancellationToken)
+    {
+        var filterData = await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var families = Files.SelectMany(file => file.MinecraftVersions).Select(GetVersionFamily)
+                .Where(family => family != null).Distinct().OrderByDescending(family => MinecraftVersionKey.Parse(family!))
+                .Select(family => family!).ToArray();
+            var loaders = Files.SelectMany(file => file.GroupKeys).Select(key => key.Loader).Distinct().Order().ToArray();
+            return (Families: families, Loaders: loaders);
+        }, cancellationToken);
+        if (cancellationToken.IsCancellationRequested) return;
+
+        _buildingFilters = true;
+        VersionFilters.Clear();
+        VersionFilters.Add(new ModMinecraftVersionFilter("全部", null));
+        foreach (var family in filterData.Families) VersionFilters.Add(new ModMinecraftVersionFilter(family, family));
+        LoaderFilters.Clear();
+        LoaderFilters.Add(new ModLoaderFilter("全部", null));
+        foreach (var loader in filterData.Loaders) LoaderFilters.Add(new ModLoaderFilter(loader, loader));
+        SelectedVersionFilter = VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(target.GameVersion)) ??
+            VersionFilters[0];
+        SelectedLoaderFilter = LoaderFilters.FirstOrDefault(filter => filter.Loader == LoaderName(target.Loader)) ??
+            LoaderFilters[0];
+        _buildingFilters = false;
+        OnPropertyChanged(nameof(HasVersions));
+        await ApplyFilterAsync();
+    }
+
+    private async Task ApplyFilterAsync()
     {
         var selectedFamily = SelectedVersionFilter?.Family;
         var selectedLoader = SelectedLoaderFilter?.Loader;
-        var groups = Files.Where(file =>
-                selectedFamily == null ||
-                file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
-            .SelectMany(file => file.GroupKeys.Select(key => (Key: key, File: file)))
-            .Where(item => (selectedFamily == null || GetVersionFamily(item.Key.MinecraftVersion) == selectedFamily) &&
-                           (selectedLoader == null || item.Key.Loader == selectedLoader))
-            .GroupBy(item => item.Key)
-            .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key.MinecraftVersion))
-            .ThenBy(group => group.Key.Loader)
-            .Select(group => new ModVersionGroup($"{group.Key.Loader} {group.Key.MinecraftVersion}",
-                group.Select(item => item.File).DistinctBy(file => file.Id).ToList()));
-        VersionGroups.Clear();
-        foreach (var group in groups) VersionGroups.Add(group);
-        OnPropertyChanged(nameof(IsEmpty));
+        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
+        var previous = Interlocked.Exchange(ref _filterCancellation, cancellation);
+        previous?.Cancel();
+        try
+        {
+            var groups = await Task.Run(() => Files.Where(file =>
+                    selectedFamily == null || file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
+                .SelectMany(file => file.GroupKeys.Select(key => (Key: key, File: file)))
+                .Where(item => (selectedFamily == null || GetVersionFamily(item.Key.MinecraftVersion) == selectedFamily) &&
+                               (selectedLoader == null || item.Key.Loader == selectedLoader))
+                .GroupBy(item => item.Key)
+                .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key.MinecraftVersion))
+                .ThenBy(group => group.Key.Loader)
+                .Select(group => new ModVersionGroup($"{group.Key.Loader} {group.Key.MinecraftVersion}",
+                    group.Select(item => item.File).DistinctBy(file => file.Id).ToArray()))
+                .ToArray(), cancellation.Token);
+            if (cancellation.IsCancellationRequested) return;
+
+            VersionGroups = new ObservableCollection<ModVersionGroup>(groups);
+            OnPropertyChanged(nameof(IsEmpty));
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        finally
+        {
+            if (ReferenceEquals(_filterCancellation, cancellation)) _filterCancellation = null;
+            cancellation.Dispose();
+        }
     }
 
     private void AddScreenshots(IEnumerable<string>? urls)
@@ -189,15 +252,54 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         var match = Regex.Match(version, @"^(\d+)\.(\d+)(?:\.\d+)?$");
         return match.Success ? $"{match.Groups[1].Value}.{match.Groups[2].Value}" : null;
     }
+
+    private static string? LoaderName(ModLoaderType loader) => loader switch
+    {
+        ModLoaderType.NeoForge => "NeoForge", ModLoaderType.Forge => "Forge", ModLoaderType.Fabric => "Fabric",
+        ModLoaderType.Quilt => "Quilt", _ => null
+    };
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _disposeCancellation.Cancel();
+        _filterCancellation?.Cancel();
+        _filterDebounce?.Cancel();
+        // Fast path: replace with empty collection instead of clearing (avoids N Remove notifications)
+        VersionGroups = [];
+        _disposeCancellation.Dispose();
+    }
 }
 
 public sealed record ModMinecraftVersionFilter(string DisplayName, string? Family);
 
 public sealed record ModLoaderFilter(string DisplayName, string? Loader);
 
-public sealed record ModVersionGroup(string Title, IReadOnlyList<ModVersionFileItem> Files)
+public sealed partial class ModVersionGroup : ObservableObject
 {
-    public string FileCountText => $"{Files.Count} 个文件";
+    private const int PageSize = 20;
+    private readonly IReadOnlyList<ModVersionFileItem> _files;
+    public string Title { get; }
+    public ObservableCollection<ModVersionFileItem> VisibleFiles { get; } = [];
+    public string FileCountText => $"{_files.Count} 个文件";
+    public bool HasMore => VisibleFiles.Count < _files.Count;
+    public string LoadMoreText => $"显示更多（剩余 {_files.Count - VisibleFiles.Count} 个）";
+
+    public ModVersionGroup(string title, IReadOnlyList<ModVersionFileItem> files)
+    {
+        Title = title;
+        _files = files;
+        LoadMore();
+    }
+
+    [RelayCommand]
+    private void LoadMore()
+    {
+        foreach (var file in _files.Skip(VisibleFiles.Count).Take(PageSize)) VisibleFiles.Add(file);
+        OnPropertyChanged(nameof(HasMore));
+        OnPropertyChanged(nameof(LoadMoreText));
+    }
 }
 
 public sealed record ModVersionGroupKey(string Loader, string MinecraftVersion);
@@ -245,14 +347,18 @@ public sealed record ModVersionFileItem(
     };
 }
 
-public readonly record struct MinecraftVersionKey(int Major, int Minor) : IComparable<MinecraftVersionKey>
+public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patch) : IComparable<MinecraftVersionKey>
 {
     public static MinecraftVersionKey Parse(string version)
     {
-        var pieces = version.Split('.');
-        return new MinecraftVersionKey(int.Parse(pieces[0]), int.Parse(pieces[1]));
+        var match = Regex.Match(version, @"^(\d+)\.(\d+)(?:\.(\d+))?");
+        return match.Success
+            ? new MinecraftVersionKey(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value),
+                match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0)
+            : new MinecraftVersionKey(-1, -1, -1);
     }
 
     public int CompareTo(MinecraftVersionKey other) =>
-        Major != other.Major ? Major.CompareTo(other.Major) : Minor.CompareTo(other.Minor);
+        Major != other.Major ? Major.CompareTo(other.Major) : Minor != other.Minor ? Minor.CompareTo(other.Minor) :
+        Patch.CompareTo(other.Patch);
 }

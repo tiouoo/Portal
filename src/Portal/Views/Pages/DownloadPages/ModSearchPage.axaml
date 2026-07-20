@@ -86,6 +86,16 @@
                     Text="{Binding GameVersion, Mode=TwoWay}" />
                 <ComboBox
                     HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding Loaders}"
+                    SelectedItem="{Binding SelectedLoader}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox
+                    HorizontalAlignment="Stretch"
                     ItemsSource="{Binding SortOptions}"
                     SelectedItem="{Binding SelectedSort}">
                     <ComboBox.ItemTemplate>

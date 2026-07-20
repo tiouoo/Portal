@@ -58,11 +58,15 @@ public partial class ModSearchPageViewModel : ObservableObject
     public IReadOnlyList<ModSearchSource> Sources { get; } =
         [new("CurseForge", SearchSource.CurseForge), new("Modrinth", SearchSource.Modrinth)];
     public IReadOnlyList<ModSearchCategory> Categories => SelectedSource?.Categories ?? [];
+    public IReadOnlyList<ModSearchLoader> Loaders { get; } =
+        [new("全部加载器", ModLoaderType.Any), new("Forge", ModLoaderType.Forge), new("NeoForge", ModLoaderType.NeoForge),
+            new("Fabric", ModLoaderType.Fabric), new("Quilt", ModLoaderType.Quilt)];
     public IReadOnlyList<ModSearchSort> SortOptions { get; } =
         [new("相关度", SearchSort.Relevance), new("热度", SearchSort.Popularity), new("最近更新", SearchSort.Updated), new("最新发布", SearchSort.Newest)];
 
     [ObservableProperty] public partial ModSearchSource? SelectedSource { get; set; }
     [ObservableProperty] public partial ModSearchCategory? SelectedCategory { get; set; }
+    [ObservableProperty] public partial ModSearchLoader? SelectedLoader { get; set; }
     [ObservableProperty] public partial ModSearchSort? SelectedSort { get; set; }
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
     [ObservableProperty] public partial string GameVersion { get; set; } = string.Empty;
@@ -75,6 +79,7 @@ public partial class ModSearchPageViewModel : ObservableObject
     public ModSearchPageViewModel()
     {
         SelectedSource = Sources[0];
+        SelectedLoader = Loaders[0];
         SelectedSort = SortOptions[0];
     }
 
@@ -94,6 +99,7 @@ public partial class ModSearchPageViewModel : ObservableObject
         SelectedCategory = value?.Categories.FirstOrDefault();
         SelectedSort = SortOptions[0];
         GameVersion = string.Empty;
+        SelectedLoader = Loaders[0];
 
         if (!_initialized)
             return;
@@ -111,6 +117,20 @@ public partial class ModSearchPageViewModel : ObservableObject
     {
         if (_initialized && value > 0)
             _ = SearchAsync();
+    }
+
+    partial void OnSelectedLoaderChanged(ModSearchLoader? value)
+    {
+        if (!_initialized)
+            return;
+
+        if (CurrentPage != 1)
+        {
+            CurrentPage = 1;
+            return;
+        }
+
+        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
     }
 
     [RelayCommand]
@@ -138,7 +158,7 @@ public partial class ModSearchPageViewModel : ObservableObject
     {
         if (SelectedSource is null || SelectedSort is null) return;
         var request = new SearchRequest(SelectedSource.Kind, SearchText.Trim(), GameVersion.Trim(),
-            SelectedCategory?.Id ?? "", SelectedSort.Kind, CurrentPage);
+            SelectedLoader?.Kind ?? ModLoaderType.Any, SelectedCategory?.Id ?? "", SelectedSort.Kind, CurrentPage);
         var renderedCache = false;
         if (isDefaultSearch)
         {
@@ -177,8 +197,9 @@ public partial class ModSearchPageViewModel : ObservableObject
         if (request.Source is SearchSource.Modrinth)
         {
             var modrinthPage = await _modrinth.SearchPageAsync(request.Query, request.GameVersion, request.Category,
-                index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize);
-            return new SearchPageData(modrinthPage.Items.Select(item => new ModSearchResultItem(item, request.Sort)).ToList(), modrinthPage.TotalCount);
+                modLoader: request.Loader, index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize);
+            return new SearchPageData(modrinthPage.Items.Select(item => new ModSearchResultItem(item, request.Sort,
+                request.GameVersion, request.Loader)).ToList(), modrinthPage.TotalCount);
         }
 
         var page = await _curseForge.SearchResourcesPageAsync(new CurseforgeSearchOptions
@@ -186,12 +207,14 @@ public partial class ModSearchPageViewModel : ObservableObject
             SearchFilter = request.Query,
             CategoryId = int.TryParse(request.Category, out var category) ? category : 0,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
+            ModLoaderType = request.Loader,
             SortField = ToCurseForgeSort(request.Sort),
             SortOrder = SortOrder.Desc,
             Index = offset,
             PageSize = PageSize
         });
-        return new SearchPageData(page.Items.Select(item => new ModSearchResultItem(item)).ToList(), page.TotalCount);
+        return new SearchPageData(page.Items.Select(item => new ModSearchResultItem(item, request.GameVersion,
+            request.Loader)).ToList(), page.TotalCount);
     }
 
     private void Apply(SearchPageData page, bool preserveExistingItems = false)
@@ -218,7 +241,8 @@ public partial class ModSearchPageViewModel : ObservableObject
 
     private bool IsCurrent(SearchRequest request) => SelectedSource?.Kind == request.Source &&
         SearchText.Trim() == request.Query && GameVersion.Trim() == request.GameVersion &&
-        (SelectedCategory?.Id ?? "") == request.Category && SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
+        (SelectedLoader?.Kind ?? ModLoaderType.Any) == request.Loader && (SelectedCategory?.Id ?? "") == request.Category &&
+        SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
 
     private async Task LoadVersionsAsync()
     {
@@ -286,6 +310,7 @@ public readonly record struct MinecraftVersionSortKey(int Major, int Minor, int 
 public enum SearchSource { CurseForge, Modrinth }
 public enum SearchSort { Relevance, Popularity, Updated, Newest }
 public sealed record ModSearchCategory(string DisplayName, string Id);
+public sealed record ModSearchLoader(string DisplayName, ModLoaderType Kind);
 public sealed record ModSearchSort(string DisplayName, SearchSort Kind);
 public sealed record ModSearchSource(string DisplayName, SearchSource Kind)
 {
@@ -306,19 +331,20 @@ public sealed partial class ModSearchResultItem : ObservableObject
 
     public ModDetailsTarget Target { get; private set; }
 
-    public ModSearchResultItem(ModrinthResource item, SearchSort sort = SearchSort.Relevance)
+    public ModSearchResultItem(ModrinthResource item, SearchSort sort = SearchSort.Relevance, string gameVersion = "",
+        ModLoaderType loader = ModLoaderType.Any)
     {
         Name = item.Name; FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name; Summary = item.Summary;
         var timestamp = sort is SearchSort.Newest ? item.DateModified : item.Updated;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(timestamp)}·{item.DownloadCount:N0} 下载";
-        Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId);
+        Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId, gameVersion, loader);
     }
 
-    public ModSearchResultItem(CurseforgeResource item)
+    public ModSearchResultItem(CurseforgeResource item, string gameVersion = "", ModLoaderType loader = ModLoaderType.Any)
     {
         Name = item.Name; FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name; Summary = item.Summary;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
-        Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString());
+        Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString(), gameVersion, loader);
     }
 
     internal ModSearchResultItem(CachedSearchItem item)
@@ -355,7 +381,8 @@ public sealed partial class ModSearchResultItem : ObservableObject
     }
 }
 
-public sealed record SearchRequest(SearchSource Source, string Query, string GameVersion, string Category, SearchSort Sort, int Page);
+public sealed record SearchRequest(SearchSource Source, string Query, string GameVersion, ModLoaderType Loader, string Category,
+    SearchSort Sort, int Page);
 public sealed record SearchPageData(IReadOnlyList<ModSearchResultItem> Items, int TotalCount);
 
 // Search data is only reused while Portal is running. It is never persisted to disk.
