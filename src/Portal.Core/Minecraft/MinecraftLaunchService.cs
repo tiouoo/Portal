@@ -14,6 +14,7 @@ using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Operations.Account;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -26,7 +27,8 @@ namespace Portal.Core.Minecraft;
 public static class MinecraftLaunchService
 {
     public static Func<BedrockInstanceConfig, IBedrockLaunch>? DefaultBedrockLauncherFactory { get; set; }
-    public static Task LaunchAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options)
+    public static Task LaunchAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options,
+        RecentPlayTarget? target = null)
     {
         topLevel?.Notice($"启动 {instance.InstanceName}");
         var launchCompleted = false;
@@ -105,7 +107,7 @@ public static class MinecraftLaunchService
             Progress = 0
         });
         task.Start();
-        _ = RunWorkflowAsync(instance, topLevel, options, task, verifyAccount, selectJava, buildArguments, startGame, logSession,
+        _ = RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments, startGame, logSession,
             launchedProcess =>
             {
                 process = launchedProcess;
@@ -115,7 +117,8 @@ public static class MinecraftLaunchService
         return task.Completion;
     }
 
-    private static async Task RunWorkflowAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options, ManagedTask task,
+    private static async Task RunWorkflowAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options,
+        RecentPlayTarget? target, ManagedTask task,
         ManagedTask? verifyAccount, ManagedTask? selectJava, ManagedTask? buildArguments, ManagedTask startGame,
         MinecraftLogSession? logSession, Action<Process> processStarted)
     {
@@ -157,14 +160,14 @@ public static class MinecraftLaunchService
             buildArguments!.Start(context =>
             {
                 context.SetRunning("正在应用实例与全局游戏设置");
-                config = CreateLaunchConfig(instance, account!, java!, options);
+                config = CreateLaunchConfig(instance, account!, java!, options, target);
                 context.ReportProgress(1);
                 return Task.CompletedTask;
             });
             await buildArguments.Completion;
             ThrowIfFailed(buildArguments);
 
-            startGame.Start(context => StartGameStepAsync(context, instance, config!, topLevel, task, logSession!, processStarted));
+            startGame.Start(context => StartGameStepAsync(context, instance, config!, target, topLevel, task, logSession!, processStarted));
             await startGame.Completion;
             ThrowIfFailed(startGame);
         }
@@ -190,7 +193,7 @@ public static class MinecraftLaunchService
     }
 
     private static async Task StartGameStepAsync(TaskExecutionContext context, MinecraftInstance instance,
-        LaunchConfig config, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
+        LaunchConfig config, RecentPlayTarget? target, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
         Action<Process> processStarted)
     {
         context.SetRunning("正在启动 Minecraft 进程");
@@ -262,7 +265,7 @@ public static class MinecraftLaunchService
     };
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
-        MinecraftLaunchOptions options) => new()
+        MinecraftLaunchOptions options, RecentPlayTarget? target) => new()
     {
         Account = account,
         JavaPath = java,
@@ -273,7 +276,11 @@ public static class MinecraftLaunchService
         MinMemorySize = 512,
         MaxMemorySize = instance.JavaConfig?.EnableOverrideMaxMemory == true
             ? instance.JavaConfig.MinecraftMaxMemory
-            : options.MaxMemory
+            : options.MaxMemory,
+        SaveName = target is { Type: RecentPlayTargetType.World } ? target.Id : null,
+        ServerInfo = target is { Type: RecentPlayTargetType.Server, ServerPort: { } port, ServerAddress: { } address }
+            ? new ServerInfo { Address = address, Port = port }
+            : null
     };
 
     private static void ObserveProcess(MinecraftInstance instance, TopLevel? topLevel, MinecraftProcess process,
@@ -290,6 +297,7 @@ public static class MinecraftLaunchService
 
             var entry = new MinecraftLogEntry(data.Data, GetLogLevel(data.Data));
             logSession.Add(entry);
+            new RecentPlayService().RecordServerConnection(instance, data.Data);
         };
         task.AddAction(new TaskActionDefinition
         {

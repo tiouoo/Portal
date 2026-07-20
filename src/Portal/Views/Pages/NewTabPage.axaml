@@ -21,7 +21,10 @@
         <portalConverters:WidthToColumnsConverter x:Key="WidthToColumnsConv" />
         <portalConverters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
     </UserControl.Resources>
-    <smoothScroll:ScrollView Classes="Flat" Margin="12,2,5,10">
+    <smoothScroll:ScrollView
+        Classes="Flat"
+        Margin="12,2,5,10"
+        SizeChanged="NewTabPage_OnSizeChanged">
         <StackPanel Margin="0,0,7,0" Spacing="12">
             <DockPanel VerticalAlignment="Top">
                 <StackPanel
@@ -495,6 +498,102 @@
                     </Border>
                 </StackPanel>
             </DockPanel>
+            <StackPanel IsVisible="{Binding HasRecentPlays}" Spacing="8">
+                <TextBlock
+                    FontSize="15"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="15,0,0,0"
+                    Text="最近游玩" />
+                <ItemsRepeater HorizontalAlignment="Stretch" ItemsSource="{Binding RecentPlays}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout
+                            ItemsStretch="Fill"
+                            MinColumnSpacing="12"
+                            MinItemWidth="270"
+                            Orientation="Horizontal" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="pages:RecentPlayItem">
+                            <Border
+                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Height="120">
+                                <Border.Styles>
+                                    <Style Selector="Button#QuickPlayButton">
+                                        <Setter Property="Opacity" Value="0" />
+                                    </Style>
+                                    <Style Selector="Border:pointerover Button#QuickPlayButton">
+                                        <Setter Property="Opacity" Value="1" />
+                                    </Style>
+                                </Border.Styles>
+                                <DockPanel Margin="12,12,12,5">
+                                    <DockPanel DockPanel.Dock="Top">
+                                        <Border
+                                            ClipToBounds="True"
+                                            CornerRadius="10"
+                                            Height="40"
+                                            Margin="0,0,8,0"
+                                            Width="40">
+                                            <Image
+                                                Height="40"
+                                                Source="{Binding Icon}"
+                                                Width="40" />
+                                        </Border>
+                                        <TextBlock
+                                            Margin="2,3,0,0"
+                                            MaxLines="2"
+                                            Text="{Binding Name}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="Wrap" />
+                                    </DockPanel>
+                                    <StackPanel
+                                        DockPanel.Dock="Bottom"
+                                        Margin="2,8,0,5"
+                                        Spacing="2">
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            MaxLines="1"
+                                            Text="{Binding InstanceName}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            MaxLines="1"
+                                            Text="{Binding Details}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <DockPanel>
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding RelativeTime}" />
+                                            <Button
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Click="QuickPlay_Click"
+                                                DockPanel.Dock="Right"
+                                                HorizontalAlignment="Right"
+                                                Padding="4,-2,2,0"
+                                                Tag="{Binding Target}"
+                                                Theme="{StaticResource TransparentButton}"
+                                                ToolTip.Tip="快速进入"
+                                                x:Name="QuickPlayButton">
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M192,384L88.5,384C63.6,384,48.3,356.9,61.1,335.5L114,247.3C122.7,232.8,138.3,224,155.2,224L250.2,224C326.3,95.1 439.8,88.6 515.7,99.7 528.5,101.6 538.5,111.6 540.3,124.3 551.4,200.2 544.9,313.7 416,389.8L416,484.8C416,501.7,407.2,517.3,392.7,526L304.5,578.9C283.2,591.7,256,576.3,256,551.5L256,448C256,412.7,227.3,384,192,384L191.9,384z M464,224C464,197.5 442.5,176 416,176 389.5,176 368,197.5 368,224 368,250.5 389.5,272 416,272 442.5,272 464,250.5 464,224z"
+                                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                                    Height="15"
+                                                    Width="15" />
+                                            </Button>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
             <Border IsVisible="{Binding Data.ConfigEntry.ShowMinecraftNews}">
                 <StackPanel IsVisible="{Binding NewsPage.NewsPageViewModel.IsVisible}" Spacing="8">
                     <ContentControl Content="{Binding NewsPage}" Name="NewsContentControl" />

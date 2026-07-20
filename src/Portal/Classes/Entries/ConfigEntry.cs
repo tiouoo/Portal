@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch;
 using Portal.Views;
@@ -18,12 +19,14 @@ namespace Portal.Classes.Entries;
 
 public partial class ConfigEntry : ObservableObject
 {
+    private bool _isMinecraftFolderRecoveryScheduled;
+
     public ConfigEntry()
     {
         PropertyChanged += OnPropertyChanged;
         MinecraftAccounts.CollectionChanged += (_, _) => App.Method.SaveConfig();
         AuthServers.CollectionChanged += (_, _) => App.Method.SaveConfig();
-        MinecraftFolders.CollectionChanged += (_, _) => App.Method.SaveConfig();
+        MinecraftFolders.CollectionChanged += OnMinecraftFoldersChanged;
         JavaRuntimes.CollectionChanged += (_, _) => App.Method.SaveConfig();
     }
 
@@ -121,12 +124,29 @@ public partial class ConfigEntry : ObservableObject
                 break;
         }
 
-        if (Data.UiProperty.ConfigLoaded)
+        if (Data.UiProperty.ConfigLoaded &&
+            (e.PropertyName != nameof(DefaultMinecraftFolder) || MinecraftFolders.Count > 0))
         {
             ConfigIdentifyExtension.MinecraftFolder(this);
         }
 
         App.Method.SaveConfig();
+    }
+
+    private void OnMinecraftFoldersChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        App.Method.SaveConfig();
+        if (!Data.UiProperty.ConfigLoaded || _isMinecraftFolderRecoveryScheduled)
+            return;
+
+        _isMinecraftFolderRecoveryScheduled = true;
+        // The default-folder ComboBox may update its selection during this notification.
+        // Recover after it completes so ObservableCollection is no longer in its reentrancy guard.
+        Dispatcher.UIThread.Post(() =>
+        {
+            _isMinecraftFolderRecoveryScheduled = false;
+            ConfigIdentifyExtension.MinecraftFolder(this);
+        });
     }
 
     private void SetResource()

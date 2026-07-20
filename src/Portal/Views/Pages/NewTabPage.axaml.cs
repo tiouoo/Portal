@@ -1,9 +1,11 @@
+using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +13,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Operations;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
@@ -39,7 +42,11 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         InitializeComponent();
         NewTabViewModel = new NewTabViewModel();
         DataContext = NewTabViewModel;
-        Loaded += (_, _) => { NewTabViewModel.ApplyFilterAndSort(); };
+        Loaded += async (_, _) =>
+        {
+            NewTabViewModel.ApplyFilterAndSort();
+            await NewTabViewModel.RefreshRecentPlaysAsync();
+        };
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
         Unloaded += (_, _) => InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
     }
@@ -108,6 +115,18 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
         _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
+    }
+
+    private void NewTabPage_OnSizeChanged(object? sender, SizeChangedEventArgs e) =>
+        NewTabViewModel.SetRecentPlayWidth(e.NewSize.Width);
+
+    private void QuickPlay_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not RecentPlayTarget target || TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
+
+        _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
+            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private void Button_OnClick(object? sender, RoutedEventArgs e)
@@ -192,12 +211,43 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
 public partial class NewTabViewModel : InstanceListViewModelBase
 {
+    private readonly RecentPlayService _recentPlayService = new();
+    private List<RecentPlayItem> _allRecentPlays = [];
+    private int _recentPlayCapacity = 1;
+
     public NewTabViewModel()
     {
         SelectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
     }
 
     public NewsPage NewsPage { get; } = new(true);
+    public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
+    public bool HasRecentPlays => RecentPlays.Count > 0;
+
+    public async Task RefreshRecentPlaysAsync()
+    {
+        var targets = await _recentPlayService.ScanAsync(InstanceManager.Instance.Instances);
+        _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
+        ApplyRecentPlayCapacity();
+    }
+
+    public void SetRecentPlayWidth(double width)
+    {
+        var capacity = Math.Max(1, (int)((width + 12) / 282));
+        if (_recentPlayCapacity == capacity)
+            return;
+
+        _recentPlayCapacity = capacity;
+        ApplyRecentPlayCapacity();
+    }
+
+    private void ApplyRecentPlayCapacity()
+    {
+        RecentPlays.Clear();
+        foreach (var item in _allRecentPlays.Take(_recentPlayCapacity))
+            RecentPlays.Add(item);
+        OnPropertyChanged(nameof(HasRecentPlays));
+    }
 
     [RelayCommand]
     public void ToggleFavorite(MinecraftInstance instance)
@@ -207,5 +257,42 @@ public partial class NewTabViewModel : InstanceListViewModelBase
         instance.Config.IsFavorite = !instance.Config.IsFavorite;
         instance.SaveConfig();
         ApplyFilterAndSort();
+    }
+}
+
+public sealed class RecentPlayItem
+{
+    private readonly RecentPlayTarget _target;
+
+    public RecentPlayItem(RecentPlayTarget target) => _target = target;
+
+    public RecentPlayTarget Target => _target;
+    public string Name => _target.Name;
+    public string InstanceName => _target.Instance.InstanceName;
+    public string Details => _target.Details;
+    public string RelativeTime => GetRelativeTime(_target.LastPlayedTime);
+    public Bitmap Icon => _target.Type == RecentPlayTargetType.Server && _target.ServerIconData is { Length: > 0 }
+        ? LoadIcon(_target.ServerIconData) ?? _target.Instance.Icon
+        : _target.WorldIconPath is { } path && File.Exists(path) ? LoadIcon(path) ?? _target.Instance.Icon : _target.Instance.Icon;
+
+    private static Bitmap? LoadIcon(byte[] data)
+    {
+        try { using var stream = new MemoryStream(data); return Bitmap.DecodeToWidth(stream, 48); }
+        catch (Exception) { return null; }
+    }
+
+    private static Bitmap? LoadIcon(string path)
+    {
+        try { using var stream = File.OpenRead(path); return Bitmap.DecodeToWidth(stream, 48); }
+        catch (Exception) { return null; }
+    }
+
+    private static string GetRelativeTime(DateTime time)
+    {
+        var elapsed = DateTime.Now - time;
+        if (elapsed.TotalMinutes < 1) return "刚刚";
+        if (elapsed.TotalDays >= 30) return time.ToString("yyyy-MM-dd HH:mm");
+        if (elapsed.TotalDays >= 1) return $"{(int)elapsed.TotalDays} 天前";
+        return elapsed.TotalHours >= 1 ? $"{(int)elapsed.TotalHours} 小时前" : $"{(int)elapsed.TotalMinutes} 分钟前";
     }
 }
