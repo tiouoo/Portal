@@ -498,13 +498,14 @@
                     </Border>
                 </StackPanel>
             </DockPanel>
-            <StackPanel IsVisible="{Binding HasRecentPlays}" Spacing="8">
-                <TextBlock
-                    FontSize="15"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Margin="15,0,0,0"
-                    Text="最近游玩" />
-                <ItemsRepeater HorizontalAlignment="Stretch" ItemsSource="{Binding RecentPlays}">
+            <Border IsVisible="{Binding Data.ConfigEntry.ShowRecentPlays}">
+                <StackPanel IsVisible="{Binding HasRecentPlays}" Spacing="8">
+                    <TextBlock
+                        FontSize="15"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="15,0,0,0"
+                        Text="最近游玩" />
+                    <ItemsRepeater HorizontalAlignment="Stretch" ItemsSource="{Binding RecentPlays}">
                     <ItemsRepeater.Layout>
                         <UniformGridLayout
                             ItemsStretch="Fill"
@@ -592,8 +593,9 @@
                             </Border>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-            </StackPanel>
+                    </ItemsRepeater>
+                </StackPanel>
+            </Border>
             <Border IsVisible="{Binding Data.ConfigEntry.ShowMinecraftNews}">
                 <StackPanel IsVisible="{Binding NewsPage.NewsPageViewModel.IsVisible}" Spacing="8">
                     <ContentControl Content="{Binding NewsPage}" Name="NewsContentControl" />

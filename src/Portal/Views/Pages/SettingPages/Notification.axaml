@@ -82,6 +82,17 @@
                         HorizontalAlignment="Right"
                         IsChecked="{Binding Data.ConfigEntry.ShowMinecraftNews}" />
                 </DockPanel>
+                <DockPanel>
+                    <TextBlock
+                        DockPanel.Dock="Left"
+                        FontSize="14"
+                        HorizontalAlignment="Left"
+                        Text="在新标签页中显示最近游戏" />
+                    <ToggleSwitch
+                        DockPanel.Dock="Right"
+                        HorizontalAlignment="Right"
+                        IsChecked="{Binding Data.ConfigEntry.ShowRecentPlays}" />
+                </DockPanel>
             </StackPanel>
         </StackPanel>
     </StackPanel>

@@ -226,6 +226,13 @@ public partial class NewTabViewModel : InstanceListViewModelBase
 
     public async Task RefreshRecentPlaysAsync()
     {
+        if (!Data.ConfigEntry.ShowRecentPlays)
+        {
+            _allRecentPlays = [];
+            ApplyRecentPlayCapacity();
+            return;
+        }
+
         var targets = await _recentPlayService.ScanAsync(InstanceManager.Instance.Instances);
         _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
         ApplyRecentPlayCapacity();
