@@ -6,6 +6,7 @@
     x:DataType="local:ModDetailsPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -139,11 +140,11 @@
             Background="{DynamicResource TranslucentBorderBrush}"
             DockPanel.Dock="Top"
             Margin="0,10,0,-2" />
-        <ScrollViewer Margin="0,14,0,0">
+        <controls:ScrollView Margin="0,14,0,0">
             <ItemsControl ItemsSource="{Binding VersionGroups}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
+                        <StackPanel />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
@@ -154,6 +155,7 @@
                             BorderThickness="1"
                             HeaderHeight="46"
                             HeaderPadding="0"
+                            IsExpanded="{Binding IsExpanded}"
                             Margin="0,0,0,10">
                             <Expander.Header>
                                 <DockPanel Margin="5,0,14,0">
@@ -211,6 +213,6 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </ScrollViewer>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>

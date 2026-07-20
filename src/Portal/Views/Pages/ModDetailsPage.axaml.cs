@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
@@ -43,6 +44,9 @@ public sealed record ModDetailsTarget(
 
 public partial class ModDetailsPage : UserControl, ITioTabPage
 {
+    private ModVersionGroup? _targetVersionGroup;
+    private bool _isWaitingForTargetVersionGroup;
+
     public ModDetailsPage() : this(new ModDetailsTarget(ModDetailsSource.Modrinth, string.Empty))
     {
     }
@@ -52,6 +56,7 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         InitializeComponent();
         ViewModel = new ModDetailsPageViewModel(target);
         DataContext = ViewModel;
+        ViewModel.TargetVersionGroupReady += ScrollToTargetVersionGroup;
         PageInfo = new PageInfo
         {
             Title = "模组详情",
@@ -66,6 +71,34 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     public TabEntry HostTab { get; set; }
 
     public void OnClose() => ViewModel.Dispose();
+
+    private void ScrollToTargetVersionGroup(ModVersionGroup group)
+    {
+        _targetVersionGroup = group;
+        if (_isWaitingForTargetVersionGroup)
+            return;
+
+        _isWaitingForTargetVersionGroup = true;
+        LayoutUpdated += OnLayoutUpdated;
+    }
+
+    private void OnLayoutUpdated(object? sender, EventArgs e)
+    {
+        if (_targetVersionGroup is null)
+            return;
+
+        var expander = this.GetVisualDescendants().OfType<TioExpander>()
+            .FirstOrDefault(control => ReferenceEquals(control.DataContext, _targetVersionGroup));
+        if (expander is null)
+            return;
+
+        LayoutUpdated -= OnLayoutUpdated;
+        _isWaitingForTargetVersionGroup = false;
+        _targetVersionGroup = null;
+        expander.IsExpanded = true;
+        // Run after the expanded content has updated the scroll extent.
+        Dispatcher.UIThread.Post(() => expander.BringIntoView(), DispatcherPriority.Render);
+    }
 
     private async void VersionFile_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -187,10 +220,12 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     private readonly CurseforgeProvider _curseforge = new();
     private bool _loaded;
     private bool _buildingFilters;
+    private bool _hasLocatedTargetVersionGroup;
     private bool _disposed;
     private readonly CancellationTokenSource _disposeCancellation = new();
     private CancellationTokenSource? _filterCancellation;
     private CancellationTokenSource? _filterDebounce;
+    public event Action<ModVersionGroup>? TargetVersionGroupReady;
     public ObservableCollection<ModMinecraftVersionFilter> VersionFilters { get; } = [];
     public ObservableCollection<ModLoaderFilter> LoaderFilters { get; } = [];
     [ObservableProperty] public partial ObservableCollection<ModVersionGroup> VersionGroups { get; set; } = [];
@@ -347,11 +382,21 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
                 .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key.MinecraftVersion))
                 .ThenBy(group => group.Key.Loader)
                 .Select(group => new ModVersionGroup($"{group.Key.Loader} {group.Key.MinecraftVersion}",
-                    group.Select(item => item.File.ForCompatibility(item.Key)).DistinctBy(file => file.Id).ToArray()))
+                    group.Select(item => item.File.ForCompatibility(item.Key)).DistinctBy(file => file.Id).ToArray(),
+                    group.Key.Loader, group.Key.MinecraftVersion))
                 .ToArray(), cancellation.Token);
             if (cancellation.IsCancellationRequested) return;
 
             VersionGroups = new ObservableCollection<ModVersionGroup>(groups);
+            if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(target.GameVersion) &&
+                LoaderName(target.Loader) is { } targetLoader &&
+                groups.FirstOrDefault(group => group.MinecraftVersion == target.GameVersion &&
+                    group.Loader == targetLoader) is { } targetGroup)
+            {
+                _hasLocatedTargetVersionGroup = true;
+                targetGroup.IsExpanded = true;
+                TargetVersionGroupReady?.Invoke(targetGroup);
+            }
             OnPropertyChanged(nameof(IsEmpty));
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -428,15 +473,21 @@ public sealed partial class ModVersionGroup : ObservableObject
     private const int PageSize = 20;
     private readonly IReadOnlyList<ModVersionFileItem> _files;
     public string Title { get; }
+    public string Loader { get; }
+    public string MinecraftVersion { get; }
     public ObservableCollection<ModVersionFileItem> VisibleFiles { get; } = [];
     public string FileCountText => $"{_files.Count} 个文件";
     public bool HasMore => VisibleFiles.Count < _files.Count;
     public string LoadMoreText => $"显示更多（剩余 {_files.Count - VisibleFiles.Count} 个）";
 
-    public ModVersionGroup(string title, IReadOnlyList<ModVersionFileItem> files)
+    [ObservableProperty] public partial bool IsExpanded { get; set; }
+
+    public ModVersionGroup(string title, IReadOnlyList<ModVersionFileItem> files, string loader, string minecraftVersion)
     {
         Title = title;
         _files = files;
+        Loader = loader;
+        MinecraftVersion = minecraftVersion;
         LoadMore();
     }
 
