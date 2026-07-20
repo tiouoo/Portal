@@ -227,18 +227,10 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             step.SetDescription(entries.Count == 1
                 ? $"正在下载并安装 Minecraft {versionId}"
                 : $"正在组合安装 {string.Join(" + ", entries.Skip(1).Select(x => x.DisplayVersion))}");
-            if (entries.Count == 1)
-            {
-                var installer = VanillaInstaller.Create(folder.FolderPath, _vanilla, versionId);
-                installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
-                await installer.InstallAsync(step.CancellationToken);
-            }
-            else
-            {
-                var installer = CompositeInstaller.Create(entries, folder.FolderPath, SelectedJavaRuntime?.JavaPath, versionId);
-                installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
-                await installer.InstallAsync(step.CancellationToken);
-            }
+            var installer = CompositeInstaller.Create(entries, folder.FolderPath,
+                SelectedJavaRuntime?.JavaPath, versionId);
+            installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
+            await installer.InstallAsync(step.CancellationToken);
             step.SetDescription($"已写入 {versionId} 的安装文件");
             step.ReportProgress(1);
         });
@@ -347,11 +339,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
                 ? "实例 id 包含文件夹名称不允许的字符"
                 :
-                HasModLoader && string.Equals(id, _vanilla.Id, StringComparison.OrdinalIgnoreCase)
-                    ?
-                    "附加加载器时，实例 id 不能与原版版本号相同"
-                    :
-                    SelectedMinecraftFolder is not null &&
+                SelectedMinecraftFolder is not null &&
                     (VersionDirectoryExists(id) || HasModLoader && VersionDirectoryExists($"{id}-base"))
                         ? "该实例 id 或内部父版本目录已存在，请更换名称"
                         : null;
