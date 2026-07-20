@@ -9,25 +9,6 @@
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <UserControl.Styles>
-        <Style Selector="Border.loader-card">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Duration="0:0:0.1" Property="BorderBrush" />
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Border.in-loader-card">
-            <Setter Property="BorderBrush" Value="{DynamicResource TranslucentBorderBrush}" />
-        </Style>
-        <Style Selector="Border.loader-card.selected">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-    </UserControl.Styles>
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top" Spacing="10">
             <DockPanel>
@@ -37,7 +18,7 @@
                     FontWeight="SemiBold"
                     HorizontalAlignment="Left"
                     Margin="6,2,0,0">
-                    <Run Text="安装 Java" />
+                    <Run Text="安装 Java " />
                     <Run Text="{Binding VanillaVersion}" />
                 </TextBlock>
                 <StackPanel
@@ -86,192 +67,90 @@
                         </ComboBox>
                     </StackPanel>
                     <StackPanel>
-                        <TextBlock
-                            Margin="5,0,0,2"
-                            Text="实例 id"
-                            VerticalAlignment="Center" />
-                        <TextBox PlaceholderText="输入实例 id" Text="{Binding CustomVersionId}" />
+                        <TextBlock Margin="5,0,0,2" Text="实例 id" />
+                        <TextBox
+                            IsEnabled="{Binding CanCustomizeVersionId}"
+                            PlaceholderText="输入实例 id"
+                            Text="{Binding CustomVersionId}" />
                     </StackPanel>
                 </DockPanel>
             </Border>
         </StackPanel>
+
         <ScrollViewer Margin="0,14,0,0">
-            <StackPanel Spacing="12">
-                <Expander
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1">
-                    <Expander.Header>
-                        <TextBlock Margin="5,11,0,10" Text="{Binding FabricHeader}" />
-                    </Expander.Header>
-                    <ItemsControl ItemsSource="{Binding FabricOptions}" Margin="5">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Classes.loader-card="True"
-                                    Classes.selected="{Binding IsSelected}"
-                                    CornerRadius="11"
-                                    Margin="4">
-                                    <Border
-                                        Classes.in-loader-card="True"
-                                        Classes.loader-card="True"
-                                        Classes.selected="{Binding IsSelected}"
-                                        CornerRadius="10"
-                                        Cursor="Hand"
-                                        Padding="10"
-                                        Tapped="FabricOption_OnTapped">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                    </Border>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Expander>
-                <Expander
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1">
-                    <Expander.Header>
-                        <TextBlock Margin="5,11,0,10" Text="{Binding ForgeHeader}" />
-                    </Expander.Header>
-                    <ItemsControl ItemsSource="{Binding ForgeOptions}" Margin="5">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Classes.loader-card="True"
-                                    Classes.selected="{Binding IsSelected}"
-                                    CornerRadius="11"
-                                    Margin="4">
-                                    <Border
-                                        Classes.in-loader-card="True"
-                                        Classes.loader-card="True"
-                                        Classes.selected="{Binding IsSelected}"
-                                        CornerRadius="10"
-                                        Cursor="Hand"
-                                        Padding="10"
-                                        Tapped="ForgeOption_OnTapped">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                    </Border>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Expander>
-                <Expander
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1">
-                    <Expander.Header>
-                        <TextBlock Margin="5,11,0,10" Text="{Binding NeoForgeHeader}" />
-                    </Expander.Header>
-                    <ItemsControl ItemsSource="{Binding NeoForgeOptions}" Margin="5">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Classes.loader-card="True"
-                                    Classes.selected="{Binding IsSelected}"
-                                    CornerRadius="11"
-                                    Margin="4">
-                                    <Border
-                                        Classes.in-loader-card="True"
-                                        Classes.loader-card="True"
-                                        Classes.selected="{Binding IsSelected}"
-                                        CornerRadius="10"
-                                        Cursor="Hand"
-                                        Padding="10"
-                                        Tapped="NeoForgeOption_OnTapped">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                    </Border>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Expander>
-                <Expander
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1">
-                    <Expander.Header>
-                        <TextBlock Margin="5,11,0,10" Text="{Binding QuiltHeader}" />
-                    </Expander.Header>
-                    <ItemsControl ItemsSource="{Binding QuiltOptions}" Margin="5">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Classes.loader-card="True"
-                                    Classes.selected="{Binding IsSelected}"
-                                    CornerRadius="11"
-                                    Margin="4">
-                                    <Border
-                                        Classes.in-loader-card="True"
-                                        Classes.loader-card="True"
-                                        Classes.selected="{Binding IsSelected}"
-                                        CornerRadius="10"
-                                        Cursor="Hand"
-                                        Padding="10"
-                                        Tapped="QuiltOption_OnTapped">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                    </Border>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Expander>
-                <Expander
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1">
-                    <Expander.Header>
-                        <TextBlock Margin="5,11,0,10" Text="{Binding OptiFineHeader}" />
-                    </Expander.Header>
-                    <ItemsControl ItemsSource="{Binding OptifineOptions}" Margin="5">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Classes.loader-card="True"
-                                    Classes.selected="{Binding IsSelected}"
-                                    CornerRadius="11"
-                                    Margin="4">
-                                    <Border
-                                        Classes.in-loader-card="True"
-                                        Classes.loader-card="True"
-                                        Classes.selected="{Binding IsSelected}"
-                                        CornerRadius="10"
-                                        Cursor="Hand"
-                                        Padding="10"
-                                        Tapped="OptifineOption_OnTapped">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                    </Border>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Expander>
+            <StackPanel Spacing="10">
+                <TextBlock
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Margin="5,0,0,0"
+                    Text="选择加载器" />
+                <WrapPanel>
+                    <CheckBox
+                        IsChecked="{Binding IsForgeSelected, Mode=TwoWay}"
+                        Margin="0,0,10,10"
+                        Theme="{DynamicResource PureCardCheckBox}"
+                        Width="220">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Text="Forge" />
+                            <TextBlock Text="{Binding ForgeStatus}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox
+                        IsChecked="{Binding IsNeoForgeSelected, Mode=TwoWay}"
+                        Margin="0,0,10,10"
+                        Theme="{DynamicResource PureCardCheckBox}"
+                        Width="220">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Text="NeoForge" />
+                            <TextBlock Text="{Binding NeoForgeStatus}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox
+                        IsChecked="{Binding IsFabricSelected, Mode=TwoWay}"
+                        Margin="0,0,10,10"
+                        Theme="{DynamicResource PureCardCheckBox}"
+                        Width="220">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Text="Fabric" />
+                            <TextBlock Text="{Binding FabricStatus}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox
+                        IsChecked="{Binding IsQuiltSelected, Mode=TwoWay}"
+                        Margin="0,0,10,10"
+                        Theme="{DynamicResource PureCardCheckBox}"
+                        Width="220">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Text="Quilt" />
+                            <TextBlock Text="{Binding QuiltStatus}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox
+                        IsChecked="{Binding IsOptiFineSelected, Mode=TwoWay}"
+                        Margin="0,0,10,10"
+                        Theme="{DynamicResource PureCardCheckBox}"
+                        Width="220">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Text="OptiFine" />
+                            <TextBlock Text="{Binding OptiFineStatus}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </CheckBox>
+                </WrapPanel>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>
