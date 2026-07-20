@@ -1,23 +1,32 @@
-using Portal.Bedrock;
-using Portal.Core.Minecraft.Instance;
-using Portal.Core.Minecraft.Instance.Bedrock;
+using MinecraftLaunch.Components.Installer;
 
-var manager = InstanceManager.Instance;
-manager.RefreshAll([(@"D:\Games\.minecraft", ".minecraft")]);
-foreach (var x in manager.Instances)
+var minecrafts = await VanillaInstaller.EnumerableMinecraftAsync();
+
+var minecraft = minecrafts.First(x => x.McVersion == "1.21.1");
+
+var installer = VanillaInstaller.Create(@"D:\Temp\mc", minecraft);
+
+installer.ProgressChanged += (sender, x) =>
 {
-    Console.WriteLine($"{x.Type} {x.VersionId}");
-    if (x.BedrockConfig is { } bedrockConf)
-    {
-        Console.WriteLine($"Bedrock Config: Name={bedrockConf.Name}, Version={bedrockConf.Version}, BuildType={bedrockConf.BuildType}, Type={bedrockConf.Type}");
-    }
-}
+    Console.WriteLine(
+        $"{x.Speed} {x.Progress * 100}% {x.StepName} {x.Status} {x.FinishedStepTaskCount}/{x.TotalStepTaskCount}");
+};
 
-var launcher = new BedrockLaunch(BedrockHelper.GetInstanceConfig(@"D:\Games\.minecraft\bedrock_versions\1.26.3202"));
-await launcher.Launch();
 
-var process = launcher.GetProcess();
-Console.WriteLine(process.Id);
+await installer.InstallAsync();
 
-process.WaitForExit();
-Console.WriteLine(process.ExitCode);
+var optifine = (await OptifineInstaller.EnumerableOptifineAsync("1.21.1")).First();
+
+var optifineInstaller = OptifineInstaller.Create(
+    @"D:\Temp\mc",
+    @"D:\Minecraft\jdk\openjdk-25_windows-x64_bin\jdk-25\bin\java.exe",
+    optifine
+);
+
+optifineInstaller.ProgressChanged += (sender, x) =>
+{
+    Console.WriteLine(
+        $"{x.Speed} {x.Progress * 100}% {x.StepName} {x.Status} {x.FinishedStepTaskCount}/{x.TotalStepTaskCount}");
+};
+
+var minecraft1 = await optifineInstaller.InstallAsync();
