@@ -259,9 +259,22 @@ public static class MinecraftLaunchService
             throw new InvalidOperationException("没有可用的 Java 运行时，请在设置中添加 Java。");
 
         var javaEntries = candidates.Select(ToJavaEntry).ToList();
-        var selected = preferred != null ? javaEntries[0] : options.EnableAutoSelectJava
-            ? instance.MinecraftEntry!.GetAppropriateJava(javaEntries)
-            : options.DefaultJavaRuntime is { } defaultJava ? ToJavaEntry(defaultJava) : javaEntries[0];
+        JavaEntry? selected;
+        if (preferred != null)
+        {
+            selected = javaEntries[0];
+        }
+        else if (options.EnableAutoSelectJava)
+        {
+            selected = instance.MinecraftEntry!.GetAppropriateJava(javaEntries);
+        }
+        else
+        {
+            selected = options.DefaultJavaRuntime is { } defaultJava ? ToJavaEntry(defaultJava) : javaEntries[0];
+            var requiredVersion = instance.MinecraftEntry!.GetAppropriateJavaVersion();
+            if (requiredVersion > 0 && selected.MajorVersion < requiredVersion)
+                selected = instance.MinecraftEntry.GetAppropriateJava(javaEntries);
+        }
         return selected ?? throw new InvalidOperationException("找不到与当前 Minecraft 版本兼容的 Java 运行时。");
     }
 
