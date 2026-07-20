@@ -90,9 +90,10 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     public bool CanCustomizeVersionId => true;
 
     public bool RequiresJava => _selectedPrimary?.Kind is LoaderKind.Forge or LoaderKind.NeoForge ||
-                                _selectedOptifine is not null;
+                                 _selectedOptifine is not null;
 
-    public bool CanInstall => !IsInstalling && SelectedMinecraftFolder is not null && IsVersionIdValid();
+    public bool CanInstall => !IsInstalling && SelectedMinecraftFolder is not null && IsVersionIdValid()
+                              && HasRequiredJavaRuntime();
     public string FabricHeader => HeaderFor(LoaderKind.Fabric);
     public string ForgeHeader => HeaderFor(LoaderKind.Forge);
     public string NeoForgeHeader => HeaderFor(LoaderKind.NeoForge);
@@ -110,6 +111,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     }
 
     partial void OnSelectedMinecraftFolderChanged(MinecraftFolderEntry? value) => UpdateVersionState();
+    partial void OnSelectedJavaRuntimeChanged(JavaRuntimeEntry? value) => UpdateVersionState();
     partial void OnCustomVersionIdChanged(string value) => UpdateVersionState();
     partial void OnIsInstallingChanged(bool value) => OnPropertyChanged(nameof(CanInstall));
 
@@ -141,12 +143,22 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         if (option.Kind == LoaderKind.OptiFine)
         {
             if (_selectedOptifine == option) _selectedOptifine = null;
-            else _selectedOptifine = option;
+            else
+            {
+                _selectedOptifine = option;
+                if (_selectedPrimary?.Kind is not LoaderKind.Forge)
+                    _selectedPrimary = null;
+            }
         }
         else
         {
             if (_selectedPrimary == option) _selectedPrimary = null;
-            else _selectedPrimary = option;
+            else
+            {
+                _selectedPrimary = option;
+                if (option.Kind is not LoaderKind.Forge)
+                    _selectedOptifine = null;
+            }
         }
 
         foreach (var item in AllOptions()) item.IsSelected = item == _selectedPrimary || item == _selectedOptifine;
@@ -198,7 +210,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     {
         await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
         {
-            if (RequiresJava && (SelectedJavaRuntime is null || !File.Exists(SelectedJavaRuntime.JavaPath)))
+            if (!HasRequiredJavaRuntime())
                 throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
             if (VersionDirectoryExists(versionId) || (HasModLoader && VersionDirectoryExists($"{versionId}-base")))
                 throw new InvalidOperationException($"实例 ID “{versionId}”或其内部父版本目录已存在于所选文件夹，请更换名称。");
@@ -361,6 +373,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             .Select(option => option!.DisplayName);
         return names.Any() ? $"{_vanilla.Id} {string.Join(" + ", names)}" : _vanilla.Id;
     }
+
+    private bool HasRequiredJavaRuntime() => !RequiresJava ||
+        SelectedJavaRuntime is { JavaPath: { } javaPath } && File.Exists(javaPath);
 
     private readonly Dictionary<LoaderKind, string?> _loaderStatuses = [];
 
