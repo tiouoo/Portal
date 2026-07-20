@@ -12,7 +12,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Views.Pages.InstancePages;
 using TioUi.Common.Interfaces;
 
-namespace Portal.Views.Pages;
+namespace Portal.Views.Pages.DownloadPages;
 
 public partial class ModInstallDialog : UserControl
 {

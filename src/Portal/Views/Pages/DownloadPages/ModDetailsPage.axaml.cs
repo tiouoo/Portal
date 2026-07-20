@@ -26,7 +26,7 @@ using TioUi.Controls;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 
-namespace Portal.Views.Pages;
+namespace Portal.Views.Pages.DownloadPages;
 
 public enum ModDetailsSource
 {

@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.Input;
 using Flurl.Http;
 using Portal.Const;
 using Portal.Views.Pages;
+using Portal.Views.Pages.DownloadPages;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
