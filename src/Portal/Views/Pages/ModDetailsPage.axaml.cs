@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using AsyncImageLoader;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
@@ -79,6 +80,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     public ObservableCollection<string> Screenshots { get; } = [];
     public ObservableCollection<int> ScreenshotIndices { get; } = [];
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
+    public IAsyncImageLoader ScreenshotLoader { get; } = new ModScreenshotLoader();
     [ObservableProperty] public partial string Name { get; set; } = string.Empty;
     [ObservableProperty] public partial string FriendlyName { get; set; } = string.Empty;
     [ObservableProperty] public partial string Summary { get; set; } = string.Empty;
@@ -361,4 +363,27 @@ public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patc
     public int CompareTo(MinecraftVersionKey other) =>
         Major != other.Major ? Major.CompareTo(other.Major) : Minor != other.Minor ? Minor.CompareTo(other.Minor) :
         Patch.CompareTo(other.Patch);
+}
+
+public sealed class ModScreenshotLoader : IAsyncImageLoader
+{
+    private const int ScreenshotWidth = 260;
+    private static readonly HttpClient Client = new();
+
+    public async Task<Bitmap?> ProvideImageAsync(string url)
+    {
+        try
+        {
+            using var response = await Client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            return Bitmap.DecodeToWidth(stream, ScreenshotWidth);
+        }
+        catch (HttpRequestException) { return null; }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
+        catch (InvalidDataException) { return null; }
+    }
+
+    public void Dispose() { }
 }

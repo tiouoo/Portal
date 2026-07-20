@@ -29,7 +29,7 @@
                             <Carousel.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
                                     <asyncImageLoader:AdvancedImage
-                                        Loader="{Binding $parent[UserControl].DataContext.ImageLoader}"
+                                        Loader="{Binding $parent[UserControl].DataContext.ScreenshotLoader}"
                                         Source="{Binding}"
                                         Stretch="UniformToFill" />
                                 </DataTemplate>
