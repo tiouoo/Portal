@@ -121,6 +121,12 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
             return;
 
         StartDownload(topLevel, file, destination);
+        if (result.Destination == ModDownloadDestination.Install && result.Instance is not null)
+        {
+            var modsFolder = result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
+            foreach (var dependency in result.Dependencies)
+                StartDownload(topLevel, dependency, Path.Combine(modsFolder, dependency.FileName));
+        }
     }
 
     private static async Task<string?> SelectSaveDestinationAsync(TopLevel topLevel, ModVersionFileItem file)
@@ -511,7 +517,10 @@ public sealed record ModVersionFileItem(
     string DownloadUrl,
     long FileSize,
     IReadOnlyList<string> MinecraftVersions,
-    IReadOnlyList<ModVersionGroupKey> GroupKeys)
+    IReadOnlyList<ModVersionGroupKey> GroupKeys,
+    ModDetailsSource Source,
+    string ProjectId,
+    IReadOnlyList<ModFileDependency> Dependencies)
 {
     public static ModVersionFileItem From(ModrinthResourceFile file) => new(file.VersionId,
         string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
@@ -520,7 +529,13 @@ public sealed record ModVersionFileItem(
         ReleaseType(file.ReleaseType), file.FileName, file.DownloadUrl, file.FileSize,
         file.MinecraftVersions.ToList(),
         file.ModLoaders.SelectMany(loader =>
-            file.MinecraftVersions.Select(version => new ModVersionGroupKey(LoaderName(loader), version))).ToList());
+            file.MinecraftVersions.Select(version => new ModVersionGroupKey(LoaderName(loader), version))).ToList(),
+        ModDetailsSource.Modrinth,
+        file.ProjectId,
+            file.Dependencies.Where(dependency => dependency.Type == DependencyType.Required &&
+                (!string.IsNullOrWhiteSpace(dependency.ProjectId) || !string.IsNullOrWhiteSpace(dependency.VersionId)))
+            .Select(dependency => new ModFileDependency(dependency.ProjectId, dependency.FileName ?? string.Empty,
+                dependency.VersionId)).Distinct().ToArray());
 
     public static ModVersionFileItem From(CurseforgeResourceFile file)
     {
@@ -532,7 +547,11 @@ public sealed record ModVersionFileItem(
             ReleaseType(file.ReleaseType), file.FileName,
             file.DownloadUrl, file.FileLength, versions,
             enumerable.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
-                .ToList());
+                .ToList(),
+            ModDetailsSource.CurseForge,
+            file.ModId.ToString(),
+            file.Dependencies.Where(dependency => dependency.Value == DependencyType.Required)
+                .Select(dependency => new ModFileDependency(dependency.Key.ToString(), string.Empty)).Distinct().ToArray());
     }
 
     public ModVersionFileItem ForCompatibility(ModVersionGroupKey compatibility) => this with
@@ -580,6 +599,8 @@ public sealed record ModVersionFileItem(
         return $"{Math.Max(1, (int)(elapsed.TotalDays / 365))} 年前";
     }
 }
+
+public sealed record ModFileDependency(string ProjectId, string Name, string? VersionId = null);
 
 public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patch) : IComparable<MinecraftVersionKey>
 {

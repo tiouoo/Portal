@@ -11,7 +11,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid
         Margin="24"
-        RowDefinitions="Auto,Auto,Auto"
+        RowDefinitions="Auto,Auto,Auto,Auto"
         Width="480">
         <StackPanel Spacing="4">
             <TextBlock>
@@ -56,8 +56,41 @@
                 IsVisible="{Binding HasNoInstances}"
                 Text="没有可安装模组的 Java 版实例" />
         </StackPanel>
-        <DockPanel
+        <StackPanel
             Grid.Row="2"
+            IsVisible="{Binding ShowDependencyActions}"
+            Margin="0,18,0,0"
+            Spacing="5">
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoadingDependencies}"
+                Text="正在加载依赖项。你可以跳过依赖项，仅下载当前模组。" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasDependencyLoadError}"
+                Text="依赖项加载失败。你可以跳过依赖项，仅下载当前模组。" />
+            <TextBlock IsVisible="{Binding HasDependencies}" Text="将同时下载以下依赖项" />
+            <ItemsControl IsVisible="{Binding HasDependencies}" ItemsSource="{Binding Dependencies}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:ModInstallDependencyItem">
+                        <Button
+                            Background="Transparent"
+                            Click="Dependency_OnClick"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="0">
+                            <TextBlock
+                                HorizontalAlignment="Left"
+                                Margin="10,0,0,0"
+                                Text="{Binding File.DisplayName}"
+                                TextTrimming="CharacterEllipsis" />
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+        <DockPanel
+            Grid.Row="3"
             LastChildFill="False"
             Margin="0,22,0,0">
             <Button
@@ -70,9 +103,14 @@
                 Spacing="8">
                 <Button Click="Cancel_Click" Content="取消" />
                 <Button
+                    Click="SkipDependencies_Click"
+                    Content="跳过依赖项"
+                    IsEnabled="{Binding CanInstall}"
+                    IsVisible="{Binding ShowDependencyActions}" />
+                <Button
                     Click="Install_Click"
                     Content="确定"
-                    IsEnabled="{Binding CanInstall}" />
+                    IsEnabled="{Binding CanInstallWithDependencies}" />
             </StackPanel>
         </DockPanel>
     </Grid>
