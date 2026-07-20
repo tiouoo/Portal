@@ -131,9 +131,14 @@
                     <Setter Property="Opacity" Value="1" />
                 </Style>
             </ListBox.Styles>
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="4" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="classes:JavaRuntimeEntry">
-                    <Grid ColumnDefinitions="*,Auto" Margin="3,6">
+                    <Grid ColumnDefinitions="*,Auto" Margin="3,0">
                         <StackPanel Spacing="2">
                             <TextBlock Text="{Binding DisplayName}" />
                             <TextBlock
