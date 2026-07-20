@@ -2,14 +2,26 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using AsyncImageLoader;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Provider;
+using MinecraftLaunch.Components.Downloader;
+using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Instance;
 using Portal.Views.Pages.InstancePages;
+using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Tab.Gateway;
+using TioUi.Common;
+using TioUi.Common.Extensions;
+using TioUi.Controls;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 
@@ -23,7 +35,10 @@ public enum ModDetailsSource
 
 // Instance entries use only the provider identity cached for their installed file.
 // All display data is fetched from the provider project endpoint.
-public sealed record ModDetailsTarget(ModDetailsSource Source, string ProjectId, string GameVersion = "",
+public sealed record ModDetailsTarget(
+    ModDetailsSource Source,
+    string ProjectId,
+    string GameVersion = "",
     ModLoaderType Loader = ModLoaderType.Any);
 
 public partial class ModDetailsPage : UserControl, ITioTabPage
@@ -51,6 +66,108 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     public TabEntry HostTab { get; set; }
 
     public void OnClose() => ViewModel.Dispose();
+
+    private async void VersionFile_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control { DataContext: ModVersionFileItem file } ||
+            TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
+
+        var result = await OverlayDialog
+            .ShowCustomAsync<ModInstallDialog, ModInstallDialogViewModel, ModInstallDialogResult>(
+                new ModInstallDialogViewModel(file, InstanceManager.Instance.Instances), topLevel.TryGetHostId(),
+                new OverlayDialogOptions
+                    { Title = "下载模组", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false });
+        if (result is null)
+            return;
+
+        string? destination = result.Destination == ModDownloadDestination.Install && result.Instance is not null
+            ? Path.Combine(result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder), file.FileName)
+            : await SelectSaveDestinationAsync(topLevel, file);
+        if (string.IsNullOrWhiteSpace(destination))
+            return;
+
+        StartDownload(topLevel, file, destination);
+    }
+
+    private static async Task<string?> SelectSaveDestinationAsync(TopLevel topLevel, ModVersionFileItem file)
+    {
+        var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "另存为模组",
+            SuggestedFileName = file.FileName,
+            FileTypeChoices = [new FilePickerFileType("Java 模组") { Patterns = ["*.jar"] }]
+        });
+        return selected?.TryGetLocalPath();
+    }
+
+    private static void StartDownload(TopLevel topLevel, ModVersionFileItem file, string destination)
+    {
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = $"下载模组：{file.FileName}",
+            Description = "正在连接下载服务器",
+            Progress = 0,
+            Actions =
+            [
+                new TaskActionDefinition
+                {
+                    Name = "取消下载", Description = "取消此模组下载", IconKey = "Cancel",
+                    ExecuteAsync = (managedTask, _) =>
+                    {
+                        managedTask.RequestCancellation();
+                        return Task.CompletedTask;
+                    },
+                    CanExecute = managedTask => managedTask.CanBeCancelled,
+                    IsVisible = managedTask => !managedTask.IsTerminal
+                }
+            ]
+        }, async context =>
+        {
+            context.SetRunning($"正在下载：{file.FileName}");
+            var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
+            {
+                ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
+                {
+                    if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                    var fraction = progress.TotalBytes > 0
+                        ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
+                        : (double?)null;
+                    context.ReportProgress(fraction);
+                    context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(progress.Speed, true)}");
+                })
+            };
+            var download = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
+            if (download.Type == DownloadResultType.Cancelled)
+                throw new OperationCanceledException(context.CancellationToken);
+            if (download.Type != DownloadResultType.Successful)
+                throw download.Exception ?? new IOException("模组下载失败。");
+            context.ReportProgress(1);
+            context.SetDescription("下载完成");
+        });
+        task.Start();
+        _ = ObserveDownloadAsync(task, topLevel, file.FileName);
+    }
+
+    private static async Task ObserveDownloadAsync(ManagedTask task, TopLevel topLevel, string fileName)
+    {
+        try
+        {
+            await task.Completion;
+        }
+        catch
+        {
+        }
+
+        if (task.Status == ManagedTaskStatus.Completed)
+            Dispatcher.UIThread.Post(() =>
+                NotificationGateway.Notice(topLevel, $"{fileName} 下载完成", NotificationType.Success));
+        else if (task.Status == ManagedTaskStatus.Faulted)
+            Dispatcher.UIThread.Post(() =>
+                NotificationGateway.Notice(topLevel, $"{fileName} 下载失败", NotificationType.Error));
+        await Task.Delay(TimeSpan.FromSeconds(3));
+        Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
+    }
 
     public static void Open(TopLevel sender, ModDetailsTarget target, string? title = null)
     {
@@ -119,7 +236,9 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             }
             else
             {
-                var project = (await _curseforge.GetResourcesByModIdsAsync([long.Parse(target.ProjectId)], cancellationToken)).First();
+                var project =
+                    (await _curseforge.GetResourcesByModIdsAsync([long.Parse(target.ProjectId)], cancellationToken))
+                    .First();
                 Name = project.Name;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
                 Summary = project.Summary;
@@ -132,7 +251,9 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
             await BuildFiltersAsync(cancellationToken);
         }
-        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested) { }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
+        }
         catch (Exception)
         {
             HasError = true;
@@ -169,7 +290,9 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             await Task.Delay(100, cancellationToken);
             await ApplyFilterAsync();
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     private async Task BuildFiltersAsync(CancellationToken cancellationToken)
@@ -178,9 +301,11 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         {
             cancellationToken.ThrowIfCancellationRequested();
             var families = Files.SelectMany(file => file.MinecraftVersions).Select(GetVersionFamily)
-                .Where(family => family != null).Distinct().OrderByDescending(family => MinecraftVersionKey.Parse(family!))
+                .Where(family => family != null).Distinct()
+                .OrderByDescending(family => MinecraftVersionKey.Parse(family!))
                 .Select(family => family!).ToArray();
-            var loaders = Files.SelectMany(file => file.GroupKeys).Select(key => key.Loader).Distinct().Order().ToArray();
+            var loaders = Files.SelectMany(file => file.GroupKeys).Select(key => key.Loader).Distinct().Order()
+                .ToArray();
             return (Families: families, Loaders: loaders);
         }, cancellationToken);
         if (cancellationToken.IsCancellationRequested) return;
@@ -192,10 +317,11 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         LoaderFilters.Clear();
         LoaderFilters.Add(new ModLoaderFilter("全部", null));
         foreach (var loader in filterData.Loaders) LoaderFilters.Add(new ModLoaderFilter(loader, loader));
-        SelectedVersionFilter = VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(target.GameVersion)) ??
+        SelectedVersionFilter =
+            VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(target.GameVersion)) ??
             VersionFilters[0];
         SelectedLoaderFilter = LoaderFilters.FirstOrDefault(filter => filter.Loader == LoaderName(target.Loader)) ??
-            LoaderFilters[0];
+                               LoaderFilters[0];
         _buildingFilters = false;
         OnPropertyChanged(nameof(HasVersions));
         await ApplyFilterAsync();
@@ -211,22 +337,26 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         try
         {
             var groups = await Task.Run(() => Files.Where(file =>
-                    selectedFamily == null || file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
+                    selectedFamily == null ||
+                    file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
                 .SelectMany(file => file.GroupKeys.Select(key => (Key: key, File: file)))
-                .Where(item => (selectedFamily == null || GetVersionFamily(item.Key.MinecraftVersion) == selectedFamily) &&
-                               (selectedLoader == null || item.Key.Loader == selectedLoader))
+                .Where(item =>
+                    (selectedFamily == null || GetVersionFamily(item.Key.MinecraftVersion) == selectedFamily) &&
+                    (selectedLoader == null || item.Key.Loader == selectedLoader))
                 .GroupBy(item => item.Key)
                 .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key.MinecraftVersion))
                 .ThenBy(group => group.Key.Loader)
                 .Select(group => new ModVersionGroup($"{group.Key.Loader} {group.Key.MinecraftVersion}",
-                    group.Select(item => item.File).DistinctBy(file => file.Id).ToArray()))
+                    group.Select(item => item.File.ForCompatibility(item.Key)).DistinctBy(file => file.Id).ToArray()))
                 .ToArray(), cancellation.Token);
             if (cancellation.IsCancellationRequested) return;
 
             VersionGroups = new ObservableCollection<ModVersionGroup>(groups);
             OnPropertyChanged(nameof(IsEmpty));
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+        }
         finally
         {
             if (ReferenceEquals(_filterCancellation, cancellation)) _filterCancellation = null;
@@ -251,7 +381,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
     private static string? GetVersionFamily(string version)
     {
-        var match = Regex.Match(version, @"^(\d+)\.(\d+)(?:\.\d+)?$");
+        var match = Regex.Match(version, @"^(\d+)\.(\d+)(?:\.\d+)?(?:-[^-]+)?$", RegexOptions.IgnoreCase);
         return match.Success ? $"{match.Groups[1].Value}.{match.Groups[2].Value}" : null;
     }
 
@@ -311,26 +441,40 @@ public sealed record ModVersionFileItem(
     string DisplayName,
     string Details,
     string ReleaseTypeText,
+    string FileName,
+    string DownloadUrl,
+    long FileSize,
     IReadOnlyList<string> MinecraftVersions,
     IReadOnlyList<ModVersionGroupKey> GroupKeys)
 {
     public static ModVersionFileItem From(ModrinthResourceFile file) => new(file.VersionId,
         string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-        $"{file.VersionNumber} · {file.FileName} · {file.Published.ToLocalTime():yyyy-MM-dd}",
-        ReleaseType(file.ReleaseType),
+        FormatDetails(string.Join(",", file.ModLoaders.Select(LoaderName).Distinct()), file.FileName, file.Published,
+            file.ReleaseType),
+        ReleaseType(file.ReleaseType), file.FileName, file.DownloadUrl, file.FileSize,
         file.MinecraftVersions.ToList(),
         file.ModLoaders.SelectMany(loader =>
             file.MinecraftVersions.Select(version => new ModVersionGroupKey(LoaderName(loader), version))).ToList());
 
     public static ModVersionFileItem From(CurseforgeResourceFile file)
     {
-        var versions = file.GameVersions.Where(version => Regex.IsMatch(version, @"^\d+\.\d+(?:\.\d+)?$")).ToList();
-        var loaders = file.GameVersions.Where(version => !Regex.IsMatch(version, @"^\d+\.\d+(?:\.\d+)?$"))
-            .Select(LoaderName).DefaultIfEmpty("通用");
+        var versions = file.GameVersions.Where(IsMinecraftVersion).ToList();
+        var loaders = file.GameVersions.Select(LoaderName).OfType<string>().DefaultIfEmpty("通用");
+        var enumerable = loaders as string[] ?? loaders.ToArray();
         return new(file.Id.ToString(), string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-            $"{file.FileName} · {file.Published.ToLocalTime():yyyy-MM-dd}", ReleaseType(file.ReleaseType), versions,
-            loaders.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version))).ToList());
+            FormatDetails(string.Join(",", enumerable), file.FileName, file.Published, file.ReleaseType),
+            ReleaseType(file.ReleaseType), file.FileName,
+            file.DownloadUrl, file.FileLength, versions,
+            enumerable.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
+                .ToList());
     }
+
+    public ModVersionFileItem ForCompatibility(ModVersionGroupKey compatibility) => this with
+    {
+        Details = $"{compatibility.Loader}·{Details[(Details.IndexOf('·') + 1)..]}",
+        MinecraftVersions = [compatibility.MinecraftVersion],
+        GroupKeys = [compatibility]
+    };
 
     private static string LoaderName(ModLoaderType loader) => loader switch
     {
@@ -338,15 +482,37 @@ public sealed record ModVersionFileItem(
         ModLoaderType.Quilt => "Quilt", _ => "通用"
     };
 
-    private static string LoaderName(string loader) => loader.ToLowerInvariant() switch
+    private static string? LoaderName(string loader) => loader.Trim().ToLowerInvariant() switch
     {
-        "neoforge" => "NeoForge", "forge" => "Forge", "fabric" => "Fabric", "quilt" => "Quilt", _ => loader
+        "neoforge" => "NeoForge", "forge" => "Forge", "fabric" => "Fabric", "quilt" => "Quilt", _ => null
     };
+
+    private static bool IsMinecraftVersion(string version) => Regex.IsMatch(version,
+        @"^\d+\.\d+(?:\.\d+)?(?:-(?:snapshot|pre-release|pre\d+|rc\d+))?$", RegexOptions.IgnoreCase);
+
+    private static string FormatDetails(string loader, string fileName, DateTime published, FileReleaseType releaseType) =>
+        $"{loader}·{fileName}·{FormatRelativeTime(published)}·{ReleaseType(releaseType)}";
 
     private static string ReleaseType(FileReleaseType type) => type switch
     {
-        FileReleaseType.Release => "正式版", FileReleaseType.Beta => "Beta", _ => "Alpha"
+        FileReleaseType.Release => "正式版", FileReleaseType.Beta => "测试B版", FileReleaseType.Alpha => "测试A版",
+        _ => "测试版"
     };
+
+    private static string FormatRelativeTime(DateTime timestamp)
+    {
+        var localTime = timestamp.Kind == DateTimeKind.Utc ? timestamp.ToLocalTime() : timestamp;
+        var elapsed = DateTime.Now - localTime;
+        if (elapsed < TimeSpan.FromMinutes(1)) return "刚刚";
+        if (elapsed < TimeSpan.FromHours(1)) return $"{Math.Max(1, (int)elapsed.TotalMinutes)} 分钟前";
+        if (elapsed < TimeSpan.FromDays(1)) return $"{Math.Max(1, (int)elapsed.TotalHours)} 小时前";
+        if (elapsed < TimeSpan.FromDays(2)) return "1 天前";
+        if (elapsed < TimeSpan.FromDays(7)) return $"{(int)elapsed.TotalDays} 天前";
+        if (elapsed < TimeSpan.FromDays(14)) return "1 周前";
+        if (elapsed < TimeSpan.FromDays(30)) return $"{Math.Max(2, (int)(elapsed.TotalDays / 7))} 周前";
+        if (elapsed < TimeSpan.FromDays(365)) return $"{Math.Max(1, (int)(elapsed.TotalDays / 30))} 个月前";
+        return $"{Math.Max(1, (int)(elapsed.TotalDays / 365))} 年前";
+    }
 }
 
 public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patch) : IComparable<MinecraftVersionKey>
@@ -361,7 +527,8 @@ public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patc
     }
 
     public int CompareTo(MinecraftVersionKey other) =>
-        Major != other.Major ? Major.CompareTo(other.Major) : Minor != other.Minor ? Minor.CompareTo(other.Minor) :
+        Major != other.Major ? Major.CompareTo(other.Major) :
+        Minor != other.Minor ? Minor.CompareTo(other.Minor) :
         Patch.CompareTo(other.Patch);
 }
 
@@ -379,11 +546,25 @@ public sealed class ModScreenshotLoader : IAsyncImageLoader
             await using var stream = await response.Content.ReadAsStreamAsync();
             return Bitmap.DecodeToWidth(stream, ScreenshotWidth);
         }
-        catch (HttpRequestException) { return null; }
-        catch (IOException) { return null; }
-        catch (UnauthorizedAccessException) { return null; }
-        catch (InvalidDataException) { return null; }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (InvalidDataException)
+        {
+            return null;
+        }
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+    }
 }

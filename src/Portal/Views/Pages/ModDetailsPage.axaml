@@ -175,24 +175,27 @@
                                     <ItemsControl ItemsSource="{Binding VisibleFiles}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="local:ModVersionFileItem">
-                                                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                                                    <StackPanel Spacing="2">
-                                                        <TextBlock
-                                                            FontWeight="SemiBold"
-                                                            Text="{Binding DisplayName}"
-                                                            TextTrimming="CharacterEllipsis" />
-                                                        <TextBlock
-                                                            FontSize="12"
-                                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                                            Text="{Binding Details}"
-                                                            TextTrimming="CharacterEllipsis" />
-                                                    </StackPanel>
-                                                    <TextBlock
-                                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                                        Grid.Column="1"
-                                                        Text="{Binding ReleaseTypeText}"
-                                                        VerticalAlignment="Center" />
-                                                </Grid>
+                                                <Button
+                                                    Background="Transparent"
+                                                    Click="VersionFile_OnClick"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Margin="0,2,0,0"
+                                                    Padding="0">
+                                                    <Grid Margin="9,5,5,6">
+                                                        <StackPanel Spacing="2">
+                                                            <TextBlock
+                                                                FontWeight="SemiBold"
+                                                                Text="{Binding DisplayName}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock
+                                                                FontSize="12"
+                                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                                Text="{Binding Details}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

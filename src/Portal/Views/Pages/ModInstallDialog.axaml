@@ -1,0 +1,73 @@
+<UserControl
+    d:DesignHeight="220"
+    d:DesignWidth="480"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.ModInstallDialog"
+    x:DataType="local:ModInstallDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto"
+        Width="480">
+        <StackPanel Spacing="4">
+            <TextBlock>
+                <Run FontSize="16" Text="安装模组" />
+                <Run FontSize="16" Text="{Binding File.DisplayName}" />
+            </TextBlock>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="{Binding Metadata}"
+                TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            Spacing="6">
+            <TextBlock Text="安装目标实例" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding Instances}"
+                Padding="10,6,6,4"
+                SelectedItem="{Binding SelectedInstance}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:ModInstallInstanceItem">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding Description}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasNoInstances}"
+                Text="没有可安装模组的 Java 版实例" />
+        </StackPanel>
+        <DockPanel
+            Grid.Row="2"
+            LastChildFill="False"
+            Margin="0,22,0,0">
+            <Button
+                Click="SaveAs_Click"
+                Content="另存为"
+                DockPanel.Dock="Left" />
+            <StackPanel
+                DockPanel.Dock="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Click="Cancel_Click" Content="取消" />
+                <Button
+                    Click="Install_Click"
+                    Content="确定"
+                    IsEnabled="{Binding CanInstall}" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>
