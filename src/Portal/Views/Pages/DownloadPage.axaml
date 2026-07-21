@@ -36,14 +36,16 @@
                     <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" CommandParameter="{x:Type downloadPages:DataPackSearchPage}" Header="数据包" />
                     <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" CommandParameter="{x:Type downloadPages:SaveSearchPage}" Header="存档" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="基岩版" IsVisible="{Binding IsBedrockSupported}">
+                <tio:NavMenuItem Header="基岩版">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:BedrockInstallation}"
-                        Header="游戏本体" />
-                    <tio:NavMenuItem Header="行为包" />
-                    <tio:NavMenuItem Header="资源包" />
-                    <tio:NavMenuItem Header="世界模板" />
+                        Header="游戏本体"
+                        IsVisible="{Binding IsBedrockInstallationSupported}" />
+                    <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" CommandParameter="{x:Type downloadPages:BedrockBehaviorPackSearchPage}" Header="行为包" />
+                    <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" CommandParameter="{x:Type downloadPages:BedrockResourcePackSearchPage}" Header="资源包" />
+                    <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" CommandParameter="{x:Type downloadPages:BedrockWorldSearchPage}" Header="世界" />
+                    <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" CommandParameter="{x:Type downloadPages:BedrockWorldTemplateSearchPage}" Header="世界模板" />
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>

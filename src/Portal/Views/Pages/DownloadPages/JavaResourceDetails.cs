@@ -325,7 +325,7 @@ public static class JavaResourceDownload
         StartDownload(topLevel, definition, file, temporaryPath, true);
     }
 
-    internal static void StartDownload(TopLevel topLevel, JavaResourceDefinition definition,
+    internal static ManagedTask StartDownload(TopLevel topLevel, JavaResourceDefinition definition,
         JavaResourceFileItem file, string destination, bool extractSave = false)
     {
         var task = TaskManager.Instance.CreateTask(new TaskOptions
@@ -374,6 +374,7 @@ public static class JavaResourceDownload
         });
         task.Start();
         _ = ObserveAsync(task, topLevel, file.FileName);
+        return task;
     }
 
     private static IReadOnlyList<string> Patterns(JavaResourceKind kind) => kind switch
@@ -428,3 +429,4 @@ public sealed class ResourcePackDetailsPageViewModel(JavaResourceDetailsTarget t
 public sealed class ShaderPackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
 public sealed class DataPackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
 public sealed class SaveDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
+public sealed class BedrockResourceDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);

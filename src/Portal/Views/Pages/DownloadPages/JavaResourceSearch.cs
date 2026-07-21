@@ -18,17 +18,22 @@ public enum JavaResourceKind
     ResourcePack,
     ShaderPack,
     DataPack,
-    Save
+    Save,
+    BedrockBehaviorPack,
+    BedrockResourcePack,
+    BedrockWorld,
+    BedrockWorldTemplate
 }
 
 public sealed record JavaResourceDefinition(
     JavaResourceKind Kind,
     string DisplayName,
     string ProjectType,
-    int CurseForgeClassId,
+    int? CurseForgeClassId,
     bool SupportsDownload,
     bool SupportsLoaderFilter,
-    bool SupportsModrinth = true);
+    bool SupportsModrinth = true,
+    int CurseForgeGameId = 432);
 
 public static class JavaResourceDefinitions
 {
@@ -195,6 +200,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
         var curseForgePage = await _curseForge.SearchResourcesPageAsync(new CurseforgeSearchOptions
         {
             ClassId = Definition.CurseForgeClassId,
+            GameId = Definition.CurseForgeGameId,
             SearchFilter = request.Query,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
             ModLoaderType = request.Loader,
@@ -360,3 +366,4 @@ public sealed class ResourcePackSearchPageViewModel() : JavaResourceSearchViewMo
 public sealed class ShaderPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.ShaderPack);
 public sealed class DataPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.DataPack);
 public sealed class SaveSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Save);
+public sealed class BedrockResourceSearchViewModel(JavaResourceDefinition definition) : JavaResourceSearchViewModel(definition);

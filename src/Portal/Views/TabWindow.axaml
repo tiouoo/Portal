@@ -138,10 +138,10 @@
         </DockPanel>
     </tio:TioWindow.TitleBarRightContent>
     <Grid Background="Transparent">
-        <controls:ScrollView
+        <!--  ContentOrientation="Horizontal"  -->
+        <ScrollViewer
             Background="Transparent"
             Classes="Flat"
-            ContentOrientation="Horizontal"
             Height="44"
             HorizontalAlignment="Left"
             HorizontalScrollBarVisibility="Auto"
@@ -251,7 +251,7 @@
                         Width="20" />
                 </Button>
             </DockPanel>
-        </controls:ScrollView>
+        </ScrollViewer>
         <TransitioningContentControl Background="Transparent" Content="{Binding SelectedTab.Content}">
             <TransitioningContentControl.PageTransition>
                 <CompositePageTransition>

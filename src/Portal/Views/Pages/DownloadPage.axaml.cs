@@ -39,7 +39,7 @@ public partial class DownloadPage : UserControl, ITioTabPage
 public partial class DownloadPageViewModel : ObservableObject
 {
     [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
-    public bool IsBedrockSupported => OperatingSystem.IsWindows();
+    public bool IsBedrockInstallationSupported => OperatingSystem.IsWindows();
     private readonly Dictionary<Type, UserControl> _pageCache = new();
 
     public DownloadPageViewModel()
