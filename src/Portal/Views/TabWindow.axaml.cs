@@ -11,7 +11,9 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
+#if DEBUG
 using HotAvalonia;
+#endif
 using Portal.Classes.Entries;
 using Portal.Const;
 using Portal.Module.DefaultPage;
@@ -94,7 +96,9 @@ public partial class TabWindow : TioTabWindowBase
         Loaded += (_, _) => ApplyBackground();
     }
 
+#if DEBUG
     [AvaloniaHotReload]
+#endif
     public void Hot()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

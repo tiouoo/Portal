@@ -43,7 +43,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
-        <PackageReference Include="HotAvalonia" />
+        <PackageReference Include="HotAvalonia" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="SmoothScroll.Avalonia" />
         <PackageReference Include="Tomlyn" />

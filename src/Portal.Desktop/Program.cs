@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Avalonia;
+#if DEBUG
 using HotAvalonia;
+#endif
 using Portal.Core.Minecraft;
 using Tio.Avalonia.Standard.Modules;
 using Tio.Avalonia.Standard.Modules.DiskIO;

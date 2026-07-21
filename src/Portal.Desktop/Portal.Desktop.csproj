@@ -50,7 +50,7 @@
         <PackageReference Include="Avalonia.Markup.Xaml.Loader" PrivateAssets="All" Publish="True"/>
 
         <PackageReference Include="DotNet.Bundle"/>
-        <PackageReference Include="HotAvalonia" PrivateAssets="All" Publish="True"/>
+        <PackageReference Include="HotAvalonia" PrivateAssets="All" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="SkiaSharp"/>
         <PackageReference Include="SkiaSharp.NativeAssets.Linux"/>
     </ItemGroup>
