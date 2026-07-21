@@ -90,6 +90,38 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var tab = new TabEntry(window, new ModpackDetailsPage(target), title: title); window.CreateTab(tab); window.SelectTab(tab);
     }
 
+    public static async Task InstallLocalAsync(TopLevel topLevel, string archivePath, ModDetailsSource source,
+        string suggestedInstanceId)
+    {
+        var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
+            ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(
+                string.IsNullOrWhiteSpace(suggestedInstanceId) ? Path.GetFileNameWithoutExtension(archivePath) : suggestedInstanceId,
+                false),
+            topLevel.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = "安装整合包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+            });
+        if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
+
+        var displayName = Path.GetFileName(archivePath);
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
+            Actions =
+            [
+                new TaskActionDefinition
+                {
+                    Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
+                    ExecuteAsync = (managedTask, _) => { managedTask.RequestCancellation(); return Task.CompletedTask; },
+                    CanExecute = managedTask => managedTask.CanBeCancelled,
+                    IsVisible = managedTask => !managedTask.IsTerminal
+                }
+            ]
+        }, context => InstallLocalArchiveAsync(context, source, archivePath, result));
+        task.Start();
+        _ = ObserveInstallationAsync(task, topLevel, displayName);
+    }
+
     private static async Task SaveAsAsync(TopLevel topLevel, JavaResourceFileItem file)
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -159,6 +191,30 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         {
             if (Directory.Exists(temporaryFolder)) Directory.Delete(temporaryFolder, true);
         }
+    }
+
+    private static async Task InstallLocalArchiveAsync(TaskExecutionContext context, ModDetailsSource source, string archivePath,
+        ModpackInstallDialogResult selection)
+    {
+        var folder = selection.Folder!.FolderPath;
+        var instanceId = selection.InstanceId!;
+        var instancePath = Path.Combine(folder, "versions", instanceId);
+        if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
+
+        var minecraft = source switch
+        {
+            ModDetailsSource.Modrinth => await InstallModrinthAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
+            ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
+            _ => throw new NotSupportedException("不支持的整合包来源。")
+        };
+        await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+        {
+            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+            step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
+            step.ReportProgress(1);
+            return Task.CompletedTask;
+        });
+        context.SetDescription($"整合包 {minecraft.Id} 安装完成");
     }
 
     private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file, string destination)

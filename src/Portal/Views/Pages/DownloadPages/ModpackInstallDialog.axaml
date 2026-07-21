@@ -28,10 +28,11 @@
             <ComboBox
                 HorizontalAlignment="Stretch"
                 ItemsSource="{Binding MinecraftFolders}"
+                Padding="10,5,5,5"
                 SelectedItem="{Binding SelectedMinecraftFolder}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="local:ModpackInstallFolderItem">
-                        <StackPanel Margin="0,5">
+                        <StackPanel>
                             <TextBlock Text="{Binding Name}" />
                             <TextBlock
                                 FontSize="11"
@@ -68,7 +69,8 @@
             <Button
                 Click="SaveAs_Click"
                 Content="另存为"
-                DockPanel.Dock="Left" />
+                DockPanel.Dock="Left"
+                IsVisible="{Binding ShowSaveAs}" />
             <StackPanel
                 DockPanel.Dock="Right"
                 Orientation="Horizontal"

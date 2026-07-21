@@ -33,8 +33,11 @@ public partial class ModpackInstallDialogViewModel : ObservableObject, IDialogCo
     [ObservableProperty] public partial ModpackInstallFolderItem? SelectedMinecraftFolder { get; set; }
     [ObservableProperty] public partial string InstanceId { get; set; }
 
-    public ModpackInstallDialogViewModel(string suggestedInstanceId)
+    public bool ShowSaveAs { get; }
+
+    public ModpackInstallDialogViewModel(string suggestedInstanceId, bool showSaveAs = true)
     {
+        ShowSaveAs = showSaveAs;
         foreach (var folder in Data.ConfigEntry.MinecraftFolders.Where(folder => folder.SupportsTraditionalInstallation))
             MinecraftFolders.Add(new ModpackInstallFolderItem(folder, folder.FolderName, folder.FolderPath));
         SelectedMinecraftFolder = MinecraftFolders.FirstOrDefault(item => item.Folder == Data.ConfigEntry.DefaultMinecraftFolder)

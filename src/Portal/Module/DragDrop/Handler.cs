@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
+using Avalonia.Platform.Storage;
+using MinecraftLaunch.Components.Installer.Modpack;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
@@ -13,6 +15,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using Portal.Views.Pages.DownloadPages;
 using AuthServer = Portal.Core.Operations.Account.AuthServer;
 
 namespace Portal.Module.DragDrop;
@@ -34,6 +37,12 @@ public class Handler
                 }
             }
         }
+
+        if (TryGetModpack(data, out var archivePath, out var source, out var suggestedInstanceId))
+        {
+            e.Handled = true;
+            await ModpackDetailsPage.InstallLocalAsync(window, archivePath, source, suggestedInstanceId);
+        }
     }
 
     public static string GetMsg(DragEventArgs e)
@@ -53,6 +62,12 @@ public class Handler
                 dropEffects = DragDropEffects.Link;
                 msg = "识别到验证服务器";
             }
+        }
+
+        if (TryGetModpack(data, out _, out _, out _))
+        {
+            dropEffects = DragDropEffects.Copy;
+            msg = "识别到整合包";
         }
 
         e.DragEffects = dropEffects;
@@ -162,5 +177,45 @@ public class Handler
         {
             return false;
         }
+    }
+
+    private static bool TryGetModpack(IDataTransfer data, out string archivePath, out ModDetailsSource source,
+        out string suggestedInstanceId)
+    {
+        archivePath = string.Empty;
+        source = default;
+        suggestedInstanceId = string.Empty;
+        var files = data.TryGetFiles()?.OfType<IStorageFile>().ToArray();
+        if (files is not [var file]) return false;
+
+        var path = file.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return false;
+        var extension = Path.GetExtension(path);
+        if (!extension.Equals(".zip", StringComparison.OrdinalIgnoreCase) &&
+            !extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase)) return false;
+
+        try
+        {
+            if (extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase))
+            {
+                var entry = ModrinthModpackInstaller.ParseModpackInstallEntry(path);
+                archivePath = path;
+                source = ModDetailsSource.Modrinth;
+                suggestedInstanceId = entry.Name;
+                return true;
+            }
+
+            if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                var entry = CurseforgeModpackInstaller.ParseModpackInstallEntry(path);
+                archivePath = path;
+                source = ModDetailsSource.CurseForge;
+                suggestedInstanceId = entry.Id;
+                return true;
+            }
+        }
+        catch (Exception) { }
+
+        return false;
     }
 }
