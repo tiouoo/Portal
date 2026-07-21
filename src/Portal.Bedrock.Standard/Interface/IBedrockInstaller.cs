@@ -38,7 +38,8 @@ public sealed record BedrockOnlineInstallRequest(
     string DestinationPath,
     CancellationToken CancellationToken);
 
-public sealed record BedrockInstallProgress(long Current, long Total, string Item, string State);
+public sealed record BedrockInstallProgress(long Current, long Total, string Item, string State,
+    double Speed = 0, TimeSpan? EstimatedRemaining = null);
 
 public static class BedrockInstallationService
 {

@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using BedrockLauncher.Core;
 using BedrockLauncher.Core.CoreOption;
@@ -14,7 +16,11 @@ namespace Portal.Bedrock;
 public sealed class BedrockInstaller : IBedrockInstaller
 {
     private const string VersionDatabaseUrl = "https://data.mcappx.com/v2/bedrock.json";
+    private const int DownloadConcurrency = 8;
+    private const int DownloadBufferSize = 1024 * 256;
+    private const int SourceProbeBytes = 1024 * 1024;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
+    private static readonly HttpClient DownloadClient = CreateDownloadClient();
     private static IReadOnlyList<BedrockGdkVersion>? _cachedVersions;
 
     public async Task<IReadOnlyList<BedrockGdkVersion>> GetGdkVersionsAsync(bool refresh,
@@ -67,8 +73,8 @@ public sealed class BedrockInstaller : IBedrockInstaller
         await core.AutoCompleteGameInput();
         var build = await FindBuildAsync(request.Version, request.CancellationToken);
         var packageUrl = await core.GetPackageUri(build, Architecture.X64);
-        var packagePath = Path.Combine(Path.GetDirectoryName(destination)!, "..", "version_save", $"{request.Version.Id}.insPack");
-        packagePath = Path.GetFullPath(packagePath);
+        var packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "xyz.tiouo.Portal", "Cache", "Bedrock", $"{request.Version.Id}.insPack");
 
         await DownloadPackageAsync(packageUrl, packagePath, build, progress, request.CancellationToken);
         request.CancellationToken.ThrowIfCancellationRequested();
@@ -123,16 +129,26 @@ public sealed class BedrockInstaller : IBedrockInstaller
             return;
         }
 
-        foreach (var candidate in GetGdkDownloadUrls(url))
+        if (File.Exists(packagePath)) File.Delete(packagePath);
+        progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, "Selecting source"));
+        var candidates = GetGdkDownloadUrls(url).ToList();
+        var selected = await SelectFastestSourceAsync(candidates, cancellationToken);
+        var orderedCandidates = selected is null
+            ? candidates
+            : new[] { selected }.Concat(candidates.Where(candidate => candidate != selected));
+
+        foreach (var candidate in orderedCandidates)
         {
             try
             {
                 await DownloadAsync(candidate, packagePath, progress, cancellationToken);
                 if (await MatchesMd5Async(packagePath, expectedMd5, cancellationToken)) return;
+                File.Delete(packagePath);
             }
-            catch (HttpRequestException)
+            catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
                 // Try the next Xbox CDN host, matching BedrockBoot's GDK fallback behavior.
+                if (File.Exists(packagePath)) File.Delete(packagePath);
             }
         }
 
@@ -142,29 +158,206 @@ public sealed class BedrockInstaller : IBedrockInstaller
     private static IEnumerable<string> GetGdkDownloadUrls(string url)
     {
         var uri = new Uri(url);
-        yield return url;
-        foreach (var host in new[] { "assets1.xboxlive.cn", "assets2.xboxlive.cn", "assets1.xboxlive.com", "assets2.xboxlive.com", "xvcf1.xboxlive.com", "xvcf2.xboxlive.com" })
-            yield return $"https://{host}{uri.AbsolutePath}";
+        var path = uri.PathAndQuery;
+        var sources = new[]
+        {
+            url,
+            "http://assets1.xboxlive.cn" + path,
+            "http://assets2.xboxlive.cn" + path,
+            "http://assets1.xboxlive.com" + path,
+            "http://assets2.xboxlive.com" + path,
+            "http://xvcf1.xboxlive.com" + path,
+            "http://xvcf2.xboxlive.com" + path,
+            "http://d1.xboxlive.cn" + path,
+            "http://d2.xboxlive.cn" + path,
+            "http://d1.xboxlive.com" + path,
+            "http://d2.xboxlive.com" + path
+        };
+        return sources.Distinct(StringComparer.OrdinalIgnoreCase);
     }
 
     private static async Task DownloadAsync(string url, string path, IProgress<BedrockInstallProgress>? progress,
         CancellationToken cancellationToken)
     {
-        using var client = new HttpClient();
-        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        var total = response.Content.Headers.ContentLength ?? 0;
+        using var probeRequest = new HttpRequestMessage(HttpMethod.Get, url);
+        probeRequest.Headers.Range = new RangeHeaderValue(0, 0);
+        using var probeResponse = await DownloadClient.SendAsync(probeRequest, HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        probeResponse.EnsureSuccessStatusCode();
+        var total = probeResponse.Content.Headers.ContentRange?.Length ?? probeResponse.Content.Headers.ContentLength ?? 0;
+        if (total <= 0 || probeResponse.StatusCode != HttpStatusCode.PartialContent)
+        {
+            await DownloadSinglePartAsync(url, path, total, progress, cancellationToken);
+            return;
+        }
+
+        await DownloadMultiPartAsync(url, path, total, progress, cancellationToken);
+    }
+
+    private static async Task<string?> SelectFastestSourceAsync(IReadOnlyList<string> candidates,
+        CancellationToken cancellationToken)
+    {
+        var probes = candidates.Select(candidate => ProbeSourceAsync(candidate, cancellationToken));
+        var results = await Task.WhenAll(probes);
+        return results.Where(result => result.Speed > 0)
+            .OrderByDescending(result => result.Speed)
+            .Select(result => result.Url)
+            .FirstOrDefault();
+    }
+
+    private static async Task<(string Url, double Speed)> ProbeSourceAsync(string url, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(12));
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Range = new RangeHeaderValue(0, SourceProbeBytes - 1);
+            var stopwatch = Stopwatch.StartNew();
+            using var response = await DownloadClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            if (response.StatusCode != HttpStatusCode.PartialContent) return (url, 0);
+            await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
+            var buffer = new byte[DownloadBufferSize];
+            var bytes = 0;
+            while (bytes < SourceProbeBytes)
+            {
+                var read = await stream.ReadAsync(buffer.AsMemory(0, Math.Min(buffer.Length, SourceProbeBytes - bytes)), timeout.Token);
+                if (read == 0) break;
+                bytes += read;
+            }
+            stopwatch.Stop();
+            return bytes == SourceProbeBytes && stopwatch.Elapsed.TotalSeconds > 0
+                ? (url, bytes / stopwatch.Elapsed.TotalSeconds)
+                : (url, 0);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return (url, 0);
+        }
+        catch (HttpRequestException)
+        {
+            return (url, 0);
+        }
+    }
+
+    private static async Task DownloadMultiPartAsync(string url, string path, long total,
+        IProgress<BedrockInstallProgress>? progress, CancellationToken cancellationToken)
+    {
+        await using (var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write, DownloadBufferSize, true))
+            file.SetLength(total);
+
+        long downloaded = 0;
+        var stopwatch = Stopwatch.StartNew();
+        using var progressCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var progressTask = ReportProgressAsync(path, total, () => Interlocked.Read(ref downloaded), stopwatch, progress,
+            progressCancellation.Token);
+        try
+        {
+            var segmentSize = (total + DownloadConcurrency - 1) / DownloadConcurrency;
+            var downloads = Enumerable.Range(0, DownloadConcurrency).Select(async index =>
+            {
+                var start = index * segmentSize;
+                if (start >= total) return;
+                var end = Math.Min(start + segmentSize, total) - 1;
+                await DownloadRangeAsync(url, path, start, end, bytes => Interlocked.Add(ref downloaded, bytes), cancellationToken);
+            });
+            await Task.WhenAll(downloads);
+        }
+        finally
+        {
+            progressCancellation.Cancel();
+            await IgnoreCancellationAsync(progressTask);
+        }
+        progress?.Report(new BedrockInstallProgress(total, total, Path.GetFileName(path), "Downloading", 0, TimeSpan.Zero));
+    }
+
+    private static async Task DownloadRangeAsync(string url, string path, long start, long end, Action<int> onBytes,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Range = new RangeHeaderValue(start, end);
+        using var response = await DownloadClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (response.StatusCode != HttpStatusCode.PartialContent)
+            throw new HttpRequestException("下载源不支持分段下载。");
         await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var output = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 128, true);
-        var buffer = new byte[1024 * 128];
-        long current = 0;
+        await using var output = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Write, DownloadBufferSize, true);
+        output.Seek(start, SeekOrigin.Begin);
+        var buffer = new byte[DownloadBufferSize];
         int read;
         while ((read = await input.ReadAsync(buffer, cancellationToken)) > 0)
         {
             await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-            current += read;
-            progress?.Report(new BedrockInstallProgress(current, total, Path.GetFileName(path), "Downloading"));
+            onBytes(read);
         }
+    }
+
+    private static async Task DownloadSinglePartAsync(string url, string path, long total,
+        IProgress<BedrockInstallProgress>? progress, CancellationToken cancellationToken)
+    {
+        long downloaded = 0;
+        var stopwatch = Stopwatch.StartNew();
+        using var progressCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var progressTask = ReportProgressAsync(path, total, () => Interlocked.Read(ref downloaded), stopwatch, progress,
+            progressCancellation.Token);
+        try
+        {
+            using var response = await DownloadClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
+            await using var output = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, DownloadBufferSize, true);
+            var buffer = new byte[DownloadBufferSize];
+            int read;
+            while ((read = await input.ReadAsync(buffer, cancellationToken)) > 0)
+            {
+                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                Interlocked.Add(ref downloaded, read);
+            }
+        }
+        finally
+        {
+            progressCancellation.Cancel();
+            await IgnoreCancellationAsync(progressTask);
+        }
+        progress?.Report(new BedrockInstallProgress(downloaded, total, Path.GetFileName(path), "Downloading", 0, TimeSpan.Zero));
+    }
+
+    private static async Task ReportProgressAsync(string path, long total, Func<long> getDownloaded, Stopwatch stopwatch,
+        IProgress<BedrockInstallProgress>? progress, CancellationToken cancellationToken)
+    {
+        var lastBytes = 0L;
+        var lastTime = 0d;
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+        while (await timer.WaitForNextTickAsync(cancellationToken))
+        {
+            var downloaded = getDownloaded();
+            var elapsed = stopwatch.Elapsed.TotalSeconds;
+            var speed = elapsed > lastTime ? (downloaded - lastBytes) / (elapsed - lastTime) : 0;
+            var remaining = speed > 0 ? TimeSpan.FromSeconds((total - downloaded) / speed) : TimeSpan.Zero;
+            progress?.Report(new BedrockInstallProgress(downloaded, total, Path.GetFileName(path), "Downloading", speed, remaining));
+            lastBytes = downloaded;
+            lastTime = elapsed;
+        }
+    }
+
+    private static async Task IgnoreCancellationAsync(Task task)
+    {
+        try { await task; }
+        catch (OperationCanceledException) { }
+    }
+
+    private static HttpClient CreateDownloadClient()
+    {
+        var handler = new SocketsHttpHandler
+        {
+            UseProxy = false,
+            AllowAutoRedirect = true,
+            MaxAutomaticRedirections = 5,
+            MaxConnectionsPerServer = DownloadConcurrency * 2,
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+        };
+        var client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Portal/1.0 Bedrock GDK Downloader");
+        return client;
     }
 
     private static async Task<bool> MatchesMd5Async(string path, string expectedMd5, CancellationToken cancellationToken)
