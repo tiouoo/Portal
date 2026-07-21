@@ -131,15 +131,13 @@
   color: #a7aeba;
 }
 .download-note {
+  width: calc(100% - 48px);
   margin: 25px auto 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
   color: #4e5b70;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.6;
+  text-align: center;
 }
 .download-note > span {
   display: grid;
@@ -177,8 +175,7 @@
     margin-top: 20px;
   }
   .download-note {
-    text-align: left;
-    align-items: flex-start;
+    width: calc(100% - 32px);
   }
 }
 
@@ -188,5 +185,8 @@
   }
   .platform-card {
     padding: 22px;
+  }
+  .download-note {
+    width: calc(100% - 28px);
   }
 }
