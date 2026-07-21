@@ -11,6 +11,7 @@ public class ConfigIdentifyExtension
         var traditionalFolders = entry.MinecraftFolders.Where(IsTraditionalFolder).ToList();
         if (traditionalFolders.Count == 0)
         {
+            entry.DefaultMinecraftFolder = null;
             var defaultFolder = CreateDefaultMinecraftFolder();
             entry.MinecraftFolders.Insert(0, defaultFolder);
             traditionalFolders.Add(defaultFolder);

@@ -1,0 +1,84 @@
+<UserControl
+    d:DesignHeight="300"
+    d:DesignWidth="480"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.ModpackInstallDialog"
+    x:DataType="local:ModpackInstallDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto,Auto"
+        Width="480">
+        <StackPanel Spacing="4">
+            <TextBlock FontSize="16" Text="安装整合包" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="将下载游戏、加载器和整合包文件到新实例。"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            Spacing="6">
+            <TextBlock Text="Minecraft 文件夹" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding MinecraftFolders}"
+                SelectedItem="{Binding SelectedMinecraftFolder}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:ModpackInstallFolderItem">
+                        <StackPanel Margin="0,5">
+                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding Path}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasNoMinecraftFolders}"
+                Text="没有可用于安装的传统 Minecraft 文件夹" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            Margin="0,18,0,0"
+            Spacing="6">
+            <TextBlock Text="实例 ID" />
+            <TextBox Text="{Binding InstanceId}" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding InstanceIdExists}"
+                Text="该实例 ID 已存在，请更换名称" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasInvalidInstanceId}"
+                Text="实例 ID 不能为空且不能包含无效文件名字符" />
+        </StackPanel>
+        <DockPanel
+            Grid.Row="3"
+            LastChildFill="False"
+            Margin="0,22,0,0">
+            <Button
+                Click="SaveAs_Click"
+                Content="另存为"
+                DockPanel.Dock="Left" />
+            <StackPanel
+                DockPanel.Dock="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Click="Cancel_Click" Content="取消" />
+                <Button
+                    Click="Install_Click"
+                    Content="安装"
+                    IsEnabled="{Binding CanInstall}" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

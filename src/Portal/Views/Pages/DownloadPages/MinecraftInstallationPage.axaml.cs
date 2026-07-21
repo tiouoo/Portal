@@ -14,7 +14,6 @@ using MinecraftLaunch.Components.Installer;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.Minecraft.Instance.Java;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -58,11 +57,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     private int _loadingCount;
 
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
-    public ObservableCollection<JavaRuntimeEntry> JavaRuntimes { get; } = [];
 
     public string VanillaVersion => _vanilla.Id;
     [ObservableProperty] public partial MinecraftFolderEntry? SelectedMinecraftFolder { get; set; }
-    [ObservableProperty] public partial JavaRuntimeEntry? SelectedJavaRuntime { get; set; }
     [ObservableProperty] public partial string CustomVersionId { get; set; } = string.Empty;
     [ObservableProperty] public partial bool IsInstalling { get; set; }
     [ObservableProperty] public partial bool IsFabricSelected { get; set; }
@@ -88,14 +85,11 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         _vanilla = vanilla;
         foreach (var folder in Data.ConfigEntry.MinecraftFolders.Where(x => x.SupportsTraditionalInstallation))
             MinecraftFolders.Add(folder);
-        foreach (var java in Data.ConfigEntry.JavaRuntimes) JavaRuntimes.Add(java);
         SelectedMinecraftFolder = Data.ConfigEntry.DefaultMinecraftFolder ?? MinecraftFolders.FirstOrDefault();
-        SelectedJavaRuntime = Data.ConfigEntry.DefaultJavaRuntime ?? JavaRuntimes.FirstOrDefault();
         CustomVersionId = vanilla.Id;
     }
 
     partial void OnSelectedMinecraftFolderChanged(MinecraftFolderEntry? value) => UpdateVersionState();
-    partial void OnSelectedJavaRuntimeChanged(JavaRuntimeEntry? value) => UpdateVersionState();
     partial void OnCustomVersionIdChanged(string value) => UpdateVersionState();
     partial void OnIsInstallingChanged(bool value) => OnPropertyChanged(nameof(CanInstall));
     partial void OnIsFabricSelectedChanged(bool value) => SelectionChanged(LoaderKind.Fabric, value);
@@ -208,6 +202,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         var versionId = EffectiveVersionId();
         var folder = SelectedMinecraftFolder;
         var selectedEntries = _selectedLoaders.ToDictionary(x => x.Key, x => x.Value);
+        var javaPath = GetJavaPath();
         IsInstalling = true;
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
@@ -230,7 +225,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                     IsVisible = managedTask => !managedTask.IsTerminal
                 }
             ]
-        }, context => RunInstallationAsync(context, folder, versionId, selectedEntries));
+        }, context => RunInstallationAsync(context, folder, versionId, selectedEntries, javaPath));
         task.Start();
         try
         {
@@ -244,11 +239,11 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     }
 
     private async Task RunInstallationAsync(TaskExecutionContext context, MinecraftFolderEntry folder, string versionId,
-        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries)
+        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
     {
         await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
         {
-            if (!HasRequiredJavaRuntime())
+            if (RequiresJava && string.IsNullOrWhiteSpace(javaPath))
                 throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
             if (VersionDirectoryExists(versionId))
                 throw new InvalidOperationException($"实例 ID “{versionId}”已存在于所选文件夹，请更换名称。");
@@ -269,7 +264,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         {
             await RunStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}", async step =>
             {
-                var installer = CreatePrimaryInstaller(primary.Key, primary.Value, folder.FolderPath, versionId);
+                var installer = CreatePrimaryInstaller(primary.Key, primary.Value, folder.FolderPath, versionId, javaPath);
                 installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
                 minecraft = await installer.InstallAsync(step.CancellationToken);
             });
@@ -282,7 +277,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                 var entry = (OptifineInstallEntry)optifineEntry;
                 var installer = primary.Value is not null
                     ? OptifineInstaller.Create(folder.FolderPath, entry, minecraft)
-                    : OptifineInstaller.Create(folder.FolderPath, SelectedJavaRuntime!.JavaPath, entry, versionId);
+                    : OptifineInstaller.Create(folder.FolderPath, javaPath!, entry, versionId);
                 installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
                 minecraft = await installer.InstallAsync(step.CancellationToken);
             });
@@ -298,11 +293,12 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         context.SetDescription($"已完成 Minecraft Java {minecraft.Id} 的安装");
     }
 
-    private InstallerBase CreatePrimaryInstaller(LoaderKind kind, IInstallEntry entry, string folder, string versionId) =>
+    private static InstallerBase CreatePrimaryInstaller(LoaderKind kind, IInstallEntry entry, string folder, string versionId,
+        string? javaPath) =>
         kind switch
         {
             LoaderKind.Forge or LoaderKind.NeoForge =>
-                ForgeInstaller.Create(folder, SelectedJavaRuntime!.JavaPath, (ForgeInstallEntry)entry, versionId),
+                ForgeInstaller.Create(folder, javaPath!, (ForgeInstallEntry)entry, versionId),
             LoaderKind.Fabric => FabricInstaller.Create(folder, (FabricInstallEntry)entry, versionId),
             LoaderKind.Quilt => QuiltInstaller.Create(folder, (QuiltInstallEntry)entry, versionId),
             _ => throw new InvalidOperationException($"不支持的加载器：{kind}")
@@ -424,8 +420,14 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         return HasModLoader ? $"{_vanilla.Id} {string.Join(" + ", names)}" : _vanilla.Id;
     }
 
-    private bool HasRequiredJavaRuntime() => !RequiresJava ||
-        SelectedJavaRuntime is { JavaPath: { } javaPath } && File.Exists(javaPath);
+    private bool HasRequiredJavaRuntime() => !RequiresJava || GetJavaPath() is not null;
+
+    private static string? GetJavaPath()
+    {
+        var preferred = Data.ConfigEntry.DefaultJavaRuntime;
+        if (preferred is { JavaPath: { } path } && File.Exists(path)) return path;
+        return Data.ConfigEntry.JavaRuntimes.Select(runtime => runtime.JavaPath).FirstOrDefault(File.Exists);
+    }
 
     public bool HasErrors => _errors.Count > 0;
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;

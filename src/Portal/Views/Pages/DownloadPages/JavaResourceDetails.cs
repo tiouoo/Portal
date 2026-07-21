@@ -308,7 +308,7 @@ public static class JavaResourceDownload
         StartDownload(topLevel, definition, file, Path.Combine(folder, fileName));
     }
 
-    private static void StartDownload(TopLevel topLevel, JavaResourceDefinition definition,
+    internal static void StartDownload(TopLevel topLevel, JavaResourceDefinition definition,
         JavaResourceFileItem file, string destination)
     {
         var task = TaskManager.Instance.CreateTask(new TaskOptions

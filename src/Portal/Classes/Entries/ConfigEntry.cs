@@ -131,7 +131,7 @@ public partial class ConfigEntry : ObservableObject
         if (Data.UiProperty.ConfigLoaded && e.PropertyName == nameof(DefaultMinecraftFolder) &&
             MinecraftFolders.Count > 0)
         {
-            ConfigIdentifyExtension.MinecraftFolder(this);
+            ScheduleMinecraftFolderRecovery();
         }
 
         App.Method.SaveConfig();
@@ -157,17 +157,7 @@ public partial class ConfigEntry : ObservableObject
         }
         OnPropertyChanged(nameof(TraditionalMinecraftFolders));
         App.Method.SaveConfig();
-        if (!Data.UiProperty.ConfigLoaded || _isMinecraftFolderRecoveryScheduled)
-            return;
-
-        _isMinecraftFolderRecoveryScheduled = true;
-        // The default-folder ComboBox may update its selection during this notification.
-        // Recover after it completes so ObservableCollection is no longer in its reentrancy guard.
-        Dispatcher.UIThread.Post(() =>
-        {
-            _isMinecraftFolderRecoveryScheduled = false;
-            ConfigIdentifyExtension.MinecraftFolder(this);
-        });
+        ScheduleMinecraftFolderRecovery();
     }
 
     private void OnMinecraftFolderPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -176,6 +166,21 @@ public partial class ConfigEntry : ObservableObject
             return;
         OnPropertyChanged(nameof(TraditionalMinecraftFolders));
         ConfigIdentifyExtension.MinecraftFolder(this);
+    }
+
+    private void ScheduleMinecraftFolderRecovery()
+    {
+        if (!Data.UiProperty.ConfigLoaded || _isMinecraftFolderRecoveryScheduled)
+            return;
+
+        _isMinecraftFolderRecoveryScheduled = true;
+        // The ComboBox can update its selection while the collection is notifying listeners.
+        // Recover afterward, once ObservableCollection has left its reentrancy guard.
+        Dispatcher.UIThread.Post(() =>
+        {
+            _isMinecraftFolderRecoveryScheduled = false;
+            ConfigIdentifyExtension.MinecraftFolder(this);
+        });
     }
 
     private void SetResource()

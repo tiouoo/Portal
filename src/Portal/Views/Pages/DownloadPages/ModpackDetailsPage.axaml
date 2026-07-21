@@ -136,8 +136,14 @@
                                     <ItemsControl ItemsSource="{Binding VisibleFiles}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="local:JavaResourceFileItem">
-                                                <Border Margin="9,5,5,6">
-                                                    <StackPanel>
+                                                <Button
+                                                    Background="Transparent"
+                                                    Click="VersionFile_OnClick"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Margin="0,2,0,0"
+                                                    Padding="0">
+                                                    <StackPanel Margin="9,5,5,6">
                                                         <TextBlock
                                                             FontWeight="SemiBold"
                                                             Text="{Binding DisplayName}"
@@ -148,7 +154,7 @@
                                                             Text="{Binding Details}"
                                                             TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
-                                                </Border>
+                                                </Button>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
