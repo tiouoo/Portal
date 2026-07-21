@@ -107,7 +107,7 @@ jobs:
           dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=false /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
           cd "../../dist"
           Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.win.x64.portable.exe" -Force
-          Compress-Archive -Path "*" -DestinationPath "../Portal.win.x64.portable.zip" -Force
+          Compress-Archive -Path "Portal.win.x64.portable.exe" -DestinationPath "../Portal.win.x64.portable.zip" -Force
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
