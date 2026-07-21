@@ -11,7 +11,7 @@ using TioUi.Shared;
 
 namespace Portal;
 
-public partial class App : Application
+public partial class App : Application 
 {
     public static class Method
     {
