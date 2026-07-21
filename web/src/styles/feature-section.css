@@ -46,6 +46,7 @@
   color: #b5bbc6;
   font-size: 12px;
   letter-spacing: 0.1em;
+  z-index: 999;
 }
 .feature-graphic {
   position: relative;
@@ -142,18 +143,21 @@
 .cube-a {
   left: 55px;
   top: 50px;
-  background: linear-gradient(145deg, #87aaf8, #3974ee);
+  /* background: linear-gradient(145deg, #87aaf8, #3974ee); */
   transform: rotate(-8deg);
+  background-color: white;
 }
 .cube-b {
   right: 55px;
   bottom: 42px;
-  background: linear-gradient(145deg, #ae8de8, #7752ca);
+  /* background: linear-gradient(145deg, #ae8de8, #7752ca); */
   transform: rotate(8deg);
+  background-color: white;
 }
 .resource-line {
   position: absolute;
   width: 115px;
+  display: none;
   height: 2px;
   left: 110px;
   top: 121px;
@@ -288,7 +292,7 @@
     height: 220px;
   }
   .capability-strip {
-    align-items: flex-start;
+    align-items: center;
   }
   .capability-strip > div {
     flex-wrap: wrap;

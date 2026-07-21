@@ -56,15 +56,13 @@ h1 em {
   gap: 12px;
   height: 50px;
   padding: 0 22px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 15px;
   font-weight: 700;
   transition:
-    transform 0.2s,
+    background 0.2s,
+    border-color 0.2s,
     box-shadow 0.2s;
-}
-.button:hover {
-  transform: translateY(-2px);
 }
 .button svg {
   width: 19px;
@@ -75,9 +73,18 @@ h1 em {
   background: var(--blue);
   box-shadow: 0 12px 28px rgba(42, 112, 245, 0.23);
 }
+.button.primary:hover {
+  background: #1f62df;
+  box-shadow: 0 12px 32px rgba(42, 112, 245, 0.34);
+}
 .button.secondary {
   border: 1px solid #dfe3eb;
   background: rgba(255, 255, 255, 0.8);
+}
+.button.secondary:hover {
+  border-color: #c8d5ed;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(49, 62, 93, 0.09);
 }
 .hero-meta {
   display: flex;
@@ -149,7 +156,6 @@ h1 em {
   box-shadow:
     0 40px 80px rgba(49, 62, 93, 0.18),
     0 10px 25px rgba(49, 62, 93, 0.08);
-  transform: perspective(1400px) rotateY(-4deg) rotateX(1deg);
 }
 .window-topbar {
   height: 48px;
@@ -162,16 +168,27 @@ h1 em {
 .traffic {
   display: flex;
   gap: 6px;
-  width: 95px;
+  width: 50px;
 }
 .traffic i {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #dce0e8;
+}
+.traffic i:nth-child(1) {
+  background: #ff5f57;
+  box-shadow: inset 0 0 0 1px rgba(180, 40, 35, 0.18);
+}
+.traffic i:nth-child(2) {
+  background: #febc2e;
+  box-shadow: inset 0 0 0 1px rgba(181, 122, 12, 0.15);
+}
+.traffic i:nth-child(3) {
+  background: #28c840;
+  box-shadow: inset 0 0 0 1px rgba(25, 128, 42, 0.15);
 }
 .window-tab {
-  height: 34px;
+  height: 30px;
   min-width: 180px;
   padding: 0 15px;
   display: flex;
@@ -179,12 +196,24 @@ h1 em {
   gap: 8px;
   background: white;
   border: 1px solid #e8eaf0;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 11px;
+  padding-left: 8px;
 }
 .window-tab img {
   width: 15px;
   height: 15px;
+}
+.window-tab + .window-tab {
+  margin-left: 6px;
+  background: #f6f8fb;
+}
+.tab-icon {
+  width: 15px;
+  height: 15px;
+  color: #617088;
+  fill: currentColor;
+  stroke: none;
 }
 .window-plus {
   color: #9198a7;
@@ -193,41 +222,6 @@ h1 em {
 .window-body {
   display: flex;
   height: calc(100% - 48px);
-}
-.app-sidebar {
-  width: 58px;
-  flex: none;
-  padding: 14px 0 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  border-right: 1px solid #eceef3;
-  background: #fafbfc;
-}
-.sidebar-logo {
-  width: 24px;
-  height: 24px;
-  margin-bottom: 12px;
-}
-.side-icon {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  color: #9ba2af;
-}
-.side-icon svg {
-  width: 16px;
-  height: 16px;
-}
-.side-icon.active {
-  color: var(--blue);
-  background: #eaf1ff;
-}
-.side-icon.bottom {
-  margin-top: auto;
 }
 .app-content {
   flex: 1;
@@ -263,6 +257,8 @@ h1 em {
   padding: 13px;
   display: flex;
   align-items: center;
+  padding-right: 30px;
+  padding-left: 30px;
   gap: 11px;
 }
 .continue-card > div:nth-child(2) {
@@ -444,8 +440,8 @@ h1 em {
   backdrop-filter: blur(10px);
 }
 .pill-top {
-  top: 14px;
-  right: -18px;
+  top: 20px;
+  right: -40px;
   gap: 9px;
   padding: 11px 15px;
   border-radius: 10px;
@@ -462,7 +458,7 @@ h1 em {
 }
 .pill-bottom {
   left: -30px;
-  bottom: 40px;
+  bottom: 60px;
   gap: 11px;
   padding: 12px 17px;
   border-radius: 12px;

@@ -32,6 +32,8 @@
   color: var(--muted);
   font-size: 13px;
   line-height: 1.8;
+  text-align: end;
+  margin-right: 30px;
 }
 .platform-grid {
   display: grid;
@@ -44,11 +46,11 @@
   border-radius: 17px;
   background: white;
   transition:
-    transform 0.2s,
+    border-color 0.2s,
     box-shadow 0.2s;
 }
 .platform-card:hover {
-  transform: translateY(-3px);
+  border-color: #ccd8ea;
   box-shadow: 0 16px 35px rgba(60, 75, 105, 0.08);
 }
 .platform-head {
@@ -87,7 +89,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-radius: 9px;
+  border-radius: 14px;
   background: var(--blue);
   color: white;
   font-size: 13px;
