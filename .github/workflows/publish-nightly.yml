@@ -13,11 +13,7 @@ jobs:
       app_version: ${{ steps.meta.outputs.app_version }}
       commit: ${{ steps.meta.outputs.commit_hash }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: "recursive"
+      - uses: actions/checkout@v4
   
       - name: Check for Recent Commits
         if: ${{ github.event_name == 'schedule' }}
@@ -30,11 +26,6 @@ jobs:
             gh run cancel ${{ github.run_id }}
             sleep 10
           fi
-  
-      - name: Update Submodules
-        run: |
-          git submodule update --init --recursive
-          git submodule foreach --recursive 'git fetch origin main && git checkout -B main origin/main'
   
       - name: Generate Meta and JSON
         id: meta

@@ -11,16 +11,7 @@ jobs:
       app_version: ${{ steps.meta.outputs.app_version }}
       commit: ${{ steps.meta.outputs.commit_hash }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: "recursive"
-
-      - name: Update Submodules
-        run: |
-          git submodule update --init --recursive
-          git submodule foreach --recursive 'git fetch origin main && git checkout -B main origin/main'
+      - uses: actions/checkout@v4
 
       - name: Generate Meta and JSON
         id: meta
