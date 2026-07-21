@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -103,6 +104,13 @@ public partial class About : DataUserControl
                 CanResize = false
             });
         if (result == DialogResult.Yes) await UpdateApp.Apply(update);
+    }
+
+    private void OpenLink_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not HyperlinkButton { CommandParameter: string url }) return;
+
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 }
 
