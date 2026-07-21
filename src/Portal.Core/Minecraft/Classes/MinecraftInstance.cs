@@ -31,6 +31,12 @@ public class MinecraftInstance : ObservableObject
     public string? ExternalDisplayName { get; init; }
     public string FolderTypeDescription => Layout?.KindDisplayName ?? "传统 .minecraft";
     public bool IsExternallyManaged => Layout != null;
+    public bool RequiresIndependentInstance => Layout?.Kind is
+        MinecraftFolderKind.ModrinthApp or MinecraftFolderKind.ModrinthProfile or
+        MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance or
+        MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance or
+        MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance;
+    public bool CanDisableIndependentInstance => !RequiresIndependentInstance;
 
     public DateTime LastPlayTime => Config?.LastPlayTime ?? DateTime.MinValue;
 
@@ -242,6 +248,7 @@ public class MinecraftInstance : ObservableObject
         InstanceFolderPath = layout?.InstanceRoot ?? e.VersionDirectoryPath ??
                              Path.Combine(e.MinecraftFolderPath, "versions", e.Id);
         Config = GetInstanceConfig();
+        EnsureRequiredIndependentInstance();
         ObserveConfigChanges();
     }
 
@@ -342,11 +349,18 @@ public class MinecraftInstance : ObservableObject
     {
         lock (_timerLock)
         {
+            EnsureRequiredIndependentInstance();
             FormatPlayTimeData();
             var configPath = GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             File.WriteAllText(configPath, JsonConvert.SerializeObject(Config, Formatting.Indented));
         }
+    }
+
+    private void EnsureRequiredIndependentInstance()
+    {
+        if (RequiresIndependentInstance && JavaConfig?.EnableIndependentInstance == false)
+            JavaConfig.EnableIndependentInstance = true;
     }
 
     private string GetConfigPath()

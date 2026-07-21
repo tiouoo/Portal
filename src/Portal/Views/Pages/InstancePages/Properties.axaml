@@ -44,16 +44,17 @@
                 </StackPanel>
                 <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
                     <TextBlock FontSize="18" Text="Java 版配置" />
-                    <TextBlock
-                        FontSize="13"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="游玩时长、最近启动和会话次数会自动记录在此实例中。" />
                     <StackPanel Spacing="5">
                         <Label
                             Content="独立实例"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableIndependentInstance}" />
+                        <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableIndependentInstance}" IsEnabled="{Binding Instance.CanDisableIndependentInstance}" />
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            IsVisible="{Binding Instance.RequiresIndependentInstance}"
+                            Text=" *此类型文件夹强制独立实例" />
                     </StackPanel>
                     <StackPanel Spacing="5">
                         <Label

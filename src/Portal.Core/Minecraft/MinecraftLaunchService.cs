@@ -290,7 +290,8 @@ public static class MinecraftLaunchService
         Account = account,
         JavaPath = java,
         LauncherName = "Portal",
-        IsEnableIndependency = instance.JavaConfig?.EnableIndependentInstance == true,
+        IsEnableIndependency = instance.RequiresIndependentInstance ||
+                               instance.JavaConfig?.EnableIndependentInstance == true,
         Width = options.WindowWidth,
         Height = options.WindowHeight,
         MinMemorySize = 512,
