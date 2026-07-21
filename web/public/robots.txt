@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://portal.tiouo.xyz/sitemap.xml

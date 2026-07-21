@@ -1,11 +1,12 @@
 <script setup>
 import logoUrl from '../assets/portal-logo.svg'
+import { RouterLink } from 'vue-router'
 </script>
 
 <template>
   <footer>
     <div class="container footer-inner">
-      <a class="brand" href="#top"><img :src="logoUrl" alt="" /><span>Portal</span></a>
+      <RouterLink class="brand" to="/"><img :src="logoUrl" alt="" /><span>Portal</span></RouterLink>
       <p>Copyright © Portal 2026. 基于 GPL-3.0-or-later 开源许可发布。</p>
       <div class="footer-links">
         <a href="https://github.com/tiouoo/Portal" target="_blank" rel="noreferrer">GitHub</a>

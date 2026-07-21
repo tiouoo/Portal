@@ -136,18 +136,29 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  color: #798293;
-  font-size: 11px;
+  color: #4e5b70;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
 }
 .download-note > span {
   display: grid;
   place-items: center;
-  width: 17px;
-  height: 17px;
-  border: 1px solid #aeb8c8;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #8090a9;
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
+}
+.download-note a {
+  color: var(--blue);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.download-note a:hover {
+  color: #1f62df;
 }
 
 @media (max-width: 820px) {

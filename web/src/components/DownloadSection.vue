@@ -69,7 +69,7 @@ import { platforms } from "../data/downloads.js";
       </div>
       <p class="download-note">
         <span>i</span> 基岩版游戏的安装与启动功能目前仅在 Windows 上提供。macOS
-        如遇安全提示，请参考 GitHub 仓库说明。
+        如遇安全提示或文件损坏，请参考<RouterLink to="/macos-install">安装说明</RouterLink>。
       </p>
     </div>
   </section>

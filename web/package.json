@@ -11,7 +11,7 @@
   "dependencies": {
     "@vitejs/plugin-vue": "latest",
     "vite": "latest",
-    "vue": "latest"
-  },
-  "devDependencies": {}
+    "vue": "latest",
+    "vue-router": "^5.2.0"
+  }
 }
