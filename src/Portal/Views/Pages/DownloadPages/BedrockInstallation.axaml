@@ -1,0 +1,94 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.BedrockInstallation"
+    x:DataType="downloadPages:BedrockInstallationViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:bedrock="clr-namespace:Portal.Bedrock.Standard.Interface;assembly=Portal.Bedrock.Standard"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12" VerticalAlignment="Top">
+            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <TextBlock FontSize="20" FontWeight="SemiBold" Text="基岩版游戏本体" />
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="8,9,0,0"
+                    Text="{Binding StatusText}"
+                    VerticalAlignment="Top" />
+            </StackPanel>
+            <StackPanel
+                DockPanel.Dock="Right"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8"
+                VerticalAlignment="Top">
+                <ComboBox SelectedIndex="{Binding SelectedReleaseChannel}" Width="105">
+                    <ComboBoxItem Content="全部" />
+                    <ComboBoxItem Content="正式版" />
+                    <ComboBoxItem Content="预览版" />
+                </ComboBox>
+                <TextBox PlaceholderText="搜索版本名称" Text="{Binding SearchText}" Width="170" />
+            </StackPanel>
+        </DockPanel>
+
+        <controls:ScrollView>
+            <ItemsRepeater ItemsSource="{Binding Versions}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="10"
+                        MinItemHeight="65"
+                        MinItemWidth="270"
+                        MinRowSpacing="10"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="bedrock:BedrockGdkVersion">
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Cursor="Hand"
+                            Padding="12"
+                            PointerPressed="VersionCard_OnPointerPressed">
+                            <StackPanel Spacing="5">
+                                <DockPanel>
+                                    <TextBlock
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding Id}"
+                                        TextTrimming="CharacterEllipsis"
+                                        VerticalAlignment="Center" />
+                                    <Border
+                                        Background="{DynamicResource PopupBackgroundColor}"
+                                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        DockPanel.Dock="Right"
+                                        HorizontalAlignment="Right"
+                                        Padding="5,3,5,1"
+                                        VerticalAlignment="Top">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding ChannelLabel}" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock FontSize="12" Foreground="{DynamicResource InnerForegroundColor}">
+                                    <Run Text="{Binding RelativeReleaseTime}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
+    </DockPanel>
+</UserControl>

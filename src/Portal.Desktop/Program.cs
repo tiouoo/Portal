@@ -47,6 +47,8 @@ sealed class Program
     {
         MinecraftLaunchService.DefaultBedrockLauncherFactory =
             config => new Portal.Bedrock.BedrockLaunch(config);
+        Portal.Bedrock.Standard.Interface.BedrockInstallationService.DefaultInstaller =
+            new Portal.Bedrock.BedrockInstaller();
     }
 #endif
 
