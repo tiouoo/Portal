@@ -1,0 +1,74 @@
+<UserControl
+    d:DesignHeight="300"
+    d:DesignWidth="480"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstancePages.BedrockPackageImportDialog"
+    x:DataType="local:BedrockPackageImportDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto,Auto"
+        Width="480">
+        <StackPanel Spacing="4">
+            <TextBlock FontSize="16" Text="导入基岩版包" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="{Binding PackageDescription}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            Spacing="6">
+            <TextBlock Text="基岩版实例" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding Instances}"
+                Padding="10,6,5,5"
+                SelectedItem="{Binding SelectedInstance}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:BedrockPackageInstanceItem">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding Version}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasNoInstances}"
+                Text="没有可用的基岩版实例" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            IsVisible="{Binding RequiresUserId}"
+            Margin="0,18,0,0"
+            Spacing="6">
+            <TextBlock Text="存档用户 ID" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding WorldUserIds}"
+                SelectedItem="{Binding SelectedWorldUserId}" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="3"
+            HorizontalAlignment="Right"
+            Margin="0,22,0,0"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Click="Cancel_Click" Content="取消" />
+            <Button
+                Click="Import_Click"
+                Content="导入"
+                IsEnabled="{Binding CanImport}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

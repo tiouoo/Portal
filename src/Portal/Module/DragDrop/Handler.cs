@@ -9,6 +9,7 @@ using MinecraftLaunch.Components.Installer.Modpack;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
+using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -16,6 +17,7 @@ using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 using Portal.Views.Pages.DownloadPages;
+using Portal.Views.Pages.InstancePages;
 using AuthServer = Portal.Core.Operations.Account.AuthServer;
 
 namespace Portal.Module.DragDrop;
@@ -42,6 +44,13 @@ public class Handler
         {
             e.Handled = true;
             await ModpackDetailsPage.InstallLocalAsync(window, archivePath, source, suggestedInstanceId);
+            return;
+        }
+
+        if (OperatingSystem.IsWindows() && TryGetBedrockPackage(data, out archivePath, out var inspection))
+        {
+            e.Handled = true;
+            await BedrockPackageImportDialog.ImportAsync(window, archivePath, inspection);
         }
     }
 
@@ -68,6 +77,12 @@ public class Handler
         {
             dropEffects = DragDropEffects.Copy;
             msg = "识别到整合包";
+        }
+
+        if (OperatingSystem.IsWindows() && TryGetBedrockPackage(data, out _, out _))
+        {
+            dropEffects = DragDropEffects.Copy;
+            msg = "识别到基岩版包";
         }
 
         e.DragEffects = dropEffects;
@@ -217,5 +232,29 @@ public class Handler
         catch (Exception) { }
 
         return false;
+    }
+
+    private static bool TryGetBedrockPackage(IDataTransfer data, out string archivePath,
+        out BedrockPackageInspection inspection)
+    {
+        archivePath = string.Empty;
+        inspection = null!;
+        var files = data.TryGetFiles()?.OfType<IStorageFile>().ToArray();
+        if (files is not [var file]) return false;
+
+        var path = file.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path) ||
+            !BedrockPackageImportService.TryGetArchiveType(path, out _)) return false;
+
+        try
+        {
+            inspection = new BedrockPackageImportService().Inspect(path);
+            archivePath = path;
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }
