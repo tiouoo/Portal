@@ -11,18 +11,24 @@ public static class JavaRuntimeOperations
         ICollection<JavaRuntimeEntry> javaRuntimes,
         CancellationToken cancellationToken = default)
     {
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        var options = new FilePickerOpenOptions
         {
             Title = "选择 Java 可执行文件",
-            AllowMultiple = false,
-            FileTypeFilter =
+            AllowMultiple = false
+        };
+
+        if (OperatingSystem.IsWindows())
+        {
+            options.FileTypeFilter =
             [
                 new FilePickerFileType("Java 可执行文件")
                 {
                     Patterns = ["java", "java.exe", "javaw", "javaw.exe"]
                 }
-            ]
-        });
+            ];
+        }
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
         if (files.Count == 0)
             return null;
 
