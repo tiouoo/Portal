@@ -93,12 +93,6 @@ jobs:
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
-    strategy:
-      matrix:
-        rid: [win-x64]
-        include:
-          - rid: win-x64
-            output_rid: win.x64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -122,16 +116,16 @@ jobs:
         run: |
           cd ./src/Portal.Desktop
           New-Item -ItemType Directory -Force -Path "../../dist"
-          dotnet restore -r ${{ matrix.rid }}
-          dotnet publish -c Release -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=false /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
+          dotnet restore -r win-x64
+          dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:IncludeNativeLibrariesForSelfExtract=true /p:SelfContained=false /p:Version=${{ needs.prepare.outputs.app_version }} -o "../../dist" -p:DebugType=none -p:DebugSymbols=false
           cd "../../dist"
-          Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.${{ matrix.output_rid }}.portable.exe" -Force
-          Compress-Archive -Path "Portal.${{ matrix.output_rid }}.portable.exe" -DestinationPath "../Portal.${{ matrix.output_rid }}.portable.zip" -Force
+          Rename-Item -Path "Portal.Desktop.exe" -NewName "Portal.win.x64.portable.exe" -Force
+          Compress-Archive -Path "Portal.win.x64.portable.exe" -DestinationPath "../Portal.win.x64.portable.zip" -Force
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win-exe-${{ matrix.output_rid }}-artifacts
+          name: win-exe-win.x64-artifacts
           path: ./Portal.*.zip
 
   win-installer:
@@ -140,12 +134,6 @@ jobs:
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
-    strategy:
-      matrix:
-        rid: [win-x64]
-        include:
-          - rid: win-x64
-            output_rid: win.x64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -175,12 +163,12 @@ jobs:
       - name: Build
         run: |
           cd ./src/Portal.Desktop
-          pupnet -r ${{ matrix.rid }} -k setup -y -o Portal.${{ matrix.output_rid }}.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
+          pupnet -r win-x64 -k setup -y -o Portal.win.x64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win-installer-${{ matrix.output_rid }}-artifacts
+          name: win-installer-win.x64-artifacts
           path: src/Portal.Desktop/Deploy/OUT/Portal.win.*.installer.exe
 
   mac-dmg:
