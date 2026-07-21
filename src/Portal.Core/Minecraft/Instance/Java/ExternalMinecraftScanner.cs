@@ -67,7 +67,7 @@ internal static class ExternalMinecraftScanner
                 var name = package.RootElement.TryGetProperty("name", out var nameNode)
                     ? nameNode.GetString() ?? Path.GetFileName(instanceRoot)
                     : Path.GetFileName(instanceRoot);
-                var iconPath = ResolveIcon(instanceRoot, "icon.png");
+                var iconPath = ResolveIcon(instanceRoot, "icon.png") ?? ResolveIcon(instanceRoot, "Icon.png");
                 result.Add(CreateInstance(entry, folder, new MinecraftInstanceLayout(
                     MinecraftFolderKind.BakaXl, folderLayout.RootPath, instanceRoot, gameDirectory,
                     Path.Combine(folderLayout.RootPath, "meta"), Path.Combine(folderLayout.RootPath, "assets"),
@@ -127,6 +127,7 @@ internal static class ExternalMinecraftScanner
                 var icon = root.TryGetProperty("profileImagePath", out var iconNode)
                     ? ResolveIcon(instanceRoot, iconNode.GetString() ?? string.Empty)
                     : null;
+                icon ??= ResolveIcon(instanceRoot, "icon.png") ?? ResolveIcon(instanceRoot, "Icon.png");
                 var displayName = root.TryGetProperty("name", out var displayNameNode)
                     ? displayNameNode.GetString() ?? Path.GetFileName(instanceRoot)
                     : Path.GetFileName(instanceRoot);
@@ -165,28 +166,36 @@ internal static class ExternalMinecraftScanner
             var result = new List<MinecraftInstance>();
             while (reader.Read())
             {
-                var relativePath = reader.GetString(0);
-                var gameDirectory = Path.Combine(folderLayout.RootPath, "profiles", relativePath);
-                if (folderLayout.Kind == MinecraftFolderKind.ModrinthProfile &&
-                    !Path.GetFullPath(gameDirectory).Equals(Path.GetFullPath(folderLayout.SelectedPath),
-                        StringComparison.OrdinalIgnoreCase))
-                    continue;
-                if (!Directory.Exists(gameDirectory))
-                    continue;
+                try
+                {
+                    var profilePath = reader.GetString(0);
+                    var gameDirectory = ResolveModrinthProfilePath(folderLayout.RootPath, profilePath);
+                    if (folderLayout.Kind == MinecraftFolderKind.ModrinthProfile &&
+                        !Path.GetFullPath(gameDirectory).Equals(Path.GetFullPath(folderLayout.SelectedPath),
+                            StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    if (!Directory.Exists(gameDirectory))
+                        continue;
 
-                var version = reader.GetString(3);
-                var metadataRoot = Path.Combine(folderLayout.RootPath, "meta");
-                var parsed = new MinecraftParser(metadataRoot).GetMinecraft(version);
-                var loader = reader.IsDBNull(4) ? "vanilla" : reader.GetString(4);
-                var loaderVersion = reader.IsDBNull(5) ? null : reader.GetString(5);
-                var entry = WithLayout(parsed, relativePath, gameDirectory, metadataRoot,
-                    Path.Combine(metadataRoot, "versions", version),
-                    loader, loaderVersion, null, Path.Combine(metadataRoot, "natives", relativePath));
-                var icon = reader.IsDBNull(2) ? null : ResolveIcon(folderLayout.RootPath, reader.GetString(2));
-                result.Add(CreateInstance(entry, folder, new MinecraftInstanceLayout(
-                    MinecraftFolderKind.ModrinthApp, folderLayout.RootPath, gameDirectory, gameDirectory, metadataRoot,
-                    Path.Combine(metadataRoot, "assets"), Path.Combine(metadataRoot, "libraries"),
-                    Path.Combine(metadataRoot, "natives", relativePath), icon), reader.GetString(1)));
+                    var metadataRoot = Path.Combine(folderLayout.RootPath, "meta");
+                    var loader = reader.IsDBNull(4) ? "vanilla" : reader.GetString(4);
+                    var loaderVersion = reader.IsDBNull(5) ? null : reader.GetString(5);
+                    var version = ResolveModrinthVersionId(metadataRoot, reader.GetString(3), loaderVersion);
+                    var parsed = new MinecraftParser(metadataRoot).GetMinecraft(version);
+                    var entry = WithLayout(parsed, profilePath, gameDirectory, metadataRoot,
+                        Path.Combine(metadataRoot, "versions", version),
+                        loader, loaderVersion, null, Path.Combine(metadataRoot, "natives", profilePath));
+                    var icon = reader.IsDBNull(2) ? null : ResolveIcon(folderLayout.RootPath, reader.GetString(2));
+                    icon ??= ResolveIcon(gameDirectory, "icon.png") ?? ResolveIcon(gameDirectory, "Icon.png");
+                    result.Add(CreateInstance(entry, folder, new MinecraftInstanceLayout(
+                        MinecraftFolderKind.ModrinthApp, folderLayout.RootPath, gameDirectory, gameDirectory, metadataRoot,
+                        Path.Combine(metadataRoot, "assets"), Path.Combine(metadataRoot, "libraries"),
+                        Path.Combine(metadataRoot, "natives", profilePath), icon), reader.GetString(1)));
+                }
+                catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or
+                                                  ArgumentException or InvalidOperationException)
+                {
+                }
             }
             return result;
         }
@@ -399,13 +408,43 @@ internal static class ExternalMinecraftScanner
 
     private static string? ResolveMultiMcIcon(string root, string instanceRoot, string? iconKey)
     {
-        var candidates = new List<string> { Path.Combine(instanceRoot, "icon.png") };
+        var candidates = new List<string>
+        {
+            Path.Combine(instanceRoot, ".minecraft", "icon.png"),
+            Path.Combine(instanceRoot, ".minecraft", "Icon.png"),
+            Path.Combine(instanceRoot, "icon.png")
+        };
         if (!string.IsNullOrWhiteSpace(iconKey) && iconKey != "default")
         {
             candidates.Add(Path.Combine(root, "icons", $"{iconKey}.png"));
             candidates.Add(Path.Combine(root, "icons", iconKey));
         }
         return candidates.FirstOrDefault(File.Exists);
+    }
+
+    private static string ResolveModrinthProfilePath(string root, string profilePath)
+    {
+        if (Path.IsPathRooted(profilePath))
+            return profilePath;
+
+        var profilesRoot = Path.Combine(root, "profiles");
+        var directPath = Path.Combine(root, profilePath);
+        return Path.GetFullPath(directPath).StartsWith(Path.GetFullPath(profilesRoot) + Path.DirectorySeparatorChar,
+            StringComparison.OrdinalIgnoreCase)
+            ? directPath
+            : Path.Combine(profilesRoot, profilePath);
+    }
+
+    private static string ResolveModrinthVersionId(string metadataRoot, string gameVersion, string? loaderVersion)
+    {
+        if (!string.IsNullOrWhiteSpace(loaderVersion))
+        {
+            var loaderVersionId = $"{gameVersion}-{loaderVersion}";
+            if (Directory.Exists(Path.Combine(metadataRoot, "versions", loaderVersionId)))
+                return loaderVersionId;
+        }
+
+        return gameVersion;
     }
 
     private static string? ResolveIcon(string root, string iconPath)

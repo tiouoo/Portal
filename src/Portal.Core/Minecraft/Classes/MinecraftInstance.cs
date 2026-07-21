@@ -611,9 +611,9 @@ public class MinecraftInstance : ObservableObject
 
     public void SetIcon(Bitmap icon)
     {
-        var instanceFolder = GetIconOverrideFolder();
-        Directory.CreateDirectory(instanceFolder);
-        using (var stream = File.Create(Path.Combine(instanceFolder, "Icon.png")))
+        var iconPath = GetIconOverridePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(iconPath)!);
+        using (var stream = File.Create(iconPath))
         {
             icon.Save(stream, PngBitmapEncoderOptions.Default);
         }
@@ -623,12 +623,7 @@ public class MinecraftInstance : ObservableObject
 
     public void ResetIcon()
     {
-        var instanceFolder = GetIconOverrideFolder();
-        foreach (var iconPath in new[]
-                 {
-                     Path.Combine(instanceFolder, "Icon.png"),
-                      Path.Combine(instanceFolder, "icon.png")
-                 }.Distinct(StringComparer.Ordinal))
+        foreach (var iconPath in GetIconOverridePaths())
         {
             if (File.Exists(iconPath))
                 File.Delete(iconPath);
@@ -652,11 +647,12 @@ public class MinecraftInstance : ObservableObject
     private Bitmap GetSourceIcon()
     {
         var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
-        var customIcon = GetCustomIconPath(GetIconOverrideFolder()) ?? GetCustomIconPath(instanceFolder);
+        var customIcon = GetCustomIconPath();
         if (customIcon != null)
             return new Bitmap(customIcon);
 
-        if (Layout?.NativeIconPath is { } nativeIcon && File.Exists(nativeIcon))
+        var nativeIcon = GetNativeIconPath(instanceFolder);
+        if (nativeIcon != null)
             return new Bitmap(nativeIcon);
 
         if (Type == MinecraftInstanceType.Bedrock)
@@ -675,14 +671,15 @@ public class MinecraftInstance : ObservableObject
     private Bitmap GetInstanceIcon(int width)
     {
         var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
-        var customIcon = GetCustomIconPath(GetIconOverrideFolder()) ?? GetCustomIconPath(instanceFolder);
+        var customIcon = GetCustomIconPath();
         if (customIcon != null)
         {
             using var s = File.OpenRead(customIcon);
             return Bitmap.DecodeToWidth(s, width);
         }
 
-        if (Layout?.NativeIconPath is { } nativeIcon && File.Exists(nativeIcon))
+        var nativeIcon = GetNativeIconPath(instanceFolder);
+        if (nativeIcon != null)
         {
             using var s = File.OpenRead(nativeIcon);
             return Bitmap.DecodeToWidth(s, width);
@@ -704,21 +701,40 @@ public class MinecraftInstance : ObservableObject
         return LoadBitmapFromAssembly(iconName, width);
     }
 
-    private static string? GetCustomIconPath(string instanceFolder)
-    {
-        var iconPath = Path.Combine(instanceFolder, "Icon.png");
-        if (File.Exists(iconPath))
-            return iconPath;
+    private string? GetCustomIconPath() => GetIconOverridePaths().FirstOrDefault(File.Exists);
 
-        var legacyIconPath = Path.Combine(instanceFolder, "icon.png");
-        return File.Exists(legacyIconPath) ? legacyIconPath : null;
+    private IEnumerable<string> GetIconOverridePaths()
+    {
+        yield return GetIconOverridePath();
+
+        // Remove legacy overrides too, so reset always returns to the launcher's original icon.
+        if (Layout != null)
+            yield return Path.Combine(Path.GetDirectoryName(GetConfigPath())!, Path.GetFileNameWithoutExtension(GetConfigPath()),
+                "Icon.png");
+        else
+            yield return Path.Combine(GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder), "Icon.png");
     }
 
-    private string GetIconOverrideFolder()
+    private string GetIconOverridePath()
     {
         if (Layout == null)
-            return GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
-        return Path.Combine(Path.GetDirectoryName(GetConfigPath())!, Path.GetFileNameWithoutExtension(GetConfigPath()));
+            return Path.Combine(GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder), "Portal.Icon.png");
+        return Path.ChangeExtension(GetConfigPath(), ".png");
+    }
+
+    private string? GetNativeIconPath(string instanceFolder)
+    {
+        if (Layout?.NativeIconPath is { } nativeIcon && File.Exists(nativeIcon))
+            return nativeIcon;
+
+        if (Layout == null)
+        {
+            var iconPath = Path.Combine(instanceFolder, "icon.png");
+            if (File.Exists(iconPath))
+                return iconPath;
+        }
+
+        return null;
     }
 
     private static Bitmap LoadBitmapFromAssembly(string fileName, int width)
