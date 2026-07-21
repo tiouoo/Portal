@@ -38,8 +38,12 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     private readonly CurseforgeProvider _curseforge = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _loaded;
+    private bool _buildingFilters;
+    private bool _hasLocatedTargetVersionGroup;
 
+    public event Action<JavaResourceVersionGroup>? TargetVersionGroupReady;
     public JavaResourceDetailsTarget Target { get; } = target;
+    public ObservableCollection<JavaResourceVersionFilter> VersionFilters { get; } = [];
     public ObservableCollection<string> Screenshots { get; } = [];
     public ObservableCollection<int> ScreenshotIndices { get; } = [];
     [ObservableProperty] public partial ObservableCollection<JavaResourceVersionGroup> VersionGroups { get; set; } = [];
@@ -49,13 +53,14 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     [ObservableProperty] public partial string? IconUrl { get; set; }
     [ObservableProperty] public partial bool IsLoading { get; set; }
     [ObservableProperty] public partial bool HasError { get; set; }
+    [ObservableProperty] public partial JavaResourceVersionFilter? SelectedVersionFilter { get; set; }
     [ObservableProperty] public partial int SelectedScreenshotIndex { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
     public IAsyncImageLoader ScreenshotLoader { get; } = new ModScreenshotLoader();
     public string LoadingText => $"正在加载{Target.Definition.DisplayName}详情与所有版本...";
     public string ErrorText => $"无法加载{Target.Definition.DisplayName}详情，请检查网络";
     public bool HasScreenshots => Screenshots.Count > 0;
-    public bool HasVersions => VersionGroups.Count > 0;
+    public bool HasVersions => VersionFilters.Count > 0;
     public bool IsEmpty => !IsLoading && !HasError && VersionGroups.Count == 0;
     public bool SupportsDownload => Target.Definition.SupportsDownload;
     private IReadOnlyList<JavaResourceFileItem> AllFiles { get; set; } = [];
@@ -74,7 +79,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 Name = project.Name;
                 Summary = project.Summary;
                 IconUrl = project.IconUrl;
-                Metadata = $"Modrinth·{JavaResourceSearchResultItem.FormatRelativeTime(project.Updated)}·{project.DownloadCount:N0} 下载";
+                Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.Updated)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
                 AllFiles = (await _modrinth.GetModFilesByProjectIdAsync(Target.ProjectId, cancellationToken))
                     .Select(JavaResourceFileItem.From).ToArray();
@@ -86,7 +91,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 Name = project.Name;
                 Summary = project.Summary;
                 IconUrl = project.IconUrl;
-                Metadata = $"CurseForge·{JavaResourceSearchResultItem.FormatRelativeTime(project.DateModified)}·{project.DownloadCount:N0} 下载";
+                Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.DateModified)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
                 AllFiles = (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
                     .Select(JavaResourceFileItem.From).ToArray();
@@ -109,7 +114,32 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
 
     private void BuildVersionGroups()
     {
-        var groups = AllFiles.SelectMany(file => file.MinecraftVersions.DefaultIfEmpty("未知版本")
+        _buildingFilters = true;
+        VersionFilters.Clear();
+        VersionFilters.Add(new JavaResourceVersionFilter("全部", null));
+        foreach (var family in AllFiles.SelectMany(file => file.MinecraftVersions).Select(GetVersionFamily)
+                     .Where(family => family is not null).Distinct()
+                     .OrderByDescending(family => MinecraftVersionKey.Parse(family!)))
+            VersionFilters.Add(new JavaResourceVersionFilter(family!, family));
+        SelectedVersionFilter = VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(Target.GameVersion)) ??
+                                VersionFilters[0];
+        _buildingFilters = false;
+        ApplyVersionFilter();
+        OnPropertyChanged(nameof(HasVersions));
+    }
+
+    partial void OnSelectedVersionFilterChanged(JavaResourceVersionFilter? value)
+    {
+        if (!_buildingFilters) ApplyVersionFilter();
+    }
+
+    private void ApplyVersionFilter()
+    {
+        var selectedFamily = SelectedVersionFilter?.Family;
+        var groups = AllFiles.Where(file => selectedFamily is null ||
+                file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
+            .SelectMany(file => file.MinecraftVersions.DefaultIfEmpty("未知版本")
+                .Where(version => selectedFamily is null || GetVersionFamily(version) == selectedFamily)
                 .Select(version => (Version: version, File: file)))
             .GroupBy(item => item.Version)
             .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key))
@@ -118,11 +148,20 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                     .ToArray()))
             .ToArray();
         VersionGroups = new ObservableCollection<JavaResourceVersionGroup>(groups);
-        var targetGroup = VersionGroups.FirstOrDefault(group => group.MinecraftVersion == Target.GameVersion) ??
-                          VersionGroups.FirstOrDefault();
-        if (targetGroup is not null) targetGroup.IsExpanded = true;
-        OnPropertyChanged(nameof(HasVersions));
+        if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(Target.GameVersion) &&
+            VersionGroups.FirstOrDefault(group => group.MinecraftVersion == Target.GameVersion) is { } targetGroup)
+        {
+            _hasLocatedTargetVersionGroup = true;
+            targetGroup.IsExpanded = true;
+            TargetVersionGroupReady?.Invoke(targetGroup);
+        }
         OnPropertyChanged(nameof(IsEmpty));
+    }
+
+    private static string? GetVersionFamily(string version)
+    {
+        var match = Regex.Match(version, @"^(\d+)\.(\d+)");
+        return match.Success ? $"{match.Groups[1].Value}.{match.Groups[2].Value}" : null;
     }
 
     private void AddScreenshots(IEnumerable<string>? urls)
@@ -172,6 +211,8 @@ public sealed partial class JavaResourceVersionGroup : ObservableObject
         OnPropertyChanged(nameof(LoadMoreText));
     }
 }
+
+public sealed record JavaResourceVersionFilter(string DisplayName, string? Family);
 
 public sealed record JavaResourceFileItem(string Id, string DisplayName, string Details, string FileName,
     string DownloadUrl, long FileSize, DateTime Published, IReadOnlyList<string> MinecraftVersions)

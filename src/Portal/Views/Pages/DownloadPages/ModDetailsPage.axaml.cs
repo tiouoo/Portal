@@ -395,9 +395,8 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
             VersionGroups = new ObservableCollection<ModVersionGroup>(groups);
             if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(target.GameVersion) &&
-                LoaderName(target.Loader) is { } targetLoader &&
                 groups.FirstOrDefault(group => group.MinecraftVersion == target.GameVersion &&
-                    group.Loader == targetLoader) is { } targetGroup)
+                    (LoaderName(target.Loader) is not { } targetLoader || group.Loader == targetLoader)) is { } targetGroup)
             {
                 _hasLocatedTargetVersionGroup = true;
                 targetGroup.IsExpanded = true;

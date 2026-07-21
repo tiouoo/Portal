@@ -1,14 +1,169 @@
 <UserControl
-    d:DesignHeight="600" d:DesignWidth="900" mc:Ignorable="d"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    mc:Ignorable="d"
     x:Class="Portal.Views.Pages.DownloadPages.ModpackDetailsPage"
     x:DataType="local:ModpackDetailsPageViewModel"
-    xmlns="https://github.com/avaloniaui" xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns="https://github.com/avaloniaui"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="12,0,12,12">
-        <StackPanel DockPanel.Dock="Top"><DockPanel><StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" IsVisible="{Binding HasScreenshots}" Width="260"><Border ClipToBounds="True" CornerRadius="10" Height="150"><Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex}"><Carousel.ItemTemplate><DataTemplate x:DataType="x:String"><asyncImageLoader:AdvancedImage Loader="{Binding $parent[UserControl].DataContext.ScreenshotLoader}" Source="{Binding}" Stretch="UniformToFill" /></DataTemplate></Carousel.ItemTemplate></Carousel></Border></StackPanel><DockPanel><DockPanel DockPanel.Dock="Top"><Border Background="{DynamicResource TranslucentBorderBrush}" CornerRadius="14" Height="72" Width="72"><asyncImageLoader:AdvancedImage CornerRadius="14" Loader="{Binding ImageLoader}" Source="{Binding IconUrl}" /></Border><StackPanel Margin="12,1,12,0" Spacing="3"><TextBlock FontSize="22" FontWeight="SemiBold" Text="{Binding Name}" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" /></StackPanel></DockPanel><TextBlock DockPanel.Dock="Top" Foreground="{DynamicResource InnerForegroundColor}" Height="52" Margin="2,6,0,0" MaxLines="3" Text="{Binding Summary}" TextWrapping="Wrap" /></DockPanel></DockPanel><TextBlock Foreground="{DynamicResource InnerForegroundColor}" IsVisible="{Binding IsLoading}" Margin="0,12,0,0" Text="正在加载整合包详情与所有版本..." /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" IsVisible="{Binding HasError}" Margin="0,12,0,0" Text="无法加载整合包详情，请检查网络" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" IsVisible="{Binding IsEmpty}" Margin="0,12,0,0" Text="没有可用文件" /></StackPanel>
-        <Separator Background="{DynamicResource TranslucentBorderBrush}" DockPanel.Dock="Top" Margin="0,10,0,-2" />
-        <controls:ScrollView Margin="0,14,0,0"><ItemsControl ItemsSource="{Binding VersionGroups}"><ItemsControl.ItemTemplate><DataTemplate x:DataType="local:JavaResourceVersionGroup"><tio:TioExpander Background="{DynamicResource TranslucentBackgroundColor}" BorderBrush="{DynamicResource TranslucentBorderBrush}" BorderThickness="1" HeaderHeight="46" HeaderPadding="0" IsExpanded="{Binding IsExpanded}" Margin="0,0,0,10"><Expander.Header><DockPanel Margin="5,0,14,0"><TextBlock FontSize="15" FontWeight="SemiBold" Text="{Binding Title}" VerticalAlignment="Center" /><TextBlock DockPanel.Dock="Right" Foreground="{DynamicResource InnerForegroundColor}" HorizontalAlignment="Right" Text="{Binding FileCountText}" VerticalAlignment="Center" /></DockPanel></Expander.Header><tio:TioExpander.Content><StackPanel Margin="14,0,14,12"><ItemsControl ItemsSource="{Binding VisibleFiles}"><ItemsControl.ItemTemplate><DataTemplate x:DataType="local:JavaResourceFileItem"><Border Margin="9,5,5,6"><StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" /><TextBlock FontSize="12" Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Details}" TextTrimming="CharacterEllipsis" /></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><Button Command="{Binding LoadMoreCommand}" Content="{Binding LoadMoreText}" HorizontalAlignment="Left" IsVisible="{Binding HasMore}" Margin="0,10,0,0" /></StackPanel></tio:TioExpander.Content></tio:TioExpander></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></controls:ScrollView>
+        <StackPanel DockPanel.Dock="Top">
+            <DockPanel>
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    IsVisible="{Binding HasScreenshots}"
+                    Width="294">
+                    <Border
+                        ClipToBounds="True"
+                        CornerRadius="10"
+                        Height="165">
+                        <Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex}">
+                            <Carousel.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <asyncImageLoader:AdvancedImage
+                                        Loader="{Binding $parent[UserControl].DataContext.ScreenshotLoader}"
+                                        Source="{Binding}"
+                                        Stretch="UniformToFill" />
+                                </DataTemplate>
+                            </Carousel.ItemTemplate>
+                        </Carousel>
+                    </Border>
+                </StackPanel>
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
+                        <Border
+                            Background="{DynamicResource TranslucentBorderBrush}"
+                            CornerRadius="14"
+                            Height="72"
+                            Width="72">
+                            <asyncImageLoader:AdvancedImage
+                                CornerRadius="14"
+                                Loader="{Binding ImageLoader}"
+                                Source="{Binding IconUrl}" />
+                        </Border>
+                        <StackPanel Margin="12,5,12,0" Spacing="3">
+                            <TextBlock
+                                FontSize="22"
+                                FontWeight="SemiBold"
+                                Margin="0,0,0,-2"
+                                Text="{Binding Name}" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Target.Source}" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock
+                        DockPanel.Dock="Top"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Height="52"
+                        Margin="2,4,0,0"
+                        MaxLines="3"
+                        Text="{Binding Summary}"
+                        TextWrapping="Wrap" />
+                    <ComboBox
+                        IsVisible="{Binding HasVersions}"
+                        ItemsSource="{Binding VersionFilters}"
+                        Margin="0,5,0,0"
+                        SelectedItem="{Binding SelectedVersionFilter}"
+                        Width="140">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </DockPanel>
+            </DockPanel>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoading}"
+                Margin="0,12,0,0"
+                Text="正在加载整合包详情与所有版本..." />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasError}"
+                Margin="0,12,0,0"
+                Text="无法加载整合包详情，请检查网络" />
+            <Border IsVisible="{Binding !IsLoading}">
+                <Border IsVisible="{Binding !HasError}">
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding IsEmpty}"
+                        Margin="0,12,0,0"
+                        Text="没有可用文件" />
+                </Border>
+            </Border>
+        </StackPanel>
+        <Separator
+            Background="{DynamicResource TranslucentBorderBrush}"
+            DockPanel.Dock="Top"
+            Margin="0,10,0,-2" />
+        <controls:ScrollView Margin="0,14,0,0">
+            <ItemsControl ItemsSource="{Binding VersionGroups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:JavaResourceVersionGroup">
+                        <tio:TioExpander
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            HeaderHeight="46"
+                            HeaderPadding="0"
+                            IsExpanded="{Binding IsExpanded}"
+                            Margin="0,0,0,10">
+                            <Expander.Header>
+                                <DockPanel Margin="5,0,14,0">
+                                    <TextBlock
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding Title}"
+                                        VerticalAlignment="Center" />
+                                    <TextBlock
+                                        DockPanel.Dock="Right"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        HorizontalAlignment="Right"
+                                        Text="{Binding FileCountText}"
+                                        VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Expander.Header>
+                            <tio:TioExpander.Content>
+                                <StackPanel Margin="14,0,14,12">
+                                    <ItemsControl ItemsSource="{Binding VisibleFiles}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:JavaResourceFileItem">
+                                                <Border Margin="9,5,5,6">
+                                                    <StackPanel>
+                                                        <TextBlock
+                                                            FontWeight="SemiBold"
+                                                            Text="{Binding DisplayName}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                                            Text="{Binding Details}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button
+                                        Command="{Binding LoadMoreCommand}"
+                                        Content="{Binding LoadMoreText}"
+                                        HorizontalAlignment="Left"
+                                        IsVisible="{Binding HasMore}"
+                                        Margin="0,10,0,0" />
+                                </StackPanel>
+                            </tio:TioExpander.Content>
+                        </tio:TioExpander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </controls:ScrollView>
     </DockPanel>
 </UserControl>
