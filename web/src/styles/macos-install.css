@@ -4,7 +4,7 @@
   background: linear-gradient(180deg, #f4f7fd 0, #f8f9fc 420px);
 }
 .macos-hero {
-  max-width: 860px;
+  padding-left: 12px;
 }
 .card-label {
   margin: 0;
@@ -22,7 +22,6 @@
   line-height: 1.2;
 }
 .intro {
-  max-width: 720px;
   margin: 0;
   color: #657086;
   font-size: 17px;
