@@ -17,7 +17,8 @@ public enum JavaResourceKind
     Modpack,
     ResourcePack,
     ShaderPack,
-    DataPack
+    DataPack,
+    Save
 }
 
 public sealed record JavaResourceDefinition(
@@ -26,7 +27,8 @@ public sealed record JavaResourceDefinition(
     string ProjectType,
     int CurseForgeClassId,
     bool SupportsDownload,
-    bool SupportsLoaderFilter);
+    bool SupportsLoaderFilter,
+    bool SupportsModrinth = true);
 
 public static class JavaResourceDefinitions
 {
@@ -38,6 +40,8 @@ public static class JavaResourceDefinitions
         new(JavaResourceKind.ShaderPack, "光影包", "shader", 6552, true, false);
     public static JavaResourceDefinition DataPack { get; } =
         new(JavaResourceKind.DataPack, "数据包", "datapack", 6945, true, false);
+    public static JavaResourceDefinition Save { get; } =
+        new(JavaResourceKind.Save, "存档", "world", 17, true, false, false);
 }
 
 public abstract partial class JavaResourceSearchViewModel : ObservableObject
@@ -50,22 +54,23 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
     private readonly CurseforgeProvider _curseForge = new();
     private bool _initialized;
 
-    protected JavaResourceSearchViewModel(JavaResourceDefinition definition)
-    {
-        Definition = definition;
-        SelectedSource = Sources[1];
-        SelectedLoader = Loaders[0];
-        SelectedSort = SortOptions[0];
-    }
-
     public JavaResourceDefinition Definition { get; }
     public string PageTitle => $"{Definition.DisplayName}搜索";
     public string SearchPlaceholder => $"搜索{Definition.DisplayName}";
     public bool ShowLoaderFilter => Definition.SupportsLoaderFilter;
     public ObservableCollection<JavaResourceSearchResultItem> Results { get; } = [];
     public ObservableCollection<string> MinecraftVersions { get; } = [];
-    public IReadOnlyList<JavaResourceSearchSource> Sources { get; } =
-        [new("CurseForge", SearchSource.CurseForge), new("Modrinth", SearchSource.Modrinth)];
+    public IReadOnlyList<JavaResourceSearchSource> Sources { get; }
+    protected JavaResourceSearchViewModel(JavaResourceDefinition definition)
+    {
+        Definition = definition;
+        Sources = definition.SupportsModrinth
+            ? [new("CurseForge", SearchSource.CurseForge), new("Modrinth", SearchSource.Modrinth)]
+            : [new("CurseForge", SearchSource.CurseForge)];
+        SelectedSource = Sources.Last();
+        SelectedLoader = Loaders[0];
+        SelectedSort = SortOptions[0];
+    }
     public IReadOnlyList<ModSearchLoader> Loaders { get; } =
         [new("全部加载器", ModLoaderType.Any), new("Forge", ModLoaderType.Forge),
             new("NeoForge", ModLoaderType.NeoForge), new("Fabric", ModLoaderType.Fabric),
@@ -354,3 +359,4 @@ public sealed class ModpackSearchPageViewModel() : JavaResourceSearchViewModel(J
 public sealed class ResourcePackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.ResourcePack);
 public sealed class ShaderPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.ShaderPack);
 public sealed class DataPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.DataPack);
+public sealed class SaveSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Save);

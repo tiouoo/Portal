@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 using AsyncImageLoader;
 using Avalonia.Controls;
@@ -264,6 +265,12 @@ public static class JavaResourceDownload
         }
         if (result.Instance is null) return;
 
+        if (definition.Kind == JavaResourceKind.Save)
+        {
+            InstallSave(topLevel, definition, file, result.Instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder));
+            return;
+        }
+
         string folder;
         if (definition.Kind == JavaResourceKind.DataPack)
         {
@@ -308,8 +315,18 @@ public static class JavaResourceDownload
         StartDownload(topLevel, definition, file, Path.Combine(folder, fileName));
     }
 
+    private static void InstallSave(TopLevel topLevel, JavaResourceDefinition definition, JavaResourceFileItem file,
+        string savesFolder)
+    {
+        Directory.CreateDirectory(savesFolder);
+        var fileName = Path.GetFileName(file.FileName);
+        if (string.IsNullOrWhiteSpace(fileName)) throw new InvalidDataException("存档文件名无效。");
+        var temporaryPath = Path.Combine(savesFolder, $".{Guid.NewGuid():N}.zip");
+        StartDownload(topLevel, definition, file, temporaryPath, true);
+    }
+
     internal static void StartDownload(TopLevel topLevel, JavaResourceDefinition definition,
-        JavaResourceFileItem file, string destination)
+        JavaResourceFileItem file, string destination, bool extractSave = false)
     {
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
@@ -347,8 +364,13 @@ public static class JavaResourceDownload
             var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
             if (result.Type == DownloadResultType.Cancelled) throw new OperationCanceledException(context.CancellationToken);
             if (result.Type != DownloadResultType.Successful) throw result.Exception ?? new IOException("下载失败。");
+            if (extractSave)
+            {
+                context.SetDescription("正在解压存档");
+                ExtractSave(destination, file.FileName, context.CancellationToken);
+            }
             context.ReportProgress(1);
-            context.SetDescription("下载完成");
+            context.SetDescription(extractSave ? "存档已安装" : "下载完成");
         });
         task.Start();
         _ = ObserveAsync(task, topLevel, file.FileName);
@@ -356,9 +378,38 @@ public static class JavaResourceDownload
 
     private static IReadOnlyList<string> Patterns(JavaResourceKind kind) => kind switch
     {
-        JavaResourceKind.ResourcePack or JavaResourceKind.ShaderPack or JavaResourceKind.DataPack => ["*.zip"],
+        JavaResourceKind.ResourcePack or JavaResourceKind.ShaderPack or JavaResourceKind.DataPack or JavaResourceKind.Save => ["*.zip"],
         _ => ["*.*"]
     };
+
+    private static void ExtractSave(string archivePath, string fileName, CancellationToken cancellationToken)
+    {
+        var savesFolder = Path.GetDirectoryName(archivePath) ?? throw new InvalidDataException("存档目录无效。");
+        var stagingFolder = Path.Combine(savesFolder, $".portal-{Guid.NewGuid():N}");
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ZipFile.ExtractToDirectory(archivePath, stagingFolder);
+            cancellationToken.ThrowIfCancellationRequested();
+            var worldFolder = File.Exists(Path.Combine(stagingFolder, "level.dat"))
+                ? stagingFolder
+                : Directory.EnumerateFiles(stagingFolder, "level.dat", SearchOption.AllDirectories)
+                    .Select(Path.GetDirectoryName)
+                    .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path));
+            if (worldFolder is null) throw new InvalidDataException("下载的压缩包不包含有效的 Minecraft 存档。");
+
+            var baseName = Path.GetFileNameWithoutExtension(Path.GetFileName(fileName));
+            if (string.IsNullOrWhiteSpace(baseName)) baseName = "World";
+            var destination = Path.Combine(savesFolder, baseName);
+            for (var suffix = 2; Directory.Exists(destination); suffix++) destination = Path.Combine(savesFolder, $"{baseName} ({suffix})");
+            Directory.Move(worldFolder, destination);
+        }
+        finally
+        {
+            if (Directory.Exists(stagingFolder)) Directory.Delete(stagingFolder, true);
+            if (File.Exists(archivePath)) File.Delete(archivePath);
+        }
+    }
 
     private static async Task ObserveAsync(ManagedTask task, TopLevel topLevel, string fileName)
     {
@@ -376,3 +427,4 @@ public sealed class ModpackDetailsPageViewModel(JavaResourceDetailsTarget target
 public sealed class ResourcePackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
 public sealed class ShaderPackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
 public sealed class DataPackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
+public sealed class SaveDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
