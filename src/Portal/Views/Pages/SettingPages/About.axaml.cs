@@ -110,7 +110,7 @@ public partial class About : DataUserControl
     {
         if (sender is not HyperlinkButton { CommandParameter: string url }) return;
 
-        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        this.AsTopLevel().Launcher.LaunchUriAsync(new Uri(url));
     }
 }
 
