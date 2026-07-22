@@ -13,7 +13,12 @@ function closeMenu() {
 <template>
   <header class="nav-wrap">
     <nav class="nav container" aria-label="主导航">
-      <RouterLink class="brand" to="/" aria-label="Portal 首页" @click="closeMenu">
+      <RouterLink
+        class="brand"
+        to="/"
+        aria-label="Portal 首页"
+        @click="closeMenu"
+      >
         <img :src="logoUrl" alt="" />
         <span>Portal</span>
       </RouterLink>
@@ -27,8 +32,12 @@ function closeMenu() {
         <span></span><span></span>
       </button>
       <div class="nav-links" :class="{ open: menuOpen }">
-        <RouterLink :to="{ path: '/', hash: '#features' }" @click="closeMenu">功能</RouterLink>
-        <RouterLink :to="{ path: '/', hash: '#download' }" @click="closeMenu">下载</RouterLink>
+        <RouterLink :to="{ path: '/', hash: '#features' }" @click="closeMenu"
+          >功能</RouterLink
+        >
+        <RouterLink :to="{ path: '/', hash: '#download' }" @click="closeMenu"
+          >下载</RouterLink
+        >
         <a
           href="https://github.com/tiouoo/Portal"
           target="_blank"

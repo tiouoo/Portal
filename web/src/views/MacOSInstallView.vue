@@ -10,7 +10,7 @@
 
     <section class="install-content container" aria-labelledby="install-title">
       <h2 id="install-title">安装前确认</h2>
-      <div class="architecture-note">
+      <div style="border-radius: 16px" class="architecture-note">
         <div>
           <h3>选择正确的安装包</h3>
           <p>
@@ -22,7 +22,7 @@
       </div>
 
       <div class="install-grid">
-        <article class="install-card">
+        <article style="border-radius: 16px" class="install-card">
           <p class="card-label">DMG 安装包</p>
           <h3>打开并拖入应用程序</h3>
           <ol>
@@ -34,7 +34,7 @@
             </li>
           </ol>
         </article>
-        <article class="install-card">
+        <article style="border-radius: 16px" class="install-card">
           <p class="card-label">app.zip 压缩包</p>
           <h3>解压后移入应用程序</h3>
           <ol>
@@ -48,7 +48,11 @@
         </article>
       </div>
 
-      <section class="command-panel" aria-labelledby="command-title">
+      <section
+        style="border-radius: 16px"
+        class="command-panel"
+        aria-labelledby="command-title"
+      >
         <div class="command-copy">
           <h2 id="command-title">在终端执行命令</h2>
           <p>
@@ -61,7 +65,7 @@
         >
       </section>
 
-      <aside class="fallback-note">
+      <aside style="border-radius: 16px" class="fallback-note">
         <strong>仍然无法打开？</strong>
         <p>
           打开“系统设置 -

@@ -36,8 +36,8 @@ export const platforms = [
     primaryUrl: `${releaseBase}/Portal.linux.x64.AppImage`,
     links: [
       { label: '通用桌面版', meta: 'x64 · appimage', url: `${releaseBase}/Portal.linux.x64.AppImage` },
-      { label: 'ARM64 版', meta: 'arm64 · appimage', url: `${releaseBase}/Portal.linux.arm64.AppImage` },
-      { label: 'ARM 版', meta: '32-bit arm · appimage', url: `${releaseBase}/Portal.linux.arm.AppImage` }
+      { label: 'Arm64 版', meta: 'arm64 · appimage', url: `${releaseBase}/Portal.linux.arm64.AppImage` },
+      { label: 'Arm 版', meta: '32-bit arm · appimage', url: `${releaseBase}/Portal.linux.arm.AppImage` }
     ]
   }
 ]
