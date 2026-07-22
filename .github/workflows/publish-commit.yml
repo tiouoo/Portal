@@ -147,16 +147,18 @@ jobs:
           echo 'installer' > ./src/package-type.txt
         shell: bash
 
-      - name: Build
+      - name: Build & Package
+        shell: pwsh
         run: |
           cd ./src/Portal.Desktop
           pupnet -r win-x64 -k setup -y -o Portal.win.x64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
+          Compress-Archive -Path "Deploy/OUT/Portal.win.x64.installer.exe" -DestinationPath "Deploy/OUT/Portal.win.x64.installer.zip" -Force
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: win-installer-win.x64-artifacts
-          path: src/Portal.Desktop/Deploy/OUT/Portal.win.*.installer.exe
+          path: src/Portal.Desktop/Deploy/OUT/Portal.win.*.installer.zip
 
   mac-dmg:
     runs-on: macos-latest
