@@ -53,7 +53,7 @@ public static class UpdateApp
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "installer")
             {
-                var installerUpdate = new PreparedUpdate(new ProcessStartInfo(packagePath) { UseShellExecute = true }, true);
+                var installerUpdate = new PreparedUpdate(PrepareWindowsInstaller(packagePath, updateDirectory), true);
                 CompletePreparation(taskHandle, installerUpdate);
                 return installerUpdate;
             }
@@ -103,7 +103,7 @@ public static class UpdateApp
             if (arch != "x64") throw new PlatformNotSupportedException("当前没有 Windows ARM 更新包。");
             expectedName = packageType switch
             {
-                "installer" => "Portal.win.x64.installer.exe",
+                "installer" => "Portal.win.x64.installer.zip",
                 "portable" => "Portal.win.x64.portable.zip",
                 _ => throw new NotSupportedException($"无法自动更新 Windows 安装类型“{packageType}”。")
             };
@@ -277,6 +277,16 @@ public static class UpdateApp
             }
             """);
         return PowerShell(script, !CanWriteDirectory(Path.GetDirectoryName(target)!));
+    }
+
+    private static ProcessStartInfo PrepareWindowsInstaller(string zipPath, string updateDirectory)
+    {
+        var extracted = Path.Combine(updateDirectory, "installer");
+        if (Directory.Exists(extracted)) Directory.Delete(extracted, true);
+        ZipFile.ExtractToDirectory(zipPath, extracted);
+        var installer = Directory.GetFiles(extracted, "*.exe", SearchOption.AllDirectories).SingleOrDefault()
+                        ?? throw new InvalidDataException("安装程序更新包中必须有且只有一个 EXE。");
+        return new ProcessStartInfo(installer) { UseShellExecute = true };
     }
 
     private static ProcessStartInfo PrepareAppImage(string packagePath, string updateDirectory)
