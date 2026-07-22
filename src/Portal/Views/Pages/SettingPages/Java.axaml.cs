@@ -281,13 +281,15 @@ public partial class Java : DataUserControl, INotifyPropertyChanged
                 return;
             }
 
+            if (Data.ConfigEntry.DefaultJavaRuntime is null)
+                Data.ConfigEntry.DefaultJavaRuntime = result.JavaRuntime;
+
             if (result.IsDuplicate)
             {
                 topLevel.Notice("该 Java 已在列表中", NotificationType.Warning);
                 return;
             }
 
-            Data.ConfigEntry.DefaultJavaRuntime ??= result.JavaRuntime;
             topLevel.Notice("Java 已添加", NotificationType.Success);
         }
         catch (Exception ex)

@@ -22,6 +22,7 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using Avalonia.Controls.Notifications;
 using Tio.Avalonia.Standard.Standard.Ui;
+using ModLoaderType = MinecraftLaunch.Base.Enums.ModLoaderType;
 
 namespace Portal.Core.Minecraft;
 
@@ -253,7 +254,7 @@ public static class MinecraftLaunchService
                          ?? throw new InvalidOperationException("Java 版实例配置缺失。");
         var preferred = javaConfig.EnableSpecificJava ? javaConfig.SpecificJavaEntry : null;
         var candidates = preferred != null ? [preferred] : options.JavaRuntimes.ToList();
-        if (candidates.Count == 0 && options.EnableAutoSelectJava)
+        if (candidates.Count == 0)
             candidates = (await JavaRuntimeManager.ScanAsync(cancellationToken)).ToList();
         if (candidates.Count == 0)
             throw new InvalidOperationException("没有可用的 Java 运行时，请在设置中添加 Java。");
@@ -264,18 +265,25 @@ public static class MinecraftLaunchService
         {
             selected = javaEntries[0];
         }
-        else if (options.EnableAutoSelectJava)
-        {
-            selected = instance.MinecraftEntry!.GetAppropriateJava(javaEntries);
-        }
         else
         {
-            selected = options.DefaultJavaRuntime is { } defaultJava ? ToJavaEntry(defaultJava) : javaEntries[0];
-            var requiredVersion = instance.MinecraftEntry!.GetAppropriateJavaVersion();
-            if (requiredVersion > 0 && selected.MajorVersion < requiredVersion)
-                selected = instance.MinecraftEntry.GetAppropriateJava(javaEntries);
+            selected = SelectAppropriateJava(instance.MinecraftEntry!, javaEntries);
         }
-        return selected ?? throw new InvalidOperationException("找不到与当前 Minecraft 版本兼容的 Java 运行时。");
+        return selected;
+    }
+
+    private static JavaEntry SelectAppropriateJava(MinecraftEntry minecraft, IReadOnlyList<JavaEntry> javaEntries)
+    {
+        var requiredVersion = minecraft.GetAppropriateJavaVersion();
+        if (requiredVersion is 0 or -1) return javaEntries[^1];
+
+        var requiresExactVersion = minecraft is ModifiedMinecraftEntry modified &&
+            modified.ModLoaders.Any(loader => loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
+        var java = javaEntries.LastOrDefault(candidate => requiresExactVersion
+            ? candidate.MajorVersion == requiredVersion
+            : candidate.MajorVersion >= requiredVersion);
+        return java ?? throw new InvalidOperationException(
+            $"当前 Minecraft 版本需要 Java {requiredVersion}，已添加的 Java 运行时均不兼容。请在设置中添加 Java {requiredVersion} 后重试。");
     }
 
     private static JavaEntry ToJavaEntry(JavaRuntimeEntry java) => new()
@@ -522,7 +530,6 @@ public sealed class MinecraftLaunchOptions
     public MinecraftAccount? Account { get; init; }
     public IReadOnlyList<JavaRuntimeEntry> JavaRuntimes { get; init; } = [];
     public JavaRuntimeEntry? DefaultJavaRuntime { get; init; }
-    public bool EnableAutoSelectJava { get; init; }
     public int WindowWidth { get; init; }
     public int WindowHeight { get; init; }
     public int MaxMemory { get; init; }

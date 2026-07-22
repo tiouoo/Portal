@@ -11,7 +11,6 @@ public static class MinecraftLaunchOptionsFactory
         Account = Data.ConfigEntry.UsingMinecraftMinecraftAccount,
         JavaRuntimes = Data.ConfigEntry.JavaRuntimes,
         DefaultJavaRuntime = Data.ConfigEntry.DefaultJavaRuntime,
-        EnableAutoSelectJava = Data.ConfigEntry.EnableAutoSelectJava,
         WindowWidth = Data.ConfigEntry.MinecraftWindowWidth,
         WindowHeight = Data.ConfigEntry.MinecraftWindowHeight,
         MaxMemory = Data.ConfigEntry.MinecraftMaxMemory,

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,6 +17,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
+using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -41,6 +43,15 @@ public partial class MinecraftInstallationPage : UserControl, ITioTabPage
 
     private void Install_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (_viewModel.HasMissingRequiredJavaRuntime)
+        {
+            if (TopLevel.GetTopLevel(this) is { } topLevel)
+                NotificationGateway.Notice(topLevel,
+                    "所选加载器需要 Java 运行时。请先在设置中添加有效的 Java，再开始安装。",
+                    NotificationType.Warning);
+            return;
+        }
+
         _ = _viewModel.InstallAsync();
         HostTab.Close();
     }
@@ -78,7 +89,8 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     public bool CanCustomizeVersionId => HasModLoader;
     public bool RequiresJava => IsForgeSelected || IsNeoForgeSelected || IsOptiFineSelected;
     public bool CanInstall => !IsInstalling && _loadingCount == 0 && SelectedMinecraftFolder is not null &&
-                              IsVersionIdValid() && HasRequiredJavaRuntime() && SelectedLoadersAreReady();
+                              IsVersionIdValid() && SelectedLoadersAreReady();
+    public bool HasMissingRequiredJavaRuntime => RequiresJava && GetJavaPath() is null;
 
     public MinecraftInstallationViewModel(VersionManifestEntry vanilla)
     {
@@ -404,6 +416,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         OnPropertyChanged(nameof(HasModLoader));
         OnPropertyChanged(nameof(CanCustomizeVersionId));
         OnPropertyChanged(nameof(RequiresJava));
+        OnPropertyChanged(nameof(HasMissingRequiredJavaRuntime));
         OnPropertyChanged(nameof(CanInstall));
     }
 
@@ -419,8 +432,6 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                 : kind.ToString());
         return HasModLoader ? $"{_vanilla.Id} {string.Join(" + ", names)}" : _vanilla.Id;
     }
-
-    private bool HasRequiredJavaRuntime() => !RequiresJava || GetJavaPath() is not null;
 
     private static string? GetJavaPath()
     {

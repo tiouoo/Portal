@@ -47,8 +47,9 @@ public static class JavaRuntimeOperations
         if (java == null)
             return new JavaRuntimeAddResult(null, false);
 
-        if (javaRuntimes.Contains(java))
-            return new JavaRuntimeAddResult(java, true);
+        var existingJava = javaRuntimes.FirstOrDefault(runtime => runtime.Equals(java));
+        if (existingJava is not null)
+            return new JavaRuntimeAddResult(existingJava, true);
 
         javaRuntimes.Add(java);
         return new JavaRuntimeAddResult(java, false);
