@@ -7,9 +7,9 @@ export const platforms = [
     detail: 'Windows 10 / 11',
     icon: 'windows',
     primary: 'x64 安装程序',
-    primaryUrl: `${releaseBase}/Portal.win.x64.installer.exe`,
+    primaryUrl: `${releaseBase}/Portal.win.x64.installer.zip`,
     links: [
-      { label: 'x64 安装程序', meta: 'x64 · exe', url: `${releaseBase}/Portal.win.x64.installer.exe` },
+      { label: 'x64 安装程序', meta: 'x64 · zip', url: `${releaseBase}/Portal.win.x64.installer.zip` },
       { label: 'x64 便携版', meta: 'x64 · zip', url: `${releaseBase}/Portal.win.x64.portable.zip` }
     ]
   },
