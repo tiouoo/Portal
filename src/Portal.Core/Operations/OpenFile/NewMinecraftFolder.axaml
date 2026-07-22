@@ -77,21 +77,32 @@
                 </StackPanel>
             </tio:FormItem>
         </tio:Form>
-        <StackPanel
-            Grid.Row="2"
-            HorizontalAlignment="Right"
-            Orientation="Horizontal"
-            Spacing="8">
+        <DockPanel Grid.Row="2">
+            <StackPanel
+                DockPanel.Dock="Right"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Command="{Binding CancelCommand}" Content="取消" />
+                <Button Command="{Binding NextCommand}" Content="添加" />
+            </StackPanel>
             <DropDownButton
                 Content="导入"
+                DockPanel.Dock="Left"
+                HorizontalAlignment="Left"
                 IsVisible="{Binding HasImports}"
                 Name="ImportLauncherDropDown">
+                <DropDownButton.Styles>
+                    <Style Selector="MenuItem">
+                        <Style Selector="^ /template/ ContentPresenter#PART_Icon">
+                            <Setter Property="IsVisible" Value="False" />
+                        </Style>
+                    </Style>
+                </DropDownButton.Styles>
                 <DropDownButton.Flyout>
                     <MenuFlyout />
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <Button Command="{Binding CancelCommand}" Content="取消" />
-            <Button Command="{Binding NextCommand}" Content="添加" />
-        </StackPanel>
+        </DockPanel>
     </Grid>
 </UserControl>

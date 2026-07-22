@@ -75,13 +75,6 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="自动选择适合游戏版本的 Java"
-                FontSize="13"
-                Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch DockPanel.Dock="Right" IsChecked="{Binding Data.ConfigEntry.EnableAutoSelectJava}" />
-        </StackPanel>
-        <StackPanel Spacing="5">
-            <Label
                 Content="默认 Java"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
@@ -95,6 +88,10 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text=" *启动游戏时会自动选择适合的Java运行时，与此设置无关" />
         </StackPanel>
         <DockPanel Margin="0,4,0,0">
             <Label

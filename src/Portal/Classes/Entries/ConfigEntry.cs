@@ -44,7 +44,6 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool EnableMinecraftMirror { get; set; }
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
-    [ObservableProperty] public partial bool EnableAutoSelectJava { get; set; } = true;
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
