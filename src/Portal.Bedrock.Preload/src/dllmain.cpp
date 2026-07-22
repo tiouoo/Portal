@@ -1,3 +1,15 @@
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+// 原作者: https://github.com/Round-Studio/PreLoadCpp
+
+
 #include "pch.h"
 #include <shellapi.h>
 #include <shlobj.h>
@@ -21,7 +33,7 @@ bool g_hooksInstalled = false;
 ConfigManager g_configManager;
 bool isOutFileHook = g_configManager.GetBoolConfig("isDetailedLog");
 
-std::string bbFolder = "config/Portal/isolation";
+std::string portalIsolationFolder = "config/Portal/isolation";
 
 NtCreateFile_t OriginalNtCreateFile = nullptr;
 NtOpenFile_t OriginalNtOpenFile = nullptr;
@@ -155,7 +167,7 @@ void InitializeBaseDir()
 
 	if (folderPolicy == "independence" || folderPolicy.empty())
 	{
-		g_logicalBaseDir = exePath.parent_path() / bbFolder;
+		g_logicalBaseDir = exePath.parent_path() / portalIsolationFolder;
 	}
 
 	if (folderPolicy == "portal")
@@ -167,7 +179,7 @@ void InitializeBaseDir()
 		}
 		else
 		{
-			g_logicalBaseDir = exePath.parent_path() / bbFolder;
+			g_logicalBaseDir = exePath.parent_path() / portalIsolationFolder;
 		}
 	}
 
@@ -677,11 +689,12 @@ bool SetExeDirectoryAsWorkingDir()
 inline void PrintBanner()
 {
 	std::string banner = R"(
-  ____           _                 _     ____              _   
- | __ )  ___  __| |_ __ ___   ___ | | __| __ )  ___   ___ | |_ 
- |  _ \ / _ \/ _` | '__/ _ \ / _ \| |/ /|  _ \ / _ \ / _ \| __|
- | |_) |  __/ (_| | | | (_) | (_) |   < | |_) | (_) | (_) | |_ 
- |____/ \___|\__,_|_|  \___/ \___/|_|\_\|____/ \___/ \___/ \__|
+  ____                   _             _     __  __    ____ 
+ |  _ \    ___    _ __  | |_    __ _  | |   |  \/  |  / ___|
+ | |_) |  / _ \  | '__| | __|  / _` | | |   | |\/| | | |    
+ |  __/  | (_) | | |    | |_  | (_| | | |   | |  | | | |___ 
+ |_|      \___/  |_|     \__|  \__,_| |_|   |_|  |_|  \____|
+                                                            
 
 )";
 
@@ -716,8 +729,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 			PrintVersionInfo();
 
 			Logger::Success("Portal is free software licensed under GPLv3");
-			Logger::Success("Submit issues and submit PR: https://github.com/Round-Studio/BedrockBoot");
-			Logger::Success("Submit issues and submit PR: https://github.com/Round-Studio/PreLoadCpp");
+			Logger::Success("Submit issues and submit PR: https://github.com/tiouo/Portal");
 		}
 		if (g_configManager.GetBoolConfig("isVersionIsolated"))
 		{

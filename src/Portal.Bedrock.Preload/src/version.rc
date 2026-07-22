@@ -14,7 +14,7 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-            VALUE "CompanyName", "Round-Studio"
+            VALUE "CompanyName", "Portal"
             VALUE "FileDescription", "PreLoadCpp - Portal DLL Preloader"
             VALUE "FileVersion", PRELOADCPP_VERSION
             VALUE "ProductVersion", PRELOADCPP_VERSION
