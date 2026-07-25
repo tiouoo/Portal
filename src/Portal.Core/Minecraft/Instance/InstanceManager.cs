@@ -22,6 +22,11 @@ public class InstanceManager
     public List<string> VersionFolders { get; } = new() { "versions" };
 
     /// <summary>
+    /// 当实例列表重新扫描完成时触发。
+    /// </summary>
+    public event EventHandler? InstancesChanged;
+
+    /// <summary>
     /// 当实例统计数据发生变化时触发的事件
     /// </summary>
     public event EventHandler? StatisticsChanged;
@@ -69,6 +74,7 @@ public class InstanceManager
             }
         }
 
+        InstancesChanged?.Invoke(this, EventArgs.Empty);
         NotifyStatisticsChanged();
     }
 

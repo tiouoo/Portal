@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes.Enums;
 using Portal.Const;
@@ -47,6 +48,12 @@ public partial class InstanceListViewModelBase : ObservableObject
     protected InstanceListViewModelBase()
     {
         InstanceManager.Instance.InstanceIconChanged += OnInstanceIconChanged;
+        InstanceManager.Instance.InstancesChanged += OnInstancesChanged;
+    }
+
+    private void OnInstancesChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(ApplyFilterAndSort);
     }
 
     private void OnInstanceIconChanged(object? sender, MinecraftInstance instance)
