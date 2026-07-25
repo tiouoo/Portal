@@ -50,6 +50,9 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     public ShaderPacks()
     {
         InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
+        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         SelectAllCommand = new RelayCommand(() => SetSelection(item => true));
         ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
         InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
@@ -76,9 +79,10 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         RaiseListProperties();
         var folder = _instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder);
         var files = await Task.Run(() => Directory.Exists(folder)
-            ? Directory.EnumerateFiles(folder).OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray()
-            : []);
+             ? Directory.EnumerateFiles(folder).OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray()
+             : []);
         Items.Clear();
+        RaiseSelectionProperties();
         foreach (var file in files)
             Items.Add(new ShaderPackItem(file));
         ApplyFilter();
@@ -102,6 +106,21 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         if (TopLevel.GetTopLevel(this) is not { } topLevel || _instance == null) return;
         await topLevel.Launcher.LaunchDirectoryInfoAsync(
             new DirectoryInfo(_instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder)));
+    }
+
+    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private void Resource_OnDragOver(object? sender, DragEventArgs e)
+    {
+        if (JavaResourceImport.Accepts(e.DataTransfer, ".zip")) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+    }
+    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
+    private async Task ImportAsync(DragEventArgs? drop)
+    {
+        if (_instance == null) return;
+        var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
+        var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder);
+        if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, "选择光影包", destination, "光影包", [".zip"], false, refresh);
+        else await JavaResourceImport.ImportDropAsync(this, drop, destination, "光影包", [".zip"], false, refresh);
     }
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)

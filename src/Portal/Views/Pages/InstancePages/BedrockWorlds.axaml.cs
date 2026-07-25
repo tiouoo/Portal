@@ -36,6 +36,9 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
     public BedrockWorlds()
     {
         InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
+        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
     }
 
@@ -51,6 +54,21 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
     {
         if (TopLevel.GetTopLevel(this) is { } topLevel && !string.IsNullOrEmpty(GetSelectedWorldsFolder()))
             await topLevel.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(GetSelectedWorldsFolder()));
+    }
+
+    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private void Resource_OnDragOver(object? sender, DragEventArgs e)
+    {
+        if (BedrockResourceImport.Accepts(e.DataTransfer, ".mcworld")) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+    }
+    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
+    private async Task ImportAsync(DragEventArgs? drop)
+    {
+        if (_instance == null) return;
+        var userId = WorldUserIdSelector.SelectedItem as string;
+        if (string.IsNullOrWhiteSpace(userId)) return;
+        if (drop == null) await BedrockResourceImport.SelectAndImportAsync(this, _instance, "选择基岩版存档", "存档", [".mcworld"], userId, null, LoadAsync);
+        else await BedrockResourceImport.ImportDropAsync(this, drop, _instance, "存档", [".mcworld"], userId, null, LoadAsync);
     }
 
     private async void OpenWorldFolder_OnClick(object? sender, RoutedEventArgs e)

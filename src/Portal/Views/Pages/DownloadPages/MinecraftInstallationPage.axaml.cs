@@ -263,46 +263,71 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             await Task.CompletedTask;
         });
 
-        MinecraftEntry minecraft = null!;
-        await RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {_vanilla.Id}", async step =>
+        var versionDirectory = Path.Combine(folder.FolderPath, "versions", versionId);
+        var vanillaDirectory = Path.Combine(folder.FolderPath, "versions", _vanilla.Id);
+        var vanillaDirectoryExisted = Directory.Exists(vanillaDirectory);
+        try
         {
-            var installer = VanillaInstaller.Create(folder.FolderPath, _vanilla);
-            installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
-            minecraft = await installer.InstallAsync(step.CancellationToken);
-        });
-
-        var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
-        if (primary.Value is not null)
-        {
-            await RunStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}", async step =>
+            MinecraftEntry minecraft = null!;
+            await RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {_vanilla.Id}", async step =>
             {
-                var installer = CreatePrimaryInstaller(primary.Key, primary.Value, folder.FolderPath, versionId, javaPath);
+                var installer = VanillaInstaller.Create(folder.FolderPath, _vanilla);
                 installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
                 minecraft = await installer.InstallAsync(step.CancellationToken);
             });
-        }
 
-        if (selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry))
-        {
-            await RunStepAsync(context, "安装 OptiFine", "正在安装最新版 OptiFine", async step =>
+            var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
+            if (primary.Value is not null)
             {
-                var entry = (OptifineInstallEntry)optifineEntry;
-                var installer = primary.Value is not null
-                    ? OptifineInstaller.Create(folder.FolderPath, entry, minecraft)
-                    : OptifineInstaller.Create(folder.FolderPath, javaPath!, entry, versionId);
-                installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
-                minecraft = await installer.InstallAsync(step.CancellationToken);
-            });
-        }
+                await RunStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}", async step =>
+                {
+                    var installer = CreatePrimaryInstaller(primary.Key, primary.Value, folder.FolderPath, versionId, javaPath);
+                    installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
+                    minecraft = await installer.InstallAsync(step.CancellationToken);
+                });
+            }
 
-        await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            if (selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry))
+            {
+                await RunStepAsync(context, "安装 OptiFine", "正在安装最新版 OptiFine", async step =>
+                {
+                    var entry = (OptifineInstallEntry)optifineEntry;
+                    var installer = primary.Value is not null
+                        ? OptifineInstaller.Create(folder.FolderPath, entry, minecraft)
+                        : OptifineInstaller.Create(folder.FolderPath, javaPath!, entry, versionId);
+                    installer.ProgressChanged += (_, progress) => ReportInstallerProgress(step, progress);
+                    minecraft = await installer.InstallAsync(step.CancellationToken);
+                });
+            }
+
+            await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            {
+                InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+                step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
+                step.ReportProgress(1);
+                return Task.CompletedTask;
+            });
+            context.SetDescription($"已完成 Minecraft Java {minecraft.Id} 的安装");
+        }
+        catch
         {
-            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-            step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
-            step.ReportProgress(1);
-            return Task.CompletedTask;
-        });
-        context.SetDescription($"已完成 Minecraft Java {minecraft.Id} 的安装");
+            DeleteVersionDirectory(versionDirectory);
+            if (!vanillaDirectoryExisted && vanillaDirectory != versionDirectory)
+                DeleteVersionDirectory(vanillaDirectory);
+            throw;
+        }
+    }
+
+    private static void DeleteVersionDirectory(string directory)
+    {
+        try
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        }
+        catch
+        {
+            // Preserve the original installation or cancellation error.
+        }
     }
 
     private static InstallerBase CreatePrimaryInstaller(LoaderKind kind, IInstallEntry entry, string folder, string versionId,

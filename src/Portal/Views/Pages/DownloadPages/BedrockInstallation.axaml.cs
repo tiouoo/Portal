@@ -47,7 +47,7 @@ public partial class BedrockInstallation : UserControl
         var folderSelector = new ComboBox
         {
             ItemsSource = folders,
-            SelectedItem = selectedFolder,
+            SelectedItem = selectedFolder,Width = 470,
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch
         };
         folderSelector.ItemTemplate = new FuncDataTemplate<MinecraftFolderEntry>((folder, _) => new TextBlock
@@ -197,59 +197,44 @@ public partial class BedrockInstallationViewModel : ObservableObject
             });
             downloadStep.Start();
             TaskCompletionSource? extractionFinished = null;
-            TaskExecutionContext? extractionContext = null;
             ManagedTask? extractionStep = null;
 
-            var progress = new Progress<BedrockInstallProgress>(update =>
+            var progress = new ThrottledProgress<BedrockInstallProgress>(update =>
             {
                 if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                Dispatcher.UIThread.Post(() =>
+                if (update.State == "Extracting" && extractionStep is null)
                 {
-                    if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                    downloadFinished.TrySetResult();
+                    extractionFinished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    extractionStep = context.CreateChild(new TaskOptions
+                    {
+                        Name = "解压 GDK 安装包",
+                        Description = "正在准备解压",
+                        Progress = 0
+                    }, async step =>
+                    {
+                        await extractionFinished.Task.WaitAsync(step.CancellationToken);
+                    });
+                    extractionStep.Start();
+                }
 
-                    if (update.State == "Extracting" && extractionStep is null)
+                var value = update.Total > 0 ? Math.Clamp((double)update.Current / update.Total, 0, 1) : (double?)null;
+                if (update.State == "Downloading" && downloadContext is { } downloading &&
+                    !downloading.Task.IsTerminal && !downloading.Task.IsCancellationRequested)
+                {
+                    downloading.ReportProgress(value);
+                    downloading.SetDescription(FormatDownloadDescription(update, value));
+                }
+                else if (downloadContext is { } downloadingState && !downloadingState.Task.IsTerminal &&
+                         !downloadingState.Task.IsCancellationRequested)
+                {
+                    downloadingState.SetDescription(update.State switch
                     {
-                        downloadFinished.TrySetResult();
-                        extractionFinished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                        extractionStep = context.CreateChild(new TaskOptions
-                        {
-                            Name = "解压 GDK 安装包",
-                            Description = "正在准备解压",
-                            Progress = 0
-                        }, async step =>
-                        {
-                            extractionContext = step;
-                            await extractionFinished.Task.WaitAsync(step.CancellationToken);
-                        });
-                        extractionStep.Start();
-                    }
-
-                    var value = update.Total > 0 ? Math.Clamp((double)update.Current / update.Total, 0, 1) : (double?)null;
-                    if (update.State == "Downloading" && downloadContext is { } downloading &&
-                        !downloading.Task.IsTerminal && !downloading.Task.IsCancellationRequested)
-                    {
-                        downloading.ReportProgress(value);
-                        downloading.SetDescription(FormatDownloadDescription(update, value));
-                    }
-                    else if (update.State == "Extracting" && extractionContext is { } extracting &&
-                             !extracting.Task.IsTerminal && !extracting.Task.IsCancellationRequested)
-                    {
-                        extracting.ReportProgress(value);
-                        extracting.SetDescription(string.IsNullOrWhiteSpace(update.Item)
-                            ? "正在解压 GDK 安装包"
-                            : $"正在解压 {update.Item}");
-                    }
-                    else if (downloadContext is { } downloadingState && !downloadingState.Task.IsTerminal &&
-                             !downloadingState.Task.IsCancellationRequested)
-                    {
-                        downloadingState.SetDescription(update.State switch
-                        {
-                            "Selecting source" => "正在测速并选择最快下载源",
-                            "Using cached package" => "正在校验并使用本地安装包缓存",
-                            _ => $"安装状态：{update.State}"
-                        });
-                    }
-                });
+                        "Selecting source" => "正在测速并选择最快下载源",
+                        "Using cached package" => "正在校验并使用本地安装包缓存",
+                        _ => $"安装状态：{update.State}"
+                    });
+                }
             });
 
             try
@@ -261,6 +246,9 @@ public partial class BedrockInstallationViewModel : ObservableObject
             }
             catch (Exception exception)
             {
+                if (Directory.Exists(destination))
+                    Directory.Delete(destination, true);
+
                 if (exception is OperationCanceledException && context.CancellationToken.IsCancellationRequested)
                 {
                     downloadFinished.TrySetCanceled(context.CancellationToken);
@@ -296,16 +284,9 @@ public partial class BedrockInstallationViewModel : ObservableObject
                 throw new OperationCanceledException();
             if (task.Exception is not null)
                 throw task.Exception;
-            StatusText = $"{instanceName} 已安装完成。";
         }
-        catch (OperationCanceledException)
-        {
-            StatusText = "安装已取消。";
-        }
-        catch (Exception exception)
-        {
-            StatusText = $"安装失败：{exception.Message}";
-        }
+        catch (OperationCanceledException) { }
+        catch (Exception) { }
         finally
         {
             IsInstalling = false;
@@ -374,5 +355,37 @@ public partial class BedrockInstallationViewModel : ObservableObject
             ? $"，剩余约 {eta:mm\\:ss}"
             : string.Empty;
         return $"正在下载 {update.Item}{percentage}{speed}{remaining}";
+    }
+
+    private sealed class ThrottledProgress<T>(Action<T> handler) : IProgress<T>
+    {
+        private readonly Lock _lock = new();
+        private T? _latest;
+        private bool _scheduled;
+
+        public void Report(T value)
+        {
+            lock (_lock)
+            {
+                _latest = value;
+                if (_scheduled) return;
+                _scheduled = true;
+            }
+
+            Dispatcher.UIThread.Post(Dispatch, DispatcherPriority.Background);
+        }
+
+        private void Dispatch()
+        {
+            T? latest;
+            lock (_lock)
+            {
+                latest = _latest;
+                _latest = default;
+                _scheduled = false;
+            }
+
+            if (latest is not null) handler(latest);
+        }
     }
 }

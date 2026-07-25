@@ -59,6 +59,9 @@ public partial class Saves : UserControl, INotifyPropertyChanged
     public Saves()
     {
         InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
+        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
         _lockRefreshTimer.Tick += async (_, _) => await RefreshLockStatesAsync();
     }
@@ -125,6 +128,20 @@ public partial class Saves : UserControl, INotifyPropertyChanged
     {
         if (!string.IsNullOrEmpty(_savesPath))
             await TopLevel.GetTopLevel(this).Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(_savesPath));
+    }
+
+    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private void Resource_OnDragOver(object? sender, DragEventArgs e)
+    {
+        if (JavaResourceImport.Accepts(e.DataTransfer, ".zip")) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+    }
+    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
+    private async Task ImportAsync(DragEventArgs? drop)
+    {
+        if (_savesPath == null) return;
+        var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
+        if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, "选择存档", _savesPath, "存档", [".zip"], true, refresh);
+        else await JavaResourceImport.ImportDropAsync(this, drop, _savesPath, "存档", [".zip"], true, refresh);
     }
 
     private async void OpenWorldFolder_OnClick(object? sender, RoutedEventArgs e)

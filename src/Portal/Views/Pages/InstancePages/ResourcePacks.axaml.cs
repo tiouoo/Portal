@@ -48,6 +48,9 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     public ResourcePacks()
     {
         InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
+        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
     }
 
@@ -83,6 +86,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             if (_isDisposed) return;
             foreach (var item in Items) item.Dispose();
             Items.Clear();
+            RaiseSelectionProperties();
             foreach (var pack in packs) Items.Add(new ResourcePackItem(pack, _isCompactLayout));
             ApplyFilter();
         }
@@ -99,6 +103,33 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             return;
 
         await topLevel.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(_instance.GetSpecialFolder(_folder)));
+    }
+
+    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private void Resource_OnDragOver(object? sender, DragEventArgs e)
+    {
+        var extensions = _instance?.IsBedrock == true ? new[] { ".mcpack", ".mcaddon" } : new[] { ".zip" };
+        if (( _instance?.IsBedrock == true ? BedrockResourceImport.Accepts(e.DataTransfer, extensions) : JavaResourceImport.Accepts(e.DataTransfer, extensions))) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+    }
+    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
+    private async Task ImportAsync(DragEventArgs? drop)
+    {
+        if (_instance == null) return;
+        var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
+        if (_instance.IsBedrock)
+        {
+            var expectedType = _folder == MinecraftSpecialFolder.BehaviorPacksFolder
+                ? BedrockPackageContentType.BehaviorPack
+                : _folder == MinecraftSpecialFolder.SkinPacksFolder
+                    ? BedrockPackageContentType.SkinPack
+                    : BedrockPackageContentType.ResourcePack;
+            if (drop == null) await BedrockResourceImport.SelectAndImportAsync(this, _instance, $"选择{PackName}", PackName, [".mcpack", ".mcaddon"], null, expectedType, refresh);
+            else await BedrockResourceImport.ImportDropAsync(this, drop, _instance, PackName, [".mcpack", ".mcaddon"], null, expectedType, refresh);
+            return;
+        }
+        var destination = _instance.GetSpecialFolder(_folder);
+        if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, $"选择{PackName}", destination, PackName, [".zip"], false, refresh);
+        else await JavaResourceImport.ImportDropAsync(this, drop, destination, PackName, [".zip"], false, refresh);
     }
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)

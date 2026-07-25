@@ -12,6 +12,12 @@
                 Content="打开文件夹"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
+            <Button
+                Click="Import_OnClick"
+                Content="添加存档"
+                DockPanel.Dock="Right"
+                Margin="0,0,8,0"
+                VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"

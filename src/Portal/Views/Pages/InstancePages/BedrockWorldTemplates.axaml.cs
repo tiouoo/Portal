@@ -51,6 +51,7 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
             if (_isDisposed) return;
             foreach (var item in Items) item.Dispose();
             Items.Clear();
+            RaiseSelectionProperties();
             foreach (var template in templates) Items.Add(new WorldTemplateItem(template));
             ApplyFilter();
         }

@@ -51,7 +51,9 @@ public class Handler
         {
             e.Handled = true;
             await BedrockPackageImportDialog.ImportAsync(window, archivePath, inspection);
+            return;
         }
+
     }
 
     public static string GetMsg(DragEventArgs e)
@@ -84,6 +86,7 @@ public class Handler
             dropEffects = DragDropEffects.Copy;
             msg = "识别到基岩版包";
         }
+
 
         e.DragEffects = dropEffects;
         return msg ?? "不支持的拖放内容";

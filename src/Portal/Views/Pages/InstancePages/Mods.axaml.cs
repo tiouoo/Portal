@@ -77,6 +77,9 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     public Mods()
     {
         InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
+        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         SelectAllCommand = new RelayCommand(() => SetSelection(item => true));
         ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
         InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
@@ -113,6 +116,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         _hasLoaded = true;
         IsLoading = true;
         Items.Clear();
+        RaiseSelectionProperties();
         ApplyFilter();
         RaiseListProperties();
         var mods = await _modService.ScanAsync(_instance, _disposeCancellation.Token);
@@ -196,6 +200,21 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (TopLevel.GetTopLevel(this) is not { } topLevel || _instance == null) return;
         await topLevel.Launcher.LaunchDirectoryInfoAsync(
             new DirectoryInfo(_instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder)));
+    }
+
+    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private void Resource_OnDragOver(object? sender, DragEventArgs e)
+    {
+        if (JavaResourceImport.Accepts(e.DataTransfer, ".jar")) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+    }
+    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
+    private async Task ImportAsync(DragEventArgs? drop) 
+    {
+        if (_instance == null) return;
+        var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
+        var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
+        if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, "选择模组", destination, "模组", [".jar"], false, refresh);
+        else await JavaResourceImport.ImportDropAsync(this, drop, destination, "模组", [".jar"], false, refresh);
     }
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)
