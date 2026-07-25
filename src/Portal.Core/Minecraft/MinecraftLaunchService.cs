@@ -87,6 +87,7 @@ public static class MinecraftLaunchService
         ManagedTask? verifyAccount = null;
         ManagedTask? selectJava = null;
         ManagedTask? buildArguments = null;
+        ManagedTask? completeResources = null;
         if (instance.Type == MinecraftInstanceType.Java)
         {
             verifyAccount = task.CreateChild(new TaskOptions
@@ -101,6 +102,10 @@ public static class MinecraftLaunchService
             {
                 Name = "构建启动参数", Description = "等待 Java 运行时选择完成", Progress = 0
             });
+            completeResources = task.CreateChild(new TaskOptions
+            {
+                Name = "补全游戏资源", Description = "等待启动参数构建完成", Progress = 0
+            });
         }
         var startGame = task.CreateChild(new TaskOptions
         {
@@ -109,7 +114,8 @@ public static class MinecraftLaunchService
             Progress = 0
         });
         task.Start();
-        _ = RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments, startGame, logSession,
+        _ = RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments, completeResources,
+            startGame, logSession,
             launchedProcess =>
             {
                 process = launchedProcess;
@@ -121,7 +127,8 @@ public static class MinecraftLaunchService
 
     private static async Task RunWorkflowAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options,
         RecentPlayTarget? target, ManagedTask task,
-        ManagedTask? verifyAccount, ManagedTask? selectJava, ManagedTask? buildArguments, ManagedTask startGame,
+        ManagedTask? verifyAccount, ManagedTask? selectJava, ManagedTask? buildArguments, ManagedTask? completeResources,
+        ManagedTask startGame,
         MinecraftLogSession? logSession, Action<Process> processStarted)
     {
         try
@@ -169,6 +176,10 @@ public static class MinecraftLaunchService
             await buildArguments.Completion;
             ThrowIfFailed(buildArguments);
 
+            completeResources!.Start(context => CompleteResourcesAsync(context, instance.MinecraftEntry!));
+            await completeResources.Completion;
+            ThrowIfFailed(completeResources);
+
             startGame.Start(context => StartGameStepAsync(context, instance, config!, target, topLevel, task, logSession!, processStarted));
             await startGame.Completion;
             ThrowIfFailed(startGame);
@@ -198,12 +209,6 @@ public static class MinecraftLaunchService
         LaunchConfig config, RecentPlayTarget? target, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
         Action<Process> processStarted)
     {
-        if (instance.Layout != null)
-        {
-            context.SetRunning("正在检查外部实例依赖");
-            var downloader = new MinecraftResourceDownloader(instance.MinecraftEntry!);
-            await downloader.VerifyAndDownloadDependenciesAsync(cancellationToken: context.CancellationToken);
-        }
         context.SetRunning("正在启动 Minecraft 进程");
         var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
         var mcProcess = await new MinecraftRunner(config, parser)
@@ -213,6 +218,48 @@ public static class MinecraftLaunchService
         ObserveProcess(instance, topLevel, mcProcess, task, context, logSession);
         processStarted(mcProcess.Process);
         context.ReportProgress(1);
+    }
+
+    private static async Task CompleteResourcesAsync(TaskExecutionContext context, MinecraftEntry entry)
+    {
+        context.SetRunning("正在检查游戏资源");
+        var downloader = new MinecraftResourceDownloader(entry);
+        downloader.ProgressChanged += (_, progress) => Dispatcher.UIThread.Post(() =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested)
+                return;
+
+            var completion = progress.TotalBytes > 0
+                ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
+                : (double?)null;
+            context.ReportProgress(completion);
+            context.SetDescription(FormatResourceProgress(progress.CompletedCount, progress.TotalCount,
+                progress.DownloadedBytes, progress.TotalBytes, progress.Speed, progress.EstimatedRemaining));
+        });
+
+        // ML verifies files synchronously before its first await. Isolate it from the UI and
+        // limit hashing concurrency so cancellation does not starve rendering or disk access.
+        await Task.Factory.StartNew(
+                () => downloader.VerifyAndDownloadDependenciesAsync(fileVerificationParallelism: 2,
+                    cancellationToken: context.CancellationToken),
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default)
+            .Unwrap();
+        context.ReportProgress(1);
+        context.SetDescription("资源补全完成");
+    }
+
+    private static string FormatResourceProgress(int completedCount, int totalCount, long downloadedBytes, long totalBytes,
+        double speed, TimeSpan estimatedRemaining)
+    {
+        var files = totalCount > 0 ? $"{completedCount}/{totalCount} 个文件" : "正在准备下载";
+        var transferred = totalBytes > 0
+            ? $"，{DefaultDownloader.FormatSize(downloadedBytes)} / {DefaultDownloader.FormatSize(totalBytes)}"
+            : string.Empty;
+        var speedText = speed > 0 ? $"，{DefaultDownloader.FormatSize(speed, true)}" : string.Empty;
+        // var remaining = estimatedRemaining > TimeSpan.Zero ? $"，剩余约 {estimatedRemaining:mm\\:ss}" : string.Empty;
+        return $"正在补全资源：{files}{transferred}{speedText}";
     }
 
     private static async Task<Account> VerifyAccountAsync(MinecraftLaunchOptions options)
