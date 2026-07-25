@@ -22,7 +22,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages.DownloadPages;
 
-public partial class MinecraftInstallationPage : UserControl, ITioTabPage
+internal partial class MinecraftInstallationPage : UserControl, ITioTabPage
 {
     private readonly MinecraftInstallationViewModel _viewModel;
 
