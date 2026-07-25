@@ -5,7 +5,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Const;
-using Tio.Avalonia.Standard.Tab.Extensions;
+using TioUi.Common;
+using TioUi.Common.Extensions;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -18,17 +20,22 @@ public partial class VanillaInstallation : UserControl
         Loaded += async (_, _) => await ((VanillaInstallationViewModel)DataContext).LoadVersionsAsync();
     }
 
-    private void VersionCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private async void VersionCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(sender as Control).Properties.IsLeftButtonPressed)
             return;
-        if (sender is not Control { DataContext: MinecraftVersionListItem item } ||
-            item.Entry is null || TopLevel.GetTopLevel(this) is not Tio.Avalonia.Standard.Tab.Interface.TioTabWindowBase window)
+        if (sender is not Control { DataContext: MinecraftVersionListItem item } || item.Entry is null)
             return;
 
-        var tab = new Tio.Avalonia.Standard.Tab.Entries.TabEntry(window, new MinecraftInstallationPage(item.Entry));
-        window.CreateTab(tab);
-        window.SelectTab(tab);
+        var page = new MinecraftInstallationPage(item.Entry);
+        await OverlayDialog.ShowCustomAsync<MinecraftInstallationDialogResult>(page, page.DataContext,
+            this.GetTopLevel().TryGetHostId(), new OverlayDialogOptions
+        {
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanResize = false,
+            IsCloseButtonVisible = false
+        });
     }
 }
 

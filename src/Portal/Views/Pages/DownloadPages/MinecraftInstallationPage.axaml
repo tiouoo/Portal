@@ -10,139 +10,136 @@
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <DockPanel Margin="12,0,12,12">
-        <StackPanel DockPanel.Dock="Top" Spacing="10">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto"
+        Width="750">
+        <StackPanel Spacing="10">
             <DockPanel>
                 <TextBlock
                     DockPanel.Dock="Left"
-                    FontSize="22"
-                    FontWeight="SemiBold"
+                    FontSize="16"
+                    FontWeight="600"
                     HorizontalAlignment="Left"
-                    Margin="6,2,0,0">
+                    Margin="0,2,0,0">
                     <Run Text="安装 Java " />
                     <Run Text="{Binding VanillaVersion}" />
                 </TextBlock>
+            </DockPanel>
+            <DockPanel>
                 <StackPanel
                     DockPanel.Dock="Right"
                     HorizontalAlignment="Right"
-                    Orientation="Horizontal"
-                    Spacing="8">
-                    <Button
-                        Click="Install_OnClick"
-                        Content="开始安装"
-                        IsEnabled="{Binding CanInstall}" />
+                    Margin="10,0,0,0"
+                    MinWidth="200">
+                    <TextBlock Margin="5,0,0,2" Text="安装目录" />
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding MinecraftFolders}"
+                        SelectedItem="{Binding SelectedMinecraftFolder}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding FolderName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Margin="5,0,0,2" Text="实例 id" />
+                    <TextBox
+                        IsEnabled="{Binding CanCustomizeVersionId}"
+                        PlaceholderText="输入实例 id"
+                        Text="{Binding CustomVersionId}" />
                 </StackPanel>
             </DockPanel>
-            <Border
-                Background="{DynamicResource TranslucentBackgroundColor}"
-                BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="14">
-                <DockPanel>
-                    <StackPanel
-                        DockPanel.Dock="Right"
-                        HorizontalAlignment="Right"
-                        Margin="10,0,0,0"
-                        MinWidth="220">
-                        <TextBlock Margin="5,0,0,2" Text="安装目录" />
-                        <ComboBox
-                            HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding MinecraftFolders}"
-                            SelectedItem="{Binding SelectedMinecraftFolder}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding FolderName}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock Margin="5,0,0,2" Text="实例 id" />
-                        <TextBox
-                            IsEnabled="{Binding CanCustomizeVersionId}"
-                            PlaceholderText="输入实例 id"
-                            Text="{Binding CustomVersionId}" />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
         </StackPanel>
-
-        <ScrollViewer Margin="0,14,0,0">
-            <StackPanel Spacing="10">
-                <TextBlock
-                    FontSize="16"
-                    FontWeight="SemiBold"
-                    Margin="5,0,0,0"
-                    Text="选择加载器" />
-                <WrapPanel>
-                    <CheckBox
-                        IsChecked="{Binding IsForgeSelected, Mode=TwoWay}"
-                        Margin="0,0,10,10"
-                        Theme="{DynamicResource PureCardCheckBox}"
-                        Width="220">
-                        <StackPanel Spacing="4">
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="SemiBold"
-                                Text="Forge" />
-                            <TextBlock Text="{Binding ForgeStatus}" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </CheckBox>
-                    <CheckBox
-                        IsChecked="{Binding IsNeoForgeSelected, Mode=TwoWay}"
-                        Margin="0,0,10,10"
-                        Theme="{DynamicResource PureCardCheckBox}"
-                        Width="220">
-                        <StackPanel Spacing="4">
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="SemiBold"
-                                Text="NeoForge" />
-                            <TextBlock Text="{Binding NeoForgeStatus}" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </CheckBox>
-                    <CheckBox
-                        IsChecked="{Binding IsFabricSelected, Mode=TwoWay}"
-                        Margin="0,0,10,10"
-                        Theme="{DynamicResource PureCardCheckBox}"
-                        Width="220">
-                        <StackPanel Spacing="4">
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="SemiBold"
-                                Text="Fabric" />
-                            <TextBlock Text="{Binding FabricStatus}" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </CheckBox>
-                    <CheckBox
-                        IsChecked="{Binding IsQuiltSelected, Mode=TwoWay}"
-                        Margin="0,0,10,10"
-                        Theme="{DynamicResource PureCardCheckBox}"
-                        Width="220">
-                        <StackPanel Spacing="4">
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="SemiBold"
-                                Text="Quilt" />
-                            <TextBlock Text="{Binding QuiltStatus}" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </CheckBox>
-                    <CheckBox
-                        IsChecked="{Binding IsOptiFineSelected, Mode=TwoWay}"
-                        Margin="0,0,10,10"
-                        Theme="{DynamicResource PureCardCheckBox}"
-                        Width="220">
-                        <StackPanel Spacing="4">
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="SemiBold"
-                                Text="OptiFine" />
-                            <TextBlock Text="{Binding OptiFineStatus}" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </CheckBox>
-                </WrapPanel>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            Spacing="10">
+            <TextBlock
+                FontSize="16"
+                FontWeight="SemiBold"
+                Margin="5,0,0,0"
+                Text="选择加载器" />
+            <WrapPanel>
+                <CheckBox
+                    IsChecked="{Binding IsForgeSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="Forge" />
+                        <TextBlock Text="{Binding ForgeStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsNeoForgeSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="NeoForge" />
+                        <TextBlock Text="{Binding NeoForgeStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsFabricSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="Fabric" />
+                        <TextBlock Text="{Binding FabricStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsQuiltSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="Quilt" />
+                        <TextBlock Text="{Binding QuiltStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsOptiFineSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="OptiFine" />
+                        <TextBlock Text="{Binding OptiFineStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+            </WrapPanel>
+            <StackPanel
+                DockPanel.Dock="Right"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Click="Cancel_OnClick" Content="取消" />
+                <Button
+                    Click="Install_OnClick"
+                    Content="开始安装"
+                    IsEnabled="{Binding CanInstall}" />
             </StackPanel>
-        </ScrollViewer>
-    </DockPanel>
+        </StackPanel>
+    </Grid>
 </UserControl>

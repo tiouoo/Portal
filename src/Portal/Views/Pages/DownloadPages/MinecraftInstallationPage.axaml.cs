@@ -4,7 +4,6 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
@@ -16,30 +15,20 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.Tasks;
-using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
-using Tio.Avalonia.Standard.Tab.Interface;
+using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;
 
-internal partial class MinecraftInstallationPage : UserControl, ITioTabPage
+internal partial class MinecraftInstallationPage : UserControl
 {
     private readonly MinecraftInstallationViewModel _viewModel;
 
     public MinecraftInstallationPage(VersionManifestEntry entry)
     {
         InitializeComponent();
-        PageInfo = new PageInfo
-        {
-            Title = $"安装 Minecraft Java {entry.Id}",
-            Icon = StreamGeometry.Parse(
-                "F1 M640,640z M0,0z M217.6,544L451.3,544 566.7,339.8 268.4,397.2 217.6,544z M569,304.1L451.4,96 219.9,96 424.5,331.9 569,304.1z M188.6,112.8L71.5,320 187.5,525.2 289.9,229.6 188.6,112.8z")
-        };
         DataContext = _viewModel = new MinecraftInstallationViewModel(entry);
     }
-
-    public PageInfo PageInfo { get; init; }
-    public TabEntry HostTab { get; set; } = null!;
 
     private void Install_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -53,11 +42,15 @@ internal partial class MinecraftInstallationPage : UserControl, ITioTabPage
         }
 
         _ = _viewModel.InstallAsync();
-        HostTab.Close();
+        _viewModel.Complete();
     }
+
+    private void Cancel_OnClick(object? sender, RoutedEventArgs e) => _viewModel.Cancel();
 }
 
-public partial class MinecraftInstallationViewModel : ObservableObject, INotifyDataErrorInfo
+public sealed record MinecraftInstallationDialogResult;
+
+public partial class MinecraftInstallationViewModel : ObservableObject, INotifyDataErrorInfo, IDialogContext
 {
     private static readonly Dictionary<(string Version, LoaderKind Kind), IInstallEntry?> LatestLoaderCache = [];
     private readonly VersionManifestEntry _vanilla;
@@ -467,6 +460,11 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
 
     public bool HasErrors => _errors.Count > 0;
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+    public void Complete() => RequestClose?.Invoke(this, new MinecraftInstallationDialogResult());
+    public void Cancel() => RequestClose?.Invoke(this, null);
+    public void Close() => Cancel();
+    public event EventHandler<object?>? RequestClose;
 
     public IEnumerable GetErrors(string? propertyName) =>
         propertyName is not null && _errors.TryGetValue(propertyName, out var errors) ? errors : [];

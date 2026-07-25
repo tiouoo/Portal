@@ -1,0 +1,61 @@
+<UserControl
+    d:DesignHeight="300"
+    d:DesignWidth="510"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.BedrockInstallDialog"
+    x:DataType="downloadPages:BedrockInstallDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto"
+        Width="510">
+        <StackPanel Spacing="4">
+            <TextBlock
+                FontSize="16"
+                FontWeight="SemiBold"
+                Text="安装 Minecraft 基岩版" />
+            <TextBlock Text="{Binding Details}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            Spacing="6">
+            <TextBlock Text="安装目录" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding Folders}"
+                Padding="10,5,6,5"
+                SelectedItem="{Binding SelectedFolder}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding FolderName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding FolderPath}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Margin="0,22,0,0"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Click="Cancel_Click" Content="取消" />
+            <Button
+                Click="Install_Click"
+                Content="开始安装"
+                IsEnabled="{Binding CanInstall}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

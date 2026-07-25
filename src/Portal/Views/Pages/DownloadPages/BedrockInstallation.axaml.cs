@@ -1,10 +1,8 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
-using Avalonia.Controls.Templates;
 using Avalonia.Threading;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Bedrock.Standard.Interface;
@@ -43,57 +41,17 @@ public partial class BedrockInstallation : UserControl
             return;
         }
 
-        var selectedFolder = _viewModel.GetPreferredInstallFolder(folders);
-        var folderSelector = new ComboBox
-        {
-            ItemsSource = folders,
-            SelectedItem = selectedFolder,Width = 470,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch
-        };
-        folderSelector.ItemTemplate = new FuncDataTemplate<MinecraftFolderEntry>((folder, _) => new TextBlock
-        {
-            Text = folder.FolderName,
-            TextTrimming = TextTrimming.CharacterEllipsis
-        });
-        var destinationText = new TextBlock
-        {
-            Text = _viewModel.GetDestinationPath(version, selectedFolder),
-            TextWrapping = TextWrapping.Wrap
-        };
-        folderSelector.SelectionChanged += (_, _) =>
-        {
-            if (folderSelector.SelectedItem is MinecraftFolderEntry folder)
-                destinationText.Text = _viewModel.GetDestinationPath(version, folder);
-        };
-
-        var content = new StackPanel
-        {
-            Margin = new Avalonia.Thickness(24),
-            Spacing = 12,
-            Children =
+        var result = await OverlayDialog.ShowCustomAsync<BedrockInstallDialog, BedrockInstallDialogViewModel,
+            BedrockInstallDialogResult>(new BedrockInstallDialogViewModel(version, folders,
+            _viewModel.GetPreferredInstallFolder(folders), _viewModel), this.GetTopLevel().TryGetHostId(),
+            new OverlayDialogOptions
             {
-                new TextBlock
-                {
-                    Text = _viewModel.GetInstallDetails(version, selectedFolder),
-                    TextWrapping = TextWrapping.Wrap
-                },
-                new TextBlock { Text = "安装目录" },
-                folderSelector,
-                destinationText
-            }
-        };
-
-        var result = await OverlayDialog.ShowStandardAsync(content, null, this.GetTopLevel().TryGetHostId(), new OverlayDialogOptions
-        {
-            Title = $"安装 Minecraft 基岩版 {version.Id}",
-            Buttons = DialogButton.YesNo,
-            OverrideYesButtonText = "开始安装",
-            OverrideNoButtonText = "取消",
-            CanLightDismiss = false,
-            CanResize = false
-        });
-        if (result == DialogResult.Yes && folderSelector.SelectedItem is MinecraftFolderEntry folder)
-            _ = _viewModel.InstallAsync(version, folder);
+                Buttons = DialogButton.None,
+                CanLightDismiss = false,
+                CanResize = false,
+                IsCloseButtonVisible = false
+            });
+        if (result is not null) _ = _viewModel.InstallAsync(version, result.Folder);
     }
 }
 
