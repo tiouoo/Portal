@@ -187,6 +187,11 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             });
             context.SetDescription($"整合包 {minecraft.Id} 安装完成");
         }
+        catch
+        {
+            DeleteFailedInstance(instancePath);
+            throw;
+        }
         finally
         {
             if (Directory.Exists(temporaryFolder)) Directory.Delete(temporaryFolder, true);
@@ -201,20 +206,38 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var instancePath = Path.Combine(folder, "versions", instanceId);
         if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
 
-        var minecraft = source switch
+        try
         {
-            ModDetailsSource.Modrinth => await InstallModrinthAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
-            ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
-            _ => throw new NotSupportedException("不支持的整合包来源。")
-        };
-        await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            var minecraft = source switch
+            {
+                ModDetailsSource.Modrinth => await InstallModrinthAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
+                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
+                _ => throw new NotSupportedException("不支持的整合包来源。")
+            };
+            await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            {
+                InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+                step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
+                step.ReportProgress(1);
+                return Task.CompletedTask;
+            });
+            context.SetDescription($"整合包 {minecraft.Id} 安装完成");
+        }
+        catch
         {
-            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-            step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
-            step.ReportProgress(1);
-            return Task.CompletedTask;
-        });
-        context.SetDescription($"整合包 {minecraft.Id} 安装完成");
+            DeleteFailedInstance(instancePath);
+            throw;
+        }
+    }
+
+    private static void DeleteFailedInstance(string instancePath)
+    {
+        try
+        {
+            if (Directory.Exists(instancePath)) Directory.Delete(instancePath, true);
+        }
+        // Preserve the original installation error if an antivirus or another process holds a partial file.
+        catch (Exception) { }
     }
 
     private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file, string destination)
