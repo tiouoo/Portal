@@ -806,6 +806,9 @@ public partial class MinecraftInstanceConfig : ObservableObject
     [ObservableProperty] public partial string Note { get; set; }
     [ObservableProperty] public partial bool IsFavorite { get; set; }
     [ObservableProperty] public partial DateTime LastPlayTime { get; set; } = DateTime.MinValue;
+    [ObservableProperty] public partial Dictionary<string, bool> RecentPlayFavorites { get; set; } = [];
+
+    public bool ShouldSerializeRecentPlayFavorites() => RecentPlayFavorites?.Count > 0;
 
     [ObservableProperty]
     public partial Dictionary<string, long> PlayTimeByDate { get; set; } = []; //string : Data (yyyy-MM-dd)

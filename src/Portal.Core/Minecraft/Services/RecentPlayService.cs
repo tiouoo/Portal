@@ -11,8 +11,12 @@ public sealed class RecentPlayService
     private const string HistoryFileName = "Portal.recent-play.json";
     private readonly WorldSaveService _worldSaveService = new();
 
-    public async Task<IReadOnlyList<RecentPlayTarget>> ScanAsync(IEnumerable<MinecraftInstance> instances,
-        CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<RecentPlayTarget>> ScanAsync(IEnumerable<MinecraftInstance> instances,
+        CancellationToken cancellationToken = default) =>
+        Task.Run(() => Scan(instances.ToArray(), cancellationToken), cancellationToken);
+
+    private IReadOnlyList<RecentPlayTarget> Scan(IReadOnlyList<MinecraftInstance> instances,
+        CancellationToken cancellationToken)
     {
         var targets = new List<RecentPlayTarget>();
         foreach (var instance in instances.Where(instance => instance.Type == MinecraftInstanceType.Java))
@@ -21,7 +25,7 @@ public sealed class RecentPlayService
             var history = ReadHistory(instance);
             var servers = ReadServers(instance, out _).ToArray();
             MergeConnectionLogs(instance, history, servers);
-            var worlds = await _worldSaveService.ScanAsync(instance, cancellationToken);
+            var worlds = _worldSaveService.ScanAsync(instance, cancellationToken).GetAwaiter().GetResult();
             targets.AddRange(worlds
                 .Where(world => world.LastPlayedTime.HasValue)
                 .Select(world => new RecentPlayTarget(instance, RecentPlayTargetType.World, world.FolderName,

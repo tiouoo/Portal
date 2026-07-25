@@ -45,7 +45,7 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         Loaded += async (_, _) =>
         {
             NewTabViewModel.ApplyFilterAndSort();
-            await NewTabViewModel.RefreshRecentPlaysAsync();
+            await NewTabViewModel.EnsureRecentPlaysLoadedAsync();
         };
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
         Unloaded += (_, _) => InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
@@ -136,6 +136,12 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
+    private void RecentPlayFavorite_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is RecentPlayItem item)
+            NewTabViewModel.ToggleRecentPlayFavorite(item);
+    }
+
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
         if (InstanceManager.Instance.Instances.Count == 0)
@@ -219,6 +225,9 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     private readonly RecentPlayService _recentPlayService = new();
     private List<RecentPlayItem> _allRecentPlays = [];
     private int _recentPlayCapacity = 1;
+    private bool _areRecentPlaysExpanded;
+    private bool _recentPlaysLoaded;
+    private Task? _recentPlaysLoadingTask;
 
     public NewTabViewModel()
     {
@@ -228,19 +237,44 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     public NewsPage NewsPage { get; } = new(true);
     public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
     public bool HasRecentPlays => RecentPlays.Count > 0;
+    public bool CanExpandRecentPlays => _allRecentPlays.Count > _recentPlayCapacity;
+    public string ToggleRecentPlaysText => _areRecentPlaysExpanded ? "收起" : $"展开全部 ({_allRecentPlays.Count})";
 
     public async Task RefreshRecentPlaysAsync()
     {
         if (!Data.ConfigEntry.ShowRecentPlays)
         {
             _allRecentPlays = [];
+            _recentPlaysLoaded = true;
             ApplyRecentPlayCapacity();
             return;
         }
 
         var targets = await _recentPlayService.ScanAsync(InstanceManager.Instance.Instances);
         _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
+        SortRecentPlays();
+        _recentPlaysLoaded = true;
         ApplyRecentPlayCapacity();
+    }
+
+    public Task EnsureRecentPlaysLoadedAsync()
+    {
+        if (_recentPlaysLoaded)
+            return Task.CompletedTask;
+
+        return _recentPlaysLoadingTask ??= LoadRecentPlaysAsync();
+    }
+
+    private async Task LoadRecentPlaysAsync()
+    {
+        try
+        {
+            await RefreshRecentPlaysAsync();
+        }
+        finally
+        {
+            _recentPlaysLoadingTask = null;
+        }
     }
 
     public void SetRecentPlayWidth(double width)
@@ -256,10 +290,31 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     private void ApplyRecentPlayCapacity()
     {
         RecentPlays.Clear();
-        foreach (var item in _allRecentPlays.Take(_recentPlayCapacity))
+        foreach (var item in _allRecentPlays.Take(_areRecentPlaysExpanded ? _allRecentPlays.Count : _recentPlayCapacity))
             RecentPlays.Add(item);
         OnPropertyChanged(nameof(HasRecentPlays));
+        OnPropertyChanged(nameof(CanExpandRecentPlays));
+        OnPropertyChanged(nameof(ToggleRecentPlaysText));
     }
+
+    [RelayCommand]
+    private void ToggleRecentPlays()
+    {
+        _areRecentPlaysExpanded = !_areRecentPlaysExpanded;
+        ApplyRecentPlayCapacity();
+    }
+
+    public void ToggleRecentPlayFavorite(RecentPlayItem item)
+    {
+        item.ToggleFavorite();
+        SortRecentPlays();
+        ApplyRecentPlayCapacity();
+    }
+
+    private void SortRecentPlays() => _allRecentPlays = _allRecentPlays
+        .OrderByDescending(item => item.IsFavorite)
+        .ThenByDescending(item => item.LastPlayedTime)
+        .ToList();
 
     [RelayCommand]
     public void ToggleFavorite(MinecraftInstance instance)
@@ -282,10 +337,22 @@ public sealed class RecentPlayItem
     public string Name => _target.Name;
     public string InstanceName => _target.Instance.InstanceName;
     public string Details => _target.Details;
+    public DateTime LastPlayedTime => _target.LastPlayedTime;
     public string RelativeTime => GetRelativeTime(_target.LastPlayedTime);
+    public bool IsFavorite => _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;
     public Bitmap Icon => _target.Type == RecentPlayTargetType.Server && _target.ServerIconData is { Length: > 0 }
         ? LoadIcon(_target.ServerIconData) ?? _target.Instance.Icon
         : _target.WorldIconPath is { } path && File.Exists(path) ? LoadIcon(path) ?? _target.Instance.Icon : _target.Instance.Icon;
+
+    public void ToggleFavorite()
+    {
+        var favorites = _target.Instance.Config.RecentPlayFavorites ??= [];
+        if (IsFavorite)
+            favorites.Remove(_target.Id);
+        else
+            favorites[_target.Id] = true;
+        _target.Instance.SaveConfig();
+    }
 
     private static Bitmap? LoadIcon(byte[] data)
     {
