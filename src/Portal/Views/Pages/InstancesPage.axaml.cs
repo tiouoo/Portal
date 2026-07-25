@@ -35,6 +35,12 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         Loaded += (_, _) => InstancesPageViewModel.ApplyFilterAndSort();
     }
 
+    public void Refresh()
+    {
+        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+        InstancesPageViewModel.ApplyFilterAndSort();
+    }
+
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = "实例",
@@ -77,8 +83,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
     private void RefreshInstance_Click(object? sender, RoutedEventArgs e)
     {
-        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-        InstancesPageViewModel.ApplyFilterAndSort();
+        Refresh();
     }
 }
 

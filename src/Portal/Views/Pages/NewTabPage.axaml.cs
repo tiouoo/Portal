@@ -51,6 +51,13 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         Unloaded += (_, _) => InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
     }
 
+    public async Task RefreshAsync()
+    {
+        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+        NewTabViewModel.ApplyFilterAndSort();
+        await NewTabViewModel.RefreshRecentPlaysAsync();
+    }
+
     private void OnStatisticsChanged(object? sender, EventArgs e)
     {
         Dispatcher.UIThread.Post(NewTabViewModel.UpdateStatistics);
