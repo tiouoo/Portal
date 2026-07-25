@@ -26,13 +26,21 @@ namespace Portal.Views.Pages;
 public partial class InstancesPage : DataUserControl, ITioTabPage
 {
     public InstancesPageViewModel InstancesPageViewModel;
+    private bool _isInitialized;
 
     public InstancesPage()
     {
         InitializeComponent();
         InstancesPageViewModel = new InstancesPageViewModel();
         DataContext = InstancesPageViewModel;
-        Loaded += (_, _) => InstancesPageViewModel.ApplyFilterAndSort();
+        Loaded += (_, _) =>
+        {
+            if (_isInitialized)
+                return;
+
+            _isInitialized = true;
+            InstancesPageViewModel.ApplyFilterAndSort();
+        };
     }
 
     public void Refresh()

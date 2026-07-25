@@ -1,9 +1,7 @@
 using System;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -54,8 +52,6 @@ public partial class TabWindow : TioTabWindowBase
         Window = this;
         DataContext = this;
         Events();
-        PropertyChanged += OnWindowPropertyChanged;
-        Activated += async (_, _) => await RefreshSelectedPageAsync();
         Keys();
         AttachDropDrag();
         CreateNewTabFunc = () =>
@@ -166,25 +162,6 @@ public partial class TabWindow : TioTabWindowBase
             {
                 Logger.Error(exception);
             }
-        }
-    }
-
-    private void OnWindowPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(SelectedTab))
-            _ = RefreshSelectedPageAsync();
-    }
-
-    private async Task RefreshSelectedPageAsync()
-    {
-        switch (SelectedTab?.Content)
-        {
-            case NewTabPage page:
-                await page.RefreshAsync();
-                break;
-            case InstancesPage page:
-                page.Refresh();
-                break;
         }
     }
 

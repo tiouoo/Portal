@@ -36,6 +36,7 @@ namespace Portal.Views.Pages;
 public partial class NewTabPage : DataUserControl, ITioTabPage
 {
     public NewTabViewModel NewTabViewModel;
+    private bool _isInitialized;
 
     public NewTabPage()
     {
@@ -44,18 +45,15 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         DataContext = NewTabViewModel;
         Loaded += async (_, _) =>
         {
+            if (_isInitialized)
+                return;
+
+            _isInitialized = true;
             NewTabViewModel.ApplyFilterAndSort();
             await NewTabViewModel.EnsureRecentPlaysLoadedAsync();
         };
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
         Unloaded += (_, _) => InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
-    }
-
-    public async Task RefreshAsync()
-    {
-        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-        NewTabViewModel.ApplyFilterAndSort();
-        await NewTabViewModel.RefreshRecentPlaysAsync();
     }
 
     private void OnStatisticsChanged(object? sender, EventArgs e)
@@ -218,6 +216,11 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
         NewTabViewModel.ApplyFilterAndSort();
     }
+
+    private async void RefreshRecentPlays_Click(object? sender, RoutedEventArgs e)
+    {
+        await NewTabViewModel.RefreshRecentPlaysAsync();
+    }
 }
 
 public partial class NewTabViewModel : InstanceListViewModelBase
@@ -244,13 +247,16 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     {
         if (!Data.ConfigEntry.ShowRecentPlays)
         {
-            _allRecentPlays = [];
-            _recentPlaysLoaded = true;
-            ApplyRecentPlayCapacity();
+            UpdateRecentPlays([]);
             return;
         }
 
         var targets = await _recentPlayService.ScanAsync(InstanceManager.Instance.Instances);
+        UpdateRecentPlays(targets);
+    }
+
+    private void UpdateRecentPlays(IEnumerable<RecentPlayTarget> targets)
+    {
         _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
         SortRecentPlays();
         _recentPlaysLoaded = true;

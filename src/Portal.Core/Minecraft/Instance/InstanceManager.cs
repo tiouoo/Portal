@@ -68,7 +68,7 @@ public class InstanceManager
                 Instances.Add(instance);
             }
         }
-        
+
         NotifyStatisticsChanged();
     }
 
