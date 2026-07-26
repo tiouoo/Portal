@@ -79,6 +79,11 @@ public static class ProtocolRegistration
 
     private static async Task RegisterLinuxAsync(string executablePath)
     {
+        // AppImage 的 ProcessPath 指向临时挂载点，退出后失效；运行时通过 APPIMAGE 环境变量给出包文件本身的路径。
+        if (Environment.GetEnvironmentVariable("APPIMAGE") is { Length: > 0 } appImagePath &&
+            File.Exists(appImagePath))
+            executablePath = appImagePath;
+
         // Linux 上 LocalApplicationData 即 $XDG_DATA_HOME（默认 ~/.local/share）。
         var applicationsFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "applications");
