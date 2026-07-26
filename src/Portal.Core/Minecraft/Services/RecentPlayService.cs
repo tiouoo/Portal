@@ -3,12 +3,15 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using fNbt;
 using Portal.Core.Minecraft.Classes;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
 
 public sealed class RecentPlayService
 {
     private const string HistoryFileName = "Portal.recent-play.json";
+    // 记录回调可能来自游戏进程输出线程，需要串行化历史文件的读改写
+    private static readonly object HistoryLock = new();
     private readonly WorldSaveService _worldSaveService = new();
 
     public Task<IReadOnlyList<RecentPlayTarget>> ScanAsync(IEnumerable<MinecraftInstance> instances,
@@ -62,12 +65,23 @@ public sealed class RecentPlayService
 
     public void RecordServerPlay(MinecraftInstance instance, string address, int port)
     {
-        var history = ReadHistory(instance);
-        var servers = ReadServers(instance, out _).ToArray();
-        var savedServer = servers.FirstOrDefault(server => IsSameServer(address, port, server.Host, server.Port));
-        history.RemoveAll(item => IsSameServer(item, address, port));
-        history.Add(new RecentServerHistory(address, port, savedServer?.Name, savedServer != null, DateTime.Now));
-        WriteHistory(instance, history);
+        try
+        {
+            lock (HistoryLock)
+            {
+                var history = ReadHistory(instance);
+                var servers = ReadServers(instance, out _).ToArray();
+                var savedServer = servers.FirstOrDefault(server => IsSameServer(address, port, server.Host, server.Port));
+                history.RemoveAll(item => IsSameServer(item, address, port));
+                history.Add(new RecentServerHistory(address, port, savedServer?.Name, savedServer != null, DateTime.Now));
+                WriteHistory(instance, history);
+            }
+        }
+        catch (Exception e)
+        {
+            // 该方法在进程输出事件线程上执行，异常不能外抛，否则会导致进程崩溃
+            Logger.Error($"记录服务器游玩历史失败: {e.Message}");
+        }
     }
 
     public void RecordServerConnection(MinecraftInstance instance, string logLine)
@@ -174,8 +188,24 @@ public sealed class RecentPlayService
 
     private static (string Host, int Port) ParseAddress(string address)
     {
+        // [addr]:port 形式的 IPv6 地址
+        if (address.StartsWith('['))
+        {
+            var end = address.IndexOf(']');
+            if (end > 0)
+            {
+                var host = address[1..end];
+                return address.Length > end + 1 && address[end + 1] == ':' &&
+                       int.TryParse(address[(end + 2)..], out var bracketPort)
+                    ? (host, bracketPort)
+                    : (host, 25565);
+            }
+        }
+
+        // 含多个 ':' 的裸 IPv6 地址整体视为主机
         var separator = address.LastIndexOf(':');
-        return separator > 0 && int.TryParse(address[(separator + 1)..], out var port)
+        return separator > 0 && address.IndexOf(':') == separator &&
+               int.TryParse(address[(separator + 1)..], out var port)
             ? (address[..separator], port)
             : (address, 25565);
     }
@@ -212,9 +242,19 @@ public sealed class RecentPlayService
     private static bool IsLanAddress(string address) =>
         address.StartsWith("192.168.", StringComparison.Ordinal) ||
         address.StartsWith("10.", StringComparison.Ordinal) ||
-        address.StartsWith("172.16.", StringComparison.Ordinal) ||
+        Is172PrivateAddress(address) ||
         address.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
         address.Equals("127.0.0.1", StringComparison.Ordinal);
+
+    // 172.16.0.0/12 私有网段覆盖 172.16.* 至 172.31.*
+    private static bool Is172PrivateAddress(string address)
+    {
+        if (!address.StartsWith("172.", StringComparison.Ordinal))
+            return false;
+
+        var end = address.IndexOf('.', 4);
+        return end > 4 && int.TryParse(address[4..end], out var second) && second is >= 16 and <= 31;
+    }
 
     private static List<RecentServerHistory> ReadHistory(MinecraftInstance instance)
     {

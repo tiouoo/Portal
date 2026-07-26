@@ -242,8 +242,9 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                 IsError = true;
                 IsAuthing = false;
                 ErrMsg = "验证服务器返回成功，但未接收到账户数据。";
+                return;
             }
-            
+
             Logger.Info("验证成功 \n" + result!.AsJson());
 
             var yggdrasilAccounts = result!.ToList();

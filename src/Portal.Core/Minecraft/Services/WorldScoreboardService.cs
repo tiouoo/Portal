@@ -29,7 +29,7 @@ public sealed class WorldScoreboardService
             .Where(x => !string.IsNullOrWhiteSpace(x.Name)).ToArray() ?? [];
         var scores = (data["PlayerScores"] as NbtList)?.OfType<NbtCompound>()
             .Select(x => new WorldScoreboardScore(GetString(x, "Objective"), GetString(x, "Name"), GetString(x, "display"),
-                (x["Score"] as NbtInt)?.Value ?? 0, (x["Locked"] as NbtByte)?.Value != 0))
+                (x["Score"] as NbtInt)?.Value ?? 0, x["Locked"] is NbtByte locked && locked.Value != 0))
             .Where(x => !string.IsNullOrWhiteSpace(x.Objective) && !string.IsNullOrWhiteSpace(x.Name)).ToArray() ?? [];
         return new WorldScoreboard(objectives, scores);
     }

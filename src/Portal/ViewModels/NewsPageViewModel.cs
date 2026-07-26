@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using AsyncImageLoader;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Module.Imaging;
 using Portal.Core.Minecraft;
@@ -48,7 +49,8 @@ public partial class NewsPageViewModel : ObservableObject
 
     private void OnNewsUpdated(object? sender, EventArgs e)
     {
-        HandleNewsUpdate();
+        // NewsUpdated 在后台线程触发，FilteredNews 与 IsVisible 绑定到 UI，必须切回 UI 线程处理
+        Dispatcher.UIThread.Post(HandleNewsUpdate);
     }
 
     private void HandleNewsUpdate()

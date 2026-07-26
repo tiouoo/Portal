@@ -74,8 +74,20 @@ public class ConfigEntity<T> where T : new()
             }
             catch
             {
+                // 解析失败时先备份损坏的文件，避免直接用默认值覆盖丢失用户数据
+                try
+                {
+                    File.Copy(Path, Path + ".bak", true);
+                }
+                catch
+                {
+                }
+
                 Save();
             }
+
+        // 文件内容为 null 等情况反序列化会返回 null，保证 Data 始终可用
+        Data ??= new T();
     }
 
     public void Save()

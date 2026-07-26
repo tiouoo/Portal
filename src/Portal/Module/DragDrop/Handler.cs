@@ -10,6 +10,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
 using Portal.Core.Minecraft.Services;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -26,34 +27,43 @@ public class Handler
 {
     public static async void Handle(DragEventArgs e, TioTabWindowBase window)
     {
-        var data = e.DataTransfer;
-        if (data.Contains(DataFormat.Text))
+        // async void：异常会直接抛给 Dispatcher 导致崩溃，必须在此兜底
+        try
         {
-            var text = data.TryGetText();
-            if (TryParseAuthlibUrl(text, out var apiUrl, out var domain))
+            var data = e.DataTransfer;
+            if (data.Contains(DataFormat.Text))
             {
-                e.Handled = true;
-                if (!string.IsNullOrEmpty(apiUrl) && !string.IsNullOrEmpty(domain))
+                var text = data.TryGetText();
+                if (TryParseAuthlibUrl(text, out var apiUrl, out var domain))
                 {
-                    await HandleAuthServerUrlAsync(apiUrl, domain, window);
+                    e.Handled = true;
+                    if (!string.IsNullOrEmpty(apiUrl) && !string.IsNullOrEmpty(domain))
+                    {
+                        await HandleAuthServerUrlAsync(apiUrl, domain, window);
+                    }
                 }
             }
-        }
 
-        if (TryGetModpack(data, out var archivePath, out var source, out var suggestedInstanceId))
+            if (TryGetModpack(data, out var archivePath, out var source, out var suggestedInstanceId))
+            {
+                e.Handled = true;
+                await ModpackDetailsPage.InstallLocalAsync(window, archivePath, source, suggestedInstanceId);
+                return;
+            }
+
+            if (OperatingSystem.IsWindows() && TryGetBedrockPackage(data, out archivePath, out var inspection))
+            {
+                e.Handled = true;
+                await BedrockPackageImportDialog.ImportAsync(window, archivePath, inspection);
+                return;
+            }
+        }
+        catch (Exception ex)
         {
-            e.Handled = true;
-            await ModpackDetailsPage.InstallLocalAsync(window, archivePath, source, suggestedInstanceId);
-            return;
+            Logger.Error($"处理拖放内容失败：{ex}");
+            NotificationGateway.Notice(window.GetTopLevel(), $"处理拖放内容失败：{ex.Message}",
+                NotificationType.Error);
         }
-
-        if (OperatingSystem.IsWindows() && TryGetBedrockPackage(data, out archivePath, out var inspection))
-        {
-            e.Handled = true;
-            await BedrockPackageImportDialog.ImportAsync(window, archivePath, inspection);
-            return;
-        }
-
     }
 
     public static string GetMsg(DragEventArgs e)

@@ -19,17 +19,23 @@ public static class PortalCommandQueue
         _initialized = true;
         App.UiLoaded += _ =>
         {
-            _isReady = true;
+            // _isReady 会被管道监听线程读取，必须与入队操作用同一把锁同步
+            lock (CommandLock)
+                _isReady = true;
             Dispatcher.UIThread.Post(DrainPendingCommands);
         };
     }
 
     public static void Enqueue(PortalCommand command)
     {
+        bool isReady;
         lock (CommandLock)
+        {
             PendingCommands.Enqueue(command);
+            isReady = _isReady;
+        }
 
-        if (_isReady)
+        if (isReady)
             Dispatcher.UIThread.Post(DrainPendingCommands);
     }
 

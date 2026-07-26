@@ -263,6 +263,9 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         try
         {
             var entries = Data.UiProperty.MinecraftVersionManifestEntries;
+            // 上次加载失败（如离线）的任务不再复用，置空以便本次重试
+            if (_versionLoadTask is { IsCompleted: true, IsCompletedSuccessfully: false })
+                _versionLoadTask = null;
             _versionLoadTask ??= entries.Count == 0
                 ? LoadReleaseManifestAsync()
                 : Task.FromResult<IReadOnlyList<VersionManifestEntry>>(entries);

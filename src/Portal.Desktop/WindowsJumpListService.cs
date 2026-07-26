@@ -80,12 +80,24 @@ internal static class WindowsJumpListService
                 using var reader = new StreamReader(pipe, Encoding.UTF8, detectEncodingFromByteOrderMarks: false,
                     leaveOpen: true);
                 var json = await reader.ReadToEndAsync();
+                if (string.IsNullOrWhiteSpace(json))
+                    continue;
                 if (JsonSerializer.Deserialize<JumpListCommand>(json) is { } command)
                     QueueCommand(command);
             }
+            catch (JsonException)
+            {
+                // 客户端提前断开或发送了截断的负载；丢弃本次连接，继续监听。
+            }
             catch (IOException)
             {
-                // A client can close the pipe before sending a complete command.
+                // 管道被另一个实例占用，或客户端提前断开；稍后重试，避免空转。
+                await Task.Delay(1000);
+            }
+            catch (Exception)
+            {
+                // 监听循环不能因意外异常终止，否则后续命令会启动重复实例。
+                await Task.Delay(1000);
             }
         }
     }
@@ -99,7 +111,9 @@ internal static class WindowsJumpListService
             Dispatcher.UIThread.Post(DrainPendingCommands);
     }
 
-    private static void DrainPendingCommands()
+    private static void DrainPendingCommands() => _ = DrainPendingCommandsAsync();
+
+    private static async Task DrainPendingCommandsAsync()
     {
         while (true)
         {
@@ -109,11 +123,18 @@ internal static class WindowsJumpListService
             if (command == null)
                 return;
 
-            Execute(command);
+            try
+            {
+                await ExecuteAsync(command);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error($"执行 Jump List 命令失败：{exception}");
+            }
         }
     }
 
-    private static void Execute(JumpListCommand command)
+    private static async Task ExecuteAsync(JumpListCommand command)
     {
         var window = App.MainWindow;
         if (window == null)
@@ -145,7 +166,7 @@ internal static class WindowsJumpListService
         RecentPlayTarget? target = null;
         if (command.Kind == JumpListCommandKind.RecentPlay)
         {
-            target = RecentPlayService.ScanAsync(InstanceManager.Instance.Instances).GetAwaiter().GetResult()
+            target = (await RecentPlayService.ScanAsync(InstanceManager.Instance.Instances))
                 .FirstOrDefault(item => item.Type == command.TargetType && item.Id == command.TargetId &&
                                         string.Equals(item.Instance.InstanceFolderPath, command.InstanceFolderPath,
                                             StringComparison.OrdinalIgnoreCase));
@@ -217,8 +238,17 @@ internal static class WindowsJumpListService
         link.SetIconLocation(Environment.ProcessPath!, 0);
         var propertyStore = (IPropertyStore)link;
         var key = PropertyKeys.Title;
-        propertyStore.SetValue(ref key, new PropVariant(title));
-        propertyStore.Commit();
+        var titleValue = new PropVariant(title);
+        try
+        {
+            propertyStore.SetValue(ref key, ref titleValue);
+            propertyStore.Commit();
+        }
+        finally
+        {
+            // 释放 PropVariant 持有的 CoTaskMem 字符串，避免每次刷新 Jump List 都泄漏。
+            PropVariantClear(ref titleValue);
+        }
         return link;
     }
 
@@ -243,6 +273,9 @@ internal static class WindowsJumpListService
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
+
+    [DllImport("ole32.dll")]
+    private static extern int PropVariantClear(ref PropVariant variant);
 
     [ComImport, Guid("6332DEBF-87B5-4670-90C0-5E57B408A49E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface ICustomDestinationList

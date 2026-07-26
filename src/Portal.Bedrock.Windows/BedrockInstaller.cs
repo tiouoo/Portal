@@ -127,7 +127,9 @@ public sealed class BedrockInstaller : IBedrockInstaller
         IProgress<BedrockInstallProgress>? progress, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
-        var expectedMd5 = build.Variations.First(variation => variation.Arch == Architecture.X64).MD5;
+        // 与 FindBuildAsync 使用相同的筛选条件（含 MetaData），确保 MD5 与下载地址来自同一个变体。
+        var expectedMd5 = build.Variations
+            .First(variation => variation.Arch == Architecture.X64 && variation.MetaData.Count > 0).MD5;
         if (File.Exists(packagePath) && await MatchesMd5Async(packagePath, expectedMd5, cancellationToken))
         {
             progress?.Report(new BedrockInstallProgress(1, 1, Path.GetFileName(packagePath), "Using cached package"));
@@ -235,12 +237,14 @@ public sealed class BedrockInstaller : IBedrockInstaller
                 ? (url, bytes / stopwatch.Elapsed.TotalSeconds)
                 : (url, 0);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return (url, 0);
+            throw;
         }
-        catch (HttpRequestException)
+        catch (Exception)
         {
+            // 单个镜像探测失败（超时、连接被重置、读取中断等）只应淘汰该镜像，
+            // 不能让异常穿透 Task.WhenAll 中断整个安装流程。
             return (url, 0);
         }
     }
@@ -367,7 +371,12 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
     private static async Task<bool> MatchesMd5Async(string path, string expectedMd5, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(expectedMd5)) return false;
+        if (string.IsNullOrWhiteSpace(expectedMd5))
+        {
+            // 版本数据未提供 MD5 时无法校验；直接接受文件，否则会在所有镜像间反复下载并删除。
+            Debug.WriteLine($"基岩版安装包缺少 MD5 校验值，跳过校验：{path}");
+            return true;
+        }
         await using var stream = File.OpenRead(path);
         var hash = await MD5.HashDataAsync(stream, cancellationToken);
         return string.Equals(Convert.ToHexString(hash), expectedMd5, StringComparison.OrdinalIgnoreCase);

@@ -169,7 +169,11 @@ internal static class BedrockDataIsolation
     {
         foreach (var path in Directory.EnumerateFiles(instancePath, $"{FallbackPreloadDllPrefix}????????.dll"))
         {
-            if (string.Equals(Path.GetFileName(path), activeDllName, StringComparison.OrdinalIgnoreCase))
+            var fileName = Path.GetFileName(path);
+            // EnumerateFiles 的 ? 通配符可匹配零个字符（如 P.dll、PhysX.dll），
+            // 必须用 IsPreloadDllName 再次确认是本组件的备用 DLL，避免误删无关文件。
+            if (!IsPreloadDllName(fileName) ||
+                string.Equals(fileName, activeDllName, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             try

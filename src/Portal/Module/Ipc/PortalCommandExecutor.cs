@@ -500,7 +500,7 @@ public static class PortalCommandExecutor
         {
             var folderPath = ResolveFolderPathForLaunch(command.Folder);
             candidates = candidates.Where(instance =>
-                string.Equals(NormalizePath(instance.FolderPath), folderPath, StringComparison.OrdinalIgnoreCase));
+                string.Equals(NormalizePath(instance.FolderPath), folderPath, PathComparison));
         }
 
         var instance = candidates.FirstOrDefault(candidate => MatchesInstanceId(candidate, id))
@@ -539,7 +539,7 @@ public static class PortalCommandExecutor
         if (TryNormalizeFullPath(specification, out var fullPath))
         {
             var byPath = folders.FirstOrDefault(folder =>
-                string.Equals(NormalizePath(folder.FolderPath), fullPath, StringComparison.OrdinalIgnoreCase));
+                string.Equals(NormalizePath(folder.FolderPath), fullPath, PathComparison));
             if (byPath is not null) return byPath;
 
             // 未配置过但确实存在的目录：直接作为安装目标，不写入启动器配置。
@@ -582,8 +582,23 @@ public static class PortalCommandExecutor
         }
     }
 
-    private static string NormalizePath(string path) =>
-        path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    /// <summary>Linux 文件系统区分大小写，路径比较必须用 Ordinal；Windows/macOS 则忽略大小写。</summary>
+    private static StringComparison PathComparison =>
+        OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+    private static string NormalizePath(string path)
+    {
+        // Path.GetFullPath 统一分隔符（如 Windows 上的正斜杠），避免同一路径的不同写法比较失败
+        try
+        {
+            path = Path.GetFullPath(path);
+        }
+        catch (Exception)
+        {
+            // 非法路径保持原样，仅做末尾分隔符裁剪
+        }
+        return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
 
     private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
         Func<TaskExecutionContext, Task> operation)

@@ -276,7 +276,9 @@ public partial class TabWindow : TioTabWindowBase
         KeyBindings.Add(new KeyBinding
         {
             Gesture = KeyGesture.Parse("Shift+S"),
-            Command = new RelayCommand(OpenAggregatedSearchDialog)
+            // 文本框聚焦时不触发聚合搜索，避免劫持正常的大写字母输入
+            Command = new RelayCommand(OpenAggregatedSearchDialog,
+                () => FocusManager?.GetFocusedElement() is not (TextBox or Avalonia.Controls.AutoCompleteBox or TioUi.Controls.AutoCompleteBox))
         });
     }
 

@@ -13,6 +13,7 @@ using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Classes;
 
@@ -94,8 +95,8 @@ public class MinecraftInstance : ObservableObject
     {
         (true, false) => "Portal 实例隔离数据文件夹",
         (false, false) => "Portal 数据文件夹",
-        (true, true) => "用户目录共享文件夹",
-        (false, true) => "实例隔离数据文件夹"
+        (true, true) => "实例隔离数据文件夹",
+        (false, true) => "用户目录共享文件夹"
     };
 
     public string InstanceName
@@ -331,11 +332,27 @@ public class MinecraftInstance : ObservableObject
         var configPath = GetConfigPath();
         if (File.Exists(configPath))
         {
-            var loadedConfig = Type == MinecraftInstanceType.Java
-                ? JsonConvert.DeserializeObject<JavaInstanceConfig>(File.ReadAllText(configPath))!
-                : JsonConvert.DeserializeObject<MinecraftInstanceConfig>(File.ReadAllText(configPath))!;
-            if (loadedConfig != null)
-                return loadedConfig;
+            try
+            {
+                MinecraftInstanceConfig? loadedConfig = Type == MinecraftInstanceType.Java
+                    ? JsonConvert.DeserializeObject<JavaInstanceConfig>(File.ReadAllText(configPath))
+                    : JsonConvert.DeserializeObject<MinecraftInstanceConfig>(File.ReadAllText(configPath));
+                if (loadedConfig != null)
+                    return loadedConfig;
+            }
+            catch (Exception e)
+            {
+                // 配置文件损坏时先备份再回退到默认配置，避免异常中断实例扫描、覆盖丢失用户数据
+                Logger.Error($"读取实例配置失败，已回退默认配置: {configPath} {e.Message}");
+                try
+                {
+                    File.Copy(configPath, configPath + ".bak", true);
+                }
+                catch (Exception backupException)
+                {
+                    Logger.Error($"备份损坏的实例配置失败: {backupException.Message}");
+                }
+            }
         }
 
         MinecraftInstanceConfig config = Type == MinecraftInstanceType.Java
@@ -392,14 +409,16 @@ public class MinecraftInstance : ObservableObject
     /// <param name="saveImmediately">是否立即保存配置文件</param>
     public void AddPlayTime(long seconds, bool saveImmediately)
     {
-        AddPlayTimeForDate(DateTime.Today, seconds);
-        if (saveImmediately)
+        lock (_timerLock)
         {
-            SaveConfig();
+            AddPlayTimeForDate(DateTime.Today, seconds);
+            if (saveImmediately)
+            {
+                SaveConfig();
+            }
         }
 
-        InstanceManager.Instance.NotifyStatisticsChanged();
-        OnPropertyChanged(nameof(FullInfo));
+        NotifyPlayTimeChanged();
     }
 
     /// <summary>
@@ -409,7 +428,19 @@ public class MinecraftInstance : ObservableObject
     {
         Config.PlaySessions++;
         SaveConfig();
-        InstanceManager.Instance.NotifyStatisticsChanged();
+        Dispatcher.UIThread.Post(InstanceManager.Instance.NotifyStatisticsChanged);
+    }
+
+    /// <summary>
+    /// 计时相关调用可能来自定时器线程或进程退出回调，属性通知需回到 UI 线程
+    /// </summary>
+    private void NotifyPlayTimeChanged()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            OnPropertyChanged(nameof(FullInfo));
+            InstanceManager.Instance.NotifyStatisticsChanged();
+        });
     }
 
     private System.Threading.Timer? _playTimer;
@@ -434,8 +465,6 @@ public class MinecraftInstance : ObservableObject
                     lock (_timerLock)
                     {
                         AddUnsavedPlayTime(DateTime.Today, 1);
-                        OnPropertyChanged(nameof(FullInfo));
-                        InstanceManager.Instance.NotifyStatisticsChanged();
 
                         if (_unsavedPlayTimeByDate.Values.Sum() >= 60)
                         {
@@ -443,6 +472,8 @@ public class MinecraftInstance : ObservableObject
                             SaveConfig();
                         }
                     }
+
+                    NotifyPlayTimeChanged();
                 },
                 null,
                 0,
@@ -456,6 +487,7 @@ public class MinecraftInstance : ObservableObject
     /// </summary>
     public void StopPlayTimer()
     {
+        var changed = false;
         lock (_timerLock)
         {
             _playTimer?.Dispose();
@@ -465,9 +497,12 @@ public class MinecraftInstance : ObservableObject
             {
                 SaveUnsavedPlayTime();
                 SaveConfig();
-                InstanceManager.Instance.NotifyStatisticsChanged();
+                changed = true;
             }
         }
+
+        if (changed)
+            NotifyPlayTimeChanged();
     }
 
     /// <summary>

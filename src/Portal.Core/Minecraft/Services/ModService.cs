@@ -45,19 +45,29 @@ public sealed class ModService
         var results = new Dictionary<string, ModInfo>(StringComparer.OrdinalIgnoreCase);
         foreach (var candidate in candidates)
         {
-            ModInfo mod;
-            if (candidate.Sha1 is { } sha1 && ReadCache(sha1) is { MetadataFetched: not false } cached)
-                mod = CreateModInfo(candidate.Path, cached);
-            else if (candidate.Fingerprint is { } fingerprint && ReadCache(fingerprint) is { MetadataFetched: not false } fingerprintCached)
-                mod = CreateModInfo(candidate.Path, fingerprintCached);
-            else
+            // 扫描期间文件可能被删除或占用，跳过该文件而不是让整个扫描失败
+            try
             {
-                mod = ReadMod(candidate.Path, cancellationToken);
-                if (candidate.Fingerprint is { } missingFingerprint)
-                    WriteCache(missingFingerprint, CreateLocalCacheEntry(mod));
-            }
+                ModInfo mod;
+                if (candidate.Sha1 is { } sha1 && ReadCache(sha1) is { MetadataFetched: not false } cached)
+                    mod = CreateModInfo(candidate.Path, cached);
+                else if (candidate.Fingerprint is { } fingerprint && ReadCache(fingerprint) is { MetadataFetched: not false } fingerprintCached)
+                    mod = CreateModInfo(candidate.Path, fingerprintCached);
+                else
+                {
+                    mod = ReadMod(candidate.Path, cancellationToken);
+                    if (candidate.Fingerprint is { } missingFingerprint)
+                        WriteCache(missingFingerprint, CreateLocalCacheEntry(mod));
+                }
 
-            results[candidate.Path] = mod;
+                results[candidate.Path] = mod;
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
         }
 
         return results.Values
@@ -285,11 +295,23 @@ public sealed class ModService
         CancellationToken cancellationToken)
     {
         var requested = fingerprints.Distinct().ToArray();
-        var response = await CurseForgeFingerprintEndpoint
-            .WithHeader("Accept", "application/json")
-            .WithHeader("x-api-key", ServiceCredentials.CurseForgeApiKey!)
-            .PostJsonAsync(new { fingerprints = requested }, cancellationToken: cancellationToken)
-            .ReceiveJson<CurseForgeFingerprintResponse>();
+        CurseForgeFingerprintResponse response;
+        try
+        {
+            response = await CurseForgeFingerprintEndpoint
+                .WithHeader("Accept", "application/json")
+                .WithHeader("x-api-key", ServiceCredentials.CurseForgeApiKey!)
+                .PostJsonAsync(new { fingerprints = requested }, cancellationToken: cancellationToken)
+                .ReceiveJson<CurseForgeFingerprintResponse>();
+        }
+        catch (FlurlHttpException)
+        {
+            return [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
         var matches = response.Data?.ExactMatches
             ?.Where(match => match.File != null)
             .ToDictionary(match => match.File!.Fingerprint) ?? [];

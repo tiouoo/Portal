@@ -78,7 +78,7 @@ public sealed class WorldEnvironmentService
 
     private static void SaveFile(NbtFile file, string worldPath, string fileName) =>
         file.SaveToFile(Path.Combine(worldPath, "data", "minecraft", fileName), NbtCompression.None);
-    private static bool GetBool(NbtCompound data, string name) => (data[name] as NbtByte)?.Value != 0;
+    private static bool GetBool(NbtCompound data, string name) => data[name] is NbtByte tag && tag.Value != 0;
     private static int GetInt(NbtCompound data, string name) => (data[name] as NbtInt)?.Value ?? 0;
     private static void SetBool(NbtCompound data, string name, bool value)
     {

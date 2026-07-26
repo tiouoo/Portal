@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -52,9 +53,11 @@ public static class UpdateApp
             sender.Notice($"正在下载 {asset.Name}", NotificationType.Information);
             var taskHandle = await Download(asset, packagePath);
 
+            // 解压与外部进程等待都是阻塞操作，放到线程池执行，避免大包冻结 UI
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "installer")
             {
-                var installerUpdate = new PreparedUpdate(PrepareWindowsInstaller(packagePath, updateDirectory), true);
+                var installerUpdate = new PreparedUpdate(
+                    await Task.Run(() => PrepareWindowsInstaller(packagePath, updateDirectory)), true);
                 CompletePreparation(taskHandle, installerUpdate);
                 return installerUpdate;
             }
@@ -63,11 +66,11 @@ public static class UpdateApp
                               ?? throw new InvalidOperationException("无法确定当前程序路径。");
             ProcessStartInfo updater;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "portable")
-                updater = PrepareWindowsPortable(packagePath, updateDirectory, processPath);
+                updater = await Task.Run(() => PrepareWindowsPortable(packagePath, updateDirectory, processPath));
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType == "appimage")
-                updater = PrepareAppImage(packagePath, updateDirectory);
+                updater = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && packageType is "app" or "dmg")
-                updater = PrepareMacApp(packagePath, updateDirectory, processPath);
+                updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, processPath));
             else
                 throw new NotSupportedException($"当前系统不支持安装类型“{packageType}”的自动更新。");
 
@@ -85,6 +88,7 @@ public static class UpdateApp
     public static async Task Apply(PreparedUpdate update)
     {
         if (!await ApplicationEvents.RaiseAppExiting()) return;
+        App.Method.FlushConfig();
         Process.Start(update.StartInfo);
         Environment.Exit(0);
     }
@@ -254,6 +258,7 @@ public static class UpdateApp
         var replacement = Directory.GetFiles(extracted, "*.exe", SearchOption.AllDirectories).SingleOrDefault()
                           ?? throw new InvalidDataException("portable 更新包中必须有且只有一个 EXE。");
         var script = Path.Combine(updateDirectory, "apply-update.ps1");
+        // Windows PowerShell 5.1 把无 BOM 的脚本按 ANSI 解码，非 ASCII 路径会乱码，必须写入带 BOM 的 UTF-8
         File.WriteAllText(script, $$"""
             $ErrorActionPreference = 'Stop'
             $pidToWait = {{Environment.ProcessId}}
@@ -280,7 +285,7 @@ public static class UpdateApp
               }
               throw
             }
-            """);
+            """, new UTF8Encoding(true));
         return PowerShell(script, !CanWriteDirectory(Path.GetDirectoryName(target)!));
     }
 

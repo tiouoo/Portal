@@ -51,10 +51,25 @@ public class Config
         catch (Exception ex)
         {
             FailedSettingKeys.Add($"Setting completely load failed: {ex.Message}");
+            try
+            {
+                // 解析失败时先备份损坏的配置文件，避免默认配置直接覆盖用户数据
+                var backupPath = ConfigPath.SettingDataPath + ".bak";
+                File.Copy(ConfigPath.SettingDataPath, backupPath, true);
+                Logger.Error($"配置文件解析失败，已备份到：{backupPath}");
+            }
+            catch (Exception backupEx)
+            {
+                Logger.Error($"备份损坏配置文件失败：{backupEx.Message}");
+            }
             Data.ConfigEntry = new ConfigEntry();
         }
 
         if (FailedSettingKeys.Count > 0) Logger.Error($"Setting load with errors: {FailedSettingKeys.AsJson()}");
+
+        // 账户与认证服务器变更时使聚合搜索索引失效（实例集合的失效逻辑在 UiProperty 中）
+        Data.ConfigEntry.MinecraftAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
+        Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
 
         const string RESOURCE_NAME = "Portal.version-ci.txt";
         var assembly = Assembly.GetExecutingAssembly();

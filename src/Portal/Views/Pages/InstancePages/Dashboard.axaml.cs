@@ -58,10 +58,14 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         Instance = instance;
         InitializeComponent();
         DataContext = this;
-        InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
-        InstanceManager.Instance.InstanceIconChanged += OnInstanceIconChanged;
         Loaded += (_, _) =>
         {
+            // 页面被 InstanceDetailPage 缓存复用，Unloaded 时会退订事件，
+            // 因此在 Loaded 中重新订阅（先退订以避免重复订阅）
+            InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
+            InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
+            InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
+            InstanceManager.Instance.InstanceIconChanged += OnInstanceIconChanged;
             RefreshWorldUserIds();
             Instance.StorageUsage.Refresh();
             Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);

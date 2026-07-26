@@ -57,7 +57,12 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
         InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
         DataContext = this;
-        KeyBindings.Add(new KeyBinding { Command = SelectAllCommand, Gesture = KeyGesture.Parse("ctrl+A") });
+        // 文本框聚焦时不拦截 Ctrl+A，保留全选文本的默认行为
+        KeyBindings.Add(new KeyBinding
+        {
+            Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),
+            Gesture = KeyGesture.Parse("ctrl+A")
+        });
         KeyBindings.Add(new KeyBinding { Command = ClearSelectionCommand, Gesture = KeyGesture.Parse("ctrl+Shift+A") });
         KeyBindings.Add(new KeyBinding { Command = InvertSelectionCommand, Gesture = KeyGesture.Parse("ctrl+I") });
     }
@@ -145,13 +150,16 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         RaiseSelectionProperties();
     }
 
+    private bool IsTextInputFocused() =>
+        TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox or Avalonia.Controls.AutoCompleteBox or TioUi.Controls.AutoCompleteBox;
+
     private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => true);
     private void ClearSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => false);
     private void InvertSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => !item.IsSelected);
     private async void DeleteSelected_OnClick(object? sender, RoutedEventArgs e)
     {
         var selected = GetSelectedItems();
-        if (selected.Length < 2) return;
+        if (selected.Length < 1) return;
 
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {

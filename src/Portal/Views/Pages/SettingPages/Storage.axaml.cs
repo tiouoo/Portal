@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Classes.Entries;
@@ -115,38 +116,39 @@ public partial class StorageViewModel : ObservableObject
                 long dataBytes = GetDirectorySize(portalPath, [_cachePath, _bedrockDataPath]);
                 long cacheBytes = GetDirectorySize(_cachePath);
                 long portalBytes = dataBytes + cacheBytes;
-                PortalBytesRaw = portalBytes;
-
-                PortalFolders[0].SizeBytes = dataBytes;
-                PortalFolders[1].SizeBytes = cacheBytes;
 
                 long totalGameBytes = 0;
+                var gameSizes = new List<(string FolderPath, long Size)>();
                 foreach (var folder in folders)
                 {
                     long size = GetDirectorySize(folder.FolderPath);
                     totalGameBytes += size;
-
-                    var item = GameFolders.FirstOrDefault(x => x.FolderPath == folder.FolderPath);
-                    if (item != null)
-                    {
-                        item.SizeBytes = size;
-                    }
+                    gameSizes.Add((folder.FolderPath, size));
                 }
 
                 if (OperatingSystem.IsWindows())
                 {
                     long bedrockBytes = GetDirectorySize(_bedrockDataPath);
                     totalGameBytes += bedrockBytes;
-
-                    var item = GameFolders.FirstOrDefault(x => x.FolderPath == _bedrockDataPath);
-                    if (item != null)
-                    {
-                        item.SizeBytes = bedrockBytes;
-                    }
+                    gameSizes.Add((_bedrockDataPath, bedrockBytes));
                 }
 
-                GameBytesRaw = totalGameBytes;
-                TotalBytesRaw = portalBytes + totalGameBytes;
+                var gameBytes = totalGameBytes;
+                // 后台线程只负责计算，绑定属性的赋值必须切回 UI 线程
+                Dispatcher.UIThread.Post(() =>
+                {
+                    PortalBytesRaw = portalBytes;
+                    PortalFolders[0].SizeBytes = dataBytes;
+                    PortalFolders[1].SizeBytes = cacheBytes;
+                    foreach (var (folderPath, size) in gameSizes)
+                    {
+                        var item = GameFolders.FirstOrDefault(x => x.FolderPath == folderPath);
+                        if (item != null)
+                            item.SizeBytes = size;
+                    }
+                    GameBytesRaw = gameBytes;
+                    TotalBytesRaw = portalBytes + gameBytes;
+                });
             }
             catch (Exception ex)
             {

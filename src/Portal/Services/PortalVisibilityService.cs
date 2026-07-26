@@ -129,6 +129,10 @@ public static class PortalVisibilityService
     private static void Shutdown()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            // 退出前立即落盘配置，避免防抖中的保存丢失
+            App.Method.FlushConfig();
             desktop.Shutdown();
+        }
     }
 }

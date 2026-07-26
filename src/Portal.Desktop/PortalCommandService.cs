@@ -79,12 +79,23 @@ internal static class PortalCommandService
                 using var reader = new StreamReader(pipe, Encoding.UTF8, detectEncodingFromByteOrderMarks: false,
                     leaveOpen: true);
                 var json = await reader.ReadToEndAsync();
+                if (string.IsNullOrWhiteSpace(json))
+                    continue;
                 if (JsonSerializer.Deserialize<PortalCommand>(json) is { } command)
                     PortalCommandQueue.Enqueue(command);
+            }
+            catch (JsonException)
+            {
+                // 客户端提前断开或发送了截断的负载；丢弃本次连接，继续监听。
             }
             catch (IOException)
             {
                 // 管道被另一个实例占用，或客户端提前断开；稍后重试，避免空转。
+                await Task.Delay(1000);
+            }
+            catch (Exception)
+            {
+                // 监听循环不能因意外异常终止，否则后续命令会启动重复实例。
                 await Task.Delay(1000);
             }
         }

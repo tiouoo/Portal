@@ -5,6 +5,7 @@ using MinecraftLaunch.Components.Parser;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance.Java;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Instance;
 
@@ -141,14 +142,22 @@ internal class FolderScanner
 
                 if (instanceType == MinecraftInstanceType.Java)
                 {
-                    var folderName = Path.GetFileName(instanceFolder);
-                    if (javaEntries.TryGetValue(folderName, out var minecraftEntry))
+                    // 单个实例异常（如配置文件损坏）不应中断整个扫描
+                    try
                     {
-                        instances.Add(new MinecraftInstance(minecraftEntry)
+                        var folderName = Path.GetFileName(instanceFolder);
+                        if (javaEntries.TryGetValue(folderName, out var minecraftEntry))
                         {
-                            FolderName = _folderName,
-                            FolderPath = _gameRootFolder
-                        });
+                            instances.Add(new MinecraftInstance(minecraftEntry)
+                            {
+                                FolderName = _folderName,
+                                FolderPath = _gameRootFolder
+                            });
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"扫描 Java 实例失败: {instanceFolder} {e.Message}");
                     }
                 }
                 else if (instanceType == MinecraftInstanceType.Bedrock)

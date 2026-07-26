@@ -39,6 +39,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private bool _isLoading;
     private bool _isLoadingMetadata;
     private bool _isDisposed;
+    private int _loadVersion; // 加载序号，防止并发刷新时旧的扫描结果覆盖新结果
     private string _filter = string.Empty;
     private readonly CancellationTokenSource _disposeCancellation = new();
 
@@ -87,7 +88,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         DataContext = this;
         KeyBindings.Add(new KeyBinding()
         {
-            Command = SelectAllCommand,
+            // 文本框聚焦时不拦截 Ctrl+A，保留全选文本的默认行为
+            Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),
             Gesture = KeyGesture.Parse("ctrl+A")
         });
         KeyBindings.Add(new KeyBinding()
@@ -115,14 +117,14 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (_hasLoaded || _instance == null) return;
 
         _hasLoaded = true;
+        var version = ++_loadVersion;
         IsLoading = true;
-        Items.Clear();
-        RaiseSelectionProperties();
-        ApplyFilter();
         RaiseListProperties();
         var mods = await _modService.ScanAsync(_instance, _disposeCancellation.Token);
-        if (_isDisposed)
+        if (_isDisposed || version != _loadVersion)
             return;
+        Items.Clear();
+        RaiseSelectionProperties();
         foreach (var mod in mods)
             Items.Add(new ModItem(mod));
         ApplyFilter();
@@ -255,7 +257,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private async void DeleteSelected_OnClick(object? sender, RoutedEventArgs e)
     {
         var selected = GetSelectedItems();
-        if (selected.Length < 2)
+        if (selected.Length < 1)
             return;
 
         var result = await OverlayDialog.ShowStandardAsync(
@@ -394,6 +396,9 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     }
 
     private ModItem[] GetSelectedItems() => Items.Where(item => item.IsSelected).ToArray();
+
+    private bool IsTextInputFocused() =>
+        TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox or Avalonia.Controls.AutoCompleteBox or TioUi.Controls.AutoCompleteBox;
 
     private static ModItem? GetModItem(object? sender) => (sender as Control)?.Tag as ModItem;
 

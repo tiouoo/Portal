@@ -218,17 +218,14 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
 
     public override int GetHashCode()
     {
+        // Equals 在任一方缺少 Uuid 时会回退到按名称比较，因此 Uuid 和 Name 都不能参与哈希，
+        // 否则相等的账户可能得到不同哈希值，破坏哈希去重
         var hash = new HashCode();
         hash.Add(AccountType);
 
         if (AccountType == AccountType.Yggdrasil && YggdrasilServerUrl != null)
         {
             hash.Add(YggdrasilServerUrl, StringComparer.OrdinalIgnoreCase);
-        }
-
-        if (Uuid.HasValue)
-        {
-            hash.Add(Uuid.Value);
         }
 
         return hash.ToHashCode();

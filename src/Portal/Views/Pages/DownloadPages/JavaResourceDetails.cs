@@ -43,6 +43,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     private bool _loaded;
     private bool _buildingFilters;
     private bool _hasLocatedTargetVersionGroup;
+    private bool _disposed;
 
     public event Action<JavaResourceVersionGroup>? TargetVersionGroupReady;
     public JavaResourceDetailsTarget Target { get; } = target;
@@ -180,6 +181,10 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        // 阻止置空筛选项时触发 ApplyVersionFilter 重建版本分组，确保内存能够释放
+        _buildingFilters = true;
         _disposeCancellation.Cancel();
         _disposeCancellation.Dispose();
         TargetVersionGroupReady = null;

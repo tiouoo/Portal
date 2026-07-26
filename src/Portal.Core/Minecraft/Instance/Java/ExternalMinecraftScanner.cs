@@ -400,10 +400,13 @@ internal static class ExternalMinecraftScanner
 
     private static Dictionary<string, string> ReadCfg(string path)
     {
-        if (!File.Exists(path)) return new(StringComparer.OrdinalIgnoreCase);
-        return File.ReadLines(path).Select(line => line.Split('=', 2))
-            .Where(parts => parts.Length == 2)
-            .ToDictionary(parts => parts[0], parts => parts[1], StringComparer.OrdinalIgnoreCase);
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!File.Exists(path)) return values;
+        // 重复键取最后一次出现的值，避免 ToDictionary 因重复键抛出异常
+        foreach (var parts in File.ReadLines(path).Select(line => line.Split('=', 2))
+                     .Where(parts => parts.Length == 2))
+            values[parts[0]] = parts[1];
+        return values;
     }
 
     private static string? ResolveMultiMcIcon(string root, string instanceRoot, string? iconKey)

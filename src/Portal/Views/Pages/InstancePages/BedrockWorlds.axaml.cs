@@ -24,6 +24,7 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
     private readonly BedrockWorldService _worldService = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _isLoading, _isDisposed;
+    private int _loadSequence; // 加载序号，防止快速切换用户时旧的扫描结果覆盖新结果
     private string _filter = string.Empty;
 
     public ObservableCollection<string> WorldUserIds { get; } = [];
@@ -159,12 +160,13 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
     private async Task LoadAsync()
     {
         if (_instance?.BedrockConfig is not { } config || _isDisposed) return;
+        var sequence = ++_loadSequence;
         IsLoading = true;
         RaiseListProperties();
         try
         {
             var worlds = await _worldService.ScanAsync(config, WorldUserIdSelector.SelectedItem as string ?? "Shared", _disposeCancellation.Token);
-            if (_isDisposed) return;
+            if (_isDisposed || sequence != _loadSequence) return;
             foreach (var item in Items) item.Dispose();
             Items.Clear();
             foreach (var world in worlds) Items.Add(new BedrockWorldItem(world));
@@ -173,7 +175,7 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
         catch (OperationCanceledException) { }
         finally
         {
-            if (!_isDisposed) { IsLoading = false; RaiseListProperties(); }
+            if (!_isDisposed && sequence == _loadSequence) { IsLoading = false; RaiseListProperties(); }
         }
     }
 
