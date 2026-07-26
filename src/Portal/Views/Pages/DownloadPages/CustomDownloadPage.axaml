@@ -15,7 +15,7 @@
             FontSize="24"
             Text="自定义下载" />
         <ScrollViewer Classes="Flat" Margin="0,10,0,0">
-            <StackPanel MaxWidth="790" Spacing="15">
+            <StackPanel Spacing="15">
                 <StackPanel Spacing="5">
                     <Label
                         Content="下载链接"

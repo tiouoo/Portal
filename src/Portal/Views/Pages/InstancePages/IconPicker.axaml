@@ -5,8 +5,8 @@
     x:Class="Portal.Views.Pages.InstancePages.IconPicker"
     x:DataType="local:IconPickerViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -43,8 +43,9 @@
                                 CornerRadius="10"
                                 Height="52"
                                 Width="52">
-                                <asyncImageLoader:AdvancedImage
+                                <owned:OwnedAdvancedImage
                                     Height="52"
+                                    Loader="{Binding ImageLoader}"
                                     Source="{Binding ResourceUri}"
                                     Width="52" />
                             </Border>

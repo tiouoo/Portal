@@ -31,6 +31,9 @@ public partial class ConfigEntry : ObservableObject
         JavaRuntimes.CollectionChanged += (_, _) => App.Method.SaveConfig();
     }
 
+    // 默认 true：老版本升级时配置文件中没有该字段，不应再次进入初始化流程；
+    // 仅在配置文件首次创建时由 Config.Initialize 置为 false
+    [ObservableProperty] public partial bool IsInitialized { get; set; } = true;
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
     [ObservableProperty] public partial string DefaultPage { get; set; } = typeof(NewTabPage).AssemblyQualifiedName!;
     [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");

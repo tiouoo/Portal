@@ -19,28 +19,14 @@ public sealed class ModService
     private const string ModrinthUserAgent = "Portal/1.0 (https://github.com/tiouoo/Portal)";
     private const int FingerprintBatchSize = 50;
     private const int MaximumConcurrentRequests = 4;
+    private const int MaximumConcurrentHashes = 4;
+    private const int HashBufferSize = 81920;
 
     public async Task<IReadOnlyList<ModInfo>> ScanAsync(MinecraftInstance instance,
         CancellationToken cancellationToken = default)
     {
         var paths = await Task.Run(() => FindModFiles(instance), cancellationToken);
-        var candidates = await Task.WhenAll(paths.Select(async path =>
-        {
-            try
-            {
-                return (Path: path,
-                    Sha1: await Task.Run(() => CalculateSha1(path, cancellationToken), cancellationToken),
-                    Fingerprint: await Task.Run(() => CalculateCurseForgeFingerprint(path, cancellationToken), cancellationToken));
-            }
-            catch (IOException)
-            {
-                return (Path: path, Sha1: (string?)null, Fingerprint: (uint?)null);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return (Path: path, Sha1: (string?)null, Fingerprint: (uint?)null);
-            }
-        }));
+        var candidates = await ComputeHashesAsync(paths, cancellationToken);
 
         var results = new Dictionary<string, ModInfo>(StringComparer.OrdinalIgnoreCase);
         foreach (var candidate in candidates)
@@ -60,7 +46,8 @@ public sealed class ModService
                         WriteCache(missingFingerprint, CreateLocalCacheEntry(mod));
                 }
 
-                results[candidate.Path] = mod;
+                // 把扫描时算好的哈希带在 ModInfo 上，后续刷新元数据、缓存中文名时无需再读一遍文件
+                results[candidate.Path] = mod with { Sha1 = candidate.Sha1, Fingerprint = candidate.Fingerprint };
             }
             catch (IOException)
             {
@@ -79,14 +66,17 @@ public sealed class ModService
     public async Task RefreshMetadataAsync(IEnumerable<ModInfo> mods, Func<string, string?>? findFriendlyName,
         Action<ModInfo> metadataUpdated, Action<bool>? loadingChanged = null, CancellationToken cancellationToken = default)
     {
+        using var hashSemaphore = new SemaphoreSlim(MaximumConcurrentHashes);
         var fingerprintedMods = await Task.WhenAll(mods.Select(async mod =>
         {
+            if (mod.Sha1 != null)
+                return (Mod: mod, mod.Sha1, mod.Fingerprint);
+
+            await hashSemaphore.WaitAsync(cancellationToken);
             try
             {
-                return (Mod: mod,
-                    Sha1: await Task.Run(() => CalculateSha1(mod.FilePath, cancellationToken), cancellationToken),
-                    Fingerprint: await Task.Run(() => CalculateCurseForgeFingerprint(mod.FilePath, cancellationToken),
-                        cancellationToken));
+                var hashes = await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken), cancellationToken);
+                return (Mod: mod, Sha1: (string?)hashes.Sha1, Fingerprint: (uint?)hashes.Fingerprint);
             }
             catch (IOException)
             {
@@ -95,6 +85,10 @@ public sealed class ModService
             catch (UnauthorizedAccessException)
             {
                 return (Mod: mod, Sha1: (string?)null, Fingerprint: (uint?)null);
+            }
+            finally
+            {
+                hashSemaphore.Release();
             }
         }));
 
@@ -355,8 +349,8 @@ public sealed class ModService
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                var fingerprint = await Task.Run(() => CalculateCurseForgeFingerprint(mod.FilePath, cancellationToken),
-                    cancellationToken);
+                var fingerprint = mod.Fingerprint ??
+                    (await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken), cancellationToken)).Fingerprint;
                 var cached = ReadCache(fingerprint);
                 if (cached is { IsWikiFriendlyName: true, FriendlyName: not null })
                 {
@@ -417,59 +411,127 @@ public sealed class ModService
         ? entry.ModrinthSlug
         : entry.CurseForgeSlug;
 
-    private static string CalculateSha1(string path, CancellationToken cancellationToken)
+    private static async Task<(string Path, string? Sha1, uint? Fingerprint)[]> ComputeHashesAsync(
+        IReadOnlyList<string> paths, CancellationToken cancellationToken)
     {
-        using var source = File.OpenRead(path);
-        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA1);
-        var buffer = new byte[81920];
-        int read;
-        while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+        // 限制同时哈希的文件数：模组目录动辄上百个文件，全部并发会同时打开大量文件句柄并推高内存峰值
+        using var semaphore = new SemaphoreSlim(MaximumConcurrentHashes);
+        return await Task.WhenAll(paths.Select(async path =>
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            hash.AppendData(buffer, 0, read);
-        }
-
-        return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            await semaphore.WaitAsync(cancellationToken);
+            try
+            {
+                var hashes = await Task.Run(() => ComputeHashes(path, cancellationToken), cancellationToken);
+                return (Path: path, Sha1: (string?)hashes.Sha1, Fingerprint: (uint?)hashes.Fingerprint);
+            }
+            catch (IOException)
+            {
+                return (Path: path, Sha1: null, Fingerprint: null);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return (Path: path, Sha1: null, Fingerprint: null);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }));
     }
 
-    private static uint CalculateCurseForgeFingerprint(string path, CancellationToken cancellationToken)
+    /// <summary>
+    /// 用固定大小的缓冲区分两遍流式读取文件：第一遍算 SHA1 并统计过滤后的长度，
+    /// 第二遍增量计算 CurseForge 指纹。全程不把整个文件读进内存。
+    /// </summary>
+    private static (string Sha1, uint Fingerprint) ComputeHashes(string path, CancellationToken cancellationToken)
     {
-        using var source = File.OpenRead(path);
-        using var filtered = new MemoryStream();
-        while (source.ReadByte() is var value and >= 0)
+        using var sha1 = IncrementalHash.CreateHash(HashAlgorithmName.SHA1);
+        var buffer = new byte[HashBufferSize];
+        uint filteredLength = 0;
+        using (var source = File.OpenRead(path))
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (!IsCurseForgeWhitespace((byte)value))
-                filtered.WriteByte((byte)value);
+            int read;
+            while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                sha1.AppendData(buffer, 0, read);
+                for (var index = 0; index < read; index++)
+                {
+                    if (!IsCurseForgeWhitespace(buffer[index]))
+                        filteredLength++;
+                }
+            }
         }
 
-        var bytes = filtered.GetBuffer().AsSpan(0, checked((int)filtered.Length));
-        uint hash = 1 ^ (uint)bytes.Length;
-        var offset = 0;
-        while (bytes.Length - offset >= 4)
+        var fingerprint = new CurseForgeFingerprint(filteredLength);
+        var filtered = new byte[HashBufferSize];
+        using (var source = File.OpenRead(path))
         {
-            Mix(ref hash, BitConverter.ToUInt32(bytes[offset..]));
-            offset += 4;
+            int read;
+            while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var count = 0;
+                for (var index = 0; index < read; index++)
+                {
+                    var value = buffer[index];
+                    if (!IsCurseForgeWhitespace(value))
+                        filtered[count++] = value;
+                }
+
+                fingerprint.Append(filtered.AsSpan(0, count));
+            }
         }
 
-        switch (bytes.Length - offset)
+        return (Convert.ToHexString(sha1.GetHashAndReset()).ToLowerInvariant(), fingerprint.Complete());
+    }
+
+    /// <summary>
+    /// MurmurHash2 的增量实现，结果与一次性对整段过滤字节计算完全一致。
+    /// 种子是过滤后的总长度，所以必须先数完长度再开始喂数据。
+    /// </summary>
+    private struct CurseForgeFingerprint(uint filteredLength)
+    {
+        private uint _hash = 1u ^ filteredLength;
+        private uint _tail;
+        private int _tailLength;
+
+        public void Append(ReadOnlySpan<byte> data)
         {
-            case 3:
-                hash ^= (uint)bytes[offset + 2] << 16;
-                goto case 2;
-            case 2:
-                hash ^= (uint)bytes[offset + 1] << 8;
-                goto case 1;
-            case 1:
-                hash ^= bytes[offset];
-                hash *= 0x5bd1e995u;
-                break;
+            var index = 0;
+            while (_tailLength > 0 && _tailLength < 4 && index < data.Length)
+                _tail |= (uint)data[index++] << (8 * _tailLength++);
+
+            if (_tailLength == 4)
+            {
+                Mix(ref _hash, _tail);
+                _tail = 0;
+                _tailLength = 0;
+            }
+
+            while (data.Length - index >= 4)
+            {
+                Mix(ref _hash, BitConverter.ToUInt32(data.Slice(index, 4)));
+                index += 4;
+            }
+
+            while (index < data.Length)
+                _tail |= (uint)data[index++] << (8 * _tailLength++);
         }
 
-        hash ^= hash >> 13;
-        hash *= 0x5bd1e995u;
-        hash ^= hash >> 15;
-        return hash;
+        public uint Complete()
+        {
+            if (_tailLength > 0)
+            {
+                _hash ^= _tail;
+                _hash *= 0x5bd1e995u;
+            }
+
+            _hash ^= _hash >> 13;
+            _hash *= 0x5bd1e995u;
+            _hash ^= _hash >> 15;
+            return _hash;
+        }
     }
 
     private static bool IsCurseForgeWhitespace(byte value) => value is 0x20 or 0x09 or 0x0a or 0x0d;
@@ -608,7 +670,9 @@ public sealed record ModInfo(
     string? FriendlyName = null,
     string? Source = null,
     string? ProjectId = null,
-    string? VersionId = null);
+    string? VersionId = null,
+    string? Sha1 = null,
+    uint? Fingerprint = null);
 
 internal sealed record ModCacheEntry
 {

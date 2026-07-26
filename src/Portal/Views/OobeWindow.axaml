@@ -1,0 +1,454 @@
+<tio:TioWindow
+    CanResize="False"
+    Height="480"
+    IsCloseBtnShow="{OnPlatform Default=True,
+                                macOS=False}"
+    IsMaxBtnShow="False"
+    IsMinBtnShow="{OnPlatform Default=True,
+                              macOS=False}"
+    Title="欢迎使用 Portal"
+    Width="780"
+    WindowStartupLocation="CenterScreen"
+    d:DesignHeight="540"
+    d:DesignWidth="780"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.OobeWindow"
+    x:DataType="views:OobeWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:anim="clr-namespace:Portal.Module.Animations"
+    xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:converter="clr-namespace:Portal.Module.Converter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:javaClasses="clr-namespace:Portal.Core.Minecraft.Instance.Java;assembly=Portal.Core"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:views="clr-namespace:Portal.Views"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <tio:TioWindow.Resources>
+        <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
+        <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
+    </tio:TioWindow.Resources>
+    <tio:TioWindow.Styles>
+        <!--  宽度与透明度由代码里的单一时钟统一驱动（见 UpdateStepDots），
+              两个独立 Transition 无法保证互补，动画结束时会让右侧的点错位回弹  -->
+        <Style Selector="Border.dot">
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Width" Value="6" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Background" Value="{DynamicResource InnerForegroundColor}" />
+            <Setter Property="Opacity" Value="0.3" />
+        </Style>
+        <Style Selector="Border.dot.active">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+    </tio:TioWindow.Styles>
+    <tio:TioWindow.TitleBarLeftContent>
+        <TextBlock
+            FontSize="16"
+            Margin="{OnPlatform '12,2,0,0',
+                                macOS='78,2,0,0'}"
+            Text="Portal"
+            VerticalAlignment="Center" />
+    </tio:TioWindow.TitleBarLeftContent>
+    <DockPanel>
+        <StackPanel
+            DockPanel.Dock="Bottom"
+            Margin="25,10,25,20"
+            Spacing="10">
+            <Separator />
+            <Panel>
+                <StackPanel
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,5"
+                    Orientation="Horizontal"
+                    Spacing="10"
+                    VerticalAlignment="Bottom">
+                    <StackPanel
+                        Name="StepDots"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        UseLayoutRounding="False"
+                        VerticalAlignment="Center"
+                        Width="56">
+                        <Border Classes="dot" />
+                        <Border Classes="dot" />
+                        <Border Classes="dot" />
+                        <Border Classes="dot" />
+                    </StackPanel>
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Name="StepTitle"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="10">
+                    <Button
+                        Classes="Float"
+                        Click="Back_OnClick"
+                        Content="←"
+                        Name="BackButton"
+                        ToolTip.Tip="上一步"
+                        Width="60" />
+                    <Button
+                        Classes="Float"
+                        Click="Next_OnClick"
+                        Content="→"
+                        Name="NextButton"
+                        ToolTip.Tip="下一步"
+                        Width="60" />
+                    <tio:IconButton
+                        Background="{DynamicResource SystemAccentColor}"
+                        Click="Finish_OnClick"
+                        Content="进入 Portal"
+                        Foreground="White"
+                        IsVisible="False"
+                        Name="FinishButton" />
+                </StackPanel>
+            </Panel>
+        </StackPanel>
+        <Carousel Margin="10" Name="Steps">
+            <Carousel.PageTransition>
+                <PageSlide Duration="0:0:0.25" Orientation="Horizontal">
+                    <PageSlide.SlideInEasing>
+                        <anim:SoftBackEaseOut Amplitude="0.6" />
+                    </PageSlide.SlideInEasing>
+                    <PageSlide.SlideOutEasing>
+                        <CubicEaseOut />
+                    </PageSlide.SlideOutEasing>
+                </PageSlide>
+            </Carousel.PageTransition>
+
+            <!--  第一步：主题样式  -->
+            <StackPanel Margin="25,5,25,10" Spacing="15">
+                <StackPanel Spacing="6">
+                    <TextBlock FontSize="26" Text="欢迎使用" />
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="先从挑一个喜欢的外观开始吧"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <Label
+                        Content="主题样式"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <ListBox Name="ThemeListBox" Theme="{DynamicResource BorderListBox}">
+                        <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
+                            <StackPanel Orientation="Horizontal">
+                                <PathIcon
+                                    Data="F1 M640,640z M0,0z M208.3,256C251.4,256 288.8,280.4 307.5,316.1 322.2,298.9 343.9,288 368.3,288 412.5,288 448.3,323.8 448.3,368 448.3,373.5 447.7,378.9 446.7,384 447.2,384 447.8,384 448.3,384 501.3,384 544.3,427 544.3,480 544.3,533 501.3,576 448.3,576L128.3,576C75.3,576 32.3,533 32.3,480 32.3,437.5 60,401.5 98.3,388.8 97,382 96.3,375.1 96.3,368 96.3,306.1 146.4,256 208.3,256z M400.3,32.2C405.6,32.2,410.6,34.9,413.6,39.3L460.9,109.7 544.2,93.4C549.4,92.4 554.8,94.1 558.5,97.8 562.3,101.6 563.9,107 562.9,112.2L546.6,195.5 617,242.8C621.4,245.8 624.1,250.8 624.1,256.1 624.1,261.4 621.5,266.4 617.1,269.3L546.7,316.6 561.2,390.8C544,369.1 520.8,352.4 494,343.5 491.5,330.8 487.1,318.9 481.2,307.8 490.8,292.9 496.4,275.1 496.4,256.1 496.4,203.1 453.4,160.1 400.4,160.1 352.5,160.1 312.8,195.2 305.6,241 284.7,225 259.7,214 232.5,209.9L254,195.4 237.7,112.2 237.4,110.2C237.1,105.6 238.7,101.1 242,97.8 245.8,94 251.2,92.4 256.4,93.4L339.7,109.7 387,39.3 388.2,37.7C391.2,34.2,395.6,32.2,400.3,32.2z M400.3,208C426.8,208 448.3,229.5 448.3,256 448.3,259.8 447.8,263.6 446.9,267.1 425.2,250.2 398,240 368.3,240 363.7,240 359.2,240.2 354.8,240.7 361.2,221.7 379.1,208 400.3,208z"
+                                    Height="16"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Width="16" />
+                                <TextBlock Text="系统" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
+                            <StackPanel Orientation="Horizontal">
+                                <PathIcon
+                                    Data="F1 M640,640z M0,0z M320,32C328,32,335.4,36,339.9,42.6L398.7,130 502.1,109.8C509.9,108.3 518,110.7 523.7,116.4 529.4,122.1 531.8,130.2 530.3,138L510,241.3 597.4,300.1C604,304.5 608,312 608,320 608,328 604,335.4 597.4,339.9L510,398.7 530.2,502C531.7,509.8 529.3,517.9 523.6,523.6 517.9,529.3 509.8,531.7 502,530.2L398.7,510 339.9,597.4C335.4,604 328,608 320,608 312,608 304.6,604 300.1,597.4L241.3,510 137.9,530.2C130.1,531.7 122,529.3 116.3,523.6 110.6,517.9 108.2,509.8 109.7,502L130,398.7 42.6,339.9C36,335.4 32,328 32,320 32,312 36,304.6 42.6,300.1L130,241.3 109.8,137.9C108.3,130.1 110.7,122 116.4,116.3 122.1,110.6 130.2,108.2 138,109.7L241.3,129.9 300.1,42.5 301.9,40.2C306.4,35,313,32,320,32z M272.2,170C266.8,178,257.2,182,247.7,180.2L163.7,163.8 180.1,247.8C181.9,257.3,177.9,266.9,169.9,272.3L99,320 170,367.8C178,373.2,182,382.8,180.2,392.3L163.8,476.3 247.8,459.9 251.3,459.5C259.6,459.1,267.6,463.1,272.3,470.1L320.1,541.1 367.9,470.1 370.1,467.3C375.7,461.2,384.1,458.3,392.4,460L476.4,476.4 460,392.4C458.2,382.9,462.2,373.3,470.2,367.9L541.2,320.1 470.2,272.3C462.2,266.9,458.2,257.3,460,247.8L476.4,163.8 392.4,180.2C382.9,182,373.3,178,367.9,170L320.1,99 272.3,170z M320,440C253.7,440 200,386.3 200,320 200,253.7 253.7,200 320,200 386.3,200 440,253.7 440,320 440,386.3 386.3,440 320,440z M320,248C280.2,248 248,280.2 248,320 248,359.8 280.2,392 320,392 359.8,392 392,359.8 392,320 392,280.2 359.8,248 320,248z"
+                                    Height="16"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Width="16" />
+                                <TextBlock Text="浅色" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
+                            <StackPanel Orientation="Horizontal">
+                                <PathIcon
+                                    Data="F1 M640,640z M0,0z M320,64C178.6,64 64,178.6 64,320 64,461.4 178.6,576 320,576 388.8,576 451.3,548.8 497.3,504.6 504.6,497.6 506.7,486.7 502.6,477.5 498.5,468.3 488.9,462.6 478.8,463.4 473.9,463.8 469,464 464,464 362.4,464 280,381.6 280,280 280,207.9 321.5,145.4 382.1,115.2 391.2,110.7 396.4,100.9 395.2,90.8 394,80.7 386.6,72.5 376.7,70.3 358.4,66.2 339.4,64 320,64z"
+                                    Height="16"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Width="16" />
+                                <TextBlock Text="深色" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
+                            <StackPanel Orientation="Horizontal">
+                                <PathIcon
+                                    Data="F1 M640,640z M0,0z M168.1,531.1L156.9,540.1C153.7,542.6 149.8,544 145.8,544 136,544 128,536 128,526.2L128,256C128,150 214,64 320,64 426,64 512,150 512,256L512,526.2C512,536 504,544 494.2,544 490.2,544 486.3,542.6 483.1,540.1L471.9,531.1C458.5,520.4,439.1,522.1,427.8,535L397.3,570C394,573.8 389.1,576 384,576 378.9,576 374.1,573.8 370.7,570L344.1,539.5C331.4,524.9,308.7,524.9,295.9,539.5L269.3,570C266,573.8 261.1,576 256,576 250.9,576 246.1,573.8 242.7,570L212.2,535C200.9,522.1,181.5,520.4,168.1,531.1z M288,256C288,238.3 273.7,224 256,224 238.3,224 224,238.3 224,256 224,273.7 238.3,288 256,288 273.7,288 288,273.7 288,256z M384,288C401.7,288 416,273.7 416,256 416,238.3 401.7,224 384,224 366.3,224 352,238.3 352,256 352,273.7 366.3,288 384,288z"
+                                    Height="16"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Width="16" />
+                                <TextBlock Text="幻影" />
+                            </StackPanel>
+                        </ListBoxItem>
+                    </ListBox>
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <Panel>
+                        <Label
+                            Content="主题色"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Left" />
+                        <SelectableTextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Right"
+                            Text="{Binding Data.ConfigEntry.ThemeColor}" />
+                    </Panel>
+                    <tio:TioColorPicker
+                        Color="{Binding Data.ConfigEntry.ThemeColor}"
+                        ColorSpectrumShape="Box"
+                        HorizontalAlignment="Stretch"
+                        SelectedIndex="1">
+                        <tio:TioColorPicker.Palette>
+                            <tio:TioColorLightPalette />
+                        </tio:TioColorPicker.Palette>
+                    </tio:TioColorPicker>
+                </StackPanel>
+            </StackPanel>
+
+            <!--  第二步：Minecraft 文件夹  -->
+            <DockPanel Margin="25,5,25,10">
+                <StackPanel DockPanel.Dock="Top" Spacing="15">
+                    <StackPanel Spacing="6">
+                        <TextBlock FontSize="26" Text="添加 Minecraft 文件夹" />
+                        <TextBlock
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="支持Modrinth/Curseeforge/MultiMC等多种格式哦"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <DockPanel Margin="0,4,0,0">
+                        <Label
+                            Content="文件夹列表"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Center" />
+                        <HyperlinkButton
+                            Click="AddFolder_OnClick"
+                            Content="添加文件夹"
+                            FontSize="13"
+                            HorizontalAlignment="Right"
+                            Theme="{StaticResource TransparentHyperlinkButton}" />
+                    </DockPanel>
+                </StackPanel>
+                <controls:ScrollView
+                    Classes="Flat"
+                    Margin="0,10,-10,0"
+                    Padding="0,5,10,0">
+                    <ItemsControl ItemsSource="{Binding Data.ConfigEntry.MinecraftFolders}" Margin="0,-5,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="classes:MinecraftFolderEntry">
+                                <Border
+                                    Background="{DynamicResource TranslucentBackgroundColor}"
+                                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="12,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <PathIcon
+                                            Data="F1 M 3.056641 18.75 C 2.646484 18.75 2.255859 18.666992 1.884766 18.500977 C 1.513672 18.334961 1.189779 18.113607 0.913086 17.836914 C 0.636393 17.560221 0.415039 17.236328 0.249023 16.865234 C 0.083008 16.494141 0 16.103516 0 15.693359 L 0 4.306641 C 0 3.896484 0.083008 3.505859 0.249023 3.134766 C 0.415039 2.763672 0.636393 2.439779 0.913086 2.163086 C 1.189779 1.886395 1.513672 1.665039 1.884766 1.499023 C 2.255859 1.333008 2.646484 1.25 3.056641 1.25 L 6.875 1.25 C 7.324219 1.25 7.709961 1.319988 8.032227 1.459961 C 8.354492 1.599936 8.645833 1.787109 8.90625 2.021484 C 9.166666 2.255859 9.407552 2.522787 9.628906 2.822266 C 9.85026 3.121746 10.078125 3.43099 10.3125 3.75 L 16.943359 3.75 C 17.353516 3.75 17.744141 3.833008 18.115234 3.999023 C 18.486328 4.165039 18.810221 4.386394 19.086914 4.663086 C 19.363605 4.939779 19.584961 5.263672 19.750977 5.634766 C 19.916992 6.005859 20 6.396484 20 6.806641 L 20 15.693359 C 20 16.103516 19.916992 16.494141 19.750977 16.865234 C 19.584961 17.236328 19.363605 17.560221 19.086914 17.836914 C 18.810221 18.113607 18.486328 18.334961 18.115234 18.500977 C 17.744141 18.666992 17.353516 18.75 16.943359 18.75 Z M 7.363281 5 C 7.539062 5.000001 7.701823 4.977215 7.851562 4.931641 C 8.001302 4.886068 8.147786 4.825847 8.291016 4.750977 C 8.434244 4.676107 8.570963 4.5931 8.701172 4.501953 C 8.83138 4.410808 8.964844 4.316406 9.101562 4.21875 C 8.951822 4.016928 8.805338 3.813477 8.662109 3.608398 C 8.51888 3.40332 8.36263 3.219402 8.193359 3.056641 C 8.024088 2.893881 7.833658 2.760418 7.62207 2.65625 C 7.410481 2.552084 7.161458 2.5 6.875 2.5 L 3.125 2.5 C 2.871094 2.5 2.630208 2.548828 2.402344 2.646484 C 2.174479 2.744141 1.974284 2.879232 1.801758 3.051758 C 1.629232 3.224285 1.494141 3.42448 1.396484 3.652344 C 1.298828 3.880209 1.25 4.121094 1.25 4.375 L 1.25 5 Z M 16.875 17.5 C 17.128906 17.5 17.369791 17.451172 17.597656 17.353516 C 17.82552 17.255859 18.025715 17.120768 18.198242 16.948242 C 18.370768 16.775717 18.505859 16.575521 18.603516 16.347656 C 18.701172 16.119791 18.75 15.878906 18.75 15.625 L 18.75 6.875 C 18.75 6.621095 18.701172 6.380209 18.603516 6.152344 C 18.505859 5.924479 18.370768 5.724284 18.198242 5.551758 C 18.025715 5.379232 17.82552 5.244142 17.597656 5.146484 C 17.369791 5.048829 17.128906 5.000001 16.875 5 L 10.185547 5 C 9.957682 5.156251 9.737955 5.309246 9.526367 5.458984 C 9.314778 5.608725 9.09668 5.742188 8.87207 5.859375 C 8.647461 5.976562 8.411458 6.070964 8.164062 6.142578 C 7.916666 6.214193 7.649739 6.25 7.363281 6.25 L 1.25 6.25 L 1.25 15.625 C 1.25 15.878906 1.298828 16.119791 1.396484 16.347656 C 1.494141 16.575521 1.629232 16.775717 1.801758 16.948242 C 1.974284 17.120768 2.174479 17.255859 2.402344 17.353516 C 2.630208 17.451172 2.871094 17.5 3.125 17.5 Z "
+                                            Height="22"
+                                            HorizontalAlignment="Center"
+                                            Margin="4,0,0,2"
+                                            VerticalAlignment="Center"
+                                            Width="22" />
+                                        <StackPanel Margin="14,0,0,0" Spacing="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding FolderName}" />
+                                                <TextBlock Text="·" VerticalAlignment="Center" />
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                                    Text="{Binding FolderTypeDescription}"
+                                                    VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                MaxWidth="625"
+                                                Text="{Binding FolderPath}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="NoWrap" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </controls:ScrollView>
+            </DockPanel>
+
+            <!--  第三步：账户  -->
+            <DockPanel Margin="25,5,25,10">
+                <StackPanel DockPanel.Dock="Top" Spacing="15">
+                    <StackPanel Spacing="6">
+                        <TextBlock FontSize="26" Text="添加账户" />
+                        <TextBlock
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="登录微软账户、使用外置登录，或创建一个离线账户"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <DockPanel Margin="0,4,0,0">
+                        <Label
+                            Content="账户列表"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Center" />
+                        <HyperlinkButton
+                            Click="AddAccount_OnClick"
+                            Content="添加账户"
+                            FontSize="13"
+                            HorizontalAlignment="Right"
+                            Theme="{StaticResource TransparentHyperlinkButton}" />
+                    </DockPanel>
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding !Data.ConfigEntry.MinecraftAccounts.Count}"
+                        Margin="0,20,0,0"
+                        Text="还没有账户，点击「添加账户」开始" />
+                </StackPanel>
+                <controls:ScrollView
+                    Classes="Flat"
+                    Margin="0,10,-10,0"
+                    Padding="0,5,10,0">
+                    <ItemsControl ItemsSource="{Binding Data.ConfigEntry.MinecraftAccounts}" Margin="0,-5,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="classes:MinecraftAccount">
+                                <Border
+                                    Background="{DynamicResource TranslucentBackgroundColor}"
+                                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="10,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border
+                                            Background="{Binding AccountType, Converter={StaticResource AccountTypeToBrushConverter}}"
+                                            CornerRadius="6"
+                                            Height="38"
+                                            Width="38">
+                                            <Image
+                                                Height="34"
+                                                Source="{Binding Cover}"
+                                                VerticalAlignment="Bottom"
+                                                Width="34" />
+                                        </Border>
+                                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" />
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource InnerForegroundColor}">
+                                                <Run Text="{Binding ShortType}" />
+                                                <Run Text="•" />
+                                                <Run Text="{Binding DisplayLastLoginTime}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </controls:ScrollView>
+            </DockPanel>
+
+            <!--  第四步：Java  -->
+            <DockPanel Margin="25,5,25,10">
+                <StackPanel DockPanel.Dock="Top" Spacing="15">
+                    <StackPanel Spacing="4">
+                        <TextBlock FontSize="26" Text="添加 Java" />
+                        <TextBlock
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="运行 Minecraft 需要 Java，推荐使用自动扫描；启动游戏时 Portal 也会自动选择合适的 Java 版本"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <DockPanel Margin="0,4,0,0">
+                        <Label
+                            Content="Java 列表"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Center" />
+                        <StackPanel
+                            DockPanel.Dock="Right"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <HyperlinkButton
+                                Click="ScanJava_OnClick"
+                                Content="自动扫描"
+                                FontSize="13"
+                                Name="ScanJavaButton"
+                                Theme="{StaticResource TransparentHyperlinkButton}" />
+                            <HyperlinkButton
+                                Click="AddJava_OnClick"
+                                Content="手动添加"
+                                FontSize="13"
+                                Name="AddJavaButton"
+                                Theme="{StaticResource TransparentHyperlinkButton}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="False"
+                        Margin="5,-8,0,0"
+                        Name="JavaStatusText" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding !Data.ConfigEntry.JavaRuntimes.Count}"
+                        Margin="0,20,0,0"
+                        Text="还没有 Java，点击「自动扫描」试试" />
+                </StackPanel>
+                <controls:ScrollView
+                    Classes="Flat"
+                    Margin="0,10,-10,0"
+                    Padding="0,5,10,0">
+                    <ItemsControl ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}" Margin="0,-5,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="javaClasses:JavaRuntimeEntry">
+                                <Border
+                                    Background="{DynamicResource TranslucentBackgroundColor}"
+                                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="12,8">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding DisplayName}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding JavaPath}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </controls:ScrollView>
+            </DockPanel>
+        </Carousel>
+    </DockPanel>
+</tio:TioWindow>

@@ -19,6 +19,17 @@ namespace Portal.Module.Initialize;
 
 public static partial class Initializer
 {
+    /// <summary>
+    /// 初始化窗口（OOBE）显示前的轻量初始化：仅应用主题相关配置，
+    /// 并提前设置 NotificationGateway.IsToastFunc，避免账户登录等流程中的通知调用抛出空引用
+    /// </summary>
+    public static void Oobe()
+    {
+        ThemeHelper.SetThemeColor(Data.ConfigEntry.ThemeColor);
+        ThemeHelper.ToggleTheme(Data.ConfigEntry.Theme);
+        NotificationGateway.IsToastFunc = () => Data.ConfigEntry.NoticeWay == NoticeWay.Toast;
+    }
+
     public static void Ui()
     {
         File.WriteAllText(ConfigPath.AppPathDataPath,

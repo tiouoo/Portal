@@ -25,7 +25,8 @@ public class Config
         Helper.TryCreateFolder(ConfigPath.UpdateFolderPath);
         BedrockDataPathResolver.EnsurePortalDataDirectories();
 
-        if (!File.Exists(ConfigPath.SettingDataPath))
+        var isFirstRun = !File.Exists(ConfigPath.SettingDataPath);
+        if (isFirstRun)
             File.WriteAllText(ConfigPath.SettingDataPath, new ConfigEntry().AsJson());
 
         Logger.Info($"配置文件夹：{ConfigPath.UserDataRootPath}");
@@ -64,6 +65,8 @@ public class Config
             }
             Data.ConfigEntry = new ConfigEntry();
         }
+
+        if (isFirstRun) Data.ConfigEntry.IsInitialized = false;
 
         if (FailedSettingKeys.Count > 0) Logger.Error($"Setting load with errors: {FailedSettingKeys.AsJson()}");
 

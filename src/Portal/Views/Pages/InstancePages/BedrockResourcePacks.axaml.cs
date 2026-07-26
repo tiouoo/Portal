@@ -3,7 +3,7 @@ using Portal.Core.Minecraft.Classes;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class BedrockResourcePacks : UserControl
+public partial class BedrockResourcePacks : UserControl, IDisposable
 {
     public BedrockResourcePacks()
     {
@@ -14,4 +14,7 @@ public partial class BedrockResourcePacks : UserControl
     {
         ResourcePacksContent.Content = new ResourcePacks(instance);
     }
+
+    // 关闭标签页时把释放转发给内部列表页，否则各条目持有的图标位图只能等终结器回收
+    public void Dispose() => (ResourcePacksContent.Content as IDisposable)?.Dispose();
 }

@@ -52,9 +52,27 @@ public partial class App : Application
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Dispatcher.UIThread.UnhandledException += UIThread_UnhandledException;
 #endif
-            _win = new TabWindow(true);
-            desktop.MainWindow = _win;
-            _win.Loaded += Function;
+            if (Data.ConfigEntry.IsInitialized)
+            {
+                ShowMainWindow(desktop);
+            }
+            else
+            {
+                Logger.Info("尚未完成初始化，进入初始化窗口");
+                Initializer.Oobe();
+                var oobe = new OobeWindow();
+                desktop.MainWindow = oobe;
+                oobe.Completed += () =>
+                {
+                    Logger.Info("初始化完成，进入主窗口");
+                    Data.ConfigEntry.IsInitialized = true;
+                    Method.FlushConfig();
+                    ShowMainWindow(desktop);
+                    _win.Show();
+                    oobe.Close();
+                };
+            }
+
             Logger.Info("UI配置完成");
         }
 
@@ -75,6 +93,13 @@ public partial class App : Application
             PortalCommandQueue.Enqueue(command);
         else if (error is not null)
             Logger.Error($"协议激活链接无效：{error}");
+    }
+
+    private void ShowMainWindow(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        _win = new TabWindow(true);
+        desktop.MainWindow = _win;
+        _win.Loaded += Function;
     }
 
     private void Function(object? sender, RoutedEventArgs e)
