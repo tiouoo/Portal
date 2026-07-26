@@ -6,10 +6,8 @@ import { platforms } from "../data/downloads.js";
   <section id="download" class="download-section section">
     <div class="container">
       <div class="download-heading">
-        <div>
-          <span class="section-kicker">现在开始</span>
-          <h2>选择你的平台</h2>
-        </div>
+        <span class="section-kicker">现在开始</span>
+        <h2>选择你的平台</h2>
         <p>Nightly 版本在北京时间凌晨5点左右自动发布一个新版本</p>
       </div>
       <div class="platform-grid">
