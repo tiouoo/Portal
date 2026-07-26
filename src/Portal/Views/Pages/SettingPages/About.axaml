@@ -122,7 +122,7 @@
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *前往 设置-代理 开启GitHub代理可加快更新速度" />
+                Text=" *前往 设置-网络代理 开启 GitHub 镜像加速可加快更新速度" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label

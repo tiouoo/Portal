@@ -13,6 +13,32 @@
         <TextBlock FontSize="26" Text="网络代理" />
         <StackPanel Spacing="5">
             <Label
+                Content="GitHub 镜像加速"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableGithubMirror}" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text=" *通过镜像站加速应用更新包下载，适合无法直连 GitHub 的网络环境" />
+        </StackPanel>
+        <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableGithubMirror}" Spacing="5">
+            <Label
+                Content="镜像源地址"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox PlaceholderText="https://ghfast.top" Text="{Binding Data.ConfigEntry.GithubMirrorUrl}" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text=" *前缀式镜像直接填写站点地址，如 https://ghfast.top 或 ghproxy.net" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text=" *其他格式可用 {url} 占位符代表原始下载地址，如 https://example.com/?q={url}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
                 Content="自定义 UserAgent"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />

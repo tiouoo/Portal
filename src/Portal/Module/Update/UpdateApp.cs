@@ -13,6 +13,7 @@ using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Const;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -130,6 +131,10 @@ public static class UpdateApp
 
     private static async Task<UpdateTaskHandle> Download(UpdateAsset asset, string destination)
     {
+        // 镜像仅改写下载地址，大小与 SHA-256 校验仍基于 GitHub API 返回的元数据
+        var downloadUrl = GithubMirror.Apply(asset.DownloadUrl);
+        if (!downloadUrl.Equals(asset.DownloadUrl, StringComparison.Ordinal))
+            Logger.Info($"Downloading update via GitHub mirror: {downloadUrl}");
         var temporary = destination + ".download";
         if (File.Exists(temporary)) File.Delete(temporary);
         UpdateTaskHandle? handle = null;
@@ -171,7 +176,7 @@ public static class UpdateApp
         }, async context =>
         {
             context.SetRunning($"正在下载：{asset.Name}");
-            var request = new DownloadRequest(asset.DownloadUrl, temporary, asset.Size)
+            var request = new DownloadRequest(downloadUrl, temporary, asset.Size)
             {
                 ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
                 {

@@ -44,6 +44,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool EnableMinecraftMirror { get; set; }
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
+    [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
@@ -51,6 +52,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowRecentPlays { get; set; } = true;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
+    [ObservableProperty] public partial string? GithubMirrorUrl { get; set; }
     [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
     [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
     [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
