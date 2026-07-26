@@ -30,8 +30,10 @@
         <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
     </tio:TioWindow.Resources>
     <tio:TioWindow.Styles>
-        <!--  宽度与透明度由代码里的单一时钟统一驱动（见 UpdateStepDots），
-              两个独立 Transition 无法保证互补，动画结束时会让右侧的点错位回弹  -->
+        <!--
+            宽度与透明度由代码里的单一时钟统一驱动（见 UpdateStepDots），
+            两个独立 Transition 无法保证互补，动画结束时会让右侧的点错位回弹
+        -->
         <Style Selector="Border.dot">
             <Setter Property="Height" Value="6" />
             <Setter Property="Width" Value="6" />
@@ -219,7 +221,7 @@
                         <TextBlock FontSize="26" Text="添加 Minecraft 文件夹" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="支持Modrinth/Curseeforge/MultiMC等多种格式哦"
+                            Text="支持Modrinth/CurseForge/MultiMC等多种格式哦"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
@@ -296,7 +298,7 @@
                         <TextBlock FontSize="26" Text="添加账户" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="登录微软账户、使用外置登录，或创建一个离线账户"
+                            Text="登录微软账户、使用外置登录，或创建一个离线账户 ovo"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
@@ -374,7 +376,7 @@
                         <TextBlock FontSize="26" Text="添加 Java" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="运行 Minecraft 需要 Java，推荐使用自动扫描；启动游戏时 Portal 也会自动选择合适的 Java 版本"
+                            Text="运行 Minecraft 当然是需要 Java 滴"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
