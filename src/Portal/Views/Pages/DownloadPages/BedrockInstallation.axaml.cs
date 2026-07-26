@@ -55,9 +55,11 @@ public partial class BedrockInstallation : UserControl
     }
 }
 
-public partial class BedrockInstallationViewModel : ObservableObject
+public partial class BedrockInstallationViewModel : ObservableObject, IDisposable
 {
     private readonly List<BedrockGdkVersion> _allVersions = [];
+    private readonly CancellationTokenSource _pageCancellation = new();
+    private bool _disposed;
 
     public ObservableCollection<BedrockGdkVersion> Versions { get; } = [];
 
@@ -83,10 +85,14 @@ public partial class BedrockInstallationViewModel : ObservableObject
         StatusText = "正在从版本源获取 GDK 版本列表...";
         try
         {
-            var versions = await installer.GetGdkVersionsAsync(false, CancellationToken.None);
+            var versions = await installer.GetGdkVersionsAsync(false, _pageCancellation.Token);
+            if (_disposed) return;
             _allVersions.Clear();
             _allVersions.AddRange(versions);
             loaded = true;
+        }
+        catch (OperationCanceledException) when (_pageCancellation.IsCancellationRequested)
+        {
         }
         catch (Exception exception)
         {
@@ -97,6 +103,15 @@ public partial class BedrockInstallationViewModel : ObservableObject
             IsLoading = false;
             if (loaded) ApplyFilter();
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _pageCancellation.Cancel();
+        Versions.Clear();
+        _allVersions.Clear();
     }
 
     public async Task InstallAsync(BedrockGdkVersion version, MinecraftFolderEntry folder)
@@ -234,20 +249,18 @@ public partial class BedrockInstallationViewModel : ObservableObject
         });
 
         task.Start();
-        try
-        {
-            await task.Completion;
-            if (task.Status == ManagedTaskStatus.Cancelled)
-                throw new OperationCanceledException();
-            if (task.Exception is not null)
-                throw task.Exception;
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception) { }
-        finally
-        {
-            IsInstalling = false;
-        }
+        _ = ObserveInstallationAsync(task, new WeakReference<BedrockInstallationViewModel>(this));
+        await Task.CompletedTask;
+    }
+
+    private static async Task ObserveInstallationAsync(ManagedTask task,
+        WeakReference<BedrockInstallationViewModel> viewModelReference)
+    {
+        try { await task.Completion; }
+        catch { }
+
+        if (viewModelReference.TryGetTarget(out var viewModel) && !viewModel._disposed)
+            viewModel.IsInstalling = false;
     }
 
     private void UpdateInstallState()

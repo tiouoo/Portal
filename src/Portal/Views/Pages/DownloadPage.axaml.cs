@@ -34,9 +34,15 @@ public partial class DownloadPage : UserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; }
+
+    public void OnClose()
+    {
+        DownloadPageViewModel.Dispose();
+        DataContext = null;
+    }
 }
 
-public partial class DownloadPageViewModel : ObservableObject
+public partial class DownloadPageViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
     public bool IsBedrockInstallationSupported => OperatingSystem.IsWindows();
@@ -61,5 +67,19 @@ public partial class DownloadPageViewModel : ObservableObject
         }
 
         CurrentPage = page;
+    }
+
+    public void Dispose()
+    {
+        CurrentPage = null;
+        foreach (var page in _pageCache.Values)
+        {
+            if (page is IDisposable disposablePage)
+                disposablePage.Dispose();
+            else if (page.DataContext is IDisposable disposableViewModel)
+                disposableViewModel.Dispose();
+            page.DataContext = null;
+        }
+        _pageCache.Clear();
     }
 }

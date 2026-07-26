@@ -10,9 +10,10 @@ using Portal.ViewModels;
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("下载", "设置/下载", "Download")]
-public partial class Download : DataUserControl, INotifyPropertyChanged
+public partial class Download : DataUserControl, INotifyPropertyChanged, IDisposable
 {
     private event PropertyChangedEventHandler? WarningPropertyChanged;
+    private bool _isDisposed;
 
     event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
     {
@@ -34,5 +35,15 @@ public partial class Download : DataUserControl, INotifyPropertyChanged
     {
         if (e.PropertyName is nameof(ConfigEntry.DownloadMaxThreadCount) or nameof(ConfigEntry.DownloadMaxFragmentCount))
             WarningPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasHighConcurrencyWarning)));
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        Data.ConfigEntry.PropertyChanged -= ConfigEntry_OnPropertyChanged;
+        DataContext = null;
     }
 }

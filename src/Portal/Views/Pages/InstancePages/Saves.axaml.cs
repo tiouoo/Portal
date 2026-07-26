@@ -27,7 +27,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Saves : UserControl, INotifyPropertyChanged
+public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
 {
     private readonly MinecraftInstance? _instance;
     private readonly string? _savesPath;
@@ -38,6 +38,8 @@ public partial class Saves : UserControl, INotifyPropertyChanged
     private bool _isRefreshingLockStates;
     private bool _isAttached;
     private string _filter = string.Empty;
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private bool _isDisposed;
 
     public ObservableCollection<SaveItem> Items { get; } = [];
     public ObservableCollection<SaveItem> FilteredItems { get; } = [];
@@ -63,7 +65,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged
         AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
-        _lockRefreshTimer.Tick += async (_, _) => await RefreshLockStatesAsync();
+        _lockRefreshTimer.Tick += LockRefreshTimer_OnTick;
     }
 
     public Saves(MinecraftInstance instance) : this()
@@ -102,7 +104,18 @@ public partial class Saves : UserControl, INotifyPropertyChanged
         _hasLoaded = true;
         IsLoading = true;
         RaiseListProperties();
-        var saves = await _saveService.ScanAsync(_instance);
+        IReadOnlyList<WorldSaveInfo> saves;
+        try
+        {
+            saves = await _saveService.ScanAsync(_instance, _disposeCancellation.Token);
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (_isDisposed)
+            return;
         Items.Clear();
         foreach (var save in saves)
             Items.Add(new SaveItem(save));
@@ -185,7 +198,8 @@ public partial class Saves : UserControl, INotifyPropertyChanged
                 (image.Width + cropSize) / 2, (image.Height + cropSize) / 2);
             using var surface = SKSurface.Create(new SKImageInfo(64, 64)) ?? throw new InvalidOperationException("无法创建图标。");
             surface.Canvas.DrawBitmap(image, source, new SKRect(0, 0, 64, 64), new SKSamplingOptions());
-            using var png = surface.Snapshot().Encode(SKEncodedImageFormat.Png, 100);
+            using var snapshot = surface.Snapshot();
+            using var png = snapshot.Encode(SKEncodedImageFormat.Png, 100);
             await using (var output = File.Create(temporaryIconPath))
                 png.SaveTo(output);
 
@@ -304,7 +318,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged
 
     private async Task RefreshLockStatesAsync()
     {
-        if (_isRefreshingLockStates || !IsVisible || Items.Count == 0)
+        if (_isDisposed || _isRefreshingLockStates || !IsVisible || Items.Count == 0)
             return;
 
         _isRefreshingLockStates = true;
@@ -313,6 +327,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged
             var items = Items.ToArray();
             var lockStates = await Task.WhenAll(items.Select(async item =>
                 (Item: item, IsLocked: await _saveService.IsWorldLockedAsync(item.Info.FolderPath))));
+            if (_isDisposed) return;
             var changed = false;
             foreach (var (item, isLocked) in lockStates)
             {
@@ -329,6 +344,17 @@ public partial class Saves : UserControl, INotifyPropertyChanged
         finally
         {
             _isRefreshingLockStates = false;
+        }
+    }
+
+    private async void LockRefreshTimer_OnTick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await RefreshLockStatesAsync();
+        }
+        catch when (_isDisposed)
+        {
         }
     }
 
@@ -401,6 +427,20 @@ public partial class Saves : UserControl, INotifyPropertyChanged
             IsCloseButtonVisible = true,
             CloseBtnMargin = new Thickness(0,12,12,0)
         });
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _disposeCancellation.Cancel();
+        _lockRefreshTimer.Stop();
+        _lockRefreshTimer.Tick -= LockRefreshTimer_OnTick;
+        Items.Clear();
+        FilteredItems.Clear();
+        DataContext = null;
+    }
 }
 
 public sealed class SaveItem(WorldSaveInfo info)

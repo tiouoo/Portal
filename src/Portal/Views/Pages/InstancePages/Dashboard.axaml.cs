@@ -27,10 +27,11 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Dashboard : DataUserControl, INotifyPropertyChanged
+public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDisposable
 {
     private InstanceDetailPage _parent;
     private event PropertyChangedEventHandler? DashboardPropertyChanged;
+    private bool _isDisposed;
 
     event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
     {
@@ -154,6 +155,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged
     {
         Dispatcher.UIThread.Post(() =>
         {
+            if (_isDisposed) return;
             DashboardPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalPlayTime)));
             RecentPlayTimeChart.InvalidateVisual();
         });
@@ -163,7 +165,22 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged
     {
         if (!ReferenceEquals(instance, Instance)) return;
 
-        Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_isDisposed)
+                InstanceIcon.Source = Instance[72];
+        });
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
+        InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
+        DataContext = null;
     }
 
     private void ToggleChartDays_Click(object? sender, RoutedEventArgs e)

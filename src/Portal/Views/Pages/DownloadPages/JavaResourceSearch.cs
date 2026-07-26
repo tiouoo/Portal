@@ -49,15 +49,17 @@ public static class JavaResourceDefinitions
         new(JavaResourceKind.Save, "存档", "world", 17, true, false, false);
 }
 
-public abstract partial class JavaResourceSearchViewModel : ObservableObject
+public abstract partial class JavaResourceSearchViewModel : ObservableObject, IDisposable
 {
     private const int PageSize = 40;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
     private static Task<IReadOnlyList<VersionManifestEntry>>? _versionLoadTask;
-    private static readonly ConcurrentDictionary<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new();
+    private static readonly BoundedCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new(32);
     private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseForge = new();
     private bool _initialized;
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private bool _disposed;
 
     public JavaResourceDefinition Definition { get; }
     public string PageTitle => $"{Definition.DisplayName}搜索";
@@ -172,9 +174,12 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
 
         try
         {
-            var page = await FetchAsync(request);
-            if (isDefaultSearch) Cache[request] = page;
+            var page = await FetchAsync(request, _disposeCancellation.Token);
+            if (isDefaultSearch) Cache.Set(request, page);
             if (IsCurrent(request)) Apply(page, renderedCache);
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
         }
         catch
         {
@@ -184,14 +189,16 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
         }
     }
 
-    private async Task<JavaResourceSearchPage> FetchAsync(JavaResourceSearchRequest request)
+    private async Task<JavaResourceSearchPage> FetchAsync(JavaResourceSearchRequest request,
+        CancellationToken cancellationToken)
     {
         var offset = (request.Page - 1) * PageSize;
         if (request.Source == SearchSource.Modrinth)
         {
             var page = await _modrinth.SearchPageAsync(request.Query, request.GameVersion,
                 projectType: Definition.ProjectType, modLoader: request.Loader,
-                index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize);
+                index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
+                cancellationToken: cancellationToken);
             return new JavaResourceSearchPage(page.Items.Select(item =>
                 new JavaResourceSearchResultItem(item, Definition, request.GameVersion, request.Loader)).ToArray(),
                 page.TotalCount);
@@ -208,7 +215,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
             SortOrder = SortOrder.Desc,
             Index = offset,
             PageSize = PageSize
-        });
+        }, cancellationToken);
         return new JavaResourceSearchPage(curseForgePage.Items.Select(item =>
             new JavaResourceSearchResultItem(item, Definition, request.GameVersion, request.Loader)).ToArray(),
             curseForgePage.TotalCount);
@@ -236,7 +243,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
         OnPropertyChanged(nameof(HasResults));
     }
 
-    private bool IsCurrent(JavaResourceSearchRequest request) => Definition.Kind == request.Kind &&
+    private bool IsCurrent(JavaResourceSearchRequest request) => !_disposed && Definition.Kind == request.Kind &&
         SelectedSource?.Kind == request.Source && SearchText.Trim() == request.Query &&
         GameVersion.Trim() == request.GameVersion &&
         (ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any) == request.Loader &&
@@ -244,14 +251,22 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
 
     private async Task LoadVersionsAsync()
     {
-        await VersionLoadLock.WaitAsync();
+        try
+        {
+            await VersionLoadLock.WaitAsync(_disposeCancellation.Token);
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
+            return;
+        }
         try
         {
             var entries = Data.UiProperty.MinecraftVersionManifestEntries;
             _versionLoadTask ??= entries.Count == 0
                 ? LoadReleaseManifestAsync()
                 : Task.FromResult<IReadOnlyList<VersionManifestEntry>>(entries);
-            var loadedEntries = await _versionLoadTask;
+            var loadedEntries = await _versionLoadTask.WaitAsync(_disposeCancellation.Token);
+            if (_disposed) return;
             if (entries.Count == 0) entries.AddRange(loadedEntries);
             var versions = entries.Where(x => x.Type == "release").Select(x => x.Id).Distinct()
                 .OrderByDescending(ParseMinecraftVersion).ThenByDescending(x => x, StringComparer.Ordinal);
@@ -265,6 +280,15 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject
         {
             VersionLoadLock.Release();
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _disposeCancellation.Cancel();
+        Results.Clear();
+        MinecraftVersions.Clear();
     }
 
     private static ModrinthSearchIndex ToModrinthSort(SearchSort sort) => sort switch
@@ -367,3 +391,44 @@ public sealed class ShaderPackSearchPageViewModel() : JavaResourceSearchViewMode
 public sealed class DataPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.DataPack);
 public sealed class SaveSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Save);
 public sealed class BedrockResourceSearchViewModel(JavaResourceDefinition definition) : JavaResourceSearchViewModel(definition);
+
+internal sealed class BoundedCache<TKey, TValue>(int capacity) where TKey : notnull
+{
+    private readonly Dictionary<TKey, LinkedListNode<(TKey Key, TValue Value)>> _entries = new();
+    private readonly LinkedList<(TKey Key, TValue Value)> _usage = new();
+    private readonly object _lock = new();
+
+    public bool TryGetValue(TKey key, out TValue? value)
+    {
+        lock (_lock)
+        {
+            if (!_entries.TryGetValue(key, out var node))
+            {
+                value = default;
+                return false;
+            }
+
+            _usage.Remove(node);
+            _usage.AddFirst(node);
+            value = node.Value.Value;
+            return true;
+        }
+    }
+
+    public void Set(TKey key, TValue value)
+    {
+        lock (_lock)
+        {
+            if (_entries.Remove(key, out var existing))
+                _usage.Remove(existing);
+
+            var node = _usage.AddFirst((key, value));
+            _entries[key] = node;
+            if (_entries.Count <= capacity) return;
+
+            var oldest = _usage.Last!;
+            _usage.RemoveLast();
+            _entries.Remove(oldest.Value.Key);
+        }
+    }
+}

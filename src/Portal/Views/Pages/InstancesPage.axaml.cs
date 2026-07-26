@@ -65,6 +65,12 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; }
 
+    public void OnClose()
+    {
+        InstancesPageViewModel.Dispose();
+        DataContext = null;
+    }
+
     private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)

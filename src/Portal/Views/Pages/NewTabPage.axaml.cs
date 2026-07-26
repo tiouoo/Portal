@@ -56,7 +56,6 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             await NewTabViewModel.EnsureRecentPlaysLoadedAsync();
         };
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
-        Unloaded += (_, _) => InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
     }
 
     private void OnStatisticsChanged(object? sender, EventArgs e)
@@ -72,6 +71,13 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; }
+
+    public void OnClose()
+    {
+        InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
+        NewTabViewModel.Dispose();
+        DataContext = null;
+    }
 
     private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -279,6 +285,8 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     private bool _areRecentPlaysExpanded;
     private bool _recentPlaysLoaded;
     private Task? _recentPlaysLoadingTask;
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private bool _isDisposed;
 
     public NewTabViewModel()
     {
@@ -293,18 +301,28 @@ public partial class NewTabViewModel : InstanceListViewModelBase
 
     public async Task RefreshRecentPlaysAsync()
     {
-        if (!Data.ConfigEntry.ShowRecentPlays)
+        try
         {
-            UpdateRecentPlays([]);
-            return;
-        }
+            if (!Data.ConfigEntry.ShowRecentPlays)
+            {
+                UpdateRecentPlays([]);
+                return;
+            }
 
-        var targets = await _recentPlayService.ScanAsync(InstanceManager.Instance.Instances);
-        UpdateRecentPlays(targets);
+            var targets = await _recentPlayService.ScanAsync(InstanceManager.Instance.Instances,
+                _disposeCancellation.Token);
+            _disposeCancellation.Token.ThrowIfCancellationRequested();
+            UpdateRecentPlays(targets);
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
+        }
     }
 
     private void UpdateRecentPlays(IEnumerable<RecentPlayTarget> targets)
     {
+        RecentPlays.Clear();
+        DisposeRecentPlays();
         _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
         SortRecentPlays();
         _recentPlaysLoaded = true;
@@ -324,6 +342,9 @@ public partial class NewTabViewModel : InstanceListViewModelBase
         try
         {
             await RefreshRecentPlaysAsync();
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
         }
         finally
         {
@@ -379,11 +400,33 @@ public partial class NewTabViewModel : InstanceListViewModelBase
         instance.SaveConfig();
         ApplyFilterAndSort();
     }
+
+    public override void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _disposeCancellation.Cancel();
+        DisposeRecentPlays();
+        RecentPlays.Clear();
+        NewsPage.DataContext = null;
+        base.Dispose();
+    }
+
+    private void DisposeRecentPlays()
+    {
+        foreach (var item in _allRecentPlays)
+            item.Dispose();
+        _allRecentPlays.Clear();
+    }
 }
 
-public sealed class RecentPlayItem
+public sealed class RecentPlayItem : IDisposable
 {
     private readonly RecentPlayTarget _target;
+    private Bitmap? _ownedIcon;
+    private bool _iconLoaded;
 
     public RecentPlayItem(RecentPlayTarget target) => _target = target;
 
@@ -394,9 +437,21 @@ public sealed class RecentPlayItem
     public DateTime LastPlayedTime => _target.LastPlayedTime;
     public string RelativeTime => GetRelativeTime(_target.LastPlayedTime);
     public bool IsFavorite => _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;
-    public Bitmap Icon => _target.Type == RecentPlayTargetType.Server && _target.ServerIconData is { Length: > 0 }
-        ? LoadIcon(_target.ServerIconData) ?? _target.Instance.Icon
-        : _target.WorldIconPath is { } path && File.Exists(path) ? LoadIcon(path) ?? _target.Instance.Icon : _target.Instance.Icon;
+    public Bitmap Icon
+    {
+        get
+        {
+            if (!_iconLoaded)
+            {
+                _iconLoaded = true;
+                _ownedIcon = _target.Type == RecentPlayTargetType.Server && _target.ServerIconData is { Length: > 0 }
+                    ? LoadIcon(_target.ServerIconData)
+                    : _target.WorldIconPath is { } path && File.Exists(path) ? LoadIcon(path) : null;
+            }
+
+            return _ownedIcon ?? _target.Instance.Icon;
+        }
+    }
 
     public void ToggleFavorite()
     {
@@ -418,6 +473,14 @@ public sealed class RecentPlayItem
     {
         try { using var stream = File.OpenRead(path); return Bitmap.DecodeToWidth(stream, 48); }
         catch (Exception) { return null; }
+    }
+
+    public void Dispose()
+    {
+        var icon = _ownedIcon;
+        _ownedIcon = null;
+        if (icon != null)
+            Dispatcher.UIThread.Post(icon.Dispose, DispatcherPriority.Background);
     }
 
     private static string GetRelativeTime(DateTime time)

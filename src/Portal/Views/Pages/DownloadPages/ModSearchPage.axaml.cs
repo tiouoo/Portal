@@ -44,7 +44,7 @@ public partial class ModSearchPage : UserControl
     }
 }
 
-public partial class ModSearchPageViewModel : ObservableObject
+public partial class ModSearchPageViewModel : ObservableObject, IDisposable
 {
     private const int PageSize = 40;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
@@ -52,6 +52,8 @@ public partial class ModSearchPageViewModel : ObservableObject
     private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseForge = new();
     private bool _initialized;
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private bool _disposed;
 
     public ObservableCollection<ModSearchResultItem> Results { get; } = [];
     public ObservableCollection<string> MinecraftVersions { get; } = [];
@@ -178,10 +180,13 @@ public partial class ModSearchPageViewModel : ObservableObject
 
         try
         {
-            var page = await FetchAsync(request);
+            var page = await FetchAsync(request, _disposeCancellation.Token);
             // All empty-keyword searches, including filtered popular lists, are persisted.
             if (isDefaultSearch) ModSearchCache.Set(request, CachedSearchPage.From(page));
             if (IsCurrent(request)) Apply(page, preserveExistingItems: renderedCache);
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
         }
         catch (Exception)
         {
@@ -191,13 +196,14 @@ public partial class ModSearchPageViewModel : ObservableObject
         }
     }
 
-    private async Task<SearchPageData> FetchAsync(SearchRequest request)
+    private async Task<SearchPageData> FetchAsync(SearchRequest request, CancellationToken cancellationToken)
     {
         var offset = (request.Page - 1) * PageSize;
         if (request.Source is SearchSource.Modrinth)
         {
             var modrinthPage = await _modrinth.SearchPageAsync(request.Query, request.GameVersion, request.Category,
-                modLoader: request.Loader, index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize);
+                modLoader: request.Loader, index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
+                cancellationToken: cancellationToken);
             return new SearchPageData(modrinthPage.Items.Select(item => new ModSearchResultItem(item, request.Sort,
                 request.GameVersion, request.Loader)).ToList(), modrinthPage.TotalCount);
         }
@@ -212,7 +218,7 @@ public partial class ModSearchPageViewModel : ObservableObject
             SortOrder = SortOrder.Desc,
             Index = offset,
             PageSize = PageSize
-        });
+        }, cancellationToken);
         return new SearchPageData(page.Items.Select(item => new ModSearchResultItem(item, request.GameVersion,
             request.Loader)).ToList(), page.TotalCount);
     }
@@ -239,14 +245,21 @@ public partial class ModSearchPageViewModel : ObservableObject
         OnPropertyChanged(nameof(HasResults));
     }
 
-    private bool IsCurrent(SearchRequest request) => SelectedSource?.Kind == request.Source &&
+    private bool IsCurrent(SearchRequest request) => !_disposed && SelectedSource?.Kind == request.Source &&
         SearchText.Trim() == request.Query && GameVersion.Trim() == request.GameVersion &&
         (SelectedLoader?.Kind ?? ModLoaderType.Any) == request.Loader && (SelectedCategory?.Id ?? "") == request.Category &&
         SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
 
     private async Task LoadVersionsAsync()
     {
-        await VersionLoadLock.WaitAsync();
+        try
+        {
+            await VersionLoadLock.WaitAsync(_disposeCancellation.Token);
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
+            return;
+        }
         try
         {
             var entries = Data.UiProperty.MinecraftVersionManifestEntries;
@@ -254,7 +267,8 @@ public partial class ModSearchPageViewModel : ObservableObject
                 _versionLoadTask = entries.Count == 0
                     ? LoadReleaseManifestAsync()
                     : Task.FromResult<IReadOnlyList<MinecraftLaunch.Base.Models.Network.VersionManifestEntry>>(entries);
-            var loadedEntries = await _versionLoadTask;
+            var loadedEntries = await _versionLoadTask.WaitAsync(_disposeCancellation.Token);
+            if (_disposed) return;
             if (entries.Count == 0) entries.AddRange(loadedEntries);
             var versions = entries.Where(x => x.Type == "release").Select(x => x.Id).Distinct()
                 .OrderByDescending(ParseMinecraftVersion).ThenByDescending(x => x, StringComparer.Ordinal).ToList();
@@ -263,6 +277,15 @@ public partial class ModSearchPageViewModel : ObservableObject
         }
         catch (Exception) { }
         finally { VersionLoadLock.Release(); }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _disposeCancellation.Cancel();
+        Results.Clear();
+        MinecraftVersions.Clear();
     }
 
     private static ModrinthSearchIndex ToModrinthSort(SearchSort sort) => sort switch
@@ -388,12 +411,12 @@ public sealed record SearchPageData(IReadOnlyList<ModSearchResultItem> Items, in
 // Search data is only reused while Portal is running. It is never persisted to disk.
 internal static class ModSearchCache
 {
-    private static readonly ConcurrentDictionary<SearchRequest, CachedSearchPage> Entries = new();
+    private static readonly BoundedCache<SearchRequest, CachedSearchPage> Entries = new(32);
 
     public static bool TryGetValue(SearchRequest request, out CachedSearchPage? page) =>
         Entries.TryGetValue(request, out page);
 
-    public static void Set(SearchRequest request, CachedSearchPage page) => Entries[request] = page;
+    public static void Set(SearchRequest request, CachedSearchPage page) => Entries.Set(request, page);
 }
 
 internal sealed record CachedSearchItem(string Name, string FriendlyName, string Summary, string? IconUrl, string Metadata,

@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -13,6 +14,7 @@ namespace Portal.Views.StaticPages;
 
 public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
 {
+    private bool _isDisposed;
     public string FilePath { get; }
     public string FileName { get; }
     public Bitmap? Image { get; }
@@ -68,5 +70,18 @@ public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
     private void ZoomOut_OnClick(object? sender, RoutedEventArgs e) =>
         ImageScrollView.ZoomTo(Math.Clamp(ImageScrollView.ZoomFactor - 0.1, 0.1, 100));
 
-    public void Dispose() => Image?.Dispose();
+    public void OnClose()
+    {
+        DataContext = null;
+        Dispatcher.UIThread.Post(Dispose, DispatcherPriority.Background);
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        Image?.Dispose();
+    }
 }

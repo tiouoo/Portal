@@ -38,12 +38,13 @@ internal class InstancePinyinCache
     public List<string> LoaderDescriptionFirstLetters { get; set; } = [];
 }
 
-public partial class InstanceListViewModelBase : ObservableObject
+public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 {
     public Data Data => Data.Instance;
     public ObservableCollection<MinecraftInstance> FilteredMinecraftInstances { get; set; } = [];
 
     private readonly ConcurrentDictionary<MinecraftInstance, InstancePinyinCache> _pinyinCache = new();
+    private bool _isDisposed;
 
     protected InstanceListViewModelBase()
     {
@@ -53,11 +54,18 @@ public partial class InstanceListViewModelBase : ObservableObject
 
     private void OnInstancesChanged(object? sender, EventArgs e)
     {
-        Dispatcher.UIThread.Post(ApplyFilterAndSort);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_isDisposed)
+                ApplyFilterAndSort();
+        });
     }
 
     private void OnInstanceIconChanged(object? sender, MinecraftInstance instance)
     {
+        if (_isDisposed)
+            return;
+
         OnPropertyChanged(nameof(RecentInstance));
         foreach (var item in FilteredMinecraftInstances.Where(item => ReferenceEquals(item, instance)).ToArray())
         {
@@ -191,6 +199,9 @@ public partial class InstanceListViewModelBase : ObservableObject
 
     public void ApplyFilterAndSort()
     {
+        if (_isDisposed)
+            return;
+
         UpdateRecentInstance();
         UpdatePlayStatistics();
         FilteredMinecraftInstances.Clear();
@@ -280,6 +291,20 @@ public partial class InstanceListViewModelBase : ObservableObject
         UpdateSummaryText(sortedResult);
     }
 
+    public virtual void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
+        InstanceManager.Instance.InstancesChanged -= OnInstancesChanged;
+        FilteredMinecraftInstances.Clear();
+        _pinyinCache.Clear();
+        FolderFilterOptions.Clear();
+        RecentInstance = null;
+    }
+
     private void UpdateRecentInstance()
     {
         var recent = InstanceManager.Instance.Instances
@@ -309,6 +334,9 @@ public partial class InstanceListViewModelBase : ObservableObject
     /// </summary>
     public void UpdateStatistics()
     {
+        if (_isDisposed)
+            return;
+
         UpdatePlayStatistics();
         UpdateRecentInstance();
     }

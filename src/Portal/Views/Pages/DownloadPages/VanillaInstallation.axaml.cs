@@ -39,8 +39,10 @@ public partial class VanillaInstallation : UserControl
     }
 }
 
-public partial class VanillaInstallationViewModel : ObservableObject
+public partial class VanillaInstallationViewModel : ObservableObject, IDisposable
 {
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private bool _disposed;
     public ObservableCollection<MinecraftVersionListItem> FilteredVersions { get; } = [];
 
     public IReadOnlyList<MinecraftVersionFilterOption> FilterOptions { get; } =
@@ -62,15 +64,26 @@ public partial class VanillaInstallationViewModel : ObservableObject
         {
             var entries = Data.UiProperty.MinecraftVersionManifestEntries;
             if (entries.Count == 0)
-                entries.AddRange(await VanillaInstaller.EnumerableMinecraftAsync());
+                entries.AddRange(await VanillaInstaller.EnumerableMinecraftAsync(_disposeCancellation.Token));
 
-            if (entries.Count > 0)
+            if (!_disposed && entries.Count > 0)
                 ApplyFilter();
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
         }
         catch (Exception)
         {
             StatusText = "无法获取版本列表，请检查网络连接后重新打开下载页。";
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _disposeCancellation.Cancel();
+        FilteredVersions.Clear();
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();

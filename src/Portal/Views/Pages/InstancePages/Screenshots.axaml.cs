@@ -20,7 +20,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Screenshots : UserControl, INotifyPropertyChanged
+public partial class Screenshots : UserControl, INotifyPropertyChanged, IDisposable
 {
     public ObservableCollection<ScreenshotItem> ScreenshotItems { get; } = [];
 
@@ -46,6 +46,8 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged
 
     private MinecraftInstance? _instance;
     private bool _hasLoaded;
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private bool _isDisposed;
 
     public Screenshots()
     {
@@ -60,7 +62,6 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged
         instance.PropertyChanged += Instance_PropertyChanged;
         _ = instance.StorageUsage.EnsureLoadedAsync();
         AttachedToVisualTree += async (_, _) => await LoadAsync();
-        DetachedFromVisualTree += (_, _) => instance.PropertyChanged -= Instance_PropertyChanged;
     }
 
     private string? ScreenshotsPath => _instance?.GetSpecialFolder(MinecraftSpecialFolder.ScreenshotsFolder);
@@ -87,18 +88,29 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged
         RaisePropertyChanged(nameof(IsEmpty));
         RaisePropertyChanged(nameof(ScreenshotCountText));
 
-        var files = await Task.Run(() =>
+        ScreenshotItem[] files;
+        try
         {
-            if (!Directory.Exists(screenshotsPath))
-                return [];
+            files = await Task.Run(() =>
+            {
+                if (!Directory.Exists(screenshotsPath))
+                    return [];
 
-            return Directory.EnumerateFiles(screenshotsPath)
-                .Where(path => ScreenshotItem.IsSupported(path))
-                .Select(path => new FileInfo(path))
-                .OrderByDescending(file => file.LastWriteTimeUtc)
-                .Select(file => new ScreenshotItem(file.FullName, file.Name))
-                .ToArray();
-        });
+                return Directory.EnumerateFiles(screenshotsPath)
+                    .Where(path => ScreenshotItem.IsSupported(path))
+                    .Select(path => new FileInfo(path))
+                    .OrderByDescending(file => file.LastWriteTimeUtc)
+                    .Select(file => new ScreenshotItem(file.FullName, file.Name))
+                    .ToArray();
+            }, _disposeCancellation.Token);
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (_isDisposed)
+            return;
 
         foreach (var item in files)
             ScreenshotItems.Add(item);
@@ -216,6 +228,19 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged
     {
         _hasLoaded = false;
         _ = LoadAsync();
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _disposeCancellation.Cancel();
+        if (_instance != null)
+            _instance.PropertyChanged -= Instance_PropertyChanged;
+        ScreenshotItems.Clear();
+        DataContext = null;
     }
 }
 

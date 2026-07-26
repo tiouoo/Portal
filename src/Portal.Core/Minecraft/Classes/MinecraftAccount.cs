@@ -123,6 +123,8 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
 
     partial void OnSkinChanged(string value)
     {
+        // These images can still be referenced by controls in other windows while bindings update.
+        // Dropping the cache lets GC release them without racing Avalonia's render thread.
         _head = null;
         _body = null;
         _cover = null;
@@ -131,19 +133,25 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
     private Bitmap HandleCoverSkin()
     {
         var imageBytes = Convert.FromBase64String(Skin);
-        return CoverCapturer.Default.Capture(SKBitmap.Decode(imageBytes)).ToBitmap(130);
+        using var skin = SKBitmap.Decode(imageBytes);
+        using var cover = CoverCapturer.Default.Capture(skin);
+        return cover.ToBitmap(130);
     }
 
     private Bitmap HandleBodySkin()
     {
         var imageBytes = Convert.FromBase64String(Skin);
-        return FullBodyCapturer.Default.Capture(SKBitmap.Decode(imageBytes)).ToBitmap();
+        using var skin = SKBitmap.Decode(imageBytes);
+        using var body = FullBodyCapturer.Default.Capture(skin);
+        return body.ToBitmap();
     }
 
     private Bitmap HandleHeadSkin()
     {
         var imageBytes = Convert.FromBase64String(Skin);
-        return HeadCapturer.Default.Capture(SKBitmap.Decode(imageBytes)).ToBitmap(36);
+        using var skin = SKBitmap.Decode(imageBytes);
+        using var head = HeadCapturer.Default.Capture(skin);
+        return head.ToBitmap(36);
     }
 
     public static Guid GetMinecraftOfflineUuid(string name)

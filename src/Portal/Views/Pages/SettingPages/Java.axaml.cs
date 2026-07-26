@@ -19,11 +19,12 @@ using TioUi.Common.Extensions;
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("Java 虚拟机与内存", "设置/Java 虚拟机与内存", "Java")]
-public partial class Java : DataUserControl, INotifyPropertyChanged
+public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
 {
     private int _totalMemoryMb;
     private int _availableMemoryMb;
     private readonly DispatcherTimer _memoryRefreshTimer = new() { Interval = TimeSpan.FromSeconds(2) };
+    private bool _isDisposed;
 
     private event PropertyChangedEventHandler? MemoryStatusChanged;
 
@@ -47,7 +48,7 @@ public partial class Java : DataUserControl, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
-        _memoryRefreshTimer.Tick += (_, _) => RefreshMemoryStatus();
+        _memoryRefreshTimer.Tick += MemoryRefreshTimer_OnTick;
         Data.ConfigEntry.PropertyChanged += ConfigEntry_PropertyChanged;
         Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
         Slider.ValueChanged += (_, _) => Data.ConfigEntry.MinecraftMaxMemory = (int)Slider.Value;
@@ -74,6 +75,20 @@ public partial class Java : DataUserControl, INotifyPropertyChanged
         OnPropertyChanged(nameof(RemainingMemoryWidth));
         OnPropertyChanged(nameof(MinecraftMemoryDescription));
         OnPropertyChanged(nameof(HasMemoryWarning));
+    }
+
+    private void MemoryRefreshTimer_OnTick(object? sender, EventArgs e) => RefreshMemoryStatus();
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _memoryRefreshTimer.Stop();
+        _memoryRefreshTimer.Tick -= MemoryRefreshTimer_OnTick;
+        Data.ConfigEntry.PropertyChanged -= ConfigEntry_PropertyChanged;
+        DataContext = null;
     }
 
     private void RefreshMemoryStatus()

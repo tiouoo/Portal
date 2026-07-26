@@ -43,6 +43,12 @@ public partial class SettingPage : UserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; }
 
+    public void OnClose()
+    {
+        SettingPageViewModel.Dispose();
+        DataContext = null;
+    }
+
     public void NavigateTo(Type pageType)
     {
         SettingPageViewModel.NavigateType(pageType);
@@ -68,7 +74,7 @@ public partial class SettingPage : UserControl, ITioTabPage
     }
 }
 
-public partial class SettingPageViewModel : ObservableObject
+public partial class SettingPageViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty]
     public partial UserControl? CurrentPage { get; set; }
@@ -100,5 +106,13 @@ public partial class SettingPageViewModel : ObservableObject
         {
             CurrentPage = page;
         }
+    }
+
+    public void Dispose()
+    {
+        CurrentPage = null;
+        foreach (var page in _settingPageCache.Values.OfType<IDisposable>())
+            page.Dispose();
+        _settingPageCache.Clear();
     }
 }
