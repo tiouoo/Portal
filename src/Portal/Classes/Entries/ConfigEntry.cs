@@ -54,6 +54,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
     [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
     [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
+    [ObservableProperty] public partial string? AfterLaunchCommand { get; set; }
     [ObservableProperty] public partial string? JvmArgs { get; set; }
     [ObservableProperty] public partial string? PackagedCommand { get; set; }
     [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
@@ -61,6 +62,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 64;
     [ObservableProperty] public partial int DownloadMaxRetryCount { get; set; } = 4;
     [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 32;
+    // 自定义下载页专用，与上方全局下载配置相互独立，不写入 DownloadManager
+    [ObservableProperty] public partial int CustomDownloadMaxFragmentCount { get; set; } = 8;
     [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
     [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
     [ObservableProperty] public partial int MinecraftMaxMemory { get; set; } = 4096;

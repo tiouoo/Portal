@@ -14,6 +14,13 @@ public static class MinecraftLaunchOptionsFactory
         WindowWidth = Data.ConfigEntry.MinecraftWindowWidth,
         WindowHeight = Data.ConfigEntry.MinecraftWindowHeight,
         MaxMemory = Data.ConfigEntry.MinecraftMaxMemory,
+        WindowTitle = Data.ConfigEntry.OverrideMinecraftWindowTitle,
+        JvmArguments = Data.ConfigEntry.JvmArgs,
+        BeforeLaunchCommand = Data.ConfigEntry.BeforeLaunchCommand,
+        AfterLaunchCommand = Data.ConfigEntry.AfterLaunchCommand,
+        WrapperCommand = Data.ConfigEntry.PackagedCommand,
+        GameStarted = PortalVisibilityService.OnGameStarted,
+        GameExited = PortalVisibilityService.OnGameExited,
         AccountRefreshed = UpdateMicrosoftAccount,
         OpenLog = openLog
     };

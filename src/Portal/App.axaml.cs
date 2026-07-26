@@ -10,6 +10,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Portal.Const;
 using Portal.Module.Initialize;
+using Portal.Module.Ipc;
 using Portal.ViewModels;
 using Portal.Views;
 using Portal.Views.Pages;
@@ -57,7 +58,23 @@ public partial class App : Application
             Logger.Info("UI配置完成");
         }
 
+        // macOS 上 portal:// 链接经 Apple Event（协议激活）送达，而非命令行参数。
+        PortalCommandQueue.Initialize();
+        if (this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
+            activatableLifetime.Activated += OnActivated;
+
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void OnActivated(object? sender, ActivatedEventArgs e)
+    {
+        if (e is not ProtocolActivatedEventArgs { Uri: { } uri }) return;
+        Logger.Info($"收到协议激活：{uri}");
+        if (PortalCommandParser.Parse([uri.ToString()], out var command, out var error) ==
+            PortalCliParseStatus.Command && command is not null)
+            PortalCommandQueue.Enqueue(command);
+        else if (error is not null)
+            Logger.Error($"协议激活链接无效：{error}");
     }
 
     private void Function(object? sender, RoutedEventArgs e)

@@ -212,7 +212,25 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         var selectedEntries = _selectedLoaders.ToDictionary(x => x.Key, x => x.Value);
         var javaPath = GetJavaPath();
         IsInstalling = true;
-        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        var task = CreateInstallationTask(_vanilla, folder, versionId, selectedEntries, javaPath);
+        task.Start();
+        try
+        {
+            await task.Completion;
+        }
+        finally
+        {
+            IsInstalling = false;
+            UpdateVersionState();
+        }
+    }
+
+    /// <summary>
+    /// 创建一次 Minecraft（可含加载器）安装任务；loaders 传空字典即纯原版安装。供本页与命令行/portal:// 调用共用。
+    /// </summary>
+    public static ManagedTask CreateInstallationTask(VersionManifestEntry vanilla, MinecraftFolderEntry folder,
+        string versionId, IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath) =>
+        TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = $"安装 Minecraft Java {versionId}",
             Description = "正在创建安装任务",
@@ -233,27 +251,20 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                     IsVisible = managedTask => !managedTask.IsTerminal
                 }
             ]
-        }, context => RunInstallationAsync(context, folder, versionId, selectedEntries, javaPath));
-        task.Start();
-        try
-        {
-            await task.Completion;
-        }
-        finally
-        {
-            IsInstalling = false;
-            UpdateVersionState();
-        }
-    }
+        }, context => RunInstallationAsync(context, vanilla, folder, versionId, selectedEntries, javaPath));
 
-    private async Task RunInstallationAsync(TaskExecutionContext context, MinecraftFolderEntry folder, string versionId,
+    internal static bool RequiresJavaRuntime(IEnumerable<LoaderKind> kinds) =>
+        kinds.Any(kind => kind is LoaderKind.Forge or LoaderKind.NeoForge or LoaderKind.OptiFine);
+
+    private static async Task RunInstallationAsync(TaskExecutionContext context, VersionManifestEntry vanilla,
+        MinecraftFolderEntry folder, string versionId,
         IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
     {
         await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
         {
-            if (RequiresJava && string.IsNullOrWhiteSpace(javaPath))
+            if (RequiresJavaRuntime(selectedEntries.Keys) && string.IsNullOrWhiteSpace(javaPath))
                 throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
-            if (VersionDirectoryExists(versionId))
+            if (Directory.Exists(Path.Combine(folder.FolderPath, "versions", versionId)))
                 throw new InvalidOperationException($"实例 ID “{versionId}”已存在于所选文件夹，请更换名称。");
             step.ReportProgress(1);
             await Task.CompletedTask;
@@ -261,7 +272,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
 
         var versionDirectory = Path.Combine(folder.FolderPath, "versions", versionId);
         // Mod-loader profiles must always inherit from the canonical vanilla ID.
-        var vanillaId = selectedEntries.Count > 0 ? _vanilla.Id : versionId;
+        var vanillaId = selectedEntries.Count > 0 ? vanilla.Id : versionId;
         var vanillaDirectory = Path.Combine(folder.FolderPath, "versions", vanillaId);
         var vanillaDirectoryExisted = Directory.Exists(vanillaDirectory);
         try
@@ -275,9 +286,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                 ? CreatePreloadOptifineInstaller(folder.FolderPath, (OptifineInstallEntry)optifineEntry, javaPath)
                 : null;
 
-            var vanillaTask = RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {_vanilla.Id}", async step =>
+            var vanillaTask = RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", async step =>
             {
-                var installer = VanillaInstaller.Create(folder.FolderPath, _vanilla, vanillaId);
+                var installer = VanillaInstaller.Create(folder.FolderPath, vanilla, vanillaId);
                 AttachProgressReporter(installer, step);
                 return await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
             });
@@ -488,7 +499,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         }
     }
 
-    private static string GetLoaderVersion(LoaderKind kind, IInstallEntry entry) => kind switch
+    internal static string GetLoaderVersion(LoaderKind kind, IInstallEntry entry) => kind switch
     {
         LoaderKind.Quilt => ((QuiltInstallEntry)entry).Loader.Version,
         _ => entry.DisplayVersion
@@ -531,7 +542,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         return HasModLoader ? $"{_vanilla.Id} {string.Join(" + ", names)}" : _vanilla.Id;
     }
 
-    private static string? GetJavaPath()
+    internal static string? GetJavaPath()
     {
         var preferred = Data.ConfigEntry.DefaultJavaRuntime;
         if (preferred is { JavaPath: { } path } && File.Exists(path)) return path;

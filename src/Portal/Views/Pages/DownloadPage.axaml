@@ -62,6 +62,12 @@
                         CommandParameter="{x:Type downloadPages:BedrockResourcePackSearchPage}"
                         Header="资源包" />
                 </tio:NavMenuItem>
+                <tio:NavMenuItem Header="其他">
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type downloadPages:CustomDownloadPage}"
+                        Header="自定义下载" />
+                </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>
 

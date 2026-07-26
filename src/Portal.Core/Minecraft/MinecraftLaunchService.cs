@@ -148,6 +148,7 @@ public static class MinecraftLaunchService
             Account? account = null;
             JavaEntry? java = null;
             LaunchConfig? config = null;
+            Dictionary<string, string>? placeholders = null;
 
             verifyAccount!.Start(async context =>
             {
@@ -170,7 +171,8 @@ public static class MinecraftLaunchService
             buildArguments!.Start(context =>
             {
                 context.SetRunning("正在应用实例与全局游戏设置");
-                config = CreateLaunchConfig(instance, account!, java!, options, target);
+                placeholders = LaunchCustomization.BuildPlaceholders(instance, account, java, options);
+                config = CreateLaunchConfig(instance, account!, java!, options, target, placeholders);
                 context.ReportProgress(1);
                 return Task.CompletedTask;
             });
@@ -181,7 +183,8 @@ public static class MinecraftLaunchService
             await completeResources.Completion;
             ThrowIfFailed(completeResources);
 
-            startGame.Start(context => StartGameStepAsync(context, instance, config!, target, topLevel, task, logSession!, processStarted));
+            startGame.Start(context => StartGameStepAsync(context, instance, config!, topLevel, task, logSession!,
+                options, placeholders!, processStarted));
             await startGame.Completion;
             ThrowIfFailed(startGame);
         }
@@ -207,18 +210,50 @@ public static class MinecraftLaunchService
     }
 
     private static async Task StartGameStepAsync(TaskExecutionContext context, MinecraftInstance instance,
-        LaunchConfig config, RecentPlayTarget? target, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
-        Action<Process> processStarted)
+        LaunchConfig config, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
+        MinecraftLaunchOptions options, Dictionary<string, string> placeholders, Action<Process> processStarted)
     {
+        await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
         context.SetRunning("正在启动 Minecraft 进程");
         var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
         var mcProcess = await new MinecraftRunner(config, parser)
             .RunAsync(instance.MinecraftEntry, context.CancellationToken);
         if (mcProcess == null)
             throw new InvalidOperationException("Minecraft 启动器未返回进程信息。");
-        ObserveProcess(instance, topLevel, mcProcess, task, context, logSession);
+        ObserveProcess(instance, topLevel, mcProcess, task, context, logSession, options);
         processStarted(mcProcess.Process);
+        OnGameProcessStarted(mcProcess.Process, options, placeholders, overrideWindowTitle: true);
         context.ReportProgress(1);
+    }
+
+    private static async Task RunBeforeLaunchCommandAsync(TaskExecutionContext context, TopLevel? topLevel,
+        MinecraftLaunchOptions options, Dictionary<string, string> placeholders)
+    {
+        var command = LaunchCustomization.Apply(options.BeforeLaunchCommand, placeholders);
+        if (string.IsNullOrWhiteSpace(command))
+            return;
+
+        context.SetRunning("正在执行启动前命令");
+        var exitCode = await LaunchCustomization.RunShellCommandAsync(command,
+            placeholders.GetValueOrDefault("{game_dir}"), context.CancellationToken);
+        if (exitCode != 0)
+            Notice(topLevel, $"启动前命令以退出代码 {exitCode} 结束", NotificationType.Warning);
+    }
+
+    private static void OnGameProcessStarted(Process process, MinecraftLaunchOptions options,
+        Dictionary<string, string> placeholders, bool overrideWindowTitle)
+    {
+        placeholders["{process_id}"] = process.Id.ToString();
+
+        if (overrideWindowTitle && placeholders.GetValueOrDefault("{title}") is { Length: > 0 } title)
+            LaunchCustomization.WatchWindowTitle(process, title);
+
+        var command = LaunchCustomization.Apply(options.AfterLaunchCommand, placeholders);
+        if (!string.IsNullOrWhiteSpace(command))
+            LaunchCustomization.RunShellCommandDetached(command, placeholders.GetValueOrDefault("{game_dir}"));
+
+        if (options.GameStarted != null)
+            Dispatcher.UIThread.Post(options.GameStarted);
     }
 
     private static async Task CompleteResourcesAsync(TaskExecutionContext context, MinecraftEntry entry)
@@ -351,8 +386,11 @@ public static class MinecraftLaunchService
     };
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
-        MinecraftLaunchOptions options, RecentPlayTarget? target) => new()
+        MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders) => new()
     {
+        JvmArguments = LaunchCustomization.SplitArguments(
+            LaunchCustomization.Apply(options.JvmArguments, placeholders)),
+        WrapperCommand = LaunchCustomization.Apply(options.WrapperCommand, placeholders),
         Account = account,
         JavaPath = java,
         LauncherName = "Portal",
@@ -371,7 +409,7 @@ public static class MinecraftLaunchService
     };
 
     private static void ObserveProcess(MinecraftInstance instance, TopLevel? topLevel, MinecraftProcess process,
-        ManagedTask task, TaskExecutionContext context, MinecraftLogSession logSession)
+        ManagedTask task, TaskExecutionContext context, MinecraftLogSession logSession, MinecraftLaunchOptions options)
     {
         instance.Config.LastPlayTime = DateTime.Now;
         context.SetRunning("启动完成，正在监视 Minecraft 进程");
@@ -401,6 +439,8 @@ public static class MinecraftLaunchService
         {
             instance.StopPlayTimer();
             Notice(topLevel, $"{instance.InstanceName} 已退出", NotificationType.Success);
+            if (options.GameExited != null)
+                Dispatcher.UIThread.Post(options.GameExited);
             Dispatcher.UIThread.Post(() =>
             {
                 if (!task.IsTerminal)
@@ -443,10 +483,12 @@ public static class MinecraftLaunchService
         TopLevel? topLevel, MinecraftLaunchOptions options, ManagedTask task,
         Action<Process> processStarted)
     {
-        context.SetRunning("正在启动基岩版游戏");
-
         if (instance.BedrockConfig == null)
             throw new InvalidOperationException("基岩版实例配置缺失。");
+
+        var placeholders = LaunchCustomization.BuildPlaceholders(instance, null, null, options);
+        await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
+        context.SetRunning("正在启动基岩版游戏");
 
         var factory = options.BedrockLauncherFactory ?? DefaultBedrockLauncherFactory
                        ?? throw new PlatformNotSupportedException("当前平台不支持启动基岩版。");
@@ -469,13 +511,14 @@ public static class MinecraftLaunchService
         var process = launcher.GetProcess()
                       ?? throw new InvalidOperationException("基岩版启动器未返回进程信息。");
 
-        ObserveBedrockProcess(instance, topLevel, process, task, context);
+        ObserveBedrockProcess(instance, topLevel, process, task, context, options);
         processStarted(process);
+        OnGameProcessStarted(process, options, placeholders, overrideWindowTitle: false);
         context.ReportProgress(1);
     }
 
     private static void ObserveBedrockProcess(MinecraftInstance instance, TopLevel? topLevel, Process process,
-        ManagedTask task, TaskExecutionContext context)
+        ManagedTask task, TaskExecutionContext context, MinecraftLaunchOptions options)
     {
         instance.Config.LastPlayTime = DateTime.Now;
         context.SetRunning("启动完成，正在监视 Minecraft 进程");
@@ -486,6 +529,8 @@ public static class MinecraftLaunchService
         {
             instance.StopPlayTimer();
             Notice(topLevel, $"{instance.InstanceName} 已退出", NotificationType.Success);
+            if (options.GameExited != null)
+                Dispatcher.UIThread.Post(options.GameExited);
             Dispatcher.UIThread.Post(() =>
             {
                 if (!task.IsTerminal)
@@ -591,6 +636,13 @@ public sealed class MinecraftLaunchOptions
     public int WindowWidth { get; init; }
     public int WindowHeight { get; init; }
     public int MaxMemory { get; init; }
+    public string? WindowTitle { get; init; }
+    public string? JvmArguments { get; init; }
+    public string? BeforeLaunchCommand { get; init; }
+    public string? AfterLaunchCommand { get; init; }
+    public string? WrapperCommand { get; init; }
+    public Action? GameStarted { get; init; }
+    public Action? GameExited { get; init; }
     public Action<MinecraftAccount, MinecraftAccount>? AccountRefreshed { get; init; }
     public Action<MinecraftLogSession>? OpenLog { get; init; }
     public Func<BedrockInstanceConfig, IBedrockLaunch>? BedrockLauncherFactory { get; init; }

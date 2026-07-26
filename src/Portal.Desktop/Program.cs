@@ -18,6 +18,11 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // 命令行 / portal:// 命令：能转发给已运行实例（或只需输出帮助）就直接退出，
+        // 否则命令已入队，继续正常启动并在 UI 加载后执行。
+        if (PortalCommandService.TryHandleStartupArgs(args))
+            return;
+
 #if WINDOWS
         if (WindowsJumpListService.TryForwardToRunningInstance(args))
             return;
@@ -25,6 +30,8 @@ sealed class Program
         WindowsJumpListService.StartCommandServer();
         WindowsJumpListService.SetAppUserModelId();
 #endif
+        PortalCommandService.StartCommandServer();
+        PortalCommandService.Initialize();
         Initializer.Program("Portal", "xyz.tiouo.Portal");
         Logger.Info("应用程序启动 Main()");
 

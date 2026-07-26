@@ -54,8 +54,18 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
-                PlaceholderText="默认留空"
+                PlaceholderText="默认留空 在游戏启动前执行并等待其完成"
                 Text="{Binding Data.ConfigEntry.BeforeLaunchCommand}"
+                VerticalAlignment="Top" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="启动后执行命令"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                PlaceholderText="默认留空 在游戏进程创建后于后台执行"
+                Text="{Binding Data.ConfigEntry.AfterLaunchCommand}"
                 VerticalAlignment="Top" />
         </StackPanel>
         <StackPanel Spacing="5">

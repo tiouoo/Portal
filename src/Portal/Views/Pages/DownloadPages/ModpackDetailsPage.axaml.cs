@@ -125,7 +125,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                     IsVisible = managedTask => !managedTask.IsTerminal
                 }
             ]
-        }, context => InstallLocalArchiveAsync(context, source, archivePath, result));
+        }, context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath, result.InstanceId!));
         task.Start();
         _ = ObserveInstallationAsync(task, topLevel, displayName);
     }
@@ -162,7 +162,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                     IsVisible = managedTask => !managedTask.IsTerminal
                 }
             ]
-        }, context => InstallLocalArchiveAsync(context, source, archivePath, result));
+        }, context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath, result.InstanceId!));
         task.Start();
         _ = ObserveInstallationAsync(task, topLevel, displayName);
     }
@@ -280,11 +280,9 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
     }
 
-    private static async Task InstallLocalArchiveAsync(TaskExecutionContext context, ModDetailsSource source, string archivePath,
-        ModpackInstallDialogResult selection)
+    internal static async Task InstallLocalArchiveAsync(TaskExecutionContext context, ModDetailsSource source, string archivePath,
+        string folder, string instanceId)
     {
-        var folder = selection.Folder!.FolderPath;
-        var instanceId = selection.InstanceId!;
         var instancePath = Path.Combine(folder, "versions", instanceId);
         if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
 
@@ -335,7 +333,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         if (result.Type != DownloadResultType.Successful) throw result.Exception ?? new IOException("整合包下载失败。");
     }
 
-    private static async Task TrySaveProjectIconAsync(string? iconUrl, string instancePath, CancellationToken cancellationToken)
+    internal static async Task TrySaveProjectIconAsync(string? iconUrl, string instancePath, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(iconUrl)) return;
 
@@ -621,7 +619,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         _ => "正在安装整合包"
     };
 
-    private static async Task ObserveInstallationAsync(ManagedTask task, TopLevel topLevel, string name)
+    internal static async Task ObserveInstallationAsync(ManagedTask task, TopLevel topLevel, string name)
     {
         try { await task.Completion; } catch { }
         if (task.Status == ManagedTaskStatus.Completed)
