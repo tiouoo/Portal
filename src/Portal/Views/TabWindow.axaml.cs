@@ -142,7 +142,7 @@ public partial class TabWindow : TioTabWindowBase
             TitleBarThings.SizeChanged += (_, _) =>
             {
                 NavScrollViewer.Margin =
-                    new Thickness(TitleBarLogo.Bounds.Width + 72, -44, TitleBarThings.Bounds.Width + 15 + 30, 0);
+                    new Thickness(TitleBarLogo.Bounds.Width + 86, -44, TitleBarThings.Bounds.Width + 15 + 30, 0);
             };
         }
         else
@@ -162,9 +162,9 @@ public partial class TabWindow : TioTabWindowBase
         {
             try
             {
-                TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 19, y: -3,
-                    spacing: 25);
-                TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(nsWindow);
+                TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 16, y: -3,
+                    spacing: 23);
+                // TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(nsWindow);
             }
             catch (Exception exception)
             {
@@ -180,9 +180,9 @@ public partial class TabWindow : TioTabWindowBase
 
         try
         {
-            TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, x: 19, y: -3,
-                spacing: 25);
-            TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(_macOsWindowHandle);
+            TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, x: 16, y: -3,
+                spacing: 23);
+            // TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(_macOsWindowHandle);
         }
         catch (Exception exception)
         {

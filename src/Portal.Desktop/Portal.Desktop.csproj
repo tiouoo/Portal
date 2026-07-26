@@ -6,9 +6,11 @@
 
     <PropertyGroup>
         <IsWindowsBuildHost>$([MSBuild]::IsOSPlatform('Windows'))</IsWindowsBuildHost>
+        <TargetsWindows Condition="$(RuntimeIdentifier.StartsWith('win'))">true</TargetsWindows>
+        <TargetsWindows Condition="'$(RuntimeIdentifier)' == '' And '$(IsWindowsBuildHost)' == 'true'">true</TargetsWindows>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(IsWindowsBuildHost)' == 'true'">
+    <PropertyGroup Condition="'$(TargetsWindows)' == 'true'">
         <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
         <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     </PropertyGroup>
@@ -58,7 +60,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Portal\Portal.csproj"/>
-        <ProjectReference Condition="'$(IsWindowsBuildHost)' == 'true'"
+        <ProjectReference Condition="'$(TargetsWindows)' == 'true'"
                            Include="..\Portal.Bedrock.Windows\Portal.Bedrock.Windows.csproj"/>
     </ItemGroup>
 

@@ -1,5 +1,11 @@
 ﻿<tio:TioWindow
     Height="535"
+    IsCloseBtnShow="{OnPlatform Default=True,
+                                macOS=False}"
+    IsMaxBtnShow="{OnPlatform Default=True,
+                              macOS=False}"
+    IsMinBtnShow="{OnPlatform Default=True,
+                              macOS=False}"
     Title="崩溃窗口"
     Topmost="True"
     Width="880"
@@ -17,7 +23,8 @@
     <tio:TioWindow.TitleBarLeftContent>
         <TextBlock
             FontSize="16"
-            Margin="12,2,0,0"
+            Margin="{OnPlatform '12,2,0,0',
+                                macOS='78,2,0,0'}"
             Text="Portal"
             VerticalAlignment="Center" />
     </tio:TioWindow.TitleBarLeftContent>

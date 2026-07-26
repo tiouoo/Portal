@@ -96,6 +96,33 @@ public sealed class WorldSaveService
             stream.Unlock(0, long.MaxValue);
             return false;
         }
+        catch (PlatformNotSupportedException)
+        {
+            // macOS has no byte-range locks; fall back to an exclusive open,
+            // whose flock conflicts with the fcntl lock held by a running game.
+            return IsLockFileHeld(lockPath);
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return true;
+        }
+    }
+
+    private static bool IsLockFileHeld(string lockPath)
+    {
+        try
+        {
+            using var stream = new FileStream(lockPath, FileMode.Open, FileAccess.Write, FileShare.None);
+            return false;
+        }
         catch (FileNotFoundException)
         {
             return false;
