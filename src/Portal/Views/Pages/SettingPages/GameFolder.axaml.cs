@@ -14,7 +14,7 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("游戏文件夹", "设置/游戏文件夹", "GameFolder")]
+[AggregatedSearchPage("游戏目录", "设置/游戏目录", "GameFolder")]
 public partial class GameFolder : DataUserControl
 {
     public GameFolder()

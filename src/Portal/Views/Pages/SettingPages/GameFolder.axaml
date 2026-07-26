@@ -13,7 +13,7 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="游戏文件夹" />
+        <TextBlock FontSize="26" Text="游戏目录" />
         <StackPanel Spacing="5">
             <Label
                 Content="默认文件夹"

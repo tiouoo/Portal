@@ -11,7 +11,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel>
         <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-            <TextBlock FontSize="26" Text="存储" />
+            <TextBlock FontSize="26" Text="存储空间" />
             <Button
                 Command="{Binding RefreshStorageDataAsync}"
                 Margin="5,0,0,3"

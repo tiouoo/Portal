@@ -6,7 +6,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("显示与外观", "设置/显示与外观", "Appearance")]
+[AggregatedSearchPage("界面外观", "设置/界面外观", "Appearance")]
 public partial class Appearance : DataUserControl
 {
     public Appearance()

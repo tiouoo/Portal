@@ -88,132 +88,144 @@
                         Text="{Binding Summary}"
                         TextTrimming="CharacterEllipsis"
                         TextWrapping="Wrap" />
-                    <StackPanel
-                        IsVisible="{Binding HasVersions}"
+                    <Grid
+                        Height="32"
                         Margin="0,6,0,0"
-                        Orientation="Horizontal"
-                        Spacing="10">
-                        <ComboBox
-                            ItemsSource="{Binding VersionFilters}"
-                            SelectedItem="{Binding SelectedVersionFilter}"
-                            Width="180">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="local:ModMinecraftVersionFilter">
-                                    <TextBlock Text="{Binding DisplayName}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <ComboBox
-                            ItemsSource="{Binding LoaderFilters}"
-                            SelectedItem="{Binding SelectedLoaderFilter}"
-                            Width="150">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="local:ModLoaderFilter">
-                                    <TextBlock Text="{Binding DisplayName}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+                        VerticalAlignment="Top">
+                        <StackPanel
+                            IsVisible="{Binding HasVersions}"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <ComboBox
+                                ItemsSource="{Binding VersionFilters}"
+                                SelectedItem="{Binding SelectedVersionFilter}"
+                                Width="180">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ModMinecraftVersionFilter">
+                                        <TextBlock Text="{Binding DisplayName}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <ComboBox
+                                ItemsSource="{Binding LoaderFilters}"
+                                SelectedItem="{Binding SelectedLoaderFilter}"
+                                Width="150">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ModLoaderFilter">
+                                        <TextBlock Text="{Binding DisplayName}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
                 </DockPanel>
             </DockPanel>
-
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="{Binding IsLoading}"
-                Margin="0,12,0,0"
-                Text="正在加载模组详情与所有版本..." />
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="{Binding HasError}"
-                Margin="0,12,0,0"
-                Text="无法加载模组详情，请检查网络" />
-            <Border IsVisible="{Binding !HasError}">
-                <Border IsVisible="{Binding !IsLoading}">
-                    <TextBlock
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        IsVisible="{Binding IsEmpty}"
-                        Margin="0,12,0,0"
-                        Text="该筛选条件下没有可用文件" />
-                </Border>
-            </Border>
         </StackPanel>
         <Separator
             Background="{DynamicResource TranslucentBorderBrush}"
             DockPanel.Dock="Top"
             Margin="0,10,0,-2" />
-        <controls:ScrollView Margin="0,14,0,0">
-            <ItemsControl ItemsSource="{Binding VersionGroups}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="local:ModVersionGroup">
-                        <tio:TioExpander
-                            Background="{DynamicResource TranslucentBackgroundColor}"
-                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                            BorderThickness="1"
-                            HeaderHeight="46"
-                            HeaderPadding="0"
-                            IsExpanded="{Binding IsExpanded}"
-                            Margin="0,0,0,10">
-                            <Expander.Header>
-                                <DockPanel Margin="5,0,14,0">
-                                    <TextBlock
-                                        FontSize="15"
-                                        FontWeight="SemiBold"
-                                        Text="{Binding Title}"
-                                        VerticalAlignment="Center" />
-                                    <TextBlock
-                                        DockPanel.Dock="Right"
-                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                        HorizontalAlignment="Right"
-                                        Text="{Binding FileCountText}"
-                                        VerticalAlignment="Center" />
-                                </DockPanel>
-                            </Expander.Header>
-                            <tio:TioExpander.Content>
-                                <StackPanel Margin="14,0,14,12">
-                                    <ItemsControl ItemsSource="{Binding VisibleFiles}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="local:ModVersionFileItem">
-                                                <Button
-                                                    Background="Transparent"
-                                                    Click="VersionFile_OnClick"
-                                                    HorizontalAlignment="Stretch"
-                                                    HorizontalContentAlignment="Stretch"
-                                                    Margin="0,2,0,0"
-                                                    Padding="0">
-                                                    <Grid Margin="9,5,5,6">
-                                                        <StackPanel Spacing="2">
-                                                            <TextBlock
-                                                                FontWeight="SemiBold"
-                                                                Text="{Binding DisplayName}"
-                                                                TextTrimming="CharacterEllipsis" />
-                                                            <TextBlock
-                                                                FontSize="12"
-                                                                Foreground="{DynamicResource InnerForegroundColor}"
-                                                                Text="{Binding Details}"
-                                                                TextTrimming="CharacterEllipsis" />
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Button>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                    <Button
-                                        Command="{Binding LoadMoreCommand}"
-                                        Content="{Binding LoadMoreText}"
-                                        HorizontalAlignment="Left"
-                                        IsVisible="{Binding HasMore}"
-                                        Margin="0,10,0,0" />
-                                </StackPanel>
-                            </tio:TioExpander.Content>
-                        </tio:TioExpander>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </controls:ScrollView>
+        <Grid Margin="0,14,0,0">
+            <controls:ScrollView>
+                <ItemsControl ItemsSource="{Binding VersionGroups}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:ModVersionGroup">
+                            <tio:TioExpander
+                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                HeaderHeight="46"
+                                HeaderPadding="0"
+                                IsExpanded="{Binding IsExpanded}"
+                                Margin="0,0,0,10">
+                                <Expander.Header>
+                                    <DockPanel Margin="5,0,14,0">
+                                        <TextBlock
+                                            FontSize="15"
+                                            FontWeight="SemiBold"
+                                            Text="{Binding Title}"
+                                            VerticalAlignment="Center" />
+                                        <TextBlock
+                                            DockPanel.Dock="Right"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            HorizontalAlignment="Right"
+                                            Text="{Binding FileCountText}"
+                                            VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Expander.Header>
+                                <tio:TioExpander.Content>
+                                    <StackPanel Margin="14,0,14,12">
+                                        <ItemsControl ItemsSource="{Binding VisibleFiles}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="local:ModVersionFileItem">
+                                                    <Button
+                                                        Background="Transparent"
+                                                        Click="VersionFile_OnClick"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        Margin="0,2,0,0"
+                                                        Padding="0">
+                                                        <Grid Margin="9,5,5,6">
+                                                            <StackPanel Spacing="2">
+                                                                <TextBlock
+                                                                    FontWeight="SemiBold"
+                                                                    Text="{Binding DisplayName}"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock
+                                                                    FontSize="12"
+                                                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                                                    Text="{Binding Details}"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <Button
+                                            Command="{Binding LoadMoreCommand}"
+                                            Content="{Binding LoadMoreText}"
+                                            HorizontalAlignment="Left"
+                                            IsVisible="{Binding HasMore}"
+                                            Margin="0,10,0,0" />
+                                    </StackPanel>
+                                </tio:TioExpander.Content>
+                            </tio:TioExpander>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </controls:ScrollView>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Left"
+                IsVisible="{Binding IsLoading}"
+                Margin="2,2,0,0"
+                Text="正在加载模组详情与所有版本..."
+                VerticalAlignment="Top" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Left"
+                IsVisible="{Binding HasError}"
+                Margin="2,2,0,0"
+                Text="无法加载模组详情，请检查网络"
+                VerticalAlignment="Top" />
+            <Border
+                HorizontalAlignment="Left"
+                IsVisible="{Binding !HasError}"
+                VerticalAlignment="Top">
+                <Border IsVisible="{Binding !IsLoading}">
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding IsEmpty}"
+                        Margin="2,2,0,0"
+                        Text="该筛选条件下没有可用文件" />
+                </Border>
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>

@@ -17,7 +17,7 @@
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top" Spacing="8">
             <DockPanel>
-                <DockPanel DockPanel.Dock="Top">
+                <DockPanel DockPanel.Dock="Top" MinHeight="32">
                     <StackPanel
                         DockPanel.Dock="Left"
                         HorizontalAlignment="Left"

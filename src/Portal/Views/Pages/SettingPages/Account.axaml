@@ -17,7 +17,7 @@
             <converter:AccountTypeToBoolConverter x:Key="AccountTypeToBoolConverter" />
         </StackPanel.Resources>
         <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-            <TextBlock FontSize="26" Text="账户与档案" />
+            <TextBlock FontSize="26" Text="账户档案" />
             <Button
                 Click="AddAccountClick"
                 Margin="5,0,0,2"

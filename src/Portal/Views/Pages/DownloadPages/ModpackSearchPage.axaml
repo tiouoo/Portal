@@ -15,7 +15,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top" Spacing="8">
-            <DockPanel>
+            <DockPanel MinHeight="32">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                     <TextBlock FontSize="24" Text="整合包搜索" />
                     <TextBlock

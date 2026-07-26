@@ -11,7 +11,7 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="下载" />
+        <TextBlock FontSize="26" Text="下载设置" />
         <StackPanel Spacing="5">
             <Label
                 Content="使用国内镜像源 BMCLAPI"

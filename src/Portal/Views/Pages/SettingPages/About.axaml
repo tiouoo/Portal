@@ -14,7 +14,7 @@
         <converter:UpdateChannelToIndexConverter x:Key="UpdateChannelToIndexConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="关于" />
+        <TextBlock FontSize="26" Text="关于应用" />
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"

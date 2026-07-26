@@ -20,7 +20,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("存储", "设置/存储", "Storage")]
+[AggregatedSearchPage("存储空间", "设置/存储空间", "Storage")]
 public partial class Storage : UserControl
 {
     public StorageViewModel ViewModel { get; }

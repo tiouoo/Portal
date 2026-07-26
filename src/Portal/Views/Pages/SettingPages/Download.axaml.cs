@@ -9,7 +9,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("下载", "设置/下载", "Download")]
+[AggregatedSearchPage("下载设置", "设置/下载设置", "Download")]
 public partial class Download : DataUserControl, INotifyPropertyChanged, IDisposable
 {
     private event PropertyChangedEventHandler? WarningPropertyChanged;

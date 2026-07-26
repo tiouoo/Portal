@@ -27,7 +27,7 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Appearance}"
-                        Header="显示与外观"
+                        Header="界面外观"
                         IsSelected="True" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
@@ -36,44 +36,44 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
-                        Header="通知与可选项" />
+                        Header="通知选项" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Storage}"
-                        Header="存储" />
+                        Header="存储空间" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:About}"
-                        Header="关于"
+                        Header="关于应用"
                         Name="AboutItem" />
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="游戏">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Account}"
-                        Header="账户与档案" />
+                        Header="账户档案" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Java}"
-                        Header="Java 虚拟机与内存" />
+                        Header="Java 环境" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:GameFolder}"
-                        Header="游戏文件夹" />
+                        Header="游戏目录" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Advanced}"
-                        Header="高级" />
+                        Header="高级选项" />
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="网络">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Download}"
-                        Header="下载" />
+                        Header="下载设置" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Agent}"
-                        Header="代理" />
+                        Header="网络代理" />
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>

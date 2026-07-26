@@ -18,7 +18,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Java 虚拟机与内存", "设置/Java 虚拟机与内存", "Java")]
+[AggregatedSearchPage("Java 环境", "设置/Java 环境", "Java")]
 public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
 {
     private int _totalMemoryMb;

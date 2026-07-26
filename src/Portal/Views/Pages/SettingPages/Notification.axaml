@@ -10,7 +10,7 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="通知与可选项" />
+        <TextBlock FontSize="26" Text="通知选项" />
         <StackPanel Spacing="5">
             <Label
                 Content="通知方式"
@@ -94,27 +94,6 @@
                         IsChecked="{Binding Data.ConfigEntry.ShowRecentPlays}" />
                 </DockPanel>
             </StackPanel>
-        </StackPanel>
-        <StackPanel IsVisible="{Binding CanRegisterProtocol}" Spacing="15">
-            <Label
-                Content="Portal 协议"
-                FontSize="13"
-                Foreground="{DynamicResource InnerForegroundColor}" />
-            <DockPanel>
-                <TextBlock
-                    DockPanel.Dock="Left"
-                    FontSize="14"
-                    HorizontalAlignment="Left"
-                    Text="注册后，可在浏览器通过协议调起启动器"
-                    VerticalAlignment="Center" />
-                <HyperlinkButton
-                    Click="RegisterProtocol_OnClick"
-                    Content="{Binding RegisterProtocolButtonText}"
-                    DockPanel.Dock="Right"
-                    FontSize="13"
-                    HorizontalAlignment="Right"
-                    Theme="{StaticResource TransparentHyperlinkButton}" />
-            </DockPanel>
         </StackPanel>
     </StackPanel>
 </UserControl>

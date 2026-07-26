@@ -17,7 +17,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("账户与档案", "设置/账户与档案", "Account")]
+[AggregatedSearchPage("账户档案", "设置/账户档案", "Account")]
 public partial class Account : DataUserControl
 {
     public Account()
