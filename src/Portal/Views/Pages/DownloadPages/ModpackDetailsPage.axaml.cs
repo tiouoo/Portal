@@ -166,7 +166,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var archivePath = Path.Combine(temporaryFolder, Path.GetFileName(file.FileName));
         try
         {
-            Directory.CreateDirectory(temporaryFolder);
+            await Task.Run(() => Directory.CreateDirectory(temporaryFolder));
             await RunStepAsync(context, "下载整合包安装包", $"正在下载：{file.FileName}",
                 step => DownloadArchiveAsync(step, file, archivePath));
             MinecraftEntry minecraft = source switch
@@ -189,12 +189,12 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
         catch
         {
-            DeleteFailedInstance(instancePath);
+            await DeleteDirectoryAsync(instancePath);
             throw;
         }
         finally
         {
-            if (Directory.Exists(temporaryFolder)) Directory.Delete(temporaryFolder, true);
+            await DeleteDirectoryAsync(temporaryFolder);
         }
     }
 
@@ -225,32 +225,28 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
         catch
         {
-            DeleteFailedInstance(instancePath);
+            await DeleteDirectoryAsync(instancePath);
             throw;
         }
     }
 
-    private static void DeleteFailedInstance(string instancePath)
+    private static Task DeleteDirectoryAsync(string directory) => Task.Run(() =>
     {
         try
         {
-            if (Directory.Exists(instancePath)) Directory.Delete(instancePath, true);
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }
         // Preserve the original installation error if an antivirus or another process holds a partial file.
         catch (Exception) { }
-    }
+    });
 
     private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file, string destination)
     {
         context.SetRunning($"正在下载：{file.FileName}");
+        var reportProgress = CreateDownloadProgressReporter(context);
         var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
         {
-            ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
-            {
-                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                context.ReportProgress(progress.TotalBytes > 0 ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1) : null);
-                context.SetDescription($"正在下载安装包：{DefaultDownloader.FormatSize(progress.Speed, true)}");
-            })
+            ProgressChanged = reportProgress
         };
         var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
         if (result.Type == DownloadResultType.Cancelled) throw new OperationCanceledException(context.CancellationToken);
@@ -283,20 +279,33 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     {
         var entry = await RunStepAsync(context, "解析整合包", "正在读取 Modrinth 整合包清单", step =>
         {
-            var parsed = ModrinthModpackInstaller.ParseModpackInstallEntry(archivePath);
-            step.ReportProgress(1);
-            return Task.FromResult(parsed);
+            return Task.Run(() =>
+            {
+                var parsed = ModrinthModpackInstaller.ParseModpackInstallEntry(archivePath);
+                step.ReportProgress(1);
+                return parsed;
+            }, step.CancellationToken);
         });
-        var loader = await RunStepAsync(context, "准备模组加载器", "正在获取整合包指定的加载器", step =>
+        var loaderTask = RunStepAsync(context, "准备模组加载器", "正在获取整合包指定的加载器", step =>
             ModrinthModpackInstaller.ParseModLoaderEntryAsync(entry, step.CancellationToken));
-        var vanilla = await GetVanillaEntryAsync(context, entry.McVersion);
+        var vanillaTask = GetVanillaEntryAsync(context, entry.McVersion);
+        await Task.WhenAll(loaderTask, vanillaTask);
+        var loader = await loaderTask;
+        var vanilla = await vanillaTask;
         EnsureJavaRuntime(loader, javaPath);
-        var minecraft = await RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
+        var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
             VanillaInstaller.Create(folder, vanilla));
+        var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行下载整合包模组",
+            new ModrinthModpackInstaller
+            {
+                MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
+                WorkingPath = Path.Combine(folder, "versions", id)
+            });
+        var minecraft = await vanillaInstallation;
         minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
             CreateModLoaderInstaller(loader, folder, id, javaPath, minecraft));
-        return await RunInstallerStepAsync(context, "安装整合包文件", "正在准备下载整合包模组",
-            ModrinthModpackInstaller.Create(folder, archivePath, entry, minecraft));
+        await filesInstallation;
+        return minecraft;
     }
 
     private static async Task<MinecraftEntry> InstallCurseForgeAsync(TaskExecutionContext context, string folder, string id,
@@ -304,11 +313,14 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     {
         var entry = await RunStepAsync(context, "解析整合包", "正在读取 CurseForge 整合包清单", step =>
         {
-            var parsed = CurseforgeModpackInstaller.ParseModpackInstallEntry(archivePath);
-            step.ReportProgress(1);
-            return Task.FromResult(parsed);
+            return Task.Run(() =>
+            {
+                var parsed = CurseforgeModpackInstaller.ParseModpackInstallEntry(archivePath);
+                step.ReportProgress(1);
+                return parsed;
+            }, step.CancellationToken);
         });
-        var loaders = await RunStepAsync(context, "准备模组加载器", "正在获取整合包指定的加载器", async step =>
+        var loadersTask = RunStepAsync(context, "准备模组加载器", "正在获取整合包指定的加载器", async step =>
         {
             var result = new List<IInstallEntry>();
             await foreach (var loader in CurseforgeModpackInstaller.ParseModLoaderEntryByManifestAsync(entry, step.CancellationToken))
@@ -316,15 +328,25 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             step.ReportProgress(1);
             return result;
         });
-        var vanilla = await GetVanillaEntryAsync(context, entry.McVersion);
+        var vanillaTask = GetVanillaEntryAsync(context, entry.McVersion);
+        await Task.WhenAll(loadersTask, vanillaTask);
+        var loaders = await loadersTask;
+        var vanilla = await vanillaTask;
         foreach (var loader in loaders) EnsureJavaRuntime(loader, javaPath);
-        var minecraft = await RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
+        var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
             VanillaInstaller.Create(folder, vanilla));
+        var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行解析并下载整合包模组",
+            new CurseforgeModpackInstaller
+            {
+                MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
+                WorkingPath = Path.Combine(folder, "versions", id)
+            });
+        var minecraft = await vanillaInstallation;
         foreach (var loader in loaders)
             minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
                 CreateModLoaderInstaller(loader, folder, id, javaPath, minecraft));
-        return await RunInstallerStepAsync(context, "安装整合包文件", "正在准备下载整合包模组",
-            CurseforgeModpackInstaller.Create(folder, archivePath, entry, minecraft));
+        await filesInstallation;
+        return minecraft;
     }
 
     private static void EnsureJavaRuntime(IInstallEntry loader, string? javaPath)
@@ -380,12 +402,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         InstallerBase installer) => await RunStepAsync(context, name, description, async step =>
     {
         Exception? installationFailure = null;
-        installer.ProgressChanged += (_, progress) => Dispatcher.UIThread.Post(() =>
-        {
-            // Installer events can arrive on a worker thread after the child has completed.
-            if (step.Task.IsTerminal || step.Task.IsCancellationRequested) return;
-            ReportInstallerProgress(step, progress);
-        });
+        installer.ProgressChanged += CreateInstallerProgressReporter(step);
         installer.Completed += (_, completed) =>
         {
             if (!completed.IsSuccessful)
@@ -393,7 +410,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         };
         try
         {
-            var minecraft = await installer.InstallAsync(step.CancellationToken);
+            var minecraft = await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
             if (installationFailure is not null) throw new InvalidOperationException($"{name}失败。", installationFailure);
             return minecraft;
         }
@@ -402,6 +419,76 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             throw new InvalidOperationException($"{name}失败。", installationFailure);
         }
     });
+
+    private static Task RunModpackFilesStepAsync(TaskExecutionContext context, string name, string description,
+        InstallerBase installer) => RunStepAsync(context, name, description, async step =>
+    {
+        installer.ProgressChanged += CreateInstallerProgressReporter(step);
+
+        switch (installer)
+        {
+            case ModrinthModpackInstaller modrinth:
+                await RunInBackgroundAsync(modrinth.InstallFilesAsync, step.CancellationToken);
+                break;
+            case CurseforgeModpackInstaller curseforge:
+                await RunInBackgroundAsync(curseforge.InstallFilesAsync, step.CancellationToken);
+                break;
+            default:
+                throw new NotSupportedException($"不支持预下载的整合包安装器：{installer.GetType().Name}");
+        }
+    });
+
+    private static Task RunInBackgroundAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken) =>
+        Task.Run(() => operation(cancellationToken), cancellationToken);
+
+    private static Task<T> RunInBackgroundAsync<T>(Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken) => Task.Run(() => operation(cancellationToken), cancellationToken);
+
+    private static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(TaskExecutionContext context)
+    {
+        ResourceDownloadProgressChangedEventArgs? latestProgress = null;
+        var dispatchQueued = 0;
+        return progress =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+
+            Volatile.Write(ref latestProgress, progress);
+            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                Interlocked.Exchange(ref dispatchQueued, 0);
+                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                if (Volatile.Read(ref latestProgress) is { } current)
+                {
+                    context.ReportProgress(current.TotalBytes > 0
+                        ? Math.Clamp((double)current.DownloadedBytes / current.TotalBytes, 0, 1)
+                        : null);
+                    context.SetDescription($"正在下载安装包：{DefaultDownloader.FormatSize(current.Speed, true)}");
+                }
+            }, DispatcherPriority.Background);
+        };
+    }
+
+    private static EventHandler<InstallProgressChangedEventArgs> CreateInstallerProgressReporter(TaskExecutionContext context)
+    {
+        InstallProgressChangedEventArgs? latestProgress = null;
+        var dispatchQueued = 0;
+        return (_, progress) =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+
+            Volatile.Write(ref latestProgress, progress);
+            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                Interlocked.Exchange(ref dispatchQueued, 0);
+                // Installer events can arrive after the child has completed or been cancelled.
+                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                if (Volatile.Read(ref latestProgress) is { } current)
+                    ReportInstallerProgress(context, current);
+            }, DispatcherPriority.Background);
+        };
+    }
 
     private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
         Func<TaskExecutionContext, Task> operation)

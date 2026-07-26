@@ -8,6 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="下载" />
@@ -88,5 +89,17 @@
                     Width="40" />
             </Grid>
         </StackPanel>
+        <tio:Banner
+            Classes="Bordered"
+            Content="并发数过高会导致卡顿"
+            CornerRadius="10"
+            HorizontalContentAlignment="Left"
+            IsVisible="{Binding HasHighConcurrencyWarning}"
+            Margin="0,10,0,15"
+            Type="Warning">
+            <tio:Banner.Header>
+                <TextBlock FontSize="15" Text="警告" />
+            </tio:Banner.Header>
+        </tio:Banner>
     </StackPanel>
 </UserControl>

@@ -28,8 +28,8 @@ public class MinecraftCoreInitializeOptions
     public string AppVersion { get; set; }
     public string? CustomUserAgent { get; set; }
     public bool EnableCustomUserAgent { get; set; } = false;
-    public int MaxThread { get; set; } = 256;
-    public int MaxFragment { get; set; } = 128;
+    public int MaxThread { get; set; } = 16;
+    public int MaxFragment { get; set; } = 16;
     public int MaxRetryCount { get; set; } = 4;
     public bool IsEnableMirror { get; set; } = false;
     public bool IsEnableFragment { get; set; } = false;

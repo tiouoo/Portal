@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
+using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Provider;
@@ -350,16 +351,10 @@ public static class JavaResourceDownload
         }, async context =>
         {
             context.SetRunning($"正在下载：{file.FileName}");
+            var reportProgress = CreateDownloadProgressReporter(context);
             var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
             {
-                ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
-                {
-                    if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                    context.ReportProgress(progress.TotalBytes > 0
-                        ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
-                        : null);
-                    context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(progress.Speed, true)}");
-                })
+                ProgressChanged = reportProgress
             };
             var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
             if (result.Type == DownloadResultType.Cancelled) throw new OperationCanceledException(context.CancellationToken);
@@ -375,6 +370,31 @@ public static class JavaResourceDownload
         task.Start();
         _ = ObserveAsync(task, topLevel, file.FileName);
         return task;
+    }
+
+    private static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(TaskExecutionContext context)
+    {
+        ResourceDownloadProgressChangedEventArgs? latestProgress = null;
+        var dispatchQueued = 0;
+        return progress =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+
+            Volatile.Write(ref latestProgress, progress);
+            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                Interlocked.Exchange(ref dispatchQueued, 0);
+                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                if (Volatile.Read(ref latestProgress) is { } current)
+                {
+                    context.ReportProgress(current.TotalBytes > 0
+                        ? Math.Clamp((double)current.DownloadedBytes / current.TotalBytes, 0, 1)
+                        : null);
+                    context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(current.Speed, true)}");
+                }
+            }, DispatcherPriority.Background);
+        };
     }
 
     private static IReadOnlyList<string> Patterns(JavaResourceKind kind) => kind switch

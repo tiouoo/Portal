@@ -197,15 +197,14 @@ public partial class BedrockInstallationViewModel : ObservableObject
 
             try
             {
-                await installer.InstallGdkAsync(new BedrockOnlineInstallRequest(
-                    version, destination, context.CancellationToken), progress);
+                await Task.Run(() => installer.InstallGdkAsync(new BedrockOnlineInstallRequest(
+                    version, destination, context.CancellationToken), progress), context.CancellationToken);
                 downloadFinished.TrySetResult();
                 extractionFinished?.TrySetResult();
             }
             catch (Exception exception)
             {
-                if (Directory.Exists(destination))
-                    Directory.Delete(destination, true);
+                await DeleteDirectoryAsync(destination);
 
                 if (exception is OperationCanceledException && context.CancellationToken.IsCancellationRequested)
                 {
@@ -314,6 +313,18 @@ public partial class BedrockInstallationViewModel : ObservableObject
             : string.Empty;
         return $"正在下载 {update.Item}{percentage}{speed}{remaining}";
     }
+
+    private static Task DeleteDirectoryAsync(string directory) => Task.Run(() =>
+    {
+        try
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        }
+        catch
+        {
+            // Preserve the original installation or cancellation error.
+        }
+    });
 
     private sealed class ThrottledProgress<T>(Action<T> handler) : IProgress<T>
     {

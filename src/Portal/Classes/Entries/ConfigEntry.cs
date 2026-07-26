@@ -58,9 +58,9 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial string? PackagedCommand { get; set; }
     [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
     [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
-    [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 256;
+    [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 16;
     [ObservableProperty] public partial int DownloadMaxRetryCount { get; set; } = 4;
-    [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 128;
+    [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 16;
     [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
     [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
     [ObservableProperty] public partial int MinecraftMaxMemory { get; set; } = 4096;

@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
+using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
@@ -224,18 +225,28 @@ public static class MinecraftLaunchService
     {
         context.SetRunning("正在检查游戏资源");
         var downloader = new MinecraftResourceDownloader(entry);
-        downloader.ProgressChanged += (_, progress) => Dispatcher.UIThread.Post(() =>
+        ResourceDownloadProgressChangedEventArgs? latestProgress = null;
+        var dispatchQueued = 0;
+        downloader.ProgressChanged += (_, progress) =>
         {
-            if (context.Task.IsTerminal || context.Task.IsCancellationRequested)
-                return;
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
 
-            var completion = progress.TotalBytes > 0
-                ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
-                : (double?)null;
-            context.ReportProgress(completion);
-            context.SetDescription(FormatResourceProgress(progress.CompletedCount, progress.TotalCount,
-                progress.DownloadedBytes, progress.TotalBytes, progress.Speed, progress.EstimatedRemaining));
-        });
+            Volatile.Write(ref latestProgress, progress);
+            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                Interlocked.Exchange(ref dispatchQueued, 0);
+                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                if (Volatile.Read(ref latestProgress) is not { } current) return;
+
+                var completion = current.TotalBytes > 0
+                    ? Math.Clamp((double)current.DownloadedBytes / current.TotalBytes, 0, 1)
+                    : (double?)null;
+                context.ReportProgress(completion);
+                context.SetDescription(FormatResourceProgress(current.CompletedCount, current.TotalCount,
+                    current.DownloadedBytes, current.TotalBytes, current.Speed, current.EstimatedRemaining));
+            }, DispatcherPriority.Background);
+        };
 
         // ML verifies files synchronously before its first await. Isolate it from the UI and
         // limit hashing concurrency so cancellation does not starve rendering or disk access.
