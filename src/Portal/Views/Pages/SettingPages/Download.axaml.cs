@@ -27,8 +27,8 @@ public partial class Download : DataUserControl, INotifyPropertyChanged
         Data.ConfigEntry.PropertyChanged += ConfigEntry_OnPropertyChanged;
     }
 
-    public bool HasHighConcurrencyWarning => Data.ConfigEntry.DownloadMaxThreadCount > 20 ||
-                                             Data.ConfigEntry.DownloadMaxFragmentCount > 20;
+    public bool HasHighConcurrencyWarning => Data.ConfigEntry.DownloadMaxThreadCount > 70 ||
+                                             Data.ConfigEntry.DownloadMaxFragmentCount > 40;
 
     private void ConfigEntry_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {

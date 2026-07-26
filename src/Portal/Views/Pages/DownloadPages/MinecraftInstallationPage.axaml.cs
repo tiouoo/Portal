@@ -80,7 +80,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
 
     public bool HasModLoader => IsFabricSelected || IsForgeSelected || IsNeoForgeSelected || IsQuiltSelected ||
                                 IsOptiFineSelected;
-    public bool CanCustomizeVersionId => HasModLoader;
+    public bool CanCustomizeVersionId => true;
     public bool RequiresJava => IsForgeSelected || IsNeoForgeSelected || IsOptiFineSelected;
     public bool CanInstall => !IsInstalling && _loadingCount == 0 && SelectedMinecraftFolder is not null &&
                               IsVersionIdValid() && SelectedLoadersAreReady();
@@ -258,21 +258,24 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         });
 
         var versionDirectory = Path.Combine(folder.FolderPath, "versions", versionId);
-        var vanillaDirectory = Path.Combine(folder.FolderPath, "versions", _vanilla.Id);
+        // Mod-loader profiles must always inherit from the canonical vanilla ID.
+        var vanillaId = selectedEntries.Count > 0 ? _vanilla.Id : versionId;
+        var vanillaDirectory = Path.Combine(folder.FolderPath, "versions", vanillaId);
         var vanillaDirectoryExisted = Directory.Exists(vanillaDirectory);
         try
         {
             var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
-            var primaryInstaller = primary.Value is null
+            var primaryEntry = primary.Value;
+            var primaryInstaller = primaryEntry is null
                 ? null
-                : CreatePrimaryInstaller(primary.Key, primary.Value, folder.FolderPath, versionId, javaPath);
+                : CreatePrimaryInstaller(primary.Key, primaryEntry, folder.FolderPath, versionId, javaPath);
             var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
                 ? CreatePreloadOptifineInstaller(folder.FolderPath, (OptifineInstallEntry)optifineEntry, javaPath)
                 : null;
 
             var vanillaTask = RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {_vanilla.Id}", async step =>
             {
-                var installer = VanillaInstaller.Create(folder.FolderPath, _vanilla);
+                var installer = VanillaInstaller.Create(folder.FolderPath, _vanilla, vanillaId);
                 AttachProgressReporter(installer, step);
                 return await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
             });
@@ -297,7 +300,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             await Task.WhenAll([vanillaTask, .. preloadTasks]);
             var minecraft = await vanillaTask;
             if (primaryInstaller is not null)
+            {
                 minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}", primaryInstaller);
+            }
 
             if (optifineInstaller is not null)
             {
@@ -490,7 +495,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     private bool SelectedLoadersAreReady() => Enum.GetValues<LoaderKind>()
         .Where(IsSelected).All(_selectedLoaders.ContainsKey);
 
-    private string EffectiveVersionId() => HasModLoader ? CustomVersionId.Trim() : _vanilla.Id;
+    private string EffectiveVersionId() => CustomVersionId.Trim();
     private bool IsVersionIdValid() => !_errors.ContainsKey(nameof(CustomVersionId));
 
     private void UpdateVersionState()
