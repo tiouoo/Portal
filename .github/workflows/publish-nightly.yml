@@ -247,7 +247,14 @@ jobs:
   publish:
     needs: [prepare, appImage, win-exe, win-installer, mac-dmg]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
       - name: Download All Artifacts
         uses: actions/download-artifact@v8
         with:
@@ -257,15 +264,74 @@ jobs:
       - name: List Files
         run: ls -la ./Portal.Release/
 
+      # 生成提交报告：对比上一次 publish-nightly 标签，按提交类型分组列出更改
+      - name: Generate Changelog
+        run: |
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          PREV_COMMIT=$(git rev-parse refs/tags/publish-nightly 2>/dev/null || true)
+          if [ -n "$PREV_COMMIT" ]; then
+            RANGE="${PREV_COMMIT}..HEAD"
+          else
+            RANGE="-20"
+          fi
+
+          CC_RE='^([a-z]+)(\(([^)]*)\))?!?:[[:space:]]*(.*)$'
+          declare -A TITLES=(
+            [feat]="Features" [fix]="Bug Fixes" [perf]="Performance Improvements"
+            [refactor]="Code Refactoring" [docs]="Documentation" [test]="Tests"
+            [build]="Builds" [ci]="Continuous Integration" [style]="Styles"
+            [chore]="Chores" [revert]="Reverts" [other]="Other Changes"
+          )
+          declare -A SECTIONS
+
+          while IFS=$'\t' read -r HASH AUTHOR SUBJECT; do
+            [ -z "$HASH" ] && continue
+            if [[ "$SUBJECT" =~ $CC_RE ]] && [ -n "${TITLES[${BASH_REMATCH[1]}]:-}" ]; then
+              TYPE="${BASH_REMATCH[1]}"
+              SCOPE="${BASH_REMATCH[3]}"
+              REST="${BASH_REMATCH[4]}"
+              if [ -n "$SCOPE" ]; then DISPLAY="${SCOPE}: ${REST}"; else DISPLAY="$REST"; fi
+            else
+              TYPE="other"
+              DISPLAY="$SUBJECT"
+            fi
+            SECTIONS[$TYPE]+="- ${DISPLAY} ([${AUTHOR}](${REPO_URL}/commit/${HASH}))"$'\n'
+          done < <(git log --no-merges --pretty=tformat:'%H%x09%an%x09%s' $RANGE)
+
+          {
+            for TYPE in feat fix perf refactor docs test build ci style chore revert other; do
+              if [ -n "${SECTIONS[$TYPE]:-}" ]; then
+                echo "## ${TITLES[$TYPE]}"
+                echo ""
+                printf '%s' "${SECTIONS[$TYPE]}"
+                echo ""
+              fi
+            done
+            if [ -n "$PREV_COMMIT" ]; then
+              echo "**完整对比**: ${REPO_URL}/compare/${PREV_COMMIT}...${GITHUB_SHA}"
+            fi
+          } > RELEASE_CHANGELOG.md
+
+          if [ ! -s RELEASE_CHANGELOG.md ]; then
+            echo "本次构建与上次相比没有新的提交" > RELEASE_CHANGELOG.md
+          fi
+          cat RELEASE_CHANGELOG.md
+
+      # publish-nightly 是移动式标签：先删除旧 Release 与标签，再在当前提交上重建
+      - name: Delete Previous Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete publish-nightly --cleanup-tag -y || true
+
       - name: Publish Release
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v3
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          title: "build-nightly-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
-          automatic_release_tag: "publish-nightly"
+          tag_name: publish-nightly
+          name: "build-nightly-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
+          target_commitish: ${{ github.sha }}
           prerelease: false
+          body_path: RELEASE_CHANGELOG.md
           files: |
-            ./Portal.Release/*.exe
             ./Portal.Release/*.dmg
             ./Portal.Release/*.zip
             ./Portal.Release/*.AppImage
