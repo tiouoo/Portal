@@ -239,12 +239,12 @@
                             <Panel DockPanel.Dock="Top" Margin="10">
                                 <StackPanel
                                     HorizontalAlignment="Left"
+                                    Margin="13,3,0,0"
                                     Orientation="Horizontal"
                                     VerticalAlignment="Center">
                                     <Button
                                         Background="Transparent"
                                         Click="ButtonOpenInstance_OnClick"
-                                        Margin="10,0,0,0"
                                         Theme="{StaticResource TransparentButton}">
                                         <StackPanel Orientation="Horizontal">
                                             <PathIcon
@@ -692,6 +692,11 @@
                 </StackPanel>
             </Border>
             <Border IsVisible="{Binding Data.ConfigEntry.ShowMinecraftNews}">
+                <Border.Styles>
+                    <Style Selector="ItemsRepeater#NewsContainer">
+                        <Setter Property="Margin" Value="0" />
+                    </Style>
+                </Border.Styles>
                 <StackPanel IsVisible="{Binding NewsPage.NewsPageViewModel.IsVisible}" Spacing="8">
                     <ContentControl Content="{Binding NewsPage}" Name="NewsContentControl" />
                 </StackPanel>

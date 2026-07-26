@@ -211,14 +211,20 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         window.SelectTab(tab);
     }
 
-    private void RefreshInstance_Click(object? sender, RoutedEventArgs e)
+    private async void RefreshInstance_Click(object? sender, RoutedEventArgs e)
     {
-        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-        NewTabViewModel.ApplyFilterAndSort();
+        await RefreshInstancesAndRecentPlaysAsync();
     }
 
     private async void RefreshRecentPlays_Click(object? sender, RoutedEventArgs e)
     {
+        await RefreshInstancesAndRecentPlaysAsync();
+    }
+
+    private async Task RefreshInstancesAndRecentPlaysAsync()
+    {
+        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+        NewTabViewModel.ApplyFilterAndSort();
         await NewTabViewModel.RefreshRecentPlaysAsync();
     }
 }
