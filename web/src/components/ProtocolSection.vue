@@ -168,7 +168,7 @@ function invoke() {
         <span v-else class="placeholder">{{ example }}</span>
       </div>
       <p class="protocol-note">
-        首次使用前，请在 Portal 的「设置 → 通知与可选项」中开启 Portal
+        首次使用前，请在 Portal 的「设置 → 默认行为」中开启 Portal
         协议；macOS 应用包已内置声明，Linux
         桌面集成安装时会自动注册。文件夹、自定义实例 ID
         等更多参数与命令行用法，参见
