@@ -210,6 +210,17 @@ jobs:
           dotnet msbuild -t:BundleApp -p:RuntimeIdentifier=${{ matrix.rid }} -property:Configuration=Release -p:SelfContained=true
           cp "../../assets/Icon-Pattern-Shadow-Border.icns" "./bin/Release/net10.0/${{ matrix.rid }}/publish/Portal.app/Contents/Resources/"
 
+      # DotNet.Bundle 不支持 CFBundleURLTypes，portal:// 协议声明在打包后写入 Info.plist
+      - name: Declare portal URL Scheme
+        run: |
+          PLIST="./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/Portal.app/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string xyz.tiouoo.portal" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLRole string Viewer" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string portal" "$PLIST"
+
       - name: Package APP to ZIP
         run: |
           cd ./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/
