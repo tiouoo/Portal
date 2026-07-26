@@ -6,6 +6,7 @@
     x:DataType="viewModels:NewsPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:converters="clr-namespace:Portal.Module.Converter;assembly=Portal"
@@ -111,8 +112,9 @@
                                     DockPanel.Dock="Top"
                                     Height="130"
                                     Margin="12,12,12,0">
-                                    <asyncImageLoader:AdvancedImage
+                                    <owned:OwnedAdvancedImage
                                         Height="130"
+                                        Loader="{Binding $parent[UserControl].DataContext.ImageLoader}"
                                         Source="{Binding ImageUrl}"
                                         Stretch="UniformToFill" />
                                 </Border>

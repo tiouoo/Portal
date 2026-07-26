@@ -49,6 +49,13 @@ public partial class LitematicaPage : UserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; }
 
+    public void OnClose()
+    {
+        // 分析结果可能包含数十万条方块数据，关闭标签页时立刻释放。
+        _vm.Release();
+        DataContext = null;
+    }
+
     private void ExportTxt_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is Control control)
@@ -86,6 +93,20 @@ public partial class LitematicaPageViewModel : ObservableObject
 
     private AnalysisResult? _analysisResult;
     private string? _projectName;
+
+    /// <summary>
+    /// 释放解析结果与方块列表。
+    /// </summary>
+    public void Release()
+    {
+        _analysisResult = null;
+        _projectName = null;
+        Blocks = [];
+        FilteredBlocks = [];
+        Categories = [];
+        SelectedCategory = null;
+        HasData = false;
+    }
 
     [RelayCommand]
     private async Task LoadAndAnalyze()

@@ -6,6 +6,7 @@
     x:DataType="local:ModSearchPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
@@ -140,7 +141,7 @@
                                         Height="56"
                                         Width="56">
                                         <Grid>
-                                            <asyncImageLoader:AdvancedImage
+                                            <owned:OwnedAdvancedImage
                                                 CornerRadius="12"
                                                 Height="56"
                                                 Loader="{Binding ImageLoader}"

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncImageLoader;
+using Portal.Module.Imaging;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -452,7 +453,7 @@ public sealed class SaveItem(WorldSaveInfo info)
         $"{FolderName}";
     public string? IconPath => Info.IconPath;
     public bool HasIcon => IconPath != null;
-    public IAsyncImageLoader ImageLoader { get; } = new SaveImageLoader();
+    public IAsyncImageLoader ImageLoader { get; } = new LocalImageLoader(112);
     public string Summary => $"{Info.Version ?? "未知版本"}·{GetGameModeText(Info.GameMode)}" +
                              (Info.AllowCommands == true ? "·允许作弊" : string.Empty) +
                              (Info.IsLocked ? "·锁定中" : string.Empty);
@@ -465,26 +466,4 @@ public sealed class SaveItem(WorldSaveInfo info)
         gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
 }
 
-public sealed class SaveImageLoader : IAsyncImageLoader
-{
-    public Task<Bitmap?> ProvideImageAsync(string url) => Task.Run<Bitmap?>(() =>
-    {
-        try
-        {
-            using var stream = File.OpenRead(url);
-            return Bitmap.DecodeToWidth(stream, 112);
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return null;
-        }
-    });
-
-    public void Dispose()
-    {
-    }
-}
+// SaveImageLoader 已由 Portal.Module.Imaging.LocalImageLoader 取代。

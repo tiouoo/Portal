@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
+using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 
 namespace Portal.Core.Minecraft.Services;
@@ -7,17 +8,21 @@ namespace Portal.Core.Minecraft.Services;
 internal static class CacheDatabase
 {
     private static readonly object InitializationLock = new();
-    private static readonly object ModCacheLock = new();
-    private static readonly Dictionary<uint, ModCacheEntry?> ModCache = [];
-    private static readonly Dictionary<string, ModCacheEntry?> ModSha1Cache = new(StringComparer.OrdinalIgnoreCase);
+
+    // 内存里只保留最近使用的一部分条目：SQLite 才是数据源，缓存未命中只是多查一次数据库，
+    // 而无上限的字典会随着扫描过的模组数量一直增长。
+    private const int ModCacheCapacity = 4096;
+    private static readonly LruCache<uint, ModCacheEntry?> ModCache = new(ModCacheCapacity);
+
+    private static readonly LruCache<string, ModCacheEntry?> ModSha1Cache =
+        new(ModCacheCapacity, StringComparer.OrdinalIgnoreCase);
     private static bool _initialized;
     private static string DatabasePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "xyz.tiouo.Portal", "Cache", "cache.db");
 
     public static ModCacheEntry? ReadMod(uint fingerprint)
     {
-        lock (ModCacheLock)
-            if (ModCache.TryGetValue(fingerprint, out var cached)) return cached;
+        if (ModCache.TryGetValue(fingerprint, out var cached)) return cached;
 
         ModCacheEntry? entry;
         try
@@ -43,15 +48,13 @@ internal static class CacheDatabase
         catch (SqliteException) { return null; }
         catch (IOException) { return null; }
 
-        lock (ModCacheLock)
-            ModCache[fingerprint] = entry;
+        ModCache.Set(fingerprint, entry);
         return entry;
     }
 
     public static ModCacheEntry? ReadMod(string sha1)
     {
-        lock (ModCacheLock)
-            if (ModSha1Cache.TryGetValue(sha1, out var cached)) return cached;
+        if (ModSha1Cache.TryGetValue(sha1, out var cached)) return cached;
 
         ModCacheEntry? entry;
         try
@@ -70,8 +73,7 @@ internal static class CacheDatabase
         catch (SqliteException) { return null; }
         catch (IOException) { return null; }
 
-        lock (ModCacheLock)
-            ModSha1Cache[sha1] = entry;
+        ModSha1Cache.Set(sha1, entry);
         return entry;
     }
 
@@ -95,8 +97,7 @@ internal static class CacheDatabase
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
             AddModParameters(command, entry);
             command.ExecuteNonQuery();
-            lock (ModCacheLock)
-                ModCache[fingerprint] = entry;
+            ModCache.Set(fingerprint, entry);
         }
         catch (SqliteException) { }
         catch (IOException) { }
@@ -122,8 +123,7 @@ internal static class CacheDatabase
             command.Parameters.AddWithValue("$sha1", sha1);
             AddModParameters(command, entry);
             command.ExecuteNonQuery();
-            lock (ModCacheLock)
-                ModSha1Cache[sha1] = entry;
+            ModSha1Cache.Set(sha1, entry);
         }
         catch (SqliteException) { }
         catch (IOException) { }
@@ -155,11 +155,8 @@ internal static class CacheDatabase
             command.ExecuteNonQuery();
             transaction.Commit();
 
-            lock (ModCacheLock)
-            {
-                ModCache[fingerprint] = entry;
-                ModSha1Cache[sha1] = entry;
-            }
+            ModCache.Set(fingerprint, entry);
+            ModSha1Cache.Set(sha1, entry);
         }
         catch (SqliteException) { }
         catch (IOException) { }

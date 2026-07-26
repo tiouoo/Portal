@@ -23,7 +23,13 @@ public partial class BedrockResourceDetailsPage : UserControl, ITioTabPage
     public BedrockResourceDetailsPageViewModel ViewModel { get; }
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
-    public void OnClose() => ViewModel.Dispose();
+    public void OnClose()
+    {
+        LayoutUpdated -= OnLayoutUpdated;
+        _targetVersionGroup = null;
+        ViewModel.Dispose();
+        DataContext = null;
+    }
     private void OnLayoutUpdated(object? sender, EventArgs e)
     {
         if (_targetVersionGroup is null) return;

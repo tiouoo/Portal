@@ -14,6 +14,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using AsyncImageLoader;
+using Portal.Module.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using Flurl.Http;
 using Portal.Const;
@@ -537,54 +538,4 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
     public void Dispose() => ImageLoader.Dispose();
 }
 
-public sealed class ModImageLoader : IAsyncImageLoader
-{
-    private const int CacheImageWidth = 56;
-    private static readonly HttpClient Client = new();
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> DownloadLocks = new();
-
-    public async Task<Bitmap?> ProvideImageAsync(string url)
-    {
-        try
-        {
-            var cachePath = GetCachePath(url);
-            if (File.Exists(cachePath))
-                return new Bitmap(cachePath);
-
-            var downloadLock = DownloadLocks.GetOrAdd(cachePath, _ => new SemaphoreSlim(1, 1));
-            await downloadLock.WaitAsync();
-            try
-            {
-                if (File.Exists(cachePath))
-                    return new Bitmap(cachePath);
-
-                using var response = await Client.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-                await using var stream = await response.Content.ReadAsStreamAsync();
-                using var bitmap = Bitmap.DecodeToWidth(stream, CacheImageWidth);
-                Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
-                var temporaryPath = cachePath + ".tmp";
-                using (var output = File.Create(temporaryPath))
-                    bitmap.Save(output, PngBitmapEncoderOptions.Default);
-                File.Move(temporaryPath, cachePath, true);
-                return new Bitmap(cachePath);
-            }
-            finally
-            {
-                downloadLock.Release();
-            }
-        }
-        catch (HttpRequestException) { return null; }
-        catch (IOException) { return null; }
-        catch (UnauthorizedAccessException) { return null; }
-        catch (InvalidDataException) { return null; }
-    }
-
-    private static string GetCachePath(string url)
-    {
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(url))).ToLowerInvariant();
-        return Path.Combine(ConfigPath.CacheFolderPath, "#mod-images", hash[..2], hash + ".png");
-    }
-
-    public void Dispose() { }
-}
+// ModImageLoader 已移至 Portal.Module.Imaging，改用统一的磁盘缓存加载器。

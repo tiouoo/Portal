@@ -13,6 +13,7 @@ using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Const;
+using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -53,7 +54,8 @@ public sealed record MinecraftInstallationDialogResult;
 
 public partial class MinecraftInstallationViewModel : ObservableObject, INotifyDataErrorInfo, IDialogContext
 {
-    private static readonly Dictionary<(string Version, LoaderKind Kind), IInstallEntry?> LatestLoaderCache = [];
+    // 按 (游戏版本, 加载器) 缓存网络查询结果；限制容量，避免浏览大量版本后常驻内存。
+    private static readonly LruCache<(string Version, LoaderKind Kind), IInstallEntry?> LatestLoaderCache = new(128);
     private readonly VersionManifestEntry _vanilla;
     private readonly Dictionary<LoaderKind, IInstallEntry> _selectedLoaders = [];
     private readonly Dictionary<LoaderKind, int> _loadGenerations = [];
@@ -161,7 +163,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             if (!LatestLoaderCache.TryGetValue((_vanilla.Id, kind), out var entry))
             {
                 entry = await FetchLatestAsync(kind);
-                LatestLoaderCache[(_vanilla.Id, kind)] = entry;
+                LatestLoaderCache.Set((_vanilla.Id, kind), entry);
             }
 
             if (!IsSelected(kind) || _loadGenerations.GetValueOrDefault(kind) != generation) return;

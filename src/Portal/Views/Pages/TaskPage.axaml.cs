@@ -23,4 +23,9 @@ public partial class TaskPage : DataUserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; }
+
+    public void OnClose()
+    {
+        DataContext = null;
+    }
 }

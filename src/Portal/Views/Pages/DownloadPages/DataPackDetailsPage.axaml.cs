@@ -25,7 +25,15 @@ public partial class DataPackDetailsPage : UserControl, ITioTabPage
     public DataPackDetailsPageViewModel ViewModel { get; }
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
-    public void OnClose() => ViewModel.Dispose();
+    public void OnClose()
+    {
+        ViewModel.TargetVersionGroupReady -= ScrollToTargetVersionGroup;
+        LayoutUpdated -= OnLayoutUpdated;
+        _targetVersionGroup = null;
+        _isWaitingForTargetVersionGroup = false;
+        ViewModel.Dispose();
+        DataContext = null;
+    }
     private void ScrollToTargetVersionGroup(JavaResourceVersionGroup group)
     {
         _targetVersionGroup = group;

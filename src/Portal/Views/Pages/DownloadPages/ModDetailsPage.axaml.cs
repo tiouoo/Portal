@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using AsyncImageLoader;
+using Portal.Module.Imaging;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
@@ -70,7 +71,15 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
 
-    public void OnClose() => ViewModel.Dispose();
+    public void OnClose()
+    {
+        ViewModel.TargetVersionGroupReady -= ScrollToTargetVersionGroup;
+        LayoutUpdated -= OnLayoutUpdated;
+        _targetVersionGroup = null;
+        _isWaitingForTargetVersionGroup = false;
+        ViewModel.Dispose();
+        DataContext = null;
+    }
 
     private void ScrollToTargetVersionGroup(ModVersionGroup group)
     {
@@ -465,6 +474,14 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         _filterDebounce?.Cancel();
         // Fast path: replace with empty collection instead of clearing (avoids N Remove notifications)
         VersionGroups = [];
+        TargetVersionGroupReady = null;
+        VersionFilters.Clear();
+        LoaderFilters.Clear();
+        Screenshots.Clear();
+        ScreenshotIndices.Clear();
+        SelectedVersionFilter = null;
+        SelectedLoaderFilter = null;
+        Files = [];
         _disposeCancellation.Dispose();
     }
 }
@@ -618,39 +635,4 @@ public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patc
         Patch.CompareTo(other.Patch);
 }
 
-public sealed class ModScreenshotLoader : IAsyncImageLoader
-{
-    private const int ScreenshotWidth = 260;
-    private static readonly HttpClient Client = new();
-
-    public async Task<Bitmap?> ProvideImageAsync(string url)
-    {
-        try
-        {
-            using var response = await Client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            await using var stream = await response.Content.ReadAsStreamAsync();
-            return Bitmap.DecodeToWidth(stream, ScreenshotWidth);
-        }
-        catch (HttpRequestException)
-        {
-            return null;
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return null;
-        }
-        catch (InvalidDataException)
-        {
-            return null;
-        }
-    }
-
-    public void Dispose()
-    {
-    }
-}
+// ModScreenshotLoader 已移至 Portal.Module.Imaging，改用统一的磁盘缓存加载器。

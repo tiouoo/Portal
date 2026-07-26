@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using AsyncImageLoader;
+using Portal.Module.Imaging;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
@@ -181,7 +182,13 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     {
         _disposeCancellation.Cancel();
         _disposeCancellation.Dispose();
+        TargetVersionGroupReady = null;
         VersionGroups = [];
+        VersionFilters.Clear();
+        Screenshots.Clear();
+        ScreenshotIndices.Clear();
+        SelectedVersionFilter = null;
+        AllFiles = [];
     }
 }
 

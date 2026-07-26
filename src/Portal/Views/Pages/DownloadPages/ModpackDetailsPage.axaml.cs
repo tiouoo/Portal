@@ -43,7 +43,15 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     public ModpackDetailsPageViewModel ViewModel { get; }
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
-    public void OnClose() => ViewModel.Dispose();
+    public void OnClose()
+    {
+        ViewModel.TargetVersionGroupReady -= ScrollToTargetVersionGroup;
+        LayoutUpdated -= OnLayoutUpdated;
+        _targetVersionGroup = null;
+        _isWaitingForTargetVersionGroup = false;
+        ViewModel.Dispose();
+        DataContext = null;
+    }
     private async void VersionFile_OnClick(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control { DataContext: JavaResourceFileItem file } ||

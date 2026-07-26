@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using MinecraftLaunch.Base.Enums;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Instance.Bedrock;
@@ -638,6 +639,22 @@ public class MinecraftInstance : ObservableObject
         _icon = null;
         _sourceIcon?.Dispose();
         _sourceIcon = null;
+
+        Bitmap[] staleIcons;
+        lock (_iconsByWidth)
+        {
+            staleIcons = _iconsByWidth.Values.ToArray();
+            _iconsByWidth.Clear();
+        }
+
+        // 旧位图可能仍绑定在界面上，等下一帧渲染完成后再释放。
+        if (staleIcons.Length > 0)
+            Dispatcher.UIThread.Post(() =>
+            {
+                foreach (var icon in staleIcons)
+                    icon.Dispose();
+            }, DispatcherPriority.Background);
+
         OnPropertyChanged(nameof(sourceIcon));
         OnPropertyChanged(nameof(Icon));
         OnPropertyChanged(nameof(Icons));
@@ -668,7 +685,35 @@ public class MinecraftInstance : ObservableObject
 
     public Bitmap this[int width] => GetInstanceIcon(width);
 
+    // 每次访问都重新解码会不断产生无人释放的位图（列表滚动、图标刷新时尤其明显），
+    // 因此按宽度缓存，并在 RefreshIcon 时统一释放。
+    private readonly Dictionary<int, Bitmap> _iconsByWidth = [];
+
     private Bitmap GetInstanceIcon(int width)
+    {
+        lock (_iconsByWidth)
+        {
+            if (_iconsByWidth.TryGetValue(width, out var cached))
+                return cached;
+        }
+
+        var icon = DecodeInstanceIcon(width);
+
+        lock (_iconsByWidth)
+        {
+            // 并发解码时保留先到者，丢弃重复位图，保证同一宽度始终只有一张。
+            if (_iconsByWidth.TryGetValue(width, out var existing))
+            {
+                icon.Dispose();
+                return existing;
+            }
+
+            _iconsByWidth[width] = icon;
+            return icon;
+        }
+    }
+
+    private Bitmap DecodeInstanceIcon(int width)
     {
         var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
         var customIcon = GetCustomIconPath();

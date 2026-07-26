@@ -6,6 +6,7 @@
     x:DataType="local:SaveSearchPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
@@ -44,7 +45,7 @@
                         <Border Background="{DynamicResource TranslucentBackgroundColor}" BorderBrush="{DynamicResource TranslucentBorderBrush}" BorderThickness="1" CornerRadius="10" Cursor="Hand" Padding="10" PointerPressed="Result_OnPointerPressed">
                             <DockPanel>
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Background="{DynamicResource TranslucentBorderBrush}" CornerRadius="12" DockPanel.Dock="Left" Height="56" Width="56"><asyncImageLoader:AdvancedImage CornerRadius="12" Loader="{Binding ImageLoader}" Source="{Binding IconUrl}" /></Border>
+                                    <Border Background="{DynamicResource TranslucentBorderBrush}" CornerRadius="12" DockPanel.Dock="Left" Height="56" Width="56"><owned:OwnedAdvancedImage CornerRadius="12" Loader="{Binding ImageLoader}" Source="{Binding IconUrl}" /></Border>
                                     <StackPanel Margin="10,1,0,0" VerticalAlignment="Center"><TextBlock FontSize="16" FontWeight="SemiBold" MaxLines="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" /><TextBlock FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" /></StackPanel>
                                 </DockPanel>
                                 <TextBlock FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" Margin="3,5,3,0" MaxLines="2" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" TextWrapping="WrapWithOverflow" />

@@ -199,7 +199,19 @@ public partial class TabWindow : TioTabWindowBase
         }
 
         _macOsWindowHandle = IntPtr.Zero;
+
+        // 拖拽行为持有窗口与标签页容器，必须显式分离，否则整个窗口无法被回收。
+        TabSelectionList.DisableTabDragDrop();
+
+        this.RemoveHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
+        this.RemoveHandler(DragDrop.DragOverEvent, OnDragHandler);
+        this.RemoveHandler(DragDrop.DropEvent, OnDropHandler);
+
+        SizeChanged -= TabWindow_OnSizeChanged;
+        Closed -= TabWindow_OnClosed;
+
         ClearOwnedBackground();
+        DataContext = null;
     }
 
     private void TabWindow_OnSizeChanged(object? sender, SizeChangedEventArgs e)

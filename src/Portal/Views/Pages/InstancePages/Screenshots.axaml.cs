@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncImageLoader;
+using Portal.Module.Imaging;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -250,31 +251,7 @@ public sealed class ScreenshotItem(string filePath, string fileName)
     public string FileName { get; } = fileName;
 
     // The loader runs off the UI thread and decodes only enough pixels for the gallery tile.
-    public IAsyncImageLoader ImageLoader { get; } = new ScreenshotImageLoader(480);
+    public IAsyncImageLoader ImageLoader { get; } = new LocalImageLoader(480);
 
     public static bool IsSupported(string path) => Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".webp" or ".bmp";
-}
-
-public sealed class ScreenshotImageLoader(int decodeWidth) : IAsyncImageLoader
-{
-    public Task<Bitmap?> ProvideImageAsync(string url) => Task.Run<Bitmap?>(() =>
-    {
-        try
-        {
-            using var stream = File.OpenRead(url);
-            return Bitmap.DecodeToWidth(stream, decodeWidth);
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return null;
-        }
-    });
-
-    public void Dispose()
-    {
-    }
 }

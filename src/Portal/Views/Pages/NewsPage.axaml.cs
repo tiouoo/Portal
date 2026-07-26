@@ -49,6 +49,12 @@ public partial class NewsPage : DataUserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; }
 
+    // NewsPageViewModel 是全局单例，这里只切断视图对它的引用即可。
+    public void OnClose()
+    {
+        DataContext = null;
+    }
+
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
         if (sender is null || sender.AsTopLevel() is not TioTabWindowBase window)

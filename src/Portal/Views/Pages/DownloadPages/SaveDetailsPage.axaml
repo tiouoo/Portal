@@ -6,6 +6,7 @@
     x:DataType="local:SaveDetailsPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
@@ -16,10 +17,10 @@
         <StackPanel DockPanel.Dock="Top">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" IsVisible="{Binding HasScreenshots}" Width="294">
-                    <Border ClipToBounds="True" CornerRadius="10" Height="165"><Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex}"><Carousel.ItemTemplate><DataTemplate x:DataType="x:String"><asyncImageLoader:AdvancedImage Loader="{Binding $parent[UserControl].DataContext.ScreenshotLoader}" Source="{Binding}" Stretch="UniformToFill" /></DataTemplate></Carousel.ItemTemplate></Carousel></Border>
+                    <Border ClipToBounds="True" CornerRadius="10" Height="165"><Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex}"><Carousel.ItemTemplate><DataTemplate x:DataType="x:String"><owned:OwnedAdvancedImage Loader="{Binding $parent[UserControl].DataContext.ScreenshotLoader}" Source="{Binding}" Stretch="UniformToFill" /></DataTemplate></Carousel.ItemTemplate></Carousel></Border>
                 </StackPanel>
                 <DockPanel>
-                    <DockPanel DockPanel.Dock="Top"><Border Background="{DynamicResource TranslucentBorderBrush}" CornerRadius="14" Height="72" Width="72"><asyncImageLoader:AdvancedImage CornerRadius="14" Loader="{Binding ImageLoader}" Source="{Binding IconUrl}" /></Border><StackPanel Margin="12,5,12,0" Spacing="3"><TextBlock FontSize="22" FontWeight="SemiBold" Margin="0,0,0,-2" Text="{Binding Name}" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Target.Source}" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" /></StackPanel></DockPanel>
+                    <DockPanel DockPanel.Dock="Top"><Border Background="{DynamicResource TranslucentBorderBrush}" CornerRadius="14" Height="72" Width="72"><owned:OwnedAdvancedImage CornerRadius="14" Loader="{Binding ImageLoader}" Source="{Binding IconUrl}" /></Border><StackPanel Margin="12,5,12,0" Spacing="3"><TextBlock FontSize="22" FontWeight="SemiBold" Margin="0,0,0,-2" Text="{Binding Name}" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Target.Source}" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" /></StackPanel></DockPanel>
                     <TextBlock DockPanel.Dock="Top" Foreground="{DynamicResource InnerForegroundColor}" Height="52" Margin="2,4,0,0" MaxLines="3" Text="{Binding Summary}" TextWrapping="Wrap" />
                     <ComboBox IsVisible="{Binding HasVersions}" ItemsSource="{Binding VersionFilters}" Margin="0,5,0,0" SelectedItem="{Binding SelectedVersionFilter}" Width="140"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding DisplayName}" /></DataTemplate></ComboBox.ItemTemplate></ComboBox>
                 </DockPanel>
