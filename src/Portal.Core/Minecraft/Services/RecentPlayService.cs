@@ -284,7 +284,12 @@ public sealed class RecentPlayService
         if (!key.StartsWith(prefix, StringComparison.Ordinal))
             return null;
 
-        var (address, port) = ParseAddress(key[prefix.Length..]);
+        var addressAndPort = key[prefix.Length..];
+        // 旧键以 address:port 拼接，裸 IPv6 必须从最后一个分隔符拆分端口。
+        var separator = addressAndPort.LastIndexOf(':');
+        var (address, port) = separator > 0 && int.TryParse(addressAndPort[(separator + 1)..], out var legacyPort)
+            ? (addressAndPort[..separator], legacyPort)
+            : ParseAddress(addressAndPort);
         return new RecentServerHistory(address, port, null, true, lastPlayedTime);
     }
 

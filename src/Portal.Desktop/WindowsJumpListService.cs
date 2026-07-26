@@ -25,6 +25,7 @@ internal static class WindowsJumpListService
     private static readonly Queue<JumpListCommand> PendingCommands = [];
     private static readonly object CommandLock = new();
     private static bool _isReady;
+    private static bool _isDrainingCommands;
 
     public static void SetAppUserModelId() => SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
 
@@ -111,26 +112,58 @@ internal static class WindowsJumpListService
             Dispatcher.UIThread.Post(DrainPendingCommands);
     }
 
-    private static void DrainPendingCommands() => _ = DrainPendingCommandsAsync();
+    private static void DrainPendingCommands()
+    {
+        lock (CommandLock)
+        {
+            if (_isDrainingCommands)
+                return;
+
+            _isDrainingCommands = true;
+        }
+
+        _ = DrainPendingCommandsAsync();
+    }
 
     private static async Task DrainPendingCommandsAsync()
     {
-        while (true)
+        try
         {
-            JumpListCommand? command;
-            lock (CommandLock)
-                command = PendingCommands.Count > 0 ? PendingCommands.Dequeue() : null;
-            if (command == null)
-                return;
+            while (true)
+            {
+                JumpListCommand? command;
+                lock (CommandLock)
+                {
+                    if (PendingCommands.Count == 0)
+                    {
+                        _isDrainingCommands = false;
+                        return;
+                    }
 
-            try
-            {
-                await ExecuteAsync(command);
+                    command = PendingCommands.Dequeue();
+                }
+
+                try
+                {
+                    await ExecuteAsync(command);
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error($"执行 Jump List 命令失败：{exception}");
+                }
             }
-            catch (Exception exception)
+        }
+        finally
+        {
+            var restart = false;
+            lock (CommandLock)
             {
-                Logger.Error($"执行 Jump List 命令失败：{exception}");
+                _isDrainingCommands = false;
+                restart = _isReady && PendingCommands.Count > 0;
             }
+
+            if (restart)
+                Dispatcher.UIThread.Post(DrainPendingCommands);
         }
     }
 

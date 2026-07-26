@@ -130,6 +130,8 @@ public sealed class BedrockInstaller : IBedrockInstaller
         // 与 FindBuildAsync 使用相同的筛选条件（含 MetaData），确保 MD5 与下载地址来自同一个变体。
         var expectedMd5 = build.Variations
             .First(variation => variation.Arch == Architecture.X64 && variation.MetaData.Count > 0).MD5;
+        if (string.IsNullOrWhiteSpace(expectedMd5))
+            throw new InvalidOperationException("所选基岩版缺少安装包校验值，无法安全安装。");
         if (File.Exists(packagePath) && await MatchesMd5Async(packagePath, expectedMd5, cancellationToken))
         {
             progress?.Report(new BedrockInstallProgress(1, 1, Path.GetFileName(packagePath), "Using cached package"));
@@ -371,12 +373,6 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
     private static async Task<bool> MatchesMd5Async(string path, string expectedMd5, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(expectedMd5))
-        {
-            // 版本数据未提供 MD5 时无法校验；直接接受文件，否则会在所有镜像间反复下载并删除。
-            Debug.WriteLine($"基岩版安装包缺少 MD5 校验值，跳过校验：{path}");
-            return true;
-        }
         await using var stream = File.OpenRead(path);
         var hash = await MD5.HashDataAsync(stream, cancellationToken);
         return string.Equals(Convert.ToHexString(hash), expectedMd5, StringComparison.OrdinalIgnoreCase);
