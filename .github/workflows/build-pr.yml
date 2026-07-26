@@ -16,7 +16,7 @@ jobs:
       version_json: ${{ steps.meta.outputs.version_json }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: "recursive"
@@ -51,7 +51,7 @@ jobs:
     needs: prepare
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -78,7 +78,7 @@ jobs:
           Compress-Archive -Path "Portal.win-x64.PR-${{ github.event.number }}.exe" -DestinationPath "../Portal.win-x64.PR-${{ github.event.number }}.zip" -Force
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Portal.win-x64.PR-${{ github.event.number }}
           path: ./Portal.*.zip
@@ -89,11 +89,11 @@ jobs:
     needs: [prepare, win-x64-build]
     steps:
       - name: Comment on PR
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v3
         with:
           message: |
             PR 自动化构建已完成
-            
+
             win.x64 版本下载链接：
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          comment_tag: pr_build_status_comment
+          comment-tag: pr_build_status_comment

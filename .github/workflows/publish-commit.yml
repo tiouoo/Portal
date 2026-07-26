@@ -12,7 +12,7 @@ jobs:
       app_version: ${{ steps.meta.outputs.app_version }}
       commit: ${{ steps.meta.outputs.commit_hash }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         
       - name: Generate Meta and JSON
         id: meta
@@ -42,7 +42,7 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -69,7 +69,7 @@ jobs:
           pupnet --runtime linux-arm64 --kind appimage -o Portal.linux.arm64.AppImage -y --app-version ${{ needs.prepare.outputs.app_version }}
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-artifacts
           path: src/Portal.Desktop/Deploy/OUT/Portal.linux.*.AppImage
@@ -82,7 +82,7 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -110,7 +110,7 @@ jobs:
           Compress-Archive -Path "Portal.win.x64.portable.exe" -DestinationPath "../Portal.win.x64.portable.zip" -Force
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: win-exe-win.x64-artifacts
           path: ./Portal.*.zip
@@ -123,7 +123,7 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -155,7 +155,7 @@ jobs:
           Compress-Archive -Path "Deploy/OUT/Portal.win.x64.installer.exe" -DestinationPath "Deploy/OUT/Portal.win.x64.installer.zip" -Force
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: win-installer-win.x64-artifacts
           path: src/Portal.Desktop/Deploy/OUT/Portal.win.*.installer.zip
@@ -176,7 +176,7 @@ jobs:
             dmg_arch: arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -213,14 +213,18 @@ jobs:
           cd ./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/
           /usr/bin/ditto -c -k --keepParent Portal.app ../../../../../../../Portal.osx.mac.${{ matrix.dmg_arch }}.app.zip
 
+      # macOS Runner 预装的 aws/tap 未受信任，会导致 brew 输出警告，构建 DMG 前先移除
+      - name: Untap Untrusted Homebrew Taps
+        run: brew untap aws/tap || true
+
       - name: Build DMG
-        uses: L-Super/create-dmg-actions@v1.0.3
+        uses: L-Super/create-dmg-actions@v1.1.0
         with:
           dmg_name: "Portal.osx.mac.${{ matrix.dmg_arch }}"
           src_dir: "./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/Portal.app"
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: osx-${{ matrix.dmg_arch }}-artifacts
           path: |
@@ -232,7 +236,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download All Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: ./Portal.Release/
           merge-multiple: true
