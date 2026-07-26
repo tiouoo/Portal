@@ -122,6 +122,80 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         _ = ObserveInstallationAsync(task, topLevel, displayName);
     }
 
+    public static async Task TryInstallFromPath(TopLevel topLevel, string path)
+    {
+        if (!TryGetModpack(path, out var archivePath, out var source, out var suggestedInstanceId))
+        {
+            topLevel.Notice("无效整合包文件", NotificationType.Error);
+            return;
+        }
+        
+        var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
+            ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(
+                string.IsNullOrWhiteSpace(suggestedInstanceId) ? Path.GetFileNameWithoutExtension(archivePath) : suggestedInstanceId,
+                false),
+            topLevel.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = "安装整合包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+            });
+        if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
+
+        var displayName = Path.GetFileName(archivePath);
+        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        {
+            Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
+            Actions =
+            [
+                new TaskActionDefinition
+                {
+                    Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
+                    ExecuteAsync = (managedTask, _) => { managedTask.RequestCancellation(); return Task.CompletedTask; },
+                    CanExecute = managedTask => managedTask.CanBeCancelled,
+                    IsVisible = managedTask => !managedTask.IsTerminal
+                }
+            ]
+        }, context => InstallLocalArchiveAsync(context, source, archivePath, result));
+        task.Start();
+        _ = ObserveInstallationAsync(task, topLevel, displayName);
+    }
+
+    public static bool TryGetModpack(string path, out string archivePath, out ModDetailsSource source,
+        out string suggestedInstanceId)
+    {
+        archivePath = string.Empty;
+        source = default;
+        suggestedInstanceId = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return false;
+        var extension = Path.GetExtension(path);
+        if (!extension.Equals(".zip", StringComparison.OrdinalIgnoreCase) &&
+            !extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase)) return false;
+
+        try
+        {
+            if (extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase))
+            {
+                var entry = ModrinthModpackInstaller.ParseModpackInstallEntry(path);
+                archivePath = path;
+                source = ModDetailsSource.Modrinth;
+                suggestedInstanceId = entry.Name;
+                return true;
+            }
+
+            if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                var entry = CurseforgeModpackInstaller.ParseModpackInstallEntry(path);
+                archivePath = path;
+                source = ModDetailsSource.CurseForge;
+                suggestedInstanceId = entry.Id;
+                return true;
+            }
+        }
+        catch (Exception) { }
+
+        return false;
+    }
+    
     private static async Task SaveAsAsync(TopLevel topLevel, JavaResourceFileItem file)
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions

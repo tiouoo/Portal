@@ -4,20 +4,27 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Operations.OpenFile;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using Portal.Services;
+using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
+using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
+using TioUi.Common;
 using TioUi.Common.Extensions;
+using TioUi.Controls;
+using Handler = Portal.Module.DragDrop.Handler;
 
 namespace Portal.Views.Pages;
 
@@ -92,6 +99,45 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
     private void RefreshInstance_Click(object? sender, RoutedEventArgs e)
     {
         Refresh();
+    }
+
+    private async void ImportModpack_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = this.GetTopLevel();
+        var file = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "导入整合包",
+            AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType("整合包") { Patterns = ["*.mrpack", "*.zip"] }]
+        });
+        var archivePath = file.FirstOrDefault()?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(archivePath))
+            return;
+
+        _ = ModpackDetailsPage.TryInstallFromPath(topLevel, archivePath);
+    }
+
+    private async void AddFolder_Click(object? sender, RoutedEventArgs e)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalOffset = 110,
+            VerticalAnchor = VerticalPosition.Top
+        };
+
+        var result = await OverlayDialog
+            .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
+                new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders.Select(x
+                    => x.FolderPath).ToList()), hostId: (sender as Control)!.TryGetHostId(), options: options);
+
+        if (result == null) return;
+        Data.ConfigEntry.MinecraftFolders.Add(result);
     }
 }
 

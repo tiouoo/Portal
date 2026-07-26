@@ -197,7 +197,7 @@ public class Handler
         }
     }
 
-    private static bool TryGetModpack(IDataTransfer data, out string archivePath, out ModDetailsSource source,
+    public static bool TryGetModpack(IDataTransfer data, out string archivePath, out ModDetailsSource source,
         out string suggestedInstanceId)
     {
         archivePath = string.Empty;
