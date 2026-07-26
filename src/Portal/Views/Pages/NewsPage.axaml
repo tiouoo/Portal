@@ -114,7 +114,7 @@
                                     Margin="12,12,12,0">
                                     <owned:OwnedAdvancedImage
                                         Height="130"
-                                        Loader="{Binding $parent[UserControl].DataContext.ImageLoader}"
+                                        Loader="{Binding $parent[UserControl].((viewModels:NewsPageViewModel)DataContext).ImageLoader}"
                                         Source="{Binding ImageUrl}"
                                         Stretch="UniformToFill" />
                                 </Border>

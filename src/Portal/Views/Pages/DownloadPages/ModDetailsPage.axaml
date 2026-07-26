@@ -31,7 +31,7 @@
                             <Carousel.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
                                     <owned:OwnedAdvancedImage
-                                        Loader="{Binding $parent[UserControl].DataContext.ScreenshotLoader}"
+                                        Loader="{Binding $parent[UserControl].((local:ModDetailsPageViewModel)DataContext).ScreenshotLoader}"
                                         Source="{Binding}"
                                         Stretch="UniformToFill" />
                                 </DataTemplate>

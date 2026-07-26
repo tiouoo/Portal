@@ -17,7 +17,7 @@
         <StackPanel DockPanel.Dock="Top">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" IsVisible="{Binding HasScreenshots}" Width="294">
-                    <Border ClipToBounds="True" CornerRadius="10" Height="165"><Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex}"><Carousel.ItemTemplate><DataTemplate x:DataType="x:String"><owned:OwnedAdvancedImage Loader="{Binding $parent[UserControl].DataContext.ScreenshotLoader}" Source="{Binding}" Stretch="UniformToFill" /></DataTemplate></Carousel.ItemTemplate></Carousel></Border>
+                    <Border ClipToBounds="True" CornerRadius="10" Height="165"><Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex}"><Carousel.ItemTemplate><DataTemplate x:DataType="x:String"><owned:OwnedAdvancedImage Loader="{Binding $parent[UserControl].((local:SaveDetailsPageViewModel)DataContext).ScreenshotLoader}" Source="{Binding}" Stretch="UniformToFill" /></DataTemplate></Carousel.ItemTemplate></Carousel></Border>
                 </StackPanel>
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top"><Border Background="{DynamicResource TranslucentBorderBrush}" CornerRadius="14" Height="72" Width="72"><owned:OwnedAdvancedImage CornerRadius="14" Loader="{Binding ImageLoader}" Source="{Binding IconUrl}" /></Border><StackPanel Margin="12,5,12,0" Spacing="3"><TextBlock FontSize="22" FontWeight="SemiBold" Margin="0,0,0,-2" Text="{Binding Name}" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Target.Source}" /><TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" /></StackPanel></DockPanel>
