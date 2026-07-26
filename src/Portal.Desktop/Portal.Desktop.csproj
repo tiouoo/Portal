@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
+        <AssemblyTitle>Portal</AssemblyTitle>
     </PropertyGroup>
 
     <PropertyGroup>
