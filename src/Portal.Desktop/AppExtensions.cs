@@ -21,4 +21,12 @@ public static class AppExtensions
         }
         return builder;
     }
+
+#if WINDOWS
+    public static AppBuilder WithWindowsJumpList(this AppBuilder builder, string[] args)
+    {
+        WindowsJumpListService.Initialize(args);
+        return builder;
+    }
+#endif
 }

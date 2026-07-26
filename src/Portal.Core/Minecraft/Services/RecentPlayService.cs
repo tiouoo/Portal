@@ -33,7 +33,7 @@ public sealed class RecentPlayService
                     $"存档·{world.Version ?? "未知版本"}·{GetGameModeText(world.GameMode)}",
                     world.LastPlayedTime!.Value, world.IconPath)));
 
-            foreach (var server in servers)
+            foreach (var server in servers.Where(server => !IsLanAddress(server.Host)))
             {
                 var recorded = history.FirstOrDefault(item => IsSameServer(item, server.Host, server.Port));
                 if (recorded == null)
@@ -44,14 +44,15 @@ public sealed class RecentPlayService
                     recorded.LastPlayedTime, ServerIconData: server.IconData, ServerAddress: server.Host, ServerPort: server.Port));
             }
 
-            // Direct connections and LAN worlds are not guaranteed to appear in servers.dat.
+            // Direct connections are not guaranteed to appear in servers.dat. LAN addresses are deliberately
+            // excluded so recent play contains only saved worlds and external servers.
             // Entries recorded as saved are intentionally omitted when their server was later removed.
-            foreach (var recorded in history.Where(item => !item.WasSaved &&
-                         !servers.Any(server => IsSameServer(item, server.Host, server.Port))))
+            foreach (var recorded in history.Where(item => !item.WasSaved && !IsLanAddress(item.Address) &&
+                          !servers.Any(server => IsSameServer(item, server.Host, server.Port))))
             {
                 targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
                     GetServerHistoryKey(recorded.Address, recorded.Port), recorded.Name ?? recorded.Address,
-                    $"{(IsLanAddress(recorded.Address) ? "局域网" : "服务器")}·{recorded.Address}:{recorded.Port}",
+                    $"服务器·{recorded.Address}:{recorded.Port}",
                     recorded.LastPlayedTime, ServerAddress: recorded.Address, ServerPort: recorded.Port));
             }
         }

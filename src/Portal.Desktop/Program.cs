@@ -18,6 +18,13 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+#if WINDOWS
+        if (WindowsJumpListService.TryForwardToRunningInstance(args))
+            return;
+
+        WindowsJumpListService.StartCommandServer();
+        WindowsJumpListService.SetAppUserModelId();
+#endif
         Initializer.Program("Portal", "xyz.tiouo.Portal");
         Logger.Info("应用程序启动 Main()");
 
@@ -34,7 +41,7 @@ sealed class Program
         
         try
         {
-            BuildAvaloniaApp()
+            BuildAvaloniaApp(args)
                 .StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
@@ -55,9 +62,12 @@ sealed class Program
 #endif
 
     // Avalonia configuration, don't remove; also used by visual designer.
-    private static AppBuilder BuildAvaloniaApp()
+    private static AppBuilder BuildAvaloniaApp(string[] args)
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+#if WINDOWS
+            .WithWindowsJumpList(args)
+#endif
 #if DEBUG
             .UseHotReload()
             // .WithDeveloperTools()
