@@ -22,6 +22,7 @@ namespace Portal;
 
 public partial class App : Application
 {
+    
     public delegate void UiLoadedEventHandler(TabWindow ui);
 
     private TabWindow _win;

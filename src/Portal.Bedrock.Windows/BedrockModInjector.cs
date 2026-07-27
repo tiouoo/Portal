@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Bedrock.Standard.Interface;
 
 namespace Portal.Bedrock;
 
@@ -23,7 +24,8 @@ internal static class BedrockModInjector
     private delegate int InjectDelegate(int processId, nint dllPath, [MarshalAs(UnmanagedType.I1)] bool delayInject,
         int delayMs);
 
-    public static void Start(BedrockInstanceConfig config, Process process)
+    public static void Start(BedrockInstanceConfig config, Process process,
+        Action<string, BedrockLogLevel>? log = null)
     {
         if (config.BuildType != BedrockBuildType.GDK)
             return;
@@ -38,19 +40,28 @@ internal static class BedrockModInjector
         catch (Exception exception)
         {
             Trace.TraceError($"读取基岩版 DLL 模组失败：{exception}");
+            log?.Invoke($"读取 DLL 模组失败：{exception.Message}", BedrockLogLevel.Error);
             return;
         }
 
+        log?.Invoke($"发现 {mods.Count} 个等待注入的模组", BedrockLogLevel.Information);
         foreach (var mod in mods)
-            _ = Task.Run(() => Inject(process, mod));
+        {
+            log?.Invoke($"已安排模组注入：{mod.FileName}，延迟 {mod.Config.DelayMs} ms",
+                BedrockLogLevel.Information);
+            _ = Task.Run(() => Inject(process, mod, log));
+        }
     }
 
-    private static void Inject(Process process, BedrockModInfo mod)
+    private static void Inject(Process process, BedrockModInfo mod, Action<string, BedrockLogLevel>? log)
     {
         try
         {
             if (process.HasExited)
+            {
+                log?.Invoke($"已跳过模组 {mod.FileName}：Minecraft 进程已经退出", BedrockLogLevel.Warning);
                 return;
+            }
 
             var inject = GetInjector();
             var runtimePath = PrepareRuntimeMod(mod);
@@ -59,9 +70,15 @@ internal static class BedrockModInjector
             {
                 var result = inject(process.Id, path, mod.Config.DelayMs > 0, mod.Config.DelayMs);
                 if (result != 0)
+                {
                     Trace.TraceError($"注入基岩版模组失败：{mod.FileName}，返回值 {result}");
+                    log?.Invoke($"模组注入失败：{mod.FileName}，注入器返回值 {result}", BedrockLogLevel.Error);
+                }
                 else
+                {
                     Trace.TraceInformation($"已注入基岩版模组：{mod.FileName}");
+                    log?.Invoke($"模组注入成功：{mod.FileName}", BedrockLogLevel.Information);
+                }
             }
             finally
             {
@@ -71,6 +88,7 @@ internal static class BedrockModInjector
         catch (Exception exception)
         {
             Trace.TraceError($"注入基岩版模组失败：{mod.FileName}，{exception}");
+            log?.Invoke($"模组注入异常：{mod.FileName}，{exception.Message}", BedrockLogLevel.Error);
         }
     }
 

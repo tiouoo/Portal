@@ -9,6 +9,7 @@ using Portal.Core;
 using Portal.Core.Minecraft;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.Events;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.Platform;
 using Tio.Avalonia.Standard.Tab.Common;
@@ -21,6 +22,7 @@ public static partial class Initializer
 {
     public static void App()
     {
+        Logger.Info("开始初始化应用服务");
         Config.Initialize();
         MinecraftCoreInitializer.Initialize(new MinecraftCoreInitializeOptions()
         {
@@ -33,5 +35,6 @@ public static partial class Initializer
             IsEnableMirror = Data.ConfigEntry.EnableMinecraftMirror,
             IsEnableFragment = Data.ConfigEntry.EnableFragmentDownload
         });
+        Logger.Info("应用服务初始化完成");
     }
 }

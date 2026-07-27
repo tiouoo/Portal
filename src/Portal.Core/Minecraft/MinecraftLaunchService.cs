@@ -23,6 +23,7 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using Avalonia.Controls.Notifications;
 using Tio.Avalonia.Standard.Standard.Ui;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using ModLoaderType = MinecraftLaunch.Base.Enums.ModLoaderType;
 
 namespace Portal.Core.Minecraft;
@@ -36,7 +37,7 @@ public static class MinecraftLaunchService
         topLevel?.Notice($"启动 {instance.InstanceName}");
         var launchCompleted = false;
         Process? process = null;
-        var logSession = instance.Type == MinecraftInstanceType.Java ? new MinecraftLogSession(instance) : null;
+        var logSession = new MinecraftLogSession(instance);
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = $"启动 {GetEditionName(instance)} {instance.InstanceName}",
@@ -81,7 +82,7 @@ public static class MinecraftLaunchService
                         options.OpenLog?.Invoke(logSession!);
                         return Task.CompletedTask;
                     },
-                    IsVisible = _ => logSession != null && options.OpenLog != null
+                    IsVisible = _ => options.OpenLog != null
                 }
             ]
         });
@@ -130,13 +131,14 @@ public static class MinecraftLaunchService
         RecentPlayTarget? target, ManagedTask task,
         ManagedTask? verifyAccount, ManagedTask? selectJava, ManagedTask? buildArguments, ManagedTask? completeResources,
         ManagedTask startGame,
-        MinecraftLogSession? logSession, Action<Process> processStarted)
+        MinecraftLogSession logSession, Action<Process> processStarted)
     {
         try
         {
             if (instance.Type == MinecraftInstanceType.Bedrock)
             {
-                startGame.Start(context => LaunchBedrockAsync(context, instance, topLevel, options, task, processStarted));
+                startGame.Start(context => LaunchBedrockAsync(context, instance, topLevel, options, task, logSession,
+                    processStarted));
                 await startGame.Completion;
                 ThrowIfFailed(startGame);
                 return;
@@ -481,7 +483,7 @@ public static class MinecraftLaunchService
 
     private static async Task LaunchBedrockAsync(TaskExecutionContext context, MinecraftInstance instance,
         TopLevel? topLevel, MinecraftLaunchOptions options, ManagedTask task,
-        Action<Process> processStarted)
+        MinecraftLogSession logSession, Action<Process> processStarted)
     {
         if (instance.BedrockConfig == null)
             throw new InvalidOperationException("基岩版实例配置缺失。");
@@ -494,6 +496,25 @@ public static class MinecraftLaunchService
                        ?? throw new PlatformNotSupportedException("当前平台不支持启动基岩版。");
 
         var launcher = factory(instance.BedrockConfig);
+        launcher.LogReceived = (message, level) =>
+        {
+            var text = $"[Portal/Bedrock] {message}";
+            var minecraftLevel = level switch
+            {
+                BedrockLogLevel.Debug => MinecraftLogLevel.Debug,
+                BedrockLogLevel.Warning => MinecraftLogLevel.Warning,
+                BedrockLogLevel.Error => MinecraftLogLevel.Error,
+                _ => MinecraftLogLevel.Information
+            };
+            logSession.Add(new MinecraftLogEntry(text, minecraftLevel));
+            switch (level)
+            {
+                case BedrockLogLevel.Debug: Logger.Debug(text); break;
+                case BedrockLogLevel.Warning: Logger.Warning(text); break;
+                case BedrockLogLevel.Error: Logger.Error(text); break;
+                default: Logger.Info(text); break;
+            }
+        };
         launcher.UpdateProgress = (text, progress) =>
         {
             Dispatcher.UIThread.Post(() =>

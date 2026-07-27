@@ -17,7 +17,7 @@ public static class AccountRefresher
 
         try
         {
-            Logger.Debug("正在刷新账号 " + account.AsJson());
+            Logger.Info($"开始刷新微软账户：{account.Name}");
             
             var authenticator = new MicrosoftAuthenticator(ServiceCredentials.MicrosoftClientId);
             var authResult = await authenticator.RefreshAsync(new MicrosoftAccount(account.Name, (Guid)account.Uuid!,
@@ -50,11 +50,12 @@ public static class AccountRefresher
                 AccountNote = account.AccountNote,
             };
 
+            Logger.Info($"微软账户刷新成功：{newAccount.Name}");
             return newAccount;
         }
         catch (Exception e)
         {
-            Logger.Error("刷新账号失败  " + e.Message);
+            Logger.Error($"刷新微软账户失败：{account.Name}，{e}");
             return null;
         }
     }
@@ -73,7 +74,7 @@ public static class AccountRefresher
 
         try
         {
-            Logger.Debug("正在重新登录外置账户 " + account.AsJson());
+            Logger.Info($"开始重新登录外置账户：{account.Name}，服务器：{account.YggdrasilServerUrl}");
 
             var normalizedUrl = UrlHelper.NormalizeUrl(account.YggdrasilServerUrl);
             var existingAccounts = allAccounts
@@ -90,6 +91,7 @@ public static class AccountRefresher
             var authenticatedAccounts = await authenticator.AuthenticateAsync();
             if (authenticatedAccounts == null)
             {
+                Logger.Warning($"外置账户重新登录未返回账户：{account.Name}");
                 return null;
             }
 
@@ -119,11 +121,12 @@ public static class AccountRefresher
             var removed = existingAccounts.Where(candidate => !candidate.Uuid.HasValue || !refreshedUuids.Contains(candidate.Uuid.Value))
                 .ToList();
 
+            Logger.Info($"外置账户重新登录完成：{account.Name}，刷新 {refreshedAccounts.Count} 个账户，新增 {added.Count} 个，移除 {removed.Count} 个");
             return new YggdrasilRefreshResult(existingAccounts, refreshedAccounts, updated, added, removed);
         }
         catch (Exception e)
         {
-            Logger.Error("重新登录外置账户失败  " + e.Message);
+            Logger.Error($"重新登录外置账户失败：{account.Name}，{e}");
             return null;
         }
     }

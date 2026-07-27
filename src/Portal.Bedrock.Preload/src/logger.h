@@ -47,6 +47,7 @@ private:
     static inline std::condition_variable cv;
     static inline std::thread workerThread;
     static inline std::atomic<bool> shouldStop{ false };
+    static inline std::atomic<bool> initialized{ false };
 
     static inline std::ofstream logFile;
     static inline std::mutex fileMutex;
@@ -120,27 +121,6 @@ private:
         }
     }
 
-    static void ProcessLogs() {
-        while (true) {
-            std::queue<LogTask> localQueue;
-            {
-                std::unique_lock<std::mutex> lock(queueMutex);
-                cv.wait(lock, [] { return !logQueue.empty() || shouldStop; });
-
-                if (shouldStop && logQueue.empty()) break;
-
-                std::swap(localQueue, logQueue);
-            }
-
-            while (!localQueue.empty()) {
-                const auto& task = localQueue.front();
-                Render(task);
-                WriteToFile(task);
-                localQueue.pop();
-            }
-        }
-    }
-
     static void Render(const LogTask& task) {
         if (hConsole == INVALID_HANDLE_VALUE) return;
 
@@ -153,7 +133,7 @@ private:
         std::cout << " [" << task.context << "] " << task.message << "\n";
     }
 
-    static std::string CreateLogDirectory() {
+    static std::string CreateLogDirectory(const std::string& fileName) {
         char exePath[MAX_PATH];
         GetModuleFileNameA(NULL, exePath, MAX_PATH);
         fs::path exeDir = fs::path(exePath).parent_path();
@@ -163,29 +143,25 @@ private:
             fs::create_directories(logDir);
         }
 
-        auto now = std::chrono::system_clock::now();
-        auto time = std::chrono::system_clock::to_time_t(now);
-        struct tm tm_info;
-        localtime_s(&tm_info, &time);
-
-        std::stringstream ss;
-        ss << "log_" << std::put_time(&tm_info, "%Y%m%d") << ".log";
-        logFilePath = (logDir / ss.str()).string();
+        fs::path safeName = fs::path(fileName).filename();
+        if (safeName.empty() || safeName.extension() != ".log") {
+            safeName = "native.log";
+        }
+        logFilePath = (logDir / safeName).string();
 
         return logFilePath;
     }
 
 public:
-    static void Initialize() {
-        if (hConsole != INVALID_HANDLE_VALUE) return;
+    static void Initialize(bool consoleEnabled, const std::string& fileName) {
+        if (initialized) return;
 
-        hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        hConsole = consoleEnabled ? GetStdHandle(STD_OUTPUT_HANDLE) : INVALID_HANDLE_VALUE;
 
         std::ios_base::sync_with_stdio(false);
         std::cin.tie(NULL);
 
-        // ��ʼ���ļ���־
-        CreateLogDirectory();
+        CreateLogDirectory(fileName);
         logFile.open(logFilePath, std::ios::out | std::ios::app);
         if (!logFile.is_open()) {
             Logger::Log(LogLevel::ERR, "Unable to open log file!", "Logger");
@@ -199,8 +175,17 @@ public:
             fileEnabled = false;
         }
 
-        shouldStop = false;
-        workerThread = std::thread(ProcessLogs);
+        initialized = true;
+        std::queue<LogTask> pending;
+        {
+            std::lock_guard<std::mutex> lock(queueMutex);
+            std::swap(pending, logQueue);
+        }
+        while (!pending.empty()) {
+            Render(pending.front());
+            WriteToFile(pending.front());
+            pending.pop();
+        }
 
         Logger::Log(LogLevel::INFO, "Logger initialized (file: " + std::string(fileEnabled ? "enabled" : "disabled") + ")", "Logger");
         Logger::Log(LogLevel::INFO, "Log file: " + logFilePath, "Logger");
@@ -212,9 +197,7 @@ public:
             logFile.close();
         }
 
-        shouldStop = true;
-        cv.notify_all();
-        if (workerThread.joinable()) workerThread.join();
+        initialized = false;
     }
 
     static void EnableFileLogging(bool enable) {
@@ -233,11 +216,16 @@ public:
 
     static void Log(LogLevel level, const std::string& message, const std::string& context = "Portal") {
         LogTask task{ level, message, GetTimestamp(), context };
-        {
+        if (!initialized) {
             std::lock_guard<std::mutex> lock(queueMutex);
             logQueue.push(std::move(task));
+            return;
         }
-        cv.notify_one();
+        {
+            std::lock_guard<std::mutex> lock(queueMutex);
+            Render(task);
+            WriteToFile(task);
+        }
     }
 
     static void Info(const std::string& msg, const std::string& context = "Portal") {
@@ -256,4 +244,3 @@ public:
         Log(LogLevel::SUCCESS, msg, context);
     }
 };
-

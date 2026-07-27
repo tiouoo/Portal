@@ -32,20 +32,28 @@ sealed class Program
 #endif
         PortalCommandService.StartCommandServer();
         PortalCommandService.Initialize();
-        Initializer.Program("Portal", "xyz.tiouo.Portal");
+        var versionInfo = Module.Initialize.Config.LoadVersionInfo();
+        Initializer.Program("Portal", "xyz.tiouo.Portal", versionInfo.VersionTitle);
+        Logger.Info("Portal MC");
+        Logger.Info("  ____                   _             _     __  __    ____ ");
+        Logger.Info(" |  _ \\    ___    _ __  | |_    __ _  | |   |  \\/  |  / ___|");
+        Logger.Info(" | |_) |  / _ \\  | '__| | __|  / _` | | |   | |\\/| | | |    ");
+        Logger.Info(" |  __/  | (_) | | |    | |_  | (_| | | |   | |  | | | |___ ");
+        Logger.Info(" |_|      \\___/  |_|     \\__|  \\__,_| |_|   |_|  |_|  \\____|");
+        Logger.Info(">");
         Logger.Info("应用程序启动 Main()");
 
 #if WINDOWS
         RegisterBedrockLauncher();
 #endif
-        
-        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             Logger.Info("Running on Windows");
-        else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             Logger.Info("Running on Linux");
-        else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             Logger.Info("Running on macOS");
-        
+
         try
         {
             BuildAvaloniaApp(args)

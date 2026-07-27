@@ -73,7 +73,7 @@ public partial class OobeWindow : TioWindow
         try
         {
             // 初始化窗口为固定大小，隐藏缩放（最大化）按钮，位置与崩溃窗口保持一致
-            TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(nsWindow);
+            // TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(nsWindow);
             TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 14, y: 2,
                 spacing: 20);
         }

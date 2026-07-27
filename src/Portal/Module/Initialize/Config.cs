@@ -18,8 +18,26 @@ public class Config
 {
     public static List<object> FailedSettingKeys { get; } = [];
 
+    public static CiVersionInfo LoadVersionInfo()
+    {
+        const string RESOURCE_NAME = "Portal.version-ci.txt";
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream(RESOURCE_NAME);
+        if (stream is null) return CreateLocalVersionInfo();
+
+        using var reader = new StreamReader(stream);
+        return JsonConvert.DeserializeObject<CiVersionInfo>(reader.ReadToEnd()) ?? CreateLocalVersionInfo();
+    }
+
+    private static CiVersionInfo CreateLocalVersionInfo() => new()
+    {
+        Type = "dev",
+        VersionTitle = "local-build"
+    };
+
     public static void Initialize()
     {
+        Logger.Info("开始加载应用配置");
         Helper.TryCreateFolder(ConfigPath.UserDataRootPath);
         Helper.TryCreateFolder(ConfigPath.TempFolderPath);
         Helper.TryCreateFolder(ConfigPath.UpdateFolderPath);
@@ -27,7 +45,10 @@ public class Config
 
         var isFirstRun = !File.Exists(ConfigPath.SettingDataPath);
         if (isFirstRun)
+        {
+            Logger.Info("未找到配置文件，正在创建默认配置");
             File.WriteAllText(ConfigPath.SettingDataPath, new ConfigEntry().AsJson());
+        }
 
         Logger.Info($"配置文件夹：{ConfigPath.UserDataRootPath}");
 
@@ -74,16 +95,8 @@ public class Config
         Data.ConfigEntry.MinecraftAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
         Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
 
-        const string RESOURCE_NAME = "Portal.version-ci.txt";
-        var assembly = Assembly.GetExecutingAssembly();
-        var stream = assembly.GetManifestResourceStream(RESOURCE_NAME);
-        using var reader = new StreamReader(stream!);
-        var result = reader.ReadToEnd();
-        Data.Instance.Version = JsonConvert.DeserializeObject<CiVersionInfo>(result) ?? new CiVersionInfo()
-        {
-            Type = "dev",
-            VersionTitle = "local-build"
-        };
+        Data.Instance.Version = LoadVersionInfo();
+        Logger.Info($"已加载版本信息：{Data.Instance.Version.VersionTitle} ({Data.Instance.Version.Type})");
         Data.UiProperty.OverrideUpdateChannel = Data.Instance.Version.Type;
 
         const string RESOURCE_NAME1 = "Portal.package-type.txt";
@@ -92,14 +105,17 @@ public class Config
         using var reader1 = new StreamReader(stream1!);
         var result1 = reader1.ReadToEnd();
         Data.Instance.PackageType = string.IsNullOrWhiteSpace(result1) ? "portable" : result1.Trim().ToLowerInvariant();
+        Logger.Info($"已识别安装包类型：{Data.Instance.PackageType}");
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);
+        Logger.Debug("已清理临时目录");
         App.Method.SaveConfig();
 
         Data.UiProperty.ConfigLoaded = true;
         ConfigIdentifyExtension.MinecraftFolder(Data.ConfigEntry);
 
         InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+        Logger.Info($"配置加载完成，已加载 {Data.ConfigEntry.MinecraftFolders.Count} 个 Minecraft 文件夹");
 
         InitializationEvents.RaiseBeforeUiLoaded();
     }

@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using BedrockLauncher.Core.CoreOption;
 using PeNet;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Bedrock.Standard.Interface;
 
 namespace Portal.Bedrock;
 
@@ -16,17 +17,17 @@ internal static class BedrockDataIsolation
     private const string PreloadResourceName = "PreloadCpp.dll";
     private const string FallbackPreloadDllPrefix = "P";
 
-    public static void Prepare(BedrockInstanceConfig config)
+    public static string Prepare(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log = null)
     {
         var gameExecutable = Path.Combine(config.InstancePath, "Minecraft.Windows.exe");
         if (!File.Exists(gameExecutable))
             throw new FileNotFoundException("未找到用于启用数据隔离的基岩版主程序。", gameExecutable);
 
         var currentDllName = GetPreloadImportName(gameExecutable) ?? PreloadDllName;
-        SyncPreloadMods(config);
+        SyncPreloadMods(config, log);
         CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
         var preloadDllName = DeployPreloadDll(config.InstancePath, currentDllName);
-        WritePreloadConfiguration(config);
+        var nativeLogPath = WritePreloadConfiguration(config);
         try
         {
             AddPreloadImport(gameExecutable, preloadDllName);
@@ -38,9 +39,10 @@ internal static class BedrockDataIsolation
             CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
             throw;
         }
+        return nativeLogPath;
     }
 
-    private static void SyncPreloadMods(BedrockInstanceConfig config)
+    private static void SyncPreloadMods(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
     {
         if (config.BuildType != BedrockBuildType.GDK)
             return;
@@ -48,7 +50,9 @@ internal static class BedrockDataIsolation
         var runtimeFolder = Path.Combine(config.InstancePath, "preload", "Portal");
         Directory.CreateDirectory(runtimeFolder);
         var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var mod in BedrockModManager.Scan(config).Where(mod => mod.Config.Enabled && mod.Config.Preload))
+        var preloadMods = BedrockModManager.Scan(config).Where(mod => mod.Config.Enabled && mod.Config.Preload).ToArray();
+        log?.Invoke($"发现 {preloadMods.Length} 个已启用的预加载模组", BedrockLogLevel.Information);
+        foreach (var mod in preloadMods)
         {
             using var stream = File.OpenRead(mod.FilePath);
             var fileName = $"{Convert.ToHexString(SHA256.HashData(stream))[..16]}.dll";
@@ -56,6 +60,7 @@ internal static class BedrockDataIsolation
             activeFiles.Add(fileName);
             if (!File.Exists(destination))
                 File.Copy(mod.FilePath, destination);
+            log?.Invoke($"已准备预加载模组：{mod.FileName}", BedrockLogLevel.Information);
         }
 
         var manifestPath = Path.Combine(runtimeFolder, "mods.txt");
@@ -106,10 +111,13 @@ internal static class BedrockDataIsolation
         return nativePath;
     }
 
-    private static void WritePreloadConfiguration(BedrockInstanceConfig config)
+    private static string WritePreloadConfiguration(BedrockInstanceConfig config)
     {
         var configFolder = Path.Combine(config.InstancePath, "config", "Portal");
         Directory.CreateDirectory(configFolder);
+        var logFolder = Path.Combine(configFolder, "logs");
+        Directory.CreateDirectory(logFolder);
+        var nativeLogFile = $"native-{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.log";
 
         var preloadConfig = new
         {
@@ -119,7 +127,8 @@ internal static class BedrockDataIsolation
                 // Native Windows sharing must bypass the file hooks entirely.
                 isVersionIsolated = !config.EnableLauncherSharedData,
                 isDetailedLog = false,
-                folderPolicyString = GetFolderPolicy(config)
+                folderPolicyString = GetFolderPolicy(config),
+                nativeLogFile
             },
             info = new
             {
@@ -129,6 +138,7 @@ internal static class BedrockDataIsolation
 
         var configPath = Path.Combine(configFolder, "config.json");
         File.WriteAllText(configPath, JsonSerializer.Serialize(preloadConfig));
+        return Path.Combine(logFolder, nativeLogFile);
     }
 
     private static string GetFolderPolicy(BedrockInstanceConfig config)

@@ -585,6 +585,8 @@ extern "C" __declspec(dllexport) void Load()
 	Logger::Info("Portal Injecting!");
 }
 
+inline void PrintBanner();
+
 int LoadPreloadDlls(HINSTANCE hinstDLL,
 	DWORD fdwReason,
 	LPVOID lpvReserved)
@@ -644,6 +646,15 @@ int LoadPreloadDlls(HINSTANCE hinstDLL,
 
 DWORD WINAPI LoadPreloadDllsWorker(LPVOID parameter)
 {
+	const bool consoleEnabled = g_configManager.GetBoolConfig("isConsole");
+	Logger::Initialize(consoleEnabled, g_configManager.GetStringConfig("nativeLogFile"));
+	if (consoleEnabled)
+	{
+		PrintBanner();
+		PrintVersionInfo();
+		Logger::Success("Portal is free software licensed under GPLv3");
+		Logger::Success("Submit issues and submit PR: https://github.com/tiouo/Portal");
+	}
 	LoadPreloadDlls(static_cast<HINSTANCE>(parameter), DLL_PROCESS_ATTACH, nullptr);
 	return 0;
 }
@@ -716,20 +727,17 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		SetExeDirectoryAsWorkingDir();
-		if (g_configManager.GetBoolConfig("isConsole"))
 		{
-			AllocConsole();
-			system("title Minecraft Bedrock Console");
-			FILE* fDummy;
-			freopen_s(&fDummy, "CONOUT$", "w", stdout);
-			freopen_s(&fDummy, "CONOUT$", "w", stderr);
-			freopen_s(&fDummy, "CONIN$", "r", stdin);
-			Logger::Initialize();
-			PrintBanner();
-			PrintVersionInfo();
-
-			Logger::Success("Portal is free software licensed under GPLv3");
-			Logger::Success("Submit issues and submit PR: https://github.com/tiouo/Portal");
+			const bool consoleEnabled = g_configManager.GetBoolConfig("isConsole");
+			if (consoleEnabled)
+			{
+				AllocConsole();
+				system("title Minecraft Bedrock Console");
+				FILE* fDummy;
+				freopen_s(&fDummy, "CONOUT$", "w", stdout);
+				freopen_s(&fDummy, "CONOUT$", "w", stderr);
+				freopen_s(&fDummy, "CONIN$", "r", stdin);
+			}
 		}
 		if (g_configManager.GetBoolConfig("isVersionIsolated"))
 		{

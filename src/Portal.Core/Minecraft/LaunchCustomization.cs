@@ -5,6 +5,7 @@ using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Extensions;
 using Portal.Core.Minecraft.Classes;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;
 
@@ -118,6 +119,7 @@ public static class LaunchCustomization
     public static async Task<int> RunShellCommandAsync(string command, string? workingDirectory,
         CancellationToken cancellationToken)
     {
+        Logger.Info($"执行启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
         var startInfo = OperatingSystem.IsWindows()
             ? new ProcessStartInfo("cmd.exe") { Arguments = $"/c {command}" }
             : new ProcessStartInfo("/bin/sh") { ArgumentList = { "-c", command } };
@@ -128,6 +130,7 @@ public static class LaunchCustomization
 
         using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.Start();
+        Logger.Debug($"启动自定义命令进程：{process.Id}");
         try
         {
             await process.WaitForExitAsync(cancellationToken);
@@ -145,6 +148,7 @@ public static class LaunchCustomization
             }
             throw;
         }
+        Logger.Info($"启动自定义命令已结束，退出代码：{process.ExitCode}");
         return process.ExitCode;
     }
 
@@ -153,15 +157,17 @@ public static class LaunchCustomization
     /// </summary>
     public static void RunShellCommandDetached(string command, string? workingDirectory)
     {
+        Logger.Info($"已安排后台启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
         _ = Task.Run(async () =>
         {
             try
             {
                 await RunShellCommandAsync(command, workingDirectory, CancellationToken.None);
             }
-            catch
+            catch (Exception exception)
             {
                 // 后台命令失败不影响游戏进程
+                Logger.Warning($"后台启动自定义命令失败：{exception.Message}");
             }
         });
     }
@@ -177,6 +183,7 @@ public static class LaunchCustomization
 
         _ = Task.Run(async () =>
         {
+            Logger.Debug($"开始监视游戏窗口标题，进程：{process.Id}");
             try
             {
                 while (!process.HasExited)
@@ -194,9 +201,10 @@ public static class LaunchCustomization
                     await Task.Delay(1000);
                 }
             }
-            catch
+            catch (Exception exception)
             {
                 // 进程已退出或句柄失效
+                Logger.Debug($"停止监视游戏窗口标题，进程：{process.Id}，原因：{exception.Message}");
             }
         });
     }
