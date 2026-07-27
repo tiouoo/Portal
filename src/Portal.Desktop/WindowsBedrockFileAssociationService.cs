@@ -1,0 +1,75 @@
+#if WINDOWS
+using Microsoft.Win32;
+using System.Runtime.InteropServices;
+using Portal.Core.Minecraft.Services;
+
+namespace Portal.Desktop;
+
+internal static class WindowsBedrockFileAssociationService
+{
+    private const uint AssociationChanged = 0x08000000;
+    private const uint IdList = 0x0000;
+
+    private static readonly (string Extension, string ProgId, string TypeName)[] Associations =
+    [
+        (".mcpack", "Portal.Minecraft.Mcpack", "Minecraft 基岩版资源包"),
+        (".mcaddon", "Portal.Minecraft.Mcaddon", "Minecraft 基岩版附加包"),
+        (".mcworld", "Portal.Minecraft.Mcworld", "Minecraft 基岩版世界存档"),
+        (".mctemplate", "Portal.Minecraft.Mctemplate", "Minecraft 基岩版世界模板")
+    ];
+
+    public static void Register()
+    {
+        try
+        {
+            var executablePath = Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(executablePath))
+                return;
+            var executableName = Path.GetFileName(executablePath);
+
+            using var classes = Registry.CurrentUser.CreateSubKey(@"Software\Classes");
+            foreach (var association in Associations)
+            {
+                using var progId = classes.CreateSubKey(association.ProgId);
+                progId.SetValue(null, association.TypeName);
+                progId.SetValue("FriendlyTypeName", association.TypeName);
+                using var application = progId.CreateSubKey("Application");
+                application.SetValue("ApplicationName", "Portal");
+                application.SetValue("ApplicationDescription", "Portal Minecraft 启动器");
+                using var icon = progId.CreateSubKey("DefaultIcon");
+                icon.SetValue(null, $"\"{executablePath}\",0");
+                using var command = progId.CreateSubKey(@"shell\open\command");
+                command.SetValue(null, $"\"{executablePath}\" \"%1\"");
+            }
+
+            using (var application = classes.CreateSubKey($@"Applications\{executableName}"))
+            {
+                application.SetValue("FriendlyAppName", "Portal");
+                using var supportedTypes = application.CreateSubKey("SupportedTypes");
+                foreach (var extension in BedrockPackageImportService.SupportedExtensions)
+                    supportedTypes.SetValue(extension, string.Empty);
+                using var command = application.CreateSubKey(@"shell\open\command");
+                command.SetValue(null, $"\"{executablePath}\" \"%1\"");
+            }
+
+            foreach (var association in Associations)
+            {
+                using var extensionKey = classes.CreateSubKey(association.Extension);
+                extensionKey.SetValue(null, association.ProgId);
+                extensionKey.SetValue("Content Type", "application/zip");
+                using var openWith = extensionKey.CreateSubKey("OpenWithProgids");
+                openWith.SetValue(association.ProgId, Array.Empty<byte>(), RegistryValueKind.None);
+            }
+
+            SHChangeNotify(AssociationChanged, IdList, IntPtr.Zero, IntPtr.Zero);
+        }
+        catch (Exception exception)
+        {
+            Tio.Avalonia.Standard.Modules.DiskIO.Logger.Error($"注册基岩版包文件关联失败：{exception}");
+        }
+    }
+
+    [DllImport("shell32.dll")]
+    private static extern void SHChangeNotify(uint eventId, uint flags, IntPtr item1, IntPtr item2);
+}
+#endif

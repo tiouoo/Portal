@@ -22,6 +22,7 @@ namespace Portal;
 
 public partial class App : Application
 {
+    public static string? BedrockPackagePath { get; set; }
     
     public delegate void UiLoadedEventHandler(TabWindow ui);
 
@@ -36,7 +37,10 @@ public partial class App : Application
     public override void Initialize()
     {
         Logger.Info("开始初始化");
-        Initializer.App();
+        if (BedrockPackagePath == null)
+            Initializer.App();
+        else
+            Initializer.BedrockPackageImport();
         AvaloniaXamlLoader.Load(this);
         Logger.Info("完成初始化");
     }
@@ -54,7 +58,13 @@ public partial class App : Application
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Dispatcher.UIThread.UnhandledException += UIThread_UnhandledException;
 #endif
-            if (Data.ConfigEntry.IsInitialized)
+            if (BedrockPackagePath is { } packagePath)
+            {
+                Initializer.Oobe();
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+                desktop.MainWindow = new BedrockPackageImportWindow(packagePath);
+            }
+            else if (Data.ConfigEntry.IsInitialized)
             {
                 ShowMainWindow(desktop);
             }
@@ -79,8 +89,9 @@ public partial class App : Application
         }
 
         // macOS 上 portal:// 链接经 Apple Event（协议激活）送达，而非命令行参数。
-        PortalCommandQueue.Initialize();
-        if (this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
+        if (BedrockPackagePath == null)
+            PortalCommandQueue.Initialize();
+        if (BedrockPackagePath == null && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
             activatableLifetime.Activated += OnActivated;
 
         base.OnFrameworkInitializationCompleted();

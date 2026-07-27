@@ -5,7 +5,7 @@ using Portal.Core.Minecraft.Instance.Bedrock;
 
 namespace Portal.Core.Minecraft.Services;
 
-public enum BedrockPackageArchiveType { Mcpack, Mcaddon, Mcworld }
+public enum BedrockPackageArchiveType { Mcpack, Mcaddon, Mcworld, Mctemplate }
 
 public enum BedrockPackageContentType { ResourcePack, BehaviorPack, SkinPack, WorldTemplate }
 
@@ -16,6 +16,9 @@ public sealed record BedrockPackageInspection(BedrockPackageArchiveType ArchiveT
 
 public sealed class BedrockPackageImportService
 {
+    public static IReadOnlyList<string> SupportedExtensions { get; } =
+        [".mcpack", ".mcaddon", ".mcworld", ".mctemplate"];
+
     private static readonly JsonDocumentOptions JsonOptions = new()
     {
         CommentHandling = JsonCommentHandling.Skip,
@@ -96,11 +99,10 @@ public sealed class BedrockPackageImportService
             ".mcpack" => BedrockPackageArchiveType.Mcpack,
             ".mcaddon" => BedrockPackageArchiveType.Mcaddon,
             ".mcworld" => BedrockPackageArchiveType.Mcworld,
+            ".mctemplate" => BedrockPackageArchiveType.Mctemplate,
             _ => default
         };
-        return Path.GetExtension(path).Equals(".mcpack", StringComparison.OrdinalIgnoreCase) ||
-               Path.GetExtension(path).Equals(".mcaddon", StringComparison.OrdinalIgnoreCase) ||
-               Path.GetExtension(path).Equals(".mcworld", StringComparison.OrdinalIgnoreCase);
+        return SupportedExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
     }
 
     private static BedrockPackageArchiveType GetArchiveType(string path)

@@ -1,0 +1,113 @@
+<tio:TioWindow
+    CanResize="False"
+    Height="380"
+    IsCloseBtnShow="{OnPlatform Default=True,
+                                macOS=False}"
+    IsMaxBtnShow="False"
+    IsMinBtnShow="{OnPlatform Default=True,
+                              macOS=False}"
+    Title="{Binding ImportTitle}"
+    Width="620"
+    WindowStartupLocation="CenterScreen"
+    d:DesignHeight="420"
+    d:DesignWidth="620"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.BedrockPackageImportWindow"
+    x:DataType="views:BedrockPackageImportWindowViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:views="clr-namespace:Portal.Views"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <tio:TioWindow.Resources>
+        <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
+    </tio:TioWindow.Resources>
+    <tio:TioWindow.TitleBarLeftContent>
+        <TextBlock
+            FontSize="16"
+            Margin="{OnPlatform '12,2,0,0',
+                                macOS='78,2,0,0'}"
+            Text="Portal"
+            VerticalAlignment="Center" />
+    </tio:TioWindow.TitleBarLeftContent>
+    <Grid Margin="30,10,30,24" RowDefinitions="Auto,*,Auto">
+        <StackPanel Spacing="5">
+            <TextBlock FontSize="25" Text="{Binding ImportTitle}" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                MaxWidth="550"
+                Text="{Binding PackageDescription}"
+                TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,26,0,0"
+            Spacing="18">
+            <StackPanel Spacing="7">
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="导入到" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding !IsBusy}"
+                    ItemsSource="{Binding ViewModel.Instances}"
+                    Padding="12,8,6,6"
+                    SelectedItem="{Binding ViewModel.SelectedInstance}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="local:BedrockPackageInstanceItem">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Name}" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="{Binding Version}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    IsVisible="{Binding ViewModel.HasNoInstances}"
+                    Text="没有可用的基岩版实例" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding ViewModel.RequiresUserId}" Spacing="7">
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="存档用户" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding !IsBusy}"
+                    ItemsSource="{Binding ViewModel.WorldUserIds}"
+                    SelectedItem="{Binding ViewModel.SelectedWorldUserId}" />
+            </StackPanel>
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasStatus}"
+                Text="{Binding StatusText}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="10">
+            <Button
+                Click="Cancel_OnClick"
+                Content="取消"
+                IsEnabled="{Binding !IsBusy}" />
+            <tio:IconButton
+                Background="{DynamicResource SystemAccentColor}"
+                Click="Import_OnClick"
+                Content="{Binding ImportButtonText}"
+                Foreground="White"
+                IsEnabled="{Binding CanImport}" />
+        </StackPanel>
+    </Grid>
+</tio:TioWindow>

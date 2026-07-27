@@ -20,6 +20,13 @@ namespace Portal.Module.Initialize;
 
 public static partial class Initializer
 {
+    public static void BedrockPackageImport()
+    {
+        Logger.Info("开始初始化基岩版包导入服务");
+        Config.Initialize();
+        Logger.Info("基岩版包导入服务初始化完成");
+    }
+
     public static void App()
     {
         Logger.Info("开始初始化应用服务");

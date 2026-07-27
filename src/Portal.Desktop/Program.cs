@@ -5,6 +5,7 @@ using Avalonia;
 using HotAvalonia;
 #endif
 using Portal.Core.Minecraft;
+using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -18,22 +19,32 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (TryGetBedrockPackagePath(args, out var packagePath))
+            App.BedrockPackagePath = packagePath;
+
         // 命令行 / portal:// 命令：能转发给已运行实例（或只需输出帮助）就直接退出，
         // 否则命令已入队，继续正常启动并在 UI 加载后执行。
-        if (PortalCommandService.TryHandleStartupArgs(args))
+        if (packagePath == null && PortalCommandService.TryHandleStartupArgs(args))
             return;
 
 #if WINDOWS
-        if (WindowsJumpListService.TryForwardToRunningInstance(args))
+        if (packagePath == null && WindowsJumpListService.TryForwardToRunningInstance(args))
             return;
 
-        WindowsJumpListService.StartCommandServer();
+        if (packagePath == null)
+            WindowsJumpListService.StartCommandServer();
         WindowsJumpListService.SetAppUserModelId();
 #endif
-        PortalCommandService.StartCommandServer();
-        PortalCommandService.Initialize();
+        if (packagePath == null)
+        {
+            PortalCommandService.StartCommandServer();
+            PortalCommandService.Initialize();
+        }
         var versionInfo = Module.Initialize.Config.LoadVersionInfo();
         Initializer.Program("Portal", "xyz.tiouo.Portal", versionInfo.VersionTitle);
+#if WINDOWS
+        WindowsBedrockFileAssociationService.Register();
+#endif
         Logger.Info("Portal MC");
         Logger.Info("  ____                   _             _     __  __    ____ ");
         Logger.Info(" |  _ \\    ___    _ __  | |_    __ _  | |   |  \\/  |  / ___|");
@@ -64,6 +75,20 @@ sealed class Program
             Logger.Fatal(ex);
             throw;
         }
+    }
+
+    private static bool TryGetBedrockPackagePath(string[] args, out string? packagePath)
+    {
+        packagePath = null;
+        if (args.Length != 1 || !BedrockPackageImportService.TryGetArchiveType(args[0], out _))
+            return false;
+
+        var fullPath = Path.GetFullPath(args[0]);
+        if (!File.Exists(fullPath))
+            return false;
+
+        packagePath = fullPath;
+        return true;
     }
 
 #if WINDOWS
