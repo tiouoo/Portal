@@ -44,8 +44,6 @@ sealed class Program
         Initializer.Program("Portal", "xyz.tiouo.Portal", versionInfo.VersionTitle);
 #if WINDOWS
         WindowsBedrockFileAssociationService.Register();
-#elif LINUX
-        LinuxBedrockFileAssociationService.Register();
 #endif
         Logger.Info("Portal MC");
         Logger.Info("  ____                   _             _     __  __    ____ ");
@@ -82,16 +80,10 @@ sealed class Program
     private static bool TryGetBedrockPackagePath(string[] args, out string? packagePath)
     {
         packagePath = null;
-        if (args.Length != 1)
+        if (args.Length != 1 || !BedrockPackageImportService.TryGetArchiveType(args[0], out _))
             return false;
 
-        var path = Uri.TryCreate(args[0], UriKind.Absolute, out var uri) && uri.IsFile
-            ? uri.LocalPath
-            : args[0];
-        if (!BedrockPackageImportService.TryGetArchiveType(path, out _))
-            return false;
-
-        var fullPath = Path.GetFullPath(path);
+        var fullPath = Path.GetFullPath(args[0]);
         if (!File.Exists(fullPath))
             return false;
 
