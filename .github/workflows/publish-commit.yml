@@ -198,7 +198,7 @@ jobs:
           cp "../../assets/Icon-Pattern-Shadow-Border.icns" "./bin/Release/net10.0/${{ matrix.rid }}/publish/Portal.app/Contents/Resources/"
 
       # DotNet.Bundle 不支持 CFBundleURLTypes，portal:// 协议声明在打包后写入 Info.plist
-      - name: Declare portal URL Scheme
+      - name: Declare portal URL Scheme and Bedrock document types
         run: |
           PLIST="./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/Portal.app/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$PLIST"
@@ -207,6 +207,19 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLRole string Viewer" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string portal" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes array" "$PLIST"
+          INDEX=0
+          for ENTRY in "Minecraft Bedrock Resource Pack|mcpack" "Minecraft Bedrock Add-on|mcaddon" "Minecraft Bedrock World|mcworld" "Minecraft Bedrock World Template|mctemplate"; do
+            NAME="${ENTRY%%|*}"
+            EXT="${ENTRY##*|}"
+            /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:$INDEX dict" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:$INDEX:CFBundleTypeName string $NAME" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:$INDEX:CFBundleTypeRole string Editor" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:$INDEX:LSHandlerRank string Owner" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:$INDEX:CFBundleTypeExtensions array" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:$INDEX:CFBundleTypeExtensions:0 string $EXT" "$PLIST"
+            INDEX=$((INDEX + 1))
+          done
 
       - name: Package APP to ZIP
         run: |
