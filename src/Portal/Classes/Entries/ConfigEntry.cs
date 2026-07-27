@@ -31,21 +31,13 @@ public partial class ConfigEntry : ObservableObject
         JavaRuntimes.CollectionChanged += (_, _) => App.Method.SaveConfig();
     }
 
-    // 默认 true：老版本升级时配置文件中没有该字段，不应再次进入初始化流程；
-    // 仅在配置文件首次创建时由 Config.Initialize 置为 false
-    [ObservableProperty] public partial bool IsInitialized { get; set; } = true;
-    [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
-    [ObservableProperty] public partial string DefaultPage { get; set; } = typeof(NewTabPage).AssemblyQualifiedName!;
-    [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
-    [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
-    [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
-    [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
-    [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
-    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
+    [ObservableProperty] public partial bool IsInitialized { get; set; } = true; // 仅在配置文件首次创建时由 Config.Initialize 置为 false
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
     [ObservableProperty] public partial bool EnableMinecraftMirror { get; set; }
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
+    [ObservableProperty] public partial bool EnableManagedWindowDecorationsOnWindows { get; set; }
+    [ObservableProperty] public partial bool EnableManagedWindowBorderOnWindows { get; set; } = true;
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
     [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
@@ -57,6 +49,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
     [ObservableProperty] public partial string? GithubMirrorUrl { get; set; }
     [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
+    [ObservableProperty] public partial string DefaultPage { get; set; } = typeof(NewTabPage).AssemblyQualifiedName!;
     [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
     [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
     [ObservableProperty] public partial string? AfterLaunchCommand { get; set; }
@@ -64,10 +57,17 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial string? PackagedCommand { get; set; }
     [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
     [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
+    [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
+    [ObservableProperty] public partial Color CustomWindowBorderColor { get; set; } = Color.Parse("#6a6c70");
+    [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
+    [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
+    [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
+    [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
+    [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
+    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
     [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 64;
     [ObservableProperty] public partial int DownloadMaxRetryCount { get; set; } = 4;
     [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 32;
-    // 自定义下载页专用，与上方全局下载配置相互独立，不写入 DownloadManager
     [ObservableProperty] public partial int CustomDownloadMaxFragmentCount { get; set; } = 8;
     [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
     [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
@@ -83,8 +83,10 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
+
     public IEnumerable<MinecraftFolderEntry> TraditionalMinecraftFolders =>
         MinecraftFolders.Where(folder => folder.DetectedLayout.Kind == MinecraftFolderKind.Standard);
+
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
     public ObservableCollection<JavaRuntimeEntry> JavaRuntimes { get; } = [];
 
@@ -108,6 +110,9 @@ public partial class ConfigEntry : ObservableObject
             case nameof(ImageBlurRadius):
             case nameof(MicaOpacity):
             case nameof(BlurOpacity):
+            case nameof(CustomWindowBorderColor):
+            case nameof(EnableManagedWindowBorderOnWindows):
+            case nameof(EnableManagedWindowDecorationsOnWindows):
                 TabWindow.ApplyBackgroundToAllWindows();
                 break;
             case nameof(ControlOpacity):
@@ -144,7 +149,8 @@ public partial class ConfigEntry : ObservableObject
         App.Method.SaveConfig();
     }
 
-    private void OnMinecraftFoldersChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void OnMinecraftFoldersChanged(object? sender,
+        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         if (e.OldItems != null)
         {
@@ -154,6 +160,7 @@ public partial class ConfigEntry : ObservableObject
                 _observedMinecraftFolders.Remove(folder);
             }
         }
+
         if (e.NewItems != null)
         {
             foreach (MinecraftFolderEntry folder in e.NewItems)
@@ -162,6 +169,7 @@ public partial class ConfigEntry : ObservableObject
                     folder.PropertyChanged += OnMinecraftFolderPropertyChanged;
             }
         }
+
         OnPropertyChanged(nameof(TraditionalMinecraftFolders));
         App.Method.SaveConfig();
         ScheduleMinecraftFolderRecovery();

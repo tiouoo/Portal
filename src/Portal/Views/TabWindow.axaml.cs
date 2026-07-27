@@ -278,7 +278,8 @@ public partial class TabWindow : TioTabWindowBase
             Gesture = KeyGesture.Parse("Shift+S"),
             // 文本框聚焦时不触发聚合搜索，避免劫持正常的大写字母输入
             Command = new RelayCommand(OpenAggregatedSearchDialog,
-                () => FocusManager?.GetFocusedElement() is not (TextBox or Avalonia.Controls.AutoCompleteBox or TioUi.Controls.AutoCompleteBox))
+                () => FocusManager?.GetFocusedElement() is not (TextBox or Avalonia.Controls.AutoCompleteBox
+                    or TioUi.Controls.AutoCompleteBox))
         });
     }
 
@@ -375,6 +376,27 @@ public partial class TabWindow : TioTabWindowBase
     public void ApplyBackground()
     {
         var entry = Data.ConfigEntry;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            if (entry.EnableManagedWindowDecorationsOnWindows)
+            {
+                WindowDecorations = WindowDecorations.None;
+                FrameBorderThickness = new Thickness(1);
+                FrameBorderCornerRadius = new CornerRadius(10);  
+                FrameBorderBrush = entry.EnableManagedWindowBorderOnWindows
+                    ? new SolidColorBrush(entry.CustomWindowBorderColor)
+                    : new SolidColorBrush(Colors.Transparent);
+                IsManagedResizerVisible = true;
+            }
+            else
+            {
+                WindowDecorations = WindowDecorations.Full;
+                FrameBorderThickness = new Thickness(0);
+                FrameBorderCornerRadius = new CornerRadius(0);  
+                IsManagedResizerVisible = false;
+            }
+        }
 
         switch (entry.BackgroundMode)
         {

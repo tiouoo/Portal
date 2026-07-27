@@ -324,5 +324,39 @@
                 </tio:TioColorPicker.Palette>
             </tio:TioColorPicker>
         </StackPanel>
+        <StackPanel IsVisible="{Binding IsWindows}" Spacing="5">
+            <Label
+                Content="禁用系统边框"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const:Data.ConfigEntry}}" />
+        </StackPanel>
+        <StackPanel IsVisible="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const:Data.ConfigEntry}}" Spacing="5">
+            <Label
+                Content="显示边框"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const:Data.ConfigEntry}}" />
+        </StackPanel>
+        <Border IsVisible="{Binding Data.ConfigEntry.EnableManagedWindowDecorationsOnWindows}" Margin="0,-5,0,0">
+            <StackPanel
+                IsVisible="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const:Data.ConfigEntry}}"
+                Margin="0,5,0,0"
+                Spacing="5">
+                <Label
+                    Content="边框颜色"
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}" />
+                <tio:TioColorPicker
+                    Color="{Binding Data.ConfigEntry.CustomWindowBorderColor}"
+                    ColorSpectrumShape="Box"
+                    HorizontalAlignment="Stretch"
+                    SelectedIndex="1">
+                    <tio:TioColorPicker.Palette>
+                        <tio:TioColorLightPalette />
+                    </tio:TioColorPicker.Palette>
+                </tio:TioColorPicker>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

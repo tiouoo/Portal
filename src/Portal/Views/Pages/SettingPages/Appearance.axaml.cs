@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -20,4 +21,6 @@ public partial class Appearance : DataUserControl
             Const.Data.ConfigEntry.Theme = (TioUi.Shared.Theme)ListBox.SelectedIndex;
         };
     }
+
+    public object IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 }
