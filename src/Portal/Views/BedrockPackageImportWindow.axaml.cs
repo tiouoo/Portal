@@ -15,11 +15,13 @@ namespace Portal.Views;
 public partial class BedrockPackageImportWindow : TioWindow
 {
     private IntPtr _macOsWindowHandle;
+    private readonly bool _closeApplicationOnSuccess;
 
     public BedrockPackageImportWindow() : this(string.Empty) { }
 
-    public BedrockPackageImportWindow(string archivePath)
+    public BedrockPackageImportWindow(string archivePath, bool closeApplicationOnSuccess = true)
     {
+        _closeApplicationOnSuccess = closeApplicationOnSuccess;
         InitializeComponent();
         DataContext = new BedrockPackageImportWindowViewModel(archivePath);
 
@@ -57,8 +59,12 @@ public partial class BedrockPackageImportWindow : TioWindow
     {
         if (DataContext is not BedrockPackageImportWindowViewModel viewModel)
             return;
-        if (await viewModel.ImportAsync())
+        if (!await viewModel.ImportAsync())
+            return;
+        if (_closeApplicationOnSuccess)
             (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
+        else
+            Close();
     }
 
     private void Cancel_OnClick(object? sender, RoutedEventArgs e) => Close();

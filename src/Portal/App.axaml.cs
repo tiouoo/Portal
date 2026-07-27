@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Portal.Const;
 using Portal.Module.Initialize;
@@ -99,13 +100,35 @@ public partial class App : Application
 
     private void OnActivated(object? sender, ActivatedEventArgs e)
     {
-        if (e is not ProtocolActivatedEventArgs { Uri: { } uri }) return;
-        Logger.Info($"收到协议激活：{uri}");
-        if (PortalCommandParser.Parse([uri.ToString()], out var command, out var error) ==
-            PortalCliParseStatus.Command && command is not null)
-            PortalCommandQueue.Enqueue(command);
-        else if (error is not null)
-            Logger.Error($"协议激活链接无效：{error}");
+        if (e is ProtocolActivatedEventArgs { Uri: { } uri })
+        {
+            Logger.Info($"收到协议激活：{uri}");
+            if (PortalCommandParser.Parse([uri.ToString()], out var command, out var error) ==
+                PortalCliParseStatus.Command && command is not null)
+                PortalCommandQueue.Enqueue(command);
+            else if (error is not null)
+                Logger.Error($"协议激活链接无效：{error}");
+            return;
+        }
+
+        if (e is not FileActivatedEventArgs { Files.Count: > 0 } fileActivation)
+            return;
+        var path = fileActivation.Files[0].TryGetLocalPath();
+        if (path == null || !Portal.Core.Minecraft.Services.BedrockPackageImportService.TryGetArchiveType(path, out _))
+            return;
+
+        Logger.Info($"收到文件激活：{path}");
+        var desktop = ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+        var startupWindow = desktop?.MainWindow;
+        var replaceStartupWindow = startupWindow is { IsVisible: false };
+        var window = new BedrockPackageImportWindow(path, closeApplicationOnSuccess: replaceStartupWindow);
+        if (replaceStartupWindow)
+        {
+            desktop!.MainWindow = window;
+            startupWindow.Close();
+        }
+        window.Show();
+        window.Activate();
     }
 
     private void ShowMainWindow(IClassicDesktopStyleApplicationLifetime desktop)

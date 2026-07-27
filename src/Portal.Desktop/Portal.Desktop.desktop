@@ -9,5 +9,5 @@ NoDisplay=${DESKTOP_NODISPLAY}
 X-AppImage-Integrate=${DESKTOP_INTEGRATE}
 Terminal=${DESKTOP_TERMINAL}
 Categories=${PRIME_CATEGORY};
-MimeType=x-scheme-handler/portal;
+MimeType=x-scheme-handler/portal;application/x-minecraft-mcpack;application/x-minecraft-mcaddon;application/x-minecraft-mcworld;application/x-minecraft-mctemplate;
 Keywords=
