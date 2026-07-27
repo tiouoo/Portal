@@ -12,7 +12,6 @@
     Title="Portal"
     TitleBarControlBtnMargin="0,0,10,0"
     TitleBarHeight="44"
-    WindowDecorations="None"
     Width="1200"
     d:DesignHeight="450"
     d:DesignWidth="800"

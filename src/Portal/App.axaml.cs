@@ -7,6 +7,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Const;
 using Portal.Module.Initialize;
@@ -98,6 +99,14 @@ public partial class App : Application
     private void ShowMainWindow(IClassicDesktopStyleApplicationLifetime desktop)
     {
         _win = new TabWindow(true);
+        TextOptions.SetTextRenderingMode(_win, TextRenderingMode.Antialias);
+        TextOptions.SetTextHintingMode(_win, TextHintingMode.Light);
+        TextOptions.SetBaselinePixelAlignment(_win, BaselinePixelAlignment.Aligned);
+        
+        // TextOptions.SetTextRenderingMode(this, TextRenderingMode.Unspecified);
+        // TextOptions.SetTextHintingMode(this, TextHintingMode.Unspecified);
+        // TextOptions.SetBaselinePixelAlignment(this, BaselinePixelAlignment.Unspecified);
+        
         desktop.MainWindow = _win;
         _win.Loaded += Function;
     }
@@ -144,7 +153,7 @@ public partial class App : Application
 
     private void OpenSetting_OnClick(object? sender, EventArgs e)
     {
-        if(UiProperty.TabWindow is not { } window)  return;
+        if (UiProperty.TabWindow is not { } window) return;
         var tabEntry = new TabEntry(window, new SettingPage());
         window.CreateTab(tabEntry);
         window.SelectTab(tabEntry);

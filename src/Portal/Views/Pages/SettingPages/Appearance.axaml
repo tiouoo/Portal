@@ -106,7 +106,7 @@
                 <ComboBoxItem>图片</ComboBoxItem>
                 <ComboBoxItem>纯色</ComboBoxItem>
                 <ComboBoxItem>亚克力</ComboBoxItem>
-                <ComboBoxItem>模糊</ComboBoxItem>
+                <!-- <ComboBoxItem>模糊</ComboBoxItem> -->
                 <ComboBoxItem>云母</ComboBoxItem>
                 <ComboBoxItem>透明</ComboBoxItem>
             </ComboBox>

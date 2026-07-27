@@ -6,7 +6,7 @@ public enum BackgroundMode
     Image,
     Color,
     Acrylic,
-    Blur,
+    // Blur,
     Mica,
     Transparent
 }

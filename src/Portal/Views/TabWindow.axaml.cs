@@ -458,18 +458,18 @@ public partial class TabWindow : TioTabWindowBase
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
                 break;
 
-            case BackgroundMode.Blur:
-                ClearOwnedBackground();
-                var blurColor = entry.BackgroundSolidColor;
-                var blurAlpha = (byte)(entry.BlurOpacity * 255);
-                var blurBrush = new SolidColorBrush(Color.FromArgb(blurAlpha, blurColor.R, blurColor.G, blurColor.B));
-                Background = Brushes.Transparent;
-                if (RootBorder != null)
-                    RootBorder.Background = blurBrush;
-                TransparencyBackgroundFallback =
-                    new SolidColorBrush(Color.FromArgb(255, blurColor.R, blurColor.G, blurColor.B));
-                TransparencyLevelHint = new[] { WindowTransparencyLevel.Blur };
-                break;
+            // case BackgroundMode.Blur:
+            //     ClearOwnedBackground();
+            //     var blurColor = entry.BackgroundSolidColor;
+            //     var blurAlpha = (byte)(entry.BlurOpacity * 255);
+            //     var blurBrush = new SolidColorBrush(Color.FromArgb(blurAlpha, blurColor.R, blurColor.G, blurColor.B));
+            //     Background = Brushes.Transparent;
+            //     if (RootBorder != null)
+            //         RootBorder.Background = blurBrush;
+            //     TransparencyBackgroundFallback =
+            //         new SolidColorBrush(Color.FromArgb(255, blurColor.R, blurColor.G, blurColor.B));
+            //     TransparencyLevelHint = new[] { WindowTransparencyLevel.Blur };
+            //     break;
 
             case BackgroundMode.Mica:
                 ClearOwnedBackground();
