@@ -589,54 +589,48 @@ int LoadPreloadDlls(HINSTANCE hinstDLL,
 	DWORD fdwReason,
 	LPVOID lpvReserved)
 {
-	std::string preloadDir;
-	char currentDir[MAX_PATH];
-	GetCurrentDirectoryA(MAX_PATH, currentDir);
-	preloadDir = std::string(currentDir) + "\\preload";
+	fs::path preloadDir = fs::current_path() / L"preload";
 
 
 	if (!fs::exists(preloadDir) || !fs::is_directory(preloadDir))
 	{
-		fs::create_directory("preload");
+		fs::create_directory(preloadDir);
 	}
 
 	std::vector<HMODULE> loadedModules;
 	int count = 0;
 
-	Logger::Info("Loading DLLs from: " + preloadDir);
+	Logger::Info("Loading DLLs from preload directory");
+
+	auto loadDll = [&](const fs::path& path)
+	{
+		std::string ext = path.extension().string();
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+		if (ext != ".dll") return;
+		std::string filename = path.filename().string();
+		Logger::Info("Loading DLL: " + filename + "...");
+		HMODULE hModule = LoadLibraryW(path.c_str());
+		if (hModule)
+		{
+			loadedModules.push_back(hModule);
+			count++;
+			Logger::Success("Success for loading DLL: " + filename);
+		}
+		else Logger::Error("FAILED Error: " + std::to_string(GetLastError()));
+	};
 
 	try
 	{
 		for (const auto& entry : fs::directory_iterator(preloadDir))
+			if (entry.is_regular_file()) loadDll(entry.path());
+
+		fs::path portalDir = preloadDir / L"Portal";
+		std::ifstream manifest(portalDir / L"mods.txt");
+		std::string fileName;
+		while (std::getline(manifest, fileName))
 		{
-			if (entry.is_regular_file())
-			{
-				std::string path = entry.path().string();
-				std::string ext = entry.path().extension().string();
-
-				std::string lowerExt = ext;
-				std::transform(lowerExt.begin(), lowerExt.end(), lowerExt.begin(), ::tolower);
-
-				if (lowerExt == ".dll")
-				{
-					std::string filename = entry.path().filename().string();
-					Logger::Info("Loading DLL: " + filename + "...");
-
-					HMODULE hModule = LoadLibraryA(path.c_str());
-					if (hModule)
-					{
-						FARPROC dllMain = GetProcAddress(hModule, "DllMain");
-
-						loadedModules.push_back(hModule);
-						count++;
-						Logger::Success("Success for loading DLL: " + filename);
-					}
-					else
-					{
-						Logger::Error("FAILED Error:" + GetLastError());
-					}
-				}
-			}
+			fs::path safeName = fs::path(fileName).filename();
+			if (!safeName.empty() && safeName == fs::path(fileName)) loadDll(portalDir / safeName);
 		}
 	}
 	catch (const std::exception& e)
@@ -646,6 +640,12 @@ int LoadPreloadDlls(HINSTANCE hinstDLL,
 
 	Logger::Success("Successfully loaded " + std::to_string(count) + " DLL(s)");
 	return count;
+}
+
+DWORD WINAPI LoadPreloadDllsWorker(LPVOID parameter)
+{
+	LoadPreloadDlls(static_cast<HINSTANCE>(parameter), DLL_PROCESS_ATTACH, nullptr);
+	return 0;
 }
 
 bool SetExeDirectoryAsWorkingDir()
@@ -789,7 +789,8 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 			}
 		}
 		Load();
-		LoadPreloadDlls(hModule, ul_reason_for_call, lpReserved);
+		if (HANDLE worker = CreateThread(nullptr, 0, LoadPreloadDllsWorker, hModule, 0, nullptr))
+			CloseHandle(worker);
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:

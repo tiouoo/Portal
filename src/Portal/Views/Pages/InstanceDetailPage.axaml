@@ -64,6 +64,11 @@
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
+                    CommandParameter="{x:Type instancePages:BedrockMods}"
+                    Header="模组"
+                    IsVisible="{Binding IsGdkBedrock}" />
+                <tio:NavMenuItem
+                    Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockResourcePacks}"
                     Header="资源包"
                     IsVisible="{Binding IsBedrock}" />

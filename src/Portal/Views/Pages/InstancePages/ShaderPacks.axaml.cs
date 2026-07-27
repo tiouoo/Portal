@@ -84,7 +84,7 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         RaiseListProperties();
         var folder = _instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder);
         var files = await Task.Run(() => Directory.Exists(folder)
-             ? Directory.EnumerateFiles(folder).OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray()
+             ? Directory.EnumerateFiles(folder).Where(IsShaderPackFile).OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray()
              : []);
         Items.Clear();
         RaiseSelectionProperties();
@@ -170,6 +170,30 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
             await RunSelectedFileActionAsync(selected, item => File.Delete(item.FilePath), "删除");
     }
 
+    private async void EnableSelected_OnClick(object? sender, RoutedEventArgs e) =>
+        await SetDisabledAsync(GetSelectedItems(), false);
+
+    private async void DisableSelected_OnClick(object? sender, RoutedEventArgs e) =>
+        await SetDisabledAsync(GetSelectedItems(), true);
+
+    private async void EnableShaderPack_OnClick(object? sender, RoutedEventArgs e) =>
+        await SetDisabledAsync(GetShaderPackItem(sender) is { } item ? [item] : [], false);
+
+    private async void DisableShaderPack_OnClick(object? sender, RoutedEventArgs e) =>
+        await SetDisabledAsync(GetShaderPackItem(sender) is { } item ? [item] : [], true);
+
+    private async Task SetDisabledAsync(IEnumerable<ShaderPackItem> items, bool disabled)
+    {
+        var selected = items.Where(item => item.IsDisabled != disabled).ToArray();
+        if (selected.Length == 0) return;
+        await RunSelectedFileActionAsync(selected, item =>
+        {
+            var destination = disabled ? item.FilePath + ".disabled" : item.FilePath[..^".disabled".Length];
+            if (File.Exists(destination)) throw new IOException("目标光影包已存在。");
+            File.Move(item.FilePath, destination);
+        }, disabled ? "禁用" : "启用");
+    }
+
     private async void ShowShaderPackDetails_OnClick(object? sender, RoutedEventArgs e)
     {
         if (GetShaderPackItem(sender) is not { } item) return;
@@ -224,6 +248,9 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     }
 
     private ShaderPackItem[] GetSelectedItems() => Items.Where(item => item.IsSelected).ToArray();
+    private static bool IsShaderPackFile(string path) =>
+        path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
+        path.EndsWith(".zip.disabled", StringComparison.OrdinalIgnoreCase);
     private static ShaderPackItem? GetShaderPackItem(object? sender) => (sender as Control)?.Tag as ShaderPackItem;
     private static OverlayDialogOptions CreateDeleteConfirmationOptions() => new()
     {
@@ -267,6 +294,8 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
     private bool _isSelected;
     public string FilePath { get; } = filePath;
     public string FileName { get; } = Path.GetFileName(filePath);
+    public bool IsDisabled => FilePath.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase);
+    public bool IsEnabled => !IsDisabled;
 
     public bool IsSelected
     {

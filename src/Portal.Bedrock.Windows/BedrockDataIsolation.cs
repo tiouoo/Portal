@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Reflection;
+using System.Security.Cryptography;
 using BedrockLauncher.Core.CoreOption;
 using PeNet;
 using Portal.Bedrock.Standard.Manifest;
@@ -22,6 +23,7 @@ internal static class BedrockDataIsolation
             throw new FileNotFoundException("未找到用于启用数据隔离的基岩版主程序。", gameExecutable);
 
         var currentDllName = GetPreloadImportName(gameExecutable) ?? PreloadDllName;
+        SyncPreloadMods(config);
         CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
         var preloadDllName = DeployPreloadDll(config.InstancePath, currentDllName);
         WritePreloadConfiguration(config);
@@ -35,6 +37,37 @@ internal static class BedrockDataIsolation
             // The fallback was never referenced if the PE import update failed.
             CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
             throw;
+        }
+    }
+
+    private static void SyncPreloadMods(BedrockInstanceConfig config)
+    {
+        if (config.BuildType != BedrockBuildType.GDK)
+            return;
+
+        var runtimeFolder = Path.Combine(config.InstancePath, "preload", "Portal");
+        Directory.CreateDirectory(runtimeFolder);
+        var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var mod in BedrockModManager.Scan(config).Where(mod => mod.Config.Enabled && mod.Config.Preload))
+        {
+            using var stream = File.OpenRead(mod.FilePath);
+            var fileName = $"{Convert.ToHexString(SHA256.HashData(stream))[..16]}.dll";
+            var destination = Path.Combine(runtimeFolder, fileName);
+            activeFiles.Add(fileName);
+            if (!File.Exists(destination))
+                File.Copy(mod.FilePath, destination);
+        }
+
+        var manifestPath = Path.Combine(runtimeFolder, "mods.txt");
+        var temporaryPath = manifestPath + ".tmp";
+        File.WriteAllLines(temporaryPath, activeFiles.OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
+        File.Move(temporaryPath, manifestPath, true);
+        foreach (var path in Directory.EnumerateFiles(runtimeFolder, "*.dll"))
+        {
+            if (activeFiles.Contains(Path.GetFileName(path))) continue;
+            try { File.Delete(path); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
     }
 

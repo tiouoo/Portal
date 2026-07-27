@@ -61,6 +61,7 @@ public class BedrockLaunch : IBedrockLaunch
         // Package registration can perform synchronous work before its task is returned.
         // Keep it off Avalonia's UI thread so the task drawer remains responsive.
         MinecraftProcess = await Task.Run(() => new BedrockCore().LaunchGameAsync(options)).ConfigureAwait(false);
+        BedrockModInjector.Start(_instanceConfig, MinecraftProcess);
         
         LaunchFinish?.Invoke();
     }

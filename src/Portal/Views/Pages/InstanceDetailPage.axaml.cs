@@ -8,6 +8,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
+using Portal.Bedrock.Standard.Manifest;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -100,6 +101,7 @@ public partial class InstanceDetailPageViewModel : ObservableObject
 
     public bool IsJava => Instance.IsJava;
     public bool IsBedrock => Instance.IsBedrock;
+    public bool IsGdkBedrock => Instance.BedrockConfig?.BuildType == BedrockBuildType.GDK;
 
     private readonly Dictionary<Type, UserControl> _pageCache = new();
 

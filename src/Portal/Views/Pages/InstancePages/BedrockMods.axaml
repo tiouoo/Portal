@@ -2,8 +2,8 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
-    x:Class="Portal.Views.Pages.InstancePages.ShaderPacks"
-    x:DataType="local:ShaderPacks"
+    x:Class="Portal.Views.Pages.InstancePages.BedrockMods"
+    x:DataType="local:BedrockMods"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,14 +11,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Styles>
-        <Style Selector="Border.shader-pack-card">
+        <Style Selector="Border.mod-card">
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
-        <Style Selector="Border.shader-pack-card.selected">
+        <Style Selector="Border.mod-card.selected">
             <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
         </Style>
-        <Style Selector="Border.shader-pack-card-inner.selected">
+        <Style Selector="Border.mod-card-inner.selected">
             <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
         </Style>
     </UserControl.Styles>
@@ -31,14 +31,14 @@
                 VerticalAlignment="Top" />
             <Button
                 Click="Import_OnClick"
-                Content="添加光影包"
+                Content="添加模组"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="搜索光影包"
+                PlaceholderText="搜索模组"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
@@ -70,23 +70,23 @@
             <DropDownButton
                 Content="{Binding SelectedCountText}"
                 DockPanel.Dock="Right"
-                IsVisible="{Binding HasMultipleSelection}"
+                IsVisible="{Binding HasSelection}"
                 Margin="0,0,8,0">
                 <Button.Flyout>
                     <MenuFlyout>
                         <MenuItem
                             Classes="hide-icon"
                             Click="EnableSelected_OnClick"
-                            Header="启用所选光影包" />
+                            Header="启用所选模组" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="DisableSelected_OnClick"
-                            Header="禁用所选光影包" />
+                            Header="禁用所选模组" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="删除所选光影包" />
+                            Header="删除所选模组" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -94,29 +94,25 @@
                 <TextBlock
                     Cursor="Hand"
                     FontSize="24"
-                    MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="光影包"
-                    TextWrapping="NoWrap" />
+                    Text="模组" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
-                    MaxLines="1"
-                    Text="{Binding ShaderPackCountText}"
-                    TextWrapping="NoWrap" />
+                    Text="{Binding CountText}" />
             </DockPanel>
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取光影包..." />
+                Text="正在读取模组..." />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例没有可识别的光影包" />
+                Text="此 GDK 实例没有可识别的 x64 DLL 模组" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -124,23 +120,23 @@
                     <UniformGridLayout
                         ItemsStretch="Fill"
                         MinColumnSpacing="16"
-                        MinItemHeight="72"
+                        MinItemHeight="96"
                         MinItemWidth="300"
                         MinRowSpacing="16"
                         Orientation="Horizontal" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="local:ShaderPackItem">
+                    <DataTemplate x:DataType="local:BedrockModItem">
                         <Border
+                            Classes.mod-card="True"
                             Classes.selected="{Binding IsSelected}"
-                            Classes.shader-pack-card="True"
                             CornerRadius="11"
                             Cursor="Hand"
-                            PointerPressed="ShaderPackCard_OnPointerPressed">
+                            PointerPressed="ModCard_OnPointerPressed">
                             <Border.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuItem
-                                        Click="ShowShaderPackDetails_OnClick"
+                                        Click="ShowDetails_OnClick"
                                         Header="查看详情"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -151,8 +147,8 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
-                                        Click="EnableShaderPack_OnClick"
-                                        Header="启用光影包"
+                                        Click="EnableMod_OnClick"
+                                        Header="启用模组"
                                         IsVisible="{Binding IsDisabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -163,8 +159,8 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
-                                        Click="DisableShaderPack_OnClick"
-                                        Header="禁用光影包"
+                                        Click="DisableMod_OnClick"
+                                        Header="禁用模组"
                                         IsVisible="{Binding IsEnabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -176,7 +172,7 @@
                                     </MenuItem>
                                     <Separator />
                                     <MenuItem
-                                        Click="OpenShaderPackFolder_OnClick"
+                                        Click="OpenModFolder_OnClick"
                                         Header="在文件夹中打开"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -187,12 +183,12 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
-                                        Click="DeleteShaderPack_OnClick"
+                                        Click="DeleteMod_OnClick"
                                         Header="删除"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
-                                                Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403.7,56.8,407.4,69.9L416,96 512,96C529.7,96,544,110.3,544,128 544,145.7 529.7,160 512,160L128,160C110.3,160,96,145.7,96,128 96,110.3,110.3,96,128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3,202.7,512,216,512 229.3,512,240,501.3,240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3,306.7,512 320,512 333.3,512,344,501.3,344,488L344,296C344,282.7,306.7,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3,410.7,512 424,512 437.3,512,448,501.3,448,488L448,296C448,282.7,437.3,272,424,272z"
+                                                Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403.7,56.8,407.4,69.9L416,96 512,96C529.7,96,544,110.3,544,128 544,145.7 529.7,160 512,160L128,160C110.3,160,96,145.7,96,128 96,110.3,110.3,96,128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3,202.7,512,216,512 229.3,512,240,501.3,240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3,306.7,512,320,512 333.3,512,344,501.3,344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3,410.7,512,424,512 437.3,512,448,501.3,448,488L448,296C448,282.7,437.3,272,424,272z"
                                                 Height="16"
                                                 Width="16" />
                                         </MenuItem.Icon>
@@ -203,24 +199,51 @@
                                 Background="{DynamicResource TranslucentBackgroundColor}"
                                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                                 BorderThickness="1"
+                                Classes.mod-card-inner="True"
                                 Classes.selected="{Binding IsSelected}"
-                                Classes.shader-pack-card-inner="True"
                                 CornerRadius="10"
                                 Padding="14">
                                 <DockPanel>
-                                    <Border Background="#A8643030" CornerRadius="4" DockPanel.Dock="Bottom" HorizontalAlignment="Left" IsVisible="{Binding IsDisabled}" Margin="3,6,0,0" Padding="6,1">
-                                        <TextBlock Foreground="White" FontSize="11" Text="已禁用" />
-                                    </Border>
+                                    <StackPanel
+                                        DockPanel.Dock="Bottom"
+                                        Orientation="Horizontal"
+                                        Spacing="8">
+                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding FileSizeText}" />
+                                        <Border
+                                            Background="{DynamicResource SystemAccentColor}"
+                                            CornerRadius="8"
+                                            IsVisible="{Binding IsPreload}"
+                                            Padding="6,1">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="White"
+                                                Text="预加载"
+                                                VerticalAlignment="Center" />
+                                        </Border>
+                                        <Border
+                                            Background="#A8643030"
+                                            CornerRadius="8"
+                                            IsVisible="{Binding IsDisabled}"
+                                            Padding="6,1">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="White"
+                                                Text="已禁用"
+                                                VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            IsVisible="{Binding IsDelayed}"
+                                            Text="{Binding DelayText}" />
+                                    </StackPanel>
                                     <TextBlock
                                         FontSize="16"
                                         FontWeight="SemiBold"
-                                        Margin="3,0,0,0"
                                         MaxLines="2"
                                         Text="{Binding FileName}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="Wrap"
-                                        ToolTip.Tip="{Binding FileName}"
-                                        VerticalAlignment="Top" />
+                                        ToolTip.Tip="{Binding FileName}" />
                                 </DockPanel>
                             </Border>
                         </Border>
