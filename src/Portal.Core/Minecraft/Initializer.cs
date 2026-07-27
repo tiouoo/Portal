@@ -17,6 +17,8 @@ public static class MinecraftCoreInitializer
             settings.IsEnableFragment = options.IsEnableFragment;
             settings.CurseForgeApiKey = ServiceCredentials.CurseForgeApiKey;
             settings.UserAgent = $"Portal/{options.AppVersion}";
+            settings.DisableSystemProxy = options.DisableSystemProxy;
+            settings.ProxyServer = options.ProxyServer;
         });
         if (options.EnableCustomUserAgent && !string.IsNullOrEmpty(options.CustomUserAgent))
         {
@@ -36,6 +38,8 @@ public class MinecraftCoreInitializeOptions
     public string AppVersion { get; set; }
     public string? CustomUserAgent { get; set; }
     public bool EnableCustomUserAgent { get; set; } = false;
+    public bool DisableSystemProxy { get; set; }
+    public string? ProxyServer { get; set; }
     public int MaxThread { get; set; } = 16;
     public int MaxFragment { get; set; } = 16;
     public int MaxRetryCount { get; set; } = 4;

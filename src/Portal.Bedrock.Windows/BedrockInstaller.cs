@@ -25,7 +25,9 @@ public sealed class BedrockInstaller : IBedrockInstaller
     private const int DownloadBufferSize = 1024 * 256;
     private const int SourceProbeBytes = 1024 * 1024;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
-    private static readonly HttpClient DownloadClient = CreateDownloadClient();
+    private static readonly object DownloadClientLock = new();
+    private static HttpClient? _downloadClient;
+    private static int _downloadClientConfigurationVersion = -1;
     private static IReadOnlyList<BedrockGdkVersion>? _cachedVersions;
 
     public async Task<IReadOnlyList<BedrockGdkVersion>> GetGdkVersionsAsync(bool refresh,
@@ -190,7 +192,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
     {
         using var probeRequest = new HttpRequestMessage(HttpMethod.Get, url);
         probeRequest.Headers.Range = new RangeHeaderValue(0, 0);
-        using var probeResponse = await DownloadClient.SendAsync(probeRequest, HttpCompletionOption.ResponseHeadersRead,
+        using var probeResponse = await GetDownloadClient().SendAsync(probeRequest, HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
         probeResponse.EnsureSuccessStatusCode();
         var total = probeResponse.Content.Headers.ContentRange?.Length ?? probeResponse.Content.Headers.ContentLength ?? 0;
@@ -223,7 +225,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Range = new RangeHeaderValue(0, SourceProbeBytes - 1);
             var stopwatch = Stopwatch.StartNew();
-            using var response = await DownloadClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            using var response = await GetDownloadClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
             if (response.StatusCode != HttpStatusCode.PartialContent) return (url, 0);
             await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
             var buffer = new byte[DownloadBufferSize];
@@ -287,7 +289,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Range = new RangeHeaderValue(start, end);
-        using var response = await DownloadClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response = await GetDownloadClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode != HttpStatusCode.PartialContent)
             throw new HttpRequestException("下载源不支持分段下载。");
         await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -312,7 +314,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
             progressCancellation.Token);
         try
         {
-            using var response = await DownloadClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await GetDownloadClient().GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
             await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
             await using var output = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, DownloadBufferSize, true);
@@ -356,18 +358,34 @@ public sealed class BedrockInstaller : IBedrockInstaller
         catch (OperationCanceledException) { }
     }
 
+    private static HttpClient GetDownloadClient()
+    {
+        lock (DownloadClientLock)
+        {
+            if (_downloadClient is not null && _downloadClientConfigurationVersion == BedrockNetworkConfiguration.Version)
+                return _downloadClient;
+
+            _downloadClient = CreateDownloadClient();
+            _downloadClientConfigurationVersion = BedrockNetworkConfiguration.Version;
+            return _downloadClient;
+        }
+    }
+
     private static HttpClient CreateDownloadClient()
     {
+        var hasProxyServer = Uri.TryCreate(BedrockNetworkConfiguration.ProxyServer, UriKind.Absolute, out var proxyUri);
         var handler = new SocketsHttpHandler
         {
-            UseProxy = false,
+            UseProxy = !BedrockNetworkConfiguration.DisableSystemProxy ||
+                       hasProxyServer,
             AllowAutoRedirect = true,
             MaxAutomaticRedirections = 5,
             MaxConnectionsPerServer = DownloadConcurrency * 2,
             PooledConnectionLifetime = TimeSpan.FromMinutes(5)
         };
+        if (hasProxyServer) handler.Proxy = new WebProxy(proxyUri);
         var client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Portal/1.0 Bedrock GDK Downloader");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(BedrockNetworkConfiguration.UserAgent);
         return client;
     }
 

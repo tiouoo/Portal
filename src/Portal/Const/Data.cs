@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MinecraftLaunch.Utilities;
+using Portal.Bedrock.Standard.Interface;
 using Portal.Classes.Entries;
 using Tio.Avalonia.Standard.Modules.Platform;
 
@@ -33,10 +35,13 @@ public partial class Data : ObservableObject
         {
             case nameof(ConfigEntry.EnableCustomUserAgent):
             case nameof(ConfigEntry.CustomUserAgent):
-                if(ConfigEntry.EnableCustomUserAgent && !string.IsNullOrEmpty(ConfigEntry.CustomUserAgent))
-                    MinecraftLaunch.Utilities.HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent", ConfigEntry.CustomUserAgent);
-                else
-                    MinecraftLaunch.Utilities.HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent", $"Portal/{Version.VersionTitle}");
+            case nameof(ConfigEntry.EnableProxyServer):
+            case nameof(ConfigEntry.DisableSystemProxy):
+            case nameof(ConfigEntry.ProxyServer):
+                HttpUtil.Configure(ConfigEntry.DisableSystemProxy,
+                    ConfigEntry.EnableProxyServer ? ConfigEntry.ProxyServer : null, UserAgent);
+                BedrockNetworkConfiguration.Configure(ConfigEntry.DisableSystemProxy,
+                    ConfigEntry.EnableProxyServer ? ConfigEntry.ProxyServer : null, UserAgent);
                 break;
         }
     }

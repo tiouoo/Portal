@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Flurl.Http;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
+using MinecraftLaunch.Utilities;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -16,7 +17,6 @@ public sealed class ModService
     private const string CurseForgeModsEndpoint = "https://api.curseforge.com/v1/mods";
     private const string ModrinthVersionFilesEndpoint = "https://api.modrinth.com/v2/version_files";
     private const string ModrinthProjectsEndpoint = "https://api.modrinth.com/v2/projects";
-    private const string ModrinthUserAgent = "Portal/1.0 (https://github.com/tiouoo/Portal)";
     private const int FingerprintBatchSize = 50;
     private const int MaximumConcurrentRequests = 4;
     private const int MaximumConcurrentHashes = 4;
@@ -227,9 +227,8 @@ public sealed class ModService
         Dictionary<string, ModrinthVersion> response;
         try
         {
-            response = await ModrinthVersionFilesEndpoint
+            response = await HttpUtil.Request(ModrinthVersionFilesEndpoint)
                 .WithHeader("Accept", "application/json")
-                .WithHeader("User-Agent", ModrinthUserAgent)
                 .PostJsonAsync(new { hashes = requested, algorithm = "sha1" }, cancellationToken: cancellationToken)
                 .ReceiveJson<Dictionary<string, ModrinthVersion>>();
         }
@@ -267,9 +266,8 @@ public sealed class ModService
 
         try
         {
-            var projects = await ModrinthProjectsEndpoint
+            var projects = await HttpUtil.Request(ModrinthProjectsEndpoint)
                 .WithHeader("Accept", "application/json")
-                .WithHeader("User-Agent", ModrinthUserAgent)
                 .SetQueryParam("ids", JsonSerializer.Serialize(requested))
                 .GetJsonAsync<List<ModrinthProject>>(cancellationToken: cancellationToken);
             return projects.Where(project => !string.IsNullOrWhiteSpace(project.Id))
@@ -292,7 +290,7 @@ public sealed class ModService
         CurseForgeFingerprintResponse response;
         try
         {
-            response = await CurseForgeFingerprintEndpoint
+            response = await HttpUtil.Request(CurseForgeFingerprintEndpoint)
                 .WithHeader("Accept", "application/json")
                 .WithHeader("x-api-key", ServiceCredentials.CurseForgeApiKey!)
                 .PostJsonAsync(new { fingerprints = requested }, cancellationToken: cancellationToken)

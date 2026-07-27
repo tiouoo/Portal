@@ -39,6 +39,33 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
+                Content="使用代理服务器"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableProxyServer}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="禁用系统代理"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch
+                IsChecked="{Binding Data.ConfigEntry.DisableSystemProxy}"
+                IsEnabled="{Binding Data.ConfigEntry.CanDisableSystemProxy}" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text=" *单独启用时，所有网络请求将直接连接，不使用系统代理" />
+        </StackPanel>
+        <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableProxyServer}" Spacing="5">
+            <Label
+                Content="代理服务器地址"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox PlaceholderText="http://127.0.0.1:7890" Text="{Binding Data.ConfigEntry.ProxyServer}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
                 Content="自定义 UserAgent"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
@@ -49,7 +76,7 @@
                 Content="UserAgent"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <TextBox Text="{Binding Data.ConfigEntry.CustomUserAgent}" />
+            <TextBox PlaceholderText="{Binding DefaultAgent}" Text="{Binding Data.ConfigEntry.CustomUserAgent}" />
             <StackPanel Orientation="Horizontal">
                 <TextBlock
                     FontSize="11"
@@ -58,11 +85,7 @@
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="Portal/" />
-                <TextBlock
-                    FontSize="11"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="{Binding Data.Instance.Version.VersionTitle}" />
+                    Text="{Binding DefaultAgent}" />
             </StackPanel>
         </StackPanel>
     </StackPanel>

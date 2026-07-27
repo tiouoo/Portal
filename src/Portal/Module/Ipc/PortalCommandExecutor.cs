@@ -8,6 +8,7 @@ using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Installer.Modpack;
 using MinecraftLaunch.Components.Provider;
+using MinecraftLaunch.Utilities;
 using Portal.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
@@ -26,7 +27,6 @@ namespace Portal.Module.Ipc;
 /// </summary>
 public static class PortalCommandExecutor
 {
-    private static readonly HttpClient HttpClient = new();
 
     public static async Task ExecuteAsync(PortalCommand command)
     {
@@ -420,7 +420,7 @@ public static class PortalCommandExecutor
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Head, candidate);
-                using var response = await HttpClient.SendAsync(request, cancellationToken);
+                using var response = await HttpUtil.Client.SendAsync(request, cancellationToken);
                 if (response.IsSuccessStatusCode) return candidate;
             }
             catch (Exception) when (!cancellationToken.IsCancellationRequested)

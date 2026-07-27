@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
 using Portal.Const;
+using MinecraftLaunch.Utilities;
 
 namespace Portal.Module.Imaging;
 
@@ -21,8 +22,6 @@ namespace Portal.Module.Imaging;
 /// </remarks>
 public class DiskCachedImageLoader : IAsyncImageLoader
 {
-    private static readonly HttpClient Client = new();
-
     // 同一个 URL 只下载一次；下载完成后立刻移除信号量，避免字典无限增长。
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> DownloadLocks = new();
 
@@ -53,7 +52,7 @@ public class DiskCachedImageLoader : IAsyncImageLoader
                 if (File.Exists(cachePath))
                     return Decode(cachePath);
 
-                using var response = await Client.GetAsync(url);
+                using var response = await HttpUtil.Client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 await using var stream = await response.Content.ReadAsStreamAsync();
                 using var bitmap = Bitmap.DecodeToWidth(stream, _decodeWidth);

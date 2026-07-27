@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Provider;
+using MinecraftLaunch.Utilities;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Views.Pages.InstancePages;
@@ -56,7 +57,6 @@ public sealed record ModInstallDependencyItem(ModVersionFileItem File, ModDetail
 
 public partial class ModInstallDialogViewModel : ObservableObject, IDialogContext
 {
-    private static readonly HttpClient HttpClient = new();
     private readonly IReadOnlyList<ModInstallInstanceItem> _allInstances;
     private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseforge = new();
@@ -209,7 +209,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     {
         if (!File.GroupKeys.Any(key => key.Loader == "NeoForge")) return [];
 
-        await using var stream = await HttpClient.GetStreamAsync(File.DownloadUrl);
+        await using var stream = await HttpUtil.Client.GetStreamAsync(File.DownloadUrl);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
         var entry = archive.GetEntry("META-INF/neoforge.mods.toml") ?? archive.GetEntry("META-INF/mods.toml");
         if (entry is null) return [];

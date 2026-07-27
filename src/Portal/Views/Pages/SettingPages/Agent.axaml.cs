@@ -14,4 +14,6 @@ public partial class Agent : DataUserControl
         InitializeComponent();
         DataContext = this;
     }
+
+    public object DefaultAgent => $"Portal/{Data.Version.VersionTitle}";
 }

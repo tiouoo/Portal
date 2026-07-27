@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Flurl.Http;
 using Newtonsoft.Json.Linq;
 using Portal.Const;
+using MinecraftLaunch.Utilities;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
@@ -48,9 +49,7 @@ public static class UpdateChecker
         var apiUrl = $"https://api.github.com/repos/tiouoo/Portal/releases/tags/publish-{channel}";
         Logger.Info($"Checking update for {Data.Instance.Version.VersionTitle} from {apiUrl}");
 
-        var json = JObject.Parse(await apiUrl
-            .WithHeader("User-Agent", "Portal-Updater")
-            .GetStringAsync());
+        var json = JObject.Parse(await HttpUtil.Request(apiUrl).GetStringAsync());
         var title = json["name"]?.ToString().Trim();
         if (string.IsNullOrEmpty(title)) throw new InvalidOperationException("更新发布缺少版本名称。");
 

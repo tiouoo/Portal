@@ -39,6 +39,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool EnableManagedWindowDecorationsOnWindows { get; set; }
     [ObservableProperty] public partial bool EnableManagedWindowBorderOnWindows { get; set; } = true;
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
+    [ObservableProperty] public partial bool EnableProxyServer { get; set; }
+    [ObservableProperty] public partial bool DisableSystemProxy { get; set; }
     [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
@@ -47,6 +49,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowRecentPlays { get; set; } = true;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
+    [ObservableProperty] public partial string? ProxyServer { get; set; }
     [ObservableProperty] public partial string? GithubMirrorUrl { get; set; }
     [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
     [ObservableProperty] public partial string DefaultPage { get; set; } = typeof(NewTabPage).AssemblyQualifiedName!;
@@ -83,6 +86,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
+    public bool CanDisableSystemProxy => !EnableProxyServer;
 
     public IEnumerable<MinecraftFolderEntry> TraditionalMinecraftFolders =>
         MinecraftFolders.Where(folder => folder.DetectedLayout.Kind == MinecraftFolderKind.Standard);
@@ -137,6 +141,15 @@ public partial class ConfigEntry : ObservableObject
                 break;
             case nameof(DownloadMaxFragmentCount):
                 DownloadManager.MaxFragment = DownloadMaxFragmentCount;
+                break;
+            case nameof(EnableProxyServer):
+                if (EnableProxyServer && !DisableSystemProxy)
+                    DisableSystemProxy = true;
+                OnPropertyChanged(nameof(CanDisableSystemProxy));
+                break;
+            case nameof(DisableSystemProxy):
+                if (EnableProxyServer && !DisableSystemProxy)
+                    DisableSystemProxy = true;
                 break;
         }
 

@@ -14,6 +14,7 @@ using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Installer.Modpack;
 using MinecraftLaunch.Components.Provider;
+using MinecraftLaunch.Utilities;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
@@ -29,7 +30,6 @@ namespace Portal.Views.Pages.DownloadPages;
 
 public partial class ModpackDetailsPage : UserControl, ITioTabPage
 {
-    private static readonly HttpClient HttpClient = new();
     private JavaResourceVersionGroup? _targetVersionGroup;
     private bool _isWaitingForTargetVersionGroup;
     public ModpackDetailsPage() : this(new JavaResourceDetailsTarget(JavaResourceDefinitions.Modpack, ModDetailsSource.Modrinth, string.Empty)) { }
@@ -339,7 +339,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
 
         try
         {
-            using var response = await HttpClient.GetAsync(iconUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await HttpUtil.Client.GetAsync(iconUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
             Directory.CreateDirectory(instancePath);
             var iconPath = Path.Combine(instancePath, "Portal.Icon.png");

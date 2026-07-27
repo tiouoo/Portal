@@ -46,3 +46,19 @@ public static class BedrockInstallationService
 {
     public static IBedrockInstaller? DefaultInstaller { get; set; }
 }
+
+public static class BedrockNetworkConfiguration
+{
+    public static bool DisableSystemProxy { get; private set; }
+    public static string? ProxyServer { get; private set; }
+    public static string UserAgent { get; private set; } = "Portal Bedrock GDK Downloader";
+    public static int Version { get; private set; }
+
+    public static void Configure(bool disableSystemProxy, string? proxyServer, string userAgent)
+    {
+        DisableSystemProxy = disableSystemProxy;
+        ProxyServer = proxyServer;
+        UserAgent = userAgent;
+        Version++;
+    }
+}

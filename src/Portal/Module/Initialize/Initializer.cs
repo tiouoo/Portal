@@ -7,6 +7,7 @@ using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core;
 using Portal.Core.Minecraft;
+using Portal.Bedrock.Standard.Interface;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -31,11 +32,15 @@ public static partial class Initializer
     {
         Logger.Info("开始初始化应用服务");
         Config.Initialize();
+        BedrockNetworkConfiguration.Configure(Data.ConfigEntry.DisableSystemProxy,
+            Data.ConfigEntry.EnableProxyServer ? Data.ConfigEntry.ProxyServer : null, Data.Instance.UserAgent);
         MinecraftCoreInitializer.Initialize(new MinecraftCoreInitializeOptions()
         {
             AppVersion = Data.Instance.Version.VersionTitle,
             EnableCustomUserAgent = Data.ConfigEntry.EnableCustomUserAgent,
             CustomUserAgent = Data.ConfigEntry.CustomUserAgent,
+            DisableSystemProxy = Data.ConfigEntry.DisableSystemProxy,
+            ProxyServer = Data.ConfigEntry.EnableProxyServer ? Data.ConfigEntry.ProxyServer : null,
             MaxThread = Data.ConfigEntry.DownloadMaxThreadCount,
             MaxFragment = Data.ConfigEntry.DownloadMaxFragmentCount,
             MaxRetryCount = Data.ConfigEntry.DownloadMaxRetryCount,
