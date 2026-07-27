@@ -182,7 +182,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
                     extractionStep = context.CreateChild(new TaskOptions
                     {
                         Name = "解压 GDK 安装包",
-                        Description = "正在准备解压",
+                        Description = "正在解压",
                         Progress = 0
                     }, async step =>
                     {
