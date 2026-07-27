@@ -17,6 +17,7 @@ public class BackgroundModeCompareConverter : IValueConverter
         var res = targetModeName.Trim('!') switch
         {
             "Default" => currentMode == BackgroundMode.Default,
+            "Transparent" => currentMode == BackgroundMode.Transparent,
             "Image" => currentMode == BackgroundMode.Image,
             "SolidColor" => currentMode == BackgroundMode.Color,
             "Acrylic" => currentMode == BackgroundMode.Acrylic,

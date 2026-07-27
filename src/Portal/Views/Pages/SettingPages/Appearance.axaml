@@ -108,6 +108,7 @@
                 <ComboBoxItem>亚克力</ComboBoxItem>
                 <ComboBoxItem>模糊</ComboBoxItem>
                 <ComboBoxItem>云母</ComboBoxItem>
+                <ComboBoxItem>透明</ComboBoxItem>
             </ComboBox>
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='SolidColor'}" Spacing="5">

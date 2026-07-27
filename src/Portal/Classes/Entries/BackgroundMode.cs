@@ -7,5 +7,6 @@ public enum BackgroundMode
     Color,
     Acrylic,
     Blur,
-    Mica
+    Mica,
+    Transparent
 }

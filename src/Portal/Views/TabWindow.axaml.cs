@@ -386,6 +386,13 @@ public partial class TabWindow : TioTabWindowBase
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
                 break;
 
+            case BackgroundMode.Transparent:
+                ClearOwnedBackground();
+                Background = Brushes.Transparent;
+                TransparencyBackgroundFallback = Brushes.Transparent;
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
+                break;
+
             case BackgroundMode.Image:
                 if (RootBorder != null)
                 {
@@ -432,9 +439,10 @@ public partial class TabWindow : TioTabWindowBase
 
             case BackgroundMode.Color:
                 ClearOwnedBackground();
+                Background = Brushes.Transparent;
                 if (RootBorder != null)
                     RootBorder.Background = new SolidColorBrush(entry.BackgroundSolidColor);
-                ClearValue(TransparencyBackgroundFallbackProperty);
+                TransparencyBackgroundFallback = Brushes.Transparent;
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
                 break;
 
