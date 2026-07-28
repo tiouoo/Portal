@@ -42,6 +42,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool EnableProxyServer { get; set; }
     [ObservableProperty] public partial bool DisableSystemProxy { get; set; }
     [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
+    [ObservableProperty] public partial GithubMirrorMode GithubMirrorMode { get; set; } = GithubMirrorMode.Prefix;
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;

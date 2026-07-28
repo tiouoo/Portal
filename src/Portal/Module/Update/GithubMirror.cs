@@ -1,12 +1,16 @@
 using System;
+using Portal.Classes.Enums;
 using Portal.Const;
 
 namespace Portal.Module.Update;
 
 /// <summary>
-/// GitHub 镜像加速地址改写，兼容多种镜像源写法：
-/// 纯域名（ghfast.top）、前缀式（https://ghfast.top）、{url} 占位符模板式，
-/// 以及粘贴了镜像站示例后缀（https://ghfast.top/https://github.com）的写法。
+/// GitHub 镜像加速地址改写，支持两种模式：
+/// <list type="bullet">
+/// <item>前缀代理式（Prefix）：在原始 URL 前拼接镜像站地址，如 https://ghfast.top/https://github.com/a/b</item>
+/// <item>直接访问式（Direct）：替换原始 URL 的域名为镜像站域名，如 https://bgithub.xyz/a/b</item>
+/// </list>
+/// 此外仍兼容 {url} 占位符模板式写法。
 /// </summary>
 public static class GithubMirror
 {
@@ -41,9 +45,56 @@ public static class GithubMirror
 
     private static string Rewrite(string url, string mirror)
     {
+        // 占位符模板式优先，兼容历史写法
         if (mirror.Contains(UrlPlaceholder, StringComparison.OrdinalIgnoreCase))
             return ReplacePlaceholder(mirror, url);
+
+        return Data.ConfigEntry.GithubMirrorMode == GithubMirrorMode.Direct
+            ? RewriteDirect(url, mirror)
+            : RewritePrefix(url, mirror);
+    }
+
+    // 直接访问式：替换域名为镜像站域名
+    // https://github.com/a/b + bgithub.xyz -> https://bgithub.xyz/a/b
+    private static string RewriteDirect(string url, string mirror)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var original)) return url;
+
+        var mirrorUri = ParseMirrorUrl(mirror);
+        if (mirrorUri == null) return url;
+
+        var builder = new UriBuilder(original)
+        {
+            Scheme = mirrorUri.Scheme,
+            Host = mirrorUri.Host,
+            Port = mirrorUri.IsDefaultPort ? -1 : mirrorUri.Port
+        };
+
+        // 保留镜像站的路径前缀（如 https://mirror.com/github 作为前缀）
+        var mirrorPath = mirrorUri.AbsolutePath.TrimEnd('/');
+        var originalPath = original.AbsolutePath;
+
+        builder.Path = mirrorPath.Length > 0
+            ? mirrorPath + (originalPath.StartsWith('/') ? originalPath : "/" + originalPath)
+            : originalPath;
+
+        return builder.Uri.AbsoluteUri;
+    }
+
+    // 前缀代理式：在原始 URL 前拼接镜像站地址
+    // https://github.com/a/b + https://ghfast.top -> https://ghfast.top/https://github.com/a/b
+    private static string RewritePrefix(string url, string mirror)
+    {
         return $"{NormalizePrefix(mirror)}/{url}";
+    }
+
+    // 将用户输入的镜像地址解析为 Uri，支持纯域名写法（如 bgithub.xyz）
+    private static Uri? ParseMirrorUrl(string mirror)
+    {
+        var candidate = mirror.Trim();
+        if (!candidate.Contains("://", StringComparison.OrdinalIgnoreCase))
+            candidate = "https://" + candidate;
+        return Uri.TryCreate(candidate, UriKind.Absolute, out var uri) ? uri : null;
     }
 
     private static string ReplacePlaceholder(string template, string url)

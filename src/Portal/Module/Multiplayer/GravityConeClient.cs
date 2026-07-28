@@ -53,8 +53,14 @@ public sealed class GravityConeClient : IAsyncDisposable
             startInfo.ArgumentList.Add(peer);
         }
 
-        _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-        if (!_process.Start()) throw new InvalidOperationException("无法启动 GravityCone CLI。");
+        // Process.Start() is synchronous and may take hundreds of ms;
+        // run it on a background thread to avoid blocking the UI.
+        _process = await Task.Run(() =>
+        {
+            var p = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+            if (!p.Start()) throw new InvalidOperationException("无法启动 GravityCone CLI。");
+            return p;
+        });
         _process.Exited += (_, _) => FailAllPending("GravityCone CLI 已退出。");
         _ = ReadOutputAsync(_process);
         _ = ReadErrorAsync(_process);
@@ -229,3 +235,4 @@ public sealed class GravityConeException(string code, string message) : Exceptio
 {
     public string Code { get; } = code;
 }
+

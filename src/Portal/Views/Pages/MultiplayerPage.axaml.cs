@@ -59,6 +59,12 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         ViewModel.Activate();
         ShowEditionContent();
         SelectEditionNavItem();
+        Loaded += (s, e) =>
+        {
+            var a = Frame.Content;
+            Frame.Content = null;
+            Frame.Content = a;
+        };
         await ViewModel.InitializeAsync();
     }
 
@@ -71,7 +77,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     private void ShowEditionContent()
     {
-        this.FindControl<TransitioningContentControl>("Frame")!.Content = new Components.MultiplayerContentPage(ViewModel);
+        this.FindControl<ContentControl>("Frame")!.Content = new Components.MultiplayerContentPage(ViewModel);
     }
 
     private void SelectEditionNavItem()
@@ -204,7 +210,9 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     public async Task InitializeAsync()
     {
-        var installation = GravityConeInstaller.FindInstalled();
+        // FindInstalled() does synchronous file IO and JSON deserialization;
+        // run it on a background thread to avoid blocking the UI on first open.
+        var installation = await Task.Run(GravityConeInstaller.FindInstalled);
         IsComponentMissing = installation is null;
         StatusText = installation is null ? "联机组件未安装" : string.Empty;
         if (installation is null) return;
@@ -763,3 +771,4 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         _lifetime.Dispose();
     }
 }
+

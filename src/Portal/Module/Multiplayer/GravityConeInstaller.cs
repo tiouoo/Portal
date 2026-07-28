@@ -1,6 +1,7 @@
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Portal.Const;
@@ -13,6 +14,9 @@ public static class GravityConeInstaller
     public const string ManifestUrl = "https://cdn.tiouo.xyz/portal/gravitycone.json";
     public const string GravityConeVersion = "0.1.3-alpha";
     public const string EasyTierVersion = "2.6.4";
+
+    private const int DownloadConcurrency = 4;
+    private const int BufferSize = 128 * 1024;
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromMinutes(5) };
     private static string Root => Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer");
@@ -62,8 +66,19 @@ public static class GravityConeInstaller
         Directory.CreateDirectory(gcDirectory);
         Directory.CreateDirectory(etDirectory);
 
-        await InstallPackageAsync(gcPackage, gcDirectory, false, progress, cancellationToken);
-        await InstallPackageAsync(etPackage, etDirectory, true, progress, cancellationToken);
+        var progressState = new ParallelDownloadProgress(2, progress);
+
+        var gcArchive = new DownloadContext(gcPackage, gcDirectory, false, 0) { ProgressState = progressState };
+        var etArchive = new DownloadContext(etPackage, etDirectory, true, 1) { ProgressState = progressState };
+
+        progressState.Start();
+
+        var gcTask = InstallPackageInternalAsync(gcArchive, cancellationToken);
+        var etTask = InstallPackageInternalAsync(etArchive, cancellationToken);
+
+        await Task.WhenAll(gcTask, etTask);
+
+        progress?.Report((null, "正在校验联机组件"));
 
         var cliName = gcPackage.Executable ?? GetCliName(rid);
         var cliPath = Path.Combine(gcDirectory, cliName);
@@ -95,9 +110,9 @@ public static class GravityConeInstaller
         }
     }
 
-    private static async Task InstallPackageAsync(OnlinePackageManifest package, string destination,
-        bool flatten, IProgress<(double? Progress, string Message)>? progress, CancellationToken cancellationToken)
+    private static async Task InstallPackageInternalAsync(DownloadContext context, CancellationToken cancellationToken)
     {
+        var package = context.Package;
         var tempRoot = Path.Combine(ConfigPath.TempFolderPath, "Multiplayer", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var archive = Path.Combine(tempRoot, package.FileName);
@@ -105,27 +120,17 @@ public static class GravityConeInstaller
         Directory.CreateDirectory(extracted);
         try
         {
-            progress?.Report((0, $"正在下载 {package.FileName}"));
             var downloadUrl = GithubMirror.Apply(package.Url);
-            using var response = await Client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken);
-            response.EnsureSuccessStatusCode();
-            await using (var input = await response.Content.ReadAsStreamAsync(cancellationToken))
-            await using (var output = File.Create(archive))
-            {
-                var total = response.Content.Headers.ContentLength ?? package.Size;
-                var buffer = new byte[128 * 1024];
-                long downloaded = 0;
-                while (true)
-                {
-                    var read = await input.ReadAsync(buffer, cancellationToken);
-                    if (read == 0) break;
-                    await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-                    downloaded += read;
-                    progress?.Report((total > 0 ? (double)downloaded / total : null,
-                        $"正在下载 {package.FileName}"));
-                }
-            }
+            var total = package.Size;
+
+            context.ReportDownloadProgress(0, total, $"正在下载 {package.FileName}");
+
+            bool supportsRange = total > 0 && await ValidateRangeSupportAsync(downloadUrl, cancellationToken);
+
+            if (supportsRange)
+                await DownloadMultiPartAsync(downloadUrl, archive, total, context, cancellationToken);
+            else
+                await DownloadSinglePartAsync(downloadUrl, archive, total, context, cancellationToken);
 
             if (package.Size > 0 && new FileInfo(archive).Length != package.Size)
                 throw new InvalidDataException($"{package.FileName} 文件大小校验失败。");
@@ -136,7 +141,7 @@ public static class GravityConeInstaller
                     throw new InvalidDataException($"{package.FileName} SHA-256 校验失败。");
             }
 
-            progress?.Report((null, $"正在解压 {package.FileName}"));
+            context.ReportMessage($"正在解压 {package.FileName}");
             if (package.ArchiveType.Equals("zip", StringComparison.OrdinalIgnoreCase))
                 ZipFile.ExtractToDirectory(archive, extracted);
             else if (package.ArchiveType.Equals("tar.gz", StringComparison.OrdinalIgnoreCase))
@@ -149,15 +154,85 @@ public static class GravityConeInstaller
 
             foreach (var file in Directory.EnumerateFiles(extracted, "*", SearchOption.AllDirectories))
             {
-                var relative = flatten ? Path.GetFileName(file) : Path.GetRelativePath(extracted, file);
-                var target = Path.Combine(destination, relative);
+                var relative = context.Flatten ? Path.GetFileName(file) : Path.GetRelativePath(extracted, file);
+                var target = Path.Combine(context.Destination, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.Copy(file, target, true);
             }
+
+            context.MarkCompleted();
         }
         finally
         {
             if (Directory.Exists(tempRoot)) Directory.Delete(tempRoot, true);
+        }
+    }
+
+    private static async Task<bool> ValidateRangeSupportAsync(string url, CancellationToken cancellationToken)
+    {
+        using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
+        rangeRequest.Headers.Range = new RangeHeaderValue(0, 0);
+        using var response = await Client.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        return response.StatusCode == System.Net.HttpStatusCode.PartialContent;
+    }
+
+    private static async Task DownloadMultiPartAsync(string url, string path, long total,
+        DownloadContext context, CancellationToken cancellationToken)
+    {
+        await using (var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write, BufferSize, true))
+            file.SetLength(total);
+
+        long downloaded = 0;
+        long segmentSize = (total + DownloadConcurrency - 1) / DownloadConcurrency;
+        var downloads = Enumerable.Range(0, DownloadConcurrency).Select(async index =>
+        {
+            var start = index * segmentSize;
+            if (start >= total) return;
+            var end = Math.Min(start + segmentSize, total) - 1;
+            await DownloadRangeAsync(url, path, start, end, bytes =>
+            {
+                long current = Interlocked.Add(ref downloaded, bytes);
+                context.ReportDownloadProgress(current, total, $"正在下载 {context.Package.FileName}");
+            }, cancellationToken);
+        });
+        await Task.WhenAll(downloads);
+    }
+
+    private static async Task DownloadRangeAsync(string url, string path, long start, long end,
+        Action<int> onBytes, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Range = new RangeHeaderValue(start, end);
+        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var output = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Write, BufferSize, true);
+        output.Seek(start, SeekOrigin.Begin);
+        var buffer = new byte[BufferSize];
+        int read;
+        while ((read = await input.ReadAsync(buffer, cancellationToken)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            onBytes(read);
+        }
+    }
+
+    private static async Task DownloadSinglePartAsync(string url, string path, long total,
+        DownloadContext context, CancellationToken cancellationToken)
+    {
+        using var response = await Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var output = File.Create(path);
+        var buffer = new byte[BufferSize];
+        long downloaded = 0;
+        while (true)
+        {
+            var read = await input.ReadAsync(buffer, cancellationToken);
+            if (read == 0) break;
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            downloaded += read;
+            context.ReportDownloadProgress(downloaded, total, $"正在下载 {context.Package.FileName}");
         }
     }
 
@@ -194,4 +269,124 @@ public static class GravityConeInstaller
 
     private sealed record InstallationState(string GravityConeVersion, string EasyTierVersion, string Rid,
         string CliExecutable);
+
+    private sealed class DownloadContext
+    {
+        public OnlinePackageManifest Package { get; }
+        public string Destination { get; }
+        public bool Flatten { get; }
+        public int Index { get; }
+
+        public ParallelDownloadProgress? ProgressState { get; set; }
+
+        public DownloadContext(OnlinePackageManifest package, string destination, bool flatten, int index)
+        {
+            Package = package;
+            Destination = destination;
+            Flatten = flatten;
+            Index = index;
+        }
+
+        public void ReportDownloadProgress(long downloaded, long total, string message)
+        {
+            ProgressState?.ReportDownloadProgress(Index, downloaded, total, message);
+        }
+
+        public void ReportMessage(string message)
+        {
+            ProgressState?.ReportMessage(Index, message);
+        }
+
+        public void MarkCompleted()
+        {
+            ProgressState?.MarkCompleted(Index);
+        }
+    }
+
+    private sealed class ParallelDownloadProgress
+    {
+        private readonly int _count;
+        private readonly IProgress<(double? Progress, string Message)>? _progress;
+        private readonly long[] _downloadedBytes;
+        private readonly long[] _totalBytes;
+        private readonly string[] _messages;
+        private readonly int[] _states;
+        private int _started;
+
+        private const int StateIdle = 0;
+        private const int StateDownloading = 1;
+        private const int StateExtracting = 2;
+        private const int StateCompleted = 3;
+
+        public ParallelDownloadProgress(int count, IProgress<(double? Progress, string Message)>? progress)
+        {
+            _count = count;
+            _progress = progress;
+            _downloadedBytes = new long[count];
+            _totalBytes = new long[count];
+            _messages = new string[count];
+            _states = new int[count];
+        }
+
+        public void Start()
+        {
+            Interlocked.Exchange(ref _started, 1);
+            Report();
+        }
+
+        public void ReportDownloadProgress(int index, long downloaded, long total, string message)
+        {
+            Interlocked.Exchange(ref _downloadedBytes[index], downloaded);
+            Interlocked.Exchange(ref _totalBytes[index], total);
+            _messages[index] = message;
+            Interlocked.CompareExchange(ref _states[index], StateDownloading, StateIdle);
+            Report();
+        }
+
+        public void ReportMessage(int index, string message)
+        {
+            _messages[index] = message;
+            Interlocked.Exchange(ref _states[index], StateExtracting);
+            Report();
+        }
+
+        public void MarkCompleted(int index)
+        {
+            Interlocked.Exchange(ref _states[index], StateCompleted);
+            Report();
+        }
+
+        private void Report()
+        {
+            if (Volatile.Read(ref _started) == 0) return;
+
+            long totalSum = 0;
+            long downloadedSum = 0;
+            var messages = new List<string>();
+            int completedCount = 0;
+
+            for (int i = 0; i < _count; i++)
+            {
+                long total = Volatile.Read(ref _totalBytes[i]);
+                long downloaded = Volatile.Read(ref _downloadedBytes[i]);
+                totalSum += total;
+                downloadedSum += Math.Min(downloaded, total);
+
+                var state = Volatile.Read(ref _states[i]);
+                if (state == StateCompleted) completedCount++;
+
+                if (!string.IsNullOrEmpty(_messages[i]))
+                    messages.Add(_messages[i]);
+            }
+
+            double? progress = totalSum > 0 ? (double)downloadedSum / totalSum : null;
+            string message = completedCount == _count
+                ? "联机组件下载完成"
+                : messages.Count > 0
+                    ? string.Join("，", messages)
+                    : "正在下载联机组件";
+
+            _progress?.Report((progress, message));
+        }
+    }
 }

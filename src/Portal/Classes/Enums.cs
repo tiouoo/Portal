@@ -30,3 +30,11 @@ public enum PortalVisibleMode
     MinimizedAfterLaunch,
     MinimizedAfterLaunchAndRestore
 }
+
+public enum GithubMirrorMode
+{
+    /// <summary>前缀代理式：https://ghfast.top/https://github.com/a/b</summary>
+    Prefix,
+    /// <summary>直接访问式（替换域名）：https://bgithub.xyz/a/b</summary>
+    Direct
+}
