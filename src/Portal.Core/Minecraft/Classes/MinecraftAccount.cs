@@ -83,7 +83,7 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
                 AccountType.Microsoft => "微软",
                 _ => "未知"
             };
-            return $"{t} · {Name}";
+            return $"{t}·{Name}";
         }
     }
 

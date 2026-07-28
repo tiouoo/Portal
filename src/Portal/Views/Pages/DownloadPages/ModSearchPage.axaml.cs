@@ -13,6 +13,7 @@ using MinecraftLaunch.Components.Provider;
 using Portal.Const;
 using Portal.Views.Pages.InstancePages;
 using Portal.Views.Pages;
+using Portal.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -41,6 +42,13 @@ public partial class ModSearchPage : UserControl
             return;
 
         ModDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
+        e.Handled = true;
+    }
+
+    private void Favorite_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is ModSearchResultItem item)
+            FavoriteCollectionService.Instance.Add(FavoriteResourceFactory.From(item));
         e.Handled = true;
     }
 }

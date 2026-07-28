@@ -85,7 +85,7 @@ public class Index
         {
             Type = AggregatedSearchEntryType.Instance,
             Title = instance.InstanceName,
-            Description = $"{instance.FolderName} · {instance.ShortDisplay}",
+            Description = $"{instance.FolderName}·{instance.ShortDisplay}",
             IconKey = instance.Type.ToString(),
             Data = instance,
             TypeDescription = "实例"

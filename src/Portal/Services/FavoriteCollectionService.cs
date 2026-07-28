@@ -1,0 +1,118 @@
+using Newtonsoft.Json;
+using Portal.Const;
+using Portal.Views.Pages.DownloadPages;
+
+namespace Portal.Services;
+
+public enum FavoriteEdition { Java, Bedrock }
+
+public class FavoriteResource
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Name { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public string? IconUrl { get; set; }
+    public FavoriteEdition Edition { get; set; }
+    public JavaResourceKind Kind { get; set; }
+    public ModDetailsSource Source { get; set; }
+    public string ProjectId { get; set; } = string.Empty;
+}
+
+public sealed class FavoriteCollection
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Name { get; set; } = "默认收藏夹";
+    public List<FavoriteResource> Items { get; set; } = [];
+}
+
+public sealed class FavoriteCollectionDocument
+{
+    public int Version { get; set; } = 1;
+    public List<FavoriteCollection> Collections { get; set; } = [];
+}
+
+public sealed class FavoriteCollectionService
+{
+    private const string FileName = "Favorites.portal.json";
+    private readonly string _path = Path.Combine(ConfigPath.UserDataRootPath, FileName);
+    public static FavoriteCollectionService Instance { get; } = new();
+    public FavoriteCollectionDocument Document { get; private set; }
+
+    private FavoriteCollectionService()
+    {
+        Document = Load();
+        EnsureCollection();
+    }
+
+    public event EventHandler? Changed;
+
+    public bool Contains(FavoriteResource resource) => Document.Collections
+        .SelectMany(collection => collection.Items)
+        .Any(item => item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source);
+
+    public void Add(FavoriteResource resource, string? collectionId = null)
+    {
+        var collection = Document.Collections.FirstOrDefault(item => item.Id == collectionId) ?? Document.Collections[0];
+        if (collection.Items.Any(item => item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source))
+            return;
+        collection.Items.Add(resource);
+        Save();
+    }
+
+    public void Remove(FavoriteResource resource)
+    {
+        foreach (var collection in Document.Collections)
+            collection.Items.RemoveAll(item => item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source);
+        Save();
+    }
+
+    public void Save()
+    {
+        Directory.CreateDirectory(ConfigPath.UserDataRootPath);
+        var temporaryPath = _path + ".tmp";
+        File.WriteAllText(temporaryPath, JsonConvert.SerializeObject(Document, Formatting.Indented));
+        File.Move(temporaryPath, _path, true);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Import(string path)
+    {
+        var imported = JsonConvert.DeserializeObject<FavoriteCollectionDocument>(File.ReadAllText(path));
+        if (imported?.Collections is null)
+            throw new InvalidDataException("收藏夹文件格式无效。");
+        foreach (var collection in imported.Collections.Where(collection => !string.IsNullOrWhiteSpace(collection.Name)))
+        {
+            collection.Id = Guid.NewGuid().ToString("N");
+            collection.Items ??= [];
+            Document.Collections.Add(collection);
+        }
+        EnsureCollection();
+        Save();
+    }
+
+    public void Export(FavoriteCollection collection, string path)
+    {
+        var document = new FavoriteCollectionDocument { Collections = [collection] };
+        File.WriteAllText(path, JsonConvert.SerializeObject(document, Formatting.Indented));
+    }
+
+    private FavoriteCollectionDocument Load()
+    {
+        try
+        {
+            return File.Exists(_path)
+                ? JsonConvert.DeserializeObject<FavoriteCollectionDocument>(File.ReadAllText(_path)) ?? new FavoriteCollectionDocument()
+                : new FavoriteCollectionDocument();
+        }
+        catch
+        {
+            return new FavoriteCollectionDocument();
+        }
+    }
+
+    private void EnsureCollection()
+    {
+        if (Document.Collections.Count == 0)
+            Document.Collections.Add(new FavoriteCollection());
+    }
+}

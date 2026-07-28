@@ -1,0 +1,31 @@
+<UserControl
+    x:Class="Portal.Views.Pages.DownloadPages.FavoriteCollectionEditDialog"
+    x:DataType="local:FavoriteCollectionEditDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, *, Auto"
+        Width="510">
+        <TextBlock
+            FontSize="16"
+            FontWeight="600"
+            Grid.Row="0"
+            Text="编辑收藏夹" />
+        <StackPanel Grid.Row="1" Margin="0,20">
+            <TextBlock Text="重命名收藏夹" />
+            <TextBox PlaceholderText="收藏夹名称" Text="{Binding DraftName}" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Click="Share_OnClick" Content="分享" />
+            <Button Click="Delete_OnClick" Content="删除" />
+            <Button Click="Cancel_OnClick" Content="取消" />
+            <Button Click="Complete_OnClick" Content="完成" />
+        </StackPanel>
+    </Grid>
+</UserControl>

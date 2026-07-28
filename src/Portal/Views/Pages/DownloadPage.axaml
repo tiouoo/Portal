@@ -20,6 +20,10 @@
             Margin="7,0,10,10"
             Width="175">
             <tio:NavMenu Margin="0,0,10,0" Theme="{StaticResource FlatScrollBarTheme}">
+                <tio:NavMenuItem
+                    Command="{Binding NavigateTypeCommand}"
+                    CommandParameter="{x:Type downloadPages:FavoritesPage}"
+                    Header="收藏夹" />
                 <tio:NavMenuItem Header="Java 版">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"

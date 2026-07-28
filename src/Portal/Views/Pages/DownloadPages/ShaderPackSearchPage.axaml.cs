@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Portal.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -20,5 +21,11 @@ public partial class ShaderPackSearchPage : UserControl
         if (e.GetCurrentPoint(sender as Control).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed ||
             (sender as Control)?.DataContext is not JavaResourceSearchResultItem item || TopLevel.GetTopLevel(this) is not { } topLevel) return;
         ShaderPackDetailsPage.Open(topLevel, item.Target, item.Name); e.Handled = true;
+    }
+    private void Favorite_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is JavaResourceSearchResultItem item)
+            FavoriteCollectionService.Instance.Add(FavoriteResourceFactory.From(item, FavoriteEdition.Java));
+        e.Handled = true;
     }
 }

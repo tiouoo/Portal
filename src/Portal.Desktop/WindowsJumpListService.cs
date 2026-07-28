@@ -232,7 +232,7 @@ internal static class WindowsJumpListService
             var recentPlay = (await RecentPlayService.ScanAsync(InstanceManager.Instance.Instances)).FirstOrDefault();
             if (recentPlay != null)
             {
-                items.Add(("继续游戏", recentPlay.Name, $"{recentPlay.Instance.InstanceName} · {recentPlay.Details}",
+                items.Add(("继续游戏", recentPlay.Name, $"{recentPlay.Instance.InstanceName}·{recentPlay.Details}",
                     new JumpListCommand(JumpListCommandKind.RecentPlay, recentPlay.Instance.InstanceFolderPath,
                         recentPlay.Type, recentPlay.Id)));
             }

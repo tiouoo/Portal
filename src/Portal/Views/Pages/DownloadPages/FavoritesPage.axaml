@@ -1,0 +1,156 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.FavoritesPage"
+    x:DataType="local:FavoritesPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="12,0,12,12">
+        <StackPanel DockPanel.Dock="Top" Spacing="10">
+            <DockPanel>
+                <TextBlock FontSize="24" Text="收藏夹" />
+            </DockPanel>
+            <DockPanel>
+                <DropDownButton Content="编辑" DockPanel.Dock="Left">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout>
+                            <MenuItem
+                                Classes="hide-icon"
+                                Command="{Binding AddCollectionCommand}"
+                                Header="新建收藏夹" />
+                            <MenuItem
+                                Classes="hide-icon"
+                                Click="Import_OnClick"
+                                Header="导入收藏夹" />
+                            <MenuItem
+                                Classes="hide-icon"
+                                Click="Export_OnClick"
+                                Header="导出当前收藏夹" />
+                            <MenuItem
+                                Classes="hide-icon"
+                                Click="Edit_OnClick"
+                                Header="编辑当前收藏夹" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+                <ComboBox
+                    DockPanel.Dock="Left"
+                    ItemsSource="{Binding Collections}"
+                    Margin="8,0,0,0"
+                    SelectedItem="{Binding SelectedCollection}"
+                    Width="150">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox
+                    DockPanel.Dock="Left"
+                    ItemsSource="{Binding Editions}"
+                    Margin="10,0,0,0"
+                    SelectedItem="{Binding SelectedEdition}"
+                    Width="120" />
+                <ComboBox
+                    DockPanel.Dock="Left"
+                    IsVisible="{Binding ShowKindFilter}"
+                    ItemsSource="{Binding Kinds}"
+                    Margin="10,0,0,0"
+                    SelectedItem="{Binding SelectedKind}"
+                    Width="130" />
+                <TextBox
+                    Margin="10,0"
+                    PlaceholderText="搜索收藏内容"
+                    Text="{Binding SearchText}" />
+            </DockPanel>
+        </StackPanel>
+        <controls:ScrollView Classes="Flat" Margin="0,12,0,0">
+            <ItemsRepeater ItemsSource="{Binding Items}" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="16"
+                        MinItemHeight="117"
+                        MinItemWidth="300"
+                        MinRowSpacing="16" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="local:FavoriteResourceItem">
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Cursor="Hand"
+                            Padding="10"
+                            PointerPressed="Item_OnPointerPressed">
+                            <Panel>
+                                <DockPanel>
+                                    <DockPanel DockPanel.Dock="Top">
+                                        <Border
+                                            Background="{DynamicResource TranslucentBorderBrush}"
+                                            CornerRadius="10"
+                                            DockPanel.Dock="Left"
+                                            Height="56"
+                                            Width="56">
+                                            <owned:OwnedAdvancedImage
+                                                CornerRadius="10"
+                                                Loader="{Binding ImageLoader}"
+                                                Source="{Binding IconUrl}" />
+                                        </Border>
+                                        <StackPanel
+                                            DockPanel.Dock="Top"
+                                            Margin="10,1,0,0"
+                                            VerticalAlignment="Top">
+                                            <TextBlock
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                MaxLines="2"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                MaxLines="1"
+                                                Text="{Binding SourceText}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <TextBlock
+                                        DockPanel.Dock="Bottom"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="3,6,3,0"
+                                        MaxLines="2"
+                                        Text="{Binding Summary}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="WrapWithOverflow" />
+                                </DockPanel>
+                                <Button
+                                    Background="Transparent"
+                                    Click="Remove_OnClick"
+                                    DockPanel.Dock="Bottom"
+                                    FontSize="12"
+                                    HorizontalAlignment="Right"
+                                    Margin="0,0,5,1"
+                                    Padding="0"
+                                    Tag="{Binding}"
+                                    Theme="{StaticResource TransparentButton}"
+                                    VerticalAlignment="Bottom">
+                                    <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="取消收藏" />
+                                </Button>
+                            </Panel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
+    </DockPanel>
+</UserControl>

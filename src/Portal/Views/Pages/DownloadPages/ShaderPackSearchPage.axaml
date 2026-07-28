@@ -6,11 +6,11 @@
     x:DataType="local:ShaderPackSearchPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="12,0,12,12">
@@ -99,43 +99,82 @@
                             BorderThickness="1"
                             CornerRadius="10"
                             Cursor="Hand"
+                            Name="ResourceCard"
                             Padding="10"
                             PointerPressed="Result_OnPointerPressed">
-                            <DockPanel>
-                                <DockPanel DockPanel.Dock="Top">
-                                    <Border
-                                        Background="{DynamicResource TranslucentBorderBrush}"
-                                        CornerRadius="12"
-                                        DockPanel.Dock="Left"
-                                        Height="56"
-                                        Width="56">
-                                        <owned:OwnedAdvancedImage
-                                            CornerRadius="12"
-                                            Loader="{Binding ImageLoader}"
-                                            Source="{Binding IconUrl}" />
-                                    </Border>
-                                    <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">
-                                        <TextBlock
-                                            FontSize="16"
-                                            FontWeight="SemiBold"
-                                            MaxLines="1"
-                                            Text="{Binding Name}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <TextBlock
-                                            FontSize="13"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Text="{Binding Metadata}" />
+                            <Grid>
+                                <Border
+                                    Background="{DynamicResource TranslucentBackgroundColor}"
+                                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    HorizontalAlignment="Right"
+                                    IsVisible="{Binding IsPointerOver, ElementName=ResourceCard}"
+                                    Margin="0,0,-4,-4"
+                                    Padding="5,2"
+                                    VerticalAlignment="Bottom"
+                                    ZIndex="1">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Button
+                                            Classes="Icon"
+                                            Click="Favorite_OnClick"
+                                            Tag="{Binding}"
+                                            Theme="{StaticResource TransparentButton}"
+                                            ToolTip.Tip="收藏">
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M442.9,144C415.6,144,389.9,157.1,373.9,179.2L339.5,226.8C335,233 327.8,236.7 320.1,236.7 312.4,236.7 305.2,233 300.7,226.8L266.3,179.2C250.3,157.1 224.6,144 197.3,144 150.3,144 112.2,182.1 112.2,229.1 112.2,279 144.2,327.5 180.3,371.4 221.4,421.4 271.7,465.4 306.2,491.7 309.4,494.1 314.1,495.9 320.2,495.9 326.3,495.9 331,494.1 334.2,491.7 368.7,465.4 419,421.3 460.1,371.4 496.3,327.5 528.2,279 528.2,229.1 528.2,182.1 490.1,144 443.1,144z M335,151.1C360,116.5 400.2,96 442.9,96 516.4,96 576,155.6 576,229.1 576,297.7 533.1,358 496.9,401.9 452.8,455.5 399.6,502 363.1,529.8 350.8,539.2 335.6,543.9 320,543.9 304.4,543.9 289.2,539.2 276.9,529.8 240.4,502 187.2,455.5 143.1,402 106.9,358.1 64,297.7 64,229.1 64,155.6 123.6,96 197.1,96 239.8,96 280,116.5 305,151.1L320,171.8 335,151.1z"
+                                                Height="16"
+                                                Width="16" />
+                                        </Button>
+                                        <Button
+                                            Classes="Icon"
+                                            Click="Favorite_OnClick"
+                                            Tag="{Binding}"
+                                            Theme="{StaticResource TransparentButton}"
+                                            ToolTip.Tip="下载">
+                                            <PathIcon
+                                                Data="{StaticResource DownloadGeometry}"
+                                                Height="12"
+                                                Width="14" />
+                                        </Button>
                                     </StackPanel>
+                                </Border>
+                                <DockPanel>
+                                    <DockPanel DockPanel.Dock="Top">
+                                        <Border
+                                            Background="{DynamicResource TranslucentBorderBrush}"
+                                            CornerRadius="12"
+                                            DockPanel.Dock="Left"
+                                            Height="56"
+                                            Width="56">
+                                            <owned:OwnedAdvancedImage
+                                                CornerRadius="12"
+                                                Loader="{Binding ImageLoader}"
+                                                Source="{Binding IconUrl}" />
+                                        </Border>
+                                        <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">
+                                            <TextBlock
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                MaxLines="1"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding Metadata}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="3,5,3,0"
+                                        MaxLines="2"
+                                        Text="{Binding Summary}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="WrapWithOverflow" />
                                 </DockPanel>
-                                <TextBlock
-                                    FontSize="13"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Margin="3,5,3,0"
-                                    MaxLines="2"
-                                    Text="{Binding Summary}"
-                                    TextTrimming="CharacterEllipsis"
-                                    TextWrapping="WrapWithOverflow" />
-                            </DockPanel>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
