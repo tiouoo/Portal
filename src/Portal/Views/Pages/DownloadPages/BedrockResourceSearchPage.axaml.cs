@@ -26,7 +26,18 @@ public partial class BedrockResourceSearchPage : UserControl
     private void Favorite_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is JavaResourceSearchResultItem item)
-            FavoriteCollectionService.Instance.Add(FavoriteResourceFactory.From(item, FavoriteEdition.Bedrock));
+        {
+            var resource = FavoriteResourceFactory.From(item, FavoriteEdition.Bedrock);
+            if (item.IsFavorite) FavoriteCollectionService.Instance.Remove(resource);
+            else FavoriteCollectionService.Instance.Add(resource);
+            item.IsFavorite = !item.IsFavorite;
+        }
+        e.Handled = true;
+    }
+    private void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is JavaResourceSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
+            BedrockResourceDetailsPage.Open(topLevel, item.Target, item.Name);
         e.Handled = true;
     }
 }

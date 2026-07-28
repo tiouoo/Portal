@@ -35,10 +35,17 @@ public partial class FavoritesPage : UserControl
         e.Handled = true;
     }
 
-    private void Remove_OnClick(object? sender, RoutedEventArgs e)
+    private void Favorite_OnClick(object? sender, RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is FavoriteResource resource)
             ((FavoritesPageViewModel)DataContext!).Remove(resource);
+        e.Handled = true;
+    }
+
+    private void Download_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is FavoriteResource resource && TopLevel.GetTopLevel(this) is { } topLevel)
+            FavoritesPageViewModel.OpenDetails(topLevel, resource);
         e.Handled = true;
     }
 

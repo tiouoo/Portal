@@ -48,7 +48,19 @@ public partial class ModSearchPage : UserControl
     private void Favorite_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is ModSearchResultItem item)
-            FavoriteCollectionService.Instance.Add(FavoriteResourceFactory.From(item));
+        {
+            var resource = FavoriteResourceFactory.From(item);
+            if (item.IsFavorite) FavoriteCollectionService.Instance.Remove(resource);
+            else FavoriteCollectionService.Instance.Add(resource);
+            item.IsFavorite = !item.IsFavorite;
+        }
+        e.Handled = true;
+    }
+
+    private void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is ModSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
+            ModDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
         e.Handled = true;
     }
 }
@@ -361,6 +373,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
     [ObservableProperty] public partial string Summary { get; set; }
     [ObservableProperty] public partial string? IconUrl { get; set; }
     public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
+    [ObservableProperty] public partial bool IsFavorite { get; set; }
     [ObservableProperty] public partial string Metadata { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
 
@@ -373,6 +386,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
         var timestamp = sort is SearchSort.Newest ? item.DateModified : item.Updated;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(timestamp)}·{item.DownloadCount:N0} 下载";
         Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId, gameVersion, loader);
+        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
 
     public ModSearchResultItem(CurseforgeResource item, string gameVersion = "", ModLoaderType loader = ModLoaderType.Any)
@@ -380,6 +394,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Name = item.Name; FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name; Summary = item.Summary;
         IconUrl = item.IconUrl; Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
         Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString(), gameVersion, loader);
+        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
 
     internal ModSearchResultItem(CachedSearchItem item)
@@ -387,6 +402,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Name = item.Name; FriendlyName = item.FriendlyName; Summary = item.Summary;
         IconUrl = item.IconUrl; Metadata = item.Metadata;
         Target = item.Target;
+        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
 
     public void Update(ModSearchResultItem item)

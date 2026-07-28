@@ -9,6 +9,7 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Provider;
 using Portal.Const;
+using Portal.Services;
 using Portal.Views.Pages.InstancePages;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -336,6 +337,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
     [ObservableProperty] public partial string? IconUrl { get; set; }
     [ObservableProperty] public partial string Metadata { get; set; }
     public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
+    [ObservableProperty] public partial bool IsFavorite { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
     public JavaResourceDetailsTarget Target { get; private set; }
 
@@ -348,6 +350,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Metadata = $"{FormatRelativeTime(item.Updated)}·{item.DownloadCount:N0} 下载";
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.Modrinth, item.ProjectId,
             gameVersion, loader);
+        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
     }
 
     public JavaResourceSearchResultItem(CurseforgeResource item, JavaResourceDefinition definition,
@@ -359,6 +362,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.CurseForge, item.Id.ToString(),
             gameVersion, loader);
+        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
     }
 
     public void Update(JavaResourceSearchResultItem item)
@@ -369,7 +373,13 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Metadata = item.Metadata;
         Target = item.Target;
         OnPropertyChanged(nameof(HasIcon));
+        IsFavorite = item.IsFavorite;
     }
+
+    private static FavoriteEdition GetEdition(JavaResourceDefinition definition) => definition.Kind is
+        JavaResourceKind.BedrockBehaviorPack or JavaResourceKind.BedrockResourcePack or JavaResourceKind.BedrockWorld or JavaResourceKind.BedrockWorldTemplate
+            ? FavoriteEdition.Bedrock
+            : FavoriteEdition.Java;
 
     internal static string FormatRelativeTime(DateTime timestamp)
     {

@@ -27,7 +27,18 @@ public partial class SaveSearchPage : UserControl
     private void Favorite_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is JavaResourceSearchResultItem item)
-            FavoriteCollectionService.Instance.Add(FavoriteResourceFactory.From(item, FavoriteEdition.Java));
+        {
+            var resource = FavoriteResourceFactory.From(item, FavoriteEdition.Java);
+            if (item.IsFavorite) FavoriteCollectionService.Instance.Remove(resource);
+            else FavoriteCollectionService.Instance.Add(resource);
+            item.IsFavorite = !item.IsFavorite;
+        }
+        e.Handled = true;
+    }
+    private void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is JavaResourceSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
+            SaveDetailsPage.Open(topLevel, item.Target, item.Name);
         e.Handled = true;
     }
 }
