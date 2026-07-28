@@ -167,7 +167,7 @@
         </Button>
         <Button
             Classes="custom-title-bar-button"
-            Click="OpenSearch"
+            Click="OpenMultiplayer"
             Margin="3,0,0,0"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="联机">

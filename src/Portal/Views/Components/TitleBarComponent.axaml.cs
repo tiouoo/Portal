@@ -193,6 +193,14 @@ public partial class TitleBarComponent : Grid
         tioTabWindowBase.SelectTab(tabEntry);
     }
 
+    private void OpenMultiplayer(object? sender, RoutedEventArgs e)
+    {
+        if (Root.GetTopLevel() is not TioTabWindowBase window) return;
+        var tabEntry = new TabEntry(window, new MultiplayerPage());
+        window.CreateTab(tabEntry);
+        window.SelectTab(tabEntry);
+    }
+
     private void GoToAbout(object? sender, RoutedEventArgs e)
     {
         var tioTabWindowBase = Root.GetTopLevel() as TioTabWindowBase;

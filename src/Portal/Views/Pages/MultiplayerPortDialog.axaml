@@ -1,0 +1,35 @@
+<UserControl
+    d:DesignHeight="180"
+    d:DesignWidth="420"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.MultiplayerPortDialog"
+    x:DataType="pages:MultiplayerPortDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, *, Auto"
+        Width="420">
+        <TextBlock
+            FontSize="16"
+            FontWeight="600"
+            Grid.Row="0"
+            Text="输入对外开放端口" />
+        <TextBox
+            Grid.Row="1"
+            Margin="0,18"
+            PlaceholderText="例如 25565"
+            Text="{Binding Port}" />
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding ConfirmCommand}" Content="确定" />
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -52,6 +52,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial string? ProxyServer { get; set; }
     [ObservableProperty] public partial string? GithubMirrorUrl { get; set; }
     [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
+    [ObservableProperty] public partial string? OnlinePlayerName { get; set; }
     [ObservableProperty] public partial string DefaultPage { get; set; } = typeof(NewTabPage).AssemblyQualifiedName!;
     [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
     [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
