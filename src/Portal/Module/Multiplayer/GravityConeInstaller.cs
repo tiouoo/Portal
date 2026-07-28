@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Portal.Const;
+using Portal.Module.Update;
 
 namespace Portal.Module.Multiplayer;
 
@@ -105,7 +106,8 @@ public static class GravityConeInstaller
         try
         {
             progress?.Report((0, $"正在下载 {package.FileName}"));
-            using var response = await Client.GetAsync(package.Url, HttpCompletionOption.ResponseHeadersRead,
+            var downloadUrl = GithubMirror.Apply(package.Url);
+            using var response = await Client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken);
             response.EnsureSuccessStatusCode();
             await using (var input = await response.Content.ReadAsStreamAsync(cancellationToken))

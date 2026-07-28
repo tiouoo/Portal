@@ -17,10 +17,6 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableGithubMirror}" />
-            <TextBlock
-                FontSize="11"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *通过镜像站加速应用更新包下载，适合无法直连 GitHub 的网络环境" />
         </StackPanel>
         <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableGithubMirror}" Spacing="5">
             <Label
@@ -49,9 +45,7 @@
                 Content="禁用系统代理"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch
-                IsChecked="{Binding Data.ConfigEntry.DisableSystemProxy}"
-                IsEnabled="{Binding Data.ConfigEntry.CanDisableSystemProxy}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.DisableSystemProxy}" IsEnabled="{Binding Data.ConfigEntry.CanDisableSystemProxy}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
