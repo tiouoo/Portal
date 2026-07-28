@@ -27,18 +27,13 @@
                 <tio:NavMenuItem
                     Command="{Binding NavigateEditionCommand}"
                     CommandParameter="{x:Static models:MinecraftEdition.Java}"
-                    Header="Java" />
+                    Header="Java版" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateEditionCommand}"
                     CommandParameter="{x:Static models:MinecraftEdition.Bedrock}"
-                    Header="基岩" />
+                    Header="基岩版" />
             </tio:NavMenu>
         </controls:ScrollView>
-
-        <TransitioningContentControl Margin="0,0,5,0" Name="Frame">
-            <TransitioningContentControl.PageTransition>
-                <CrossFade Duration="0:0:0.2" />
-            </TransitioningContentControl.PageTransition>
-        </TransitioningContentControl>
+        <ContentControl Margin="0,0,5,0" Name="Frame" />
     </DockPanel>
 </UserControl>

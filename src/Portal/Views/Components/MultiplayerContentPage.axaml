@@ -1,0 +1,301 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="960"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Components.MultiplayerContentPage"
+    x:DataType="pages:MultiplayerPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Portal.Module.Multiplayer"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer Margin="0,0,5,0">
+        <StackPanel
+            Margin="0,10,10,20"
+            MaxWidth="790"
+            Spacing="15">
+            <DockPanel>
+                <StackPanel>
+                    <TextBlock FontSize="26" Text="{Binding EditionTitle}" />
+                </StackPanel>
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    IsVisible="{Binding HasStatusText}"
+                    Padding="10,6"
+                    VerticalAlignment="Top">
+                    <TextBlock Text="{Binding StatusText}" />
+                </Border>
+            </DockPanel>
+
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="10"
+                IsVisible="{Binding IsComponentMissing}"
+                Padding="15">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="需要安装联机组件" />
+                    <Button
+                        Command="{Binding InstallCommand}"
+                        Content="下载并安装"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding IsNotBusy}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel IsVisible="{Binding IsReady}" Spacing="15">
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="15">
+                    <StackPanel Spacing="10">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="身份与网络" />
+                        <Label
+                            Content="联机用户名"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}" />
+                        <TextBox
+                            Margin="0,-4,0,0"
+                            PlaceholderText="默认使用当前 Minecraft 账户名"
+                            Text="{Binding PlayerName}" />
+                        <Label
+                            Content="NAT 类型"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}" />
+                        <Button
+                            Command="{Binding ProbeNatCommand}"
+                            HorizontalAlignment="Left"
+                            IsVisible="{Binding !HasNatSummary}"
+                            Margin="0,-6,0,0"
+                            Theme="{StaticResource TransparentButton}">
+                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Binding NatProbeButtonText}" />
+                        </Button>
+                        <TextBlock
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            IsVisible="{Binding HasNatSummary}"
+                            Margin="0,-6,0,0"
+                            Text="{Binding NatSummary}" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    IsVisible="{Binding ShowJavaRoomActions}"
+                    Padding="15">
+                    <StackPanel Spacing="10">
+                        <StackPanel Spacing="12">
+                            <DockPanel>
+                                <TextBlock
+                                    FontSize="17"
+                                    FontWeight="SemiBold"
+                                    Text="创建房间" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Margin="8,0,0,1"
+                                    Text="{Binding LanServerCountText}"
+                                    VerticalAlignment="Bottom" />
+                            </DockPanel>
+                            <DockPanel>
+                                <StackPanel
+                                    DockPanel.Dock="Right"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <Button
+                                        Click="EnterJavaPort_OnClick"
+                                        Content="手动输入端口"
+                                        HorizontalAlignment="Left"
+                                        Margin="8,0,0,0" />
+                                    <Button
+                                        Command="{Binding DiscoverJavaServersCommand}"
+                                        Content="{Binding JavaDiscoveryButtonText}"
+                                        IsEnabled="{Binding !IsDiscoveringJavaServers}" />
+                                    <Button
+                                        Command="{Binding CreateRoomCommand}"
+                                        Content="创建房间"
+                                        IsEnabled="{Binding CanCreateRoom}" />
+                                </StackPanel>
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    ItemsSource="{Binding LanServers}"
+                                    PlaceholderText="尚未检测到已开放的世界"
+                                    SelectedItem="{Binding SelectedLanServer}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="models:LanServerEntry">
+                                            <TextBlock Text="{Binding Display}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </DockPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    IsVisible="{Binding ShowBedrockRoomActions}"
+                    Padding="15">
+                    <StackPanel Spacing="10">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="创建房间" />
+                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="请先在 Minecraft 中开启局域网游戏，然后创建房间。" />
+                        <Button
+                            Command="{Binding CreateRoomCommand}"
+                            Content="创建房间"
+                            HorizontalAlignment="Left"
+                            IsEnabled="{Binding CanCreateRoom}" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    IsVisible="{Binding IsNotInRoom}"
+                    Padding="15">
+                    <StackPanel Spacing="12">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="加入房间" />
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                            <Button
+                                Command="{Binding ClearJoinCodeCommand}"
+                                Content="清除"
+                                Grid.Column="0" />
+                            <Button
+                                Click="PasteJoinCode_OnClick"
+                                Content="粘贴"
+                                Grid.Column="1"
+                                Margin="8,0,8,0" />
+                            <TextBox
+                                Grid.Column="2"
+                                Margin="0,0,10,0"
+                                PlaceholderText="{Binding JoinCodePlaceholder}"
+                                Text="{Binding JoinCode}" />
+                            <Button
+                                Command="{Binding JoinRoomCommand}"
+                                Content="加入"
+                                Grid.Column="3"
+                                IsEnabled="{Binding CanOperate}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    IsVisible="{Binding IsInRoom}"
+                    Padding="15">
+                    <StackPanel Spacing="10">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="当前房间" />
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Top">
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="当前房间码" />
+                                <TextBlock FontSize="20" Text="{Binding CurrentRoomCode}" />
+                            </StackPanel>
+                            <StackPanel
+                                DockPanel.Dock="Bottom"
+                                Margin="0,10,0,0"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <Button Click="CopyRoomCode_OnClick" Content="复制房间码" />
+                                <Button
+                                    Command="{Binding LeaveRoomCommand}"
+                                    Content="关闭或离开"
+                                    IsEnabled="{Binding CanOperate}" />
+                                <Button
+                                    Command="{Binding ConfirmMinecraftEndedCommand}"
+                                    Content="已关闭游戏，继续连接"
+                                    HorizontalAlignment="Left"
+                                    IsVisible="{Binding IsBedrockPortBusy}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    IsVisible="{Binding IsInRoom}"
+                    Padding="15">
+                    <StackPanel Spacing="10">
+                        <DockPanel>
+                            <TextBlock
+                                FontSize="17"
+                                FontWeight="SemiBold"
+                                Text="房间成员" />
+                            <TextBlock
+                                DockPanel.Dock="Right"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Margin="8,0,0,1"
+                                Text="{Binding MemberCountText}"
+                                VerticalAlignment="Bottom" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding Members}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="models:OnlineMember">
+                                    <Border
+                                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="10">
+                                        <StackPanel>
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding Detail}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

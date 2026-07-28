@@ -71,7 +71,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     private void ShowEditionContent()
     {
-        this.FindControl<TransitioningContentControl>("Frame")!.Content = new MultiplayerContentPage(ViewModel);
+        this.FindControl<TransitioningContentControl>("Frame")!.Content = new Components.MultiplayerContentPage(ViewModel);
     }
 
     private void SelectEditionNavItem()
@@ -114,7 +114,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     public MinecraftEdition Edition => _edition;
     public bool IsJava => _edition == MinecraftEdition.Java;
     public bool IsBedrock => _edition == MinecraftEdition.Bedrock;
-    public string EditionTitle => IsJava ? "Java 联机" : "基岩联机";
+    public string EditionTitle => IsJava ? "Java 版" : "基岩版";
     public bool IsNotBusy => !IsBusy;
     public bool CanOperate => IsReady && !IsBusy;
     public bool IsNotInRoom => !IsInRoom;
