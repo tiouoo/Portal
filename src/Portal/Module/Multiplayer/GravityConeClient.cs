@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Multiplayer;
 
@@ -90,6 +91,7 @@ public sealed class GravityConeClient : IAsyncDisposable
         try
         {
             var payload = JsonSerializer.Serialize(new { id, method, @params = parameters ?? new { } });
+            Trace($"[GravityCone ->] {payload}");
             await _writeLock.WaitAsync(cancellationToken);
             try
             {
@@ -122,6 +124,7 @@ public sealed class GravityConeClient : IAsyncDisposable
         {
             while (await process.StandardOutput.ReadLineAsync() is { } line)
             {
+                Trace($"[GravityCone <-] {line}");
                 using var document = JsonDocument.Parse(line);
                 var root = document.RootElement;
                 if (root.TryGetProperty("event", out var eventName))
@@ -162,7 +165,10 @@ public sealed class GravityConeClient : IAsyncDisposable
     private async Task ReadErrorAsync(Process process)
     {
         while (await process.StandardError.ReadLineAsync() is { } line)
+        {
+            Trace($"[GravityCone stderr] {line}");
             ProcessError?.Invoke(this, line);
+        }
     }
 
     private void FailAllPending(string message)
@@ -170,6 +176,12 @@ public sealed class GravityConeClient : IAsyncDisposable
         foreach (var request in _pending.Values)
             request.Completion.TrySetException(new InvalidOperationException(message));
         _pending.Clear();
+    }
+
+    private static void Trace(string message)
+    {
+        Console.WriteLine(message);
+        Logger.Debug(message);
     }
 
     public async ValueTask DisposeAsync()
