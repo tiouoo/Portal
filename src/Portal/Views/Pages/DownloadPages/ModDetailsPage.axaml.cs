@@ -175,15 +175,7 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
             context.SetRunning($"正在下载：{file.FileName}");
             var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
             {
-                ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
-                {
-                    if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                    var fraction = progress.TotalBytes > 0
-                        ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
-                        : (double?)null;
-                    context.ReportProgress(fraction);
-                    context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(progress.Speed, true)}");
-                })
+                ProgressChanged = JavaResourceDownload.CreateDownloadProgressReporter(context)
             };
             var download = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
             if (download.Type == DownloadResultType.Cancelled)
@@ -240,6 +232,8 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     private readonly CancellationTokenSource _disposeCancellation = new();
     private CancellationTokenSource? _filterCancellation;
     private CancellationTokenSource? _filterDebounce;
+    private IReadOnlyList<ModVersionGroup> _allVersionGroups = [];
+    private int _nextVersionGroupIndex;
     public event Action<ModVersionGroup>? TargetVersionGroupReady;
     public ObservableCollection<ModMinecraftVersionFilter> VersionFilters { get; } = [];
     public ObservableCollection<ModLoaderFilter> LoaderFilters { get; } = [];
@@ -262,6 +256,8 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     public bool HasVersions => VersionFilters.Count > 0;
     public bool HasScreenshots => Screenshots.Count > 0;
     public bool IsEmpty => !IsLoading && !HasError && VersionGroups.Count == 0;
+    public bool HasMoreVersionGroups => _nextVersionGroupIndex < _allVersionGroups.Count;
+    public string LoadMoreVersionGroupsText => $"显示更多版本（剩余 {_allVersionGroups.Count - _nextVersionGroupIndex} 个）";
     private IReadOnlyList<ModVersionFileItem> Files { get; set; } = [];
 
     public async Task LoadAsync()
@@ -317,16 +313,17 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
     partial void OnSelectedVersionFilterChanged(ModMinecraftVersionFilter? value)
     {
-        if (!_buildingFilters) DebounceFilter();
+        if (!_disposed && !_buildingFilters) DebounceFilter();
     }
 
     partial void OnSelectedLoaderFilterChanged(ModLoaderFilter? value)
     {
-        if (!_buildingFilters) DebounceFilter();
+        if (!_disposed && !_buildingFilters) DebounceFilter();
     }
 
     private void DebounceFilter()
     {
+        if (_disposed) return;
         var cts = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
         var previous = Interlocked.Exchange(ref _filterDebounce, cts);
         previous?.Cancel();
@@ -379,6 +376,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
     private async Task ApplyFilterAsync()
     {
+        if (_disposed) return;
         var selectedFamily = SelectedVersionFilter?.Family;
         var selectedLoader = SelectedLoaderFilter?.Loader;
         var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
@@ -400,11 +398,14 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
                     group.Select(item => item.File.ForCompatibility(item.Key)).DistinctBy(file => file.Id).ToArray(),
                     group.Key.Loader, group.Key.MinecraftVersion))
                 .ToArray(), cancellation.Token);
-            if (cancellation.IsCancellationRequested) return;
+            if (cancellation.IsCancellationRequested || _disposed) return;
 
-            VersionGroups = new ObservableCollection<ModVersionGroup>(groups);
+            _allVersionGroups = groups;
+            _nextVersionGroupIndex = 0;
+            VersionGroups = [];
+            LoadMoreVersionGroups();
             if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(target.GameVersion) &&
-                groups.FirstOrDefault(group => group.MinecraftVersion == target.GameVersion &&
+                VersionGroups.FirstOrDefault(group => group.MinecraftVersion == target.GameVersion &&
                     (LoaderName(target.Loader) is not { } targetLoader || group.Loader == targetLoader)) is { } targetGroup)
             {
                 _hasLocatedTargetVersionGroup = true;
@@ -421,6 +422,16 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             if (ReferenceEquals(_filterCancellation, cancellation)) _filterCancellation = null;
             cancellation.Dispose();
         }
+    }
+
+    [RelayCommand]
+    private void LoadMoreVersionGroups()
+    {
+        const int pageSize = 20;
+        foreach (var group in _allVersionGroups.Skip(_nextVersionGroupIndex).Take(pageSize)) VersionGroups.Add(group);
+        _nextVersionGroupIndex = VersionGroups.Count;
+        OnPropertyChanged(nameof(HasMoreVersionGroups));
+        OnPropertyChanged(nameof(LoadMoreVersionGroupsText));
     }
 
     private void AddScreenshots(IEnumerable<string>? urls)
@@ -469,9 +480,10 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     {
         if (_disposed) return;
         _disposed = true;
-        _disposeCancellation.Cancel();
-        _filterCancellation?.Cancel();
-        _filterDebounce?.Cancel();
+        _buildingFilters = true;
+        _filterCancellation = null;
+        _filterDebounce = null;
+        CancelInBackground(_disposeCancellation);
         // Fast path: replace with empty collection instead of clearing (avoids N Remove notifications)
         VersionGroups = [];
         TargetVersionGroupReady = null;
@@ -482,7 +494,22 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         SelectedVersionFilter = null;
         SelectedLoaderFilter = null;
         Files = [];
-        _disposeCancellation.Dispose();
+        _allVersionGroups = [];
+    }
+
+    private static void CancelInBackground(CancellationTokenSource cancellation)
+    {
+        _ = CancelAndDisposeAsync(cancellation);
+    }
+
+    private static async Task CancelAndDisposeAsync(CancellationTokenSource cancellation)
+    {
+        try
+        {
+            await cancellation.CancelAsync();
+        }
+        catch (ObjectDisposedException) { }
+        finally { cancellation.Dispose(); }
     }
 }
 

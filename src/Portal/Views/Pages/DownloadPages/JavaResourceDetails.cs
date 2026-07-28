@@ -44,6 +44,9 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     private bool _buildingFilters;
     private bool _hasLocatedTargetVersionGroup;
     private bool _disposed;
+    private CancellationTokenSource? _filterCancellation;
+    private IReadOnlyList<JavaResourceVersionGroup> _allVersionGroups = [];
+    private int _nextVersionGroupIndex;
 
     public event Action<JavaResourceVersionGroup>? TargetVersionGroupReady;
     public JavaResourceDetailsTarget Target { get; } = target;
@@ -67,6 +70,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     public bool HasVersions => VersionFilters.Count > 0;
     public bool IsEmpty => !IsLoading && !HasError && VersionGroups.Count == 0;
     public bool SupportsDownload => Target.Definition.SupportsDownload;
+    public bool HasMoreVersionGroups => _nextVersionGroupIndex < _allVersionGroups.Count;
+    public string LoadMoreVersionGroupsText => $"显示更多版本（剩余 {_allVersionGroups.Count - _nextVersionGroupIndex} 个）";
     private IReadOnlyList<JavaResourceFileItem> AllFiles { get; set; } = [];
 
     public async Task LoadAsync()
@@ -85,8 +90,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 IconUrl = project.IconUrl;
                 Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.Updated)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
-                AllFiles = (await _modrinth.GetModFilesByProjectIdAsync(Target.ProjectId, cancellationToken))
-                    .Select(JavaResourceFileItem.From).ToArray();
+                AllFiles = await Task.Run(async () => (await _modrinth.GetModFilesByProjectIdAsync(Target.ProjectId,
+                    cancellationToken)).Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
             }
             else
             {
@@ -97,10 +102,10 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 IconUrl = project.IconUrl;
                 Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.DateModified)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
-                AllFiles = (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
-                    .Select(JavaResourceFileItem.From).ToArray();
+                AllFiles = await Task.Run(async () => (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
+                    .Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
             }
-            BuildVersionGroups();
+            await BuildVersionGroupsAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
@@ -116,31 +121,38 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         }
     }
 
-    private void BuildVersionGroups()
+    private async Task BuildVersionGroupsAsync(CancellationToken cancellationToken)
     {
+        var families = await Task.Run(() => AllFiles.SelectMany(file => file.MinecraftVersions).Select(GetVersionFamily)
+            .Where(family => family is not null).Distinct().OrderByDescending(family => MinecraftVersionKey.Parse(family!))
+            .Select(family => family!).ToArray(), cancellationToken);
+        if (_disposed || cancellationToken.IsCancellationRequested) return;
         _buildingFilters = true;
         VersionFilters.Clear();
         VersionFilters.Add(new JavaResourceVersionFilter("全部", null));
-        foreach (var family in AllFiles.SelectMany(file => file.MinecraftVersions).Select(GetVersionFamily)
-                     .Where(family => family is not null).Distinct()
-                     .OrderByDescending(family => MinecraftVersionKey.Parse(family!)))
-            VersionFilters.Add(new JavaResourceVersionFilter(family!, family));
+        foreach (var family in families) VersionFilters.Add(new JavaResourceVersionFilter(family, family));
         SelectedVersionFilter = VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(Target.GameVersion)) ??
                                 VersionFilters[0];
         _buildingFilters = false;
-        ApplyVersionFilter();
+        await ApplyVersionFilterAsync();
         OnPropertyChanged(nameof(HasVersions));
     }
 
     partial void OnSelectedVersionFilterChanged(JavaResourceVersionFilter? value)
     {
-        if (!_buildingFilters) ApplyVersionFilter();
+        if (!_disposed && !_buildingFilters) _ = ApplyVersionFilterAsync();
     }
 
-    private void ApplyVersionFilter()
+    private async Task ApplyVersionFilterAsync()
     {
+        if (_disposed) return;
         var selectedFamily = SelectedVersionFilter?.Family;
-        var groups = AllFiles.Where(file => selectedFamily is null ||
+        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
+        var previous = Interlocked.Exchange(ref _filterCancellation, cancellation);
+        previous?.Cancel();
+        try
+        {
+            var groups = await Task.Run(() => AllFiles.Where(file => selectedFamily is null ||
                 file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
             .SelectMany(file => file.MinecraftVersions.DefaultIfEmpty("未知版本")
                 .Where(version => selectedFamily is null || GetVersionFamily(version) == selectedFamily)
@@ -150,16 +162,39 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
             .Select(group => new JavaResourceVersionGroup(group.Key,
                 group.Select(item => item.File).DistinctBy(file => file.Id).OrderByDescending(file => file.Published)
                     .ToArray()))
-            .ToArray();
-        VersionGroups = new ObservableCollection<JavaResourceVersionGroup>(groups);
-        if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(Target.GameVersion) &&
-            VersionGroups.FirstOrDefault(group => group.MinecraftVersion == Target.GameVersion) is { } targetGroup)
-        {
-            _hasLocatedTargetVersionGroup = true;
-            targetGroup.IsExpanded = true;
-            TargetVersionGroupReady?.Invoke(targetGroup);
+                .ToArray(), cancellation.Token);
+            if (cancellation.IsCancellationRequested || _disposed) return;
+            _allVersionGroups = groups;
+            _nextVersionGroupIndex = 0;
+            VersionGroups = [];
+            LoadMoreVersionGroups();
+            if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(Target.GameVersion) &&
+                VersionGroups.FirstOrDefault(group => group.MinecraftVersion == Target.GameVersion) is { } targetGroup)
+            {
+                _hasLocatedTargetVersionGroup = true;
+                targetGroup.IsExpanded = true;
+                TargetVersionGroupReady?.Invoke(targetGroup);
+            }
+            OnPropertyChanged(nameof(IsEmpty));
         }
-        OnPropertyChanged(nameof(IsEmpty));
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+        }
+        finally
+        {
+            if (ReferenceEquals(_filterCancellation, cancellation)) _filterCancellation = null;
+            cancellation.Dispose();
+        }
+    }
+
+    [RelayCommand]
+    private void LoadMoreVersionGroups()
+    {
+        const int pageSize = 20;
+        foreach (var group in _allVersionGroups.Skip(_nextVersionGroupIndex).Take(pageSize)) VersionGroups.Add(group);
+        _nextVersionGroupIndex = VersionGroups.Count;
+        OnPropertyChanged(nameof(HasMoreVersionGroups));
+        OnPropertyChanged(nameof(LoadMoreVersionGroupsText));
     }
 
     private static string? GetVersionFamily(string version)
@@ -185,8 +220,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         _disposed = true;
         // 阻止置空筛选项时触发 ApplyVersionFilter 重建版本分组，确保内存能够释放
         _buildingFilters = true;
-        _disposeCancellation.Cancel();
-        _disposeCancellation.Dispose();
+        _filterCancellation = null;
+        CancelInBackground(_disposeCancellation);
         TargetVersionGroupReady = null;
         VersionGroups = [];
         VersionFilters.Clear();
@@ -194,6 +229,22 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         ScreenshotIndices.Clear();
         SelectedVersionFilter = null;
         AllFiles = [];
+        _allVersionGroups = [];
+    }
+
+    private static void CancelInBackground(CancellationTokenSource cancellation)
+    {
+        _ = CancelAndDisposeAsync(cancellation);
+    }
+
+    private static async Task CancelAndDisposeAsync(CancellationTokenSource cancellation)
+    {
+        try
+        {
+            await cancellation.CancelAsync();
+        }
+        catch (ObjectDisposedException) { }
+        finally { cancellation.Dispose(); }
     }
 }
 
@@ -374,7 +425,7 @@ public static class JavaResourceDownload
             if (extractSave)
             {
                 context.SetDescription("正在解压存档");
-                ExtractSave(destination, file.FileName, context.CancellationToken);
+                await ExtractSaveAsync(destination, file.FileName, context.CancellationToken);
             }
             context.ReportProgress(1);
             context.SetDescription(extractSave ? "存档已安装" : "下载完成");
@@ -384,7 +435,7 @@ public static class JavaResourceDownload
         return task;
     }
 
-    private static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(TaskExecutionContext context)
+    internal static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(TaskExecutionContext context)
     {
         ResourceDownloadProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
@@ -415,6 +466,9 @@ public static class JavaResourceDownload
         _ => ["*.*"]
     };
 
+    private static Task ExtractSaveAsync(string archivePath, string fileName, CancellationToken cancellationToken) =>
+        Task.Run(() => ExtractSave(archivePath, fileName, cancellationToken), cancellationToken);
+
     private static void ExtractSave(string archivePath, string fileName, CancellationToken cancellationToken)
     {
         var savesFolder = Path.GetDirectoryName(archivePath) ?? throw new InvalidDataException("存档目录无效。");
@@ -422,7 +476,25 @@ public static class JavaResourceDownload
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ZipFile.ExtractToDirectory(archivePath, stagingFolder);
+            Directory.CreateDirectory(stagingFolder);
+            using var archive = ZipFile.OpenRead(archivePath);
+            var stagingRoot = Path.GetFullPath(stagingFolder) + Path.DirectorySeparatorChar;
+            foreach (var entry in archive.Entries)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var entryPath = Path.GetFullPath(Path.Combine(stagingFolder, entry.FullName));
+                if (!entryPath.StartsWith(stagingRoot, StringComparison.Ordinal))
+                    throw new InvalidDataException("存档压缩包包含无效路径。");
+                if (string.IsNullOrEmpty(entry.Name))
+                {
+                    Directory.CreateDirectory(entryPath);
+                    continue;
+                }
+                Directory.CreateDirectory(Path.GetDirectoryName(entryPath)!);
+                using var source = entry.Open();
+                using var target = File.Create(entryPath);
+                source.CopyToAsync(target, cancellationToken).GetAwaiter().GetResult();
+            }
             cancellationToken.ThrowIfCancellationRequested();
             var worldFolder = File.Exists(Path.Combine(stagingFolder, "level.dat"))
                 ? stagingFolder

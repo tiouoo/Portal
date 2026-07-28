@@ -92,6 +92,7 @@
             Margin="0,10,0,-2" />
         <Grid Margin="0,14,0,0">
             <controls:ScrollView>
+                <StackPanel>
                 <ItemsControl ItemsSource="{Binding VersionGroups}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="local:JavaResourceVersionGroup">
@@ -157,6 +158,13 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <Button
+                    Command="{Binding LoadMoreVersionGroupsCommand}"
+                    Content="{Binding LoadMoreVersionGroupsText}"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding HasMoreVersionGroups}"
+                    Margin="0,0,0,10" />
+                </StackPanel>
             </controls:ScrollView>
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
