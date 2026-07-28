@@ -163,37 +163,15 @@
                             <TextBlock
                                 FontSize="17"
                                 FontWeight="SemiBold"
-                                Text="基岩版世界" />
+                                Text="创建房间" />
                             <TextBlock
                                 Foreground="{DynamicResource InnerForegroundColor}"
-                                HorizontalAlignment="Center"
-                                Text="{Binding BedrockWorldStatusText}"
-                                VerticalAlignment="Center" />
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button
-                                    Command="{Binding DiscoverBedrockServersCommand}"
-                                    Content="{Binding BedrockDiscoveryButtonText}"
-                                    IsEnabled="{Binding CanOperate}" />
-                                <Button
-                                    Command="{Binding CreateRoomCommand}"
-                                    Content="创建房间"
-                                    IsEnabled="{Binding CanCreateRoom}" />
-                            </StackPanel>
-                            <ItemsControl ItemsSource="{Binding BedrockWorlds}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Spacing="4" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="models:BedrockWorldEntry">
-                                        <TextBlock
-                                            FontSize="12"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Text="{Binding Display}" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                Text="请先在 Minecraft 中开启局域网游戏，然后创建房间。" />
+                            <Button
+                                Command="{Binding CreateRoomCommand}"
+                                Content="创建房间"
+                                HorizontalAlignment="Left"
+                                IsEnabled="{Binding CanCreateRoom}" />
                         </StackPanel>
                     </Border>
 

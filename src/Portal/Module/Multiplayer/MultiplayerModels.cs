@@ -16,15 +16,6 @@ public sealed partial class LanServerEntry : ObservableObject
     public string Display => $"{Motd}·{Ip}:{Port}";
 }
 
-public sealed class BedrockWorldEntry
-{
-    public required string Name { get; init; }
-    public string LevelName { get; init; } = string.Empty;
-    public string SubProtocol { get; init; } = string.Empty;
-    public int? GamePort { get; init; }
-    public string Display => string.IsNullOrWhiteSpace(LevelName) ? Name : $"{Name} · {LevelName}";
-}
-
 public sealed partial class OnlineMember : ObservableObject
 {
     public required string Name { get; init; }

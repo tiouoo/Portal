@@ -35,7 +35,7 @@
             </tio:NavMenu>
         </controls:ScrollView>
 
-        <TransitioningContentControl Content="{Binding CurrentPage}" Margin="0,0,5,0">
+        <TransitioningContentControl Margin="0,0,5,0" Name="Frame">
             <TransitioningContentControl.PageTransition>
                 <CrossFade Duration="0:0:0.2" />
             </TransitioningContentControl.PageTransition>

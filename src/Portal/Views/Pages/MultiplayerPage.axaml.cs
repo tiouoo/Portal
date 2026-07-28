@@ -38,6 +38,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         InitializeComponent();
         ViewModel = SharedViewModel.Value;
         DataContext = ViewModel;
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Loaded += OnLoaded;
     }
 
@@ -56,8 +57,21 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     {
         Loaded -= OnLoaded;
         ViewModel.Activate();
+        ShowEditionContent();
         SelectEditionNavItem();
         await ViewModel.InitializeAsync();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MultiplayerPageViewModel.Edition)) return;
+        ShowEditionContent();
+        SelectEditionNavItem();
+    }
+
+    private void ShowEditionContent()
+    {
+        this.FindControl<TransitioningContentControl>("Frame")!.Content = new MultiplayerContentPage(ViewModel);
     }
 
     private void SelectEditionNavItem()
@@ -71,6 +85,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     public void OnClose()
     {
         Loaded -= OnLoaded;
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         ViewModel.Deactivate();
         DataContext = null;
     }
@@ -84,7 +99,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private bool _disposed;
     private bool _isActive;
     private MinecraftEdition _edition = MinecraftEdition.Java;
-    private readonly Dictionary<MinecraftEdition, UserControl> _pageCache = [];
     private string _roomRole = "none";
     private DateTimeOffset _lastRoomStatusRequest = DateTimeOffset.MinValue;
     private int _isRefreshingRoomStatus;
@@ -94,7 +108,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         PlayerName = string.IsNullOrWhiteSpace(Data.ConfigEntry.OnlinePlayerName)
             ? Data.ConfigEntry.UsingMinecraftMinecraftAccount?.Name ?? string.Empty
             : Data.ConfigEntry.OnlinePlayerName;
-        CurrentPage = GetPage(MinecraftEdition.Java);
     }
 
     public bool IsEditionNavigationVisible => OperatingSystem.IsWindows();
@@ -139,11 +152,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         LanServers.Count > 0 ? $"检测到{LanServers.Count}个开放的世界" : string.Empty;
 
     public string JavaDiscoveryButtonText => IsDiscoveringJavaServers ? "检测中" : "检测";
-    public string BedrockDiscoveryButtonText => IsDiscoveringBedrockServers ? "检测中" : "刷新";
-    public string BedrockWorldStatusText => IsDiscoveringBedrockServers ? "正在检测基岩版世界" :
-        BedrockWorlds.Count > 0 ? $"检测到{BedrockWorlds.Count}个基岩版世界" : BedrockDiscoverySupported
-            ? "未发现基岩版世界"
-            : "当前联机组件不支持世界检测";
     public string NatProbeButtonText => IsProbingNat ? "检测中" : "检测 NAT";
     public string JoinCodePlaceholder => IsJava
         ? "请输入房间码（U/XXXX-XXXX-XXXX-XXXX）"
@@ -151,7 +159,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     public bool CanProbeNat => IsReady && !IsBusy && !IsProbingNat;
 
     [ObservableProperty] public partial string StatusText { get; set; } = "正在检测联机组件";
-    [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
     [ObservableProperty] public partial string PlayerName { get; set; }
     [ObservableProperty] public partial string JoinCode { get; set; } = string.Empty;
     [ObservableProperty] public partial string ManualJavaPort { get; set; } = string.Empty;
@@ -179,15 +186,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     public partial bool IsDiscoveringJavaServers { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(BedrockDiscoveryButtonText))]
-    [NotifyPropertyChangedFor(nameof(BedrockWorldStatusText))]
-    public partial bool IsDiscoveringBedrockServers { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(BedrockWorldStatusText))]
-    public partial bool BedrockDiscoverySupported { get; set; } = true;
-
-    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanProbeNat))]
     [NotifyPropertyChangedFor(nameof(NatProbeButtonText))]
     public partial bool IsProbingNat { get; set; }
@@ -195,7 +193,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     partial void OnStatusTextChanged(string value) => OnPropertyChanged(nameof(HasStatusText));
 
     public ObservableCollection<LanServerEntry> LanServers { get; } = [];
-    public ObservableCollection<BedrockWorldEntry> BedrockWorlds { get; } = [];
     public ObservableCollection<OnlineMember> Members { get; } = [];
 
     partial void OnPlayerNameChanged(string value)
@@ -222,7 +219,10 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
     }
 
-    public void Activate() => _isActive = true;
+    public void Activate()
+    {
+        _isActive = true;
+    }
 
     public void Deactivate() => _isActive = false;
 
@@ -314,24 +314,12 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (_edition == edition) return;
 
         _edition = edition;
-        CurrentPage = GetPage(edition);
         RaiseEditionProperties();
         if (_client is not null)
         {
             await RefreshRoomStatusAsync(true);
             if (IsJava) await DiscoverJavaServersAsync();
         }
-    }
-
-    private UserControl GetPage(MinecraftEdition edition)
-    {
-        if (!_pageCache.TryGetValue(edition, out var page))
-        {
-            page = new MultiplayerContentPage(this);
-            _pageCache[edition] = page;
-        }
-
-        return page;
     }
 
     private void RaiseEditionProperties()
@@ -365,33 +353,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         finally
         {
             IsDiscoveringJavaServers = false;
-        }
-    }
-
-    [RelayCommand]
-    private async Task DiscoverBedrockServersAsync()
-    {
-        if (_client is null || IsBusy || IsDiscoveringBedrockServers) return;
-        IsDiscoveringBedrockServers = true;
-        try
-        {
-            var response = await _client.RequestAsync("paperconnect.discover_local_worlds",
-                timeout: TimeSpan.FromSeconds(8), cancellationToken: _lifetime.Token);
-            UpdateBedrockWorlds(response.Data);
-        }
-        catch (Exception ex)
-        {
-            if (ex is GravityConeException { Code: "INVALID_METHOD" })
-            {
-                BedrockDiscoverySupported = false;
-                Notify("当前联机组件不支持基岩版世界检测，请更新联机组件", NotificationType.Warning);
-            }
-            else
-                Notify($"基岩版局域网世界刷新失败：{FriendlyError(ex)}", NotificationType.Error);
-        }
-        finally
-        {
-            IsDiscoveringBedrockServers = false;
         }
     }
 
@@ -588,6 +549,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 case "room.disconnected":
                 case "paperconnect.room.closed":
                 case "paperconnect.room.disconnected":
+                case "paperconnect.connection.closed":
+                case "paperconnect.connection.disconnected":
                     ClearRoom();
                     Notify("房间连接已关闭", NotificationType.Information);
                     break;
@@ -599,7 +562,10 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                     IsBedrockPortBusy = true;
                     Notify("UDP 7551 被 Minecraft 占用，请关闭游戏后点击继续连接", NotificationType.Warning);
                     break;
-                case "paperconnect.connection.error": Notify("基岩版游戏连接建立失败", NotificationType.Error); break;
+                case "paperconnect.connection.error":
+                    ClearRoom();
+                    Notify("基岩版游戏连接建立失败", NotificationType.Error);
+                    break;
             }
         });
     }
@@ -685,27 +651,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
 
         OnPropertyChanged(nameof(LanServerCountText));
-    }
-
-    private void UpdateBedrockWorlds(JsonElement data)
-    {
-        BedrockWorlds.Clear();
-        if (data.TryGetProperty("worlds", out var worlds) && worlds.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var world in worlds.EnumerateArray())
-            {
-                BedrockWorlds.Add(new BedrockWorldEntry
-                {
-                    Name = GetString(world, "name") ?? "基岩版世界",
-                    LevelName = GetString(world, "level_name") ?? string.Empty,
-                    SubProtocol = GetString(world, "sub_protocol") ?? string.Empty,
-                    GamePort = world.TryGetProperty("game_port", out var port) && port.TryGetInt32(out var value) ? value : null
-                });
-            }
-        }
-
-        BedrockDiscoverySupported = true;
-        OnPropertyChanged(nameof(BedrockWorldStatusText));
     }
 
     private void AddLanServer(JsonElement data)
