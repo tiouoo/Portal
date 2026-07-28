@@ -80,9 +80,8 @@ public partial class UiProperty : ObservableObject
     public static List<AggregatedSearchType> AggregatedSearchTypes { get; set; } =
     [
         new() { DisplayText = "所有", EnumFlag = AggregatedSearchEntryType.All },
-        new() { DisplayText = "下级搜索", EnumFlag = AggregatedSearchEntryType.NextLevelSearch },
-        new() { DisplayText = "页面", EnumFlag = AggregatedSearchEntryType.Page },
         new() { DisplayText = "实例", EnumFlag = AggregatedSearchEntryType.Instance },
         new() { DisplayText = "账户", EnumFlag = AggregatedSearchEntryType.Account },
+        new() { DisplayText = "页面", EnumFlag = AggregatedSearchEntryType.Page },
     ];
 }
