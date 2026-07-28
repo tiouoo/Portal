@@ -138,6 +138,61 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         }
     }
 
+    public static async Task QuickDownloadAsync(TopLevel topLevel, ModDetailsTarget target)
+    {
+        var loading = new QuickDownloadLoadingDialogViewModel("下载模组");
+        var loadingDialog = OverlayDialog.ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
+            object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = "下载模组", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+            });
+        try
+        {
+            IReadOnlyList<ModVersionFileItem> files = target.Source switch
+            {
+                ModDetailsSource.Modrinth => (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
+                    .Select(ModVersionFileItem.From).ToArray(),
+                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(long.Parse(target.ProjectId)))
+                    .Select(ModVersionFileItem.From).ToArray(),
+                _ => []
+            };
+            if (files.Count == 0) throw new InvalidDataException("未找到可下载的模组文件。");
+            loading.Close();
+            await loadingDialog;
+
+            await ShowInstallDialogAsync(topLevel, files);
+        }
+        catch
+        {
+            loading.Fail();
+            await loadingDialog;
+        }
+    }
+
+    private static async Task ShowInstallDialogAsync(TopLevel topLevel, IReadOnlyList<ModVersionFileItem> files)
+    {
+        var result = await OverlayDialog
+            .ShowCustomAsync<ModInstallDialog, ModInstallDialogViewModel, ModInstallDialogResult>(
+                new ModInstallDialogViewModel(files, InstanceManager.Instance.Instances), topLevel.TryGetHostId(),
+                new OverlayDialogOptions
+                    { Title = "下载模组", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false });
+        if (result is null) return;
+        var file = result.File;
+
+        string? destination = result.Destination == ModDownloadDestination.Install && result.Instance is not null
+            ? Path.Combine(result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder), file.FileName)
+            : await SelectSaveDestinationAsync(topLevel, file);
+        if (string.IsNullOrWhiteSpace(destination)) return;
+
+        StartDownload(topLevel, file, destination);
+        if (result.Destination == ModDownloadDestination.Install && result.Instance is not null)
+        {
+            var modsFolder = result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
+            foreach (var dependency in result.Dependencies)
+                StartDownload(topLevel, dependency, Path.Combine(modsFolder, dependency.FileName));
+        }
+    }
+
     private static async Task<string?> SelectSaveDestinationAsync(TopLevel topLevel, ModVersionFileItem file)
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -559,6 +614,7 @@ public sealed record ModVersionFileItem(
     string FileName,
     string DownloadUrl,
     long FileSize,
+    DateTime Published,
     IReadOnlyList<string> MinecraftVersions,
     IReadOnlyList<ModVersionGroupKey> GroupKeys,
     ModDetailsSource Source,
@@ -569,7 +625,7 @@ public sealed record ModVersionFileItem(
         string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
         FormatDetails(string.Join(",", file.ModLoaders.Select(LoaderName).Distinct()), file.FileName, file.Published,
             file.ReleaseType),
-        ReleaseType(file.ReleaseType), file.FileName, file.DownloadUrl, file.FileSize,
+        ReleaseType(file.ReleaseType), file.FileName, file.DownloadUrl, file.FileSize, file.Published,
         file.MinecraftVersions.ToList(),
         file.ModLoaders.SelectMany(loader =>
             file.MinecraftVersions.Select(version => new ModVersionGroupKey(LoaderName(loader), version))).ToList(),
@@ -588,7 +644,7 @@ public sealed record ModVersionFileItem(
         return new(file.Id.ToString(), string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
             FormatDetails(string.Join(",", enumerable), file.FileName, file.Published, file.ReleaseType),
             ReleaseType(file.ReleaseType), file.FileName,
-            file.DownloadUrl, file.FileLength, versions,
+            file.DownloadUrl, file.FileLength, file.Published, versions,
             enumerable.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
                 .ToList(),
             ModDetailsSource.CurseForge,

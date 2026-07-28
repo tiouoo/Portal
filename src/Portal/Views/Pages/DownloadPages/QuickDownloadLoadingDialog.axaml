@@ -1,0 +1,18 @@
+<UserControl
+    d:DesignHeight="150"
+    d:DesignWidth="400"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.QuickDownloadLoadingDialog"
+    x:DataType="local:QuickDownloadLoadingDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="24" Spacing="14" Width="400">
+        <TextBlock FontSize="16" Text="{Binding Title}" />
+        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Message}" TextWrapping="Wrap" />
+        <Button Click="Close_Click" Content="关闭" HorizontalAlignment="Right" />
+    </StackPanel>
+</UserControl>

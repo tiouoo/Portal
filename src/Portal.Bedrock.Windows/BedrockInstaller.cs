@@ -373,7 +373,10 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
     private static HttpClient CreateDownloadClient()
     {
-        var hasProxyServer = Uri.TryCreate(BedrockNetworkConfiguration.ProxyServer, UriKind.Absolute, out var proxyUri);
+        var proxyServer = BedrockNetworkConfiguration.ProxyServer;
+        if (!string.IsNullOrWhiteSpace(proxyServer) && !proxyServer.Contains("://", StringComparison.Ordinal))
+            proxyServer = $"http://{proxyServer}";
+        var hasProxyServer = Uri.TryCreate(proxyServer, UriKind.Absolute, out var proxyUri);
         var handler = new SocketsHttpHandler
         {
             UseProxy = !BedrockNetworkConfiguration.DisableSystemProxy ||

@@ -55,6 +55,10 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoInstances}"
                 Text="没有可安装模组的 Java 版实例" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding !HasCompatibleFile}"
+                Text="该实例没有匹配游戏版本和加载器的模组文件" />
         </StackPanel>
         <StackPanel
             Grid.Row="2"

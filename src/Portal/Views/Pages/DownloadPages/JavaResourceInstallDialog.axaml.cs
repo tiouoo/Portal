@@ -21,7 +21,7 @@ public partial class JavaResourceInstallDialog : UserControl
 
 public enum JavaResourceDownloadDestination { Install, SaveAs }
 public sealed record JavaResourceInstallDialogResult(JavaResourceDownloadDestination Destination,
-    MinecraftInstance? Instance, WorldSaveInfo? World);
+    MinecraftInstance? Instance, WorldSaveInfo? World, JavaResourceFileItem? File);
 public sealed record JavaResourceInstallInstanceItem(MinecraftInstance Instance, string Name, string Description);
 public sealed record JavaResourceInstallWorldItem(WorldSaveInfo World, string Name, string Description);
 
@@ -31,11 +31,19 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
     private readonly WorldSaveService _worldSaveService = new();
     private CancellationTokenSource? _worldLoadCancellation;
 
+    private readonly IReadOnlyList<JavaResourceFileItem> _files;
+
     public JavaResourceInstallDialogViewModel(JavaResourceDefinition definition, JavaResourceFileItem file,
+        IEnumerable<MinecraftInstance> instances) : this(definition, [file], instances)
+    {
+    }
+
+    public JavaResourceInstallDialogViewModel(JavaResourceDefinition definition, IEnumerable<JavaResourceFileItem> files,
         IEnumerable<MinecraftInstance> instances)
     {
         Definition = definition;
-        File = file;
+        _files = files.OrderByDescending(item => item.Published).ToArray();
+        File = _files.FirstOrDefault();
         _allInstances = instances.Where(instance => instance.IsJava)
             .Select(instance => new JavaResourceInstallInstanceItem(instance, instance.InstanceName, instance.ShortDisplay))
             .ToArray();
@@ -43,14 +51,14 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
     }
 
     public JavaResourceDefinition Definition { get; }
-    public JavaResourceFileItem File { get; }
-    public string Metadata => $"适用于 {string.Join("/", File.MinecraftVersions)}";
+    [ObservableProperty] public partial JavaResourceFileItem? File { get; set; }
+    public string Metadata => File is null ? "所选实例没有兼容版本" : $"适用于 {string.Join("/", File.MinecraftVersions)}";
     public bool IsDataPack => Definition.Kind == JavaResourceKind.DataPack;
     public ObservableCollection<JavaResourceInstallInstanceItem> Instances { get; } = [];
     public ObservableCollection<JavaResourceInstallWorldItem> Worlds { get; } = [];
     public bool HasNoInstances => Instances.Count == 0;
     public bool HasNoWorlds => IsDataPack && !IsLoadingWorlds && Worlds.Count == 0;
-    public bool CanInstall => SelectedInstance is not null && (!IsDataPack || SelectedWorld is not null);
+    public bool CanInstall => File is not null && SelectedInstance is not null && (!IsDataPack || SelectedWorld is not null);
     [ObservableProperty] public partial bool ShowAllInstances { get; set; }
     [ObservableProperty] public partial JavaResourceInstallInstanceItem? SelectedInstance { get; set; }
     [ObservableProperty] public partial JavaResourceInstallWorldItem? SelectedWorld { get; set; }
@@ -60,8 +68,15 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
 
     partial void OnSelectedInstanceChanged(JavaResourceInstallInstanceItem? value)
     {
+        File = value is null ? _files.FirstOrDefault() : FindLatestCompatibleFile(value.Instance);
         OnPropertyChanged(nameof(CanInstall));
         if (IsDataPack) _ = LoadWorldsAsync(value?.Instance);
+    }
+
+    partial void OnFileChanged(JavaResourceFileItem? value)
+    {
+        OnPropertyChanged(nameof(Metadata));
+        OnPropertyChanged(nameof(CanInstall));
     }
 
     partial void OnSelectedWorldChanged(JavaResourceInstallWorldItem? value) =>
@@ -76,10 +91,9 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
     private void RefreshInstances()
     {
         var selectedPath = SelectedInstance?.Instance.InstanceFolderPath;
-        var compatible = ShowAllInstances || File.MinecraftVersions.Count == 0
+        var compatible = ShowAllInstances
             ? _allInstances
-            : _allInstances.Where(item => File.MinecraftVersions.Contains(item.Instance.VersionId,
-                StringComparer.OrdinalIgnoreCase)).ToArray();
+            : _allInstances.Where(item => FindLatestCompatibleFile(item.Instance) is not null).ToArray();
         Instances.Clear();
         foreach (var instance in compatible) Instances.Add(instance);
         SelectedInstance = Instances.FirstOrDefault(item =>
@@ -88,6 +102,10 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
         OnPropertyChanged(nameof(HasNoInstances));
         OnPropertyChanged(nameof(CanInstall));
     }
+
+    private JavaResourceFileItem? FindLatestCompatibleFile(MinecraftInstance instance) => _files.FirstOrDefault(file =>
+        file.MinecraftVersions.Count == 0 || file.MinecraftVersions.Contains(instance.VersionId,
+            StringComparer.OrdinalIgnoreCase));
 
     private async Task LoadWorldsAsync(MinecraftInstance? instance)
     {
@@ -132,9 +150,10 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
 
     public void Install() => RequestClose?.Invoke(this,
         new JavaResourceInstallDialogResult(JavaResourceDownloadDestination.Install, SelectedInstance?.Instance,
-            SelectedWorld?.World));
+            SelectedWorld?.World, File));
     public void SaveAs() => RequestClose?.Invoke(this,
-        new JavaResourceInstallDialogResult(JavaResourceDownloadDestination.SaveAs, null, null));
+        new JavaResourceInstallDialogResult(JavaResourceDownloadDestination.SaveAs, null, null,
+            _files.FirstOrDefault()));
     public void Cancel() => RequestClose?.Invoke(this, null);
     public void Close() => Cancel();
     public event EventHandler<object?>? RequestClose;

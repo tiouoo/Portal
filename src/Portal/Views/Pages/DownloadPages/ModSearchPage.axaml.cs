@@ -57,10 +57,10 @@ public partial class ModSearchPage : UserControl
         e.Handled = true;
     }
 
-    private void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is ModSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
-            ModDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
+            await ModDetailsPage.QuickDownloadAsync(topLevel, item.Target);
         e.Handled = true;
     }
 }

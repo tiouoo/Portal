@@ -10,6 +10,7 @@ namespace Portal.Const;
 public partial class Data : ObservableObject
 {
     private static Data? _instance;
+    private static ConfigEntry? _configEntry;
 
     public static Data Instance
     {
@@ -19,10 +20,25 @@ public partial class Data : ObservableObject
     private Data()
     {
         PropertyChanged += OnPropertyChanged;
-        ConfigEntry.PropertyChanged += OnPropertyChanged;
+        if (_configEntry is not null)
+            _configEntry.PropertyChanged += OnPropertyChanged;
     }
 
-    public static ConfigEntry ConfigEntry { get; set; }
+    public static ConfigEntry ConfigEntry
+    {
+        get => _configEntry ?? throw new InvalidOperationException("Configuration has not been initialized.");
+        set
+        {
+            if (ReferenceEquals(_configEntry, value)) return;
+            if (_instance is not null && _configEntry is not null)
+                _configEntry.PropertyChanged -= _instance.OnPropertyChanged;
+
+            _configEntry = value;
+
+            if (_instance is not null)
+                _configEntry.PropertyChanged += _instance.OnPropertyChanged;
+        }
+    }
     public static DesktopType DesktopType => DesktopTypeDetector.CurrentPlatform; 
     public static UiProperty UiProperty { get; } = UiProperty.Instance;
     [ObservableProperty] public partial CiVersionInfo Version { get; set; }

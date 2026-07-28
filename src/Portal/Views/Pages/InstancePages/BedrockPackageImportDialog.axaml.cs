@@ -7,6 +7,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Services;
+using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -23,12 +24,7 @@ public partial class BedrockPackageImportDialog : UserControl
 
     public static async Task ImportAsync(TopLevel topLevel, string archivePath, BedrockPackageInspection inspection)
     {
-        var result = await OverlayDialog.ShowCustomAsync<BedrockPackageImportDialog, BedrockPackageImportDialogViewModel,
-            BedrockPackageImportDialogResult>(new BedrockPackageImportDialogViewModel(inspection), topLevel.TryGetHostId(),
-            new OverlayDialogOptions
-            {
-                Title = "导入基岩版包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
-            });
+        var result = await SelectDestinationAsync(topLevel, new BedrockPackageImportDialogViewModel(inspection));
         if (result == null) return;
 
         try
@@ -42,6 +38,18 @@ public partial class BedrockPackageImportDialog : UserControl
             NotificationGateway.Notice(topLevel, $"导入失败：{ex.Message}", NotificationType.Error);
         }
     }
+
+    public static Task<BedrockPackageImportDialogResult?> SelectDestinationAsync(TopLevel topLevel,
+        JavaResourceDefinition definition) => SelectDestinationAsync(topLevel,
+        new BedrockPackageImportDialogViewModel(definition));
+
+    private static Task<BedrockPackageImportDialogResult?> SelectDestinationAsync(TopLevel topLevel,
+        BedrockPackageImportDialogViewModel viewModel) => OverlayDialog.ShowCustomAsync<BedrockPackageImportDialog,
+            BedrockPackageImportDialogViewModel, BedrockPackageImportDialogResult>(viewModel, topLevel.TryGetHostId(),
+            new OverlayDialogOptions
+            {
+                Title = "导入基岩版包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+            });
 }
 
 public sealed record BedrockPackageImportDialogResult(MinecraftInstance Instance, string? WorldUserId);
@@ -49,14 +57,17 @@ public sealed record BedrockPackageInstanceItem(MinecraftInstance Instance, stri
 
 public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDialogContext
 {
-    private readonly BedrockPackageInspection _inspection;
+    private readonly BedrockPackageInspection? _inspection;
+    private readonly JavaResourceDefinition? _definition;
     public ObservableCollection<BedrockPackageInstanceItem> Instances { get; } = [];
     public ObservableCollection<string> WorldUserIds { get; } = [];
     public bool HasNoInstances => Instances.Count == 0;
-    public bool RequiresUserId => _inspection.ArchiveType == BedrockPackageArchiveType.Mcworld;
+    public bool RequiresUserId => _inspection?.ArchiveType == BedrockPackageArchiveType.Mcworld ||
+                                  _definition?.Kind == JavaResourceKind.BedrockWorld;
     public bool CanImport => SelectedInstance != null && (!RequiresUserId || !string.IsNullOrWhiteSpace(SelectedWorldUserId));
-    public string PackageDescription => RequiresUserId ? $"{_inspection.DisplayName}（存档）" :
-        $"{_inspection.DisplayName}（{string.Join("、", _inspection.Contents.Select(content => content.Type switch
+    public string PackageDescription => _definition is not null ? $"将下载并安装{_definition.DisplayName}" :
+        RequiresUserId ? $"{_inspection!.DisplayName}（存档）" :
+        $"{_inspection!.DisplayName}（{string.Join("、", _inspection.Contents.Select(content => content.Type switch
         {
             BedrockPackageContentType.ResourcePack => "资源包",
             BedrockPackageContentType.BehaviorPack => "行为包",
@@ -71,6 +82,17 @@ public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDi
     public BedrockPackageImportDialogViewModel(BedrockPackageInspection inspection)
     {
         _inspection = inspection;
+        InitializeInstances();
+    }
+
+    public BedrockPackageImportDialogViewModel(JavaResourceDefinition definition)
+    {
+        _definition = definition;
+        InitializeInstances();
+    }
+
+    private void InitializeInstances()
+    {
         foreach (var instance in InstanceManager.Instance.Instances.Where(instance => instance.IsBedrock))
             Instances.Add(new BedrockPackageInstanceItem(instance, instance.InstanceName, instance.VersionId));
         SelectedInstance = Instances.FirstOrDefault();

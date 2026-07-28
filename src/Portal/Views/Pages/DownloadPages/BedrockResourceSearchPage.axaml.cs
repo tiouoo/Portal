@@ -34,10 +34,10 @@ public partial class BedrockResourceSearchPage : UserControl
         }
         e.Handled = true;
     }
-    private void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is JavaResourceSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
-            BedrockResourceDetailsPage.Open(topLevel, item.Target, item.Name);
+            await BedrockResourceDownload.QuickDownloadAsync(topLevel, item.Target);
         e.Handled = true;
     }
 }

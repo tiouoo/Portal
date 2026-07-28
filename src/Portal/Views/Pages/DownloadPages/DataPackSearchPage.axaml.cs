@@ -33,10 +33,10 @@ public partial class DataPackSearchPage : UserControl
         }
         e.Handled = true;
     }
-    private void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Download_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is JavaResourceSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
-            DataPackDetailsPage.Open(topLevel, item.Target, item.Name);
+            await JavaResourceDownload.QuickDownloadAsync(topLevel, item.Target);
         e.Handled = true;
     }
 }

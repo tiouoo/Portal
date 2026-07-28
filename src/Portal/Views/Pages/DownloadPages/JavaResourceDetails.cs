@@ -309,6 +309,55 @@ public sealed record JavaResourceFileItem(string Id, string DisplayName, string 
 
 public static class JavaResourceDownload
 {
+    public static async Task QuickDownloadAsync(TopLevel topLevel, JavaResourceDetailsTarget target)
+    {
+        var loading = new QuickDownloadLoadingDialogViewModel($"下载{target.Definition.DisplayName}");
+        var loadingDialog = OverlayDialog.ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
+            object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = $"下载{target.Definition.DisplayName}", Buttons = DialogButton.None,
+                CanLightDismiss = false, CanResize = false
+            });
+        try
+        {
+            IReadOnlyList<JavaResourceFileItem> files = target.Source switch
+            {
+                ModDetailsSource.Modrinth => (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
+                    .Select(JavaResourceFileItem.From).ToArray(),
+                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(long.Parse(target.ProjectId)))
+                    .Select(JavaResourceFileItem.From).ToArray(),
+                _ => []
+            };
+            if (files.Count == 0) throw new InvalidDataException("未找到可下载的资源文件。");
+            loading.Close();
+            await loadingDialog;
+
+            var result = await OverlayDialog
+                .ShowCustomAsync<JavaResourceInstallDialog, JavaResourceInstallDialogViewModel,
+                    JavaResourceInstallDialogResult>(
+                    new JavaResourceInstallDialogViewModel(target.Definition, files, InstanceManager.Instance.Instances),
+                    topLevel.TryGetHostId(), new OverlayDialogOptions
+                    {
+                        Title = $"下载{target.Definition.DisplayName}", Buttons = DialogButton.None,
+                        CanLightDismiss = false, CanResize = false
+                    });
+            if (result?.File is not { } file) return;
+            if (result.Destination == JavaResourceDownloadDestination.SaveAs)
+            {
+                await DownloadAsync(topLevel, target.Definition, file);
+                return;
+            }
+            if (result.Instance is null) return;
+
+            await InstallFromDialogAsync(topLevel, target.Definition, file, result.Instance, result.World);
+        }
+        catch
+        {
+            loading.Fail();
+            await loadingDialog;
+        }
+    }
+
     public static async Task ShowInstallDialogAsync(TopLevel topLevel, JavaResourceDefinition definition,
         JavaResourceFileItem file)
     {
@@ -321,36 +370,43 @@ public static class JavaResourceDownload
                     Title = $"下载{definition.DisplayName}", Buttons = DialogButton.None,
                     CanLightDismiss = false, CanResize = false
                 });
-        if (result is null) return;
+        if (result?.File is not { } selectedFile) return;
         if (result.Destination == JavaResourceDownloadDestination.SaveAs)
         {
-            await DownloadAsync(topLevel, definition, file);
+            await DownloadAsync(topLevel, definition, selectedFile);
             return;
         }
         if (result.Instance is null) return;
 
+        await InstallFromDialogAsync(topLevel, definition, selectedFile, result.Instance, result.World);
+    }
+
+    private static async Task InstallFromDialogAsync(TopLevel topLevel, JavaResourceDefinition definition,
+        JavaResourceFileItem file, MinecraftInstance instance, WorldSaveInfo? world)
+    {
+
         if (definition.Kind == JavaResourceKind.Save)
         {
-            InstallSave(topLevel, definition, file, result.Instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder));
+            InstallSave(topLevel, definition, file, instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder));
             return;
         }
 
         string folder;
         if (definition.Kind == JavaResourceKind.DataPack)
         {
-            if (result.World is null || await new WorldSaveService().IsWorldLockedAsync(result.World.FolderPath))
+            if (world is null || await new WorldSaveService().IsWorldLockedAsync(world.FolderPath))
             {
                 NotificationGateway.Notice(topLevel, "存档正在使用，无法安装数据包", NotificationType.Warning);
                 return;
             }
-            folder = Path.Combine(result.World.FolderPath, "datapacks");
+            folder = Path.Combine(world.FolderPath, "datapacks");
         }
         else
         {
             var specialFolder = definition.Kind == JavaResourceKind.ResourcePack
                 ? MinecraftSpecialFolder.ResourcePacksFolder
                 : MinecraftSpecialFolder.ShaderPacksFolder;
-            folder = result.Instance.GetSpecialFolder(specialFolder);
+            folder = instance.GetSpecialFolder(specialFolder);
         }
         Install(topLevel, definition, file, folder);
     }
