@@ -20,19 +20,18 @@ public sealed class WorldEnvironmentService
     private static WorldWeatherSettings? LoadWeather(string worldPath, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var file = LoadFile(worldPath, "weather.dat");
-        var data = file?.RootTag["data"] as NbtCompound;
+        var file = LoadModernFile(worldPath, "weather.dat");
+        var data = file?.RootTag["data"] as NbtCompound ?? LoadLegacyData(worldPath);
         return data == null ? null : new WorldWeatherSettings(GetBool(data, "raining"), GetBool(data, "thundering"),
-            GetInt(data, "rain_time"), GetInt(data, "thunder_time"), GetInt(data, "clear_weather_time"));
+            GetInt(data, file == null ? "rainTime" : "rain_time"), GetInt(data, file == null ? "thunderTime" : "thunder_time"), GetInt(data, file == null ? "clearWeatherTime" : "clear_weather_time"));
     }
 
     private static WorldClockSettings? LoadClocks(string worldPath, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var file = LoadFile(worldPath, "world_clocks.dat");
+        var file = LoadModernFile(worldPath, "world_clocks.dat");
         var data = file?.RootTag["data"] as NbtCompound;
-        if (data == null)
-            return null;
+        if (data == null) return LoadLegacyClocks(worldPath);
 
         var clocks = new Dictionary<string, long>(StringComparer.Ordinal);
         foreach (var dimension in data.Tags.OfType<NbtCompound>())
@@ -46,28 +45,35 @@ public sealed class WorldEnvironmentService
     private static void SaveWeather(string worldPath, WorldWeatherSettings settings, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var file = LoadFile(worldPath, "weather.dat") ?? throw new FileNotFoundException("未找到天气数据文件。");
-        var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException("天气数据文件不包含 data 标签。");
-        SetBool(data, "raining", settings.Raining);
-        SetBool(data, "thundering", settings.Thundering);
-        SetInt(data, "rain_time", settings.RainTime);
-        SetInt(data, "thunder_time", settings.ThunderTime);
-        SetInt(data, "clear_weather_time", settings.ClearWeatherTime);
-        SaveFile(file, worldPath, "weather.dat");
+        var file = LoadModernFile(worldPath, "weather.dat");
+        if (file != null)
+        {
+            var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException("天气数据文件不包含 data 标签。");
+            SetBool(data, "raining", settings.Raining); SetBool(data, "thundering", settings.Thundering);
+            SetInt(data, "rain_time", settings.RainTime); SetInt(data, "thunder_time", settings.ThunderTime); SetInt(data, "clear_weather_time", settings.ClearWeatherTime);
+            SaveModernFile(file, worldPath, "weather.dat");
+            return;
+        }
+        SaveLegacyWeather(worldPath, settings);
     }
 
     private static void SaveClocks(string worldPath, WorldClockSettings settings, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var file = LoadFile(worldPath, "world_clocks.dat") ?? throw new FileNotFoundException("未找到世界时钟数据文件。");
+        var file = LoadModernFile(worldPath, "world_clocks.dat");
+        if (file == null)
+        {
+            SaveLegacyClocks(worldPath, settings);
+            return;
+        }
         var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException("世界时钟数据文件不包含 data 标签。");
         foreach (var (dimension, totalTicks) in settings.TotalTicks)
             if (data[dimension] is NbtCompound clock && clock["total_ticks"] is NbtLong ticks)
                 ticks.Value = totalTicks;
-        SaveFile(file, worldPath, "world_clocks.dat");
+        SaveModernFile(file, worldPath, "world_clocks.dat");
     }
 
-    private static NbtFile? LoadFile(string worldPath, string fileName)
+    private static NbtFile? LoadModernFile(string worldPath, string fileName)
     {
         var path = Path.Combine(worldPath, "data", "minecraft", fileName);
         if (!File.Exists(path)) return null;
@@ -76,10 +82,42 @@ public sealed class WorldEnvironmentService
         return file;
     }
 
-    private static void SaveFile(NbtFile file, string worldPath, string fileName) =>
+    private static void SaveModernFile(NbtFile file, string worldPath, string fileName) =>
         file.SaveToFile(Path.Combine(worldPath, "data", "minecraft", fileName), NbtCompression.None);
+    private static NbtCompound? LoadLegacyData(string worldPath)
+    {
+        var path = Path.Combine(worldPath, "level.dat");
+        if (!File.Exists(path)) return null;
+        var file = new NbtFile(); file.LoadFromFile(path);
+        return file.RootTag["Data"] as NbtCompound ?? file.RootTag;
+    }
+    private static WorldClockSettings? LoadLegacyClocks(string worldPath)
+    {
+        var data = LoadLegacyData(worldPath);
+        return data == null ? null : new WorldClockSettings(new Dictionary<string, long>(StringComparer.Ordinal) { ["minecraft:overworld"] = GetLong(data, "DayTime") });
+    }
+    private static void SaveLegacyWeather(string worldPath, WorldWeatherSettings settings)
+    {
+        var path = Path.Combine(worldPath, "level.dat");
+        var file = new NbtFile(); file.LoadFromFile(path);
+        var data = file.RootTag["Data"] as NbtCompound ?? file.RootTag;
+        SetBool(data, "raining", settings.Raining); SetBool(data, "thundering", settings.Thundering);
+        SetInt(data, "rainTime", settings.RainTime); SetInt(data, "thunderTime", settings.ThunderTime); SetInt(data, "clearWeatherTime", settings.ClearWeatherTime);
+        file.SaveToFile(path, NbtCompression.GZip);
+    }
+    private static void SaveLegacyClocks(string worldPath, WorldClockSettings settings)
+    {
+        if (!settings.TotalTicks.TryGetValue("minecraft:overworld", out var ticks)) return;
+        var path = Path.Combine(worldPath, "level.dat");
+        var file = new NbtFile(); file.LoadFromFile(path);
+        var data = file.RootTag["Data"] as NbtCompound ?? file.RootTag;
+        if (data["DayTime"] is NbtLong dayTime) dayTime.Value = ticks;
+        else { if (data["DayTime"] != null) data.Remove("DayTime"); data.Add(new NbtLong("DayTime", ticks)); }
+        file.SaveToFile(path, NbtCompression.GZip);
+    }
     private static bool GetBool(NbtCompound data, string name) => data[name] is NbtByte tag && tag.Value != 0;
     private static int GetInt(NbtCompound data, string name) => (data[name] as NbtInt)?.Value ?? 0;
+    private static long GetLong(NbtCompound data, string name) => (data[name] as NbtLong)?.Value ?? 0;
     private static void SetBool(NbtCompound data, string name, bool value)
     {
         if (data[name] is NbtByte tag) tag.Value = value ? (byte)1 : (byte)0;

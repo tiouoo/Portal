@@ -64,7 +64,12 @@ public partial class WorldSaveScoreboard : UserControl
     }
 }
 
-public enum WorldSaveDetailsPage { Overview, GameRules, Weather, Clocks, Scoreboard }
+public partial class WorldSavePlayers : UserControl
+{
+    public WorldSavePlayers() => InitializeComponent();
+}
+
+public enum WorldSaveDetailsPage { Overview, GameRules, Weather, Clocks, Players, Scoreboard }
 
 public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContext
 {
@@ -72,15 +77,19 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     private readonly WorldGameRuleService _gameRuleService = new();
     private readonly WorldEnvironmentService _environmentService = new();
     private readonly WorldScoreboardService _scoreboardService = new();
+    private readonly WorldPlayerDataService _playerDataService = new();
     private readonly WorldSaveService _worldSaveService = new();
+    private readonly Dictionary<WorldSaveDetailsPage, UserControl> _pages;
     private WorldGameRules? _rules;
 
-    [ObservableProperty] private WorldSaveDetailsPage _selectedPage = WorldSaveDetailsPage.Overview;
+    [ObservableProperty] private WorldSaveDetailsPage _selectedPage;
+    [ObservableProperty] private UserControl? _currentPage;
     [ObservableProperty] private bool _isLoading = true;
     [ObservableProperty] private bool _hasGameRules;
     [ObservableProperty] private bool _hasWeather;
     [ObservableProperty] private bool _hasClocks;
     [ObservableProperty] private bool _hasScoreboard;
+    [ObservableProperty] private bool _hasPlayers;
     [ObservableProperty] private bool _raining;
     [ObservableProperty] private bool _thundering;
     [ObservableProperty] private string _rainTime = "0";
@@ -92,6 +101,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public ObservableCollection<WorldNumberSetting> ClockSettings { get; } = [];
     public ObservableCollection<WorldScoreboardObjectiveSetting> ScoreboardObjectives { get; } = [];
     public ObservableCollection<WorldScoreboardScoreSetting> ScoreboardScores { get; } = [];
+    public ObservableCollection<WorldPlayerDataSetting> Players { get; } = [];
     public string DisplayName => string.IsNullOrWhiteSpace(_info.LevelName) ? _info.FolderName : _info.LevelName;
     public string FolderName => _info.FolderName;
     public string CreationTime => _info.CreationTime.ToString("yyyy-MM-dd HH:mm");
@@ -102,25 +112,27 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public string AllowCommands => _info.AllowCommands is null ? "未知" : _info.AllowCommands.Value ? "是" : "否";
     public string FileStatistics => $"{_info.PlayerDataCount} 个玩家数据，{_info.DataPackArchiveCount} 个数据包";
     public bool IsLocked => _info.IsLocked;
-    public bool IsOverview => SelectedPage == WorldSaveDetailsPage.Overview;
-    public bool IsGameRules => SelectedPage == WorldSaveDetailsPage.GameRules;
-    public bool IsWeather => SelectedPage == WorldSaveDetailsPage.Weather;
-    public bool IsClocks => SelectedPage == WorldSaveDetailsPage.Clocks;
-    public bool IsScoreboard => SelectedPage == WorldSaveDetailsPage.Scoreboard;
+    public bool IsUnlocked => !IsLocked;
 
     public WorldSaveDetailsViewModel(WorldSaveInfo info)
     {
         _info = info;
+        _pages = new Dictionary<WorldSaveDetailsPage, UserControl>
+        {
+            [WorldSaveDetailsPage.Overview] = new WorldSaveOverview(),
+            [WorldSaveDetailsPage.GameRules] = new WorldSaveGameRules(),
+            [WorldSaveDetailsPage.Weather] = new WorldSaveWeather(),
+            [WorldSaveDetailsPage.Clocks] = new WorldSaveClocks(),
+            [WorldSaveDetailsPage.Players] = new WorldSavePlayers(),
+            [WorldSaveDetailsPage.Scoreboard] = new WorldSaveScoreboard()
+        };
+        CurrentPage = _pages[WorldSaveDetailsPage.Overview];
         _ = LoadAsync();
     }
 
     partial void OnSelectedPageChanged(WorldSaveDetailsPage value)
     {
-        OnPropertyChanged(nameof(IsOverview));
-        OnPropertyChanged(nameof(IsGameRules));
-        OnPropertyChanged(nameof(IsWeather));
-        OnPropertyChanged(nameof(IsClocks));
-        OnPropertyChanged(nameof(IsScoreboard));
+        CurrentPage = _pages[value];
     }
 
     private async Task LoadAsync()
@@ -131,9 +143,9 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
             if (_rules != null)
             {
                 foreach (var (key, value) in _rules.BooleanRules.OrderBy(x => x.Key))
-                    BooleanRules.Add(new WorldBooleanSetting(key, key["minecraft:".Length..], value));
+                    BooleanRules.Add(new WorldBooleanSetting(key, DisplayRuleName(key), value));
                 foreach (var (key, value) in _rules.IntegerRules.OrderBy(x => x.Key))
-                    IntegerRules.Add(new WorldNumberSetting(key, key["minecraft:".Length..], value));
+                    IntegerRules.Add(new WorldNumberSetting(key, DisplayRuleName(key), value));
                 HasGameRules = true;
             }
 
@@ -165,6 +177,10 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
                     ScoreboardScores.Add(new WorldScoreboardScoreSetting(score.Objective, score.Name, score.DisplayName, score.Score, score.Locked));
                 HasScoreboard = true;
             }
+
+            foreach (var player in await _playerDataService.LoadAsync(_info.FolderPath))
+                Players.Add(new WorldPlayerDataSetting(player));
+            HasPlayers = Players.Count > 0;
         }
         catch (Exception ex)
         {
@@ -260,6 +276,18 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         await SaveAsync(() => _scoreboardService.SaveAsync(_info.FolderPath, new WorldScoreboard(objectives, scores)));
     }
 
+    [RelayCommand]
+    private async Task SavePlayer(WorldPlayerDataSetting? player)
+    {
+        if (player == null || !await CanSaveAsync()) return;
+        if (!player.TryCreate(out var data))
+        {
+            ShowNotice("玩家数据包含无效数值：模式为 0-3，饥饿和饱和度为 0-20，经验进度为 0-1。", NotificationType.Warning);
+            return;
+        }
+        await SaveAsync(() => _playerDataService.SaveAsync(data));
+    }
+
     private async Task<bool> CanSaveAsync()
     {
         if (await _worldSaveService.IsWorldLockedAsync(_info.FolderPath))
@@ -288,6 +316,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     }
 
     private static bool TryParseNonNegative(string? text, out long value) => long.TryParse(text, out value) && value >= 0;
+    private static string DisplayRuleName(string key) => key.StartsWith("minecraft:", StringComparison.Ordinal) ? key["minecraft:".Length..] : key;
     private async Task SaveAsync(Func<Task> save)
     {
         try { await save(); ShowNotice("设置已保存", NotificationType.Success); }
@@ -335,4 +364,44 @@ public partial class WorldScoreboardScoreSetting(string objective, string name, 
     [ObservableProperty] private string _displayName = displayName;
     [ObservableProperty] private string _score = score.ToString();
     [ObservableProperty] private bool _locked = locked;
+}
+
+public partial class WorldPlayerDataSetting : ObservableObject
+{
+    private readonly WorldPlayerData _source;
+    public string PlayerId => _source.PlayerId;
+    public string DataVersionDisplay => $"数据版本 {_source.DataVersion}";
+    [ObservableProperty] private string _gameMode;
+    [ObservableProperty] private string _health;
+    [ObservableProperty] private string _foodLevel;
+    [ObservableProperty] private string _saturation;
+    [ObservableProperty] private string _experienceLevel;
+    [ObservableProperty] private string _experienceTotal;
+    [ObservableProperty] private string _experienceProgress;
+    [ObservableProperty] private string _dimension;
+    [ObservableProperty] private string _positionX;
+    [ObservableProperty] private string _positionY;
+    [ObservableProperty] private string _positionZ;
+    [ObservableProperty] private bool _invulnerable;
+    [ObservableProperty] private bool _mayFly;
+    [ObservableProperty] private bool _flying;
+    [ObservableProperty] private bool _instabuild;
+
+    public WorldPlayerDataSetting(WorldPlayerData source)
+    {
+        _source = source; _gameMode = source.GameMode.ToString(); _health = source.Health.ToString(); _foodLevel = source.FoodLevel.ToString(); _saturation = source.Saturation.ToString();
+        _experienceLevel = source.ExperienceLevel.ToString(); _experienceTotal = source.ExperienceTotal.ToString(); _experienceProgress = source.ExperienceProgress.ToString(); _dimension = source.Dimension;
+        _positionX = source.PositionX.ToString(); _positionY = source.PositionY.ToString(); _positionZ = source.PositionZ.ToString(); _invulnerable = source.Invulnerable; _mayFly = source.MayFly; _flying = source.Flying; _instabuild = source.Instabuild;
+    }
+
+    public bool TryCreate(out WorldPlayerData player)
+    {
+        if (!int.TryParse(GameMode, out var gameMode) || gameMode is < 0 or > 3 || !float.TryParse(Health, out var health) || health < 0 ||
+            !int.TryParse(FoodLevel, out var foodLevel) || foodLevel is < 0 or > 20 || !float.TryParse(Saturation, out var saturation) || saturation is < 0 or > 20 ||
+            !int.TryParse(ExperienceLevel, out var level) || level < 0 || !int.TryParse(ExperienceTotal, out var total) || total < 0 || !float.TryParse(ExperienceProgress, out var progress) || progress is < 0 or > 1 ||
+            !double.TryParse(PositionX, out var x) || !double.TryParse(PositionY, out var y) || !double.TryParse(PositionZ, out var z) || string.IsNullOrWhiteSpace(Dimension))
+        { player = _source; return false; }
+        player = _source with { GameMode = gameMode, Health = health, FoodLevel = foodLevel, Saturation = saturation, ExperienceLevel = level, ExperienceTotal = total, ExperienceProgress = progress, Dimension = Dimension.Trim(), PositionX = x, PositionY = y, PositionZ = z, Invulnerable = Invulnerable, MayFly = MayFly, Flying = Flying, Instabuild = Instabuild };
+        return true;
+    }
 }

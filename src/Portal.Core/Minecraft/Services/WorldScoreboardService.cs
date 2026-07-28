@@ -5,7 +5,7 @@ namespace Portal.Core.Minecraft.Services;
 
 public sealed class WorldScoreboardService
 {
-    private const string ScoreboardRelativePath = "data/minecraft/scoreboard.dat";
+    private static readonly string[] ScoreboardRelativePaths = ["data/minecraft/scoreboard.dat", "data/scoreboard.dat"];
 
     public Task<WorldScoreboard?> LoadAsync(string worldPath, CancellationToken cancellationToken = default) =>
         Task.Run(() => Load(worldPath, cancellationToken), cancellationToken);
@@ -16,7 +16,7 @@ public sealed class WorldScoreboardService
     private static WorldScoreboard? Load(string worldPath, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var path = Path.Combine(worldPath, ScoreboardRelativePath);
+        var path = FindPath(worldPath);
         if (!File.Exists(path)) return null;
 
         var file = new NbtFile();
@@ -37,7 +37,7 @@ public sealed class WorldScoreboardService
     private static void Save(string worldPath, WorldScoreboard scoreboard, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var path = Path.Combine(worldPath, ScoreboardRelativePath);
+        var path = FindPath(worldPath);
         if (!File.Exists(path)) throw new FileNotFoundException("未找到积分榜数据文件。", path);
 
         var file = new NbtFile();
@@ -73,4 +73,6 @@ public sealed class WorldScoreboardService
     }
 
     private static string GetString(NbtCompound parent, string name) => (parent[name] as NbtString)?.Value ?? string.Empty;
+    private static string FindPath(string worldPath) => ScoreboardRelativePaths.Select(path => Path.Combine(worldPath, path)).FirstOrDefault(File.Exists)
+        ?? Path.Combine(worldPath, ScoreboardRelativePaths[0]);
 }

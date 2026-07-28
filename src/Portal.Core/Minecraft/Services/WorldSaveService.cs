@@ -78,7 +78,7 @@ public sealed class WorldSaveService
             seed,
             gameMode,
             allowCommands,
-            CountFiles(Path.Combine(worldPath, "playerdata"), "*.dat"),
+            WorldPlayerDataService.CountPlayerDataFiles(worldPath),
             CountFiles(Path.Combine(worldPath, "datapacks"), "*.zip"),
             IsWorldLocked(worldPath));
     }

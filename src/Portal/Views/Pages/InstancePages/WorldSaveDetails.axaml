@@ -50,6 +50,7 @@
                 <tio:NavMenuItem Header="游戏规则" Tag="{x:Static local:WorldSaveDetailsPage.GameRules}" />
                 <tio:NavMenuItem Header="天气" Tag="{x:Static local:WorldSaveDetailsPage.Weather}" />
                 <tio:NavMenuItem Header="世界时钟" Tag="{x:Static local:WorldSaveDetailsPage.Clocks}" />
+                <tio:NavMenuItem Header="玩家数据" Tag="{x:Static local:WorldSaveDetailsPage.Players}" />
                 <tio:NavMenuItem Header="积分榜管理" Tag="{x:Static local:WorldSaveDetailsPage.Scoreboard}" />
             </tio:NavMenu>
         </controls:ScrollView>
@@ -58,12 +59,10 @@
             Fill="{DynamicResource TranslucentBorderBrush}"
             Margin="0,0,0,10"
             Width="1" />
-        <Grid Margin="24,18,20,12">
-            <local:WorldSaveOverview IsVisible="{Binding IsOverview}" />
-            <local:WorldSaveGameRules IsVisible="{Binding IsGameRules}" />
-            <local:WorldSaveWeather IsVisible="{Binding IsWeather}" />
-            <local:WorldSaveClocks IsVisible="{Binding IsClocks}" />
-            <local:WorldSaveScoreboard IsVisible="{Binding IsScoreboard}" />
-        </Grid>
+        <TransitioningContentControl Content="{Binding CurrentPage}" Margin="24,18,20,12">
+            <TransitioningContentControl.PageTransition>
+                <CrossFade Duration="0:0:0.2" />
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
     </DockPanel>
 </UserControl>
