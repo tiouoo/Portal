@@ -47,7 +47,6 @@
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="SmoothScroll.Avalonia" />
         <PackageReference Include="Tomlyn" />
-        <PackageReference Include="Velopack" />
     </ItemGroup>
 
     <ItemGroup>

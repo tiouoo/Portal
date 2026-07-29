@@ -22,7 +22,9 @@ export const platforms = [
     primaryUrl: `${releaseBase}/Portal.osx.mac.arm64.dmg`,
     links: [
       { label: 'Apple 芯片', meta: 'arm64 · dmg', url: `${releaseBase}/Portal.osx.mac.arm64.dmg` },
-      { label: 'Intel 芯片', meta: 'x64 · dmg', url: `${releaseBase}/Portal.osx.mac.x64.dmg` }
+      { label: 'Intel 芯片', meta: 'x64 · dmg', url: `${releaseBase}/Portal.osx.mac.x64.dmg` },
+      { label: 'Apple 芯片应用包', meta: 'arm64 · app.zip', url: `${releaseBase}/Portal.osx.mac.arm64.app.zip` },
+      { label: 'Intel 芯片应用包', meta: 'x64 · app.zip', url: `${releaseBase}/Portal.osx.mac.x64.app.zip` }
     ]
   },
   {
@@ -34,7 +36,8 @@ export const platforms = [
     primaryUrl: `${releaseBase}/Portal.linux.x64.AppImage`,
     links: [
       { label: '通用桌面版', meta: 'x64 · appimage', url: `${releaseBase}/Portal.linux.x64.AppImage` },
-      { label: 'Arm64 版', meta: 'arm64 · appimage', url: `${releaseBase}/Portal.linux.arm64.AppImage` }
+      { label: 'Arm64 版', meta: 'arm64 · appimage', url: `${releaseBase}/Portal.linux.arm64.AppImage` },
+      { label: 'Arm 版', meta: '32-bit arm · appimage', url: `${releaseBase}/Portal.linux.arm.AppImage` }
     ]
   }
 ]

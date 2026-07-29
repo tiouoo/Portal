@@ -63,7 +63,7 @@ public static partial class Initializer
         }
 
         if (Data.ConfigEntry.EnableCheckAutoUpdate && Data.Instance.Version.Type != "dev")
-            _ = UpdateApp.Instance.CheckAndDownloadAsync(silent: true);
+            _ = CheckUpdate();
         
         await LoadUiDataAsync();
 
@@ -92,4 +92,22 @@ public static partial class Initializer
         _ = Task.Run(NewsService.FetchAndRefreshAsync);
     }
 
+    private static async Task CheckUpdate()
+    {
+        var result = await UpdateChecker.Check(null, true);
+        switch (result)
+        {
+            case null:
+                Data.UiProperty.FoundNewVersion = false;
+                Data.UiProperty.IsLatestVersion = false;
+                return;
+            case "latest":
+                Data.UiProperty.IsLatestVersion = true;
+                return;
+            default:
+                Data.UiProperty.NewVersion = result;
+                Data.UiProperty.FoundNewVersion = true;
+                break;
+        }
+    }
 }

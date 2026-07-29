@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -36,6 +37,8 @@ public partial class About : DataUserControl
 
     private async Task Check(object? sender)
     {
+        Data.UiProperty.IsLatestVersion = false;
+        Data.UiProperty.FoundNewVersion = false;
         var channel = Data.UiProperty.OverrideUpdateChannel;
         if (channel != "nightly" && channel != "commit" && channel != "dev")
         {
@@ -44,9 +47,25 @@ public partial class About : DataUserControl
 
         HyperlinkButton.Content = "检查更新中";
         HyperlinkButton.IsEnabled = false;
-        await UpdateApp.Instance.CheckAndDownloadAsync(sender!.AsTopLevel());
+        var result = await UpdateChecker.Check(sender!.AsTopLevel());
         HyperlinkButton.Content = "检查更新";
         HyperlinkButton.IsEnabled = true;
+        if (result == null)
+        {
+            Data.UiProperty.FoundNewVersion = false;
+            Data.UiProperty.IsLatestVersion = false;
+            return;
+        }
+
+        if (result == "latest")
+        {
+            Data.UiProperty.IsLatestVersion = true;
+            sender!.AsTopLevel().Notice("当前是最新版本", NotificationType.Success);
+            return;
+        }
+
+        Data.UiProperty.NewVersion = result;
+        Data.UiProperty.FoundNewVersion = true;
     }
 
     private void UpdateChannel_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -58,17 +77,20 @@ public partial class About : DataUserControl
     private async void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control control) return;
-        if (UpdateApp.Instance.State != UpdateState.ReadyToRestart)
-        {
-            await UpdateApp.Instance.HandleActionAsync(control.GetTopLevel()!);
-            return;
-        }
+        UpdateHyperlinkButton.IsEnabled = false;
+        UpdateHyperlinkButton.Content = "正在准备更新";
+        var update = await UpdateApp.Prepare(control.GetTopLevel()!);
+        UpdateHyperlinkButton.Content = "下载新版本";
+        UpdateHyperlinkButton.IsEnabled = true;
+        if (update is null) return;
 
         var result = await OverlayDialog.ShowStandardAsync(
             new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = "增量更新包已下载并准备完成。是否立即重启 Portal 并安装更新？",
+                Text = update.RunsInstaller
+                    ? "更新安装程序已下载并校验完成。是否立即退出 Portal 并运行安装程序？"
+                    : "更新已下载并准备完成。是否立即重启 Portal 并安装更新？",
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
@@ -76,12 +98,12 @@ public partial class About : DataUserControl
                 Title = "更新准备完成",
                 Mode = DialogMode.Question,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "立即重启",
+                OverrideYesButtonText = update.RunsInstaller ? "退出并安装" : "立即重启",
                 OverrideNoButtonText = "稍后",
                 CanLightDismiss = false,
                 CanResize = false
             });
-        if (result == DialogResult.Yes) await UpdateApp.Instance.ApplyAsync();
+        if (result == DialogResult.Yes) await UpdateApp.Apply(update);
     }
 
     private void OpenLink_OnClick(object? sender, RoutedEventArgs e)
@@ -95,6 +117,5 @@ public partial class About : DataUserControl
 public partial class AboutViewModel : ObservableObject
 {
     public Data Data => Data.Instance;
-    public UpdateApp Updates => UpdateApp.Instance;
     public string Info => $"{Data.Version.Type}.{Data.PackageType}";
 }

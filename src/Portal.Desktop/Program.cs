@@ -8,7 +8,6 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Velopack;
 
 namespace Portal.Desktop;
 
@@ -20,11 +19,6 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        VelopackApp.Build()
-            .SetArgs(args)
-            .SetAutoApplyOnStartup(false)
-            .Run();
-
         if (TryGetBedrockPackagePath(args, out var packagePath))
             App.BedrockPackagePath = packagePath;
 
