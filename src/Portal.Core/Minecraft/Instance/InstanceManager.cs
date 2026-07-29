@@ -58,8 +58,13 @@ public class InstanceManager
 
     public void RefreshAll(IEnumerable<MinecraftFolderEntry> folders)
     {
-        Instances.Clear();
+        var instances = ScanAll(folders);
+        ApplyInstances(instances);
+    }
 
+    public List<MinecraftInstance> ScanAll(IEnumerable<MinecraftFolderEntry> folders)
+    {
+        var result = new List<MinecraftInstance>();
         foreach (var folder in folders)
         {
             var folderPath = folder.FolderPath;
@@ -69,11 +74,47 @@ public class InstanceManager
             var instances = layout.Kind == MinecraftFolderKind.Standard
                 ? new FolderScanner(layout.RootPath, folder.FolderName, VersionFolders).Scan()
                 : ExternalMinecraftScanner.Scan(folder).ToList();
-            foreach (var instance in instances)
+            result.AddRange(instances);
+        }
+
+        return result;
+    }
+
+    public List<MinecraftInstance> ScanBedrock(IEnumerable<MinecraftFolderEntry> folders)
+    {
+        var result = new List<MinecraftInstance>();
+        foreach (var folder in folders)
+        {
+            var layout = folder.DetectedLayout;
+            if (layout.Kind != MinecraftFolderKind.Standard)
+                continue;
+
+            var versionsPath = Path.Combine(layout.RootPath, "bedrock_versions");
+            if (!Directory.Exists(versionsPath))
+                continue;
+
+            foreach (var instanceFolder in Directory.GetDirectories(versionsPath))
             {
-                Instances.Add(instance);
+                try
+                {
+                    var config = BedrockHelper.GetInstanceConfig(instanceFolder);
+                    result.Add(new MinecraftInstance(config, folder.FolderName, layout.RootPath));
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error($"扫描基岩版实例失败: {instanceFolder} {exception.Message}");
+                }
             }
         }
+
+        return result;
+    }
+
+    public void ApplyInstances(IEnumerable<MinecraftInstance> instances)
+    {
+        Instances.Clear();
+        foreach (var instance in instances)
+            Instances.Add(instance);
 
         InstancesChanged?.Invoke(this, EventArgs.Empty);
         NotifyStatisticsChanged();

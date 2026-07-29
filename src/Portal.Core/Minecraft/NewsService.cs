@@ -21,7 +21,12 @@ public static class NewsService
     {
         JavaNews = LoadCache(NewsEdition.Java);
         BedrockNews = LoadCache(NewsEdition.Bedrock);
-        if (JavaNews.Count > 0 || BedrockNews.Count > 0) NewsUpdated?.Invoke(null, EventArgs.Empty);
+    }
+
+    public static void RaiseNewsUpdated()
+    {
+        if (JavaNews.Count > 0 || BedrockNews.Count > 0)
+            NewsUpdated?.Invoke(null, EventArgs.Empty);
     }
 
     public static async Task FetchAndRefreshAsync()

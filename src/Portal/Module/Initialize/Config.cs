@@ -114,8 +114,7 @@ public class Config
         Data.UiProperty.ConfigLoaded = true;
         ConfigIdentifyExtension.MinecraftFolder(Data.ConfigEntry);
 
-        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-        Logger.Info($"配置加载完成，已加载 {Data.ConfigEntry.MinecraftFolders.Count} 个 Minecraft 文件夹");
+        Logger.Info($"配置加载完成，已配置 {Data.ConfigEntry.MinecraftFolders.Count} 个 Minecraft 文件夹");
 
         InitializationEvents.RaiseBeforeUiLoaded();
     }

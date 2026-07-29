@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Services;
+using Portal.Module.Initialize;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Controls;
@@ -21,7 +22,8 @@ public partial class BedrockPackageImportWindow : TioWindow
     public BedrockPackageImportWindow(string archivePath)
     {
         InitializeComponent();
-        DataContext = new BedrockPackageImportWindowViewModel(archivePath);
+        DataContext = new BedrockPackageImportWindowViewModel(archivePath, false);
+        Loaded += async (_, _) => await InitializeAsync(archivePath);
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             return;
@@ -32,6 +34,28 @@ public partial class BedrockPackageImportWindow : TioWindow
         Loaded += (_, _) => RefreshMacOsTitleBarButtons();
         PropertyChanged += Window_OnPropertyChanged;
         SizeChanged += (_, _) => RefreshMacOsTitleBarButtons();
+    }
+
+    private async Task InitializeAsync(string archivePath)
+    {
+        if (DataContext is not BedrockPackageImportWindowViewModel viewModel || viewModel.IsInitialized)
+            return;
+
+        viewModel.IsBusy = true;
+        viewModel.StatusText = "正在读取包和基岩版实例...";
+        try
+        {
+            var inspectionTask = Task.Run(() => new BedrockPackageImportService().Inspect(archivePath));
+            var instancesTask = Initializer.LoadBedrockPackageImportDataAsync();
+            await Task.WhenAll(inspectionTask, instancesTask);
+            DataContext = new BedrockPackageImportWindowViewModel(archivePath, inspectionTask.Result);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+            viewModel.StatusText = $"初始化失败：{exception.Message}";
+            viewModel.IsBusy = false;
+        }
     }
 
     private void Window_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -75,6 +99,7 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
     public bool HasStatus => !string.IsNullOrWhiteSpace(StatusText);
     public string ImportButtonText => IsBusy ? "导入中" : "导入";
     public bool CanImport => !IsBusy && _inspection != null && ViewModel.CanImport;
+    public bool IsInitialized { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasStatus))]
@@ -85,9 +110,18 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanImport))]
     public partial bool IsBusy { get; set; }
 
-    public BedrockPackageImportWindowViewModel(string archivePath)
+    public BedrockPackageImportWindowViewModel(string archivePath, bool initialize = true)
     {
         _archivePath = archivePath;
+        IsInitialized = initialize;
+        if (!initialize)
+        {
+            ViewModel = new BedrockPackageImportDialogViewModel(
+                new BedrockPackageInspection(BedrockPackageArchiveType.Mcpack,
+                    Path.GetFileNameWithoutExtension(archivePath), []));
+            return;
+        }
+
         try
         {
             _inspection = new BedrockPackageImportService().Inspect(archivePath);
@@ -100,6 +134,15 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
                 new BedrockPackageInspection(BedrockPackageArchiveType.Mcpack, Path.GetFileNameWithoutExtension(archivePath), []));
             StatusText = $"无法读取此文件：{exception.Message}";
         }
+    }
+
+    public BedrockPackageImportWindowViewModel(string archivePath, BedrockPackageInspection inspection)
+    {
+        _archivePath = archivePath;
+        _inspection = inspection;
+        IsInitialized = true;
+        ViewModel = new BedrockPackageImportDialogViewModel(inspection);
+        ViewModel.PropertyChanged += ViewModel_OnPropertyChanged;
     }
 
     private static string GetImportTitle(BedrockPackageInspection? inspection)

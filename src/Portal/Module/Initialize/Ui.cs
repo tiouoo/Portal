@@ -7,8 +7,10 @@ using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core;
 using Portal.Core.Minecraft;
+using Portal.Core.Minecraft.Instance;
 using Portal.Module.Update;
 using Portal.Views;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Platform;
 using Tio.Avalonia.Standard.Tab.Common;
@@ -30,7 +32,7 @@ public static partial class Initializer
         NotificationGateway.IsToastFunc = () => Data.ConfigEntry.NoticeWay == NoticeWay.Toast;
     }
 
-    public static void Ui()
+    public static async Task UiAsync()
     {
         File.WriteAllText(ConfigPath.AppPathDataPath,
             Process.GetCurrentProcess().MainModule.FileName);
@@ -42,8 +44,6 @@ public static partial class Initializer
             ConfigEntry.SetForegroundColor(Data.ConfigEntry.ForegroundColor);
         }
         
-        NewsService.InitializeFromCache();
-
         LoopGc.BeginLoop();
 
         Functions.CreateNewTabWindowFunc = _ => new TabWindow(false);
@@ -65,9 +65,31 @@ public static partial class Initializer
         if (Data.ConfigEntry.EnableCheckAutoUpdate && Data.Instance.Version.Type != "dev")
             _ = CheckUpdate();
         
-        _ = Task.Run(async () => await NewsService.FetchAndRefreshAsync());
+        await LoadUiDataAsync();
 
         InitializationEvents.RaiseAfterUiLoaded();
+    }
+
+    public static async Task LoadBedrockPackageImportDataAsync()
+    {
+        var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
+        var instances = await Task.Run(() => InstanceManager.Instance.ScanBedrock(folders));
+        InstanceManager.Instance.ApplyInstances(instances);
+    }
+
+    private static async Task LoadUiDataAsync()
+    {
+        var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
+        var instancesTask = Task.Run(() => InstanceManager.Instance.ScanAll(folders));
+        var newsTask = Task.Run(NewsService.InitializeFromCache);
+
+        var instances = await instancesTask;
+        InstanceManager.Instance.ApplyInstances(instances);
+        Logger.Info($"实例数据加载完成，共加载 {instances.Count} 个实例");
+
+        await newsTask;
+        NewsService.RaiseNewsUpdated();
+        _ = Task.Run(NewsService.FetchAndRefreshAsync);
     }
 
     private static async Task CheckUpdate()

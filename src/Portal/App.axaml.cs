@@ -123,12 +123,23 @@ public partial class App : Application
         _win.Loaded += Function;
     }
 
-    private void Function(object? sender, RoutedEventArgs e)
+    private async void Function(object? sender, RoutedEventArgs e)
     {
         Logger.Info("UI加载完成");
-        Initializer.Ui();
-        UiLoaded?.Invoke(_win);
         _win.Loaded -= Function;
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        try
+        {
+            await Initializer.UiAsync();
+        }
+        catch (Exception exception)
+        {
+            Logger.Error($"后台加载 UI 数据失败：{exception}");
+        }
+        finally
+        {
+            UiLoaded?.Invoke(_win);
+        }
     }
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
