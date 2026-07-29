@@ -86,7 +86,7 @@ public partial class FavoritesPage : UserControl
     }
 }
 
-public partial class FavoritesPageViewModel : ObservableObject, IDisposable
+public partial class FavoritesPageViewModel : ObservableObject
 {
     private readonly FavoriteCollectionService _service = FavoriteCollectionService.Instance;
     public ObservableCollection<FavoriteCollection> Collections { get; } = [];
@@ -101,11 +101,9 @@ public partial class FavoritesPageViewModel : ObservableObject, IDisposable
 
     public FavoritesPageViewModel()
     {
-        _service.Changed += Service_OnChanged;
+        _service.Changed += (_, _) => RefreshCollections();
         RefreshCollections();
     }
-
-    private void Service_OnChanged(object? sender, EventArgs e) => RefreshCollections();
 
     partial void OnSelectedCollectionChanged(FavoriteCollection? value)
     {
@@ -154,7 +152,6 @@ public partial class FavoritesPageViewModel : ObservableObject, IDisposable
     }
     private void RefreshItems()
     {
-        foreach (var item in Items) item.Dispose();
         Items.Clear();
         if (SelectedCollection is null) return;
         foreach (var resource in SelectedCollection.Items.Where(Matches)) Items.Add(new FavoriteResourceItem(resource));
@@ -238,18 +235,9 @@ public partial class FavoritesPageViewModel : ObservableObject, IDisposable
             await JavaResourceDownload.QuickDownloadAsync(topLevel,
                 new JavaResourceDetailsTarget(definition, resource.Source, resource.ProjectId));
     }
-
-    public void Dispose()
-    {
-        _service.Changed -= Service_OnChanged;
-        foreach (var item in Items) item.Dispose();
-        Items.Clear();
-        Collections.Clear();
-        SelectedCollection = null;
-    }
 }
 
-public sealed class FavoriteResourceItem : FavoriteResource, IDisposable
+public sealed class FavoriteResourceItem : FavoriteResource
 {
     public FavoriteResourceItem(FavoriteResource resource)
     {
@@ -265,5 +253,4 @@ public sealed class FavoriteResourceItem : FavoriteResource, IDisposable
 
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
     public string SourceText => $"{(Edition == FavoriteEdition.Java ? "Java 版" : "基岩版")}·{(Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth")}";
-    public void Dispose() => ImageLoader.Dispose();
 }

@@ -105,17 +105,7 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
     private void RaiseSelectionProperties() { RaisePropertyChanged(nameof(SelectedCount)); RaisePropertyChanged(nameof(SelectedCountText)); RaisePropertyChanged(nameof(HasMultipleSelection)); }
     public new event PropertyChangedEventHandler? PropertyChanged;
     private void RaisePropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    public void Dispose()
-    {
-        if (_isDisposed) return;
-        _isDisposed = true;
-        _disposeCancellation.Cancel();
-        foreach (var item in Items) item.Dispose();
-        FilteredItems.Clear();
-        Items.Clear();
-        DataContext = null;
-        _disposeCancellation.Dispose();
-    }
+    public void Dispose() { if (_isDisposed) return; _isDisposed = true; _disposeCancellation.Cancel(); foreach (var item in Items) item.Dispose(); _disposeCancellation.Dispose(); }
 }
 
 public sealed class WorldTemplateItem(WorldTemplateInfo info) : INotifyPropertyChanged, IDisposable

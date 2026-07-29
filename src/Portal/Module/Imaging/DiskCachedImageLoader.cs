@@ -27,8 +27,6 @@ public class DiskCachedImageLoader : IAsyncImageLoader
 
     private readonly int _decodeWidth;
     private readonly string _cacheCategory;
-    private CancellationTokenSource _pendingLoads = new();
-    private bool _disposed;
 
     protected DiskCachedImageLoader(string cacheCategory, int decodeWidth)
     {
@@ -38,46 +36,33 @@ public class DiskCachedImageLoader : IAsyncImageLoader
 
     public async Task<Bitmap?> ProvideImageAsync(string url)
     {
-        if (string.IsNullOrWhiteSpace(url) || _disposed)
+        if (string.IsNullOrWhiteSpace(url))
             return null;
 
-        var cancellationToken = _pendingLoads.Token;
         try
         {
-            cancellationToken.ThrowIfCancellationRequested();
             var cachePath = GetCachePath(url);
             if (File.Exists(cachePath))
-                return Decode(cachePath, cancellationToken);
+                return Decode(cachePath);
 
             var downloadLock = DownloadLocks.GetOrAdd(cachePath, _ => new SemaphoreSlim(1, 1));
-            await downloadLock.WaitAsync(cancellationToken);
+            await downloadLock.WaitAsync();
             try
             {
                 if (File.Exists(cachePath))
-                    return Decode(cachePath, cancellationToken);
+                    return Decode(cachePath);
 
-                using var response = await HttpUtil.Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
-                    cancellationToken);
+                using var response = await HttpUtil.Client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
-                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await using var stream = await response.Content.ReadAsStreamAsync();
                 using var bitmap = Bitmap.DecodeToWidth(stream, _decodeWidth);
-                cancellationToken.ThrowIfCancellationRequested();
                 Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
                 // 临时文件名带随机后缀，避免同一 URL 的并发写入互相冲突。
                 var temporaryPath = $"{cachePath}.{Guid.NewGuid():N}.tmp";
-                try
-                {
-                    using (var output = File.Create(temporaryPath))
-                        bitmap.Save(output, PngBitmapEncoderOptions.Default);
-                    cancellationToken.ThrowIfCancellationRequested();
-                    File.Move(temporaryPath, cachePath, true);
-                }
-                finally
-                {
-                    if (File.Exists(temporaryPath))
-                        File.Delete(temporaryPath);
-                }
-                return Decode(cachePath, cancellationToken);
+                using (var output = File.Create(temporaryPath))
+                    bitmap.Save(output, PngBitmapEncoderOptions.Default);
+                File.Move(temporaryPath, cachePath, true);
+                return Decode(cachePath);
             }
             finally
             {
@@ -86,7 +71,6 @@ public class DiskCachedImageLoader : IAsyncImageLoader
                 DownloadLocks.TryRemove(cachePath, out _);
             }
         }
-        catch (OperationCanceledException) { return null; }
         catch (HttpRequestException) { return null; }
         catch (IOException) { return null; }
         catch (UnauthorizedAccessException) { return null; }
@@ -94,16 +78,10 @@ public class DiskCachedImageLoader : IAsyncImageLoader
         catch (ArgumentException) { return null; }
     }
 
-    private Bitmap Decode(string cachePath, CancellationToken cancellationToken)
+    private Bitmap Decode(string cachePath)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         using var stream = File.OpenRead(cachePath);
-        var bitmap = Bitmap.DecodeToWidth(stream, _decodeWidth);
-        if (!cancellationToken.IsCancellationRequested)
-            return bitmap;
-
-        bitmap.Dispose();
-        throw new OperationCanceledException(cancellationToken);
+        return Bitmap.DecodeToWidth(stream, _decodeWidth);
     }
 
     private string GetCachePath(string url)
@@ -112,19 +90,7 @@ public class DiskCachedImageLoader : IAsyncImageLoader
         return Path.Combine(ConfigPath.CacheFolderPath, _cacheCategory, hash[..2], hash + ".png");
     }
 
-    public void CancelPendingLoads()
-    {
-        if (_disposed) return;
-        var current = Interlocked.Exchange(ref _pendingLoads, new CancellationTokenSource());
-        current.Cancel();
-        current.Dispose();
-    }
-
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
-        _pendingLoads.Cancel();
-        _pendingLoads.Dispose();
     }
 }

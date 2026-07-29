@@ -115,7 +115,6 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
             Directory.Delete(item.Info.FolderPath, true);
             Items.Remove(item);
             ApplyFilter();
-            item.Dispose();
             if (TopLevel.GetTopLevel(this) is { } topLevel)
                 NotificationGateway.Notice(topLevel, "存档已删除", NotificationType.Success);
         }
@@ -207,10 +206,6 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
         _isDisposed = true;
         _disposeCancellation.Cancel();
         foreach (var item in Items) item.Dispose();
-        FilteredItems.Clear();
-        Items.Clear();
-        WorldUserIds.Clear();
-        DataContext = null;
         _disposeCancellation.Dispose();
     }
 }

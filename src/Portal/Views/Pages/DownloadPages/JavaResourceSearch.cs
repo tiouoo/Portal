@@ -57,7 +57,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     private const int PageSize = 40;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
     private static Task<IReadOnlyList<VersionManifestEntry>>? _versionLoadTask;
-    private static readonly BoundedCache<JavaResourceSearchRequest, CachedJavaResourceSearchPage> Cache = new(32);
+    private static readonly BoundedCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new(32);
     private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseForge = new();
     private bool _initialized;
@@ -165,9 +165,9 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         var request = new JavaResourceSearchRequest(Definition.Kind, SelectedSource.Kind, SearchText.Trim(),
             GameVersion.Trim(), ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any,
             SelectedSort.Kind, CurrentPage);
-        CachedJavaResourceSearchPage? cached = null;
+        JavaResourceSearchPage? cached = null;
         var renderedCache = isDefaultSearch && Cache.TryGetValue(request, out cached);
-        if (renderedCache && IsCurrent(request)) Apply(cached!.ToPage());
+        if (renderedCache && IsCurrent(request)) Apply(cached!);
 
         if (IsCurrent(request))
         {
@@ -178,10 +178,8 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         try
         {
             var page = await FetchAsync(request, _disposeCancellation.Token);
-            if (isDefaultSearch) Cache.Set(request, CachedJavaResourceSearchPage.From(page));
+            if (isDefaultSearch) Cache.Set(request, page);
             if (IsCurrent(request)) Apply(page, renderedCache);
-            else
-                foreach (var item in page.Items) item.Dispose();
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
@@ -231,21 +229,12 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         if (preserveExistingItems)
         {
             var sharedCount = Math.Min(Results.Count, page.Items.Count);
-            for (var index = 0; index < sharedCount; index++)
-            {
-                Results[index].Update(page.Items[index]);
-                page.Items[index].Dispose();
-            }
-            while (Results.Count > page.Items.Count)
-            {
-                Results[^1].Dispose();
-                Results.RemoveAt(Results.Count - 1);
-            }
+            for (var index = 0; index < sharedCount; index++) Results[index].Update(page.Items[index]);
+            while (Results.Count > page.Items.Count) Results.RemoveAt(Results.Count - 1);
             for (var index = sharedCount; index < page.Items.Count; index++) Results.Add(page.Items[index]);
         }
         else
         {
-            foreach (var item in Results) item.Dispose();
             Results.Clear();
             foreach (var item in page.Items) Results.Add(item);
         }
@@ -304,7 +293,6 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         if (_disposed) return;
         _disposed = true;
         _disposeCancellation.Cancel();
-        foreach (var item in Results) item.Dispose();
         Results.Clear();
         MinecraftVersions.Clear();
     }
@@ -342,7 +330,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     }
 }
 
-public sealed partial class JavaResourceSearchResultItem : ObservableObject, IDisposable
+public sealed partial class JavaResourceSearchResultItem : ObservableObject
 {
     [ObservableProperty] public partial string Name { get; set; }
     [ObservableProperty] public partial string Summary { get; set; }
@@ -388,22 +376,6 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject, IDi
         IsFavorite = item.IsFavorite;
     }
 
-    internal JavaResourceSearchResultItem(CachedJavaResourceSearchItem item)
-    {
-        Name = item.Name;
-        Summary = item.Summary;
-        IconUrl = item.IconUrl;
-        Metadata = item.Metadata;
-        Target = item.Target;
-        IsFavorite = item.IsFavorite;
-    }
-
-    public void Dispose()
-    {
-        IconUrl = null;
-        ImageLoader.Dispose();
-    }
-
     private static FavoriteEdition GetEdition(JavaResourceDefinition definition) => definition.Kind is
         JavaResourceKind.BedrockBehaviorPack or JavaResourceKind.BedrockResourcePack or JavaResourceKind.BedrockWorld or JavaResourceKind.BedrockWorldTemplate
             ? FavoriteEdition.Bedrock
@@ -427,17 +399,6 @@ public sealed record JavaResourceSearchSource(string DisplayName, SearchSource K
 public sealed record JavaResourceSearchRequest(JavaResourceKind Kind, SearchSource Source, string Query,
     string GameVersion, ModLoaderType Loader, SearchSort Sort, int Page);
 public sealed record JavaResourceSearchPage(IReadOnlyList<JavaResourceSearchResultItem> Items, int TotalCount);
-internal sealed record CachedJavaResourceSearchItem(string Name, string Summary, string? IconUrl, string Metadata,
-    JavaResourceDetailsTarget Target, bool IsFavorite);
-internal sealed record CachedJavaResourceSearchPage(IReadOnlyList<CachedJavaResourceSearchItem> Items, int TotalCount)
-{
-    public static CachedJavaResourceSearchPage From(JavaResourceSearchPage page) => new(page.Items.Select(item =>
-        new CachedJavaResourceSearchItem(item.Name, item.Summary, item.IconUrl, item.Metadata, item.Target,
-            item.IsFavorite)).ToArray(), page.TotalCount);
-
-    public JavaResourceSearchPage ToPage() => new(Items.Select(item => new JavaResourceSearchResultItem(item)).ToArray(),
-        TotalCount);
-}
 
 public sealed class ModpackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Modpack);
 public sealed class ResourcePackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.ResourcePack);

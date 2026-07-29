@@ -544,15 +544,12 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         TargetVersionGroupReady = null;
         VersionFilters.Clear();
         LoaderFilters.Clear();
-        IconUrl = null;
         Screenshots.Clear();
         ScreenshotIndices.Clear();
         SelectedVersionFilter = null;
         SelectedLoaderFilter = null;
         Files = [];
         _allVersionGroups = [];
-        ImageLoader.Dispose();
-        ScreenshotLoader.Dispose();
     }
 
     private static void CancelInBackground(CancellationTokenSource cancellation)

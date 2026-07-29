@@ -205,8 +205,6 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable
             // All empty-keyword searches, including filtered popular lists, are persisted.
             if (isDefaultSearch) ModSearchCache.Set(request, CachedSearchPage.From(page));
             if (IsCurrent(request)) Apply(page, preserveExistingItems: renderedCache);
-            else
-                foreach (var item in page.Items) item.Dispose();
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
@@ -253,21 +251,12 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable
         if (preserveExistingItems)
         {
             var sharedCount = Math.Min(Results.Count, page.Items.Count);
-            for (var index = 0; index < sharedCount; index++)
-            {
-                Results[index].Update(page.Items[index]);
-                page.Items[index].Dispose();
-            }
-            while (Results.Count > page.Items.Count)
-            {
-                Results[^1].Dispose();
-                Results.RemoveAt(Results.Count - 1);
-            }
+            for (var index = 0; index < sharedCount; index++) Results[index].Update(page.Items[index]);
+            while (Results.Count > page.Items.Count) Results.RemoveAt(Results.Count - 1);
             for (var index = sharedCount; index < page.Items.Count; index++) Results.Add(page.Items[index]);
         }
         else
         {
-            foreach (var item in Results) item.Dispose();
             Results.Clear();
             foreach (var item in page.Items) Results.Add(item);
         }
@@ -319,7 +308,6 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable
         if (_disposed) return;
         _disposed = true;
         _disposeCancellation.Cancel();
-        foreach (var item in Results) item.Dispose();
         Results.Clear();
         MinecraftVersions.Clear();
     }
@@ -378,7 +366,7 @@ public sealed record ModSearchSource(string DisplayName, SearchSource Kind)
         : [new("全部", "0"), new("冒险与探索", "425"), new("盔甲、武器与工具", "406"), new("魔法", "5191"), new("科技", "412"), new("红石", "4558"), new("地图与信息", "423"), new("性能优化", "6821"), new("API 与库", "421")];
 }
 
-public sealed partial class ModSearchResultItem : ObservableObject, IDisposable
+public sealed partial class ModSearchResultItem : ObservableObject
 {
     [ObservableProperty] public partial string Name { get; set; }
     [ObservableProperty] public partial string FriendlyName { get; set; }
@@ -426,12 +414,6 @@ public sealed partial class ModSearchResultItem : ObservableObject, IDisposable
         Metadata = item.Metadata;
         Target = item.Target;
         OnPropertyChanged(nameof(HasIcon));
-    }
-
-    public void Dispose()
-    {
-        IconUrl = null;
-        ImageLoader.Dispose();
     }
 
     private static string FormatRelativeTime(DateTime timestamp)

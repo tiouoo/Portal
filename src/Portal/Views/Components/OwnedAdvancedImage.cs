@@ -4,7 +4,6 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 
 namespace Portal.Views.Components;
 
@@ -19,8 +18,6 @@ namespace Portal.Views.Components;
 /// </remarks>
 public class OwnedAdvancedImage : AdvancedImage
 {
-    private string? _detachedSource;
-
     public OwnedAdvancedImage(Uri? baseUri) : base(baseUri)
     {
     }
@@ -41,39 +38,10 @@ public class OwnedAdvancedImage : AdvancedImage
         var previous = change.GetOldValue<IImage?>();
 
         // FallbackImage 由调用方持有、可能被多个控件共享，不能释放。
-        var bitmap = previous switch
-        {
-            Bitmap directBitmap => directBitmap,
-            ImageWrapper { ImageImplementation: Bitmap wrappedBitmap } => wrappedBitmap,
-            _ => null
-        };
-        if (bitmap is null || ReferenceEquals(bitmap, FallbackImage))
+        if (previous is not Bitmap bitmap || ReferenceEquals(previous, FallbackImage))
             return;
 
         // 延后到下一次渲染之后释放，避免合成器仍在使用该位图。
         Dispatcher.UIThread.Post(bitmap.Dispose, DispatcherPriority.Background);
-    }
-
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        _detachedSource = Source;
-        if (_detachedSource is not null)
-            SetCurrentValue(SourceProperty, null);
-        else
-            CurrentImage = null;
-
-        base.OnDetachedFromVisualTree(e);
-    }
-
-    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        base.OnAttachedToVisualTree(e);
-
-        if (_detachedSource is not { } source)
-            return;
-
-        _detachedSource = null;
-        if (Source is null)
-            SetCurrentValue(SourceProperty, source);
     }
 }
