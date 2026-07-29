@@ -80,16 +80,16 @@
                         Theme="{StaticResource TransparentHyperlinkButton}"
                         VerticalAlignment="Top" />
                 </Panel>
-                <StackPanel IsVisible="{Binding Data.UiProperty.FoundNewVersion}">
+                <StackPanel IsVisible="{Binding Updates.HasUpdate}">
                     <Separator Background="{DynamicResource TranslucentBorderBrush}" Margin="0,8" />
                     <Panel>
                         <TextBlock
                             FontSize="13"
                             Margin="5,0,0,0"
-                            Text="发现新版本" />
+                            Text="{Binding Updates.TitleText}" />
                         <HyperlinkButton
                             Click="UpdateHyperlinkButton_OnClickButton_OnClick"
-                            Content="下载新版本"
+                            Content="{Binding Updates.ActionText}"
                             FontSize="12"
                             HorizontalAlignment="Right"
                             Margin="0,2,5,0"
@@ -100,7 +100,14 @@
                     <SelectableTextBlock
                         FontSize="17"
                         Margin="5,2,0,2"
-                        Text="{Binding Data.UiProperty.NewVersion}" />
+                        Text="{Binding Updates.Version}" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding Updates.ErrorMessage, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}"
+                        Margin="5,2,0,0"
+                        Text="{Binding Updates.ErrorMessage}"
+                        TextWrapping="Wrap" />
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -131,6 +138,7 @@
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
+                IsEnabled="{Binding Updates.CanChangeChannel}"
                 Name="UpdateChannel"
                 SelectedIndex="{Binding Data.UiProperty.OverrideUpdateChannel, Converter={StaticResource UpdateChannelToIndexConverter}, Mode=TwoWay}"
                 SelectionChanged="UpdateChannel_OnSelectionChanged">

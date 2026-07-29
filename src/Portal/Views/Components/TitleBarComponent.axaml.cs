@@ -13,6 +13,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations;
 using Portal.Core.Operations.Account;
+using Portal.Module.Update;
 using Portal.Views.Pages;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -49,6 +50,7 @@ public partial class TitleBarComponent : Grid
     public Data Data { get; set; } = Data.Instance;
 
     public TaskManager Tasks => TaskManager.Instance;
+    public UpdateApp Updates => UpdateApp.Instance;
 
     private void OpenTasks(object? sender, RoutedEventArgs e)
     {
@@ -201,8 +203,41 @@ public partial class TitleBarComponent : Grid
         window.SelectTab(tabEntry);
     }
 
-    private void GoToAbout(object? sender, RoutedEventArgs e)
+    private async void GoToAbout(object? sender, RoutedEventArgs e)
     {
+        if (Root.GetTopLevel() is not TopLevel topLevel) return;
+        if (Updates.State == UpdateState.DownloadingDelta)
+        {
+            topLevel.Notice("增量更新包正在下载中", NotificationType.Information);
+            return;
+        }
+        if (Updates.State == UpdateState.ManualDownloadRequired)
+        {
+            await Updates.HandleActionAsync(topLevel);
+            return;
+        }
+        if (Updates.State == UpdateState.ReadyToRestart)
+        {
+            var result = await OverlayDialog.ShowStandardAsync(
+                new TextBlock
+                {
+                    Margin = new Thickness(24),
+                    Text = "增量更新包已下载并准备完成。是否立即重启 Portal 并安装更新？",
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                }, null, Root.TryGetHostId(), new OverlayDialogOptions
+                {
+                    Title = "更新准备完成",
+                    Mode = DialogMode.Question,
+                    Buttons = DialogButton.YesNo,
+                    OverrideYesButtonText = "立即重启",
+                    OverrideNoButtonText = "稍后",
+                    CanLightDismiss = false,
+                    CanResize = false
+                });
+            if (result == DialogResult.Yes) await Updates.ApplyAsync();
+            return;
+        }
+
         var tioTabWindowBase = Root.GetTopLevel() as TioTabWindowBase;
         var tioTabPage = new SettingPage();
         tioTabPage.SettingPageViewModel.NavigateType(typeof(About));

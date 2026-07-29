@@ -80,7 +80,7 @@
         </Border>
         <Button
             Click="GoToAbout"
-            IsVisible="{Binding Data.ConfigEntry.ShowUpdateTip}"
+            IsVisible="{Binding Updates.HasUpdate}"
             Margin="3,0"
             Theme="{StaticResource TransparentButton}"
             VerticalAlignment="Center">
@@ -89,13 +89,12 @@
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
-                IsVisible="{Binding Data.UiProperty.FoundNewVersion}"
                 Padding="8,3,8,2"
                 VerticalAlignment="Center">
                 <Panel>
                     <TextBlock
                         FontSize="13"
-                        Text="发现新版本"
+                        Text="{Binding Updates.TitleText}"
                         VerticalAlignment="Center" />
                 </Panel>
             </Border>
