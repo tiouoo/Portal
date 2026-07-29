@@ -75,7 +75,6 @@ switch ($env:PACKAGE_KIND) {
         $setup = Get-ChildItem -LiteralPath $releaseDir -Filter '*-Setup.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
         $portable = Get-ChildItem -LiteralPath $releaseDir -Filter '*-Portable.zip' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($null -eq $setup -or $null -eq $portable) { throw 'Velopack did not create the Windows setup and portable packages.' }
-        Copy-Item -LiteralPath $setup.FullName -Destination (Join-Path $releaseDir 'Portal.win.x64.installer.exe') -Force
         Copy-Item -LiteralPath $portable.FullName -Destination (Join-Path $releaseDir 'Portal.win.x64.portable.zip') -Force
         Compress-Archive -LiteralPath $setup.FullName -DestinationPath (Join-Path $releaseDir 'Portal.win.x64.installer.zip') -Force
     }
@@ -87,8 +86,6 @@ switch ($env:PACKAGE_KIND) {
     'macos' {
         $portable = Get-ChildItem -LiteralPath $releaseDir -Filter '*-Portable.zip' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($null -eq $portable) { throw 'Velopack did not create the macOS portable app package.' }
-        $publicZip = Join-Path $releaseDir "Portal.osx.mac.$($env:PUBLIC_ARCH).app.zip"
-        Copy-Item -LiteralPath $portable.FullName -Destination $publicZip -Force
 
         $dmgRoot = Join-Path $env:RUNNER_TEMP "portal-dmg-$($env:PUBLIC_ARCH)"
         if (Test-Path -LiteralPath $dmgRoot) { Remove-Item -LiteralPath $dmgRoot -Recurse -Force }
@@ -101,3 +98,26 @@ switch ($env:PACKAGE_KIND) {
         if ($LASTEXITCODE -ne 0) { throw 'Unable to create the macOS DMG.' }
     }
 }
+
+$publicAssets = switch ($env:PACKAGE_KIND) {
+    'windows' {
+        'Portal.win.x64.installer.zip'
+        'Portal.win.x64.portable.zip'
+    }
+    'linux' {
+        "Portal.linux.$($env:PUBLIC_ARCH).AppImage"
+    }
+    'macos' {
+        "Portal.osx.mac.$($env:PUBLIC_ARCH).dmg"
+    }
+}
+$feedName = "releases.$($env:VELOPACK_CHANNEL).json"
+$feedPath = Join-Path $releaseDir $feedName
+$feed = Get-Content -LiteralPath $feedPath -Raw | ConvertFrom-Json
+$feed.Assets = @($feed.Assets | Where-Object { $_.Version -eq $env:APP_VERSION })
+$feed | ConvertTo-Json -Depth 10 -Compress | Set-Content -LiteralPath $feedPath -NoNewline
+
+Get-ChildItem -LiteralPath $releaseDir -File | Where-Object {
+    ($_.Extension -eq '.nupkg' -and $_.Name -notlike "$($env:PACK_ID)-$($env:APP_VERSION)-$($env:VELOPACK_CHANNEL)-*.nupkg") -or
+    ($_.Extension -ne '.nupkg' -and $_.Name -ne $feedName -and $_.Name -notin $publicAssets)
+} | Remove-Item -Force

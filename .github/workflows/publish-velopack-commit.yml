@@ -155,8 +155,27 @@ jobs:
         run: |
           PREV_COMMIT=$(git rev-parse refs/tags/publish-commit 2>/dev/null || true)
           if [ -n "$PREV_COMMIT" ]; then RANGE="${PREV_COMMIT}..HEAD"; else RANGE="-20"; fi
-          git log --no-merges --pretty='- %s ([%an](${{ github.server_url }}/${{ github.repository }}/commit/%H))' $RANGE > RELEASE_CHANGELOG.md
-          if [ ! -s RELEASE_CHANGELOG.md ]; then echo '本次构建与上次相比没有新的提交' > RELEASE_CHANGELOG.md; fi
+          git log --no-merges --pretty='- %s ([%an](${{ github.server_url }}/${{ github.repository }}/commit/%H))' $RANGE > COMMIT_CHANGELOG.md
+          if [ ! -s COMMIT_CHANGELOG.md ]; then echo '本次构建与上次相比没有新的提交' > COMMIT_CHANGELOG.md; fi
+          cat > RELEASE_CHANGELOG.md <<'EOF'
+          ## 下载
+
+          | 平台 | 下载 |
+          | --- | --- |
+          | Windows x64 | [安装程序 (.zip)](https://github.com/${{ github.repository }}/releases/download/publish-commit/Portal.win.x64.installer.zip) · [便携版 (.zip)](https://github.com/${{ github.repository }}/releases/download/publish-commit/Portal.win.x64.portable.zip) |
+          | macOS | [Apple 芯片 DMG](https://github.com/${{ github.repository }}/releases/download/publish-commit/Portal.osx.mac.arm64.dmg) · [Intel DMG](https://github.com/${{ github.repository }}/releases/download/publish-commit/Portal.osx.mac.x64.dmg) |
+          | Linux | [x64 AppImage](https://github.com/${{ github.repository }}/releases/download/publish-commit/Portal.linux.x64.AppImage) · [Arm64 AppImage](https://github.com/${{ github.repository }}/releases/download/publish-commit/Portal.linux.arm64.AppImage) |
+
+          ## 更新内容
+
+          EOF
+          cat COMMIT_CHANGELOG.md >> RELEASE_CHANGELOG.md
+          cat >> RELEASE_CHANGELOG.md <<'EOF'
+
+          ---
+
+          `*.nupkg` 和 `releases.*.json` 是 Portal 自动增量更新所需文件，首次安装无需下载。
+          EOF
       - name: Replace moving release
         env:
           GH_TOKEN: ${{ github.token }}
