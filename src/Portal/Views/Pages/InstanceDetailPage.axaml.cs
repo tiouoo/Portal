@@ -63,6 +63,7 @@ public partial class InstanceDetailPage : UserControl, ITioTabPage
     {
         ViewModel.ClosePages();
         ViewModel.Instance.PropertyChanged -= Instance_PropertyChanged;
+        DataContext = null;
     }
 
     public Task<bool> RequestCloseAsync()
@@ -144,9 +145,15 @@ public partial class InstanceDetailPageViewModel : ObservableObject
 
     public void ClosePages()
     {
-        foreach (var page in _pageCache.Values.OfType<IDisposable>())
-            page.Dispose();
-        _pageCache.Clear();
         CurrentPage = null;
+        foreach (var page in _pageCache.Values)
+        {
+            if (page is IDisposable disposablePage)
+                disposablePage.Dispose();
+            else if (page.DataContext is IDisposable disposableViewModel)
+                disposableViewModel.Dispose();
+            page.DataContext = null;
+        }
+        _pageCache.Clear();
     }
 }

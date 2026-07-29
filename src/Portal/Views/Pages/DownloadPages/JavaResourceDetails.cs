@@ -225,11 +225,14 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         TargetVersionGroupReady = null;
         VersionGroups = [];
         VersionFilters.Clear();
+        IconUrl = null;
         Screenshots.Clear();
         ScreenshotIndices.Clear();
         SelectedVersionFilter = null;
         AllFiles = [];
         _allVersionGroups = [];
+        ImageLoader.Dispose();
+        ScreenshotLoader.Dispose();
     }
 
     private static void CancelInBackground(CancellationTokenSource cancellation)

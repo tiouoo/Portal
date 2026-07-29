@@ -142,7 +142,8 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged, IDisposa
             return;
 
         await using var stream = File.OpenRead(item.FilePath);
-        await clipboard.SetBitmapAsync(new Bitmap(stream));
+        using var bitmap = new Bitmap(stream);
+        await clipboard.SetBitmapAsync(bitmap);
     }
 
     private async void OpenScreenshot_OnClick(object? sender, RoutedEventArgs e)
@@ -242,6 +243,7 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged, IDisposa
             _instance.PropertyChanged -= Instance_PropertyChanged;
         ScreenshotItems.Clear();
         DataContext = null;
+        _disposeCancellation.Dispose();
     }
 }
 
