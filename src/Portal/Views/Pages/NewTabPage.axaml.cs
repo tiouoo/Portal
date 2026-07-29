@@ -245,7 +245,7 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
         _ = ModpackDetailsPage.TryInstallFromPath(topLevel, archivePath);
     }
-    
+
     private async void AddFolder_Click(object? sender, RoutedEventArgs e)
     {
         var options = new OverlayDialogOptions
@@ -274,6 +274,14 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
         NewTabViewModel.ApplyFilterAndSort();
         await NewTabViewModel.RefreshRecentPlaysAsync();
+    }
+
+    private void ToDownload_Click(object? sender, RoutedEventArgs e)
+    {
+        var tioTabWindowBase = this.GetTopLevel() as TioTabWindowBase;
+        var tabEntry = new TabEntry(tioTabWindowBase!, new DownloadPage());
+        tioTabWindowBase.CreateTab(tabEntry);
+        tioTabWindowBase.SelectTab(tabEntry);
     }
 }
 
@@ -365,7 +373,8 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     private void ApplyRecentPlayCapacity()
     {
         RecentPlays.Clear();
-        foreach (var item in _allRecentPlays.Take(_areRecentPlaysExpanded ? _allRecentPlays.Count : _recentPlayCapacity))
+        foreach (var item in
+                 _allRecentPlays.Take(_areRecentPlaysExpanded ? _allRecentPlays.Count : _recentPlayCapacity))
             RecentPlays.Add(item);
         OnPropertyChanged(nameof(HasRecentPlays));
         OnPropertyChanged(nameof(CanExpandRecentPlays));
@@ -436,7 +445,10 @@ public sealed class RecentPlayItem : IDisposable
     public string Details => _target.Details;
     public DateTime LastPlayedTime => _target.LastPlayedTime;
     public string RelativeTime => GetRelativeTime(_target.LastPlayedTime);
-    public bool IsFavorite => _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;
+
+    public bool IsFavorite =>
+        _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;
+
     public Bitmap Icon
     {
         get
@@ -446,7 +458,9 @@ public sealed class RecentPlayItem : IDisposable
                 _iconLoaded = true;
                 _ownedIcon = _target.Type == RecentPlayTargetType.Server && _target.ServerIconData is { Length: > 0 }
                     ? LoadIcon(_target.ServerIconData)
-                    : _target.WorldIconPath is { } path && File.Exists(path) ? LoadIcon(path) : null;
+                    : _target.WorldIconPath is { } path && File.Exists(path)
+                        ? LoadIcon(path)
+                        : null;
             }
 
             return _ownedIcon ?? _target.Instance.Icon;
@@ -465,14 +479,28 @@ public sealed class RecentPlayItem : IDisposable
 
     private static Bitmap? LoadIcon(byte[] data)
     {
-        try { using var stream = new MemoryStream(data); return Bitmap.DecodeToWidth(stream, 48); }
-        catch (Exception) { return null; }
+        try
+        {
+            using var stream = new MemoryStream(data);
+            return Bitmap.DecodeToWidth(stream, 48);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private static Bitmap? LoadIcon(string path)
     {
-        try { using var stream = File.OpenRead(path); return Bitmap.DecodeToWidth(stream, 48); }
-        catch (Exception) { return null; }
+        try
+        {
+            using var stream = File.OpenRead(path);
+            return Bitmap.DecodeToWidth(stream, 48);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     public void Dispose()

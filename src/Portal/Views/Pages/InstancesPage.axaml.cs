@@ -145,6 +145,14 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
     }
+
+    private void ToDownload_Click(object? sender, RoutedEventArgs e)
+    {
+        var tioTabWindowBase = this.GetTopLevel() as TioTabWindowBase;
+        var tabEntry = new TabEntry(tioTabWindowBase!, new DownloadPage());
+        tioTabWindowBase.CreateTab(tabEntry);
+        tioTabWindowBase.SelectTab(tabEntry);
+    }
 }
 
 public partial class InstancesPageViewModel : InstanceListViewModelBase

@@ -46,6 +46,9 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     private readonly ConcurrentDictionary<MinecraftInstance, InstancePinyinCache> _pinyinCache = new();
     private bool _isDisposed;
 
+    [ObservableProperty] public partial bool HasFilter { get; set; }
+    [ObservableProperty] public partial bool HasFilteredInstances { get; set; }
+
     protected InstanceListViewModelBase()
     {
         InstanceManager.Instance.InstanceIconChanged += OnInstanceIconChanged;
@@ -75,6 +78,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     }
 
     private long _totalPlayTimeSeconds;
+
     public long TotalPlayTimeSeconds
     {
         get => _totalPlayTimeSeconds;
@@ -89,6 +93,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     }
 
     private int _totalPlaySessions;
+
     public int TotalPlaySessions
     {
         get => _totalPlaySessions;
@@ -117,6 +122,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     public List<FolderFilterOption> FolderFilterOptions { get; set; } = [];
 
     private FolderFilterOption? _selectedFolderFilter;
+
     public FolderFilterOption? SelectedFolderFilter
     {
         get => _selectedFolderFilter;
@@ -130,6 +136,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     }
 
     private SortOption? _selectedSortOption;
+
     public SortOption? SelectedSortOption
     {
         get => _selectedSortOption;
@@ -141,12 +148,14 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
                 {
                     Data.ConfigEntry.DefaultInstanceSortType = value.SortType;
                 }
+
                 ApplyFilterAndSort();
             }
         }
     }
 
     private string _searchText = string.Empty;
+
     public string SearchText
     {
         get => _searchText;
@@ -166,6 +175,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     } = string.Empty;
 
     private MinecraftInstance? _recentInstance;
+
     public MinecraftInstance? RecentInstance
     {
         get => _recentInstance;
@@ -189,8 +199,10 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         FolderFilterOptions.Add(new FolderFilterOption { DisplayText = "所有文件夹", FolderName = null });
         foreach (var folder in Data.ConfigEntry.MinecraftFolders)
         {
-            FolderFilterOptions.Add(new FolderFilterOption { DisplayText = folder.FolderName, FolderName = folder.FolderName });
+            FolderFilterOptions.Add(new FolderFilterOption
+                { DisplayText = folder.FolderName, FolderName = folder.FolderName });
         }
+
         _selectedFolderFilter = currentSelection != null
             ? FolderFilterOptions.FirstOrDefault(o => o.FolderName == currentSelection.FolderName)
             : FolderFilterOptions[0];
@@ -215,6 +227,8 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
                 query = query.Where(x => x.FolderName == selectedFolder);
             }
         }
+        
+        HasFilter = !string.IsNullOrWhiteSpace(SearchText);
 
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
@@ -289,6 +303,8 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
         FilteredMinecraftInstances.AddRange(sortedResult);
         UpdateSummaryText(sortedResult);
+        
+        HasFilteredInstances = FilteredMinecraftInstances.Count > 0;
     }
 
     public virtual void Dispose()
@@ -360,7 +376,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     private static string FormatPlayTime(long seconds)
     {
         double value;
-        
+
         if (seconds < 60)
         {
             value = seconds;
@@ -373,7 +389,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         {
             value = seconds / 3600.0;
         }
-        
+
         return FormatNumber(value);
     }
 
@@ -457,7 +473,8 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
                 DescriptionPinyins = PinyinHelper.GetAllPinyins(instance.Description ?? string.Empty),
                 DescriptionFirstLetters = PinyinHelper.GetAllFirstLetters(instance.Description ?? string.Empty),
                 LoaderDescriptionPinyins = PinyinHelper.GetAllPinyins(instance.LoaderDescription ?? string.Empty),
-                LoaderDescriptionFirstLetters = PinyinHelper.GetAllFirstLetters(instance.LoaderDescription ?? string.Empty),
+                LoaderDescriptionFirstLetters =
+                    PinyinHelper.GetAllFirstLetters(instance.LoaderDescription ?? string.Empty),
             };
             return cache;
         });
