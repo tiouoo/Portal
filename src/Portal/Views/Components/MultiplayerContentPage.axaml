@@ -133,7 +133,7 @@
                                         IsEnabled="{Binding !IsDiscoveringJavaServers}" />
                                     <Button
                                         Command="{Binding CreateRoomCommand}"
-                                        Content="创建房间"
+                                        Content="{Binding CreateRoomButtonText}"
                                         IsEnabled="{Binding CanCreateRoom}" />
                                 </StackPanel>
                                 <ComboBox
@@ -167,7 +167,7 @@
                         <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="请先在 Minecraft 中开启局域网游戏，然后创建房间。" />
                         <Button
                             Command="{Binding CreateRoomCommand}"
-                            Content="创建房间"
+                            Content="{Binding CreateRoomButtonText}"
                             HorizontalAlignment="Left"
                             IsEnabled="{Binding CanCreateRoom}" />
                     </StackPanel>
@@ -202,7 +202,7 @@
                                 Text="{Binding JoinCode}" />
                             <Button
                                 Command="{Binding JoinRoomCommand}"
-                                Content="加入"
+                                Content="{Binding JoinRoomButtonText}"
                                 Grid.Column="3"
                                 IsEnabled="{Binding CanOperate}" />
                         </Grid>

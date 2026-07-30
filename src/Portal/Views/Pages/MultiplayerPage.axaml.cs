@@ -105,7 +105,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private bool _disposed;
     private bool _isActive;
     private MinecraftEdition _edition = MinecraftEdition.Java;
-    private string _roomRole = "none";
+    private readonly RoomState _javaRoom = new();
+    private readonly RoomState _bedrockRoom = new();
     private DateTimeOffset _lastRoomStatusRequest = DateTimeOffset.MinValue;
     private int _isRefreshingRoomStatus;
 
@@ -159,6 +160,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     public string JavaDiscoveryButtonText => IsDiscoveringJavaServers ? "检测中" : "检测";
     public string NatProbeButtonText => IsProbingNat ? "检测中" : "检测 NAT";
+    public string CreateRoomButtonText => IsCreatingRoom ? "创建中" : "创建房间";
+    public string JoinRoomButtonText => IsJoiningRoom ? "加入中" : "加入";
     public string JoinCodePlaceholder => IsJava
         ? "请输入房间码（U/XXXX-XXXX-XXXX-XXXX）"
         : "请输入房间码（P/XXXX-XXXX-XXXX-XXXX）";
@@ -170,6 +173,14 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     [ObservableProperty] public partial string ManualJavaPort { get; set; } = string.Empty;
     [ObservableProperty] public partial string CurrentRoomCode { get; set; } = string.Empty;
     [ObservableProperty] public partial bool IsBedrockPortBusy { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CreateRoomButtonText))]
+    public partial bool IsCreatingRoom { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(JoinRoomButtonText))]
+    public partial bool IsJoiningRoom { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotInRoom))]
@@ -311,7 +322,9 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         await _client.StartAsync(installation, _lifetime.Token);
         IsBackendReady = true;
         StatusText = string.Empty;
-        await RefreshRoomStatusAsync(true);
+        await RefreshRoomStatusAsync(true, MinecraftEdition.Java);
+        if (OperatingSystem.IsWindows()) await RefreshRoomStatusAsync(true, MinecraftEdition.Bedrock);
+        ApplyActiveRoomState();
         if (IsJava) await DiscoverJavaServersAsync();
     }
 
@@ -323,6 +336,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
         _edition = edition;
         RaiseEditionProperties();
+        ApplyActiveRoomState();
         if (_client is not null)
         {
             await RefreshRoomStatusAsync(true);
@@ -369,6 +383,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         if (_client is null || !CanCreateRoom || !ValidatePlayerName()) return;
         IsBusy = true;
+        IsCreatingRoom = true;
         try
         {
             await RefreshRoomStatusAsync();
@@ -383,7 +398,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 : new { player_name = PlayerName.Trim(), protocol = "paperconnect" };
             var response = await _client.RequestAsync("room.create", parameters,
                 timeout: TimeSpan.FromSeconds(35), cancellationToken: _lifetime.Token);
-            ApplyRoomData(response.Data, "host");
+            ApplyRoomData(response.Data, "host", Edition);
             Notify("房间已创建", NotificationType.Success);
         }
         catch (Exception ex)
@@ -392,6 +407,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
         finally
         {
+            IsCreatingRoom = false;
             IsBusy = false;
         }
     }
@@ -442,12 +458,16 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
 
         IsBusy = true;
+        IsJoiningRoom = true;
         try
         {
             var progress = new Progress<GravityConeProgress>(_ => { });
-            var response = await _client.RequestAsync("room.join", new { code, player_name = PlayerName.Trim() },
+            object parameters = IsJava
+                ? new { code, player_name = PlayerName.Trim() }
+                : new { code, player_name = PlayerName.Trim(), protocol = "paperconnect" };
+            var response = await _client.RequestAsync("room.join", parameters,
                 progress, TimeSpan.FromSeconds(60), _lifetime.Token);
-            ApplyRoomData(response.Data, "guest");
+            ApplyRoomData(response.Data, "guest", Edition);
             Notify(IsBedrock ? "控制通道已连接，正在建立游戏连接" : "已加入房间", NotificationType.Success);
         }
         catch (Exception ex)
@@ -456,6 +476,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
         finally
         {
+            IsJoiningRoom = false;
             IsBusy = false;
         }
     }
@@ -489,13 +510,18 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         IsBusy = true;
         try
         {
-            await _client.RequestAsync(_roomRole == "host" ? "room.stop" : "room.leave",
+            var room = GetRoomState(Edition);
+            await _client.RequestAsync(room.Role == "host" ? "room.stop" : "room.leave", RoomParameters(Edition),
                 timeout: TimeSpan.FromSeconds(8), cancellationToken: _lifetime.Token);
-            // GravityCone 1.0.0 may acknowledge room.stop while retaining a running room.
-            // Restarting the local CLI releases the stale room without polling it repeatedly.
-            Logger.Debug("[Multiplayer] Room stop/leave acknowledged; restarting GravityCone CLI to release the room.");
-            await RestartClientAsync();
-            ClearRoom();
+            var otherEdition = Edition == MinecraftEdition.Java ? MinecraftEdition.Bedrock : MinecraftEdition.Java;
+            if (string.IsNullOrWhiteSpace(GetRoomState(otherEdition).Code))
+            {
+                // GravityCone 1.0.0 may acknowledge room.stop while retaining a running room.
+                // Do not restart while the other edition still has an active room.
+                Logger.Debug("[Multiplayer] Room stop/leave acknowledged; restarting GravityCone CLI to release the stale room.");
+                await RestartClientAsync();
+            }
+            ClearRoom(Edition);
             Notify("已离开房间", NotificationType.Success);
         }
         catch (Exception ex)
@@ -548,18 +574,23 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 case "room.player_joined":
                 case "room.player_left":
                 case "room.guest_player_list_updated":
+                    _ = RefreshRoomStatusAsync(edition: MinecraftEdition.Java);
+                    break;
                 case "paperconnect.room.player_joined":
                 case "paperconnect.room.player_left":
-                    _ = RefreshRoomStatusAsync();
+                    _ = RefreshRoomStatusAsync(edition: MinecraftEdition.Bedrock);
                     break;
-                case "paperconnect.room.info": ApplyRoomData(e.Data, _roomRole); break;
+                case "paperconnect.room.info": ApplyRoomData(e.Data, _bedrockRoom.Role, MinecraftEdition.Bedrock); break;
                 case "room.closed":
                 case "room.disconnected":
+                    ClearRoom(MinecraftEdition.Java);
+                    Notify("房间连接已关闭", NotificationType.Information);
+                    break;
                 case "paperconnect.room.closed":
                 case "paperconnect.room.disconnected":
                 case "paperconnect.connection.closed":
                 case "paperconnect.connection.disconnected":
-                    ClearRoom();
+                    ClearRoom(MinecraftEdition.Bedrock);
                     Notify("房间连接已关闭", NotificationType.Information);
                     break;
                 case "paperconnect.connection.ready":
@@ -571,14 +602,14 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                     Notify("UDP 7551 被 Minecraft 占用，请关闭游戏后点击继续连接", NotificationType.Warning);
                     break;
                 case "paperconnect.connection.error":
-                    ClearRoom();
+                    ClearRoom(MinecraftEdition.Bedrock);
                     Notify("基岩版游戏连接建立失败", NotificationType.Error);
                     break;
             }
         });
     }
 
-    private async Task RefreshRoomStatusAsync(bool force = false)
+    private async Task RefreshRoomStatusAsync(bool force = false, MinecraftEdition? edition = null)
     {
         if (_client is null) return;
         if (Interlocked.CompareExchange(ref _isRefreshingRoomStatus, 1, 0) != 0) return;
@@ -587,18 +618,19 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         {
             if (!force && DateTimeOffset.UtcNow - _lastRoomStatusRequest < TimeSpan.FromSeconds(1)) return;
             _lastRoomStatusRequest = DateTimeOffset.UtcNow;
-            var response = await _client.RequestAsync("room.status", timeout: TimeSpan.FromSeconds(4),
+            var targetEdition = edition ?? Edition;
+            var response = await _client.RequestAsync("room.status", RoomParameters(targetEdition), timeout: TimeSpan.FromSeconds(4),
                 cancellationToken: _lifetime.Token);
             var role = response.Data.TryGetProperty("role", out var roleValue)
                 ? roleValue.GetString() ?? "none"
-                : _roomRole;
+                : GetRoomState(targetEdition).Role;
             if (role == "none")
             {
-                ClearRoom();
+                ClearRoom(targetEdition);
                 return;
             }
 
-            ApplyRoomData(response.Data, role);
+            ApplyRoomData(response.Data, role, targetEdition);
         }
         catch when (_lifetime.IsCancellationRequested)
         {
@@ -626,12 +658,12 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         await StartClientAsync(_installation);
     }
 
-    private void ApplyRoomData(JsonElement data, string role)
+    private void ApplyRoomData(JsonElement data, string role, MinecraftEdition edition)
     {
-        _roomRole = role;
-        CurrentRoomCode = GetString(data, "code") ?? GetString(data, "room_code") ?? CurrentRoomCode;
-        IsInRoom = !string.IsNullOrWhiteSpace(CurrentRoomCode);
-        Members.Clear();
+        var room = GetRoomState(edition);
+        room.Role = role;
+        room.Code = GetString(data, "code") ?? GetString(data, "room_code") ?? room.Code;
+        room.Members.Clear();
         if (data.TryGetProperty("players", out var players) && players.ValueKind == JsonValueKind.Array)
         {
             foreach (var player in players.EnumerateArray())
@@ -642,11 +674,11 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                            (player.TryGetProperty("isRoomHost", out var host) && host.ValueKind == JsonValueKind.True
                                ? "HOST"
                                : "GUEST");
-                Members.Add(new OnlineMember { Name = name, Vendor = vendor, Kind = kind });
+                room.Members.Add(new OnlineMember { Name = name, Vendor = vendor, Kind = kind });
             }
         }
 
-        OnPropertyChanged(nameof(MemberCountText));
+        if (edition == Edition) ApplyActiveRoomState();
     }
 
     private void UpdateLanServers(JsonElement data)
@@ -716,14 +748,38 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         return false;
     }
 
-    private void ClearRoom()
+    private void ClearRoom(MinecraftEdition edition)
     {
-        _roomRole = "none";
-        IsBedrockPortBusy = false;
-        CurrentRoomCode = string.Empty;
-        IsInRoom = false;
+        var room = GetRoomState(edition);
+        room.Role = "none";
+        room.Code = string.Empty;
+        room.Members.Clear();
+        if (edition == MinecraftEdition.Bedrock) IsBedrockPortBusy = false;
+        if (edition == Edition) ApplyActiveRoomState();
+    }
+
+    private RoomState GetRoomState(MinecraftEdition edition) =>
+        edition == MinecraftEdition.Java ? _javaRoom : _bedrockRoom;
+
+    private static object RoomParameters(MinecraftEdition edition) => edition == MinecraftEdition.Bedrock
+        ? new { protocol = "paperconnect" }
+        : new { };
+
+    private void ApplyActiveRoomState()
+    {
+        var room = GetRoomState(Edition);
+        CurrentRoomCode = room.Code;
+        IsInRoom = !string.IsNullOrWhiteSpace(room.Code);
         Members.Clear();
+        foreach (var member in room.Members) Members.Add(member);
         OnPropertyChanged(nameof(MemberCountText));
+    }
+
+    private sealed class RoomState
+    {
+        public string Role { get; set; } = "none";
+        public string Code { get; set; } = string.Empty;
+        public List<OnlineMember> Members { get; } = [];
     }
 
     private static string? GetString(JsonElement element, string property) =>
@@ -771,4 +827,3 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         _lifetime.Dispose();
     }
 }
-
