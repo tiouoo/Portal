@@ -15,6 +15,7 @@ public partial class NewsPageViewModel : ObservableObject
 
     private List<NewsEntry> _javaNews = [];
     private List<NewsEntry> _bedrockNews = [];
+    private int _newsRefreshVersion;
 
     public ObservableCollection<NewsEntry> FilteredNews { get; } = [];
 
@@ -55,6 +56,25 @@ public partial class NewsPageViewModel : ObservableObject
         IsVisible = _javaNews.Count > 0 || _bedrockNews.Count > 0;
 
         ApplyFilter();
+        ScheduleImageRefresh();
+    }
+
+    private void ScheduleImageRefresh()
+    {
+        var refreshVersion = ++_newsRefreshVersion;
+        _ = RefreshImagesAfterInitialLoadAsync(refreshVersion);
+    }
+
+    private async Task RefreshImagesAfterInitialLoadAsync(int refreshVersion)
+    {
+        // 新闻缓存与控件树会在应用启动阶段并发初始化。延后重建卡片，
+        // 让每个封面控件在数据和加载器都已就绪后重新发起缓存读取。
+        await Task.Delay(TimeSpan.FromMilliseconds(1500));
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (refreshVersion == _newsRefreshVersion)
+                ApplyFilter();
+        });
     }
 
     private void ApplyFilter()
