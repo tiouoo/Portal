@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 const modes = [
   {
@@ -77,6 +77,14 @@ const example = computed(() => {
   }
 });
 
+watch(modeId, () => {
+  input.value = "";
+  loaderVersion.value = "";
+  packVersion.value = "";
+  loaderKind.value = "fabric";
+  packFrom.value = "";
+});
+
 function invoke() {
   if (uri.value) window.location.href = uri.value;
 }
@@ -86,98 +94,97 @@ function invoke() {
   <section id="protocol" class="protocol-section section">
     <div class="container">
       <div class="section-heading">
-      <span class="section-kicker">浏览器直达</span>
-      <h2>在浏览器中唤起 Portal</h2>
-      <p>
-        Portal 支持通过命令行参数或 portal://
-        链接调用安装与启动功能，在下方选择功能并填写参数，即可从浏览器直接调起启动器
-      </p>
-    </div>
-    <div class="protocol-card">
-      <div class="protocol-tabs" role="tablist">
-        <button
-          v-for="m in modes"
-          :key="m.id"
-          type="button"
-          role="tab"
-          :aria-selected="modeId === m.id"
-          :class="{ active: modeId === m.id }"
-          @click="modeId = m.id"
-        >
-          {{ m.label }}
-        </button>
+        <span class="section-kicker">浏览器直达</span>
+        <h2>在浏览器中唤起 Portal</h2>
+        <p>
+          Portal 支持通过命令行参数或 portal://
+          链接调用安装与启动功能，在下方选择功能并填写参数，即可从浏览器直接调起启动器
+        </p>
       </div>
-      <div class="protocol-form">
-        <div v-if="modeId === 'loader'" class="protocol-controls">
-          <label>
-            加载器
-            <select v-model="loaderKind">
-              <option value="fabric">Fabric</option>
-              <option value="forge">Forge</option>
-              <option value="neoforge">NeoForge</option>
-              <option value="quilt">Quilt</option>
-              <option value="optifine">OptiFine</option>
-            </select>
-          </label>
-          <label>
-            加载器版本
-            <input
-              v-model="loaderVersion"
-              type="text"
-              placeholder="可选，留空安装最新版"
-            />
-          </label>
-        </div>
-        <div v-if="modeId === 'modpack'" class="protocol-controls">
-          <label>
-            平台
-            <select v-model="packFrom">
-              <option value="">自动识别</option>
-              <option value="modrinth">Modrinth</option>
-              <option value="curseforge">CurseForge</option>
-            </select>
-          </label>
-          <label>
-            整合包版本
-            <input
-              v-model="packVersion"
-              type="text"
-              placeholder="可选，版本号或 fileId"
-            />
-          </label>
-        </div>
-        <div class="protocol-input-row">
-          <input
-            v-model="input"
-            type="text"
-            :placeholder="mode.placeholder"
-            @keyup.enter="invoke"
-          />
+      <div class="protocol-card">
+        <div class="protocol-tabs" role="tablist">
           <button
+            v-for="m in modes"
+            :key="m.id"
             type="button"
-            class="protocol-submit"
-            :disabled="!uri"
-            @click="invoke"
+            role="tab"
+            :aria-selected="modeId === m.id"
+            :class="{ active: modeId === m.id }"
+            @click="modeId = m.id"
           >
-            {{ mode.action }}
+            {{ m.label }}
           </button>
         </div>
-      </div>
-      <div class="protocol-preview">
-        <a v-if="uri" :href="uri">{{ uri }}</a>
-        <span v-else class="placeholder">{{ example }}</span>
-      </div>
-      <p class="protocol-note">
-        首次使用前，请在 Portal 的「设置 → 默认行为」中开启 Portal
-        协议；macOS 应用包已内置声明，Linux
-        桌面集成安装时会自动注册。文件夹、自定义实例 ID
-        等更多参数与命令行用法，参见
-        <a
-          href="https://github.com/tiouoo/Portal/blob/main/docs/command-line.md"
-          target="_blank"
-          rel="noreferrer"
-          >命令行与 portal:// 协议文档</a
-        >
+        <div class="protocol-form">
+          <div v-if="modeId === 'loader'" class="protocol-controls">
+            <label>
+              加载器
+              <select v-model="loaderKind">
+                <option value="fabric">Fabric</option>
+                <option value="forge">Forge</option>
+                <option value="neoforge">NeoForge</option>
+                <option value="quilt">Quilt</option>
+                <option value="optifine">OptiFine</option>
+              </select>
+            </label>
+            <label>
+              加载器版本
+              <input
+                v-model="loaderVersion"
+                type="text"
+                placeholder="可选，留空安装最新版"
+              />
+            </label>
+          </div>
+          <div v-if="modeId === 'modpack'" class="protocol-controls">
+            <label>
+              平台
+              <select v-model="packFrom">
+                <option value="">自动识别</option>
+                <option value="modrinth">Modrinth</option>
+                <option value="curseforge">CurseForge</option>
+              </select>
+            </label>
+            <label>
+              整合包版本
+              <input
+                v-model="packVersion"
+                type="text"
+                placeholder="可选，版本号或 fileId"
+              />
+            </label>
+          </div>
+          <div class="protocol-input-row">
+            <input
+              v-model="input"
+              type="text"
+              :placeholder="mode.placeholder"
+              @keyup.enter="invoke"
+            />
+            <button
+              type="button"
+              class="protocol-submit"
+              :disabled="!uri"
+              @click="invoke"
+            >
+              {{ mode.action }}
+            </button>
+          </div>
+        </div>
+        <div class="protocol-preview">
+          <a v-if="uri" :href="uri">{{ uri }}</a>
+          <span v-else class="placeholder">{{ example }}</span>
+        </div>
+        <p class="protocol-note">
+          首次使用前，请在 Portal 的「设置 → 默认行为」中开启 Portal 协议；macOS
+          应用包已内置声明，Linux 桌面集成安装时会自动注册。文件夹、自定义实例
+          ID 等更多参数与命令行用法，参见
+          <a
+            href="https://github.com/tiouoo/Portal/blob/main/docs/command-line.md"
+            target="_blank"
+            rel="noreferrer"
+            >命令行与 portal:// 协议文档</a
+          >
         </p>
       </div>
     </div>

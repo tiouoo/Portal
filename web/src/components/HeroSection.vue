@@ -67,12 +67,30 @@ import logoUrl from "../assets/portal-logo.svg";
             </div> -->
             <div class="app-grid">
               <div class="continue-card">
-                <div class="game-art">
-                  <span></span><span></span><span></span><span></span>
-                </div>
-                <div>
-                  <small>继续游戏</small><strong>创造世界</strong
-                  ><span>Fabric · 1.21.5</span>
+                <small class="card-label">继续游戏</small>
+                <div class="continue-content">
+                  <div class="game-art">
+                    <div
+                      style="
+                        background-color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+                      "
+                    >
+                      <img
+                        width="40"
+                        height="40"
+                        src="../assets/fabrici.png"
+                        alt="Fabric"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <strong>生电整合包</strong>
+                    <span>Fabric · 1.21.1</span>
+                  </div>
                 </div>
 
                 <svg
@@ -98,19 +116,67 @@ import logoUrl from "../assets/portal-logo.svg";
                 <div class="card-title"><b>实例</b></div>
                 <div class="instance-row">
                   <div class="instance-card">
-                    <div class="instance-icon grass"></div>
+                    <div
+                      style="
+                        background-color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+                      "
+                      class="instance-icon"
+                    >
+                      <img
+                        width="36"
+                        height="36"
+                        src="../assets/fabrici.png"
+                        alt="Fabric"
+                      />
+                    </div>
                     <div>
-                      <strong>创造世界</strong><span>Fabric · 1.21.5</span>
+                      <strong>生电整合包</strong><span>Fabric · 1.21.1</span>
                     </div>
                   </div>
                   <div class="instance-card">
-                    <div class="instance-icon grass"></div>
+                    <div
+                      style="
+                        background-color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+                      "
+                      class="instance-icon"
+                    >
+                      <img
+                        width="36"
+                        height="36"
+                        src="../assets/grass.png"
+                        alt="grass"
+                      />
+                    </div>
                     <div>
-                      <strong>原版生存</strong><span>Vanilla · 1.20.1</span>
+                      <strong>原版生存</strong><span>原版 · 1.20.1</span>
                     </div>
                   </div>
                   <div class="instance-card">
-                    <div class="instance-icon grass"></div>
+                    <div
+                      style="
+                        background-color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+                      "
+                      class="instance-icon"
+                    >
+                      <img
+                        width="36"
+                        height="36"
+                        src="../assets/create.jpg"
+                        alt="create"
+                      />
+                    </div>
                     <div>
                       <strong>机械动力</strong><span>Forge · 1.19.2</span>
                     </div>

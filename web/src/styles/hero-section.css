@@ -262,27 +262,36 @@ h1 em {
   grid-area: continue;
   padding: 13px;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 7px;
+  padding-top: 12px;
+}
+.continue-content {
+  min-width: 0;
+  display: flex;
   align-items: center;
   gap: 11px;
 }
-.continue-card > div:nth-child(2) {
+.continue-content > div:nth-child(2) {
   min-width: 0;
   flex: 1;
 }
-.continue-card small,
-.continue-card strong,
-.continue-card div > span {
+.continue-card .card-label,
+.continue-content strong,
+.continue-content span {
   display: block;
 }
-.continue-card small {
+.continue-card .card-label {
   color: #969dab;
-  font-size: 8px;
+  font-size: 12px;
 }
-.continue-card strong {
+.continue-content strong {
   margin: 3px 0;
   font-size: 12px;
 }
-.continue-card div > span {
+.continue-content span {
   color: #8f96a4;
   font-size: 8px;
 }
@@ -297,8 +306,9 @@ h1 em {
 }
 .game-art {
   position: relative;
-  width: 48px;
-  height: 48px;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
   overflow: hidden;
   border-radius: 9px;
   background: linear-gradient(#8fd4f8 0 47%, #70b743 48% 68%, #7c5534 69%);
@@ -333,10 +343,11 @@ h1 em {
   grid-area: stat;
   padding: 13px;
   overflow: hidden;
+  padding-top: 8px;
 }
 .stat-card small {
   color: #9097a4;
-  font-size: 14px;
+  font-size: 12px;
 }
 .stat-card strong {
   display: block;
@@ -350,8 +361,8 @@ h1 em {
   font-weight: 400;
 }
 .chart {
-  height: 32px;
-  margin-top: -5px;
+  height: 42px;
+  margin-top: -8px;
   display: flex;
   align-items: end;
   gap: 5px;
@@ -405,12 +416,12 @@ h1 em {
 }
 .instance-card {
   min-width: 0;
-  padding: 7px;
+  padding: 10px;
   display: flex;
   align-items: center;
   gap: 7px;
   border: 1px solid #edf0f5;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fbfcfe;
 }
 .instance-card > div:last-child {
@@ -424,22 +435,25 @@ h1 em {
 .instance-card strong {
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 8px;
+  font-size: 11px;
 }
 .instance-card span {
   margin-top: 3px;
-  font-size: 7px;
+  font-size: 10px;
   color: #969daa;
 }
 .instance-icon {
-  flex: 0 0 27px;
-  width: 27px;
-  height: 27px;
-  border-radius: 7px;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
   image-rendering: pixelated;
 }
 .grass {
   background: linear-gradient(#5fa83c 0 35%, #8b613c 36%);
+}
+.fabric {
+  background: url(../assets/fabric.png);
 }
 .stone {
   background: linear-gradient(135deg, #89929a, #58636c);
