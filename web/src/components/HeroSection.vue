@@ -62,9 +62,9 @@ import logoUrl from "../assets/portal-logo.svg";
         </div>
         <div class="window-body">
           <div class="app-content">
-            <div class="app-heading">
+            <!-- <div class="app-heading">
               <span>下午好</span><b>准备好开始冒险了吗？</b>
-            </div>
+            </div> -->
             <div class="app-grid">
               <div class="continue-card">
                 <div class="game-art">
@@ -94,9 +94,7 @@ import logoUrl from "../assets/portal-logo.svg";
                 </div>
               </div>
               <div class="library-card">
-                <div class="card-title">
-                  <b>我的实例</b><span>查看全部 →</span>
-                </div>
+                <div class="card-title"><b>实例</b></div>
                 <div class="instance-row">
                   <div class="instance-icon grass"></div>
                   <div>

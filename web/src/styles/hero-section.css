@@ -241,9 +241,14 @@ h1 em {
   font-size: 17px;
 }
 .app-grid {
-  margin-top: 20px;
+  margin-top: 0px;
   display: grid;
   grid-template-columns: 1.25fr 0.75fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "library continue"
+    "library stat";
+  height: 186px;
   gap: 12px;
 }
 .continue-card,
@@ -254,11 +259,10 @@ h1 em {
   background: white;
 }
 .continue-card {
+  grid-area: continue;
   padding: 13px;
   display: flex;
   align-items: center;
-  padding-right: 30px;
-  padding-left: 30px;
   gap: 11px;
 }
 .continue-card > div:nth-child(2) {
@@ -326,6 +330,7 @@ h1 em {
   background: #fff3b0;
 }
 .stat-card {
+  grid-area: stat;
   padding: 13px;
 }
 .stat-card small {
@@ -379,13 +384,13 @@ h1 em {
   height: 45%;
 }
 .library-card {
-  grid-column: 1 / -1;
+  grid-area: library;
   padding: 14px;
 }
 .card-title {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 13px;
 }
 .card-title span {
   color: var(--blue);
@@ -393,10 +398,10 @@ h1 em {
 }
 .instance-row {
   display: grid;
-  grid-template-columns: 34px 1fr 34px 1fr 34px 1fr;
+  grid-template-columns: 34px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 10px 8px;
+  margin-top: 12px;
 }
 .instance-row div:not(.instance-icon) {
   overflow: hidden;
