@@ -2,7 +2,9 @@ name: publish/commit
 
 on:
   workflow_dispatch:
-  push: "main"
+  push:
+    branches:
+      - main
 
 jobs:
   prepare:
