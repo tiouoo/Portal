@@ -269,6 +269,7 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
 
         try
         {
+            topLevel.Notice("正在扫描中");
             var result = await JavaRuntimeOperations.ScanAndAddAsync(Data.ConfigEntry.JavaRuntimes);
             if (Data.ConfigEntry.DefaultJavaRuntime == null)
                 Data.ConfigEntry.DefaultJavaRuntime = Data.ConfigEntry.JavaRuntimes.FirstOrDefault();

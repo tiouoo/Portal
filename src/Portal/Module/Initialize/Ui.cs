@@ -9,6 +9,7 @@ using Portal.Core;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
 using Portal.Module.Update;
+using Portal.Services;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
@@ -64,7 +65,8 @@ public static partial class Initializer
 
         if (Data.ConfigEntry.EnableCheckAutoUpdate && Data.Instance.Version.Type != "dev")
             _ = CheckUpdate();
-        
+
+        RecentPlayListService.Initialize();
         await LoadUiDataAsync();
 
         InitializationEvents.RaiseAfterUiLoaded();

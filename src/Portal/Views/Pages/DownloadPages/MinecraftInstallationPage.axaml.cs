@@ -18,7 +18,10 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using TioUi.Common;
+using TioUi.Common.Extensions;
 using TioUi.Common.Interfaces;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -48,6 +51,9 @@ internal partial class MinecraftInstallationPage : UserControl
     }
 
     private void Cancel_OnClick(object? sender, RoutedEventArgs e) => _viewModel.Cancel();
+
+    private async void SelectLoaderVersion_OnClick(object? sender, RoutedEventArgs e) =>
+        await _viewModel.SelectLoaderVersionAsync(this);
 }
 
 public sealed record MinecraftInstallationDialogResult;
@@ -55,9 +61,10 @@ public sealed record MinecraftInstallationDialogResult;
 public partial class MinecraftInstallationViewModel : ObservableObject, INotifyDataErrorInfo, IDialogContext
 {
     // 按 (游戏版本, 加载器) 缓存网络查询结果；限制容量，避免浏览大量版本后常驻内存。
-    private static readonly LruCache<(string Version, LoaderKind Kind), IInstallEntry?> LatestLoaderCache = new(128);
+    private static readonly LruCache<(string Version, LoaderKind Kind), IReadOnlyList<IInstallEntry>> LoaderVersionCache = new(128);
     private readonly VersionManifestEntry _vanilla;
     private readonly Dictionary<LoaderKind, IInstallEntry> _selectedLoaders = [];
+    private readonly Dictionary<LoaderKind, IReadOnlyList<IInstallEntry>> _availableLoaderVersions = [];
     private readonly Dictionary<LoaderKind, int> _loadGenerations = [];
     private readonly Dictionary<string, List<string>> _errors = [];
     private bool _updatingSelection;
@@ -87,6 +94,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     public bool CanInstall => !IsInstalling && _loadingCount == 0 && SelectedMinecraftFolder is not null &&
                               IsVersionIdValid() && SelectedLoadersAreReady();
     public bool HasMissingRequiredJavaRuntime => RequiresJava && GetJavaPath() is null;
+    public bool CanSelectLoaderVersion => HasModLoader && _loadingCount == 0 && SelectedLoadersAreReady();
 
     public MinecraftInstallationViewModel(VersionManifestEntry vanilla)
     {
@@ -136,6 +144,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                 if (!IsSelected(loaderKind))
                 {
                     _selectedLoaders.Remove(loaderKind);
+                    _availableLoaderVersions.Remove(loaderKind);
                     SetStatus(loaderKind, "不安装");
                     _loadGenerations[loaderKind] = _loadGenerations.GetValueOrDefault(loaderKind) + 1;
                 }
@@ -160,20 +169,23 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         OnPropertyChanged(nameof(CanInstall));
         try
         {
-            if (!LatestLoaderCache.TryGetValue((_vanilla.Id, kind), out var entry))
+            if (!LoaderVersionCache.TryGetValue((_vanilla.Id, kind), out var entries))
             {
-                entry = await FetchLatestAsync(kind);
-                LatestLoaderCache.Set((_vanilla.Id, kind), entry);
+                entries = await FetchVersionsAsync(kind);
+                LoaderVersionCache.Set((_vanilla.Id, kind), entries);
             }
 
             if (!IsSelected(kind) || _loadGenerations.GetValueOrDefault(kind) != generation) return;
-            if (entry is null)
+            if (entries.Count == 0)
             {
                 _selectedLoaders.Remove(kind);
+                _availableLoaderVersions.Remove(kind);
                 SetStatus(kind, "当前游戏版本不可用");
             }
             else
             {
+                var entry = entries[0];
+                _availableLoaderVersions[kind] = entries;
                 _selectedLoaders[kind] = entry;
                 SetStatus(kind, $"最新版：{GetLoaderVersion(kind, entry)}");
                 CustomVersionId = CreateRecommendedVersionId();
@@ -184,6 +196,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             if (IsSelected(kind) && _loadGenerations.GetValueOrDefault(kind) == generation)
             {
                 _selectedLoaders.Remove(kind);
+                _availableLoaderVersions.Remove(kind);
                 SetStatus(kind, "获取失败，请取消后重试");
             }
         }
@@ -194,15 +207,37 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         }
     }
 
-    private async Task<IInstallEntry?> FetchLatestAsync(LoaderKind kind) => kind switch
+    private async Task<IReadOnlyList<IInstallEntry>> FetchVersionsAsync(LoaderKind kind) => kind switch
     {
-        LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(_vanilla.Id)).FirstOrDefault(),
-        LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla.Id)).FirstOrDefault(),
-        LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla.Id, true)).FirstOrDefault(),
-        LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(_vanilla.Id)).FirstOrDefault(),
-        LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(_vanilla.Id)).FirstOrDefault(),
-        _ => null
+        LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(_vanilla.Id)).Cast<IInstallEntry>().ToList(),
+        LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla.Id)).Cast<IInstallEntry>().ToList(),
+        LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla.Id, true)).Cast<IInstallEntry>().ToList(),
+        LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(_vanilla.Id)).Cast<IInstallEntry>().ToList(),
+        LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(_vanilla.Id)).Cast<IInstallEntry>().ToList(),
+        _ => []
     };
+
+    public async Task SelectLoaderVersionAsync(Control owner)
+    {
+        if (!CanSelectLoaderVersion) return;
+
+        var versions = _availableLoaderVersions
+            .Where(pair => IsSelected(pair.Key))
+            .SelectMany(pair => pair.Value.Select(entry => new LoaderVersionItem(pair.Key, entry, GetLoaderVersion(pair.Key, entry))))
+            .ToList();
+        var selected = await OverlayDialog.ShowCustomAsync<LoaderVersionDialog, LoaderVersionDialogViewModel,
+            LoaderVersionItem>(new LoaderVersionDialogViewModel(versions), owner.GetTopLevel().TryGetHostId(),
+            new OverlayDialogOptions
+            {
+                Title = "选择加载器版本", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false, VerticalAnchor = VerticalPosition.Top, VerticalOffset = 80
+            });
+        if (selected is null || !IsSelected(selected.Kind)) return;
+
+        _selectedLoaders[selected.Kind] = selected.Entry;
+        SetStatus(selected.Kind, $"已选择：{selected.Version}");
+        CustomVersionId = CreateRecommendedVersionId();
+        UpdateVersionState();
+    }
 
     public async Task InstallAsync()
     {
@@ -526,6 +561,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         OnPropertyChanged(nameof(CanCustomizeVersionId));
         OnPropertyChanged(nameof(RequiresJava));
         OnPropertyChanged(nameof(HasMissingRequiredJavaRuntime));
+        OnPropertyChanged(nameof(CanSelectLoaderVersion));
         OnPropertyChanged(nameof(CanInstall));
     }
 

@@ -23,7 +23,7 @@
                 Margin="5,0,0,0"
                 Orientation="Horizontal"
                 Spacing="10"
-                VerticalAlignment="Bottom">
+                VerticalAlignment="Center">
                 <TextBlock
                     FontSize="12"
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -31,7 +31,7 @@
                     Margin="5,0,0,0"
                     Text="{Binding SummaryText}" />
                 <TextBlock
-                    FontSize="12"
+                    FontSize="15"
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="5,0,0,0"
                     Text="实例" />

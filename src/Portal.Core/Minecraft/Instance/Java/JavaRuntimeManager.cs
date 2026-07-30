@@ -13,14 +13,17 @@ public static class JavaRuntimeManager
 
     public static async Task<IReadOnlyList<JavaRuntimeEntry>> ScanAsync(CancellationToken cancellationToken = default)
     {
-        var result = new List<JavaRuntimeEntry>();
-        await foreach (var java in JavaUtil.EnumerableJavaAsync(cancellationToken))
+        return await Task.Run(async () =>
         {
-            if (java != null)
-                result.Add(Convert(java));
-        }
+            var result = new List<JavaRuntimeEntry>();
+            await foreach (var java in JavaUtil.EnumerableJavaAsync(cancellationToken))
+            {
+                if (java != null)
+                    result.Add(Convert(java));
+            }
 
-        return result;
+            return (IReadOnlyList<JavaRuntimeEntry>)result;
+        }, cancellationToken);
     }
 
     private static JavaRuntimeEntry Convert(JavaEntry java)

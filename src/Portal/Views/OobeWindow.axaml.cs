@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
@@ -8,6 +9,7 @@ using Portal.Core.Operations.Java;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.Animations;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Controls;
 
@@ -211,6 +213,7 @@ public partial class OobeWindow : TioWindow
     private async void ScanJava_OnClick(object? sender, RoutedEventArgs e)
     {
         SetJavaBusy(true);
+        NotificationGateway.Notice(this, "正在扫描中", NotificationType.Information);
         ShowJavaStatus("正在扫描 Java，请稍候…");
         try
         {

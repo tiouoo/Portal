@@ -10,7 +10,9 @@ using Portal.Views.Pages;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Helpers;
 using TioUi.Shared;
@@ -20,6 +22,7 @@ namespace Portal.Classes.Entries;
 public partial class ConfigEntry : ObservableObject
 {
     private bool _isMinecraftFolderRecoveryScheduled;
+    private bool _isMinecraftFolderRefreshScheduled;
     private readonly HashSet<MinecraftFolderEntry> _observedMinecraftFolders = [];
 
     public ConfigEntry()
@@ -46,7 +49,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
-    [ObservableProperty] public partial bool ShowMinecraftNews { get; set; } = true;
+    [ObservableProperty] public partial bool ShowMinecraftNews { get; set; } = false;
     [ObservableProperty] public partial bool ShowRecentPlays { get; set; } = true;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
@@ -188,6 +191,7 @@ public partial class ConfigEntry : ObservableObject
         OnPropertyChanged(nameof(TraditionalMinecraftFolders));
         App.Method.SaveConfig();
         ScheduleMinecraftFolderRecovery();
+        ScheduleMinecraftFolderRefresh();
     }
 
     private void OnMinecraftFolderPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -211,6 +215,33 @@ public partial class ConfigEntry : ObservableObject
             _isMinecraftFolderRecoveryScheduled = false;
             ConfigIdentifyExtension.MinecraftFolder(this);
         });
+    }
+
+    private void ScheduleMinecraftFolderRefresh()
+    {
+        if (!Data.UiProperty.ConfigLoaded || _isMinecraftFolderRefreshScheduled)
+            return;
+
+        _isMinecraftFolderRefreshScheduled = true;
+        _ = RefreshMinecraftFoldersAsync();
+    }
+
+    private async Task RefreshMinecraftFoldersAsync()
+    {
+        try
+        {
+            var folders = MinecraftFolders.ToArray();
+            var instances = await Task.Run(() => InstanceManager.Instance.ScanAll(folders));
+            InstanceManager.Instance.ApplyInstances(instances);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+        }
+        finally
+        {
+            _isMinecraftFolderRefreshScheduled = false;
+        }
     }
 
     private void SetResource()

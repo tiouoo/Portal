@@ -14,7 +14,6 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.Minecraft.Services;
 using Portal.Core.Operations;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.AggregatedSearch;
@@ -53,7 +52,6 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
             _isInitialized = true;
             NewTabViewModel.ApplyFilterAndSort();
-            await NewTabViewModel.EnsureRecentPlaysLoadedAsync();
         };
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
     }
@@ -273,7 +271,7 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     {
         InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
         NewTabViewModel.ApplyFilterAndSort();
-        await NewTabViewModel.RefreshRecentPlaysAsync();
+        await RecentPlayListService.Instance.RefreshAsync();
     }
 
     private void ToDownload_Click(object? sender, RoutedEventArgs e)
@@ -287,18 +285,17 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
 public partial class NewTabViewModel : InstanceListViewModelBase
 {
-    private readonly RecentPlayService _recentPlayService = new();
+    private readonly RecentPlayListService _recentPlayListService = RecentPlayListService.Instance;
     private List<RecentPlayItem> _allRecentPlays = [];
     private int _recentPlayCapacity = 1;
     private bool _areRecentPlaysExpanded;
-    private bool _recentPlaysLoaded;
-    private Task? _recentPlaysLoadingTask;
-    private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _isDisposed;
 
     public NewTabViewModel()
     {
         SelectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
+        _recentPlayListService.Refreshed += OnRecentPlaysRefreshed;
+        UpdateRecentPlays(_recentPlayListService.Items);
     }
 
     public NewsPage NewsPage { get; } = new(true);
@@ -307,57 +304,18 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     public bool CanExpandRecentPlays => _allRecentPlays.Count > _recentPlayCapacity;
     public string ToggleRecentPlaysText => _areRecentPlaysExpanded ? "收起" : $"展开全部 ({_allRecentPlays.Count})";
 
-    public async Task RefreshRecentPlaysAsync()
-    {
-        try
-        {
-            if (!Data.ConfigEntry.ShowRecentPlays)
-            {
-                UpdateRecentPlays([]);
-                return;
-            }
-
-            var targets = await _recentPlayService.ScanAsync(InstanceManager.Instance.Instances,
-                _disposeCancellation.Token);
-            _disposeCancellation.Token.ThrowIfCancellationRequested();
-            UpdateRecentPlays(targets);
-        }
-        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
-        {
-        }
-    }
-
     private void UpdateRecentPlays(IEnumerable<RecentPlayTarget> targets)
     {
         RecentPlays.Clear();
         DisposeRecentPlays();
         _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
         SortRecentPlays();
-        _recentPlaysLoaded = true;
         ApplyRecentPlayCapacity();
     }
 
-    public Task EnsureRecentPlaysLoadedAsync()
+    private void OnRecentPlaysRefreshed(object? sender, EventArgs e)
     {
-        if (_recentPlaysLoaded)
-            return Task.CompletedTask;
-
-        return _recentPlaysLoadingTask ??= LoadRecentPlaysAsync();
-    }
-
-    private async Task LoadRecentPlaysAsync()
-    {
-        try
-        {
-            await RefreshRecentPlaysAsync();
-        }
-        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
-        {
-        }
-        finally
-        {
-            _recentPlaysLoadingTask = null;
-        }
+        UpdateRecentPlays(_recentPlayListService.Items);
     }
 
     public void SetRecentPlayWidth(double width)
@@ -416,7 +374,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
             return;
 
         _isDisposed = true;
-        _disposeCancellation.Cancel();
+        _recentPlayListService.Refreshed -= OnRecentPlaysRefreshed;
         DisposeRecentPlays();
         RecentPlays.Clear();
         NewsPage.DataContext = null;
