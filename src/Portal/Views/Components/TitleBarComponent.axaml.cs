@@ -13,6 +13,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations;
 using Portal.Core.Operations.Account;
+using Portal.Module.Multiplayer;
 using Portal.Views.Pages;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -47,6 +48,8 @@ public partial class TitleBarComponent : Grid
     }
 
     public Data Data { get; set; } = Data.Instance;
+
+    public bool IsWindows => OperatingSystem.IsWindows();
 
     public TaskManager Tasks => TaskManager.Instance;
 
@@ -196,7 +199,18 @@ public partial class TitleBarComponent : Grid
     private void OpenMultiplayer(object? sender, RoutedEventArgs e)
     {
         if (Root.GetTopLevel() is not TioTabWindowBase window) return;
-        var tabEntry = new TabEntry(window, new MultiplayerPage());
+        var tabEntry = new TabEntry(window, new MultiplayerPage(MinecraftEdition.Java));
+        window.CreateTab(tabEntry);
+        window.SelectTab(tabEntry);
+    }
+
+    private void OpenMultiplayerEdition(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { Tag: string editionName } ||
+            Root.GetTopLevel() is not TioTabWindowBase window) return;
+
+        var edition = editionName == "Bedrock" ? MinecraftEdition.Bedrock : MinecraftEdition.Java;
+        var tabEntry = new TabEntry(window, new MultiplayerPage(edition));
         window.CreateTab(tabEntry);
         window.SelectTab(tabEntry);
     }

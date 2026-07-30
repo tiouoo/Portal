@@ -31,14 +31,18 @@ namespace Portal.Views.Pages;
 [AggregatedSearchPage("联机", "联机", "Multiplayer")]
 public partial class MultiplayerPage : UserControl, ITioTabPage
 {
-    private static readonly Lazy<MultiplayerPageViewModel> SharedViewModel = new(() => new MultiplayerPageViewModel());
+    public MultiplayerPage() : this(MinecraftEdition.Java)
+    {
+    }
 
-    public MultiplayerPage()
+    public MultiplayerPage(MinecraftEdition edition = MinecraftEdition.Java)
     {
         InitializeComponent();
-        ViewModel = SharedViewModel.Value;
+        PageInfo.Title = OperatingSystem.IsWindows()
+            ? edition == MinecraftEdition.Java ? "联机 (Java)" : "联机 (基岩)"
+            : "联机";
+        ViewModel = new MultiplayerPageViewModel(edition);
         DataContext = ViewModel;
-        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Loaded += OnLoaded;
     }
 
@@ -58,7 +62,6 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         Loaded -= OnLoaded;
         ViewModel.Activate();
         ShowEditionContent();
-        SelectEditionNavItem();
         Loaded += (s, e) =>
         {
             var a = Frame.Content;
@@ -68,30 +71,14 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         _ = ViewModel.InitializeAsync();
     }
 
-    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(MultiplayerPageViewModel.Edition)) return;
-        ShowEditionContent();
-        SelectEditionNavItem();
-    }
-
     private void ShowEditionContent()
     {
         this.FindControl<ContentControl>("Frame")!.Content = new Components.MultiplayerContentPage(ViewModel);
     }
 
-    private void SelectEditionNavItem()
-    {
-        if (this.FindControl<NavMenu>("EditionNav") is not { } navMenu) return;
-        navMenu.SelectedItem = navMenu.Items
-            .OfType<NavMenuItem>()
-            .FirstOrDefault(item => item.CommandParameter is MinecraftEdition edition && edition == ViewModel.Edition);
-    }
-
     public void OnClose()
     {
         Loaded -= OnLoaded;
-        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         ViewModel.Deactivate();
         DataContext = null;
     }
@@ -99,6 +86,9 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
 public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposable
 {
+    private static readonly GravityConeClient SharedClient = new();
+    private static readonly SemaphoreSlim SharedClientStartLock = new(1, 1);
+    private static GravityConeInstallation? SharedInstallation;
     private readonly CancellationTokenSource _lifetime = new();
     private GravityConeClient? _client;
     private GravityConeInstallation? _installation;
@@ -111,18 +101,18 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private int _isRefreshingRoomStatus;
     private CancellationTokenSource? _roomOperationCancellation;
 
-    public MultiplayerPageViewModel()
+    public MultiplayerPageViewModel(MinecraftEdition edition)
     {
+        _edition = edition;
         PlayerName = string.IsNullOrWhiteSpace(Data.ConfigEntry.OnlinePlayerName)
             ? Data.ConfigEntry.UsingMinecraftMinecraftAccount?.Name ?? string.Empty
             : Data.ConfigEntry.OnlinePlayerName;
     }
 
-    public bool IsEditionNavigationVisible => OperatingSystem.IsWindows();
     public MinecraftEdition Edition => _edition;
     public bool IsJava => _edition == MinecraftEdition.Java;
     public bool IsBedrock => _edition == MinecraftEdition.Bedrock;
-    public string EditionTitle => IsJava ? "Java 版" : "基岩版";
+    public string EditionTitle => "联机";
     public bool IsNotBusy => !IsBusy;
     public bool CanOperate => IsReady && !IsBusy;
     public bool IsNotInRoom => !IsInRoom;
@@ -319,45 +309,27 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     private async Task StartClientAsync(GravityConeInstallation installation)
     {
-        _installation = installation;
-        _client ??= new GravityConeClient();
+        await SharedClientStartLock.WaitAsync(_lifetime.Token);
+        try
+        {
+            SharedInstallation ??= installation;
+            await SharedClient.StartAsync(SharedInstallation, CancellationToken.None);
+        }
+        finally
+        {
+            SharedClientStartLock.Release();
+        }
+
+        _installation = SharedInstallation;
+        _client = SharedClient;
         _client.EventReceived -= ClientOnEventReceived;
         _client.EventReceived += ClientOnEventReceived;
         await _client.StartAsync(installation, _lifetime.Token);
         IsBackendReady = true;
         StatusText = string.Empty;
-        await RefreshRoomStatusAsync(true, MinecraftEdition.Java);
-        if (OperatingSystem.IsWindows()) await RefreshRoomStatusAsync(true, MinecraftEdition.Bedrock);
+        await RefreshRoomStatusAsync(true, Edition);
         ApplyActiveRoomState();
         if (IsJava) await DiscoverJavaServersAsync();
-    }
-
-    [RelayCommand]
-    private async Task NavigateEditionAsync(MinecraftEdition edition)
-    {
-        if (edition == MinecraftEdition.Bedrock && !OperatingSystem.IsWindows()) return;
-        if (_edition == edition) return;
-
-        _edition = edition;
-        RaiseEditionProperties();
-        ApplyActiveRoomState();
-        if (_client is not null)
-        {
-            await RefreshRoomStatusAsync(true);
-            if (IsJava) await DiscoverJavaServersAsync();
-        }
-    }
-
-    private void RaiseEditionProperties()
-    {
-        OnPropertyChanged(nameof(IsJava));
-        OnPropertyChanged(nameof(IsBedrock));
-        OnPropertyChanged(nameof(Edition));
-        OnPropertyChanged(nameof(EditionTitle));
-        OnPropertyChanged(nameof(JoinCodePlaceholder));
-        OnPropertyChanged(nameof(ShowJavaRoomActions));
-        OnPropertyChanged(nameof(ShowBedrockRoomActions));
-        OnPropertyChanged(nameof(CanCreateRoom));
     }
 
     [RelayCommand]
@@ -567,14 +539,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             var room = GetRoomState(Edition);
             await _client.RequestAsync(room.Role == "host" ? "room.stop" : "room.leave", RoomParameters(Edition),
                 timeout: TimeSpan.FromSeconds(8), cancellationToken: _lifetime.Token);
-            var otherEdition = Edition == MinecraftEdition.Java ? MinecraftEdition.Bedrock : MinecraftEdition.Java;
-            if (string.IsNullOrWhiteSpace(GetRoomState(otherEdition).Code))
-            {
-                // GravityCone 1.0.0 may acknowledge room.stop while retaining a running room.
-                // Do not restart while the other edition still has an active room.
-                Logger.Debug("[Multiplayer] Room stop/leave acknowledged; restarting GravityCone CLI to release the stale room.");
-                await RestartClientAsync();
-            }
+            // The CLI is shared by the Java and Bedrock tabs. Do not restart it here:
+            // restarting would invalidate the other tab's client reference and pending requests.
             ClearRoom(Edition);
             Notify("已离开房间", NotificationType.Success);
         }
@@ -619,6 +585,10 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private void ClientOnEventReceived(object? sender, GravityConeEvent e)
     {
         if (!_isActive) return;
+        if (IsJava && e.Name.StartsWith("paperconnect.", StringComparison.Ordinal)) return;
+        if (IsBedrock && (e.Name.StartsWith("room.", StringComparison.Ordinal) ||
+                          e.Name.StartsWith("lan.", StringComparison.Ordinal))) return;
+
         Dispatcher.UIThread.Post(() =>
         {
             switch (e.Name)
@@ -696,20 +666,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         {
             Volatile.Write(ref _isRefreshingRoomStatus, 0);
         }
-    }
-
-    private async Task RestartClientAsync()
-    {
-        if (_installation is null) throw new InvalidOperationException("联机组件安装信息不可用。");
-        var client = _client;
-        if (client is not null)
-        {
-            client.EventReceived -= ClientOnEventReceived;
-            _client = null;
-            await client.DisposeAsync();
-        }
-
-        await StartClientAsync(_installation);
     }
 
     private void ApplyRoomData(JsonElement data, string role, MinecraftEdition edition)
@@ -875,7 +831,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (_client is not null)
         {
             _client.EventReceived -= ClientOnEventReceived;
-            await _client.DisposeAsync();
         }
 
         _lifetime.Dispose();

@@ -70,8 +70,10 @@
                         <Label
                             Content="联机用户名"
                             FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            IsVisible="{Binding IsNotInRoom}" />
                         <TextBox
+                            IsVisible="{Binding IsNotInRoom}"
                             Margin="0,-4,0,0"
                             PlaceholderText="默认使用当前 Minecraft 账户名"
                             Text="{Binding PlayerName}" />
@@ -194,6 +196,7 @@
                             FontSize="17"
                             FontWeight="SemiBold"
                             Text="加入房间" />
+                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="先进入房间，再打开游戏；如已打开游戏，请先关闭。" />
                         <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                             <Button
                                 Command="{Binding ClearJoinCodeCommand}"

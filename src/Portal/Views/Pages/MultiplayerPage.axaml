@@ -5,35 +5,11 @@
     x:Class="Portal.Views.Pages.MultiplayerPage"
     x:DataType="pages:MultiplayerPageViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:Portal.Module.Multiplayer"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
-    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <controls:ScrollView
-            Classes="Flat"
-            DockPanel.Dock="Left"
-            HorizontalAlignment="Left"
-            IsVisible="{Binding IsEditionNavigationVisible}"
-            Margin="7,0,10,10"
-            Width="130">
-            <tio:NavMenu
-                Margin="0,0,10,0"
-                Name="EditionNav"
-                Theme="{StaticResource FlatScrollBarTheme}">
-                <tio:NavMenuItem
-                    Command="{Binding NavigateEditionCommand}"
-                    CommandParameter="{x:Static models:MinecraftEdition.Java}"
-                    Header="Java版" />
-                <tio:NavMenuItem
-                    Command="{Binding NavigateEditionCommand}"
-                    CommandParameter="{x:Static models:MinecraftEdition.Bedrock}"
-                    Header="基岩版" />
-            </tio:NavMenu>
-        </controls:ScrollView>
         <ContentControl Margin="0,0,5,0" Name="Frame" />
     </DockPanel>
 </UserControl>
