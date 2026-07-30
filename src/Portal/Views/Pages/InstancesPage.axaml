@@ -27,8 +27,14 @@
                 <TextBlock
                     FontSize="12"
                     Foreground="{DynamicResource InnerForegroundColor}"
+                    IsVisible="False"
                     Margin="5,0,0,0"
                     Text="{Binding SummaryText}" />
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="5,0,0,0"
+                    Text="实例" />
                 <Button
                     Click="RefreshInstance_Click"
                     Theme="{StaticResource TransparentButton}"

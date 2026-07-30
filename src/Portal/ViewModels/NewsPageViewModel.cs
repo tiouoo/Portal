@@ -1,8 +1,6 @@
 ﻿using System.Collections.ObjectModel;
-using AsyncImageLoader;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Portal.Module.Imaging;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Views.Pages;
@@ -19,10 +17,6 @@ public partial class NewsPageViewModel : ObservableObject
     private List<NewsEntry> _bedrockNews = [];
 
     public ObservableCollection<NewsEntry> FilteredNews { get; } = [];
-
-    // 新闻封面以前走 AsyncImageLoader 的全局内存缓存，图片会一直常驻内存；
-    // 换成磁盘缓存加载器后，位图由 OwnedAdvancedImage 在替换时释放。
-    public IAsyncImageLoader ImageLoader { get; } = new NewsImageLoader();
 
     public List<NewsFilterOption> FilterOptions { get; } =
     [

@@ -46,6 +46,12 @@ public partial class TabWindow : TioTabWindowBase
         set => SetField(ref field, value);
     }
 
+    public bool IsUiLoading
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public TabWindow()
     {
         Build();
@@ -75,6 +81,7 @@ public partial class TabWindow : TioTabWindowBase
         };
         if (IsMainWindow)
         {
+            IsUiLoading = true;
             var pageType = DefaultPageRegistry.Pages
                 .FirstOrDefault(item => item.PageType.AssemblyQualifiedName == Data.ConfigEntry.DefaultPage)
                 ?.PageType;

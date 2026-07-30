@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -36,10 +35,10 @@ public partial class UiProperty : ObservableObject
             }
         };
 
-        InstanceManager.Instance.Instances.CollectionChanged += OnInstancesChanged;
+        InstanceManager.Instance.InstancesChanged += OnInstancesChanged;
     }
 
-    private void OnInstancesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnInstancesChanged(object? sender, EventArgs e)
     {
         Portal.Module.AggregatedSearch.Index.MarkDirty();
         if (AggregatedSelectedType.EnumFlag.HasFlag(AggregatedSearchEntryType.Instance) ||

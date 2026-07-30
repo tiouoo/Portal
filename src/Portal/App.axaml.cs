@@ -138,6 +138,7 @@ public partial class App : Application
         }
         finally
         {
+            _win.IsUiLoading = false;
             UiLoaded?.Invoke(_win);
         }
     }

@@ -113,9 +113,8 @@
                                     DockPanel.Dock="Top"
                                     Height="130"
                                     Margin="12,12,12,0">
-                                    <owned:OwnedAdvancedImage
+                                    <owned:NewsImage
                                         Height="130"
-                                        Loader="{Binding $parent[UserControl].((viewModels:NewsPageViewModel)DataContext).ImageLoader}"
                                         Source="{Binding ImageUrl}"
                                         Stretch="UniformToFill" />
                                 </Border>
