@@ -23,6 +23,28 @@
 
 <a href="https://portal.tiouo.xyz">Portal</a> 是一款开源、跨平台的 Minecraft 启动器与实例管理器，同时支持 Java 版和基岩版，提供从游戏安装、账户登录到资源查找与文件整理的一体化体验，并对不同版本、整合包和世界进行独立管理
 
+## 下载 Portal
+
+从 [Releases](https://github.com/tiouoo/Portal/releases) 下载对应平台的最新版本：
+
+| 平台 | commit 版本 | nightly 版本 |
+| --- | --- | --- |
+| **Windows 10 / 11 x64** | [安装程序](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.win.x64.installer.zip) / [便携版](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.win.x64.portable.zip)  | [安装程序](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.win.x64.installer.zip) / [便携版](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.win.x64.portable.zip)  |
+| **macOS Apple Silicon** | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.app.zip) |
+| **macOS Intel** | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.app.zip) |
+| **Linux x64** | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.AppImage) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.AppImage) |
+| **Linux Arm64** | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.arm64.AppImage) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.arm64.AppImage) |
+| **Linux Arm** | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.arm.AppImage) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.arm.AppImage) |
+
+> [!NOTE]
+> macOS 首次打开 Portal 前，请先将 `Portal.app` 移动到“应用程序”文件夹，然后在终端运行以下命令：
+>
+> ```bash
+> sudo xattr -rd com.apple.quarantine /Applications/Portal.app
+> ```
+
+## 功能
+
 ### 游戏管理
 
 - 查看、搜索、排序、收藏和启动游戏
@@ -58,26 +80,6 @@
 
 - 支持通过命令行参数或浏览器 `portal://` 链接调用安装与启动功能
 - 详细用法参见 [命令行与 portal:// 协议](docs/command-line.md)
-
-## 下载 Portal
-
-从 [Releases](https://github.com/tiouoo/Portal/releases) 下载对应平台的最新版本：
-
-| 平台 | commit 版本 | nightly 版本 |
-| --- | --- | --- |
-| **Windows 10 / 11 x64** | [安装程序](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.win.x64.installer.zip) / [便携版](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.win.x64.portable.zip)  | [安装程序](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.win.x64.installer.zip) / [便携版](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.win.x64.portable.zip)  |
-| **macOS Apple Silicon** | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.app.zip) |
-| **macOS Intel** | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.app.zip) |
-| **Linux x64** | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.AppImage) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.AppImage) |
-| **Linux Arm64** | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.arm64.AppImage) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.arm64.AppImage) |
-| **Linux Arm** | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.arm.AppImage) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.arm.AppImage) |
-
-> [!NOTE]
-> macOS 首次打开 Portal 前，请先将 `Portal.app` 移动到“应用程序”文件夹，然后在终端运行以下命令：
->
-> ```bash
-> sudo xattr -rd com.apple.quarantine /Applications/Portal.app
-> ```
 
 ## 从源代码运行
 
