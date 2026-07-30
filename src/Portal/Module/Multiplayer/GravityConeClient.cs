@@ -1,21 +1,21 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Portal.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Multiplayer;
 
 public sealed class GravityConeClient : IAsyncDisposable
 {
-    private static readonly string[] BuiltInPeers =
-    [
-        "https://etnode.zkitefly.eu.org/node1",
-        "wss://center.node.1tmc.top",
-        "tcp://public.easytier.top:11010",
-        "tcp://public2.easytier.cn:54321"
-    ];
+    public const string RelayConfigUrl = "https://cdn.tiouo.xyz/portal/multiplayer-relays.json";
+
+    private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private static string RelayConfigCachePath => Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer", "relays.json");
 
     private readonly ConcurrentDictionary<int, PendingRequest> _pending = new();
     private readonly SemaphoreSlim _writeLock = new(1, 1);
@@ -28,6 +28,8 @@ public sealed class GravityConeClient : IAsyncDisposable
     public async Task StartAsync(GravityConeInstallation installation, CancellationToken cancellationToken)
     {
         if (_process is { HasExited: false }) return;
+
+        var peers = await GetPeersAsync(cancellationToken);
 
         var startInfo = new ProcessStartInfo(installation.CliPath)
         {
@@ -47,7 +49,7 @@ public sealed class GravityConeClient : IAsyncDisposable
         startInfo.ArgumentList.Add("Portal");
         startInfo.ArgumentList.Add("--motd");
         startInfo.ArgumentList.Add("Portal 联机房间");
-        foreach (var peer in BuiltInPeers)
+        foreach (var peer in peers)
         {
             startInfo.ArgumentList.Add("--peers");
             startInfo.ArgumentList.Add(peer);
@@ -81,6 +83,70 @@ public sealed class GravityConeClient : IAsyncDisposable
         }
         throw new TimeoutException("GravityCone CLI 启动超时。");
     }
+
+    private static async Task<IReadOnlyList<string>> GetPeersAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var config = await DownloadRelayConfigAsync(cancellationToken);
+            await SaveRelayConfigAsync(config, cancellationToken);
+            return config.Peers;
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
+                                   ex is HttpRequestException or JsonException or InvalidDataException or IOException or
+                                       OperationCanceledException)
+        {
+            Logger.Warning($"[Multiplayer] Failed to download relay configuration: {ex.Message}");
+            var cachedConfig = await ReadCachedRelayConfigAsync(cancellationToken);
+            if (cachedConfig is not null) return cachedConfig.Peers;
+            throw new InvalidOperationException("无法获取联机中转服务器配置，请检查网络后重试。", ex);
+        }
+    }
+
+    private static async Task<RelayConfig> DownloadRelayConfigAsync(CancellationToken cancellationToken)
+    {
+        await using var stream = await HttpClient.GetStreamAsync(RelayConfigUrl, cancellationToken);
+        var config = await JsonSerializer.DeserializeAsync<RelayConfig>(stream, JsonOptions, cancellationToken)
+                     ?? throw new InvalidDataException("联机中转服务器配置为空。");
+        return ValidateRelayConfig(config);
+    }
+
+    private static async Task SaveRelayConfigAsync(RelayConfig config, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(RelayConfigCachePath)!);
+        await File.WriteAllTextAsync(RelayConfigCachePath, JsonSerializer.Serialize(config), cancellationToken);
+    }
+
+    private static async Task<RelayConfig?> ReadCachedRelayConfigAsync(CancellationToken cancellationToken)
+    {
+        if (!File.Exists(RelayConfigCachePath)) return null;
+        try
+        {
+            var json = await File.ReadAllTextAsync(RelayConfigCachePath, cancellationToken);
+            var config = JsonSerializer.Deserialize<RelayConfig>(json, JsonOptions);
+            return config is null ? null : ValidateRelayConfig(config);
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException)
+        {
+            Logger.Warning($"[Multiplayer] Failed to read cached relay configuration: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static RelayConfig ValidateRelayConfig(RelayConfig config)
+    {
+        if (config.SchemaVersion != 1) throw new InvalidDataException("不支持的联机中转服务器配置版本。");
+        if (config.Peers is null || config.Peers.Count == 0)
+            throw new InvalidDataException("联机中转服务器配置中没有可用服务器。");
+        if (config.Peers.Any(peer => !IsValidPeer(peer)))
+            throw new InvalidDataException("联机中转服务器配置包含无效地址。");
+        return config with { Peers = config.Peers.Distinct(StringComparer.Ordinal).ToList() };
+    }
+
+    private static bool IsValidPeer(string peer) =>
+        Uri.TryCreate(peer, UriKind.Absolute, out var uri) &&
+        uri.Scheme is "http" or "https" or "tcp" or "ws" or "wss" &&
+        !string.IsNullOrWhiteSpace(uri.Host);
 
     public async Task<GravityConeResponse> RequestAsync(string method, object? parameters = null,
         IProgress<GravityConeProgress>? progress = null, TimeSpan? timeout = null,
@@ -213,6 +279,10 @@ public sealed class GravityConeClient : IAsyncDisposable
 
     private sealed record PendingRequest(TaskCompletionSource<GravityConeResponse> Completion,
         IProgress<GravityConeProgress>? Progress);
+
+    private sealed record RelayConfig(
+        [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
+        [property: JsonPropertyName("peers")] List<string> Peers);
 }
 
 public sealed class GravityConeResponse
@@ -235,4 +305,3 @@ public sealed class GravityConeException(string code, string message) : Exceptio
 {
     public string Code { get; } = code;
 }
-
