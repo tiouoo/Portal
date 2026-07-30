@@ -526,11 +526,11 @@
                                         Orientation="Horizontal"
                                         Spacing="5">
                                         <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="暂无实例，请前往" />
-                                        <Button Theme="{StaticResource TransparentButton}">
+                                        <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
                                             <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="添加文件夹" />
                                         </Button>
                                         <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="或" />
-                                        <Button Theme="{StaticResource TransparentButton}">
+                                        <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
                                             <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="下载新实例" />
                                         </Button>
                                     </StackPanel>
@@ -539,11 +539,11 @@
                                         Orientation="Horizontal"
                                         Spacing="5">
                                         <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="暂无匹配实例，请修改筛选条件，前往" />
-                                        <Button Theme="{StaticResource TransparentButton}">
+                                        <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
                                             <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="添加文件夹" />
                                         </Button>
                                         <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="或" />
-                                        <Button Theme="{StaticResource TransparentButton}">
+                                        <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
                                             <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="下载新实例" />
                                         </Button>
                                     </StackPanel>
