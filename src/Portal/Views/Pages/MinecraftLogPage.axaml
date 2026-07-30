@@ -10,7 +10,7 @@
     xmlns:local="clr-namespace:Portal.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Margin="12" RowDefinitions="Auto,Auto,*">
+    <Grid Margin="12,0,12,12" RowDefinitions="Auto,Auto,*">
         <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
             <TextBlock
                 FontSize="17"

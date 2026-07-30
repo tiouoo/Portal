@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO.Compression;
+using System.Text;
 using System.Xml;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -106,12 +107,26 @@ public partial class Logs : UserControl
     private static async Task<string> ReadLogAsync(string path)
     {
         if (!path.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
-            return await File.ReadAllTextAsync(path);
+            return DecodeLogText(await File.ReadAllBytesAsync(path));
 
         await using var fileStream = File.OpenRead(path);
         await using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-        using var reader = new StreamReader(gzipStream);
-        return await reader.ReadToEndAsync();
+        await using var buffer = new MemoryStream();
+        await gzipStream.CopyToAsync(buffer);
+        return DecodeLogText(buffer.ToArray());
+    }
+
+    private static string DecodeLogText(byte[] bytes)
+    {
+        try
+        {
+            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            return Encoding.GetEncoding("GB18030").GetString(bytes);
+        }
     }
 
     private static bool IsFileLocked(IOException exception) => (exception.HResult & 0xffff) is 32 or 33;
