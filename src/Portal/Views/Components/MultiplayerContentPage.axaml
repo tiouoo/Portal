@@ -55,7 +55,7 @@
                 </StackPanel>
             </Border>
 
-            <StackPanel IsVisible="{Binding IsReady}" Spacing="15">
+            <StackPanel IsVisible="{Binding !IsComponentMissing}" Spacing="15">
                 <Border
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -135,6 +135,10 @@
                                         Command="{Binding CreateRoomCommand}"
                                         Content="{Binding CreateRoomButtonText}"
                                         IsEnabled="{Binding CanCreateRoom}" />
+                                    <Button
+                                        Command="{Binding CancelRoomOperationCommand}"
+                                        Content="取消"
+                                        IsVisible="{Binding IsRoomOperationInProgress}" />
                                 </StackPanel>
                                 <ComboBox
                                     HorizontalAlignment="Stretch"
@@ -165,11 +169,16 @@
                             FontWeight="SemiBold"
                             Text="创建房间" />
                         <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="请先在 Minecraft 中开启局域网游戏，然后创建房间。" />
-                        <Button
-                            Command="{Binding CreateRoomCommand}"
-                            Content="{Binding CreateRoomButtonText}"
-                            HorizontalAlignment="Left"
-                            IsEnabled="{Binding CanCreateRoom}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                Command="{Binding CreateRoomCommand}"
+                                Content="{Binding CreateRoomButtonText}"
+                                IsEnabled="{Binding CanCreateRoom}" />
+                            <Button
+                                Command="{Binding CancelRoomOperationCommand}"
+                                Content="取消"
+                                IsVisible="{Binding IsRoomOperationInProgress}" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -185,7 +194,7 @@
                             FontSize="17"
                             FontWeight="SemiBold"
                             Text="加入房间" />
-                        <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                             <Button
                                 Command="{Binding ClearJoinCodeCommand}"
                                 Content="清除"
@@ -205,6 +214,12 @@
                                 Content="{Binding JoinRoomButtonText}"
                                 Grid.Column="3"
                                 IsEnabled="{Binding CanOperate}" />
+                            <Button
+                                Command="{Binding CancelRoomOperationCommand}"
+                                Content="取消"
+                                Grid.Column="4"
+                                IsVisible="{Binding IsRoomOperationInProgress}"
+                                Margin="8,0,0,0" />
                         </Grid>
                     </StackPanel>
                 </Border>

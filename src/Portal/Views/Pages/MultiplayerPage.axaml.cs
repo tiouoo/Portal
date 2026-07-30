@@ -53,7 +53,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; } = null!;
 
-    private async void OnLoaded(object? sender, RoutedEventArgs e)
+    private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
         ViewModel.Activate();
@@ -65,7 +65,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
             Frame.Content = null;
             Frame.Content = a;
         };
-        await ViewModel.InitializeAsync();
+        _ = ViewModel.InitializeAsync();
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -109,6 +109,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private readonly RoomState _bedrockRoom = new();
     private DateTimeOffset _lastRoomStatusRequest = DateTimeOffset.MinValue;
     private int _isRefreshingRoomStatus;
+    private CancellationTokenSource? _roomOperationCancellation;
 
     public MultiplayerPageViewModel()
     {
@@ -130,6 +131,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     public bool CanCreateRoom => CanOperate && IsNotInRoom && (IsBedrock || ResolveJavaPort() is not null);
     public bool HasNatSummary => !string.IsNullOrWhiteSpace(NatSummary);
     public string MemberCountText => $"{Members.Count} 人";
+    public bool IsRoomOperationInProgress => IsCreatingRoom || IsJoiningRoom;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotBusy))]
@@ -143,7 +145,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     [NotifyPropertyChangedFor(nameof(CanOperate))]
     [NotifyPropertyChangedFor(nameof(CanCreateRoom))]
     [NotifyPropertyChangedFor(nameof(CanProbeNat))]
-    public partial bool IsComponentMissing { get; set; } = true;
+    public partial bool IsComponentMissing { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReady))]
@@ -176,10 +178,12 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CreateRoomButtonText))]
+    [NotifyPropertyChangedFor(nameof(IsRoomOperationInProgress))]
     public partial bool IsCreatingRoom { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(JoinRoomButtonText))]
+    [NotifyPropertyChangedFor(nameof(IsRoomOperationInProgress))]
     public partial bool IsJoiningRoom { get; set; }
 
     [ObservableProperty]
@@ -382,8 +386,11 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private async Task CreateRoomAsync()
     {
         if (_client is null || !CanCreateRoom || !ValidatePlayerName()) return;
+        var edition = Edition;
         IsBusy = true;
         IsCreatingRoom = true;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _roomOperationCancellation = cancellation;
         try
         {
             await RefreshRoomStatusAsync();
@@ -393,13 +400,18 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 return;
             }
 
-            object parameters = IsJava
+            object parameters = edition == MinecraftEdition.Java
                 ? new { mc_port = ResolveJavaPort()!.Value, player_name = PlayerName.Trim() }
                 : new { player_name = PlayerName.Trim(), protocol = "paperconnect" };
             var response = await _client.RequestAsync("room.create", parameters,
-                timeout: TimeSpan.FromSeconds(35), cancellationToken: _lifetime.Token);
-            ApplyRoomData(response.Data, "host", Edition);
+                timeout: TimeSpan.FromSeconds(35), cancellationToken: cancellation.Token);
+            ApplyRoomData(response.Data, "host", edition);
             Notify("房间已创建", NotificationType.Success);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            await RollbackCancelledRoomOperationAsync(edition);
+            Notify("已取消创建房间", NotificationType.Information);
         }
         catch (Exception ex)
         {
@@ -407,6 +419,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
         finally
         {
+            if (ReferenceEquals(_roomOperationCancellation, cancellation)) _roomOperationCancellation = null;
             IsCreatingRoom = false;
             IsBusy = false;
         }
@@ -449,8 +462,9 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private async Task JoinRoomAsync()
     {
         if (_client is null || IsBusy || !ValidatePlayerName()) return;
+        var edition = Edition;
         var code = JoinCode.Trim().ToUpperInvariant();
-        var prefix = IsJava ? "U/" : "P/";
+        var prefix = edition == MinecraftEdition.Java ? "U/" : "P/";
         if (!code.StartsWith(prefix, StringComparison.Ordinal))
         {
             Notify($"{EditionTitle}房间码必须以 {prefix} 开头", NotificationType.Warning);
@@ -459,16 +473,23 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
         IsBusy = true;
         IsJoiningRoom = true;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _roomOperationCancellation = cancellation;
         try
         {
             var progress = new Progress<GravityConeProgress>(_ => { });
-            object parameters = IsJava
+            object parameters = edition == MinecraftEdition.Java
                 ? new { code, player_name = PlayerName.Trim() }
                 : new { code, player_name = PlayerName.Trim(), protocol = "paperconnect" };
             var response = await _client.RequestAsync("room.join", parameters,
-                progress, TimeSpan.FromSeconds(60), _lifetime.Token);
-            ApplyRoomData(response.Data, "guest", Edition);
-            Notify(IsBedrock ? "控制通道已连接，正在建立游戏连接" : "已加入房间", NotificationType.Success);
+                progress, TimeSpan.FromSeconds(60), cancellation.Token);
+            ApplyRoomData(response.Data, "guest", edition);
+            Notify(edition == MinecraftEdition.Bedrock ? "控制通道已连接，正在建立游戏连接" : "已加入房间", NotificationType.Success);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            await RollbackCancelledRoomOperationAsync(edition);
+            Notify("已取消加入房间", NotificationType.Information);
         }
         catch (Exception ex)
         {
@@ -476,8 +497,41 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
         finally
         {
+            if (ReferenceEquals(_roomOperationCancellation, cancellation)) _roomOperationCancellation = null;
             IsJoiningRoom = false;
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void CancelRoomOperation()
+    {
+        if (_roomOperationCancellation is not { IsCancellationRequested: false } cancellation) return;
+        cancellation.Cancel();
+        Notify("正在取消联机操作", NotificationType.Information);
+    }
+
+    private async Task RollbackCancelledRoomOperationAsync(MinecraftEdition edition)
+    {
+        if (_client is null || _lifetime.IsCancellationRequested) return;
+
+        try
+        {
+            var status = await _client.RequestAsync("room.status", RoomParameters(edition),
+                timeout: TimeSpan.FromSeconds(4), cancellationToken: _lifetime.Token);
+            var role = status.Data.TryGetProperty("role", out var roleValue) ? roleValue.GetString() : "none";
+            if (role == "none") return;
+
+            await _client.RequestAsync(role == "host" ? "room.stop" : "room.leave", RoomParameters(edition),
+                timeout: TimeSpan.FromSeconds(8), cancellationToken: _lifetime.Token);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !_lifetime.IsCancellationRequested)
+        {
+            Logger.Warning($"[Multiplayer] Failed to roll back cancelled room operation: {ex.Message}");
+        }
+        finally
+        {
+            ClearRoom(edition);
         }
     }
 
