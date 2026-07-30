@@ -29,6 +29,37 @@
   font-size: 13px;
   line-height: 1.8;
 }
+.download-route {
+  width: fit-content;
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: auto minmax(150px, 190px);
+  align-items: center;
+  gap: 7px 10px;
+  color: #4e5b70;
+  font-size: 12px;
+  font-weight: 700;
+}
+.download-route select {
+  height: 36px;
+  padding: 0 30px 0 11px;
+  border: 1px solid #d5deeb;
+  border-radius: 7px;
+  background: #fff;
+  color: #20283a;
+  font: inherit;
+  font-weight: 600;
+}
+.download-route select:focus-visible {
+  outline: 2px solid rgba(42, 112, 245, 0.38);
+  outline-offset: 2px;
+}
+.download-route small {
+  grid-column: 2;
+  color: #9097a5;
+  font-size: 10px;
+  font-weight: 400;
+}
 .platform-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -172,6 +203,16 @@
   }
   .platform-card {
     padding: 22px;
+  }
+  .download-route {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .download-route select {
+    width: 100%;
+  }
+  .download-route small {
+    grid-column: auto;
   }
   .download-note {
     width: calc(100% - 28px);

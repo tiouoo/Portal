@@ -1,5 +1,30 @@
 <script setup>
+import { computed, ref } from "vue";
 import { platforms } from "../data/downloads.js";
+
+const route = ref("direct");
+
+const downloadUrl = (url) => {
+  if (route.value === "bgithub") {
+    return url.replace("https://github.com/", "https://bgithub.xyz/");
+  }
+  if (route.value === "gh.tiouo") {
+    return url.replace("https://github.com/", "https://gh.tiouo.xyz/");
+  }
+
+  if (route.value === "ghproxy") {
+    return `https://ghproxy.net/${url}`;
+  }
+  console.log(url);
+
+  return url;
+};
+
+const routeHint = computed(() => {
+  if (route.value === "bgithub") return "通过 bgithub.xyz 下载";
+  if (route.value === "ghproxy") return "通过 ghproxy.net 下载";
+  return "直接从 GitHub 下载";
+});
 </script>
 
 <template>
@@ -9,6 +34,14 @@ import { platforms } from "../data/downloads.js";
         <span class="section-kicker">现在开始</span>
         <h2>选择你的平台</h2>
         <p>Nightly 版本在北京时间凌晨5点左右自动发布一个新版本</p>
+        <label class="download-route">
+          <select v-model="route" aria-label="选择下载路线">
+            <option value="direct">直接下载</option>
+            <option value="gh.tiouo">gh.tiouo.xyz</option>
+            <option value="bgithub">bgithub.xyz</option>
+            <option value="ghproxy">ghproxy.net</option>
+          </select>
+        </label>
       </div>
       <div class="platform-grid">
         <article
@@ -39,7 +72,7 @@ import { platforms } from "../data/downloads.js";
               <p>{{ platform.detail }}</p>
             </div>
           </div>
-          <a class="platform-primary" :href="platform.primaryUrl"
+          <a class="platform-primary" :href="downloadUrl(platform.primaryUrl)"
             >{{ platform.primary }}
             <span
               ><svg
@@ -54,7 +87,11 @@ import { platforms } from "../data/downloads.js";
                 /></svg></span
           ></a>
           <div class="platform-links">
-            <a v-for="link in platform.links" :key="link.url" :href="link.url">
+            <a
+              v-for="link in platform.links"
+              :key="link.url"
+              :href="downloadUrl(link.url)"
+            >
               <span
                 >{{ link.label }}<small>{{ link.meta }}</small></span
               >
