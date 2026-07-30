@@ -670,25 +670,13 @@ public class MinecraftInstance : ObservableObject
 
     private void RefreshIcon()
     {
-        _icon?.Dispose();
         _icon = null;
-        _sourceIcon?.Dispose();
         _sourceIcon = null;
 
-        Bitmap[] staleIcons;
         lock (_iconsByWidth)
         {
-            staleIcons = _iconsByWidth.Values.ToArray();
             _iconsByWidth.Clear();
         }
-
-        // 旧位图可能仍绑定在界面上，等下一帧渲染完成后再释放。
-        if (staleIcons.Length > 0)
-            Dispatcher.UIThread.Post(() =>
-            {
-                foreach (var icon in staleIcons)
-                    icon.Dispose();
-            }, DispatcherPriority.Background);
 
         OnPropertyChanged(nameof(sourceIcon));
         OnPropertyChanged(nameof(Icon));
