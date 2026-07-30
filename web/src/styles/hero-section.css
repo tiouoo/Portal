@@ -332,25 +332,26 @@ h1 em {
 .stat-card {
   grid-area: stat;
   padding: 13px;
+  overflow: hidden;
 }
 .stat-card small {
   color: #9097a4;
-  font-size: 8px;
+  font-size: 14px;
 }
 .stat-card strong {
   display: block;
   margin-top: 6px;
-  font-size: 18px;
+  font-size: 20px;
 }
 .stat-card strong i {
-  font-size: 8px;
+  font-size: 13px;
   font-style: normal;
   color: #969daa;
   font-weight: 400;
 }
 .chart {
-  height: 25px;
-  margin-top: 5px;
+  height: 32px;
+  margin-top: -5px;
   display: flex;
   align-items: end;
   gap: 5px;
@@ -390,7 +391,7 @@ h1 em {
 .card-title {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 15px;
 }
 .card-title span {
   color: var(--blue);
@@ -398,30 +399,42 @@ h1 em {
 }
 .instance-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px 8px;
-  margin-top: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
 }
-.instance-row div:not(.instance-icon) {
+.instance-card {
+  min-width: 0;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+.instance-card > div:last-child {
   overflow: hidden;
 }
-.instance-row strong,
-.instance-row span {
+.instance-card strong,
+.instance-card span {
   display: block;
   white-space: nowrap;
 }
-.instance-row strong {
-  font-size: 9px;
+.instance-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 8px;
 }
-.instance-row span {
+.instance-card span {
   margin-top: 3px;
   font-size: 7px;
   color: #969daa;
 }
 .instance-icon {
-  width: 34px;
-  height: 34px;
+  flex: 0 0 27px;
+  width: 27px;
+  height: 27px;
   border-radius: 7px;
   image-rendering: pixelated;
 }
@@ -569,5 +582,11 @@ h1 em {
   }
   .app-window {
     transform: translateX(-50%) scale(0.61);
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-visual {
+    display: none;
   }
 }

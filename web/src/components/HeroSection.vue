@@ -87,7 +87,8 @@ import logoUrl from "../assets/portal-logo.svg";
                 </svg>
               </div>
               <div class="stat-card">
-                <small>本周游戏时长</small><strong>12.6 <i>小时</i></strong>
+                <small>本周游戏时长</small
+                ><strong style="margin-top: 2px">12.6 <i>小时</i></strong>
                 <div class="chart">
                   <span></span><span></span><span></span><span></span
                   ><span></span><span></span><span></span>
@@ -96,17 +97,23 @@ import logoUrl from "../assets/portal-logo.svg";
               <div class="library-card">
                 <div class="card-title"><b>实例</b></div>
                 <div class="instance-row">
-                  <div class="instance-icon grass"></div>
-                  <div>
-                    <strong>创造世界</strong><span>Fabric · 1.21.5</span>
+                  <div class="instance-card">
+                    <div class="instance-icon grass"></div>
+                    <div>
+                      <strong>创造世界</strong><span>Fabric · 1.21.5</span>
+                    </div>
                   </div>
-                  <div class="instance-icon grass"></div>
-                  <div>
-                    <strong>原版生存</strong><span>Vanilla · 1.20.1</span>
+                  <div class="instance-card">
+                    <div class="instance-icon grass"></div>
+                    <div>
+                      <strong>原版生存</strong><span>Vanilla · 1.20.1</span>
+                    </div>
                   </div>
-                  <div class="instance-icon grass"></div>
-                  <div>
-                    <strong>机械动力</strong><span>Forge · 1.19.2</span>
+                  <div class="instance-card">
+                    <div class="instance-icon grass"></div>
+                    <div>
+                      <strong>机械动力</strong><span>Forge · 1.19.2</span>
+                    </div>
                   </div>
                 </div>
               </div>

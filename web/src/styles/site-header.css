@@ -72,16 +72,19 @@
     right: 16px;
     top: 64px;
     padding: 18px;
-    display: none;
     flex-direction: column;
     gap: 18px;
     border: 1px solid var(--line);
     border-radius: 14px;
     background: white;
     box-shadow: 0 18px 40px rgba(40, 50, 75, 0.12);
+    opacity: 0;
+    transition: all 0.2s;
+    pointer-events: none;
   }
   .nav-links.open {
-    display: flex;
+    opacity: 1;
+    pointer-events: all;
   }
   .nav-cta {
     width: 100%;
