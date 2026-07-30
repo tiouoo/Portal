@@ -20,21 +20,21 @@
             Grid.Row="1"
             HorizontalAlignment="Center"
             LabelPosition="Top"
-            Margin="0,10,0,15">
-            <tio:FormItem Label="账户类型">
+            Margin="0,-10,0,15">
+            <tio:FormItem Label="">
                 <StackPanel Spacing="4">
                     <DataValidationErrors>
-                        <ComboBox
+                        <ListBox
                             ItemsSource="{Binding AuthServers}"
                             SelectedItem="{Binding SelectedServer}"
                             Width="368"
                             tio:FocusHelper.DialogFocusHint="True">
-                            <ComboBox.ItemTemplate>
+                            <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding DisplayText}" />
                                 </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </DataValidationErrors>
                 </StackPanel>
             </tio:FormItem>

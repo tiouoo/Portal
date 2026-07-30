@@ -25,8 +25,20 @@
             Margin="0,10,0,15">
             <TextBlock
                 IsVisible="{Binding !IsError}"
-                Margin="0,0,0,20"
+                Margin="0,0,0,5"
                 Text="{Binding Msg}" />
+            <Border IsVisible="{Binding !IsAuthing}">
+                <Border IsVisible="{Binding !IsError}">
+                    <SelectableTextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Left"
+                        IsVisible="{Binding IsReady}"
+                        Margin="1,0,0,20"
+                        Text="{Binding Url}"
+                        TextWrapping="Wrap"
+                        VerticalAlignment="Center" />
+                </Border>
+            </Border>
             <Border IsVisible="{Binding !IsAuthing}">
                 <tio:Skeleton
                     CornerRadius="10"
@@ -46,25 +58,6 @@
                             VerticalAlignment="Center" />
                     </Border>
                 </tio:Skeleton>
-            </Border>
-            <Border IsVisible="{Binding !IsAuthing}">
-                <Expander
-                    BorderBrush="{DynamicResource PopupBorderBrush}"
-                    BorderThickness="1"
-                    Header="验证页面网址"
-                    IsVisible="{Binding !IsError}">
-                    <tio:Skeleton
-                        IsActive="True"
-                        IsLoading="{Binding !IsReady}"
-                        Margin="20,10,20,20"
-                        VerticalAlignment="Center">
-                        <SelectableTextBlock
-                            HorizontalAlignment="Center"
-                            Text="{Binding Url}"
-                            TextWrapping="Wrap"
-                            VerticalAlignment="Center" />
-                    </tio:Skeleton>
-                </Expander>
             </Border>
             <TextBlock
                 Foreground="Red"
