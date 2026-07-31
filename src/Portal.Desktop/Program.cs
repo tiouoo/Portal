@@ -54,7 +54,7 @@ sealed class Program
         Logger.Info(">");
         Logger.Info("应用程序启动 Main()");
 
-#if WINDOWS
+#if WINDOWS || LINUX
         RegisterBedrockLauncher();
 #endif
 
@@ -80,10 +80,16 @@ sealed class Program
     private static bool TryGetBedrockPackagePath(string[] args, out string? packagePath)
     {
         packagePath = null;
-        if (args.Length != 1 || !BedrockPackageImportService.TryGetArchiveType(args[0], out _))
+        if (args.Length != 1)
             return false;
 
-        var fullPath = Path.GetFullPath(args[0]);
+        var path = Uri.TryCreate(args[0], UriKind.Absolute, out var uri) && uri.IsFile
+            ? uri.LocalPath
+            : args[0];
+        if (!BedrockPackageImportService.TryGetArchiveType(path, out _))
+            return false;
+
+        var fullPath = Path.GetFullPath(path);
         if (!File.Exists(fullPath))
             return false;
 
@@ -91,13 +97,20 @@ sealed class Program
         return true;
     }
 
-#if WINDOWS
+#if WINDOWS || LINUX
     private static void RegisterBedrockLauncher()
     {
+#if WINDOWS
         MinecraftLaunchService.DefaultBedrockLauncherFactory =
             config => new Portal.Bedrock.BedrockLaunch(config);
         Portal.Bedrock.Standard.Interface.BedrockInstallationService.DefaultInstaller =
             new Portal.Bedrock.BedrockInstaller();
+#elif LINUX
+        MinecraftLaunchService.DefaultBedrockLauncherFactory =
+            config => new Portal.Bedrock.Linux.BedrockLaunch(config);
+        Portal.Bedrock.Standard.Interface.BedrockInstallationService.DefaultInstaller =
+            new Portal.Bedrock.Linux.BedrockInstaller();
+#endif
     }
 #endif
 

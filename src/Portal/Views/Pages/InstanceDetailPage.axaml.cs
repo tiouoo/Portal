@@ -105,7 +105,8 @@ public partial class InstanceDetailPageViewModel : ObservableObject
 
     public bool IsJava => Instance.IsJava;
     public bool IsBedrock => Instance.IsBedrock;
-    public bool IsGdkBedrock => Instance.BedrockConfig?.BuildType == BedrockBuildType.GDK;
+    public bool SupportsBedrockMods => OperatingSystem.IsWindows() && Instance.IsBedrock;
+    public bool IsGdkBedrock => SupportsBedrockMods;
 
     private readonly Dictionary<Type, UserControl> _pageCache = new();
 

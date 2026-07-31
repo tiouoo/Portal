@@ -116,7 +116,8 @@ public static class UpdateApp
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             if (packageType != "appimage") throw new NotSupportedException("Linux 自动更新目前仅支持 AppImage。");
-            expectedName = $"Portal.linux.{arch}.AppImage";
+            if (arch != "x64") throw new PlatformNotSupportedException("Portal Linux 版本目前仅发布 x64 更新包。");
+            expectedName = "Portal.linux.x64.AppImage";
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {

@@ -8,6 +8,10 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <IsLinuxBuildHost>$([MSBuild]::IsOSPlatform('Linux'))</IsLinuxBuildHost>
+    <IsX64BuildHost Condition="$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) == 'X64'">true</IsX64BuildHost>
+    <TargetsLinux Condition="'$(RuntimeIdentifier)' == 'linux-x64' Or ('$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == 'linux-x64')">true</TargetsLinux>
+    <TargetsLinux Condition="'$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' And '$(IsLinuxBuildHost)' == 'true' And '$(IsX64BuildHost)' == 'true'">true</TargetsLinux>
   </PropertyGroup>
     
   <PropertyGroup Condition="$(RuntimeIdentifier.Contains('osx'))">
@@ -15,7 +19,7 @@
     <UseMauiEssentials>false</UseMauiEssentials>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(RuntimeIdentifier.Contains('linux'))">
-    <DefineConstants>LINUX</DefineConstants>
+  <PropertyGroup Condition="'$(TargetsLinux)' == 'true'">
+    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
   </PropertyGroup>
 </Project>

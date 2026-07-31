@@ -65,7 +65,7 @@ import { features } from "../data/features.js";
     <div class="capability-strip">
       <span>还支持</span>
       <div>
-        <b>多标签工作区</b><i></i><b>基岩版启动/版本隔离</b><i></i
+        <b>多标签工作区</b><i></i><b>基岩版启动（Windows / Linux x64）</b><i></i
         ><b>实时日志</b><i></i><b>存档信息</b><i></i><b>Litematica 分析</b>
       </div>
     </div>

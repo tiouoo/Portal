@@ -6,6 +6,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using MinecraftLaunch.Components.Installer.Modpack;
+using Portal.Bedrock.Standard.Interface;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
@@ -51,7 +52,8 @@ public class Handler
                 return;
             }
 
-            if (OperatingSystem.IsWindows() && TryGetBedrockPackage(data, out archivePath, out var inspection))
+            if (BedrockInstallationService.DefaultInstaller is not null &&
+                TryGetBedrockPackage(data, out archivePath, out var inspection))
             {
                 e.Handled = true;
                 await BedrockPackageImportDialog.ImportAsync(window, archivePath, inspection);
@@ -91,7 +93,7 @@ public class Handler
             msg = "识别到整合包";
         }
 
-        if (OperatingSystem.IsWindows() && TryGetBedrockPackage(data, out _, out _))
+        if (BedrockInstallationService.DefaultInstaller is not null && TryGetBedrockPackage(data, out _, out _))
         {
             dropEffects = DragDropEffects.Copy;
             msg = "识别到基岩版包";

@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageVersionOverrideEnabled>true</CentralPackageVersionOverrideEnabled>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="AsyncImageLoader.Avalonia" Version="3.8.0" />
@@ -27,6 +28,7 @@
     <PackageVersion Include="Tomlyn" Version="2.10.1" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
     <PackageVersion Include="BedrockLauncher.Core" Version="2.0.4.7" />
+    <PackageVersion Include="BedrockLauncher.Core.Linux" Version="1.0.0.3" />
     <PackageVersion Include="PinYinConverterCore" Version="1.0.2" />
   </ItemGroup>
 </Project>

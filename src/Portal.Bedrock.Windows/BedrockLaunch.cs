@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Management.Deployment;
 using BedrockLauncher.Core;
@@ -14,6 +15,7 @@ namespace Portal.Bedrock;
 public class BedrockLaunch : IBedrockLaunch
 {
     private readonly BedrockInstanceConfig _instanceConfig;
+    private ProcessMouseLocker? _mouseLocker;
 
     public BedrockLaunch(BedrockInstanceConfig instanceConfig)
     {
@@ -23,6 +25,7 @@ public class BedrockLaunch : IBedrockLaunch
     public override async Task Launch()
     {
         Log(BedrockLogLevel.Information, $"开始准备实例 {_instanceConfig.Name} 的基岩版启动环境");
+        BedrockWindowsPrerequisites.Validate(_instanceConfig);
         var nativeLogPath = BedrockDataIsolation.Prepare(_instanceConfig, LogReceived);
         Log(BedrockLogLevel.Information, "基岩版数据隔离和预加载环境准备完成");
         Process? launchedProcess = null;
@@ -63,7 +66,7 @@ public class BedrockLaunch : IBedrockLaunch
                     UpdateProgress?.Invoke("状态：游戏启动完成，开始计时", 100);
                 }
             }),
-            LaunchArgs = null
+            LaunchArgs = BuildLaunchArguments()
         };
 
         // Package registration can perform synchronous work before its task is returned.
@@ -79,12 +82,43 @@ public class BedrockLaunch : IBedrockLaunch
         MinecraftProcess = launchedProcess ?? throw new InvalidOperationException(
             "基岩版启动状态已完成，但未找到 Minecraft 进程。游戏可能在启动时提前退出。");
         Log(BedrockLogLevel.Information, $"已获取 Minecraft 进程，PID：{MinecraftProcess.Id}");
-        BedrockModInjector.Start(_instanceConfig, MinecraftProcess, LogReceived);
-        
-        LaunchFinish?.Invoke();
+        try
+        {
+            if (_instanceConfig.EnableMouseLock &&
+                (_instanceConfig.BuildType != BedrockBuildType.GDK || _instanceConfig.EnableMouseLockForGdk))
+            {
+                _mouseLocker = new ProcessMouseLocker(MinecraftProcess, _instanceConfig);
+                MinecraftProcess.EnableRaisingEvents = true;
+                MinecraftProcess.Exited += (_, _) => DisposeMouseLocker();
+                Log(BedrockLogLevel.Information,
+                    $"Windows 鼠标锁定已启用，解锁热键：{_instanceConfig.MouseLockHotkey}");
+            }
+
+            BedrockModInjector.Start(_instanceConfig, MinecraftProcess, LogReceived);
+            LaunchFinish?.Invoke();
+        }
+        catch
+        {
+            DisposeMouseLocker();
+            throw;
+        }
     }
 
     private void Log(BedrockLogLevel level, string message) => LogReceived?.Invoke(message, level);
+
+    private string? BuildLaunchArguments()
+    {
+        var arguments = _instanceConfig.LaunchArguments.Trim();
+        if (_instanceConfig.EnableCreatorEditor)
+            arguments = string.Join(' ', new[] { arguments, "minecraft://creator/?Editor=true" }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        return string.IsNullOrWhiteSpace(arguments) ? null : arguments;
+    }
+
+    private void DisposeMouseLocker()
+    {
+        Interlocked.Exchange(ref _mouseLocker, null)?.Dispose();
+    }
 
     private async Task<Process?> FindLaunchedProcessAsync(HashSet<int> existingProcessIds, DateTime launchStarted)
     {

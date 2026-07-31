@@ -7,7 +7,8 @@
     <PropertyGroup>
         <IsWindowsBuildHost>$([MSBuild]::IsOSPlatform('Windows'))</IsWindowsBuildHost>
         <TargetsWindows Condition="$(RuntimeIdentifier.StartsWith('win'))">true</TargetsWindows>
-        <TargetsWindows Condition="'$(RuntimeIdentifier)' == '' And '$(IsWindowsBuildHost)' == 'true'">true</TargetsWindows>
+        <TargetsWindows Condition="'$(RuntimeIdentifier)' == '' And $(RuntimeIdentifiers.StartsWith('win'))">true</TargetsWindows>
+        <TargetsWindows Condition="'$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' And '$(IsWindowsBuildHost)' == 'true'">true</TargetsWindows>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetsWindows)' == 'true'">
@@ -62,6 +63,8 @@
         <ProjectReference Include="..\Portal\Portal.csproj"/>
         <ProjectReference Condition="'$(TargetsWindows)' == 'true'"
                            Include="..\Portal.Bedrock.Windows\Portal.Bedrock.Windows.csproj"/>
+        <ProjectReference Condition="'$(TargetsLinux)' == 'true'"
+                          Include="..\Portal.Bedrock.Linux\Portal.Bedrock.Linux.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

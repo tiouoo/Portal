@@ -67,8 +67,6 @@ jobs:
         run: |
           cd ./src/Portal.Desktop
           pupnet --runtime linux-x64 --kind appimage -o Portal.linux.x64.AppImage -y --app-version ${{ needs.prepare.outputs.app_version }}
-          pupnet --runtime linux-arm --kind appimage -o Portal.linux.arm.AppImage -y --app-version ${{ needs.prepare.outputs.app_version }}
-          pupnet --runtime linux-arm64 --kind appimage -o Portal.linux.arm64.AppImage -y --app-version ${{ needs.prepare.outputs.app_version }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7

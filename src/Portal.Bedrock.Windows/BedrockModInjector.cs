@@ -20,6 +20,19 @@ internal static class BedrockModInjector
     private static InjectDelegate? _inject;
     private static nint _module;
 
+    private static string GetInjectError(int result) => result switch
+    {
+        -1 => "参数无效",
+        -2 => "DLL 路径不是存在的绝对文件路径",
+        -3 => "无法打开目标进程",
+        -4 => "无法解析 LoadLibraryA",
+        -5 => "无法在目标进程分配内存",
+        -6 => "无法向目标进程写入 DLL 路径",
+        -7 => "无法创建远程线程",
+        -8 => "等待远程线程或加载 DLL 失败",
+        _ => $"未知错误 ({result})"
+    };
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int InjectDelegate(int processId, nint dllPath, [MarshalAs(UnmanagedType.I1)] bool delayInject,
         int delayMs);
@@ -27,9 +40,6 @@ internal static class BedrockModInjector
     public static void Start(BedrockInstanceConfig config, Process process,
         Action<string, BedrockLogLevel>? log = null)
     {
-        if (config.BuildType != BedrockBuildType.GDK)
-            return;
-
         IReadOnlyList<BedrockModInfo> mods;
         try
         {
@@ -71,12 +81,13 @@ internal static class BedrockModInjector
                 var result = inject(process.Id, path, mod.Config.DelayMs > 0, mod.Config.DelayMs);
                 if (result != 0)
                 {
-                    Trace.TraceError($"注入基岩版模组失败：{mod.FileName}，返回值 {result}");
-                    log?.Invoke($"模组注入失败：{mod.FileName}，注入器返回值 {result}", BedrockLogLevel.Error);
+                    var error = GetInjectError(result);
+                    Trace.TraceError($"Portal 注入基岩版模组失败：{mod.FileName}，{error}，返回值 {result}");
+                    log?.Invoke($"模组注入失败：{mod.FileName}，{error}（{result}）", BedrockLogLevel.Error);
                 }
                 else
                 {
-                    Trace.TraceInformation($"已注入基岩版模组：{mod.FileName}");
+                    Trace.TraceInformation($"Portal 已注入基岩版模组：{mod.FileName}");
                     log?.Invoke($"模组注入成功：{mod.FileName}", BedrockLogLevel.Information);
                 }
             }
@@ -87,7 +98,7 @@ internal static class BedrockModInjector
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"注入基岩版模组失败：{mod.FileName}，{exception}");
+            Trace.TraceError($"Portal 注入基岩版模组失败：{mod.FileName}，{exception}");
             log?.Invoke($"模组注入异常：{mod.FileName}，{exception.Message}", BedrockLogLevel.Error);
         }
     }
@@ -99,7 +110,7 @@ internal static class BedrockModInjector
         Directory.CreateDirectory(runtimeFolder);
         using var stream = File.OpenRead(mod.FilePath);
         var fileName = $"{Convert.ToHexString(SHA256.HashData(stream))[..16]}.dll";
-        var destination = Path.Combine(runtimeFolder, fileName);
+        var destination = Path.GetFullPath(Path.Combine(runtimeFolder, fileName));
         if (!File.Exists(destination))
             File.Copy(mod.FilePath, destination);
         return destination;
@@ -107,6 +118,9 @@ internal static class BedrockModInjector
 
     private static InjectDelegate GetInjector()
     {
+        if (!Environment.Is64BitProcess)
+            throw new PlatformNotSupportedException("Portal 基岩版模组注入器仅支持 x64 进程。");
+
         lock (SyncRoot)
         {
             if (_inject != null)

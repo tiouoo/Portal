@@ -32,7 +32,7 @@ public partial class BedrockInstallation : UserControl
     private async void VersionCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(sender as Control).Properties.IsLeftButtonPressed ||
-            sender is not Control { DataContext: BedrockGdkVersion version }) return;
+            sender is not Control { DataContext: BedrockVersion version }) return;
 
         var folders = _viewModel.GetTraditionalInstallFolders();
         if (folders.Count == 0)
@@ -57,23 +57,25 @@ public partial class BedrockInstallation : UserControl
 
 public partial class BedrockInstallationViewModel : ObservableObject, IDisposable
 {
-    private readonly List<BedrockGdkVersion> _allVersions = [];
+    private readonly List<BedrockVersion> _allVersions = [];
     private readonly CancellationTokenSource _pageCancellation = new();
     private bool _disposed;
 
-    public ObservableCollection<BedrockGdkVersion> Versions { get; } = [];
+    public ObservableCollection<BedrockVersion> Versions { get; } = [];
 
     [ObservableProperty] public partial int SelectedReleaseChannel { get; set; } = 1;
+    [ObservableProperty] public partial int SelectedBuildType { get; set; }
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
     [ObservableProperty] public partial bool IsInstalling { get; set; }
     [ObservableProperty] public partial bool IsLoading { get; set; }
-    [ObservableProperty] public partial string StatusText { get; set; } = "正在获取 GDK 版本列表...";
+    [ObservableProperty] public partial string StatusText { get; set; } = "正在获取基岩版版本列表...";
 
     public bool CanInstall => !IsInstalling && !IsLoading && BedrockInstallationService.DefaultInstaller is not null &&
                                GetTraditionalInstallFolders().Count > 0;
     partial void OnIsInstallingChanged(bool value) => UpdateInstallState();
     partial void OnIsLoadingChanged(bool value) => UpdateInstallState();
     partial void OnSelectedReleaseChannelChanged(int value) => ApplyFilter();
+    partial void OnSelectedBuildTypeChanged(int value) => ApplyFilter();
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
     public async Task LoadVersionsAsync()
@@ -82,10 +84,10 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
         IsLoading = true;
         var loaded = false;
-        StatusText = "正在从版本源获取 GDK 版本列表...";
+        StatusText = "正在从版本源获取基岩版版本列表...";
         try
         {
-            var versions = await installer.GetGdkVersionsAsync(false, _pageCancellation.Token);
+            var versions = await installer.GetVersionsAsync(false, _pageCancellation.Token);
             if (_disposed) return;
             _allVersions.Clear();
             _allVersions.AddRange(versions);
@@ -96,7 +98,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         }
         catch (Exception exception)
         {
-            StatusText = $"无法获取 GDK 版本列表：{exception.Message}";
+            StatusText = $"无法获取基岩版版本列表：{exception.Message}";
         }
         finally
         {
@@ -114,20 +116,21 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         _allVersions.Clear();
     }
 
-    public async Task InstallAsync(BedrockGdkVersion version, MinecraftFolderEntry folder)
+    public async Task InstallAsync(BedrockVersion version, MinecraftFolderEntry folder)
     {
         if (!CanInstall || folder.DetectedLayout.Kind != MinecraftFolderKind.Standard ||
             BedrockInstallationService.DefaultInstaller is null) return;
 
         var installer = BedrockInstallationService.DefaultInstaller;
-        var instanceName = version.Id;
+        var instanceName = GetInstanceName(version);
+        var buildLabel = version.BuildLabel;
         var destination = Path.Combine(folder.FolderPath, "bedrock_versions", instanceName);
         IsInstalling = true;
 
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = $"安装 Minecraft 基岩版 {instanceName}",
-            Description = "正在准备 GDK 安装包",
+            Description = $"正在准备 {buildLabel} 安装包",
             Progress = 0,
             Actions =
             [
@@ -160,7 +163,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
             TaskExecutionContext? downloadContext = null;
             var downloadStep = context.CreateChild(new TaskOptions
             {
-                Name = "下载并校验 GDK 安装包",
+                Name = $"下载并校验 {buildLabel} 安装包",
                 Description = "正在连接下载服务器",
                 Progress = 0
             }, async step =>
@@ -181,7 +184,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
                     extractionFinished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                     extractionStep = context.CreateChild(new TaskOptions
                     {
-                        Name = "解压 GDK 安装包",
+                        Name = $"解压 {buildLabel} 安装包",
                         Description = "正在解压",
                         Progress = 0
                     }, async step =>
@@ -212,7 +215,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
             try
             {
-                await Task.Run(() => installer.InstallGdkAsync(new BedrockOnlineInstallRequest(
+                await Task.Run(() => installer.InstallAsync(new BedrockInstallRequest(
                     version, destination, context.CancellationToken), progress), context.CancellationToken);
                 downloadFinished.TrySetResult();
                 extractionFinished?.TrySetResult();
@@ -270,18 +273,24 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         else if (GetTraditionalInstallFolders().Count == 0)
             StatusText = "请先在设置中添加一个标准游戏目录。";
         else if (!IsLoading && !IsInstalling && _allVersions.Count == 0)
-            StatusText = "没有可用的 GDK 版本。";
+            StatusText = "没有可用的基岩版版本。";
 
         OnPropertyChanged(nameof(CanInstall));
     }
 
     private void ApplyFilter()
     {
-        IEnumerable<BedrockGdkVersion> versions = _allVersions;
+        IEnumerable<BedrockVersion> versions = _allVersions;
         versions = SelectedReleaseChannel switch
         {
             1 => versions.Where(version => !version.IsPreview),
             2 => versions.Where(version => version.IsPreview),
+            _ => versions
+        };
+        versions = SelectedBuildType switch
+        {
+            1 => versions.Where(version => version.BuildType == Portal.Bedrock.Standard.Manifest.BedrockBuildType.UWP),
+            2 => versions.Where(version => version.BuildType == Portal.Bedrock.Standard.Manifest.BedrockBuildType.GDK),
             _ => versions
         };
         if (!string.IsNullOrWhiteSpace(SearchText))
@@ -294,11 +303,16 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
     public string GetInstallDetails(BedrockGdkVersion version, MinecraftFolderEntry folder)
     {
-        return $"版本：{version.Id}\n渠道：{version.ChannelLabel}\n构建：GDK x64\n发布日期：{version.ReleaseTime:g}";
+        return $"版本：{version.Id}\n渠道：{version.ChannelLabel}\n构建：{version.BuildLabel} x64\n发布日期：{version.ReleaseTime:g}";
     }
 
     public string GetDestinationPath(BedrockGdkVersion version, MinecraftFolderEntry folder) =>
-        Path.Combine(folder.FolderPath, "bedrock_versions", version.Id);
+        Path.Combine(folder.FolderPath, "bedrock_versions", GetInstanceName(version));
+
+    private static string GetInstanceName(BedrockGdkVersion version) =>
+        version is BedrockVersion { BuildType: Portal.Bedrock.Standard.Manifest.BedrockBuildType.UWP }
+            ? $"{version.Id}-UWP"
+            : version.Id;
 
     public List<MinecraftFolderEntry> GetTraditionalInstallFolders() => Data.ConfigEntry.TraditionalMinecraftFolders.ToList();
 

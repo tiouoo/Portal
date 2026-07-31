@@ -66,7 +66,7 @@
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockMods}"
                     Header="模组"
-                    IsVisible="{Binding IsGdkBedrock}" />
+                    IsVisible="{Binding SupportsBedrockMods}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockResourcePacks}"

@@ -10,6 +10,7 @@ using BedrockLauncher.Core.CoreOption;
 using BedrockLauncher.Core.Utils;
 using BedrockLauncher.Core.VersionJsons;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Bedrock.Standard.Manifest;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
@@ -28,9 +29,15 @@ public sealed class BedrockInstaller : IBedrockInstaller
     private static readonly object DownloadClientLock = new();
     private static HttpClient? _downloadClient;
     private static int _downloadClientConfigurationVersion = -1;
-    private static IReadOnlyList<BedrockGdkVersion>? _cachedVersions;
+    private static IReadOnlyList<BedrockVersion>? _cachedVersions;
 
     public async Task<IReadOnlyList<BedrockGdkVersion>> GetGdkVersionsAsync(bool refresh,
+        CancellationToken cancellationToken) => (await GetVersionsAsync(refresh, cancellationToken))
+        .Where(version => version.BuildType == BedrockBuildType.GDK)
+        .Select(version => new BedrockGdkVersion(version.Id, version.ReleaseTime, version.IsPreview))
+        .ToList();
+
+    public async Task<IReadOnlyList<BedrockVersion>> GetVersionsAsync(bool refresh,
         CancellationToken cancellationToken)
     {
         if (!refresh && _cachedVersions is not null) return _cachedVersions;
@@ -42,23 +49,25 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
             var database = await VersionsHelper.GetBuildDatabaseAsync(VersionDatabaseUrl, cancellationToken)
                            ?? throw new InvalidOperationException("未获取到基岩版版本数据。");
-            var builds = new List<BedrockGdkVersion>();
+            var builds = new List<BedrockVersion>();
 
             await foreach (var (_, build) in database.Builds.WithCancellation(cancellationToken))
             {
                 if (build.Type is not (MinecraftGameTypeVersion.Release or MinecraftGameTypeVersion.Preview) ||
-                    build.BuildType != MinecraftBuildTypeVersion.GDK ||
+                    build.BuildType is not (MinecraftBuildTypeVersion.GDK or MinecraftBuildTypeVersion.UWP) ||
                     string.IsNullOrWhiteSpace(build.ID) ||
                     !build.Variations.Any(variation => variation.Arch == Architecture.X64 && variation.MetaData.Count > 0))
                     continue;
 
-                builds.Add(new BedrockGdkVersion(build.ID, ParseReleaseTime(build.Date),
-                    build.Type == MinecraftGameTypeVersion.Preview));
+                builds.Add(new BedrockVersion(build.ID, ParseReleaseTime(build.Date),
+                    build.Type == MinecraftGameTypeVersion.Preview,
+                    build.BuildType == MinecraftBuildTypeVersion.GDK ? BedrockBuildType.GDK : BedrockBuildType.UWP));
             }
 
             return _cachedVersions = builds.OrderByDescending(version => version.ReleaseTime)
                 .ThenByDescending(version => ParseVersion(version.Id))
                 .ThenByDescending(version => version.Id, StringComparer.Ordinal)
+                .ThenBy(version => version.BuildType)
                 .ToList();
         }
         finally
@@ -68,6 +77,13 @@ public sealed class BedrockInstaller : IBedrockInstaller
     }
 
     public async Task InstallGdkAsync(BedrockOnlineInstallRequest request, IProgress<BedrockInstallProgress>? progress = null)
+    {
+        await InstallAsync(new BedrockInstallRequest(
+            new BedrockVersion(request.Version.Id, request.Version.ReleaseTime, request.Version.IsPreview,
+                BedrockBuildType.GDK), request.DestinationPath, request.CancellationToken), progress);
+    }
+
+    public async Task InstallAsync(BedrockInstallRequest request, IProgress<BedrockInstallProgress>? progress = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(request.DestinationPath);
 
@@ -81,16 +97,19 @@ public sealed class BedrockInstaller : IBedrockInstaller
         var build = await FindBuildAsync(request.Version, request.CancellationToken);
         var packageUrl = await core.GetPackageUri(build, Architecture.X64);
         var packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "xyz.tiouo.Portal", "Cache", "Bedrock", $"{request.Version.Id}.insPack");
+            "xyz.tiouo.Portal", "Cache", "Bedrock", $"{request.Version.Id}-{request.Version.BuildLabel}.insPack");
 
-        await DownloadPackageAsync(packageUrl, packagePath, build, progress, request.CancellationToken);
+        await DownloadPackageAsync(packageUrl, packagePath, build, request.Version.BuildType, progress,
+            request.CancellationToken);
         request.CancellationToken.ThrowIfCancellationRequested();
         progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, "Extracting"));
         await core.InstallPackageAsync(new LocalGamePackageOptions
         {
             FileFullPath = packagePath,
             InstallDstFolder = destination,
-            Type = MinecraftBuildTypeVersion.GDK,
+            Type = request.Version.BuildType == BedrockBuildType.GDK
+                ? MinecraftBuildTypeVersion.GDK
+                : MinecraftBuildTypeVersion.UWP,
             GameTypeVersion = request.Version.IsPreview
                 ? MinecraftGameTypeVersion.Preview
                 : MinecraftGameTypeVersion.Release,
@@ -109,7 +128,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
     private static Version ParseVersion(string version) => Version.TryParse(version, out var parsed) ? parsed : new Version();
     private static DateTime ParseReleaseTime(string date) => DateTime.TryParse(date, out var parsed) ? parsed : DateTime.MinValue;
 
-    private static async Task<BuildInfo> FindBuildAsync(BedrockGdkVersion version, CancellationToken cancellationToken)
+    private static async Task<BuildInfo> FindBuildAsync(BedrockVersion version, CancellationToken cancellationToken)
     {
         var database = await VersionsHelper.GetBuildDatabaseAsync(VersionDatabaseUrl, cancellationToken)
                        ?? throw new InvalidOperationException("未获取到基岩版版本数据。");
@@ -117,7 +136,10 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
         await foreach (var (_, build) in database.Builds.WithCancellation(cancellationToken))
         {
-            if (build.ID == version.Id && build.Type == type && build.BuildType == MinecraftBuildTypeVersion.GDK &&
+            var buildType = version.BuildType == BedrockBuildType.GDK
+                ? MinecraftBuildTypeVersion.GDK
+                : MinecraftBuildTypeVersion.UWP;
+            if (build.ID == version.Id && build.Type == type && build.BuildType == buildType &&
                 build.Variations.Any(variation => variation.Arch == Architecture.X64 && variation.MetaData.Count > 0))
                 return build;
         }
@@ -126,6 +148,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
     }
 
     private static async Task DownloadPackageAsync(string url, string packagePath, BuildInfo build,
+        BedrockBuildType buildType,
         IProgress<BedrockInstallProgress>? progress, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
@@ -141,9 +164,13 @@ public sealed class BedrockInstaller : IBedrockInstaller
         }
 
         if (File.Exists(packagePath)) File.Delete(packagePath);
-        progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, "Selecting source"));
-        var candidates = GetGdkDownloadUrls(url).ToList();
-        var selected = await SelectFastestSourceAsync(candidates, cancellationToken);
+        var candidates = buildType == BedrockBuildType.GDK ? GetGdkDownloadUrls(url).ToList() : [url];
+        string? selected = null;
+        if (buildType == BedrockBuildType.GDK)
+        {
+            progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, "Selecting source"));
+            selected = await SelectFastestSourceAsync(candidates, cancellationToken);
+        }
         var orderedCandidates = selected is null
             ? candidates
             : new[] { selected }.Concat(candidates.Where(candidate => candidate != selected));
@@ -158,12 +185,12 @@ public sealed class BedrockInstaller : IBedrockInstaller
             }
             catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
-                // Try the next Xbox CDN host, matching BedrockBoot's GDK fallback behavior.
+                // GDK may try another Xbox CDN host; UWP has only its original package URL.
                 if (File.Exists(packagePath)) File.Delete(packagePath);
             }
         }
 
-        throw new InvalidOperationException("无法下载或验证 GDK 安装包。");
+        throw new InvalidOperationException($"无法下载或验证 {buildType} 安装包。");
     }
 
     private static IEnumerable<string> GetGdkDownloadUrls(string url)

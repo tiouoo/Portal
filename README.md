@@ -33,8 +33,6 @@
 | **macOS Apple Silicon** | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.app.zip)    | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.app.zip)    |
 | **macOS Intel**         | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.app.zip)        | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.app.zip)        |
 | **Linux x64**           | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.AppImage)                                                                                                              | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.AppImage)                                                                                                               |
-| **Linux Arm64**         | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.arm64.AppImage)                                                                                                            | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.arm64.AppImage)                                                                                                             |
-| **Linux Arm**           | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.arm.AppImage)                                                                                                              | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.arm.AppImage)                                                                                                               |
 
 > [!NOTE]
 > macOS 首次打开 Portal 前，请先将 `Portal.app` 移动到“应用程序”文件夹，然后在终端运行以下命令：
@@ -72,9 +70,13 @@
 
 ### 基岩版支持
 
-- 安装和启动 Windows 基岩版
+- Windows x64 支持 GDK、UWP 游戏本体的下载、安装与启动，以及 DLL 模组、预加载和可配置鼠标锁
+- Linux x64 支持 GDK 游戏本体的下载、安装与 Proton 启动；首次使用会自动下载 GDK-Proton，UWP 和 DLL 注入不适用于 Linux
 - 管理游戏版本、世界、世界模板、行为包、资源包和皮肤包
 - 导入基岩版内容包
+
+Linux 需要可用的 Vulkan 驱动和 Steam 目录。可用 `PORTAL_PROTON_PATH` 指定现有 Proton，或用
+`PORTAL_BEDROCK_PREFIX` 覆盖独立 Wine prefix；未指定 Proton 时 Portal 会下载并校验 GDK-Proton x64。
 
 ### 命令行调用
 

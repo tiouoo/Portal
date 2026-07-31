@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
@@ -39,7 +40,8 @@ public class InstanceManager
 
     private InstanceManager()
     {
-        if (OperatingSystem.IsWindows())
+        if (OperatingSystem.IsWindows() ||
+            OperatingSystem.IsLinux() && RuntimeInformation.ProcessArchitecture == Architecture.X64)
             VersionFolders.Add("bedrock_versions");
     }
 

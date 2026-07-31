@@ -26,7 +26,7 @@
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <TextBox PlaceholderText="请输入备注" Text="{Binding Instance.Config.Note}" />
                 </StackPanel>
-                <StackPanel IsVisible="{Binding Instance.IsBedrock}" Spacing="12">
+                <StackPanel IsVisible="{Binding SupportsBedrockDataIsolation}" Spacing="12">
                     <StackPanel Spacing="5">
                         <Label
                             Content="独立数据"
@@ -40,6 +40,82 @@
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
                         <ToggleSwitch IsChecked="{Binding Instance.EnableLauncherSharedBedrockData}" />
+                    </StackPanel>
+                    <StackPanel Spacing="5">
+                        <Label
+                            Content="启动参数"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}" />
+                        <TextBox PlaceholderText="可选，例如协议 URI 或调试参数" Text="{Binding BedrockLaunchArguments}" />
+                    </StackPanel>
+                    <StackPanel Spacing="5">
+                        <Label
+                            Content="Creator Editor 模式"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}" />
+                        <ToggleSwitch IsChecked="{Binding EnableCreatorEditor}" />
+                    </StackPanel>
+                    <StackPanel Spacing="5">
+                        <TextBlock FontSize="18" Text="Windows 鼠标锁" />
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            IsVisible="{Binding !IsWindows}"
+                            Text="Linux 不使用此功能；以下设置仅在 Windows 启动基岩版时生效。" />
+                    </StackPanel>
+                    <StackPanel IsEnabled="{Binding IsWindows}" Spacing="12">
+                        <StackPanel Spacing="5">
+                            <Label
+                                Content="启用鼠标锁"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ToggleSwitch x:Name="MouseLockSwitch" IsChecked="{Binding EnableMouseLock}" />
+                        </StackPanel>
+                        <StackPanel IsEnabled="{Binding #MouseLockSwitch.IsChecked}" Spacing="12">
+                            <StackPanel Spacing="5">
+                                <Label
+                                    Content="对 GDK 构建启用"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}" />
+                                <ToggleSwitch IsChecked="{Binding EnableMouseLockForGdk}" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="GDK 通常自带鼠标限制；仅在内置限制失效时启用。" />
+                            </StackPanel>
+                            <StackPanel Spacing="5">
+                                <Label
+                                    Content="四边内缩像素"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Slider
+                                        Grid.Column="0"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="100"
+                                        Minimum="0"
+                                        TickFrequency="1"
+                                        Value="{Binding MouseLockInset}" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Margin="15,0,0,0"
+                                        MinWidth="55"
+                                        Text="{Binding MouseLockInset, StringFormat={}{0} px}"
+                                        VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+                            <StackPanel Spacing="5">
+                                <Label
+                                    Content="解锁热键"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBox PlaceholderText="Ctrl+Alt" Text="{Binding MouseLockHotkey}" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="支持 Ctrl、Alt、Shift、Win 及可选主键，例如 Ctrl+Alt 或 Ctrl+Shift+F10。再次按下可恢复锁定；不会吞键。" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
