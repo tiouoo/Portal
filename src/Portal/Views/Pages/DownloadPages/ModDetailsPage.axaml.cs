@@ -19,6 +19,7 @@ using MinecraftLaunch.Components.Downloader;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Views.Pages.InstancePages;
+using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -326,9 +327,11 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             if (target.Source == ModDetailsSource.Modrinth)
             {
                 var project = await _modrinth.SearchByProjectIdAsync(target.ProjectId, cancellationToken);
+                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
+                    [project.ProjectId], cancellationToken);
                 Name = project.Name;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
-                Summary = project.Summary;
+                Summary = translations.GetValueOrDefault(project.ProjectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata = FormatMetadata(project.Updated, project.DownloadCount, "Modrinth");
                 AddScreenshots(project.Screenshots);
@@ -340,9 +343,12 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
                 var project =
                     (await _curseforge.GetResourcesByModIdsAsync([long.Parse(target.ProjectId)], cancellationToken))
                     .First();
+                var projectId = project.Id.ToString();
+                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.CurseForge,
+                    [projectId], cancellationToken);
                 Name = project.Name;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
-                Summary = project.Summary;
+                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata = FormatMetadata(project.DateModified, project.DownloadCount, "CurseForge");
                 AddScreenshots(project.Screenshots);

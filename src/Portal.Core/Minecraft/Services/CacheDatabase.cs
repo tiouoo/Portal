@@ -31,7 +31,8 @@ internal static class CacheDatabase
             using var command = connection.CreateCommand();
             command.CommandText = """
                 SELECT display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug,
-                       friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug
+                       friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug,
+                       translated_description
                 FROM mod_cache WHERE fingerprint = $fingerprint;
                 """;
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
@@ -63,7 +64,8 @@ internal static class CacheDatabase
             using var command = connection.CreateCommand();
             command.CommandText = """
                 SELECT display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug,
-                       friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug
+                       friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug,
+                       translated_description
                 FROM mod_cache WHERE sha1 = $sha1;
                 """;
             command.Parameters.AddWithValue("$sha1", sha1);
@@ -84,15 +86,15 @@ internal static class CacheDatabase
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                INSERT INTO mod_cache (fingerprint, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug)
-                VALUES ($fingerprint, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug)
+                INSERT INTO mod_cache (fingerprint, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug, translated_description)
+                VALUES ($fingerprint, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug, $translatedDescription)
                 ON CONFLICT(fingerprint) DO UPDATE SET
                     display_name = excluded.display_name, description = excluded.description, icon_url = excluded.icon_url,
                     project_id = excluded.project_id, file_id = excluded.file_id, friendly_name = excluded.friendly_name,
                     metadata_fetched = excluded.metadata_fetched, curseforge_slug = excluded.curseforge_slug,
                     friendly_name_is_wiki = excluded.friendly_name_is_wiki, metadata_source = excluded.metadata_source,
                     modrinth_project_id = excluded.modrinth_project_id, modrinth_version_id = excluded.modrinth_version_id,
-                    modrinth_slug = excluded.modrinth_slug;
+                    modrinth_slug = excluded.modrinth_slug, translated_description = excluded.translated_description;
                 """;
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
             AddModParameters(command, entry);
@@ -110,15 +112,15 @@ internal static class CacheDatabase
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                INSERT INTO mod_cache (sha1, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug)
-                VALUES ($sha1, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug)
+                INSERT INTO mod_cache (sha1, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug, translated_description)
+                VALUES ($sha1, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug, $translatedDescription)
                 ON CONFLICT(sha1) DO UPDATE SET
                     display_name = excluded.display_name, description = excluded.description, icon_url = excluded.icon_url,
                     project_id = excluded.project_id, file_id = excluded.file_id, friendly_name = excluded.friendly_name,
                     metadata_fetched = excluded.metadata_fetched, curseforge_slug = excluded.curseforge_slug,
                     friendly_name_is_wiki = excluded.friendly_name_is_wiki, metadata_source = excluded.metadata_source,
                     modrinth_project_id = excluded.modrinth_project_id, modrinth_version_id = excluded.modrinth_version_id,
-                    modrinth_slug = excluded.modrinth_slug;
+                    modrinth_slug = excluded.modrinth_slug, translated_description = excluded.translated_description;
                 """;
             command.Parameters.AddWithValue("$sha1", sha1);
             AddModParameters(command, entry);
@@ -146,8 +148,8 @@ internal static class CacheDatabase
 
             command.Parameters.Clear();
             command.CommandText = """
-                INSERT INTO mod_cache (fingerprint, sha1, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug)
-                VALUES ($fingerprint, $sha1, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug);
+                INSERT INTO mod_cache (fingerprint, sha1, display_name, description, icon_url, project_id, file_id, friendly_name, metadata_fetched, curseforge_slug, friendly_name_is_wiki, metadata_source, modrinth_project_id, modrinth_version_id, modrinth_slug, translated_description)
+                VALUES ($fingerprint, $sha1, $displayName, $description, $iconUrl, $projectId, $fileId, $friendlyName, $metadataFetched, $curseForgeSlug, $isWikiFriendlyName, $metadataSource, $modrinthProjectId, $modrinthVersionId, $modrinthSlug, $translatedDescription);
                 """;
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
             command.Parameters.AddWithValue("$sha1", sha1);
@@ -274,7 +276,7 @@ internal static class CacheDatabase
                     project_id INTEGER NULL, file_id INTEGER NULL, friendly_name TEXT NULL, metadata_fetched INTEGER NOT NULL,
                     curseforge_slug TEXT NULL, friendly_name_is_wiki INTEGER NOT NULL DEFAULT 0,
                     sha1 TEXT NULL UNIQUE, metadata_source TEXT NULL, modrinth_project_id TEXT NULL, modrinth_version_id TEXT NULL,
-                    modrinth_slug TEXT NULL
+                    modrinth_slug TEXT NULL, translated_description TEXT NULL
                 );
                 CREATE TABLE IF NOT EXISTS news_cache_entry (
                     edition TEXT NOT NULL, id TEXT NOT NULL, title TEXT NOT NULL, version TEXT NOT NULL, type TEXT NOT NULL,
@@ -338,6 +340,11 @@ internal static class CacheDatabase
             command.CommandText = "ALTER TABLE mod_cache ADD COLUMN modrinth_slug TEXT NULL;";
             command.ExecuteNonQuery();
         }
+        if (!columns.Contains("translated_description"))
+        {
+            command.CommandText = "ALTER TABLE mod_cache ADD COLUMN translated_description TEXT NULL;";
+            command.ExecuteNonQuery();
+        }
     }
 
     private static ModCacheEntry ReadModEntry(SqliteDataReader reader) => new()
@@ -354,7 +361,8 @@ internal static class CacheDatabase
         Source = reader.IsDBNull(9) ? null : reader.GetString(9),
         ModrinthProjectId = reader.IsDBNull(10) ? null : reader.GetString(10),
         ModrinthVersionId = reader.IsDBNull(11) ? null : reader.GetString(11),
-        ModrinthSlug = reader.IsDBNull(12) ? null : reader.GetString(12)
+        ModrinthSlug = reader.IsDBNull(12) ? null : reader.GetString(12),
+        TranslatedDescription = reader.IsDBNull(13) ? null : reader.GetString(13)
     };
 
     private static void AddModParameters(SqliteCommand command, ModCacheEntry entry)
@@ -372,6 +380,7 @@ internal static class CacheDatabase
         command.Parameters.AddWithValue("$modrinthProjectId", (object?)entry.ModrinthProjectId ?? DBNull.Value);
         command.Parameters.AddWithValue("$modrinthVersionId", (object?)entry.ModrinthVersionId ?? DBNull.Value);
         command.Parameters.AddWithValue("$modrinthSlug", (object?)entry.ModrinthSlug ?? DBNull.Value);
+        command.Parameters.AddWithValue("$translatedDescription", (object?)entry.TranslatedDescription ?? DBNull.Value);
     }
 
     private static void MigrateLegacyNews(SqliteConnection connection)

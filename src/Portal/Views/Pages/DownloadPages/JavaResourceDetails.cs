@@ -85,8 +85,10 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
             if (Target.Source == ModDetailsSource.Modrinth)
             {
                 var project = await _modrinth.SearchByProjectIdAsync(Target.ProjectId, cancellationToken);
+                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
+                    [project.ProjectId], cancellationToken);
                 Name = project.Name;
-                Summary = project.Summary;
+                Summary = translations.GetValueOrDefault(project.ProjectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.Updated)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
@@ -97,8 +99,11 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
             {
                 var project = (await _curseforge.GetResourcesByModIdsAsync([long.Parse(Target.ProjectId)],
                     cancellationToken)).First();
+                var projectId = project.Id.ToString();
+                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.CurseForge,
+                    [projectId], cancellationToken);
                 Name = project.Name;
-                Summary = project.Summary;
+                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.DateModified)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);

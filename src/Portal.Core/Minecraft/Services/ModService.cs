@@ -28,9 +28,16 @@ public sealed class ModService
         var paths = await Task.Run(() => FindModFiles(instance), cancellationToken);
         var candidates = await ComputeHashesAsync(paths, cancellationToken);
 
+        return await Task.Run(() => BuildScanResults(candidates, cancellationToken), cancellationToken);
+    }
+
+    private static IReadOnlyList<ModInfo> BuildScanResults(
+        IEnumerable<(string Path, string? Sha1, uint? Fingerprint)> candidates, CancellationToken cancellationToken)
+    {
         var results = new Dictionary<string, ModInfo>(StringComparer.OrdinalIgnoreCase);
         foreach (var candidate in candidates)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             // 扫描期间文件可能被删除或占用，跳过该文件而不是让整个扫描失败
             try
             {
@@ -93,6 +100,7 @@ public sealed class ModService
         }));
 
         var pending = new List<(ModInfo Mod, string Sha1, uint? Fingerprint)>();
+        var translationPending = new List<(ModInfo Mod, string Sha1, uint? Fingerprint, ModCacheEntry Entry)>();
         foreach (var item in fingerprintedMods)
         {
             if (item.Sha1 is not { } sha1) continue;
@@ -100,13 +108,15 @@ public sealed class ModService
             if (cached is { MetadataFetched: not false })
             {
                 metadataUpdated(ApplyMetadata(item.Mod, cached));
+                if (cached.TranslatedDescription == null && GetTranslationIdentity(cached) != null)
+                    translationPending.Add((item.Mod, sha1, item.Fingerprint, cached));
                 continue;
             }
 
             pending.Add((item.Mod, sha1, item.Fingerprint));
         }
 
-        loadingChanged?.Invoke(pending.Count > 0);
+        loadingChanged?.Invoke(pending.Count > 0 || translationPending.Count > 0);
         using var semaphore = new SemaphoreSlim(MaximumConcurrentRequests);
         try
         {
@@ -122,6 +132,7 @@ public sealed class ModService
                     semaphore.Release();
                 }
             }));
+            await TranslateCachedBatchAsync(translationPending.ToArray(), metadataUpdated, cancellationToken);
         }
         finally
         {
@@ -172,7 +183,8 @@ public sealed class ModService
     {
         var file = new FileInfo(path);
         var fileName = GetFileName(path);
-        return new ModInfo(path, fileName, entry.DisplayName ?? fileName, entry.Description,
+        return new ModInfo(path, fileName, entry.DisplayName ?? fileName,
+            entry.TranslatedDescription ?? entry.Description,
             Path.GetExtension(path).Equals(".disabled", StringComparison.OrdinalIgnoreCase), file.Length,
             file.LastWriteTime, entry.IconUrl, entry.FriendlyName, entry.Source,
             entry.Source == "Modrinth" ? entry.ModrinthProjectId : entry.ProjectId?.ToString(),
@@ -197,6 +209,9 @@ public sealed class ModService
         var curseForgeEntries = missing.Length == 0 || ServiceCredentials.CurseForgeApiKey is null
             ? [] : await FetchMetadataBatchAsync(missing, cancellationToken);
 
+        await TranslateEntriesAsync(entries.Values.Concat(curseForgeEntries.Values).OfType<ModCacheEntry>(),
+            cancellationToken);
+
         foreach (var item in batch)
         {
             entries.TryGetValue(item.Sha1, out var entry);
@@ -217,6 +232,44 @@ public sealed class ModService
             metadataUpdated(ApplyMetadata(item.Mod, cached));
         }
     }
+
+    private static async Task TranslateEntriesAsync(IEnumerable<ModCacheEntry> entries, CancellationToken cancellationToken)
+    {
+        var grouped = entries.Where(entry => entry.TranslatedDescription == null)
+            .Select(entry => (Entry: entry, Identity: GetTranslationIdentity(entry)))
+            .Where(item => item.Identity != null).GroupBy(item => item.Identity!.Value.Source);
+        foreach (var group in grouped)
+        {
+            var translations = await ProjectTranslationService.GetTranslationsAsync(group.Key,
+                group.Select(item => item.Identity!.Value.ProjectId), cancellationToken);
+            foreach (var item in group)
+                if (translations.TryGetValue(item.Identity!.Value.ProjectId, out var translated))
+                    item.Entry.TranslatedDescription = translated;
+        }
+    }
+
+    private static async Task TranslateCachedBatchAsync(
+        (ModInfo Mod, string Sha1, uint? Fingerprint, ModCacheEntry Entry)[] batch,
+        Action<ModInfo> metadataUpdated, CancellationToken cancellationToken)
+    {
+        await TranslateEntriesAsync(batch.Select(item => item.Entry), cancellationToken);
+        foreach (var item in batch.Where(item => item.Entry.TranslatedDescription != null))
+        {
+            if (item.Fingerprint is { } fingerprint) WriteCache(fingerprint, item.Sha1, item.Entry);
+            else WriteCache(item.Sha1, item.Entry);
+            metadataUpdated(ApplyMetadata(item.Mod, item.Entry));
+        }
+    }
+
+    private static (ProjectTranslationSource Source, string ProjectId)? GetTranslationIdentity(ModCacheEntry entry) =>
+        entry.Source switch
+        {
+            "Modrinth" when !string.IsNullOrWhiteSpace(entry.ModrinthProjectId) =>
+                (ProjectTranslationSource.Modrinth, entry.ModrinthProjectId),
+            "CurseForge" when entry.ProjectId.HasValue =>
+                (ProjectTranslationSource.CurseForge, entry.ProjectId.Value.ToString()),
+            _ => null
+        };
 
     private static async Task<Dictionary<string, ModCacheEntry>> FetchModrinthMetadataBatchAsync(IEnumerable<string> hashes,
         CancellationToken cancellationToken)
@@ -397,7 +450,7 @@ public sealed class ModService
     private static ModInfo ApplyMetadata(ModInfo mod, ModCacheEntry entry) => mod with
     {
         DisplayName = entry.DisplayName ?? mod.DisplayName,
-        Description = entry.Description ?? mod.Description,
+        Description = entry.TranslatedDescription ?? entry.Description ?? mod.Description,
         IconUrl = entry.IconUrl ?? mod.IconUrl,
         FriendlyName = entry.FriendlyName ?? mod.FriendlyName,
         Source = entry.Source ?? mod.Source,
@@ -687,6 +740,7 @@ internal sealed record ModCacheEntry
     public string? ModrinthVersionId { get; init; }
     public string? ModrinthSlug { get; init; }
     public bool IsWikiFriendlyName { get; init; }
+    public string? TranslatedDescription { get; set; }
 }
 
 internal sealed class ModrinthVersion

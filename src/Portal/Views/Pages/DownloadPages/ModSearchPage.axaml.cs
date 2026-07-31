@@ -14,6 +14,7 @@ using Portal.Const;
 using Portal.Views.Pages.InstancePages;
 using Portal.Views.Pages;
 using Portal.Services;
+using Portal.Core.Minecraft.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -225,7 +226,11 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable
             var modrinthPage = await _modrinth.SearchPageAsync(request.Query, request.GameVersion, request.Category,
                 modLoader: request.Loader, index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
                 cancellationToken: cancellationToken);
-            return new SearchPageData(modrinthPage.Items.Select(item => new ModSearchResultItem(item, request.Sort,
+            var items = modrinthPage.Items.ToArray();
+            var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
+                items.Select(item => item.ProjectId), cancellationToken);
+            return new SearchPageData(items.Select(item => new ModSearchResultItem(
+                translations.TryGetValue(item.ProjectId, out var translated) ? item with { Summary = translated } : item, request.Sort,
                 request.GameVersion, request.Loader)).ToList(), modrinthPage.TotalCount);
         }
 
@@ -240,7 +245,12 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable
             Index = offset,
             PageSize = PageSize
         }, cancellationToken);
-        return new SearchPageData(page.Items.Select(item => new ModSearchResultItem(item, request.GameVersion,
+        var curseForgeItems = page.Items.ToArray();
+        var curseForgeTranslations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.CurseForge,
+            curseForgeItems.Select(item => item.Id.ToString()), cancellationToken);
+        return new SearchPageData(curseForgeItems.Select(item => new ModSearchResultItem(
+            curseForgeTranslations.TryGetValue(item.Id.ToString(), out var translated) ? item with { Summary = translated } : item,
+            request.GameVersion,
             request.Loader)).ToList(), page.TotalCount);
     }
 

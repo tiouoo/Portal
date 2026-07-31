@@ -123,14 +123,26 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         var mods = await _modService.ScanAsync(_instance, _disposeCancellation.Token);
         if (_isDisposed || version != _loadVersion)
             return;
+        foreach (var item in Items) item.Dispose();
         Items.Clear();
+        FilteredItems.Clear();
         RaiseSelectionProperties();
-        foreach (var mod in mods)
-            Items.Add(new ModItem(mod));
-        ApplyFilter();
+        foreach (var batch in mods.Chunk(25))
+        {
+            foreach (var mod in batch)
+            {
+                var item = new ModItem(mod);
+                Items.Add(item);
+                if (MatchesFilter(item)) FilteredItems.Add(item);
+            }
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { },
+                Avalonia.Threading.DispatcherPriority.Background);
+            if (_isDisposed || version != _loadVersion) return;
+        }
         IsLoading = false;
         RaiseListProperties();
-        _ = RefreshMetadataAndFriendlyNamesAsync(mods, _disposeCancellation.Token);
+        _ = Task.Run(() => RefreshMetadataAndFriendlyNamesAsync(mods, _disposeCancellation.Token),
+            _disposeCancellation.Token);
     }
 
     private async Task RefreshMetadataAndFriendlyNamesAsync(IReadOnlyList<ModInfo> mods,
@@ -149,7 +161,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                 {
                     if (!_isDisposed)
                         Items.FirstOrDefault(item => item.Info.FilePath == updated.FilePath)?.Update(updated);
-                }), cancellationToken);
+                }, Avalonia.Threading.DispatcherPriority.Background), cancellationToken);
         }
         catch (OperationCanceledException) { }
         catch (Exception) { }
@@ -165,11 +177,11 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                         return;
                     var item = Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath);
                     item?.Update(updated);
-                }), isLoading => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                }, Avalonia.Threading.DispatcherPriority.Background), isLoading => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (!_isDisposed)
                         IsLoadingMetadata = isLoading;
-                }), cancellationToken);
+                }, Avalonia.Threading.DispatcherPriority.Background), cancellationToken);
         }
         catch (OperationCanceledException) { }
         catch (FlurlHttpException exception)
@@ -185,18 +197,17 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
     private void ApplyFilter()
     {
-        var filtered = string.IsNullOrWhiteSpace(_filter)
-            ? Items
-            : Items.Where(item =>
-                item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-                item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-                item.FriendlyName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-                item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
-        foreach (var item in filtered)
+        foreach (var item in Items.Where(MatchesFilter))
             FilteredItems.Add(item);
         RaiseListProperties();
     }
+
+    private bool MatchesFilter(ModItem item) => string.IsNullOrWhiteSpace(_filter) ||
+        item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+        item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+        item.FriendlyName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+        item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase);
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
     {

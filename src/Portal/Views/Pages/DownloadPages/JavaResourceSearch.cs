@@ -11,6 +11,7 @@ using MinecraftLaunch.Components.Provider;
 using Portal.Const;
 using Portal.Services;
 using Portal.Views.Pages.InstancePages;
+using Portal.Core.Minecraft.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -202,8 +203,13 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
                 projectType: Definition.ProjectType, modLoader: request.Loader,
                 index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
                 cancellationToken: cancellationToken);
-            return new JavaResourceSearchPage(page.Items.Select(item =>
-                new JavaResourceSearchResultItem(item, Definition, request.GameVersion, request.Loader)).ToArray(),
+            var items = page.Items.ToArray();
+            var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
+                items.Select(item => item.ProjectId), cancellationToken);
+            return new JavaResourceSearchPage(items.Select(item =>
+                new JavaResourceSearchResultItem(
+                    translations.TryGetValue(item.ProjectId, out var translated) ? item with { Summary = translated } : item,
+                    Definition, request.GameVersion, request.Loader)).ToArray(),
                 page.TotalCount);
         }
 
@@ -219,8 +225,13 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             Index = offset,
             PageSize = PageSize
         }, cancellationToken);
-        return new JavaResourceSearchPage(curseForgePage.Items.Select(item =>
-            new JavaResourceSearchResultItem(item, Definition, request.GameVersion, request.Loader)).ToArray(),
+        var curseForgeItems = curseForgePage.Items.ToArray();
+        var curseForgeTranslations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.CurseForge,
+            curseForgeItems.Select(item => item.Id.ToString()), cancellationToken);
+        return new JavaResourceSearchPage(curseForgeItems.Select(item =>
+            new JavaResourceSearchResultItem(
+                curseForgeTranslations.TryGetValue(item.Id.ToString(), out var translated) ? item with { Summary = translated } : item,
+                Definition, request.GameVersion, request.Loader)).ToArray(),
             curseForgePage.TotalCount);
     }
 
