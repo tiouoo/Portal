@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Services;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -72,6 +73,9 @@ public partial class InstanceDetailPage : UserControl, ITioTabPage
 
     public static void Open(MinecraftInstance instance, TopLevel sender)
     {
+        if (InstanceDeletionCoordinator.IsDeleting(instance))
+            return;
+
         if (sender is not TioTabWindowBase window)
             return;
 

@@ -138,12 +138,20 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             return;
         }
 
+        if (!InstanceDeletionCoordinator.TryBegin(Instance))
+        {
+            NotificationGateway.Notice(topLevel, "该实例正在删除中。", NotificationType.Warning);
+            return;
+        }
+
         try
         {
-            Directory.Delete(Instance.InstanceFolderPath, true);
-            InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+            InstanceDeletionCoordinator.CloseRelatedPages(Instance);
+            await Task.Run(() => Directory.Delete(Instance.InstanceFolderPath, true));
+            var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
+            var instances = await Task.Run(() => InstanceManager.Instance.ScanAll(folders));
+            InstanceManager.Instance.ApplyInstances(instances);
             NotificationGateway.Notice(topLevel, "实例已删除", NotificationType.Success);
-            _parent.HostTab.Close();
         }
         catch (IOException ex)
         {
@@ -152,6 +160,10 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         catch (UnauthorizedAccessException)
         {
             NotificationGateway.Notice(topLevel, "无法删除实例：没有删除此实例的权限。", NotificationType.Error);
+        }
+        finally
+        {
+            InstanceDeletionCoordinator.Complete(Instance);
         }
     }
 

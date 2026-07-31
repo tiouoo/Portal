@@ -14,6 +14,7 @@ using AvaloniaEdit.Highlighting.Xshd;
 using Portal.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
+using Portal.Services;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -55,6 +56,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
     };
 
     public TabEntry HostTab { get; set; } = null!;
+    public MinecraftInstance? Instance => _logSession?.Instance;
 
     public void OnClose()
     {
@@ -72,6 +74,9 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
 
     public static void Open(MinecraftLogSession logSession, TopLevel sender)
     {
+        if (InstanceDeletionCoordinator.IsDeleting(logSession.Instance))
+            return;
+
         TioTabWindowBase window;
         if (sender is not TioTabWindowBase window1)
         {
