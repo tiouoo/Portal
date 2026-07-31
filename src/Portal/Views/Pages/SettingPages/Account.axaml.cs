@@ -237,6 +237,15 @@ public partial class Account : DataUserControl
         var skinPath = await ChangeSkinDialog.Preview(hostId, account);
     }
 
+    private void SwitchAvatar_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: MinecraftAccount account })
+            return;
+
+        account.UseSimpleAvatar = !account.UseSimpleAvatar;
+        App.Method.SaveConfig();
+    }
+
     private async void ChangeSkin_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is not MenuItem { CommandParameter: MinecraftAccount account })

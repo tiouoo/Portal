@@ -71,6 +71,10 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
     [NotifyPropertyChangedFor(nameof(Head), nameof(Body), nameof(Cover))]
     [ObservableProperty] public partial string Skin { get; set; } = SteveSkin;
 
+    [JsonProperty]
+    [NotifyPropertyChangedFor(nameof(Cover))]
+    [ObservableProperty] public partial bool UseSimpleAvatar { get; set; }
+
     [JsonIgnore]
     public string ShortDisplay
     {
@@ -130,11 +134,18 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
         _cover = null;
     }
 
+    partial void OnUseSimpleAvatarChanged(bool value)
+    {
+        _cover = null;
+    }
+
     private Bitmap HandleCoverSkin()
     {
         var imageBytes = Convert.FromBase64String(Skin);
         using var skin = SKBitmap.Decode(imageBytes);
-        using var cover = CoverCapturer.Default.Capture(skin);
+        using var cover = UseSimpleAvatar
+            ? SideCapturer.Default.Capture(skin)
+            : CoverCapturer.Default.Capture(skin);
         return cover.ToBitmap(130);
     }
 
