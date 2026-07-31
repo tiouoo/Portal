@@ -16,6 +16,7 @@ public partial class Properties : DataUserControl
     public MinecraftInstance Instance { get; }
     public bool IsWindows => OperatingSystem.IsWindows();
     public bool IsUwpBedrock => Instance?.BedrockConfig?.BuildType == Bedrock.Standard.Manifest.BedrockBuildType.UWP;
+    public bool IsGdkBedrock => Instance?.BedrockConfig?.BuildType == Bedrock.Standard.Manifest.BedrockBuildType.GDK;
     public bool SupportsBedrockDataIsolation => Instance?.IsBedrock == true && !IsUwpBedrock;
 
     public bool EnableMouseLock
