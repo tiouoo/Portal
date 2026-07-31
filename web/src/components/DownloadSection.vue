@@ -3,27 +3,27 @@ import { computed, ref } from "vue";
 import { platforms } from "../data/downloads.js";
 
 const route = ref("direct");
+const channel = ref("nightly");
 
 const downloadUrl = (url) => {
+  const releaseUrl = url.replace("publish-nightly", `publish-${channel.value}`);
+
   if (route.value === "bgithub") {
-    return url.replace("https://github.com/", "https://bgithub.xyz/");
+    return releaseUrl.replace("https://github.com/", "https://bgithub.xyz/");
   }
   if (route.value === "gh.tiouo") {
-    return url.replace("https://github.com/", "https://gh.tiouo.xyz/");
+    return releaseUrl.replace("https://github.com/", "https://gh.tiouo.xyz/");
   }
 
   if (route.value === "ghproxy") {
-    return `https://ghproxy.net/${url}`;
+    return `https://ghproxy.net/${releaseUrl}`;
   }
-  console.log(url);
 
-  return url;
+  return releaseUrl;
 };
 
-const routeHint = computed(() => {
-  if (route.value === "bgithub") return "通过 bgithub.xyz 下载";
-  if (route.value === "ghproxy") return "通过 ghproxy.net 下载";
-  return "直接从 GitHub 下载";
+const channelHint = computed(() => {
+  return "Nightly 版本在北京时间凌晨 5 点左右自动发布；Commit 版本随代码更改而更新。";
 });
 </script>
 
@@ -33,15 +33,25 @@ const routeHint = computed(() => {
       <div class="download-heading">
         <span class="section-kicker">现在开始</span>
         <h2>选择你的平台</h2>
-        <p>Nightly 版本在北京时间凌晨5点左右自动发布一个新版本</p>
-        <label class="download-route">
-          <select v-model="route" aria-label="选择下载路线">
-            <option value="direct">直接下载</option>
-            <option value="gh.tiouo">gh.tiouo.xyz</option>
-            <option value="bgithub">bgithub.xyz</option>
-            <option value="ghproxy">ghproxy.net</option>
-          </select>
-        </label>
+        <p>{{ channelHint }}</p>
+        <div class="download-options">
+          <label class="download-route">
+            <span>版本</span>
+            <select v-model="channel" aria-label="选择下载版本">
+              <option value="nightly">Nightly</option>
+              <option value="commit">Commit</option>
+            </select>
+          </label>
+          <label class="download-route">
+            <span>镜像</span>
+            <select v-model="route" aria-label="选择下载镜像">
+              <option value="direct">直接下载</option>
+              <option value="gh.tiouo">gh.tiouo.xyz</option>
+              <option value="bgithub">bgithub.xyz</option>
+              <option value="ghproxy">ghproxy.net</option>
+            </select>
+          </label>
+        </div>
       </div>
       <div class="platform-grid">
         <article
