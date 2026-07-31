@@ -106,7 +106,7 @@ npm run dev
 
 ## 致谢
 
-Portal 建立在许多优秀的开源项目之上： [Avalonia](https://avaloniaui.net/)、[MinecraftLaunch](https://github.com/Blessing-Studio/MinecraftLaunch)、[BedrockLauncher.Core](https://github.com/Round-Studio/BedrockLauncher.Core)、[LiteSkinViewer](https://github.com/Ktn429/LiteSkinViewer)，[查看更多](src/Directory.Packages.props)
+Portal 建立在许多优秀的 [开源项目](src/Directory.Packages.props) 之上
 
 > [!NOTE]
 > 项目中使用的部分开源库进行了二次修改：
