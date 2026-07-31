@@ -84,6 +84,29 @@ public sealed class GravityConeClient : IAsyncDisposable
         throw new TimeoutException("GravityCone CLI 启动超时。");
     }
 
+    public async Task RestartAsync(GravityConeInstallation installation, CancellationToken cancellationToken)
+    {
+        var process = _process;
+        if (process is { HasExited: false })
+        {
+            try
+            {
+                await RequestAsync("system.shutdown", timeout: TimeSpan.FromSeconds(3),
+                    cancellationToken: cancellationToken);
+                await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromSeconds(4), cancellationToken);
+            }
+            catch
+            {
+                if (!process.HasExited) process.Kill(entireProcessTree: true);
+            }
+        }
+
+        _process = null;
+        process?.Dispose();
+        FailAllPending("GravityCone CLI 正在重启。");
+        await StartAsync(installation, cancellationToken);
+    }
+
     private static async Task<IReadOnlyList<string>> GetPeersAsync(CancellationToken cancellationToken)
     {
         try

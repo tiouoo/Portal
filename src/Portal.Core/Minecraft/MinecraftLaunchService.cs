@@ -217,9 +217,12 @@ public static class MinecraftLaunchService
     {
         await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
         context.SetRunning("正在启动 Minecraft 进程");
-        var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
-        var mcProcess = await new MinecraftRunner(config, parser)
-            .RunAsync(instance.MinecraftEntry, context.CancellationToken);
+        var mcProcess = await Task.Run(async () =>
+        {
+            var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
+            return await new MinecraftRunner(config, parser)
+                .RunAsync(instance.MinecraftEntry, context.CancellationToken);
+        }, context.CancellationToken);
         if (mcProcess == null)
             throw new InvalidOperationException("Minecraft 启动器未返回进程信息。");
         ObserveProcess(instance, topLevel, mcProcess, task, context, logSession, options);

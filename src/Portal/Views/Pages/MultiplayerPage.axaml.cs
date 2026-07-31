@@ -539,8 +539,11 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             var room = GetRoomState(Edition);
             await _client.RequestAsync(room.Role == "host" ? "room.stop" : "room.leave", RoomParameters(Edition),
                 timeout: TimeSpan.FromSeconds(8), cancellationToken: _lifetime.Token);
-            // The CLI is shared by the Java and Bedrock tabs. Do not restart it here:
-            // restarting would invalidate the other tab's client reference and pending requests.
+            var otherEdition = Edition == MinecraftEdition.Java ? MinecraftEdition.Bedrock : MinecraftEdition.Java;
+            if (await CanRestartSharedClientAsync(otherEdition))
+            {
+                await RestartClientAsync();
+            }
             ClearRoom(Edition);
             Notify("已离开房间", NotificationType.Success);
         }
@@ -551,6 +554,38 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private async Task<bool> CanRestartSharedClientAsync(MinecraftEdition otherEdition)
+    {
+        if (_client is null) return false;
+
+        try
+        {
+            var status = await _client.RequestAsync("room.status", RoomParameters(otherEdition),
+                timeout: TimeSpan.FromSeconds(4), cancellationToken: _lifetime.Token);
+            return !status.Data.TryGetProperty("role", out var role) || role.GetString() == "none";
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !_lifetime.IsCancellationRequested)
+        {
+            Logger.Warning($"[Multiplayer] Skipped CLI restart because the other room status is unavailable: {ex.Message}");
+            return false;
+        }
+    }
+
+    private async Task RestartClientAsync()
+    {
+        if (_installation is null) throw new InvalidOperationException("联机组件安装信息不可用。");
+
+        await SharedClientStartLock.WaitAsync(_lifetime.Token);
+        try
+        {
+            await SharedClient.RestartAsync(_installation, _lifetime.Token);
+        }
+        finally
+        {
+            SharedClientStartLock.Release();
         }
     }
 
