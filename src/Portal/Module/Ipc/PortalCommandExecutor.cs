@@ -508,7 +508,7 @@ public static class PortalCommandExecutor
                            ? $"未找到实例“{id}”。"
                            : $"文件夹“{command.Folder}”中未找到实例“{id}”。");
 
-        window.Notice($"正在启动 {instance.InstanceName}（{instance.FolderName}）");
+        // window.Notice($"正在启动 {instance.InstanceName}（{instance.FolderName}）");
         _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(logSession =>
             MinecraftLogPage.Open(logSession, window)));
     }

@@ -69,14 +69,53 @@
                             TextTrimming="CharacterEllipsis"
                             TextWrapping="NoWrap" />
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button
-                                Click="DeleteInstance_Click"
-                                Content="删除此实例"
-                                Margin="0,0,10,0" />
-                            <Button
-                                Click="OpenInstanceFolder_Click"
-                                Content="打开实例文件夹"
-                                Margin="0,0,10,0" />
+                            <DropDownButton Content="编辑" Margin="0,0,10,0">
+                                <DropDownButton.Flyout>
+                                    <MenuFlyout>
+                                        <MenuItem
+                                            Click="OpenInstanceFolder_Click"
+                                            Header="打开实例文件夹"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M480,96C515.3,96,544,124.7,544,160L544,480C544,515.3,515.3,544,480,544L160,544C124.7,544,96,515.3,96,480L96,160C96,124.7,124.7,96,160,96L480,96z M368,360C368,373.3 378.7,384 392,384 405.3,384 416,373.3 416,360L416,248C416,234.7,405.3,224,392,224L280,224C266.7,224,256,234.7,256,248 256,261.3 266.7,272 280,272L334.1,272 231.1,375C221.7,384.4 221.7,399.6 231.1,408.9 240.5,418.2 255.7,418.3 265,408.9L368,305.9 368,360z"
+                                                    Height="16"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="CreateLink_Click"
+                                            Header="创建桌面快捷方式"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M434.8,54.1C446.7,62.7,451.1,78.3,445.7,91.9L367.3,288 512,288C525.5,288 537.5,296.4 542.1,309.1 546.7,321.8 542.8,336 532.5,344.6L244.5,584.6C233.2,594 217.1,594.5 205.2,585.9 193.3,577.3 188.9,561.7 194.3,548.1L272.7,352 128,352C114.5,352 102.5,343.6 97.9,330.9 93.3,318.2 97.2,304 107.5,295.4L395.5,55.4C406.8,46,422.9,45.5,434.8,54.1z"
+                                                    Height="16"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="DeleteInstance_Click"
+                                            Header="删除此实例"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403.7,56.8,407.4,69.9L416,96 512,96C529.7,96,544,110.3,544,128 544,145.7 529.7,160 512,160L128,160C110.3,160,96,145.7,96,128 96,110.3,110.3,96,128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3,202.7,512 216,512 229.3,512,240,501.3,240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3,306.7,512 320,512 333.3,512,344,501.3,344,488L344,296C344,282.7,306.7,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3,410.7,512 424,512 437.3,512,448,501.3,448,488L448,296C448,282.7,437.3,272,424,272z"
+                                                    Height="16"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </MenuFlyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
+                            <!--  <Button  -->
+                            <!--  Click="DeleteInstance_Click"  -->
+                            <!--  Content="删除此实例"  -->
+                            <!--  Margin="0,0,10,0" />  -->
+                            <!--  <Button  -->
+                            <!--  Click="OpenInstanceFolder_Click"  -->
+                            <!--  Content="打开实例文件夹"  -->
+                            <!--  Margin="0,0,10,0" />  -->
                             <Button
                                 Click="LaunchInstance_Click"
                                 Content="启动此实例"

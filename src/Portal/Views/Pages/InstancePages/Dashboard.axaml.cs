@@ -16,6 +16,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -349,6 +350,23 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         else if (tag == "bedrock-worlds")
         {
             _parent.NavigateTo(typeof(BedrockWorlds));
+        }
+    }
+
+    private async void CreateLink_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        try
+        {
+            var shortcutPath = await DesktopShortcutService.CreateAsync(Instance);
+            NotificationGateway.Notice(topLevel, $"桌面快捷方式已创建：{shortcutPath}", NotificationType.Success);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex);
+            NotificationGateway.Notice(topLevel, $"创建桌面快捷方式失败：{ex.Message}", NotificationType.Error);
         }
     }
 }
