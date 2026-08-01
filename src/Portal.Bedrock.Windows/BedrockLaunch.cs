@@ -26,6 +26,8 @@ public class BedrockLaunch : IBedrockLaunch
     {
         Log(BedrockLogLevel.Information, $"开始准备实例 {_instanceConfig.Name} 的基岩版启动环境");
         BedrockWindowsPrerequisites.Validate(_instanceConfig);
+        await BedrockWindowsPrerequisites.EnsureDependenciesAsync(_instanceConfig.InstancePath,
+            _instanceConfig.BuildType, UpdateProgress, LogReceived, cancellationToken);
         var nativeLogPath = BedrockDataIsolation.Prepare(_instanceConfig, LogReceived);
         Log(BedrockLogLevel.Information, "基岩版数据隔离和预加载环境准备完成");
         Process? launchedProcess = null;

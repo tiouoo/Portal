@@ -123,6 +123,16 @@ public sealed class BedrockInstaller : IBedrockInstaller
                     extraction.FileName,
                     InstallStates.Extracting.ToString())))
         });
+
+        try
+        {
+            await BedrockWindowsPrerequisites.EnsureDependenciesAsync(destination, request.Version.BuildType, null,
+                null, request.CancellationToken);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"基岩版运行依赖安装失败（忽略，启动时会再次尝试）：{exception.Message}");
+        }
     }
 
     private static Version ParseVersion(string version) => Version.TryParse(version, out var parsed) ? parsed : new Version();
