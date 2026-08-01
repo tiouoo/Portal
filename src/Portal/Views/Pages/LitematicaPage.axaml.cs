@@ -27,8 +27,8 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("投影文件解析", "投影文件解析", "Litematica")]
-[DefaultPage("投影文件解析")]
+// [AggregatedSearchPage("投影文件解析", "投影文件解析", "Litematica")]
+// [DefaultPage("投影文件解析")]
 public partial class LitematicaPage : UserControl, ITioTabPage
 {
     private readonly LitematicaPageViewModel _vm;

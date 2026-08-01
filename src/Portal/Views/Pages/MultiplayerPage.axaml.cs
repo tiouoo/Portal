@@ -27,7 +27,6 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
-[DefaultPage("联机")]
 [AggregatedSearchPage("联机", "联机", "Multiplayer")]
 public partial class MultiplayerPage : UserControl, ITioTabPage
 {
