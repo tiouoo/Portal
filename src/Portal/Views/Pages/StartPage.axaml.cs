@@ -106,11 +106,22 @@ public partial class StartPage : DataUserControl, ITioTabPage
 
     private void SearchBox_OnKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Enter)
-            return;
         if (e.Source is Visual visual && visual.FindAncestorOfType<ComboBox>() != null)
             return;
 
+        switch (e.Key)
+        {
+            case Key.Enter:
+                HandleSearchEnter(e);
+                break;
+            case Key.Tab:
+                HandleSearchTab(e);
+                break;
+        }
+    }
+
+    private void HandleSearchEnter(KeyEventArgs e)
+    {
         var mode = _viewModel.SelectedSearchMode;
         if (mode?.PageType is null)
             return;
@@ -120,11 +131,41 @@ public partial class StartPage : DataUserControl, ITioTabPage
             return;
 
         OpenDownloadSearchTab(mode.PageType, keyword, $"{mode.DisplayText}搜索");
-        _suppressSearchPopulate = true;
-        SearchBox.SelectedItem = null;
-        SearchBox.Text = null;
-        SearchBox.IsDropDownOpen = false;
+        ClearSearchBox();
         e.Handled = true;
+    }
+
+    private void HandleSearchTab(KeyEventArgs e)
+    {
+        var input = SearchBox.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            _viewModel.CycleSearchMode();
+            ClearSearchBox();
+            e.Handled = true;
+            return;
+        }
+
+        var keyword = input.ToLowerInvariant();
+        var match = _viewModel.SearchModes.FirstOrDefault(mode => mode.Matches(keyword));
+        if (match == null)
+            return;
+
+        _viewModel.SelectedSearchMode = match;
+        ClearSearchBox();
+        e.Handled = true;
+    }
+
+    private void ClearSearchBox()
+    {
+        if (!string.IsNullOrEmpty(SearchBox.Text))
+        {
+            _suppressSearchPopulate = true;
+            SearchBox.Text = null;
+        }
+
+        SearchBox.SelectedItem = null;
+        SearchBox.IsDropDownOpen = false;
     }
 
     private void OpenDownloadSearchTab(Type pageType, string keyword, string title)
@@ -246,8 +287,10 @@ public partial class StartPage : DataUserControl, ITioTabPage
 
         var result = await OverlayDialog
             .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
-                new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders.Select(x
-                    => x.FolderPath).ToList()), hostId: this.TryGetHostId(), options: options);
+                new NewMinecraftFolderViewModel([
+                    .. Data.ConfigEntry.MinecraftFolders.Select(x
+                        => x.FolderPath)
+                ]), hostId: this.TryGetHostId(), options: options);
 
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
@@ -283,7 +326,10 @@ public partial class StartPage : DataUserControl, ITioTabPage
     }
 }
 
-public sealed record SearchMode(string DisplayText, Type? PageType);
+public sealed record SearchMode(string DisplayText, Type? PageType, IReadOnlyList<string> Aliases)
+{
+    public bool Matches(string keyword) => Aliases.Contains(keyword);
+}
 
 public partial class StartPageViewModel : InstanceListViewModelBase
 {
@@ -295,20 +341,68 @@ public partial class StartPageViewModel : InstanceListViewModelBase
 
     public IReadOnlyList<SearchMode> SearchModes { get; } =
     [
-        new("本地", null),
-        new("资源包", typeof(ResourcePackSearchPage)),
-        new("存档数据包", typeof(DataPackSearchPage)),
-        new("光影材质包", typeof(ShaderPackSearchPage)),
-        new("整合包", typeof(ModpackSearchPage)),
-        new("模组", typeof(ModSearchPage)),
+        new("本地", null, [
+            "本地", "bd", "local",
+            "本机", "本地文件", "本机文件", "local file", "localfiles",
+            "本机资源", "我的电脑", "本地存档", "本地模组"
+        ]),
+        new("整合包", typeof(ModpackSearchPage), [
+            "整合包", "zhb",
+            "懒人包", "一键包", "整合", "modpack", "mod packs", "整合模组包"
+        ]),
+        new("模组", typeof(ModSearchPage), [
+            "模组", "mods", "mod","mz",
+            "模块", "插件", "mod文件", "mod组件", "modification", "md", "mokuai"
+        ]),
+        new("资源包", typeof(ResourcePackSearchPage), [
+            "资源包", "材质包", "resource pack", "resourcepack", "zyb", "rp",
+            "贴图包", "纹理包", "材质", "texture", "texture pack", "tp", "czb", "zy", "wzbao"
+        ]),
+        new("光影包", typeof(ShaderPackSearchPage), [
+            "光影包", "shader", "shaders",
+            "光影", "着色器", "光影文件", "光影材质", "shader pack", "sd", "gy", "gyb",
+            "着色包", "光影补丁"
+        ]),
+        new("数据包", typeof(DataPackSearchPage), [
+            "数据包", "datapack", "data pack",
+            "数据", "数据文件", "dp", "sjb", "data package", "mc数据包"
+        ]),
+        new("存档", typeof(SaveSearchPage), [
+            "存档", "saves", "save", "world",
+            "世界", "存档文件", "游戏存档", "存档记录", "存档世界", "cun", "cd", "world save"
+        ]),
+        new("基岩包", typeof(BedrockResourcePackSearchPage), [
+            "基岩包", "bedrock", "基岩", "jy", "jyb",
+            "基岩版材质", "基岩资源", "BE", "bedrock pack", "基岩材质包", "jyzyb", "基岩光影"
+        ]),
     ];
-
     [ObservableProperty] public partial SearchMode? SelectedSearchMode { get; set; }
 
     public string SearchPlaceholder =>
         SelectedSearchMode?.PageType is null ? "搜索实例、存档、服务器、页面" : $"搜索{SelectedSearchMode.DisplayText}";
 
     partial void OnSelectedSearchModeChanged(SearchMode? value) => OnPropertyChanged(nameof(SearchPlaceholder));
+
+    public void CycleSearchMode()
+    {
+        if (SelectedSearchMode is null)
+        {
+            SelectedSearchMode = SearchModes[0];
+            return;
+        }
+
+        var index = -1;
+        for (var i = 0; i < SearchModes.Count; i++)
+        {
+            if (ReferenceEquals(SearchModes[i], SelectedSearchMode))
+            {
+                index = i;
+                break;
+            }
+        }
+
+        SelectedSearchMode = SearchModes[(index + 1) % SearchModes.Count];
+    }
 
     public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
     public bool HasRecentPlays => RecentPlays.Count > 0;
@@ -327,7 +421,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     {
         RecentPlays.Clear();
         DisposeRecentPlays();
-        _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
+        _allRecentPlays = [.. targets.Select(target => new RecentPlayItem(target))];
         SortRecentPlays();
         ApplyRecentPlayCapacity();
     }
@@ -372,10 +466,12 @@ public partial class StartPageViewModel : InstanceListViewModelBase
         ApplyRecentPlayCapacity();
     }
 
-    private void SortRecentPlays() => _allRecentPlays = _allRecentPlays
-        .OrderByDescending(item => item.IsFavorite)
-        .ThenByDescending(item => item.LastPlayedTime)
-        .ToList();
+    private void SortRecentPlays() => _allRecentPlays =
+    [
+        .. _allRecentPlays
+            .OrderByDescending(item => item.IsFavorite)
+            .ThenByDescending(item => item.LastPlayedTime)
+    ];
 
     public override void Dispose()
     {
