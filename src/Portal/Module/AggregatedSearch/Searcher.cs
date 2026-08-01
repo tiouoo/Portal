@@ -10,6 +10,7 @@ public class Searcher
 {
     public static List<AggregatedSearchEntryType> DisplayOrder { get; } =
     [
+        AggregatedSearchEntryType.RecentPlay,
         AggregatedSearchEntryType.Instance,
         AggregatedSearchEntryType.Account,
         AggregatedSearchEntryType.AuthServer,

@@ -5,8 +5,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Portal.Classes.Entries;
 using Portal.Const;
+using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
+using Portal.Services;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -32,6 +34,10 @@ public class Handler
         else if (entry.Type == AggregatedSearchEntryType.Instance)
         {
             HandleInstance(entry, sender);
+        }
+        else if (entry.Type == AggregatedSearchEntryType.RecentPlay)
+        {
+            HandleRecentPlay(entry, sender);
         }
         else if (entry.Type == AggregatedSearchEntryType.Account)
         {
@@ -76,6 +82,14 @@ public class Handler
         var instance = entry.Data as MinecraftInstance;
         if (instance == null) return;
         InstanceDetailPage.Open(instance, sender);
+    }
+
+    private static void HandleRecentPlay(AggregatedSearchEntry entry, TopLevel sender)
+    {
+        if (entry.Data is not RecentPlayTarget target) return;
+
+        _ = MinecraftLaunchService.LaunchAsync(target.Instance, sender,
+            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, sender)), target);
     }
 
     private static async Task EditAuthServer(AggregatedSearchEntry entry, TopLevel sender)

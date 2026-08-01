@@ -5,6 +5,7 @@ using Portal.Const;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Services;
 
 namespace Portal.Module.AggregatedSearch;
 
@@ -44,6 +45,11 @@ public class Index
         foreach (var instance in InstanceManager.Instance.Instances)
         {
             IndexedAggregatedSearchEntries.Add(WithPinyin(CreateInstanceEntry(instance)));
+        }
+
+        foreach (var target in RecentPlayListService.Instance.Items)
+        {
+            IndexedAggregatedSearchEntries.Add(WithPinyin(CreateRecentPlayEntry(target)));
         }
     }
 
@@ -90,6 +96,35 @@ public class Index
             Data = instance,
             TypeDescription = "实例"
         };
+    }
+
+    private static AggregatedSearchEntry CreateRecentPlayEntry(RecentPlayTarget target)
+    {
+        return new AggregatedSearchEntry
+        {
+            Type = AggregatedSearchEntryType.RecentPlay,
+            Title = target.Name,
+            Description = BuildRecentPlayDescription(target),
+            IconKey = target.Type.ToString(),
+            Data = target,
+            TypeDescription = "最近游玩"
+        };
+    }
+
+    private static string BuildRecentPlayDescription(RecentPlayTarget target)
+    {
+        var prefix = $"{target.Instance.InstanceName}·";
+        if (target.Type != RecentPlayTargetType.World || string.IsNullOrWhiteSpace(target.Id))
+            return prefix + target.Details;
+
+        // Details 形如 "存档·{版本}·{模式}"，将文件夹名称插入版本与模式之间
+        var details = target.Details;
+        var separator = details.IndexOf('·');
+        if (separator < 0) return prefix + $"{details}·{target.Id}";
+        separator = details.IndexOf('·', separator + 1);
+        return separator < 0
+            ? prefix + $"{details}·{target.Id}"
+            : prefix + details.Insert(separator + 1, target.Id + "·");
     }
 
     private static AggregatedSearchEntry CreateAccountEntry(MinecraftAccount account)

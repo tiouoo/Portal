@@ -29,7 +29,6 @@ using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
-using RandomMinecraft = Portal.Views.Components.RandomMinecraft;
 
 namespace Portal.Views.Pages;
 
@@ -147,55 +146,27 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             NewTabViewModel.ToggleRecentPlayFavorite(item);
     }
 
-    private void Button_OnClick(object? sender, RoutedEventArgs e)
+    private void RecentPlayTargetCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (InstanceManager.Instance.Instances.Count == 0)
-        {
-            if (sender is not null)
-                sender.AsTopLevel()?.Notice("还没有实例可以抽签哦", NotificationType.Error);
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             return;
-        }
+        if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() != null))
+            return;
 
-        OverlayDialogOptions options = new()
-        {
-            Title = "开奖啦！",
-            IsCloseButtonVisible = false,
-            Buttons = DialogButton.YesNoCancel,
-            OverrideNoButtonText = "再来亿次",
-            OverrideYesButtonText = "就它了",
-            OverrideCancelButtonText = "不玩了",
-            CanLightDismiss = false,
-            CanDragMove = true,
-            CanResize = true,
-            VerticalAnchor = VerticalPosition.Top,
-            VerticalOffset = 110,
-        };
-        _ = Show();
+        if (sender is Control { Tag: RecentPlayTarget target } &&
+            TopLevel.GetTopLevel(this) is { } topLevel)
+            _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
+                MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    }
 
-        return;
+    private void ContinueTargetGame_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not RecentPlayTarget target ||
+            TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
 
-        async Task Show()
-        {
-            var result = InstanceManager.Instance.Instances.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
-            if (result is null || sender is null || sender.AsTopLevel() is not { } topLevel)
-                return;
-
-            var feed = await OverlayDialog.ShowCustomAsync<RandomMinecraft, RandomMinecraftViewModle, string>(
-                new RandomMinecraftViewModle(result), topLevel.TryGetHostId(), options: options);
-
-            if (feed == "again")
-            {
-                _ = Show();
-                return;
-            }
-
-            if (feed == "yes")
-                _ = MinecraftLaunchService.LaunchAsync(result, topLevel,
-                    MinecraftLaunchOptionsFactory.Create(logSession =>
-                    {
-                        MinecraftLogPage.Open(logSession, this.GetTopLevel());
-                    }));
-        }
+        _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
+            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private void FavoritedButton_OnClick(object? sender, RoutedEventArgs e)
@@ -310,11 +281,26 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     public bool CanExpandRecentPlays => _allRecentPlays.Count > _recentPlayCapacity;
     public string ToggleRecentPlaysText => _areRecentPlaysExpanded ? "收起" : $"展开全部 ({_allRecentPlays.Count})";
 
+    private RecentPlayItem? _recentPlayTargetItem;
+
+    public RecentPlayItem? RecentPlayTargetItem
+    {
+        get => _recentPlayTargetItem;
+        private set
+        {
+            if (SetProperty(ref _recentPlayTargetItem, value))
+                OnPropertyChanged(nameof(HasRecentPlayTargetItem));
+        }
+    }
+
+    public bool HasRecentPlayTargetItem => RecentPlayTargetItem != null;
+
     private void UpdateRecentPlays(IEnumerable<RecentPlayTarget> targets)
     {
         RecentPlays.Clear();
         DisposeRecentPlays();
         _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
+        RecentPlayTargetItem = _allRecentPlays.OrderByDescending(item => item.LastPlayedTime).FirstOrDefault();
         SortRecentPlays();
         ApplyRecentPlayCapacity();
     }
@@ -389,6 +375,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
 
     private void DisposeRecentPlays()
     {
+        RecentPlayTargetItem = null;
         foreach (var item in _allRecentPlays)
             item.Dispose();
         _allRecentPlays.Clear();
@@ -409,6 +396,11 @@ public sealed class RecentPlayItem : IDisposable
     public string Details => _target.Details;
     public DateTime LastPlayedTime => _target.LastPlayedTime;
     public string RelativeTime => GetRelativeTime(_target.LastPlayedTime);
+
+    public string? FolderName => _target.Type == RecentPlayTargetType.World
+        ? _target.Id
+        : null;
+    public bool HasFolderName => FolderName is not null;
 
     public bool IsFavorite =>
         _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;

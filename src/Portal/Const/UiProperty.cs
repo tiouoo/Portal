@@ -10,6 +10,7 @@ using Portal.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Module.AggregatedSearch;
+using Portal.Services;
 using Portal.Views;
 using Portal.Views.Components;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -36,12 +37,25 @@ public partial class UiProperty : ObservableObject
         };
 
         InstanceManager.Instance.InstancesChanged += OnInstancesChanged;
+        RecentPlayListService.Instance.Refreshed += OnRecentPlaysRefreshed;
     }
 
     private void OnInstancesChanged(object? sender, EventArgs e)
     {
         Portal.Module.AggregatedSearch.Index.MarkDirty();
         if (AggregatedSelectedType.EnumFlag.HasFlag(AggregatedSearchEntryType.Instance) ||
+            AggregatedSelectedType.EnumFlag == AggregatedSearchEntryType.All)
+        {
+            AggregatedSearchResults.Clear();
+            AggregatedSearchResults.AddRange(Searcher.Search(AggregatedSearchQuery,
+                AggregatedSelectedType.EnumFlag));
+        }
+    }
+
+    private void OnRecentPlaysRefreshed(object? sender, EventArgs e)
+    {
+        Portal.Module.AggregatedSearch.Index.MarkDirty();
+        if (AggregatedSelectedType.EnumFlag.HasFlag(AggregatedSearchEntryType.RecentPlay) ||
             AggregatedSelectedType.EnumFlag == AggregatedSearchEntryType.All)
         {
             AggregatedSearchResults.Clear();
@@ -79,6 +93,7 @@ public partial class UiProperty : ObservableObject
     public static List<AggregatedSearchType> AggregatedSearchTypes { get; set; } =
     [
         new() { DisplayText = "所有", EnumFlag = AggregatedSearchEntryType.All },
+        new() { DisplayText = "最近游玩", EnumFlag = AggregatedSearchEntryType.RecentPlay },
         new() { DisplayText = "实例", EnumFlag = AggregatedSearchEntryType.Instance },
         new() { DisplayText = "账户", EnumFlag = AggregatedSearchEntryType.Account },
         new() { DisplayText = "页面", EnumFlag = AggregatedSearchEntryType.Page },
