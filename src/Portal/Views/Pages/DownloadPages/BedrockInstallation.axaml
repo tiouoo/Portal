@@ -33,7 +33,7 @@
                     <ComboBoxItem Content="正式版" />
                     <ComboBoxItem Content="预览版" />
                 </ComboBox>
-                <ComboBox SelectedIndex="{Binding SelectedBuildType}" Width="90">
+                <ComboBox SelectedIndex="{Binding SelectedBuildType}" Width="110">
                     <ComboBoxItem Content="全部构建" />
                     <ComboBoxItem Content="UWP" />
                     <ComboBoxItem Content="GDK" />

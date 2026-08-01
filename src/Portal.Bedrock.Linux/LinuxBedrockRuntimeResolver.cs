@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 namespace Portal.Bedrock.Linux;
 
 public sealed record LinuxBedrockRuntime(string ProtonScript, string ProtonRoot, string PrefixPath,
-    string SteamClientPath);
+    string SteamCompatPath);
 
 public sealed record LinuxBedrockRuntimeProgress(string Message, long BytesReceived = 0, long TotalBytes = 0)
 {
@@ -40,11 +40,27 @@ public sealed class LinuxBedrockRuntimeResolver
 
         var protonScript = await ResolveProtonScriptAsync(progress, cancellationToken).ConfigureAwait(false);
         var protonRoot = Path.GetDirectoryName(protonScript)!;
+        ApplyManagedRuntimePatch(protonRoot, progress);
         var prefixPath = ResolvePrefixPath();
-        var steamClientPath = ResolveSteamClientPath();
+        var steamClientPath = ResolveSteamCompatPath();
 
         Directory.CreateDirectory(prefixPath);
         return new LinuxBedrockRuntime(protonScript, protonRoot, prefixPath, steamClientPath);
+    }
+
+    private static void ApplyManagedRuntimePatch(string protonRoot, Action<LinuxBedrockRuntimeProgress>? progress)
+    {
+        if (!IsManagedProtonRoot(protonRoot)) return;
+        if (GdkRuntimePatcher.PatchCombaseRoOriginateErrorW(protonRoot))
+            progress?.Invoke(new LinuxBedrockRuntimeProgress("已应用运行时兼容补丁（combase.RoOriginateErrorW）"));
+    }
+
+    private static bool IsManagedProtonRoot(string protonRoot)
+    {
+        var root = Path.GetFullPath(GetProtonInstallRoot());
+        var candidate = Path.GetFullPath(protonRoot);
+        return candidate == root ||
+               candidate.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal);
     }
 
     public static void EnsureSupportedPlatform()
@@ -165,7 +181,7 @@ public sealed class LinuxBedrockRuntimeResolver
             progress?.Invoke(new LinuxBedrockRuntimeProgress($"正在验证并解压 GDK-Proton {release.TagName}"));
             Directory.CreateDirectory(staging);
             await ValidateArchiveAsync(archivePath, staging, cancellationToken).ConfigureAwait(false);
-            await ExtractArchiveAsync(archivePath, staging, cancellationToken).ConfigureAwait(false);
+            await ExtractArchiveAsync(archivePath, staging, progress, cancellationToken).ConfigureAwait(false);
 
             var proton = FindProtonInDirectory(staging)
                          ?? throw new InvalidDataException("GDK-Proton 归档中缺少 proton 启动脚本");
@@ -324,11 +340,32 @@ public sealed class LinuxBedrockRuntimeResolver
     }
 
     private static async Task ExtractArchiveAsync(string archivePath, string extractionRoot,
-        CancellationToken cancellationToken)
+        Action<LinuxBedrockRuntimeProgress>? progress, CancellationToken cancellationToken)
     {
         await using var file = File.OpenRead(archivePath);
-        await using var gzip = new GZipStream(file, CompressionMode.Decompress);
-        await TarFile.ExtractToDirectoryAsync(gzip, extractionRoot, false, cancellationToken).ConfigureAwait(false);
+        var total = file.Length;
+        await using var counting = new CountingStream(file);
+        await using var gzip = new GZipStream(counting, CompressionMode.Decompress);
+        var extraction = TarFile.ExtractToDirectoryAsync(gzip, extractionRoot, false, cancellationToken);
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(200));
+        try
+        {
+            while (!extraction.IsCompleted &&
+                   await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                progress?.Invoke(new LinuxBedrockRuntimeProgress("正在解压 GDK-Proton", counting.BytesRead, total));
+            }
+
+            await extraction.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            try { await extraction.ConfigureAwait(false); }
+            catch (OperationCanceledException) { }
+            throw;
+        }
+
+        progress?.Invoke(new LinuxBedrockRuntimeProgress("正在解压 GDK-Proton", total, total));
     }
 
     private static void ValidateArchivePath(string extractionRoot, string? archivePath, string relativeRoot)
@@ -348,7 +385,7 @@ public sealed class LinuxBedrockRuntimeResolver
         return Path.Combine(GetDataHome(), "Portal", "Bedrock", "proton-prefix");
     }
 
-    private static string ResolveSteamClientPath()
+    private static string ResolveSteamCompatPath()
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var candidates = new[]
@@ -359,8 +396,15 @@ public sealed class LinuxBedrockRuntimeResolver
             Path.Combine(home, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam")
         };
 
-        return candidates.FirstOrDefault(Directory.Exists) ?? throw new DirectoryNotFoundException(
-            "未找到 Steam client 目录。请安装 Steam，并确保 ~/.steam/root 或 ~/.local/share/Steam 可用。");
+        var installed = candidates.FirstOrDefault(Directory.Exists);
+        if (installed is not null) return installed;
+
+        // GDK 构建不依赖 Steam client，Proton 仅在初始化前缀时要求
+        // STEAM_COMPAT_CLIENT_INSTALL_PATH 指向一个存在的目录。未安装 Steam 时，
+        // 使用 Portal 自管理的兼容目录作为替代，不再要求用户预装 Steam。
+        var managed = Path.Combine(GetDataHome(), "Portal", "Bedrock", "steam-client");
+        Directory.CreateDirectory(managed);
+        return managed;
     }
 
     private static string NormalizeProtonScript(string path)
@@ -452,5 +496,56 @@ public sealed class LinuxBedrockRuntimeResolver
 
         [JsonPropertyName("digest")]
         public string? Digest { get; init; }
+    }
+
+    private sealed class CountingStream(Stream inner) : Stream
+    {
+        private long _bytesRead;
+
+        public long BytesRead => _bytesRead;
+
+        public override bool CanRead => inner.CanRead;
+        public override bool CanSeek => inner.CanSeek;
+        public override bool CanWrite => false;
+        public override long Length => inner.Length;
+        public override long Position { get => inner.Position; set => inner.Position = value; }
+
+        public override void Flush() => inner.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var read = inner.Read(buffer, offset, count);
+            _bytesRead += read;
+            return read;
+        }
+
+        public override int Read(Span<byte> buffer)
+        {
+            var read = inner.Read(buffer);
+            _bytesRead += read;
+            return read;
+        }
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer,
+            CancellationToken cancellationToken = default)
+        {
+            var read = await inner.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            _bytesRead += read;
+            return read;
+        }
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count,
+            CancellationToken cancellationToken)
+        {
+            var read = await inner.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+            _bytesRead += read;
+            return read;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 }

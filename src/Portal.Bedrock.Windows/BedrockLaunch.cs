@@ -22,7 +22,7 @@ public class BedrockLaunch : IBedrockLaunch
         _instanceConfig = instanceConfig;
     }
 
-    public override async Task Launch()
+    public override async Task Launch(CancellationToken cancellationToken)
     {
         Log(BedrockLogLevel.Information, $"开始准备实例 {_instanceConfig.Name} 的基岩版启动环境");
         BedrockWindowsPrerequisites.Validate(_instanceConfig);

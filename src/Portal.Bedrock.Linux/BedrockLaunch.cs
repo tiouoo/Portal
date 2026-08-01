@@ -16,7 +16,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         _runtimeResolver = runtimeResolver ?? new LinuxBedrockRuntimeResolver();
     }
 
-    public override async Task Launch()
+    public override async Task Launch(CancellationToken cancellationToken)
     {
         LinuxBedrockRuntimeResolver.EnsureSupportedPlatform();
         if (_instanceConfig.BuildType != BedrockBuildType.GDK)
@@ -30,9 +30,12 @@ public sealed class BedrockLaunch : IBedrockLaunch
         {
             Log(BedrockLogLevel.Information, runtimeProgress.Message +
                 (runtimeProgress.TotalBytes > 0 ? $" ({runtimeProgress.Percentage}%)" : string.Empty));
-            UpdateProgress?.Invoke($"状态：{runtimeProgress.Message}", runtimeProgress.Percentage);
-        }).ConfigureAwait(false);
-        await EnsureGameInputAsync(runtime).ConfigureAwait(false);
+            UpdateProgress?.Invoke($"状态：{runtimeProgress.Message}", runtimeProgress.TotalBytes > 0
+                ? runtimeProgress.Percentage
+                : null);
+        }, cancellationToken).ConfigureAwait(false);
+        await EnsureGameInputAsync(runtime, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
         var startInfo = new ProcessStartInfo
         {
             FileName = runtime.ProtonScript,
@@ -48,10 +51,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
             startInfo.ArgumentList.Add(argument);
         if (_instanceConfig.EnableCreatorEditor)
             startInfo.ArgumentList.Add("minecraft://creator/?Editor=true");
-        startInfo.Environment["STEAM_COMPAT_DATA_PATH"] = runtime.PrefixPath;
-        startInfo.Environment["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = runtime.SteamClientPath;
-        startInfo.Environment["LD_LIBRARY_PATH"] = BuildLibraryPath(runtime.ProtonRoot);
-        startInfo.Environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core,d3d9=b";
+        ApplyRuntimeEnvironment(startInfo, runtime);
 
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, args) => ForwardLog(args.Data, BedrockLogLevel.Information);
@@ -89,7 +89,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
 
     private void Log(BedrockLogLevel level, string message) => LogReceived?.Invoke(message, level);
 
-    private async Task EnsureGameInputAsync(LinuxBedrockRuntime runtime)
+    private async Task EnsureGameInputAsync(LinuxBedrockRuntime runtime, CancellationToken cancellationToken)
     {
         var installer = Path.Combine(_instanceConfig.InstancePath, "Installers", "GameInputRedist.msi");
         if (!File.Exists(installer)) return;
@@ -97,8 +97,9 @@ public sealed class BedrockLaunch : IBedrockLaunch
         var marker = Path.Combine(runtime.PrefixPath, ".portal-gameinput-installed");
         if (File.Exists(marker)) return;
 
+        cancellationToken.ThrowIfCancellationRequested();
         Log(BedrockLogLevel.Information, "正在通过 Proton 安装 GameInput 运行组件");
-        UpdateProgress?.Invoke("状态：正在安装 GameInput", 0);
+        UpdateProgress?.Invoke("状态：正在安装 GameInput", null);
         var startInfo = new ProcessStartInfo
         {
             FileName = runtime.ProtonScript,
@@ -114,27 +115,75 @@ public sealed class BedrockLaunch : IBedrockLaunch
         startInfo.ArgumentList.Add("/qn");
         ApplyRuntimeEnvironment(startInfo, runtime);
 
-        using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("无法启动 GameInput 安装程序。");
-        var output = process.StandardOutput.ReadToEndAsync();
-        var error = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().ConfigureAwait(false);
-        var outputText = await output.ConfigureAwait(false);
-        var errorText = await error.ConfigureAwait(false);
-        if (!string.IsNullOrWhiteSpace(outputText)) Log(BedrockLogLevel.Debug, outputText.Trim());
+        using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+        var errorBuffer = new System.Text.StringBuilder();
+        process.OutputDataReceived += (_, args) =>
+        {
+            if (string.IsNullOrEmpty(args.Data)) return;
+            Log(BedrockLogLevel.Information, args.Data);
+        };
+        process.ErrorDataReceived += (_, args) =>
+        {
+            if (string.IsNullOrEmpty(args.Data)) return;
+            errorBuffer.AppendLine(args.Data);
+            Log(BedrockLogLevel.Warning, args.Data);
+        };
+        if (!process.Start()) throw new InvalidOperationException("无法启动 GameInput 安装程序。");
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromMinutes(10));
+        using var cancellation = timeout.Token.Register(() => KillProcess(process));
+        try
+        {
+            await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            KillProcess(process);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                Log(BedrockLogLevel.Warning, "GameInput 安装已取消，安装进程已被终止");
+                UpdateProgress?.Invoke("状态：GameInput 安装已取消", null);
+                throw;
+            }
+
+            Log(BedrockLogLevel.Error, "GameInput 安装超时，安装进程已被终止");
+            UpdateProgress?.Invoke("状态：GameInput 安装超时", null);
+            throw new TimeoutException("GameInput 安装超时（10 分钟），请检查 Wine/Proton 环境后重试。");
+        }
+        var errorText = errorBuffer.ToString().Trim();
         if (process.ExitCode != 0)
-            throw new InvalidOperationException($"GameInput 安装失败（退出码 {process.ExitCode}）：{errorText.Trim()}");
+            throw new InvalidOperationException($"GameInput 安装失败（退出码 {process.ExitCode}）：{errorText}");
 
         Directory.CreateDirectory(runtime.PrefixPath);
         await File.WriteAllTextAsync(marker, DateTimeOffset.UtcNow.ToString("O")).ConfigureAwait(false);
+        UpdateProgress?.Invoke("状态：GameInput 运行组件安装完成", 100);
         Log(BedrockLogLevel.Information, "GameInput 运行组件安装完成");
     }
 
     private static void ApplyRuntimeEnvironment(ProcessStartInfo startInfo, LinuxBedrockRuntime runtime)
     {
         startInfo.Environment["STEAM_COMPAT_DATA_PATH"] = runtime.PrefixPath;
-        startInfo.Environment["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = runtime.SteamClientPath;
+        startInfo.Environment["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = runtime.SteamCompatPath;
         startInfo.Environment["LD_LIBRARY_PATH"] = BuildLibraryPath(runtime.ProtonRoot);
         startInfo.Environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core,d3d9=b";
+        // 使用内置 WoW64 运行时（files/bin-wow64），避免依赖宿主机 32 位运行库
+        // （/lib/ld-linux.so.2）。32 位组件（如 msiexec / GameInput 安装）无需
+        // 宿主机安装 32 位 multilib 也能运行。
+        startInfo.Environment["PROTON_USE_WOW64"] = "1";
+    }
+
+    private static void KillProcess(Process process)
+    {
+        try
+        {
+            if (!process.HasExited) process.Kill(entireProcessTree: true);
+        }
+        catch (InvalidOperationException)
+        {
+        }
     }
 
     private static IEnumerable<string> ParseArguments(string? arguments)
