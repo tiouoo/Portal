@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prerender.mjs",
+    "indexnow": "node scripts/indexnow.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

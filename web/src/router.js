@@ -10,7 +10,7 @@ export function createRouter() {
         path: '/',
         component: HomeView,
         meta: {
-          title: 'Portal - 你的 Minecraft，从这里出发',
+          title: 'Portal - 你的 Minecraft，从这里出发：开源跨平台 Minecraft 启动器',
           description:
             'Portal - 简洁、现代的跨平台 Minecraft 启动器与实例管理器。'
         }
