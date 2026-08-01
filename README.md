@@ -75,9 +75,6 @@
 - 管理游戏版本、世界、世界模板、行为包、资源包和皮肤包
 - 导入基岩版内容包
 
-Linux 需要可用的 Vulkan 驱动和 Steam 目录。可用 `PORTAL_PROTON_PATH` 指定现有 Proton，或用
-`PORTAL_BEDROCK_PREFIX` 覆盖独立 Wine prefix；未指定 Proton 时 Portal 会下载并校验 GDK-Proton x64。
-
 ### 命令行调用
 
 - 支持通过命令行参数或浏览器 `portal://` 链接调用安装与启动功能
