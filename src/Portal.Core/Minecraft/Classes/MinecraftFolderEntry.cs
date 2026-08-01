@@ -99,6 +99,8 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                                                        CountBedrockInstances(layout.RootPath),
                         MinecraftFolderKind.ModrinthApp => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
                         MinecraftFolderKind.ModrinthProfile => 1,
+                        MinecraftFolderKind.AxolotlApp => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
+                        MinecraftFolderKind.AxolotlProfile => 1,
                         MinecraftFolderKind.MultiMc => CountInstances(Path.Combine(layout.RootPath, "instances"),
                             "mmc-pack.json"),
                         MinecraftFolderKind.MultiMcInstance => 1,

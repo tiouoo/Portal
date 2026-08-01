@@ -10,6 +10,7 @@ using Portal.Bedrock.Standard.Interface;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
+using Portal.Core.Operations.OpenFile;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -43,6 +44,13 @@ public class Handler
                         await HandleAuthServerUrlAsync(apiUrl, domain, window);
                     }
                 }
+            }
+
+            if (TryGetMinecraftFolder(data, out var folderPath))
+            {
+                e.Handled = true;
+                await HandleMinecraftFolderAsync(folderPath, window);
+                return;
             }
 
             if (TryGetModpack(data, out var archivePath, out var source, out var suggestedInstanceId))
@@ -97,6 +105,12 @@ public class Handler
         {
             dropEffects = DragDropEffects.Copy;
             msg = "识别到基岩版包";
+        }
+
+        if (TryGetMinecraftFolder(data, out _))
+        {
+            dropEffects = DragDropEffects.Copy;
+            msg = "识别到文件夹";
         }
 
 
@@ -175,6 +189,35 @@ public class Handler
         Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
     }
 
+    private static async Task HandleMinecraftFolderAsync(string folderPath, TioTabWindowBase window)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
+        };
+
+        // 复用“添加 Minecraft 文件夹”对话框，预填路径并应用路径跳转（ResolveGameFolder）。
+        var viewModel = new NewMinecraftFolderViewModel(
+            Data.ConfigEntry.MinecraftFolders.Select(x => x.FolderPath).ToList())
+        {
+            FolderPath = MinecraftFolderLayout.ResolveGameFolder(folderPath)
+        };
+
+        var result = await OverlayDialog
+            .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
+                viewModel, hostId: window.HostId, options: options);
+
+        if (result == null) return;
+        Data.ConfigEntry.MinecraftFolders.Add(result);
+    }
+
     private static bool TryParseAuthlibUrl(string? input, out string? apiUrl, out string? domain)
     {
         apiUrl = null;
@@ -247,6 +290,19 @@ public class Handler
         catch (Exception) { }
 
         return false;
+    }
+
+    private static bool TryGetMinecraftFolder(IDataTransfer data, out string folderPath)
+    {
+        folderPath = string.Empty;
+        var items = data.TryGetFiles();
+        if (items is not [var item]) return false;
+
+        var path = item.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path)) return false;
+
+        folderPath = path;
+        return true;
     }
 
     private static bool TryGetBedrockPackage(IDataTransfer data, out string archivePath,

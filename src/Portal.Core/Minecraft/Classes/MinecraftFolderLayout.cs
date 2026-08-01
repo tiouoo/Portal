@@ -12,6 +12,8 @@ public enum MinecraftFolderKind
     BakaXlInstance,
     CurseForge,
     CurseForgeInstance,
+    AxolotlApp,
+    AxolotlProfile,
     Unknown
 }
 
@@ -57,6 +59,18 @@ public sealed record MinecraftFolderLayout(
             TryFindParentDirectory(selected, "Install", "Instances", out var curseForgeRoot))
             return new(MinecraftFolderKind.CurseForgeInstance, selected, curseForgeRoot, "CurseForge App 实例");
 
+        // Axolotl（Theseus）结构与 Modrinth 相同，靠应用根目录名区分。
+        if (IsAxolotlRoot(selected) &&
+            File.Exists(Path.Combine(selected, "app.db")) &&
+            Directory.Exists(Path.Combine(selected, "profiles")) &&
+            Directory.Exists(Path.Combine(selected, "meta")))
+            return new(MinecraftFolderKind.AxolotlApp, selected, selected, "Axolotl");
+
+        if (TryFindParent(selected, "app.db", "meta", out var axolotlRoot) &&
+            IsAxolotlRoot(axolotlRoot) &&
+            IsUnder(selected, Path.Combine(axolotlRoot, "profiles")))
+            return new(MinecraftFolderKind.AxolotlProfile, selected, axolotlRoot, "Axolotl 实例");
+
         if (File.Exists(Path.Combine(selected, "app.db")) &&
             Directory.Exists(Path.Combine(selected, "profiles")) &&
             Directory.Exists(Path.Combine(selected, "meta")))
@@ -97,6 +111,70 @@ public sealed record MinecraftFolderLayout(
         // Retain the legacy behavior for manually added roots. A valid game root may be empty,
         // contain only Bedrock versions, or receive its versions after it is configured.
         return new(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
+    }
+
+    /// <summary>
+    /// 解析用户通过文件选择器选择的文件夹，尝试定位到真正可用的 Minecraft 文件夹。
+    /// 适用于用户一时选错、选到外层目录的情况。以下情况不跳转：
+    ///  1. 所选文件夹本身已包含 versions / bedrock_versions（即为传统游戏根目录）；
+    ///  2. 所选文件夹本身就叫“.minecraft”；
+    ///  3. 所选文件夹已被识别为第三方启动器布局（Modrinth / Axolotl / MultiMC / CurseForge / BakaXL 等），
+    ///     此时直接采用其识别出的路径。
+    /// </summary>
+    public static string ResolveGameFolder(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return string.Empty;
+
+        var selected = Path.GetFullPath(path.Trim());
+
+        // 已被识别为其它启动器布局（Modrinth / Axolotl / MultiMC / CurseForge / BakaXL 等），
+        // 直接采用其识别出的 SelectedPath（例如 MultiMC 实例根目录）。
+        var layout = Detect(selected);
+        if (layout.Kind != MinecraftFolderKind.Standard && layout.Kind != MinecraftFolderKind.Unknown)
+            return layout.SelectedPath;
+
+        // 传统布局：自身已包含 versions / bedrock_versions，或本身就叫“.minecraft”，视为游戏根目录。
+        if (Directory.Exists(Path.Combine(selected, "versions")) ||
+            Directory.Exists(Path.Combine(selected, "bedrock_versions")) ||
+            Path.GetFileName(selected).Equals(".minecraft", StringComparison.OrdinalIgnoreCase))
+            return selected;
+
+        // 所选文件夹下层嵌套了实际使用的 .minecraft 文件夹，默认跳转进去。
+        var nested = Path.Combine(selected, ".minecraft");
+        if (Directory.Exists(nested))
+            return nested;
+
+        // 其它启动器类型：若所选文件夹的直接子目录中恰好只有一个可识别的启动器文件夹，则跳转进去。
+        var launcherChildren = Directory.Exists(selected)
+            ? Directory.GetDirectories(selected).Where(IsLauncherTypeFolder).ToArray()
+            : [];
+        return launcherChildren.Length == 1 ? launcherChildren[0] : selected;
+    }
+
+    private static bool IsLauncherTypeFolder(string path)
+    {
+        var kind = Detect(path).Kind;
+        return kind is not (MinecraftFolderKind.Standard or MinecraftFolderKind.Unknown);
+    }
+
+    private static bool IsAxolotlRoot(string path) =>
+        Path.GetFileName(Path.GetFullPath(path)).Equals("red.ghs.axolotl", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// 判断所选文件夹的下一级是否包含 Minecraft 游戏根目录的特征
+    /// （versions / bedrock_versions 子目录，或嵌套的 .minecraft 文件夹）。
+    /// 用于提示用户可能选择了错误的文件夹，或该文件夹结构本身存在问题。
+    /// </summary>
+    public static bool LooksLikeMinecraftRoot(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        var selected = Path.GetFullPath(path.Trim());
+        return Directory.Exists(Path.Combine(selected, "versions")) ||
+               Directory.Exists(Path.Combine(selected, "bedrock_versions")) ||
+               Directory.Exists(Path.Combine(selected, ".minecraft"));
     }
 
     private static bool TryFindParent(string path, string markerFile, string markerDirectory, out string root)
@@ -175,6 +253,7 @@ public sealed record MinecraftInstanceLayout(
     public string KindDisplayName => Kind switch
     {
         MinecraftFolderKind.ModrinthApp or MinecraftFolderKind.ModrinthProfile => "Modrinth App",
+        MinecraftFolderKind.AxolotlApp or MinecraftFolderKind.AxolotlProfile => "Axolotl",
         MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher",
         MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance => "BakaXL",
         MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge App",

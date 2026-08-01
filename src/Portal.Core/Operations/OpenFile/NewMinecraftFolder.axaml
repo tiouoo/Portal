@@ -36,8 +36,9 @@
             <tio:FormItem Label="文件夹路径">
                 <StackPanel Spacing="4">
                     <tio:PathPicker
+                        Command="{Binding FolderPickedCommand}"
                         PlaceholderText="输入文件夹路径"
-                        SelectedPathsText="{Binding FolderPath, Mode=OneWayToSource}"
+                        SelectedPathsText="{Binding FolderPath}"
                         Title="选择Minecraft文件夹"
                         UsePickerType="OpenFolder">
                         <tio:PathPicker.ButtonContent>
@@ -61,7 +62,7 @@
                         Foreground="Red"
                         IsVisible="{Binding Warning}"
                         Margin="1,0,0,0"
-                        Text="*当前文件夹需要进一步确认" />
+                        Text="*未发现 versions 或 .minecraft 子目录，可能选择了错误的文件夹，或该文件夹结构存在问题" />
                     <TextBlock
                         FontSize="12"
                         Foreground="Red"

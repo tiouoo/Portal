@@ -35,6 +35,7 @@ public class MinecraftInstance : ObservableObject
     public bool IsExternallyManaged => Layout != null;
     public bool RequiresIndependentInstance => Layout?.Kind is
         MinecraftFolderKind.ModrinthApp or MinecraftFolderKind.ModrinthProfile or
+        MinecraftFolderKind.AxolotlApp or MinecraftFolderKind.AxolotlProfile or
         MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance or
         MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance or
         MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance;

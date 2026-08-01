@@ -14,7 +14,10 @@ internal static class ExternalMinecraftScanner
         var layout = folder.DetectedLayout;
         return layout.Kind switch
         {
-            MinecraftFolderKind.ModrinthApp or MinecraftFolderKind.ModrinthProfile => ScanModrinth(folder, layout),
+            MinecraftFolderKind.ModrinthApp or MinecraftFolderKind.ModrinthProfile => ScanModrinth(folder, layout,
+                MinecraftFolderKind.ModrinthApp),
+            MinecraftFolderKind.AxolotlApp or MinecraftFolderKind.AxolotlProfile => ScanModrinth(folder, layout,
+                MinecraftFolderKind.AxolotlApp),
             MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => ScanMultiMc(folder, layout),
             MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance => ScanBakaXl(folder, layout),
             MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => ScanCurseForge(folder, layout),
@@ -144,7 +147,7 @@ internal static class ExternalMinecraftScanner
     }
 
     private static IReadOnlyList<MinecraftInstance> ScanModrinth(MinecraftFolderEntry folder,
-        MinecraftFolderLayout folderLayout)
+        MinecraftFolderLayout folderLayout, MinecraftFolderKind appKind)
     {
         var databasePath = Path.Combine(folderLayout.RootPath, "app.db");
         if (!File.Exists(databasePath))
@@ -170,7 +173,7 @@ internal static class ExternalMinecraftScanner
                 {
                     var profilePath = reader.GetString(0);
                     var gameDirectory = ResolveModrinthProfilePath(folderLayout.RootPath, profilePath);
-                    if (folderLayout.Kind == MinecraftFolderKind.ModrinthProfile &&
+                    if (folderLayout.Kind is MinecraftFolderKind.ModrinthProfile or MinecraftFolderKind.AxolotlProfile &&
                         !Path.GetFullPath(gameDirectory).Equals(Path.GetFullPath(folderLayout.SelectedPath),
                             StringComparison.OrdinalIgnoreCase))
                         continue;
@@ -188,7 +191,7 @@ internal static class ExternalMinecraftScanner
                     var icon = reader.IsDBNull(2) ? null : ResolveIcon(folderLayout.RootPath, reader.GetString(2));
                     icon ??= ResolveIcon(gameDirectory, "icon.png") ?? ResolveIcon(gameDirectory, "Icon.png");
                     result.Add(CreateInstance(entry, folder, new MinecraftInstanceLayout(
-                        MinecraftFolderKind.ModrinthApp, folderLayout.RootPath, gameDirectory, gameDirectory, metadataRoot,
+                        appKind, folderLayout.RootPath, gameDirectory, gameDirectory, metadataRoot,
                         Path.Combine(metadataRoot, "assets"), Path.Combine(metadataRoot, "libraries"),
                         Path.Combine(metadataRoot, "natives", profilePath), icon), reader.GetString(1)));
                 }

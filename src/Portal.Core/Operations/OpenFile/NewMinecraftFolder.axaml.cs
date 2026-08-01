@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
@@ -53,6 +54,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
     public ICommand NextCommand { get; }
     public ICommand CancelCommand { get; }
+    public ICommand FolderPickedCommand { get; }
 
     private readonly Dictionary<string, List<string>> _errors = new();
 
@@ -62,6 +64,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         DetectedLaunchers = FindInstalledLaunchers(paths);
         NextCommand = new RelayCommand(Next, CanNext);
         CancelCommand = new RelayCommand(Cancel);
+        FolderPickedCommand = new RelayCommand<IReadOnlyList<IStorageItem>?>(OnFolderPicked);
     }
 
     partial void OnFolderPathChanged(string? value)
@@ -82,17 +85,10 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         FolderTypeDescription = layout.DisplayName;
         IsFolderRecognized = layout.Kind != MinecraftFolderKind.Unknown;
         Contain = _paths.Contains(folderPath);
+        Warning = layout.Kind == MinecraftFolderKind.Standard &&
+                  !MinecraftFolderLayout.LooksLikeMinecraftRoot(folderPath);
 
         NoExist = false;
-
-        try
-        {
-            Warning = false;
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
 
         ((RelayCommand)NextCommand).NotifyCanExecuteChanged();
     }
@@ -100,6 +96,18 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     partial void OnFolderNameChanged(string? value)
     {
         ((RelayCommand)NextCommand).NotifyCanExecuteChanged();
+    }
+
+    private void OnFolderPicked(IReadOnlyList<IStorageItem>? items)
+    {
+        if (items is not { Count: > 0 })
+            return;
+
+        var picked = items[0].TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(picked))
+            return;
+
+        FolderPath = MinecraftFolderLayout.ResolveGameFolder(picked);
     }
 
     private bool CanNext()
@@ -132,20 +140,58 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
     private static IReadOnlyList<DetectedLauncherFolder> FindInstalledLaunchers(IEnumerable<string> configuredPaths)
     {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var existing = configuredPaths.Where(path => !string.IsNullOrWhiteSpace(path))
             .Select(Path.GetFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return new[]
+
+        var result = new List<DetectedLauncherFolder>();
+        foreach (var (name, relativeParts) in GetKnownLaunchers())
         {
-            new DetectedLauncherFolder("Modrinth App", Path.Combine(appData, "ModrinthApp")),
-            new DetectedLauncherFolder("CurseForge App", Path.Combine(userProfile, "curseforge", "minecraft")),
-            new DetectedLauncherFolder("BakaXL", Path.Combine(appData, ".BakaXL", "minecraft"))
+            var path = ResolveExistingDataPath(relativeParts);
+            if (string.IsNullOrEmpty(path))
+                continue;
+            if (MinecraftFolderLayout.Detect(path).Kind == MinecraftFolderKind.Unknown)
+                continue;
+            if (existing.Contains(Path.GetFullPath(path)))
+                continue;
+            result.Add(new DetectedLauncherFolder(name, path));
         }
-        .Where(launcher => Directory.Exists(launcher.Path))
-        .Where(launcher => MinecraftFolderLayout.Detect(launcher.Path).Kind != MinecraftFolderKind.Unknown)
-        .Where(launcher => !existing.Contains(Path.GetFullPath(launcher.Path)))
-        .ToArray();
+
+        return result;
+    }
+
+    private static (string Name, string[] RelativeParts)[] GetKnownLaunchers() => new[]
+    {
+        ("Modrinth App", new[] { "ModrinthApp" }),
+        ("Axolotl", new[] { "red.ghs.axolotl", "profiles", "Vanilla 26.2" }),
+        ("CurseForge App", new[] { "curseforge", "minecraft" }),
+        ("BakaXL", new[] { ".BakaXL", "minecraft" })
+    };
+
+    /// <summary>
+    /// 跨平台定位启动器数据目录：
+    /// Windows 通常位于 %APPDATA%；macOS 位于 ~/Library/Application Support；
+    /// Linux 下 Theseus（Modrinth / Axolotl）等使用 $XDG_DATA_HOME 或 ~/.local/share。
+    /// 依次尝试各根目录，返回第一个存在的路径。
+    /// </summary>
+    private static string? ResolveExistingDataPath(string[] relativeParts)
+    {
+        var roots = new[]
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+        };
+
+        foreach (var root in roots)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+                continue;
+            var path = Path.Combine(new[] { root }.Concat(relativeParts).ToArray());
+            if (Directory.Exists(path))
+                return path;
+        }
+
+        return null;
     }
 
     private void Cancel()
