@@ -4,7 +4,7 @@ import logoUrl from "../assets/portal-logo.svg";
 
 <template>
   <section class="open-source container section">
-    <div class="oss-mark"><img :src="logoUrl" alt="" /></div>
+    <div class="oss-mark"><img :src="logoUrl" alt="" width="42" height="42" /></div>
     <div class="oss-copy">
       <span class="section-kicker">自由且透明</span>
       <h2>由社区共同塑造</h2>
@@ -51,7 +51,7 @@ import logoUrl from "../assets/portal-logo.svg";
     </div>
     <div class="repo-card">
       <div class="repo-title">
-        <img :src="logoUrl" alt="" /><span
+        <img :src="logoUrl" alt="" width="36" height="36" /><span
           ><small>github.com/tiouoo</small><b>Portal</b></span
         >
       </div>

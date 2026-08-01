@@ -19,7 +19,7 @@ function closeMenu() {
         aria-label="Portal 首页"
         @click="closeMenu"
       >
-        <img :src="logoUrl" alt="" />
+        <img :src="logoUrl" alt="" width="28" height="28" />
         <span>Portal</span>
       </RouterLink>
       <button

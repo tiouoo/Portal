@@ -49,7 +49,7 @@ import logoUrl from "../assets/portal-logo.svg";
       <div class="app-window">
         <div class="window-topbar">
           <div class="traffic"><i></i><i></i><i></i></div>
-          <div class="window-tab"><img :src="logoUrl" alt="" /> 新标签页</div>
+          <div class="window-tab"><img :src="logoUrl" alt="" width="15" height="15" /> 新标签页</div>
           <div class="window-tab">
             <svg class="tab-icon" viewBox="0 0 640 640" aria-hidden="true">
               <path
