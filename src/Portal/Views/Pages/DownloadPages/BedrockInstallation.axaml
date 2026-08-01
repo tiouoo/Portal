@@ -33,6 +33,11 @@
                     <ComboBoxItem Content="正式版" />
                     <ComboBoxItem Content="预览版" />
                 </ComboBox>
+                <ComboBox SelectedIndex="{Binding SelectedBuildType}" Width="110">
+                    <ComboBoxItem Content="全部构建" />
+                    <ComboBoxItem Content="UWP" />
+                    <ComboBoxItem Content="GDK" />
+                </ComboBox>
                 <TextBox PlaceholderText="搜索版本名称" Text="{Binding SearchText}" Width="170" />
             </StackPanel>
         </DockPanel>
@@ -49,7 +54,7 @@
                         Orientation="Horizontal" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="bedrock:BedrockGdkVersion">
+                    <DataTemplate DataType="bedrock:BedrockVersion">
                         <Border
                             Background="{DynamicResource TranslucentBackgroundColor}"
                             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -66,20 +71,37 @@
                                         Text="{Binding Id}"
                                         TextTrimming="CharacterEllipsis"
                                         VerticalAlignment="Center" />
-                                    <Border
-                                        Background="{DynamicResource PopupBackgroundColor}"
-                                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
+                                    <StackPanel
                                         DockPanel.Dock="Right"
                                         HorizontalAlignment="Right"
-                                        Padding="5,3,5,1"
-                                        VerticalAlignment="Top">
-                                        <TextBlock
-                                            FontSize="11"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Text="{Binding ChannelLabel}" />
-                                    </Border>
+                                        Orientation="Horizontal"
+                                        Spacing="5">
+                                        <Border
+                                            Background="{DynamicResource PopupBackgroundColor}"
+                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            HorizontalAlignment="Right"
+                                            Padding="5,3,5,1"
+                                            VerticalAlignment="Top">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding ChannelLabel}" />
+                                        </Border>
+                                        <Border
+                                            Background="{DynamicResource PopupBackgroundColor}"
+                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="5,3,5,1"
+                                            VerticalAlignment="Top">
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Text="{Binding BuildLabel}" />
+                                        </Border>
+                                    </StackPanel>
                                 </DockPanel>
                                 <TextBlock FontSize="12" Foreground="{DynamicResource InnerForegroundColor}">
                                     <Run Text="{Binding RelativeReleaseTime}" />

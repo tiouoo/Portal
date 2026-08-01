@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Portal.Bedrock.Standard.Interface;
 using Portal.Module.DefaultPage;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -45,7 +46,7 @@ public partial class DownloadPage : UserControl, ITioTabPage
 public partial class DownloadPageViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
-    public bool IsBedrockInstallationSupported => OperatingSystem.IsWindows();
+    public bool IsBedrockInstallationSupported => BedrockInstallationService.DefaultInstaller is not null;
     private readonly Dictionary<Type, UserControl> _pageCache = new();
 
     public DownloadPageViewModel()

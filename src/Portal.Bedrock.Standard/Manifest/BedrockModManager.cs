@@ -27,7 +27,7 @@ public static class BedrockModManager
 
     public static IReadOnlyList<BedrockModInfo> Scan(BedrockInstanceConfig config)
     {
-        EnsureGdk(config);
+        EnsureBedrock(config);
         lock (GetLock(config))
         {
             var folder = GetModsFolder(config);
@@ -65,7 +65,7 @@ public static class BedrockModManager
 
     public static BedrockModConfig Load(BedrockInstanceConfig config)
     {
-        EnsureGdk(config);
+        EnsureBedrock(config);
         lock (GetLock(config))
             return LoadCore(config);
     }
@@ -93,7 +93,7 @@ public static class BedrockModManager
 
     public static void Save(BedrockInstanceConfig config, BedrockModConfig manifest)
     {
-        EnsureGdk(config);
+        EnsureBedrock(config);
         lock (GetLock(config))
             SaveCore(config, manifest);
     }
@@ -109,7 +109,7 @@ public static class BedrockModManager
 
     public static void Update(BedrockInstanceConfig config, string fileName, Action<BedrockModEntry> update)
     {
-        EnsureGdk(config);
+        EnsureBedrock(config);
         lock (GetLock(config))
         {
             var manifest = LoadCore(config);
@@ -170,10 +170,8 @@ public static class BedrockModManager
     private static object GetLock(BedrockInstanceConfig config) =>
         ConfigLocks.GetOrAdd(Path.GetFullPath(GetConfigPath(config)), static _ => new object());
 
-    private static void EnsureGdk(BedrockInstanceConfig config)
+    private static void EnsureBedrock(BedrockInstanceConfig config)
     {
         ArgumentNullException.ThrowIfNull(config);
-        if (config.BuildType != BedrockBuildType.GDK)
-            throw new NotSupportedException("DLL 模组仅支持基岩版 GDK 实例。");
     }
 }

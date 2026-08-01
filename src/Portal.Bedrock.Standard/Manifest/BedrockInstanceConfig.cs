@@ -11,5 +11,11 @@ public class BedrockInstanceConfig
     [JsonPropertyName("type")] public BedrockInstanceReleaseType Type { get; set; }
     [JsonPropertyName("enableIndependentInstance")] public bool EnableIndependentInstance { get; set; } = false;
     [JsonPropertyName("enableLauncherSharedData")] public bool EnableLauncherSharedData { get; set; } = false;
+    [JsonPropertyName("enableMouseLock")] public bool EnableMouseLock { get; set; } = false;
+    [JsonPropertyName("enableMouseLockForGdk")] public bool EnableMouseLockForGdk { get; set; } = false;
+    [JsonPropertyName("mouseLockInset")] public int MouseLockInset { get; set; } = 2;
+    [JsonPropertyName("mouseLockHotkey")] public string MouseLockHotkey { get; set; } = "Ctrl+Alt";
+    [JsonPropertyName("launchArguments")] public string LaunchArguments { get; set; } = string.Empty;
+    [JsonPropertyName("enableCreatorEditor")] public bool EnableCreatorEditor { get; set; }
     [JsonIgnore] public string InstancePath { get; set; }
 }

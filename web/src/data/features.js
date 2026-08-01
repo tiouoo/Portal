@@ -2,7 +2,7 @@ export const features = [
   {
     index: '01',
     title: '一处管理全部实例',
-    text: '搜索、排序、收藏与快速启动。Java 与基岩版实例保持清晰有序，最近游玩和时长统计一目了然。',
+    text: '搜索、排序、收藏与快速启动。Java 跨平台运行，基岩版支持 Windows x64 和 Linux x64 GDK-Proton。',
     tone: 'blue'
   },
   {

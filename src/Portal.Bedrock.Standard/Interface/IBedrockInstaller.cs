@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Portal.Bedrock.Standard.Manifest;
 
 namespace Portal.Bedrock.Standard.Interface;
 
@@ -9,11 +10,29 @@ public interface IBedrockInstaller
 {
     Task<IReadOnlyList<BedrockGdkVersion>> GetGdkVersionsAsync(bool refresh, CancellationToken cancellationToken);
     Task InstallGdkAsync(BedrockOnlineInstallRequest request, IProgress<BedrockInstallProgress>? progress = null);
+
+    async Task<IReadOnlyList<BedrockVersion>> GetVersionsAsync(bool refresh, CancellationToken cancellationToken)
+    {
+        var versions = await GetGdkVersionsAsync(refresh, cancellationToken);
+        var result = new List<BedrockVersion>(versions.Count);
+        foreach (var version in versions)
+            result.Add(new BedrockVersion(version.Id, version.ReleaseTime, version.IsPreview, BedrockBuildType.GDK));
+        return result;
+    }
+
+    Task InstallAsync(BedrockInstallRequest request, IProgress<BedrockInstallProgress>? progress = null)
+    {
+        if (request.Version.BuildType != BedrockBuildType.GDK)
+            throw new NotSupportedException("当前平台不支持安装 UWP 基岩版。");
+        return InstallGdkAsync(new BedrockOnlineInstallRequest(request.Version, request.DestinationPath,
+            request.CancellationToken), progress);
+    }
 }
 
-public sealed record BedrockGdkVersion(string Id, DateTime ReleaseTime, bool IsPreview)
+public record BedrockGdkVersion(string Id, DateTime ReleaseTime, bool IsPreview)
 {
     public string ChannelLabel => IsPreview ? "预览版" : "正式版";
+    public virtual string BuildLabel => BedrockBuildType.GDK.ToString();
     public string RelativeReleaseTime => FormatRelativeReleaseTime(ReleaseTime);
 
     private static string FormatRelativeReleaseTime(DateTime releaseTime)
@@ -33,6 +52,20 @@ public sealed record BedrockGdkVersion(string Id, DateTime ReleaseTime, bool IsP
         };
     }
 }
+
+public sealed record BedrockVersion(
+    string Id,
+    DateTime ReleaseTime,
+    bool IsPreview,
+    BedrockBuildType BuildType) : BedrockGdkVersion(Id, ReleaseTime, IsPreview)
+{
+    public override string BuildLabel => BuildType.ToString();
+}
+
+public sealed record BedrockInstallRequest(
+    BedrockVersion Version,
+    string DestinationPath,
+    CancellationToken CancellationToken);
 
 public sealed record BedrockOnlineInstallRequest(
     BedrockGdkVersion Version,

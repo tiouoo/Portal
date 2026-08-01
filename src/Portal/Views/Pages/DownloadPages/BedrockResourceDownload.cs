@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using MinecraftLaunch.Components.Provider;
+using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Minecraft.Services;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -43,7 +44,7 @@ public static class BedrockResourceDownload
 
     public static async Task DownloadAsync(TopLevel topLevel, JavaResourceDefinition definition, JavaResourceFileItem file)
     {
-        if (!OperatingSystem.IsWindows())
+        if (BedrockInstallationService.DefaultInstaller is null)
         {
             await JavaResourceDownload.DownloadAsync(topLevel, definition, file);
             return;

@@ -530,7 +530,7 @@ public static class MinecraftLaunchService
             });
         };
 
-        await launcher.Launch();
+        await launcher.Launch(context.CancellationToken);
 
         var process = launcher.GetProcess()
                       ?? throw new InvalidOperationException("基岩版启动器未返回进程信息。");

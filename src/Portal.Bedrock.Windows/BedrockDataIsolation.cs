@@ -44,9 +44,6 @@ internal static class BedrockDataIsolation
 
     private static void SyncPreloadMods(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
     {
-        if (config.BuildType != BedrockBuildType.GDK)
-            return;
-
         var runtimeFolder = Path.Combine(config.InstancePath, "preload", "Portal");
         Directory.CreateDirectory(runtimeFolder);
         var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -125,7 +122,7 @@ internal static class BedrockDataIsolation
             {
                 isConsole = false,
                 // Native Windows sharing must bypass the file hooks entirely.
-                isVersionIsolated = !config.EnableLauncherSharedData,
+                isVersionIsolated = config.BuildType == BedrockBuildType.GDK && !config.EnableLauncherSharedData,
                 isDetailedLog = false,
                 folderPolicyString = GetFolderPolicy(config),
                 nativeLogFile
@@ -143,6 +140,8 @@ internal static class BedrockDataIsolation
 
     private static string GetFolderPolicy(BedrockInstanceConfig config)
     {
+        if (config.BuildType == BedrockBuildType.UWP)
+            return "native";
         if (config.EnableIndependentInstance)
             return config.EnableLauncherSharedData ? "shares" : "independence";
 

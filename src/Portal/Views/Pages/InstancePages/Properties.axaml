@@ -26,7 +26,18 @@
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <TextBox PlaceholderText="请输入备注" Text="{Binding Instance.Config.Note}" />
                 </StackPanel>
-                <StackPanel IsVisible="{Binding Instance.IsBedrock}" Spacing="12">
+                <StackPanel IsVisible="{Binding IsUwpBedrock}" Spacing="5">
+                    <Label
+                        Content="鼠标锁"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
+                    <ToggleSwitch IsChecked="{Binding EnableMouseLock}" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="*在游戏中使用 ctrl+alt 切换鼠标锁定" />
+                </StackPanel>
+                <StackPanel IsVisible="{Binding IsGdkBedrock}" Spacing="12">
                     <StackPanel Spacing="5">
                         <Label
                             Content="独立数据"
