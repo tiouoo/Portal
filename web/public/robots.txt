@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://portal.tiouo.xyz/sitemap.xml
+Sitemap: https://portal.tiouo.cc/sitemap.xml

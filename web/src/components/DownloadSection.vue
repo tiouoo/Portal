@@ -12,7 +12,7 @@ const downloadUrl = (url) => {
     return releaseUrl.replace("https://github.com/", "https://bgithub.xyz/");
   }
   if (route.value === "gh.tiouo") {
-    return releaseUrl.replace("https://github.com/", "https://gh.tiouo.xyz/");
+    return releaseUrl.replace("https://github.com/", "https://gh.tiouo.cc/");
   }
 
   if (route.value === "ghproxy") {
@@ -46,7 +46,7 @@ const channelHint = computed(() => {
             <span>镜像</span>
             <select v-model="route" aria-label="选择下载镜像">
               <option value="direct">直接下载</option>
-              <option value="gh.tiouo">gh.tiouo.xyz</option>
+              <option value="gh.tiouo">gh.tiouo.cc</option>
               <option value="bgithub">bgithub.xyz</option>
               <option value="ghproxy">ghproxy.net</option>
             </select>

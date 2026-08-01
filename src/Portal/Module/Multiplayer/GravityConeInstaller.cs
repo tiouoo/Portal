@@ -11,7 +11,7 @@ namespace Portal.Module.Multiplayer;
 
 public static class GravityConeInstaller
 {
-    public const string ManifestUrl = "https://cdn.tiouo.xyz/portal/gravitycone.json";
+    public const string ManifestUrl = "https://cdn.tiouo.cc/portal/gravitycone.json";
     public const string GravityConeVersion = "0.1.3-alpha";
     public const string EasyTierVersion = "2.6.4";
 

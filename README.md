@@ -2,7 +2,7 @@
   <a href="https://ifdian.net/a/tiouo">
     <img src="assets/top.png" alt="Portal Top">
   </a>
-  <a href="https://portal.tiouo.xyz">
+  <a href="https://portal.tiouo.cc">
     <img src="assets/header.png" alt="Portal">
   </a>
 </p>
@@ -13,7 +13,7 @@
   <a href="https://github.com/tiouoo/Portal/releases"><img src="https://img.shields.io/github/v/release/tiouoo/Portal?include_prereleases&display_name=tag&label=%E9%A2%84%E5%8F%91%E5%B8%83&logo=github&logoColor=white&color=9c27b0&style=flat-square" alt="预发布"></a>  
   <a href="https://github.com/tiouoo/Portal/stargazers"><img src="https://img.shields.io/github/stars/tiouoo/Portal?label=Stars&logo=github&logoColor=white&color=eac54f&style=flat-square" alt="GitHub Stars"></a>
   <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-9d4edd?logoColor=white&style=flat-square" alt="GPL-3.0-or-later">
-  <a href="https://portal.tiouo.xyz"><img src="https://img.shields.io/static/v1?label=%E5%AE%98%E7%BD%91&message=portal.tiouo.xyz&color=38ce8f&logo=globe&logoColor=white&style=flat-square" alt="官网"></a>
+  <a href="https://portal.tiouo.cc"><img src="https://img.shields.io/static/v1?label=%E5%AE%98%E7%BD%91&message=portal.tiouo.cc&color=38ce8f&logo=globe&logoColor=white&style=flat-square" alt="官网"></a>
   <a href="https://ifdian.net/a/tiouo"><img src="https://img.shields.io/static/v1?label=%E7%88%B1%E5%8F%91%E7%94%B5&message=ifdian.net/a/tiouo&color=f89aba&logo=afdian&logoColor=white&style=flat-square" alt="爱发电"></a>
 </p>
 
@@ -21,7 +21,7 @@
 
 ## 少一点配置，多一点游戏
 
-<a href="https://portal.tiouo.xyz">Portal</a> 是一款开源、跨平台的 Minecraft 启动器与实例管理器，同时支持 Java 版和基岩版，提供从游戏安装、账户登录到资源查找与文件整理的一体化体验，并对不同版本、整合包和世界进行独立管理
+<a href="https://portal.tiouo.cc">Portal</a> 是一款开源、跨平台的 Minecraft 启动器与实例管理器，同时支持 Java 版和基岩版，提供从游戏安装、账户登录到资源查找与文件整理的一体化体验，并对不同版本、整合包和世界进行独立管理
 
 ## 下载 Portal
 

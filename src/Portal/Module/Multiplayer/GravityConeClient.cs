@@ -11,7 +11,7 @@ namespace Portal.Module.Multiplayer;
 
 public sealed class GravityConeClient : IAsyncDisposable
 {
-    public const string RelayConfigUrl = "https://cdn.tiouo.xyz/portal/multiplayer-relays.json";
+    public const string RelayConfigUrl = "https://cdn.tiouo.cc/portal/multiplayer-relays.json";
 
     private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
