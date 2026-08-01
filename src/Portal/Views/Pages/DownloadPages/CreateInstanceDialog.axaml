@@ -1,0 +1,208 @@
+<UserControl
+    d:DesignHeight="620"
+    d:DesignWidth="600"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.CreateInstanceDialog"
+    x:DataType="downloadPages:CreateInstanceDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto"
+        Width="600">
+        <TextBlock
+            FontSize="18"
+            FontWeight="SemiBold"
+            Text="创建新实例" />
+
+        <ScrollViewer
+            Grid.Row="1"
+            Margin="0,14,0,0"
+            MaxHeight="430"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="18">
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Border
+                            ClipToBounds="True"
+                            CornerRadius="12"
+                            Height="44"
+                            Margin="2,0,0,0"
+                            Width="44">
+                            <Image Source="{Binding IconPreview}" Stretch="UniformToFill" />
+                        </Border>
+                        <StackPanel
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            Spacing="2"
+                            VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <HyperlinkButton
+                                    Click="ChangeIcon_Click"
+                                    Content="更换图标"
+                                    FontSize="13"
+                                    Theme="{StaticResource TransparentHyperlinkButton}" />
+                                <HyperlinkButton
+                                    Click="ResetIcon_Click"
+                                    Content="重置图标"
+                                    FontSize="13"
+                                    Theme="{StaticResource TransparentHyperlinkButton}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                    <TextBox
+                        IsEnabled="{Binding CanCustomizeInstanceId}"
+                        IsVisible="{Binding CanCustomizeInstanceId}"
+                        PlaceholderText="输入实例 ID"
+                        Text="{Binding InstanceId}" />
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Text="选择游戏版本" />
+                    <StackPanel Orientation="Horizontal">
+                        <ListBox
+                            ItemsSource="{Binding Platforms}"
+                            SelectedItem="{Binding SelectedPlatform}"
+                            Theme="{DynamicResource BorderListBox}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="downloadPages:PlatformOption">
+                                    <TextBlock Text="{Binding DisplayText}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <ListBox
+                            ItemsSource="{Binding VersionFilters}"
+                            SelectedItem="{Binding SelectedVersionFilter}"
+                            Theme="{DynamicResource BorderListBox}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="downloadPages:VersionFilterOption">
+                                    <TextBlock Text="{Binding DisplayText}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <ComboBox
+                            HorizontalAlignment="Stretch"
+                            IsDropDownOpen="{Binding IsVersionDropDownOpen, Mode=TwoWay}"
+                            IsEditable="True"
+                            IsEnabled="{Binding IsVersionComboEnabled}"
+                            ItemsSource="{Binding Versions}"
+                            PlaceholderText="{Binding VersionsPlaceholder}"
+                            SelectedItem="{Binding SelectedVersion}"
+                            Text="{Binding VersionSearchText}"
+                            TextInput="VersionCombo_OnTextInput"
+                            x:Name="VersionCombo">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="downloadPages:VersionOption">
+                                    <TextBlock Text="{Binding DisplayText}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <ComboBox
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding MinecraftFolders}"
+                            PlaceholderText="安装目录"
+                            SelectedItem="{Binding SelectedMinecraftFolder}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="classes:MinecraftFolderEntry">
+                                    <TextBlock
+                                        MaxLines="1"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap">
+                                        <Run Text="[" />
+                                        <Run Text="{Binding FolderName}" />
+                                        <Run Text="]" />
+                                        <Run Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding FolderPath}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding IsLoaderVisible}" Spacing="8">
+                    <TextBlock
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Text="选择加载器" />
+                    <ListBox
+                        ItemsSource="{Binding LoaderOptions}"
+                        SelectedItem="{Binding SelectedLoader}"
+                        Theme="{DynamicResource BorderListBox}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="downloadPages:LoaderOption">
+                                <TextBlock Text="{Binding DisplayText}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel IsVisible="{Binding IsLoaderVersionAreaVisible}" Spacing="8">
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="加载器" />
+                        <ListBox
+                            ItemsSource="{Binding LoaderVersionFilters}"
+                            SelectedItem="{Binding SelectedLoaderVersionFilter}"
+                            Theme="{DynamicResource BorderListBox}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="downloadPages:LoaderVersionFilterOption">
+                                    <TextBlock Text="{Binding DisplayText}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <ComboBox
+                            HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding IsCustomLoaderVersionComboEnabled}"
+                            IsVisible="{Binding IsCustomLoaderVersionVisible}"
+                            ItemsSource="{Binding CustomLoaderVersions}"
+                            PlaceholderText="{Binding CustomLoaderVersionsPlaceholder}"
+                            SelectedItem="{Binding SelectedCustomLoaderVersion}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="downloadPages:LoaderVersionOption">
+                                    <TextBlock Text="{Binding DisplayText}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Margin="0,16,0,0">
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasLoaderStatus}"
+                Text="{Binding LoaderStatus}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource SystemAccentColor}"
+                IsVisible="{Binding HasErrorText}"
+                Margin="0,2,0,0"
+                Text="{Binding ErrorText}"
+                TextWrapping="Wrap" />
+            <StackPanel
+                HorizontalAlignment="Right"
+                Margin="0,10,0,0"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Click="Cancel_Click" Content="取消" />
+                <Button
+                    Click="Create_Click"
+                    Content="创建实例"
+                    IsEnabled="{Binding CanCreate}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

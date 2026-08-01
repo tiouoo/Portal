@@ -15,6 +15,7 @@ using Portal.Core.Operations;
 using Portal.Core.Operations.Account;
 using Portal.Module.Multiplayer;
 using Portal.Views.Pages;
+using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -194,6 +195,20 @@ public partial class TitleBarComponent : Grid
         var tabEntry = new TabEntry(tioTabWindowBase!, new DownloadPage());
         tioTabWindowBase.CreateTab(tabEntry);
         tioTabWindowBase.SelectTab(tabEntry);
+    }
+
+    private async void OpenCreateInstance(object? sender, RoutedEventArgs e)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            CanResize = false,
+            IsCloseButtonVisible = false
+        };
+        await OverlayDialog.ShowCustomAsync<CreateInstanceDialog, CreateInstanceDialogViewModel, bool>(
+            new CreateInstanceDialogViewModel(), Root.TryGetHostId(), options);
     }
 
     private void OpenMultiplayer(object? sender, RoutedEventArgs e)

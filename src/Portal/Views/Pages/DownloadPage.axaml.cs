@@ -51,7 +51,7 @@ public partial class DownloadPageViewModel : ObservableObject, IDisposable
 
     public DownloadPageViewModel()
     {
-        NavigateType(typeof(VanillaInstallation));
+        NavigateType(typeof(ModSearchPage));
     }
 
     [RelayCommand]

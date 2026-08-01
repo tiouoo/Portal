@@ -146,12 +146,18 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         Data.ConfigEntry.MinecraftFolders.Add(result);
     }
 
-    private void ToDownload_Click(object? sender, RoutedEventArgs e)
+    private async void ToDownload_Click(object? sender, RoutedEventArgs e)
     {
-        var tioTabWindowBase = this.GetTopLevel() as TioTabWindowBase;
-        var tabEntry = new TabEntry(tioTabWindowBase!, new DownloadPage());
-        tioTabWindowBase.CreateTab(tabEntry);
-        tioTabWindowBase.SelectTab(tabEntry);
+        var options = new OverlayDialogOptions
+        {
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            CanResize = false,
+            IsCloseButtonVisible = false
+        };
+        await OverlayDialog.ShowCustomAsync<CreateInstanceDialog, CreateInstanceDialogViewModel, bool>(
+            new CreateInstanceDialogViewModel(), this.TryGetHostId(), options);
     }
 }
 
