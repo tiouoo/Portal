@@ -61,4 +61,98 @@ function closeMenu() {
   </header>
 </template>
 
-<style scoped src="../styles/site-header.css"></style>
+<style scoped>
+.nav-wrap {
+  position: fixed;
+  z-index: 50;
+  inset: 0 0 auto;
+  border-bottom: 1px solid rgba(223, 227, 235, 0.75);
+  background: rgba(248, 249, 252, 0.88);
+  backdrop-filter: blur(18px);
+}
+.nav {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: -0.5px;
+}
+.brand img {
+  width: 28px;
+  height: 28px;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  color: #5f6879;
+  font-size: 14px;
+}
+.nav-links > a:not(.nav-cta):hover {
+  color: var(--blue);
+}
+.nav-cta {
+  background: #20283a;
+  color: white;
+  border-radius: 9px;
+  padding: 11px 18px;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.nav-cta:hover {
+  background: var(--blue);
+  box-shadow: 0 7px 18px rgba(42, 112, 245, 0.22);
+}
+.menu-button {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+}
+.menu-button span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--ink);
+  margin: 5px auto;
+}
+
+@media (max-width: 820px) {
+  .menu-button {
+    display: block;
+  }
+  .nav-links {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 64px;
+    padding: 18px;
+    flex-direction: column;
+    gap: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 18px 40px rgba(40, 50, 75, 0.12);
+    opacity: 0;
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+  .nav-links.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .nav-cta {
+    width: 100%;
+    text-align: center;
+  }
+}
+</style>

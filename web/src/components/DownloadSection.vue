@@ -125,4 +125,219 @@ const channelHint = computed(() => {
   </section>
 </template>
 
-<style scoped src="../styles/download-section.css"></style>
+<style scoped>
+.section {
+  padding-top: 112px;
+  padding-bottom: 112px;
+}
+.download-section {
+  background: #eef3fc;
+  border-top: 1px solid #e1e8f4;
+  border-bottom: 1px solid #e1e8f4;
+}
+.section-kicker {
+  color: var(--blue);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.download-heading {
+  margin-bottom: 45px;
+}
+.download-heading h2 {
+  margin: 10px 0 0;
+  font-size: clamp(36px, 4vw, 50px);
+  letter-spacing: -0.045em;
+  line-height: 1.15;
+}
+.download-heading > p {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.download-options {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 190px));
+  gap: 16px;
+}
+.download-route {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  color: #4e5b70;
+  font-size: 12px;
+  font-weight: 700;
+}
+.download-route select {
+  height: 36px;
+  padding: 0 30px 0 11px;
+  border: 1px solid #d5deeb;
+  border-radius: 7px;
+  background: #fff;
+  color: #20283a;
+  font: inherit;
+  font-weight: 600;
+}
+.download-route select:focus-visible {
+  outline: 2px solid rgba(42, 112, 245, 0.38);
+  outline-offset: 2px;
+}
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.platform-card {
+  padding: 27px;
+  border: 1px solid #dfe5ef;
+  border-radius: 17px;
+  background: white;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.platform-card:hover {
+  border-color: #ccd8ea;
+  box-shadow: 0 16px 35px rgba(60, 75, 105, 0.08);
+}
+.platform-head {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.platform-icon {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f2f5fa;
+  color: #20283a;
+}
+.platform-icon svg {
+  width: 25px;
+  height: 25px;
+  fill: currentColor;
+  stroke: none;
+}
+.platform-head h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.platform-head p {
+  margin: 0;
+  color: #9097a5;
+  font-size: 11px;
+}
+.platform-primary {
+  height: 46px;
+  margin-top: 23px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 14px;
+  background: var(--blue);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+.platform-primary:hover {
+  background: #1f62df;
+}
+.platform-primary span {
+  font-size: 18px;
+}
+.platform-links {
+  margin-top: 14px;
+}
+.platform-links a {
+  min-height: 48px;
+  padding: 9px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #edf0f4;
+  font-size: 12px;
+}
+.platform-links a:last-child {
+  border: 0;
+}
+.platform-links a:hover {
+  color: var(--blue);
+}
+.platform-links small {
+  display: block;
+  margin-top: 3px;
+  color: #a0a6b1;
+  font-size: 9px;
+}
+.platform-links svg {
+  width: 17px;
+  height: 17px;
+  color: #a7aeba;
+}
+.download-note {
+  width: calc(100% - 48px);
+  margin: 25px auto 0;
+  color: #4e5b70;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+}
+.download-note > span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #8090a9;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+.download-note a {
+  color: var(--blue);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.download-note a:hover {
+  color: #1f62df;
+}
+
+@media (max-width: 820px) {
+  .section {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+  .platform-grid {
+    grid-template-columns: 1fr;
+  }
+  .download-note {
+    width: calc(100% - 32px);
+  }
+}
+
+@media (max-width: 520px) {
+  .download-heading h2 {
+    font-size: 36px;
+  }
+  .platform-card {
+    padding: 22px;
+  }
+  .download-options {
+    grid-template-columns: 1fr;
+  }
+  .download-route select {
+    width: 100%;
+  }
+  .download-note {
+    width: calc(100% - 28px);
+  }
+}
+</style>

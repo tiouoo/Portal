@@ -1,21 +1,100 @@
 <script setup>
-import logoUrl from '../assets/portal-logo.svg'
-import { RouterLink } from 'vue-router'
+import logoUrl from "../assets/portal-logo.svg";
+import { RouterLink } from "vue-router";
 </script>
 
 <template>
   <footer>
     <div class="container footer-inner">
-      <RouterLink class="brand" to="/"><img :src="logoUrl" alt="" width="23" height="23" /><span>Portal</span></RouterLink>
+      <RouterLink class="brand" to="/"
+        ><img :src="logoUrl" alt="" width="23" height="23" /><span
+          >Portal</span
+        ></RouterLink
+      >
       <p>Copyright © Portal 2026. 基于 GPL-3.0-or-later 开源许可发布。</p>
       <div class="footer-links">
-        <a href="https://github.com/tiouoo/Portal" target="_blank" rel="noreferrer">GitHub</a>
-        <a href="https://github.com/tiouoo/Portal/releases" target="_blank" rel="noreferrer">发行版本</a>
+        <a
+          href="https://github.com/tiouoo/Portal"
+          target="_blank"
+          rel="noreferrer"
+          >GitHub</a
+        >
+        <a
+          href="https://github.com/tiouoo/Portal/releases"
+          target="_blank"
+          rel="noreferrer"
+          >发行版本</a
+        >
         <a href="mailto:tiouo@qq.com">联系</a>
       </div>
     </div>
-    <p class="disclaimer container">Portal 是独立开源项目，与 Mojang Studios 或 Microsoft 没有从属关系。Minecraft 是 Microsoft 旗下商标。</p>
+    <p class="disclaimer container">
+      Portal 是独立开源项目，与 Mojang Studios 或 Microsoft
+      没有从属关系。Minecraft 是 Microsoft 旗下商标。
+    </p>
   </footer>
 </template>
 
-<style scoped src="../styles/site-footer.css"></style>
+<style scoped>
+footer {
+  padding: 32px 0 22px;
+  border-top: 1px solid #e2e5ec;
+  background: #f3f5f8;
+}
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.footer-inner .brand {
+  font-size: 17px;
+}
+.footer-inner .brand img {
+  width: 23px;
+  height: 23px;
+}
+.footer-inner p {
+  color: #8b92a0;
+  font-size: 11px;
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+  color: #70798a;
+  font-size: 11px;
+}
+.footer-links a:hover {
+  color: var(--blue);
+}
+.disclaimer {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e0e4ea;
+  color: #a0a6b1;
+  font-size: 9px;
+  text-align: center;
+}
+
+@media (max-width: 820px) {
+  .footer-inner {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .footer-inner p {
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .footer-links {
+    gap: 18px;
+  }
+}
+</style>
