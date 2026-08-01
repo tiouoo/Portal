@@ -53,7 +53,7 @@ public static class JavaResourceDefinitions
         new(JavaResourceKind.Save, "存档", "world", 17, true, false, false);
 }
 
-public abstract partial class JavaResourceSearchViewModel : ObservableObject, IDisposable
+public abstract partial class JavaResourceSearchViewModel : ObservableObject, IDisposable, ISearchPageViewModel
 {
     private const int PageSize = 40;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);

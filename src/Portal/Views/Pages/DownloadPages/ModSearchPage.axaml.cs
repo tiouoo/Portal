@@ -66,7 +66,7 @@ public partial class ModSearchPage : UserControl
     }
 }
 
-public partial class ModSearchPageViewModel : ObservableObject, IDisposable
+public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISearchPageViewModel
 {
     private const int PageSize = 40;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);

@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Classes.Entries;
 using Portal.Const;
@@ -41,6 +42,8 @@ public partial class StartPage : DataUserControl, ITioTabPage
         InitializeComponent();
         _viewModel = new StartPageViewModel();
         DataContext = _viewModel;
+        SearchBox.AddHandler(InputElement.KeyDownEvent, SearchBox_OnKeyDown, RoutingStrategies.Bubble,
+            handledEventsToo: true);
         Loaded += (_, _) =>
         {
             if (_isInitialized)
@@ -77,14 +80,62 @@ public partial class StartPage : DataUserControl, ITioTabPage
             return;
         }
 
+        if (_viewModel.SelectedSearchMode?.PageType is not null)
+        {
+            e.Cancel = true;
+            return;
+        }
+
         if (sender is TioUi.Controls.AutoCompleteBox box)
             box.ItemsSource = Searcher.Search(e.Parameter ?? string.Empty);
     }
 
     private void SearchBox_OnDropDownOpened(object? sender, EventArgs e)
     {
-        if (sender is TioUi.Controls.AutoCompleteBox box)
-            box.ItemsSource = Searcher.Search(box.Text ?? string.Empty);
+        if (sender is not TioUi.Controls.AutoCompleteBox box)
+            return;
+
+        if (_viewModel.SelectedSearchMode?.PageType is not null)
+        {
+            box.IsDropDownOpen = false;
+            return;
+        }
+
+        box.ItemsSource = Searcher.Search(box.Text ?? string.Empty);
+    }
+
+    private void SearchBox_OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+            return;
+        if (e.Source is Visual visual && visual.FindAncestorOfType<ComboBox>() != null)
+            return;
+
+        var mode = _viewModel.SelectedSearchMode;
+        if (mode?.PageType is null)
+            return;
+
+        var keyword = SearchBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(keyword))
+            return;
+
+        OpenDownloadSearchTab(mode.PageType, keyword, $"{mode.DisplayText}搜索");
+        _suppressSearchPopulate = true;
+        SearchBox.SelectedItem = null;
+        SearchBox.Text = null;
+        SearchBox.IsDropDownOpen = false;
+        e.Handled = true;
+    }
+
+    private void OpenDownloadSearchTab(Type pageType, string keyword, string title)
+    {
+        if (this.GetTopLevel() is not TioTabWindowBase window)
+            return;
+
+        var page = new DownloadSearchTabPage(pageType, keyword, title);
+        var tab = new TabEntry(window, page);
+        window.CreateTab(tab);
+        window.SelectTab(tab);
     }
 
     private void SearchBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -232,6 +283,8 @@ public partial class StartPage : DataUserControl, ITioTabPage
     }
 }
 
+public sealed record SearchMode(string DisplayText, Type? PageType);
+
 public partial class StartPageViewModel : InstanceListViewModelBase
 {
     private readonly RecentPlayListService _recentPlayListService = RecentPlayListService.Instance;
@@ -239,6 +292,23 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     private int _recentPlayCapacity = 1;
     private bool _areRecentPlaysExpanded;
     private bool _isDisposed;
+
+    public IReadOnlyList<SearchMode> SearchModes { get; } =
+    [
+        new("本地", null),
+        new("资源包", typeof(ResourcePackSearchPage)),
+        new("存档数据包", typeof(DataPackSearchPage)),
+        new("光影材质包", typeof(ShaderPackSearchPage)),
+        new("整合包", typeof(ModpackSearchPage)),
+        new("模组", typeof(ModSearchPage)),
+    ];
+
+    [ObservableProperty] public partial SearchMode? SelectedSearchMode { get; set; }
+
+    public string SearchPlaceholder =>
+        SelectedSearchMode?.PageType is null ? "搜索实例、存档、服务器、页面" : $"搜索{SelectedSearchMode.DisplayText}";
+
+    partial void OnSelectedSearchModeChanged(SearchMode? value) => OnPropertyChanged(nameof(SearchPlaceholder));
 
     public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
     public bool HasRecentPlays => RecentPlays.Count > 0;
@@ -248,6 +318,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     public StartPageViewModel()
     {
         SelectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
+        SelectedSearchMode = SearchModes[0];
         _recentPlayListService.Refreshed += OnRecentPlaysRefreshed;
         UpdateRecentPlays(_recentPlayListService.Items);
     }
