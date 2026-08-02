@@ -85,7 +85,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="CreateLink_Click"
-                                            Header="创建桌面快捷方式"
+                                            Header="快捷方式"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon

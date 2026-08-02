@@ -172,7 +172,7 @@
                                                 </MenuItem>
                                                 <MenuItem
                                                     Click="RecentPlayCreateShortcut_Click"
-                                                    Header="创建桌面快捷方式"
+                                                    Header="快捷方式"
                                                     Tag="{Binding}">
                                                     <MenuItem.Icon>
                                                         <PathIcon
@@ -514,7 +514,7 @@
                                             </MenuItem>
                                             <MenuItem
                                                 Click="CreateShortcut_Click"
-                                                Header="创建快捷方式"
+                                                Header="快捷方式"
                                                 Tag="{Binding}">
                                                 <MenuItem.Icon>
                                                     <PathIcon
