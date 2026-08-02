@@ -70,15 +70,23 @@ public partial class TabWindow : TioTabWindowBase
         AttachDropDrag();
         CreateNewTabFunc = () =>
         {
-            var page = Data.ConfigEntry.NewTabContent == NewTabContent.StartPage
-                ? (ITioTabPage)new StartPage()
-                : new NewTabPage();
+            ITioTabPage page = Data.ConfigEntry.NewTabContent switch
+            {
+                NewTabContent.NewTabPage => new NewTabPage(),
+                NewTabContent.StartPage => new StartPage(),
+                NewTabContent.Widget => new WidgetsPage(),
+                _ => new NewTabPage()
+            };
             var tab = new TabEntry(this, page)
             {
                 IconHeight = 17,
                 IconWidth = 17,
-                IconMargin = new Thickness(0, 0, 4, -1)
+                IconMargin = Data.ConfigEntry.NewTabContent switch
+                {
+                    _ => new Thickness(0, 0, 4, 0)
+                }
             };
+
             AddTab(tab);
             SelectTab(tab);
             NavScrollViewer.Offset = new Vector(double.PositiveInfinity, 0);
@@ -394,7 +402,7 @@ public partial class TabWindow : TioTabWindowBase
             {
                 WindowDecorations = WindowDecorations.None;
                 FrameBorderThickness = new Thickness(1);
-                FrameBorderCornerRadius = new CornerRadius(10);  
+                FrameBorderCornerRadius = new CornerRadius(10);
                 FrameBorderBrush = entry.EnableManagedWindowBorderOnWindows
                     ? new SolidColorBrush(entry.CustomWindowBorderColor)
                     : new SolidColorBrush(Colors.Transparent);
@@ -404,7 +412,7 @@ public partial class TabWindow : TioTabWindowBase
             {
                 WindowDecorations = WindowDecorations.Full;
                 FrameBorderThickness = new Thickness(0);
-                FrameBorderCornerRadius = new CornerRadius(0);  
+                FrameBorderCornerRadius = new CornerRadius(0);
                 IsManagedResizerVisible = false;
             }
         }

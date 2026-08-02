@@ -30,6 +30,7 @@
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.NewTabContent}">
                 <ComboBoxItem Content="新标签页" />
                 <ComboBoxItem Content="起始页" />
+                <ComboBoxItem Content="小组件" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">
