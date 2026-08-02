@@ -413,7 +413,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     private int _recentPlayCapacity = 1;
     private bool _isDisposed;
 
-   public IReadOnlyList<SearchMode> SearchModes { get; } =
+    public static IReadOnlyList<SearchMode> DefaultSearchModes { get; } =
 [
     new("本地", null, [
         "本地", "bd", "local",
@@ -457,6 +457,8 @@ public partial class StartPageViewModel : InstanceListViewModelBase
         "基岩版材质", "基岩资源", "BE", "bedrock pack", "基岩材质包", "jyzyb", "基岩光影"
     ], "F1 M640,640z M0,0z M348,62.7C330.7,52.7,309.3,52.7,292,62.7L207.8,111.3C190.5,121.3,179.8,139.8,179.8,159.8L179.8,261.7 91.5,312.7C74.2,322.7,63.5,341.2,63.5,361.2L63.5,458.5C63.5,478.5,74.2,497,91.5,507L175.8,555.6C193.1,565.6,214.5,565.6,231.8,555.6L320.1,504.6 408.4,555.6C425.7,565.6,447.1,565.6,464.4,555.6L548.5,507C565.8,497,576.5,478.5,576.5,458.5L576.5,361.2C576.5,341.2,565.8,322.7,548.5,312.7L460.2,261.7 460.2,159.8C460.2,139.8,449.5,121.3,432.2,111.3L348,62.7z M296,356.6L296,463.1 207.7,514.1C206.5,514.8,205.1,515.2,203.7,515.2L203.7,409.9 296,356.6z M527.4,357.2C528.1,358.4,528.5,359.8,528.5,361.2L528.5,458.5C528.5,461.4,527,464,524.5,465.4L440.2,514C439,514.7,437.6,515.1,436.2,515.1L436.2,409.8 527.4,357.2z M412.3,159.8L412.3,261.7 320,315 320,208.5 411.2,155.9C411.9,157.1,412.3,158.5,412.3,159.9z"),
 ];
+
+    public IReadOnlyList<SearchMode> SearchModes => DefaultSearchModes;
 
     [ObservableProperty] public partial SearchMode? SelectedSearchMode { get; set; }
 

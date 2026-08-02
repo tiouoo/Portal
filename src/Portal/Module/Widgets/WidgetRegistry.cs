@@ -100,7 +100,6 @@ public static class WidgetRegistry
 
     private static void RegisterBuiltins()
     {
-        // 实用工具：时钟、图片
         Register(new WidgetDefinition
         {
             Kind = WidgetKind.Clock,
@@ -129,7 +128,21 @@ public static class WidgetRegistry
         }
         Register(imageDef);
 
-        // 游戏：实例、快速进入世界/服务器
+        var searchDef = new WidgetDefinition
+        {
+            Kind = WidgetKind.Search,
+            Name = "搜索框",
+            Description = "聚合搜索实例、存档、服务器、页面及下载站资源",
+            Category = WidgetCategory.Utility,
+            DefaultSize = new WidgetCellSize(1, 4)
+        };
+        for (int column = 2; column <= 16; column++)
+        {
+            var size = new WidgetCellSize(column, 1);
+            searchDef.AddPage(size, () => new SearchWidget(size));
+        }
+        Register(searchDef);
+
         Register(new WidgetDefinition
         {
             Kind = WidgetKind.Instance,

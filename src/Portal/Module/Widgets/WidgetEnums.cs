@@ -11,17 +11,14 @@ public enum WidgetKind
     DiskResource,
     NetworkResource,
     GpuResource,
-    Image
+    Image,
+    Search
 }
 
-/// <summary>小组件分类，用于添加组件对话框的左侧导航。</summary>
 public enum WidgetCategory
 {
-    /// <summary>游戏相关：实例、快速进入世界/服务器。</summary>
     Game,
-    /// <summary>系统资源：CPU、内存、磁盘、网络、GPU。</summary>
     Resource,
-    /// <summary>实用工具：时钟、图片等。</summary>
     Utility
 }
 
