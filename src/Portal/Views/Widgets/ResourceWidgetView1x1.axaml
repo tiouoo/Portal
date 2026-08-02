@@ -1,0 +1,47 @@
+<UserControl
+    d:DesignHeight="130"
+    d:DesignWidth="130"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.ResourceWidgetView1x1"
+    x:DataType="local:ResourceWidgetBase"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Portal.Views.Widgets">
+    <Grid Margin="10,10,10,8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <!-- 左上角：图标 + 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="5">
+            <PathIcon
+                Data="{Binding IconGeometry}"
+                Width="16"
+                Height="16"
+                VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Title}" />
+        </StackPanel>
+        <!-- 中间：主数据 -->
+        <TextBlock
+            Grid.Row="1"
+            FontSize="26"
+            FontWeight="SemiBold"
+            Margin="0,2,0,0"
+            Text="{Binding PrimaryText}"
+            VerticalAlignment="Center" />
+        <!-- 底部：副文本（小字，支持换行） -->
+        <TextBlock
+            Grid.Row="2"
+            FontSize="11"
+            Foreground="{DynamicResource InnerForegroundColor}"
+            Margin="0,-2,0,0"
+            MaxLines="2"
+            Text="{Binding SecondaryText}"
+            TextWrapping="Wrap"
+            TextTrimming="CharacterEllipsis"
+            IsVisible="{Binding HasSecondaryText}" />
+    </Grid>
+</UserControl>

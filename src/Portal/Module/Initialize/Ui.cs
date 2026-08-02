@@ -8,6 +8,7 @@ using Portal.Const;
 using Portal.Core;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.SystemResources;
 using Portal.Module.Update;
 using Portal.Services;
 using Portal.Views;
@@ -68,6 +69,7 @@ public static partial class Initializer
 
         RecentPlayListService.Initialize();
         BlockListService.Initialize();
+        SystemResourceService.Initialize();
         await LoadUiDataAsync();
 
         InitializationEvents.RaiseAfterUiLoaded();

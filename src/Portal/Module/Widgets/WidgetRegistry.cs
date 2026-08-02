@@ -137,5 +137,37 @@ public static class WidgetRegistry
         }
             .AddPage<QuickServerWidget1x1>(new WidgetCellSize(1, 1))
             .AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
+
+        RegisterResourceWidget(WidgetKind.CpuResource, "CPU 占用", "处理器使用率",
+            size => new CpuResourceWidget(size));
+        RegisterResourceWidget(WidgetKind.MemoryResource, "内存占用", "物理内存使用情况",
+            size => new MemoryResourceWidget(size));
+        RegisterResourceWidget(WidgetKind.DiskResource, "磁盘占用", "系统盘使用情况",
+            size => new DiskResourceWidget(size));
+        RegisterResourceWidget(WidgetKind.NetworkResource, "网络占用", "上下行传输速率",
+            size => new NetworkResourceWidget(size));
+        RegisterResourceWidget(WidgetKind.GpuResource, "GPU 占用", "显卡使用率",
+            size => new GpuResourceWidget(size));
+    }
+
+    private static void RegisterResourceWidget(
+        WidgetKind kind, string name, string description,
+        Func<WidgetCellSize, IWidgetContent> factory)
+    {
+        var def = new WidgetDefinition
+        {
+            Kind = kind,
+            Name = name,
+            Description = description,
+            DefaultSize = new WidgetCellSize(1, 1)
+        };
+        foreach (var size in new[]
+                 {
+                     new WidgetCellSize(1, 1),
+                     new WidgetCellSize(2, 1),
+                     new WidgetCellSize(2, 2)
+                 })
+            def.AddPage(size, () => factory(size));
+        Register(def);
     }
 }

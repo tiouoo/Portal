@@ -1,0 +1,49 @@
+<UserControl
+    d:DesignHeight="130"
+    d:DesignWidth="272"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.ResourceWidgetView2x1"
+    x:DataType="local:ResourceWidgetBase"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Portal.Views.Widgets">
+    <DockPanel Margin="12,10,12,10">
+        <!-- 顶部：图标 + 标题 + 主数据 -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="5">
+            <PathIcon
+                Data="{Binding IconGeometry}"
+                Width="16"
+                Height="16"
+                VerticalAlignment="Center" />
+            <TextBlock
+                Text="{Binding Title}"
+                VerticalAlignment="Center" />
+            <TextBlock
+                FontSize="16"
+                FontWeight="SemiBold"
+                Margin="6,0,0,0"
+                Text="{Binding PrimaryText}"
+                VerticalAlignment="Center" />
+        </StackPanel>
+        <!-- 底部副文本 -->
+        <TextBlock
+            DockPanel.Dock="Bottom"
+            FontSize="11"
+            Foreground="{DynamicResource InnerForegroundColor}"
+            Margin="0,0,0,4"
+            MaxLines="1"
+            Text="{Binding SecondaryText}"
+            TextTrimming="CharacterEllipsis"
+            IsVisible="{Binding HasSecondaryText}" />
+        <!-- 横向进度条 -->
+        <ProgressBar
+            Height="8"
+            CornerRadius="4"
+            Margin="0,6,0,6"
+            Maximum="{Binding ProgressMaximum}"
+            Minimum="0"
+            Value="{Binding ProgressValue}" />
+    </DockPanel>
+</UserControl>

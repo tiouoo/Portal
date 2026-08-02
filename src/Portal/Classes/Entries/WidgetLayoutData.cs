@@ -22,6 +22,9 @@ public sealed class WidgetLayoutData
     /// <summary>快速进入服务器组件所记录的服务器端口。</summary>
     public int? ServerPort { get; set; }
 
+    /// <summary>内存资源组件的显示模式：true=百分比，false=数值。null 时默认百分比。</summary>
+    public bool? MemoryShowPercentage { get; set; }
+
     [JsonIgnore]
     public WidgetCellSize Size
     {

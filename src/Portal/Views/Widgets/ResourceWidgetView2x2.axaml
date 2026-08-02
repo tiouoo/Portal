@@ -1,0 +1,62 @@
+<UserControl
+    d:DesignHeight="272"
+    d:DesignWidth="272"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.ResourceWidgetView2x2"
+    x:DataType="local:ResourceWidgetBase"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Portal.Views.Widgets">
+    <DockPanel Margin="16,12,16,12">
+        <!-- 顶部：图标 + 标题 -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6">
+            <PathIcon
+                Data="{Binding IconGeometry}"
+                Width="16"
+                Height="16"
+                VerticalAlignment="Center" />
+            <TextBlock
+                FontSize="14"
+                Text="{Binding Title}"
+                VerticalAlignment="Center" />
+        </StackPanel>
+        <!-- 底部副文本 -->
+        <TextBlock
+            DockPanel.Dock="Bottom"
+            FontSize="12"
+            Foreground="{DynamicResource InnerForegroundColor}"
+            HorizontalAlignment="Center"
+            Margin="0,0,0,4"
+            MaxLines="1"
+            Text="{Binding SecondaryText}"
+            TextTrimming="CharacterEllipsis"
+            IsVisible="{Binding HasSecondaryText}" />
+        <!-- 环形进度条 + 中心文字 -->
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+            <ProgressBar
+                BorderThickness="10"
+                Height="140"
+                Maximum="{Binding ProgressMaximum}"
+                Minimum="0"
+                ShowProgressText="False"
+                Theme="{DynamicResource ProgressRing}"
+                Value="{Binding ProgressValue}"
+                Width="140" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock
+                    FontSize="28"
+                    FontWeight="SemiBold"
+                    HorizontalAlignment="Center"
+                    Text="{Binding PrimaryText}" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    HorizontalAlignment="Center"
+                    Margin="0,2,0,0"
+                    Text="{Binding Title}" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

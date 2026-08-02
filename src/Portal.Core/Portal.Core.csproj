@@ -14,12 +14,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Data.Sqlite.Core" />
-      <PackageReference Include="CommunityToolkit.Mvvm" />
-      <PackageReference Include="fNbt" />
-      <PackageReference Include="PinYinConverterCore" />
-      <PackageReference Include="SkiaSharp" />
-      <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+        <PackageReference Include="Hardware.Info" />
+        <PackageReference Include="Microsoft.Data.Sqlite.Core" />
+        <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="fNbt" />
+        <PackageReference Include="PinYinConverterCore" />
+        <PackageReference Include="SkiaSharp" />
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
     </ItemGroup>
 
     <ItemGroup>

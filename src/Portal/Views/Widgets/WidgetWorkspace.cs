@@ -103,6 +103,27 @@ public class WidgetWorkspace : UserControl
         backgroundMenu.Items.Add(hideItem);
         _widgetContextMenu.Items.Add(backgroundMenu);
 
+        var memoryModeItem = new MenuItem
+        {
+            Header = "切换显示模式",
+            Icon = new PathIcon()
+            {
+                Data = StreamGeometry.Parse(
+                    "F1 M640,640z M0,0z M320,0C441.9,0 547.7,67.9 604.3,167.6L551.7,202.2C508.6,127.6 427.5,80 336,80L320,80C171.9,80 56,195.9 56,344L56,376 152,376 152,344C152,249.1 225.1,176 320,176L336,176C427.5,176 508.6,223.6 551.7,298.2L604.3,263.6C547.7,163.9 441.9,96 320,96L320,0z M320,512C414.9,512 488,438.9 488,344L488,312 584,312 584,344C584,492.1 468.1,608 320,608L320,512z M320,432A80,80 0 1,0 160,432A80,80 0 1,0 320,432z"),
+                Width = 16, Height = 16
+            },
+            IsVisible = false
+        };
+        memoryModeItem.Click += (_, _) =>
+        {
+            if (_contextMenuWidget?.WidgetContent is MemoryResourceWidget mem)
+            {
+                mem.ToggleDisplayMode();
+                SaveLayout();
+            }
+        };
+        _widgetContextMenu.Items.Add(memoryModeItem);
+
         var sizeMenu = new MenuItem { Header = "切换尺寸", Icon = new PathIcon()
         {
             Data = StreamGeometry.Parse(
@@ -120,6 +141,8 @@ public class WidgetWorkspace : UserControl
             followItem.IsChecked = value == null;
             showItem.IsChecked = value == true;
             hideItem.IsChecked = value == false;
+
+            memoryModeItem.IsVisible = _contextMenuWidget.WidgetContent is MemoryResourceWidget;
 
             sizeMenu.Items.Clear();
             var definition = WidgetRegistry.Get(_contextMenuWidget.Layout.Kind);

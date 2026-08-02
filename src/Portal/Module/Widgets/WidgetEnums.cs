@@ -5,7 +5,12 @@ public enum WidgetKind
     Clock,
     Instance,
     QuickWorld,
-    QuickServer
+    QuickServer,
+    CpuResource,
+    MemoryResource,
+    DiskResource,
+    NetworkResource,
+    GpuResource
 }
 
 public readonly record struct WidgetCellSize(int Columns, int Rows)
