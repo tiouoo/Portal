@@ -358,5 +358,12 @@
                 </tio:TioColorPicker>
             </StackPanel>
         </Border>
+        <StackPanel Spacing="5">
+            <Label
+                Content="小组件背景"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding ShowWidgetBackground, Source={x:Static const:Data.ConfigEntry}}" />
+        </StackPanel>
     </StackPanel>
 </UserControl>

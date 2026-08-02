@@ -1,0 +1,46 @@
+<UserControl
+    d:DesignHeight="130"
+    d:DesignWidth="130"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.WidgetHost"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Panel>
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            ClipToBounds="False"
+            CornerRadius="12"
+            x:Name="Card" />
+        <TransitioningContentControl
+            Background="Transparent"
+            Margin="12"
+            x:Name="ContentHost">
+            <TransitioningContentControl.PageTransition>
+                <CompositePageTransition>
+                    <CrossFade Duration="0:0:0.2" />
+                </CompositePageTransition>
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
+        <Border
+            Background="#01FFFFFF"
+            Cursor="BottomRightCorner"
+            Height="26"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Width="26"
+            x:Name="ResizeHandle">
+            <PathIcon
+                Data="F1 M544.682667,838.4q121.642667,0 207.658666,-86.016 86.058667,-86.016 86.058667,-207.701333V149.333333q0,-15.018667 10.624,-25.6 10.624,-10.666667 25.6,-10.666666 15.061333,0 25.685333,10.666666 10.581333,10.581333 10.581334,25.6v395.349334q0,151.722667 -107.221334,258.986666 -107.306667,107.264 -258.986666,107.264H149.333333q-15.018667,0 -25.642666,-10.666666 -10.666667,-10.581333 -10.666667,-25.6t10.666667,-25.642667q10.624,-10.624 25.6,-10.624h395.392z"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Height="14"
+                Margin="6"
+                Opacity="0"
+                Width="14"
+                x:Name="ResizeIcon" />
+        </Border>
+    </Panel>
+</UserControl>

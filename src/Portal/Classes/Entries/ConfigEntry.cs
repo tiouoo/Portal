@@ -87,6 +87,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
     [ObservableProperty] public partial double MicaOpacity { get; set; } = 0.8;
     [ObservableProperty] public partial double BlurOpacity { get; set; } = 0.5;
+    [ObservableProperty] public partial bool ShowWidgetBackground { get; set; } = true;
+    [ObservableProperty] public partial List<WidgetLayoutData> WidgetLayout { get; set; } = [];
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
     [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
     [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }

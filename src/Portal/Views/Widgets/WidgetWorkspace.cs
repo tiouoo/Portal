@@ -1,0 +1,576 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.VisualTree;
+using Portal.Classes.Entries;
+using Portal.Const;
+using Portal.Module.Widgets;
+
+namespace Portal.Views.Widgets;
+
+public class WidgetWorkspace : UserControl
+{
+    private const double DragThreshold = 6;
+
+    private Canvas? _canvas;
+
+    private WidgetHost? _pendingDragHost;
+    private Point _pendingStartPoint;
+    private Point _pendingInitialPosition;
+
+    private WidgetHost? _draggingWidget;
+    private Point _dragStartPoint;
+    private Point _widgetInitialPosition;
+
+    private Border? _ghostPlaceholder;
+
+    private readonly Dictionary<Point, WidgetHost> _occupiedGridCells = [];
+    private readonly List<WidgetHost> _allWidgets = [];
+
+    private ContextMenu? _widgetContextMenu;
+    private ContextMenu? _emptyContextMenu;
+    private WidgetHost? _contextMenuWidget;
+
+    public event EventHandler? AddWidgetCallOn;
+
+    public WidgetWorkspace()
+    {
+        _canvas = new Canvas
+        {
+            // Margin = new Thickness(WidgetGeometry.Spacing),
+            Background = new SolidColorBrush(Colors.Transparent)
+        };
+        Content = _canvas;
+        ClipToBounds = true;
+
+        _canvas.PointerPressed += OnCanvasPointerPressed;
+        AddHandler(InputElement.PointerPressedEvent, OnWorkspacePointerPressed, RoutingStrategies.Bubble,
+            handledEventsToo: true);
+        PointerMoved += OnWorkspacePointerMoved;
+        PointerReleased += OnWorkspacePointerReleased;
+        PointerCaptureLost += OnWorkspacePointerCaptureLost;
+        SizeChanged += OnWorkspaceSizeChanged;
+        InitializeContextMenus();
+        Loaded += (_, _) => LoadLayoutFromConfig();
+        UpdateCanvasSize();
+    }
+
+    private void OnWorkspaceSizeChanged(object? sender, SizeChangedEventArgs e) => UpdateCanvasSize();
+
+    private void OnCanvasPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
+        {
+            _contextMenuWidget = null;
+            _emptyContextMenu?.Open(_canvas);
+            e.Handled = true;
+        }
+    }
+
+    private void InitializeContextMenus()
+    {
+        _widgetContextMenu = new ContextMenu();
+
+        var deleteItem = new MenuItem
+        {
+            Header = "删除组件", Icon = new PathIcon()
+            {
+                Data = StreamGeometry.Parse(
+                    "F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403,56.8,407.4,69.9L416,96 512,96C529.7,96 544,110.3 544,128 544,145.7 529.7,160 512,160L128,160C110.3,160 96,145.7 96,128 96,110.3 110.3,96 128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3 202.7,512 216,512 229.3,512 240,501.3 240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3 306.7,512 320,512 333.3,512 344,501.3 344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3 410.7,512 424,512 437.3,512 448,501.3 448,488L448,296C448,282.7,437.3,272,424,272z"),
+                Width = 16, Height = 16
+            }
+        };
+        deleteItem.Click += OnDeleteWidgetClick;
+        _widgetContextMenu.Items.Add(deleteItem);
+
+        var backgroundMenu = new MenuItem { Header = "背景", Icon = new PathIcon()
+        {
+            Data = StreamGeometry.Parse(
+                "F1 M640,640z M0,0z M512,128C547.3,128,576,156.7,576,192L576,341.5C576,358.5,569.3,374.8,557.3,386.8L450.7,493.3C438.7,505.3,422.4,512,405.4,512L128,512C92.7,512,64,483.3,64,448L64,192C64,156.7,92.7,128,128,128L512,128z M517.5,336L424,336C410.7,336,400,346.7,400,360L400,453.5 517.5,336z M160,256C177.7,256 192,241.7 192,224 192,206.3 177.7,192 160,192 142.3,192 128,206.3 128,224 128,241.7 142.3,256 160,256z"),
+            Width = 16, Height = 16
+        } };
+        var followItem = new MenuItem { Header = "跟随全局", Classes = { "hide-icon" } };
+        followItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, null);
+        var showItem = new MenuItem { Header = "始终显示", Classes = { "hide-icon" } };
+        showItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, true);
+        var hideItem = new MenuItem { Header = "始终隐藏", Classes = { "hide-icon" } };
+        hideItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, false);
+        backgroundMenu.Items.Add(followItem);
+        backgroundMenu.Items.Add(showItem);
+        backgroundMenu.Items.Add(hideItem);
+        _widgetContextMenu.Items.Add(backgroundMenu);
+
+        var sizeMenu = new MenuItem { Header = "切换尺寸", Icon = new PathIcon()
+        {
+            Data = StreamGeometry.Parse(
+                "F1 M640,640z M0,0z M241.1,580.2C222.4,598.9,192,598.9,173.2,580.2L60.1,467.1C41.4,448.4,41.4,418,60.1,399.2L77.1,382.2 150.6,455.7C160,465.1 175.2,465.1 184.5,455.7 193.8,446.3 193.9,431.1 184.5,421.8L111,348.3 144.9,314.4 195.8,365.3C205.2,374.7 220.4,374.7 229.7,365.3 239,355.9 239.1,340.7 229.7,331.4L178.8,280.5 212.7,246.6 286.2,320.1C295.6,329.5 310.8,329.5 320.1,320.1 329.4,310.7 329.5,295.5 320.1,286.2L246.6,212.7 280.5,178.8 331.4,229.7C340.8,239.1 356,239.1 365.3,229.7 374.6,220.3 374.7,205.1 365.3,195.8L314.4,144.9 348.3,111 421.8,184.5C431.2,193.9 446.4,193.9 455.7,184.5 465,175.1 465.1,159.9 455.7,150.6L382.2,77.1 399.2,60.1C417.9,41.4,448.3,41.4,467.1,60.1L580.5,172.9C599.2,191.6,599.2,222,580.5,240.8L241.1,580.2z"),
+            Width = 16, Height = 16
+        } };
+        _widgetContextMenu.Items.Add(sizeMenu);
+
+        _widgetContextMenu.Opened += (_, _) =>
+        {
+            if (_contextMenuWidget == null)
+                return;
+
+            var value = _contextMenuWidget.Layout.ShowBackground;
+            followItem.IsChecked = value == null;
+            showItem.IsChecked = value == true;
+            hideItem.IsChecked = value == false;
+
+            sizeMenu.Items.Clear();
+            var definition = WidgetRegistry.Get(_contextMenuWidget.Layout.Kind);
+            if (definition == null)
+                return;
+
+            foreach (var size in definition.SupportedSizes)
+            {
+                var item = new MenuItem
+                {
+                    Header = size.ToString(),
+                    IsChecked = _contextMenuWidget.Layout.Size == size,
+                    Classes = { "hide-icon" }
+                };
+                item.Click += (_, _) => SetWidgetSize(_contextMenuWidget, size);
+                sizeMenu.Items.Add(item);
+            }
+        };
+
+        _emptyContextMenu = new ContextMenu();
+        var addItem = new MenuItem
+        {
+            Header = "添加组件", Icon = new PathIcon()
+            {
+                Data = StreamGeometry.Parse(
+                    "F1 M640,640z M0,0z M352,128C352,110.3 337.7,96 320,96 302.3,96 288,110.3 288,128L288,288 128,288C110.3,288 96,302.3 96,320 96,337.7 110.3,352 128,352L288,352 288,512C288,529.7 302.3,544 320,544 337.7,544 352,529.7 352,512L352,352 512,352C529.7,352 544,337.7 544,320 544,302.3 529.7,288 512,288L352,288 352,128z"),
+                Width = 16, Height = 16
+            }
+        };
+        addItem.Click += (_, _) => AddWidgetCallOn?.Invoke(this, EventArgs.Empty);
+        _emptyContextMenu.Items.Add(addItem);
+    }
+
+    private void SetBackgroundOverride(WidgetHost? host, bool? value)
+    {
+        if (host == null)
+            return;
+
+        host.Layout.ShowBackground = value;
+        host.ApplyBackground();
+        SaveLayout();
+    }
+
+    private void OnDeleteWidgetClick(object? sender, EventArgs e)
+    {
+        if (_contextMenuWidget == null || _canvas == null)
+            return;
+
+        UnhookWidget(_contextMenuWidget);
+        ClearWidgetOccupancy(_contextMenuWidget);
+        _canvas.Children.Remove(_contextMenuWidget);
+        _allWidgets.Remove(_contextMenuWidget);
+        _contextMenuWidget = null;
+        UpdateCanvasSize();
+        SaveLayout();
+    }
+
+    private void LoadLayoutFromConfig()
+    {
+        if (_canvas == null)
+            return;
+
+        ClearAllWidgets();
+        foreach (var data in Data.ConfigEntry.WidgetLayout ?? [])
+        {
+            if (WidgetRegistry.Get(data.Kind) == null)
+                continue;
+
+            var host = CreateHost(data.Kind);
+            if (host == null)
+                continue;
+
+            host.Layout = data;
+            host.SetSize(data.Size);
+            _canvas.Children.Add(host);
+            _allWidgets.Add(host);
+            HookWidget(host);
+            host.ApplyBackground();
+            PlaceWidgetAtGrid(host, new Point(data.GridX, data.GridY));
+        }
+
+        UpdateCanvasSize();
+    }
+
+    /// <summary>添加组件，自动放到最近的空闲位置。</summary>
+    public WidgetHost? AddWidget(WidgetKind kind)
+    {
+        if (_canvas == null)
+            return null;
+
+        var definition = WidgetRegistry.Get(kind);
+        if (definition == null)
+            return null;
+
+        var host = CreateHost(kind);
+        if (host == null)
+            return null;
+
+        host.Layout.Size = definition.DefaultSize;
+        host.SetSize(definition.DefaultSize);
+
+        var startPos = FindNearestFreeGridPosition(new Point(0, 0), host);
+        PlaceWidgetAtGrid(host, startPos);
+        _canvas.Children.Add(host);
+        _allWidgets.Add(host);
+        HookWidget(host);
+        host.ApplyBackground();
+
+        UpdateCanvasSize();
+        SaveLayout();
+        return host;
+    }
+
+    private WidgetHost? CreateHost(WidgetKind kind)
+    {
+        return new WidgetHost
+        {
+            Layout = new WidgetLayoutData { Kind = kind }
+        };
+    }
+
+    private void HookWidget(WidgetHost widget)
+    {
+        widget.Resized += OnWidgetResized;
+        widget.RightButtonPressed += OnWidgetRightButtonDown;
+    }
+
+    private void UnhookWidget(WidgetHost widget)
+    {
+        widget.Resized -= OnWidgetResized;
+        widget.RightButtonPressed -= OnWidgetRightButtonDown;
+    }
+
+    private void OnWidgetRightButtonDown(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is WidgetHost widget)
+        {
+            _contextMenuWidget = widget;
+            _widgetContextMenu?.Open(widget);
+            e.Handled = true;
+        }
+    }
+
+    private void OnWidgetResized(WidgetHost widget)
+    {
+        if (widget == null || _canvas == null)
+            return;
+
+        ClearWidgetOccupancy(widget);
+        var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
+        var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
+        PlaceWidgetAtGrid(widget, freeGridPos);
+        UpdateCanvasSize();
+        SaveLayout();
+    }
+
+    private void OnWorkspacePointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+
+        var source = e.Source as Visual;
+        if (source == null)
+            return;
+
+        // 按钮与缩放手柄自行处理交互，不参与拖拽
+        if (source.FindAncestorOfType<Button>() != null)
+            return;
+        if (source.FindAncestorOfType<WidgetHost>()?.IsResizeHandleArea(source) == true)
+            return;
+
+        var widget = source.FindAncestorOfType<WidgetHost>();
+        if (widget == null)
+            return;
+
+        _pendingDragHost = widget;
+        _pendingStartPoint = e.GetPosition(_canvas);
+        _pendingInitialPosition = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
+        e.Pointer.Capture(this);
+    }
+
+    private void OnWorkspacePointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_draggingWidget != null)
+        {
+            if (_canvas == null)
+                return;
+
+            var currentMousePos = e.GetPosition(_canvas);
+            double deltaX = currentMousePos.X - _dragStartPoint.X;
+            double deltaY = currentMousePos.Y - _dragStartPoint.Y;
+
+            double newX = _widgetInitialPosition.X + deltaX;
+            double newY = _widgetInitialPosition.Y + deltaY;
+
+            Canvas.SetLeft(_draggingWidget, newX);
+            Canvas.SetTop(_draggingWidget, newY);
+
+            UpdateGhostPositionByCenter(newX, newY);
+            return;
+        }
+
+        if (_pendingDragHost == null)
+            return;
+
+        var current = e.GetPosition(_canvas);
+        var distance = Math.Sqrt(
+            Math.Pow(current.X - _pendingStartPoint.X, 2) +
+            Math.Pow(current.Y - _pendingStartPoint.Y, 2));
+        if (distance < DragThreshold)
+            return;
+
+        BeginDrag(_pendingDragHost);
+    }
+
+    private void BeginDrag(WidgetHost widget)
+    {
+        _pendingDragHost = null;
+        _draggingWidget = widget;
+        _dragStartPoint = _pendingStartPoint;
+        _widgetInitialPosition = _pendingInitialPosition;
+
+        ClearWidgetOccupancy(widget);
+        CreateGhostPlaceholder(widget);
+
+        _canvas?.Children.Remove(widget);
+        _canvas?.Children.Add(widget);
+    }
+
+    private void OnWorkspacePointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_draggingWidget != null)
+        {
+            EndDrag();
+            return;
+        }
+
+        _pendingDragHost = null;
+    }
+
+    private void OnWorkspacePointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        _pendingDragHost = null;
+        if (_draggingWidget != null)
+            EndDrag();
+    }
+
+    private void EndDrag()
+    {
+        if (_draggingWidget == null || _canvas == null)
+            return;
+
+        var widget = _draggingWidget;
+        _draggingWidget = null;
+        RemoveGhostPlaceholder();
+
+        var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
+        var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
+        PlaceWidgetAtGrid(widget, freeGridPos);
+        UpdateCanvasSize();
+        SaveLayout();
+    }
+
+    private static int GetWidgetCols(WidgetHost widget) => Math.Max(1, widget.Layout.Columns);
+
+    private static int GetWidgetRows(WidgetHost widget) => Math.Max(1, widget.Layout.Rows);
+
+    private void CreateGhostPlaceholder(WidgetHost widget)
+    {
+        if (_canvas == null)
+            return;
+
+        int cols = GetWidgetCols(widget);
+        int rows = GetWidgetRows(widget);
+
+        _ghostPlaceholder = new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#1890ff"), 0.12),
+            BorderBrush = new SolidColorBrush(Color.Parse("#1890ff"), 0.35),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(12),
+            Width = cols * WidgetGeometry.Pitch - WidgetGeometry.Spacing,
+            Height = rows * WidgetGeometry.Pitch - WidgetGeometry.Spacing,
+            IsVisible = false
+        };
+        _canvas.Children.Add(_ghostPlaceholder);
+    }
+
+    private void UpdateGhostPositionByCenter(double pixelLeft, double pixelTop)
+    {
+        if (_ghostPlaceholder == null || _draggingWidget == null)
+            return;
+
+        int widgetCols = GetWidgetCols(_draggingWidget);
+        int widgetRows = GetWidgetRows(_draggingWidget);
+
+        double widgetWidth = widgetCols * WidgetGeometry.Pitch - WidgetGeometry.Spacing;
+        double widgetHeight = widgetRows * WidgetGeometry.Pitch - WidgetGeometry.Spacing;
+
+        double centerX = pixelLeft + widgetWidth / 2;
+        double centerY = pixelTop + widgetHeight / 2;
+
+        var bestPos = FindNearestFreeGridPositionByCenter(centerX, centerY, widgetCols, widgetRows);
+        if (bestPos != null)
+        {
+            _ghostPlaceholder.IsVisible = true;
+            Canvas.SetLeft(_ghostPlaceholder, bestPos.Value.X * WidgetGeometry.Pitch);
+            Canvas.SetTop(_ghostPlaceholder, bestPos.Value.Y * WidgetGeometry.Pitch);
+        }
+        else
+        {
+            _ghostPlaceholder.IsVisible = false;
+        }
+    }
+
+    private void RemoveGhostPlaceholder()
+    {
+        if (_ghostPlaceholder != null && _canvas != null)
+        {
+            _canvas.Children.Remove(_ghostPlaceholder);
+            _ghostPlaceholder = null;
+        }
+    }
+
+    private Point? FindNearestFreeGridPositionByCenter(double centerX, double centerY, int widgetCols, int widgetRows)
+    {
+        int startCol = (int)Math.Floor(centerX / WidgetGeometry.Pitch);
+        int startRow = (int)Math.Floor(centerY / WidgetGeometry.Pitch);
+
+        int searchRadius = Math.Max(widgetCols, widgetRows) + 6;
+
+        List<(Point pos, double distance)> candidates = [];
+        for (int r = Math.Max(0, startRow - searchRadius); r <= startRow + searchRadius; r++)
+        {
+            for (int c = Math.Max(0, startCol - searchRadius); c <= startCol + searchRadius; c++)
+            {
+                if (!IsAreaFree(c, r, widgetCols, widgetRows))
+                    continue;
+
+                double gridCenterX = c * WidgetGeometry.Pitch +
+                                     (widgetCols * WidgetGeometry.Pitch - WidgetGeometry.Spacing) / 2;
+                double gridCenterY = r * WidgetGeometry.Pitch +
+                                     (widgetRows * WidgetGeometry.Pitch - WidgetGeometry.Spacing) / 2;
+
+                double dist = Math.Pow(centerX - gridCenterX, 2) + Math.Pow(centerY - gridCenterY, 2);
+                candidates.Add((new Point(c, r), dist));
+            }
+        }
+
+        if (candidates.Count == 0)
+            return null;
+
+        candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+        return candidates[0].pos;
+    }
+
+    private Point FindNearestFreeGridPosition(Point targetPixelPos, WidgetHost widget)
+    {
+        int widgetCols = GetWidgetCols(widget);
+        int widgetRows = GetWidgetRows(widget);
+
+        double widgetWidth = widgetCols * WidgetGeometry.Pitch - WidgetGeometry.Spacing;
+        double widgetHeight = widgetRows * WidgetGeometry.Pitch - WidgetGeometry.Spacing;
+
+        double centerX = targetPixelPos.X + widgetWidth / 2;
+        double centerY = targetPixelPos.Y + widgetHeight / 2;
+
+        var bestPos = FindNearestFreeGridPositionByCenter(centerX, centerY, widgetCols, widgetRows);
+        return bestPos ?? new Point(0, 0);
+    }
+
+    private bool IsAreaFree(int col, int row, int cols, int rows)
+    {
+        for (int c = 0; c < cols; c++)
+        {
+            for (int r = 0; r < rows; r++)
+            {
+                if (_occupiedGridCells.ContainsKey(new Point(col + c, row + r)))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void PlaceWidgetAtGrid(WidgetHost widget, Point gridPos)
+    {
+        double pixelX = gridPos.X * WidgetGeometry.Pitch;
+        double pixelY = gridPos.Y * WidgetGeometry.Pitch;
+
+        Canvas.SetLeft(widget, pixelX);
+        Canvas.SetTop(widget, pixelY);
+        widget.Layout.GridX = (int)gridPos.X;
+        widget.Layout.GridY = (int)gridPos.Y;
+
+        RegisterWidgetOccupancy(widget, gridPos);
+    }
+
+    private void RegisterWidgetOccupancy(WidgetHost widget, Point gridPos)
+    {
+        int cols = GetWidgetCols(widget);
+        int rows = GetWidgetRows(widget);
+
+        for (int c = 0; c < cols; c++)
+        {
+            for (int r = 0; r < rows; r++)
+            {
+                _occupiedGridCells[new Point(gridPos.X + c, gridPos.Y + r)] = widget;
+            }
+        }
+    }
+
+    private void ClearWidgetOccupancy(WidgetHost widget)
+    {
+        var keysToRemove = _occupiedGridCells.Where(kvp => kvp.Value == widget).Select(kvp => kvp.Key).ToList();
+        foreach (var key in keysToRemove)
+            _occupiedGridCells.Remove(key);
+    }
+
+    private void ClearAllWidgets()
+    {
+        if (_canvas == null)
+            return;
+
+        foreach (var widget in _allWidgets)
+        {
+            UnhookWidget(widget);
+            _canvas.Children.Remove(widget);
+        }
+
+        _allWidgets.Clear();
+        _occupiedGridCells.Clear();
+    }
+
+    private void UpdateCanvasSize()
+    {
+        if (_canvas == null)
+            return;
+
+        _canvas.Width = Math.Max(0, Bounds.Width - 2 * WidgetGeometry.Spacing);
+        _canvas.Height = Math.Max(0, Bounds.Height - 2 * WidgetGeometry.Spacing);
+    }
+
+    private void SaveLayout()
+    {
+        Data.ConfigEntry.WidgetLayout = _allWidgets.Select(widget => widget.Layout).ToList();
+    }
+
+    private void SetWidgetSize(WidgetHost widget, WidgetCellSize size)
+    {
+        widget.SetSize(size);
+        OnWidgetResized(widget);
+    }
+}
