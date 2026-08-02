@@ -114,7 +114,9 @@ public static class WidgetRegistry
             Name = "实例",
             Description = "快速查看与启动实例",
             DefaultSize = new WidgetCellSize(2, 1)
-        }.AddPage<InstanceWidget2x1>(new WidgetCellSize(2, 1)));
+        }
+            .AddPage<InstanceWidget1x1>(new WidgetCellSize(1, 1))
+            .AddPage<InstanceWidget2x1>(new WidgetCellSize(2, 1)));
 
         Register(new WidgetDefinition
         {
@@ -122,7 +124,9 @@ public static class WidgetRegistry
             Name = "快速进入世界",
             Description = "选择实例与存档，一键进入",
             DefaultSize = new WidgetCellSize(2, 1)
-        }.AddPage<QuickWorldWidget2x1>(new WidgetCellSize(2, 1)));
+        }
+            .AddPage<QuickWorldWidget1x1>(new WidgetCellSize(1, 1))
+            .AddPage<QuickWorldWidget2x1>(new WidgetCellSize(2, 1)));
 
         Register(new WidgetDefinition
         {
@@ -130,6 +134,8 @@ public static class WidgetRegistry
             Name = "快速进入服务器",
             Description = "选择实例并输入地址，一键进入",
             DefaultSize = new WidgetCellSize(2, 1)
-        }.AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
+        }
+            .AddPage<QuickServerWidget1x1>(new WidgetCellSize(1, 1))
+            .AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
     }
 }

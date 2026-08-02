@@ -1,0 +1,86 @@
+<UserControl
+    d:DesignHeight="130"
+    d:DesignWidth="130"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.QuickWorldWidget1x1"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border
+        Background="Transparent"
+        CornerRadius="10"
+        Cursor="Hand"
+        Name="Card">
+        <Border.Styles>
+            <Style Selector="Border#Card">
+                <Style Selector="^ Button#LaunchButton">
+                    <Setter Property="Opacity" Value="0" />
+                </Style>
+            </Style>
+            <Style Selector="Border#Card:pointerover">
+                <Style Selector="^ Button#LaunchButton">
+                    <Setter Property="Opacity" Value="1" />
+                </Style>
+            </Style>
+        </Border.Styles>
+        <DockPanel Margin="10,10,10,8">
+            <Border
+                ClipToBounds="True"
+                DockPanel.Dock="Top"
+                CornerRadius="8"
+                Height="56"
+                HorizontalAlignment="Center"
+                Margin="0,2,0,6"
+                Width="56">
+                <Image
+                    Height="56"
+                    Name="IconImage"
+                    Width="56" />
+            </Border>
+            <DockPanel DockPanel.Dock="Bottom">
+                <TextBlock
+                    DockPanel.Dock="Left"
+                    FontSize="12"
+                    FontWeight="SemiBold"
+                    MaxLines="1"
+                    Name="TitleText"
+                    TextTrimming="CharacterEllipsis"
+                    VerticalAlignment="Bottom" />
+                <Button
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="LaunchButton_OnClick"
+                    Cursor="Hand"
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Padding="2,-2,0,0"
+                    Theme="{StaticResource TransparentButton}"
+                    ToolTip.Tip="快速进入世界"
+                    VerticalAlignment="Bottom"
+                    x:Name="LaunchButton">
+                    <PathIcon
+                        Data="F1 M640,640z M0,0z M192,384L88.5,384C63.6,384,48.3,356.9,61.1,335.5L114,247.3C122.7,232.8,138.3,224,155.2,224L250.2,224C326.3,95.1 439.8,88.6 515.7,99.7 528.5,101.6 538.5,111.6 540.3,124.3 551.4,200.2 544.9,313.7 416,389.8L416,484.8C416,501.7,407.2,517.3,392.7,526L304.5,578.9C283.2,591.7,256,576.3,256,551.5L256,448C256,412.7,227.3,384,192,384L191.9,384z M464,224C464,197.5 442.5,176 416,176 389.5,176 368,197.5 368,224 368,250.5 389.5,272 416,272 442.5,272 464,250.5 464,224z"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Height="13"
+                        Width="13" />
+                    <Button.Transitions>
+                        <Transitions>
+                            <DoubleTransition
+                                Duration="0:0:0.15"
+                                Easing="SineEaseOut"
+                                Property="Opacity" />
+                        </Transitions>
+                    </Button.Transitions>
+                </Button>
+            </DockPanel>
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Margin="0,0,0,2"
+                MaxLines="1"
+                Name="SourceText"
+                TextTrimming="CharacterEllipsis" />
+        </DockPanel>
+    </Border>
+</UserControl>
