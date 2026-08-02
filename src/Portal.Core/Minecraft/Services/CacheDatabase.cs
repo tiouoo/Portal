@@ -247,6 +247,67 @@ internal static class CacheDatabase
         catch (IOException) { }
     }
 
+    /// <summary>
+    /// 读取单条新闻详情正文缓存。仅在用户实际打开新闻详情时调用。
+    /// </summary>
+    public static NewsDetail? ReadNewsDetail(string id)
+    {
+        try
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT title, version, type, image_url, published_at, body, fetched_at
+                FROM news_detail_cache WHERE id = $id;
+                """;
+            command.Parameters.AddWithValue("$id", id);
+            using var reader = command.ExecuteReader();
+            if (!reader.Read()) return null;
+            return new NewsDetail
+            {
+                Id = id,
+                Title = reader.GetString(0),
+                Version = reader.GetString(1),
+                Type = reader.GetString(2),
+                ImageUrl = reader.GetString(3),
+                Date = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(4)).LocalDateTime,
+                Body = reader.GetString(5),
+                FetchedAt = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(6)).LocalDateTime
+            };
+        }
+        catch (SqliteException) { return null; }
+        catch (IOException) { return null; }
+    }
+
+    /// <summary>写入/更新一条新闻详情正文缓存。</summary>
+    public static void WriteNewsDetail(NewsDetail detail)
+    {
+        try
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                INSERT INTO news_detail_cache (id, title, version, type, image_url, published_at, body, fetched_at)
+                VALUES ($id, $title, $version, $type, $imageUrl, $publishedAt, $body, $fetchedAt)
+                ON CONFLICT(id) DO UPDATE SET
+                    title = excluded.title, version = excluded.version, type = excluded.type,
+                    image_url = excluded.image_url, published_at = excluded.published_at,
+                    body = excluded.body, fetched_at = excluded.fetched_at;
+                """;
+            command.Parameters.AddWithValue("$id", detail.Id);
+            command.Parameters.AddWithValue("$title", detail.Title);
+            command.Parameters.AddWithValue("$version", detail.Version);
+            command.Parameters.AddWithValue("$type", detail.Type);
+            command.Parameters.AddWithValue("$imageUrl", detail.ImageUrl);
+            command.Parameters.AddWithValue("$publishedAt", new DateTimeOffset(detail.Date).ToUnixTimeSeconds());
+            command.Parameters.AddWithValue("$body", detail.Body);
+            command.Parameters.AddWithValue("$fetchedAt", new DateTimeOffset(detail.FetchedAt).ToUnixTimeSeconds());
+            command.ExecuteNonQuery();
+        }
+        catch (SqliteException) { }
+        catch (IOException) { }
+    }
+
     private static SqliteConnection OpenConnection()
     {
         EnsureInitialized();
@@ -285,6 +346,10 @@ internal static class CacheDatabase
                 );
                 CREATE INDEX IF NOT EXISTS idx_news_cache_entry_edition_published_at
                     ON news_cache_entry (edition, published_at DESC);
+                CREATE TABLE IF NOT EXISTS news_detail_cache (
+                    id TEXT PRIMARY KEY, title TEXT NOT NULL, version TEXT NOT NULL, type TEXT NOT NULL,
+                    image_url TEXT NOT NULL, published_at INTEGER NOT NULL, body TEXT NOT NULL, fetched_at INTEGER NOT NULL
+                );
                 """;
             command.ExecuteNonQuery();
             EnsureModCacheColumns(connection);

@@ -320,6 +320,14 @@ public sealed class NewsWidget : IWidgetContent
 
     public override void PerformClick()
     {
+        // 小组件展示的就是 _current 这条新闻，点击直接进入它的详情页；
+        // 如果没有可展示的新闻，则回退到新闻列表页。
+        if (_current != null)
+        {
+            NewsDetailsPage.Open(TopLevel.GetTopLevel(this), _current);
+            return;
+        }
+
         if (TopLevel.GetTopLevel(this) is not TioTabWindowBase window)
             return;
         var tab = new TabEntry(window, new NewsPage());

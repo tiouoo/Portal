@@ -1,0 +1,156 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.NewsDetailsPage"
+    x:DataType="viewModels:NewsDetailsPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:converters="clr-namespace:Portal.Module.Converter;assembly=Portal"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
+    xmlns:viewModels="clr-namespace:Portal.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <converters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
+    </UserControl.Resources>
+
+    <DockPanel Margin="12,0,12,12">
+        <!--  顶部：封面 + 标题（靠上）/ 标签和时间（右下角）  -->
+        <Grid
+            ColumnDefinitions="120, *"
+            DockPanel.Dock="Top"
+            Margin="0,0,0,8">
+            <Border
+                ClipToBounds="True"
+                CornerRadius="12"
+                Grid.Column="0"
+                Height="120"
+                HorizontalAlignment="Left"
+                IsVisible="{Binding ImageUrl, Converter={StaticResource StringNotEmptyConv}}"
+                Width="120">
+                <owned:NewsImage
+                    Height="120"
+                    Source="{Binding ImageUrl}"
+                    Stretch="UniformToFill" />
+            </Border>
+
+            <Grid
+                Grid.Column="1"
+                Margin="14,0,12,0"
+                RowDefinitions="*, Auto">
+                <!--  标题：靠上  -->
+                <TextBlock
+                    FontSize="26"
+                    FontWeight="DemiBold"
+                    Grid.Row="0"
+                    Margin="5,10,0,0"
+                    Text="{Binding Title}"
+                    TextWrapping="WrapWithOverflow"
+                    VerticalAlignment="Top" />
+
+                <!--  标签 + 时间：右下角  -->
+                <StackPanel
+                    Grid.Row="1"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    VerticalAlignment="Bottom">
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="6,2">
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Binding EditionDisplay}" />
+                    </Border>
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        IsVisible="{Binding HasVersion}"
+                        Padding="6,2">
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Binding Version}" />
+                    </Border>
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        IsVisible="{Binding HasType}"
+                        Padding="6,2">
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Binding Type}" />
+                    </Border>
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding RelativeDate}"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <Separator
+            Background="{DynamicResource TranslucentBorderBrush}"
+            DockPanel.Dock="Top"
+            Margin="0,0,0,4" />
+
+        <!--  正文 + 加载/错误覆盖层  -->
+        <Grid Margin="0,10,0,0">
+            <controls:ScrollView>
+                <ItemsControl ItemsSource="{Binding BodyControls}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </controls:ScrollView>
+
+            <!--  加载中提示  -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                IsVisible="{Binding IsLoading}"
+                Margin="0,24,0,0"
+                Spacing="8"
+                VerticalAlignment="Top">
+                <ProgressBar IsIndeterminate="True" Width="200" />
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    HorizontalAlignment="Center"
+                    Text="正在加载新闻正文…" />
+            </StackPanel>
+
+            <!--  错误提示  -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                IsVisible="{Binding HasError}"
+                Margin="0,24,0,0"
+                Spacing="8"
+                VerticalAlignment="Top">
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    HorizontalAlignment="Center"
+                    Text="{Binding ErrorText}"
+                    TextWrapping="Wrap" />
+                <Button
+                    Command="{Binding RefreshCommand}"
+                    Content="重试"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

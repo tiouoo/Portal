@@ -1,6 +1,9 @@
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Portal.Core.Minecraft.Classes;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
@@ -60,5 +63,17 @@ public partial class NewsPage : DataUserControl, ITioTabPage
         var tab = new TabEntry(window, new NewsPage());
         window.CreateTab(tab);
         window.SelectTab(tab);
+    }
+
+    /// <summary>
+    /// 点击新闻卡片：在新标签页打开对应新闻详情页。
+    /// 由 NewsPage.axaml 中卡片 Border 的 PointerReleased 事件挂钩。
+    /// </summary>
+    private void NewsCard_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (sender is not Control { DataContext: NewsEntry entry } control) return;
+        // 仅响应左键释放，避免右键菜单等触发跳转。
+        if (e.InitialPressMouseButton != MouseButton.Left) return;
+        NewsDetailsPage.Open(control.AsTopLevel(), entry);
     }
 }

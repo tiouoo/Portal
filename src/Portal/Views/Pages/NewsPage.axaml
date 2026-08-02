@@ -105,7 +105,9 @@
                             Background="{DynamicResource TranslucentBackgroundColor}"
                             BorderBrush="{DynamicResource TranslucentBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="16">
+                            CornerRadius="16"
+                            Cursor="Hand"
+                            PointerReleased="NewsCard_OnPointerReleased">
                             <DockPanel>
                                 <Border
                                     ClipToBounds="True"
