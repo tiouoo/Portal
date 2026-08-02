@@ -48,9 +48,6 @@ jobs:
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
         run: |
-          # 幂等初始化：本地建 master 分支，尝试 fetch 远程。
-          # - 远程已有包：fetch 成功后 reset --hard 对齐远端，再走正常更新流程
-          # - 远程不存在（首推）：fetch 失败被忽略，本地保留空 init，后续用模板首推
           rm -rf aur
           git init -b master aur
           git -C aur remote add origin "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git"
@@ -76,6 +73,7 @@ jobs:
           useradd -m builder
           chown -R builder:builder .
           runuser -u builder -- bash -lc 'makepkg --printsrcinfo > .SRCINFO'
+          chown -R root:root .
 
       - name: Commit & push
         working-directory: aur
@@ -86,7 +84,5 @@ jobs:
           git config user.email "actions@github.com"
           git checkout -B master
           git add PKGBUILD .SRCINFO
-          # 无变化时退出码非 0，正常跳过
           git commit -m "Update ${{ inputs.pkgname }} to ${{ inputs.app_version }}" || exit 0
-          # 首推用 -u 建立跟踪；已跟踪时 -u 无副作用
           git push -u origin master
