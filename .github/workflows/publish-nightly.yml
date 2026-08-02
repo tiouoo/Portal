@@ -14,7 +14,7 @@ jobs:
       commit: ${{ steps.meta.outputs.commit_hash }}
     steps:
       - uses: actions/checkout@v7
-  
+
       - name: Check for Recent Commits
         if: ${{ github.event_name == 'schedule' }}
         env:
@@ -26,7 +26,7 @@ jobs:
             gh run cancel ${{ github.run_id }}
             sleep 10
           fi
-  
+
       - name: Generate Meta and JSON
         id: meta
         run: |
@@ -333,3 +333,26 @@ jobs:
             ./Portal.Release/*.dmg
             ./Portal.Release/*.zip
             ./Portal.Release/*.AppImage
+
+  aur:
+    needs: [prepare, publish]
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      pkgname: portal-mc-nightly-bin
+      tag: publish-nightly
+      app_version: ${{ needs.prepare.outputs.app_version }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+
+  # TODO: stable tag.
+  aur-stable:
+    needs: [prepare, publish]
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      pkgname: portal-mc-bin
+      tag: publish-nightly
+      app_version: ${{ needs.prepare.outputs.app_version }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}

@@ -15,7 +15,7 @@ jobs:
       commit: ${{ steps.meta.outputs.commit_hash }}
     steps:
       - uses: actions/checkout@v7
-        
+
       - name: Generate Meta and JSON
         id: meta
         run: |
@@ -322,3 +322,14 @@ jobs:
             ./Portal.Release/*.dmg
             ./Portal.Release/*.zip
             ./Portal.Release/*.AppImage
+
+  aur:
+    needs: [prepare, publish]
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      pkgname: portal-mc-commit-bin
+      tag: publish-commit
+      app_version: ${{ needs.prepare.outputs.app_version }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
