@@ -249,10 +249,7 @@ public class WidgetWorkspace : UserControl
 
         if (template != null)
         {
-            host.Layout.InstanceFolderPath = template.InstanceFolderPath;
-            host.Layout.WorldFolderName = template.WorldFolderName;
-            host.Layout.ServerAddress = template.ServerAddress;
-            host.Layout.ServerPort = template.ServerPort;
+            host.Layout.Data = template.Data;
         }
 
         host.Layout.Size = definition.DefaultSize;

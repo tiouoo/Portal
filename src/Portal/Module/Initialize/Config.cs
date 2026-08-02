@@ -63,7 +63,10 @@ public class Config
                     FailedSettingKeys.Add(item);
                     item.ErrorContext.Handled = true;
                 },
-                MissingMemberHandling = MissingMemberHandling.Ignore
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                // 保留 WidgetLayoutData.Data 的运行时类型信息，
+                // 否则 object 属性反序列化后只会得到 JObject。
+                TypeNameHandling = TypeNameHandling.Auto
             };
 
             Data.ConfigEntry = JsonConvert.DeserializeObject<ConfigEntry>(

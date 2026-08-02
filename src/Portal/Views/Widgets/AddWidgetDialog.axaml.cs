@@ -55,7 +55,10 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
             {
                 var instance = await PickInstanceAsync();
                 if (instance == null) return;
-                template = new WidgetLayoutData { InstanceFolderPath = instance.InstanceFolderPath };
+                template = new WidgetLayoutData
+                {
+                    Data = new InstanceWidgetData { InstanceFolderPath = instance.InstanceFolderPath }
+                };
                 break;
             }
             case WidgetKind.QuickWorld:
@@ -66,8 +69,11 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
                 if (world == null) return;
                 template = new WidgetLayoutData
                 {
-                    InstanceFolderPath = instance.InstanceFolderPath,
-                    WorldFolderName = world.FolderName
+                    Data = new QuickWorldWidgetData
+                    {
+                        InstanceFolderPath = instance.InstanceFolderPath,
+                        WorldFolderName = world.FolderName
+                    }
                 };
                 break;
             }
@@ -79,9 +85,12 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
                 if (server == null) return;
                 template = new WidgetLayoutData
                 {
-                    InstanceFolderPath = instance.InstanceFolderPath,
-                    ServerAddress = server.Address,
-                    ServerPort = server.Port
+                    Data = new QuickServerWidgetData
+                    {
+                        InstanceFolderPath = instance.InstanceFolderPath,
+                        ServerAddress = server.Address,
+                        ServerPort = server.Port
+                    }
                 };
                 break;
             }

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Portal.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
@@ -54,7 +55,7 @@ public partial class QuickWorldWidget2x1 : InstanceBoundWidgetBase
     private async Task LoadWorldAsync()
     {
         var instance = Instance;
-        var folderName = LayoutData?.WorldFolderName;
+        var folderName = GetData<QuickWorldWidgetData>()?.WorldFolderName;
         if (instance == null || string.IsNullOrEmpty(folderName))
         {
             _world = null;
@@ -87,7 +88,7 @@ public partial class QuickWorldWidget2x1 : InstanceBoundWidgetBase
         var lastPlayText = this.FindControl<TextBlock>("LastPlayText");
 
         var world = _world;
-        var folderName = LayoutData?.WorldFolderName;
+        var folderName = GetData<QuickWorldWidgetData>()?.WorldFolderName;
 
         if (world == null)
         {
@@ -113,7 +114,7 @@ public partial class QuickWorldWidget2x1 : InstanceBoundWidgetBase
     public override async void PerformClick()
     {
         var instance = Instance;
-        var folderName = LayoutData?.WorldFolderName;
+        var folderName = GetData<QuickWorldWidgetData>()?.WorldFolderName;
         if (instance == null || string.IsNullOrEmpty(folderName))
             return;
         if (TopLevel.GetTopLevel(this) is not { } topLevel)
@@ -145,7 +146,7 @@ public partial class QuickWorldWidget2x1 : InstanceBoundWidgetBase
 
     private void LaunchButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (Instance == null || LayoutData?.WorldFolderName is not { } folderName)
+        if (Instance == null || GetData<QuickWorldWidgetData>()?.WorldFolderName is not { } folderName)
             return;
         if (TopLevel.GetTopLevel(this) is not { } topLevel)
             return;

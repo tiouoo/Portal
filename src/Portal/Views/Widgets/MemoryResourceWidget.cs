@@ -12,7 +12,7 @@ namespace Portal.Views.Widgets;
 public sealed class MemoryResourceWidget : ResourceWidgetBase
 {
     private bool _showPercentage = true;
-    private WidgetLayoutData? _layout;
+    private MemoryWidgetData? _data;
 
     public MemoryResourceWidget(WidgetCellSize size) : base(size)
     {
@@ -26,15 +26,21 @@ public sealed class MemoryResourceWidget : ResourceWidgetBase
     public void ToggleDisplayMode()
     {
         _showPercentage = !_showPercentage;
-        if (_layout != null)
-            _layout.MemoryShowPercentage = _showPercentage;
+        if (_data != null)
+            _data.ShowPercentage = _showPercentage;
         OnUpdate(SystemResourceService.Instance.Latest);
     }
 
     public override void Initialize(WidgetLayoutData layout)
     {
-        _layout = layout;
-        _showPercentage = layout.MemoryShowPercentage ?? true;
+        _data = layout.Data as MemoryWidgetData;
+        // 兼容旧配置：若 Data 缺失则补建一个，避免切换模式时无处持久化。
+        if (_data == null)
+        {
+            _data = new MemoryWidgetData();
+            layout.Data = _data;
+        }
+        _showPercentage = _data.ShowPercentage ?? true;
         base.Initialize(layout);
     }
 

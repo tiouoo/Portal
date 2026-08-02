@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using Avalonia;
@@ -54,7 +54,14 @@ public partial class App : Application
         private static (string ConfigJson, string ManagedDialogs) CaptureConfig()
         {
             ApplicationEvents.RaiseSaveSettings();
-            return (JsonConvert.SerializeObject(Data.ConfigEntry, Formatting.Indented),
+            // 与读取配置保持一致：使用 TypeNameHandling.Auto 写出 WidgetLayoutData.Data 的 $type，
+            // 否则下次启动会反序列化为 JObject 而丢失组件自定义数据。
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto,
+                Formatting = Formatting.Indented
+            };
+            return (JsonConvert.SerializeObject(Data.ConfigEntry, settings),
                 Data.ConfigEntry.FilePicker == FilePicker.Managed ? "true" : "false");
         }
 

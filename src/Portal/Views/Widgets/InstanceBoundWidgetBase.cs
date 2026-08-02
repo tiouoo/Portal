@@ -36,11 +36,16 @@ public abstract class InstanceBoundWidgetBase : IWidgetContent
 
     private void ResolveInstance()
     {
-        var path = LayoutData?.InstanceFolderPath;
+        var path = (LayoutData?.Data as InstanceBoundWidgetData)?.InstanceFolderPath;
         Instance = path != null
             ? InstanceManager.Instance.Instances.FirstOrDefault(i => i.InstanceFolderPath == path)
             : null;
     }
+
+    /// <summary>
+    /// 将 <see cref="WidgetLayoutData.Data"/> 转换为指定类型，转换失败或为空时返回 null。
+    /// </summary>
+    protected T? GetData<T>() where T : class => LayoutData?.Data as T;
 
     private void OnInstancesChanged(object? sender, EventArgs e)
     {

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Portal.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Module.Widgets;
@@ -27,7 +28,7 @@ public partial class QuickServerWidget1x1 : InstanceBoundWidgetBase
         var sourceText = this.FindControl<TextBlock>("SourceText");
 
         var instance = Instance;
-        var address = LayoutData?.ServerAddress;
+        var address = GetData<QuickServerWidgetData>()?.ServerAddress;
 
         if (instance == null)
         {
@@ -51,13 +52,14 @@ public partial class QuickServerWidget1x1 : InstanceBoundWidgetBase
 
     private void LaunchButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (Instance == null || string.IsNullOrEmpty(LayoutData?.ServerAddress))
+        var data = GetData<QuickServerWidgetData>();
+        if (Instance == null || string.IsNullOrEmpty(data?.ServerAddress))
             return;
         if (TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
-        var address = LayoutData!.ServerAddress!;
-        var port = LayoutData!.ServerPort ?? 25565;
+        var address = data!.ServerAddress!;
+        var port = data!.ServerPort ?? 25565;
 
         var target = new RecentPlayTarget(
             Instance,
