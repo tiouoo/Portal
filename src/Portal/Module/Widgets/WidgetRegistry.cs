@@ -9,6 +9,8 @@ public sealed class WidgetDefinition
     public string Name { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public WidgetCellSize DefaultSize { get; init; } = new(1, 1);
+    /// <summary>组件所属分类，用于添加组件对话框左侧导航分组。</summary>
+    public WidgetCategory Category { get; init; } = WidgetCategory.Utility;
 
     private readonly List<(WidgetCellSize Size, Func<IWidgetContent> Factory)> _pages = [];
 
@@ -98,21 +100,42 @@ public static class WidgetRegistry
 
     private static void RegisterBuiltins()
     {
+        // 实用工具：时钟、图片
         Register(new WidgetDefinition
         {
             Kind = WidgetKind.Clock,
             Name = "时钟",
             Description = "时间与日期",
+            Category = WidgetCategory.Utility,
             DefaultSize = new WidgetCellSize(1, 1)
         }
             .AddPage<Clock1x1>(new WidgetCellSize(1, 1))
             .AddPage<Clock2x1>(new WidgetCellSize(2, 1)));
 
+        // 图片组件：支持 4×4 及其以内的所有尺寸（共 16 种）。
+        var imageDef = new WidgetDefinition
+        {
+            Kind = WidgetKind.Image,
+            Name = "图片",
+            Description = "显示一张本地图片，完全占满组件",
+            Category = WidgetCategory.Utility,
+            DefaultSize = new WidgetCellSize(2, 2)
+        };
+        for (int cols = 1; cols <= 16; cols++)
+        for (int rows = 1; rows <= 16; rows++)
+        {
+            var size = new WidgetCellSize(cols, rows);
+            imageDef.AddPage(size, () => new ImageViewWidget(size));
+        }
+        Register(imageDef);
+
+        // 游戏：实例、快速进入世界/服务器
         Register(new WidgetDefinition
         {
             Kind = WidgetKind.Instance,
             Name = "实例",
             Description = "快速查看与启动实例",
+            Category = WidgetCategory.Game,
             DefaultSize = new WidgetCellSize(2, 1)
         }
             .AddPage<InstanceWidget1x1>(new WidgetCellSize(1, 1))
@@ -123,6 +146,7 @@ public static class WidgetRegistry
             Kind = WidgetKind.QuickWorld,
             Name = "快速进入世界",
             Description = "选择实例与存档，一键进入",
+            Category = WidgetCategory.Game,
             DefaultSize = new WidgetCellSize(2, 1)
         }
             .AddPage<QuickWorldWidget1x1>(new WidgetCellSize(1, 1))
@@ -133,11 +157,13 @@ public static class WidgetRegistry
             Kind = WidgetKind.QuickServer,
             Name = "快速进入服务器",
             Description = "选择实例并输入地址，一键进入",
+            Category = WidgetCategory.Game,
             DefaultSize = new WidgetCellSize(2, 1)
         }
             .AddPage<QuickServerWidget1x1>(new WidgetCellSize(1, 1))
             .AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
 
+        // 系统资源
         RegisterResourceWidget(WidgetKind.CpuResource, "CPU 占用", "处理器使用率",
             size => new CpuResourceWidget(size));
         RegisterResourceWidget(WidgetKind.MemoryResource, "内存占用", "物理内存使用情况",
@@ -159,6 +185,7 @@ public static class WidgetRegistry
             Kind = kind,
             Name = name,
             Description = description,
+            Category = WidgetCategory.Resource,
             DefaultSize = new WidgetCellSize(1, 1)
         };
         foreach (var size in new[]

@@ -37,10 +37,11 @@ public partial class WidgetsPage : UserControl, ITioTabPage
         var options = new OverlayDialogOptions
         {
             Buttons = DialogButton.None,
-            CanLightDismiss = true,
-            CanDragMove = true,
-            CanResize = true,
-            IsCloseButtonVisible = true
+            CanLightDismiss = false,
+            CanDragMove = false,
+            CanResize = false,
+            IsCloseButtonVisible = false,
+            StyleClass = "undrag"
         };
         _ = OverlayDialog.ShowCustomAsync<AddWidgetDialog, AddWidgetDialogViewModel, bool>(
             new AddWidgetDialogViewModel(_workspace, this.TryGetHostId()), hostId: this.TryGetHostId(), options: options);

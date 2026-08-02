@@ -1,8 +1,15 @@
-﻿<Styles
+<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="tio|CustomDialogWindow.undrag">
+        <Style Selector="^ ScrollViewer">
+            <Setter Property="ZIndex" Value="20" />
+        </Style>
+    </Style>
+    <!-- OverlayDialog 模式：让内容 ScrollViewer 覆盖透明拖动层，使顶部交互控件可用。
+         拖动改由内容自行处理（AddWidgetDialog.DragMove）。 -->
+    <Style Selector="tio|CustomDialogControl.undrag">
         <Style Selector="^ ScrollViewer">
             <Setter Property="ZIndex" Value="20" />
         </Style>

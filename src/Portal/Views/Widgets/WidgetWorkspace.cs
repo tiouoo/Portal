@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using Portal.Classes.Entries;
 using Portal.Const;
@@ -124,6 +125,41 @@ public class WidgetWorkspace : UserControl
         };
         _widgetContextMenu.Items.Add(memoryModeItem);
 
+        var imageChangeItem = new MenuItem
+        {
+            Header = "更换图片",
+            Icon = new PathIcon()
+            {
+                Data = StreamGeometry.Parse(
+                    "F1 M640,640z M0,0z M448,128C448,93,419,64,384,64L256,64C221,64,192,93,192,128L192,256L128,256C93,256,64,285,64,320L64,448C64,483,93,512,128,512L256,512C291,512,320,483,320,448L320,384L384,384C419,384,448,355,448,320L448,128z M320,448C320,466,306,480,288,480L160,480C142,480,128,466,128,448L128,320C128,302,142,288,160,288L192,288L192,320C192,355,221,384,256,384L320,384L320,448z M384,320C384,338,370,352,352,352L224,352C206,352,192,338,192,320L192,192C192,174,206,160,224,160L352,160C370,160,384,174,384,192L384,320z"),
+                Width = 16, Height = 16
+            },
+            IsVisible = false
+        };
+        imageChangeItem.Click += (_, _) => _ = ChangeImageAsync();
+        _widgetContextMenu.Items.Add(imageChangeItem);
+
+        var imageStretchItem = new MenuItem
+        {
+            Header = "切换填充方式",
+            Icon = new PathIcon()
+            {
+                Data = StreamGeometry.Parse(
+                    "F1 M640,640z M0,0z M128,96C128,78,142,64,160,64L480,64C498,64,512,78,512,96L512,416C512,434,498,448,480,448L160,448C142,448,128,434,128,416L128,96z M64,480C64,462,78,448,96,448L544,448C562,448,576,462,576,480L576,512C576,530,562,544,544,544L96,544C78,544,64,530,64,512L64,480z"),
+                Width = 16, Height = 16
+            },
+            IsVisible = false
+        };
+        imageStretchItem.Click += (_, _) =>
+        {
+            if (_contextMenuWidget?.WidgetContent is ImageViewWidget img)
+            {
+                img.ToggleStretchMode();
+                SaveLayout();
+            }
+        };
+        _widgetContextMenu.Items.Add(imageStretchItem);
+
         var sizeMenu = new MenuItem { Header = "切换尺寸", Icon = new PathIcon()
         {
             Data = StreamGeometry.Parse(
@@ -143,6 +179,9 @@ public class WidgetWorkspace : UserControl
             hideItem.IsChecked = value == false;
 
             memoryModeItem.IsVisible = _contextMenuWidget.WidgetContent is MemoryResourceWidget;
+            var isImage = _contextMenuWidget.WidgetContent is ImageViewWidget;
+            imageChangeItem.IsVisible = isImage;
+            imageStretchItem.IsVisible = isImage;
 
             sizeMenu.Items.Clear();
             var definition = WidgetRegistry.Get(_contextMenuWidget.Layout.Kind);
@@ -197,6 +236,39 @@ public class WidgetWorkspace : UserControl
         _allWidgets.Remove(_contextMenuWidget);
         _contextMenuWidget = null;
         UpdateCanvasSize();
+        SaveLayout();
+    }
+
+    /// <summary>为当前图片小组件弹出文件选择器更换图片。</summary>
+    private async Task ChangeImageAsync()
+    {
+        if (_contextMenuWidget?.WidgetContent is not ImageViewWidget img)
+            return;
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "选择图片",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("图片")
+                {
+                    Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp", "*.ico"]
+                }
+            ]
+        });
+
+        if (files.Count == 0)
+            return;
+
+        var path = files[0].TryGetLocalPath();
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        img.UpdateImage(path);
         SaveLayout();
     }
 

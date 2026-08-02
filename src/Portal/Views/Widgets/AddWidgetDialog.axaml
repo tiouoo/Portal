@@ -2,31 +2,51 @@
     Height="560"
     MinHeight="420"
     MinWidth="640"
-    Width="780"
+    Width="820"
     d:DesignHeight="560"
-    d:DesignWidth="780"
+    d:DesignWidth="820"
     mc:Ignorable="d"
     x:Class="Portal.Views.Widgets.AddWidgetDialog"
     x:DataType="widgets:AddWidgetDialogViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:module="clr-namespace:Portal.Module.Widgets"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid
-        Margin="20"
-        RowDefinitions="Auto,*,Auto"
-        RowSpacing="14">
-        <DockPanel Grid.Row="0">
+        Margin="6,12,12,10"
+        RowDefinitions="Auto,*"
+        RowSpacing="10">
+        <DockPanel
+            Background="Transparent"
+            Grid.Row="0"
+            Name="DragMove">
+            <Button
+                Click="CloseButton_OnClick"
+                DockPanel.Dock="Right"
+                HorizontalAlignment="Right"
+                Margin="0,0,12,0"
+                Theme="{DynamicResource TransparentButton}"
+                VerticalAlignment="Center">
+                <PathIcon
+                    Data="{DynamicResource Close}"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Height="11"
+                    Width="20" />
+            </Button>
             <TextBlock
                 DockPanel.Dock="Left"
-                FontSize="22"
+                FontSize="16"
                 FontWeight="SemiBold"
-                Text="添加小组件" />
+                Margin="12,0,0,0"
+                Text="添加小组件"
+                VerticalAlignment="Center" />
             <TextBox
                 DockPanel.Dock="Right"
-                IsVisible="False"
+                Margin="10,0,0,0"
                 PlaceholderText="搜索组件"
                 Text="{Binding SearchText}"
                 Width="300">
@@ -39,52 +59,84 @@
                 </TextBox.InnerRightContent>
             </TextBox>
         </DockPanel>
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-            <ItemsRepeater ItemsSource="{Binding Items}">
-                <ItemsRepeater.Layout>
-                    <UniformGridLayout
-                        ItemsStretch="Fill"
-                        MinColumnSpacing="12"
-                        MinItemHeight="96"
-                        MinItemWidth="240"
-                        MinRowSpacing="12"
-                        Orientation="Horizontal" />
-                </ItemsRepeater.Layout>
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="module:WidgetDefinition">
-                        <Border
-                            Background="{DynamicResource TranslucentBackgroundColor}"
-                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="10"
-                            Padding="14,12">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                                <StackPanel Spacing="4">
-                                    <TextBlock
-                                        FontSize="15"
-                                        FontWeight="SemiBold"
-                                        Text="{Binding Name}" />
-                                    <TextBlock
+        <DockPanel Grid.Row="1">
+            <controls:ScrollView
+                Classes="Flat"
+                DockPanel.Dock="Left"
+                Width="120">
+                <tio:NavMenu Margin="0,0,10,0" x:Name="CategoryNav">
+                    <tio:NavMenuItem
+                        Command="{Binding SelectCategoryCommand}"
+                        CommandParameter="{x:Static module:WidgetCategory.Game}"
+                        Header="游戏"
+                        IsSelected="True" />
+                    <tio:NavMenuItem
+                        Command="{Binding SelectCategoryCommand}"
+                        CommandParameter="{x:Static module:WidgetCategory.Resource}"
+                        Header="系统资源" />
+                    <tio:NavMenuItem
+                        Command="{Binding SelectCategoryCommand}"
+                        CommandParameter="{x:Static module:WidgetCategory.Utility}"
+                        Header="实用工具" />
+                </tio:NavMenu>
+            </controls:ScrollView>
+            <Rectangle
+                DockPanel.Dock="Left"
+                Fill="{DynamicResource TranslucentBorderBrush}"
+                Margin="0,0,10,0"
+                Width="1" />
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <ItemsRepeater ItemsSource="{Binding Items}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout
+                            ItemsStretch="Fill"
+                            MinColumnSpacing="12"
+                            MinItemHeight="96"
+                            MinItemWidth="240"
+                            MinRowSpacing="12"
+                            Orientation="Horizontal" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="module:WidgetDefinition">
+                            <Border
+                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="14,12">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock
+                                            FontSize="15"
+                                            FontWeight="SemiBold"
+                                            Text="{Binding Name}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding Description}" />
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            HorizontalAlignment="Left"
+                                            MaxLines="2"
+                                            Text="{Binding SizeText}"
+                                            TextTrimming="CharacterEllipsis"
+                                            Width="240" />
+                                    </StackPanel>
+                                    <Button
+                                        Click="Add_OnClick"
+                                        Content="添加"
                                         FontSize="12"
-                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                        Text="{Binding Description}" />
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                        Text="{Binding SizeText}" />
-                                </StackPanel>
-                                <Button
-                                    Click="Add_OnClick"
-                                    Content="添加"
-                                    FontSize="12"
-                                    HorizontalAlignment="Right"
-                                    Tag="{Binding}"
-                                    VerticalAlignment="Bottom" />
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-        </ScrollViewer>
+                                        HorizontalAlignment="Right"
+                                        Margin="0,0,-10,0"
+                                        Tag="{Binding}"
+                                        VerticalAlignment="Bottom" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
+        </DockPanel>
     </Grid>
 </UserControl>

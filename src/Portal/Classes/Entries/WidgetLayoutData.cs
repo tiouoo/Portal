@@ -64,3 +64,12 @@ public sealed class MemoryWidgetData
     /// <summary>显示模式：true=百分比，false=数值。null 时默认百分比。</summary>
     public bool? ShowPercentage { get; set; }
 }
+
+/// <summary>图片小组件数据。</summary>
+public sealed class ImageWidgetData
+{
+    /// <summary>本地图片绝对路径。</summary>
+    public string? ImagePath { get; set; }
+    /// <summary>图片填充方式：true=裁剪填充（UniformToFill），false=完整显示（Uniform）。null 时默认裁剪填充。</summary>
+    public bool? StretchFill { get; set; }
+}

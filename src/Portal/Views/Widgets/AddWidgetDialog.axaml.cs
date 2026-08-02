@@ -1,7 +1,13 @@
 using System.Collections.ObjectModel;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Portal.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
 using Portal.Module.Widgets;
@@ -19,6 +25,8 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
     private readonly string? _hostId;
 
     [ObservableProperty] private string _searchText = string.Empty;
+    /// <summary>当前选中的分类，默认游戏。搜索时跨分类匹配。</summary>
+    public WidgetCategory SelectedCategory { get; set; } = WidgetCategory.Game;
 
     public ObservableCollection<WidgetDefinition> Items { get; } = [];
 
@@ -31,10 +39,19 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
+    /// <summary>切换左侧分类导航。</summary>
+    [RelayCommand]
+    private void SelectCategory(WidgetCategory category)
+    {
+        SelectedCategory = category;
+        ApplyFilter();
+    }
+
     private void ApplyFilter()
     {
         var keyword = SearchText?.Trim();
         var list = WidgetRegistry.Definitions
+            .Where(d => d.Category == SelectedCategory)
             .Where(d => string.IsNullOrEmpty(keyword) ||
                         d.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
                         d.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase))
@@ -91,6 +108,16 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
                         ServerAddress = server.Address,
                         ServerPort = server.Port
                     }
+                };
+                break;
+            }
+            case WidgetKind.Image:
+            {
+                var path = await PickImageAsync();
+                if (string.IsNullOrEmpty(path)) return;
+                template = new WidgetLayoutData
+                {
+                    Data = new ImageWidgetData { ImagePath = path }
                 };
                 break;
             }
@@ -159,15 +186,48 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
         return result as ServerConnectResult;
     }
 
+    /// <summary>弹出系统文件选择器，让用户选择一张本地图片。</summary>
+    private async Task<string?> PickImageAsync()
+    {
+        var topLevel = TopLevel.GetTopLevel(_workspace);
+        if (topLevel == null)
+            return null;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "选择图片",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("图片")
+                {
+                    Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp", "*.ico"]
+                }
+            ]
+        });
+
+        return files.Count == 0 ? null : files[0].TryGetLocalPath();
+    }
+
     public void Close() => RequestClose?.Invoke(this, null);
     public event EventHandler<object?>? RequestClose;
 }
 
 public partial class AddWidgetDialog : UserControl
 {
+    private CustomDialogControl? _dialogControl;
+    private Point _dragStart;
+    private bool _dragging;
+
     public AddWidgetDialog()
     {
         InitializeComponent();
+    }
+
+    private void CloseButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is AddWidgetDialogViewModel vm)
+            vm.Close();
     }
 
     private async void Add_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
