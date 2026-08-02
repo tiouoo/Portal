@@ -1,4 +1,4 @@
-﻿using Flurl.Http;
+using Flurl.Http;
 using Newtonsoft.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;

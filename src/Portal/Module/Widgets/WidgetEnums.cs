@@ -12,7 +12,8 @@ public enum WidgetKind
     NetworkResource,
     GpuResource,
     Image,
-    Search
+    Search,
+    News
 }
 
 public enum WidgetCategory

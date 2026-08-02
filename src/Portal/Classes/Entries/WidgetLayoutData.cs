@@ -73,3 +73,10 @@ public sealed class ImageWidgetData
     /// <summary>图片填充方式：true=裁剪填充（UniformToFill），false=完整显示（Uniform）。null 时默认裁剪填充。</summary>
     public bool? StretchFill { get; set; }
 }
+
+/// <summary>新闻小组件数据。</summary>
+public sealed class NewsWidgetData
+{
+    /// <summary>过滤模式："All"、"Java"、"Bedrock"。null 时默认 All。</summary>
+    public string? Filter { get; set; }
+}

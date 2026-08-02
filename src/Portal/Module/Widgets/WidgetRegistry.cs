@@ -176,6 +176,25 @@ public static class WidgetRegistry
             .AddPage<QuickServerWidget1x1>(new WidgetCellSize(1, 1))
             .AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
 
+        // 新闻：高度为 1（2×1~6×1）采用横排布局，其余尺寸（2×2~6×6）沿用竖排布局
+        var newsDef = new WidgetDefinition
+        {
+            Kind = WidgetKind.News,
+            Name = "新闻",
+            Description = "展示最新 Minecraft 新闻（Java 版 / 基岩版）",
+            Category = WidgetCategory.Game,
+            DefaultSize = new WidgetCellSize(2, 2)
+        };
+        for (int cols = 2; cols <= 6; cols++)
+        {
+            for (int rows = 1; rows <= 6; rows++)
+            {
+                var size = new WidgetCellSize(cols, rows);
+                newsDef.AddPage(size, () => new NewsWidget(size));
+            }
+        }
+        Register(newsDef);
+
         // 系统资源
         RegisterResourceWidget(WidgetKind.CpuResource, "CPU 占用", "处理器使用率",
             size => new CpuResourceWidget(size));

@@ -83,33 +83,24 @@ public partial class WidgetHost : UserControl
         if (definition?.SupportedSizes.Count is not > 0)
             return;
 
-        WidgetCellSize minSize = definition.SupportedSizes[0];
-        WidgetCellSize maxSize = definition.SupportedSizes[0];
-        double minArea = double.MaxValue;
-        double maxArea = 0;
+        // 宽高独立取最小/最大值，支持「横向很长」与「纵向很长」并存的尺寸集合
+        // （例如 NewsWidget 同时有 6×1 与 2×6）。若用单一最大面积尺寸，
+        // MaxWidth 会被 2×6 的宽度卡住，导致无法拖拽到 6×1。
+        double minWidth = double.MaxValue, minHeight = double.MaxValue;
+        double maxWidth = 0, maxHeight = 0;
         foreach (var size in definition.SupportedSizes)
         {
             var dims = WidgetGeometry.GetSize(size);
-            double area = dims.Width * dims.Height;
-            if (area < minArea)
-            {
-                minArea = area;
-                minSize = size;
-            }
-
-            if (area > maxArea)
-            {
-                maxArea = area;
-                maxSize = size;
-            }
+            if (dims.Width < minWidth) minWidth = dims.Width;
+            if (dims.Height < minHeight) minHeight = dims.Height;
+            if (dims.Width > maxWidth) maxWidth = dims.Width;
+            if (dims.Height > maxHeight) maxHeight = dims.Height;
         }
 
-        var minDims = WidgetGeometry.GetSize(minSize);
-        var maxDims = WidgetGeometry.GetSize(maxSize);
-        MinWidth = minDims.Width;
-        MinHeight = minDims.Height;
-        MaxWidth = maxDims.Width;
-        MaxHeight = maxDims.Height;
+        MinWidth = minWidth;
+        MinHeight = minHeight;
+        MaxWidth = maxWidth;
+        MaxHeight = maxHeight;
     }
     
     public void SetSize(WidgetCellSize target)

@@ -9,6 +9,7 @@ using Avalonia.VisualTree;
 using Portal.Classes.Entries;
 using Portal.Const;
 using Portal.Module.Widgets;
+using Portal.ViewModels;
 
 namespace Portal.Views.Widgets;
 
@@ -125,6 +126,29 @@ public class WidgetWorkspace : UserControl
         };
         _widgetContextMenu.Items.Add(memoryModeItem);
 
+        // 新闻过滤：全部 / 仅 Java 版 / 仅基岩版
+        var newsFilterMenu = new MenuItem
+        {
+            Header = "新闻过滤",
+            Icon = new PathIcon
+            {
+                Data = StreamGeometry.Parse(
+                    "F1 M640,640z M0,0z M128,96C128,78 142,64 160,64L480,64C498,64 512,78 512,96L512,544C512,562 498,576 480,576L160,576C142,576 128,562 128,544L128,96z M192,160L192,192H448V160H192z M192,256V288H448V256H192z M192,352V384H352V352H192z"),
+                Width = 16, Height = 16
+            },
+            IsVisible = false
+        };
+        var newsAllItem = new MenuItem { Header = "全部", Classes = { "hide-icon" } };
+        newsAllItem.Click += (_, _) => SetNewsFilter(NewsFilterType.All);
+        var newsJavaItem = new MenuItem { Header = "仅 Java 版", Classes = { "hide-icon" } };
+        newsJavaItem.Click += (_, _) => SetNewsFilter(NewsFilterType.Java);
+        var newsBedrockItem = new MenuItem { Header = "仅基岩版", Classes = { "hide-icon" } };
+        newsBedrockItem.Click += (_, _) => SetNewsFilter(NewsFilterType.Bedrock);
+        newsFilterMenu.Items.Add(newsAllItem);
+        newsFilterMenu.Items.Add(newsJavaItem);
+        newsFilterMenu.Items.Add(newsBedrockItem);
+        _widgetContextMenu.Items.Add(newsFilterMenu);
+
         var imageChangeItem = new MenuItem
         {
             Header = "更换图片",
@@ -183,6 +207,15 @@ public class WidgetWorkspace : UserControl
             imageChangeItem.IsVisible = isImage;
             imageStretchItem.IsVisible = isImage;
 
+            NewsWidget? newsWidget = _contextMenuWidget.WidgetContent as NewsWidget;
+            newsFilterMenu.IsVisible = newsWidget != null;
+            if (newsWidget != null)
+            {
+                newsAllItem.IsChecked = newsWidget.Filter == NewsFilterType.All;
+                newsJavaItem.IsChecked = newsWidget.Filter == NewsFilterType.Java;
+                newsBedrockItem.IsChecked = newsWidget.Filter == NewsFilterType.Bedrock;
+            }
+
             sizeMenu.Items.Clear();
             var definition = WidgetRegistry.Get(_contextMenuWidget.Layout.Kind);
             if (definition == null)
@@ -223,6 +256,15 @@ public class WidgetWorkspace : UserControl
         host.Layout.ShowBackground = value;
         host.ApplyBackground();
         SaveLayout();
+    }
+
+    private void SetNewsFilter(NewsFilterType filter)
+    {
+        if (_contextMenuWidget?.WidgetContent is NewsWidget news)
+        {
+            news.SetFilter(filter);
+            SaveLayout();
+        }
     }
 
     private void OnDeleteWidgetClick(object? sender, EventArgs e)
