@@ -333,23 +333,23 @@
                                             Margin="5,0"
                                             Orientation="Horizontal"
                                             Spacing="8">
-                                            <Button
-                                                Classes="delete-btn"
-                                                Click="ChangeSkin_OnClick"
-                                                IsVisible="{Binding IsOffline}"
-                                                Tag="{Binding}"
-                                                Theme="{StaticResource TransparentButton}"
-                                                VerticalAlignment="Center">
-                                                <PathIcon
-                                                    Data="M12,4A3.5,3.5 0 0,0 8.5,7.5H10.5A1.5,1.5 0 0,1 12,6A1.5,1.5 0 0,1 13.5,7.5A1.5,1.5 0 0,1 12,9C11.45,9 11,9.45 11,10V11.75L2.4,18.2C1.63,18.78 1.39,19.83 1.97,20.6L3.21,22.43C3.79,23.2 4.84,23.44 5.61,22.86L12,17.5L18.39,22.86C19.16,23.44 20.21,23.2 20.79,22.43L22.03,20.6C22.61,19.83 22.37,18.78 21.6,18.2L13,11.75V10C13,8.9 10.7,7.5 12,4Z"
-                                                    Height="14"
-                                                    Width="14" />
-                                                <Button.Transitions>
-                                                    <Transitions>
-                                                        <DoubleTransition Duration="0:0:0.1" Property="Opacity" />
-                                                    </Transitions>
-                                                </Button.Transitions>
-                                            </Button>
+                                            <!--  <Button  -->
+                                            <!--  Classes="delete-btn"  -->
+                                            <!--  Click="ChangeSkin_OnClick"  -->
+                                            <!--  IsVisible="{Binding IsOffline}"  -->
+                                            <!--  Tag="{Binding}"  -->
+                                            <!--  Theme="{StaticResource TransparentButton}"  -->
+                                            <!--  VerticalAlignment="Center">  -->
+                                            <!--  <PathIcon  -->
+                                            <!--  Data="M12,4A3.5,3.5 0 0,0 8.5,7.5H10.5A1.5,1.5 0 0,1 12,6A1.5,1.5 0 0,1 13.5,7.5A1.5,1.5 0 0,1 12,9C11.45,9 11,9.45 11,10V11.75L2.4,18.2C1.63,18.78 1.39,19.83 1.97,20.6L3.21,22.43C3.79,23.2 4.84,23.44 5.61,22.86L12,17.5L18.39,22.86C19.16,23.44 20.21,23.2 20.79,22.43L22.03,20.6C22.61,19.83 22.37,18.78 21.6,18.2L13,11.75V10C13,8.9 10.7,7.5 12,4Z"  -->
+                                            <!--  Height="14"  -->
+                                            <!--  Width="14" />  -->
+                                            <!--     <Button.Transitions> -->
+                                            <!--         <Transitions> -->
+                                            <!--             <DoubleTransition Duration="0:0:0.1" Property="Opacity" /> -->
+                                            <!--         </Transitions> -->
+                                            <!--     </Button.Transitions> -->
+                                            <!-- </Button> -->
                                             <Button
                                                 Classes="delete-btn"
                                                 Command="{Binding #Root.DeleteAccount}"
