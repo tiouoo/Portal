@@ -35,6 +35,15 @@ public sealed class PortalCommand
 
     /// <summary>实例 ID：下载时为自定义安装 ID，启动时为要启动的实例 ID。</summary>
     public string? InstanceId { get; set; }
+
+    /// <summary>世界所在文件夹（saves 下的目录名）：启动时指定则直接进入该世界。版本隔离下同名世界可重复，以文件夹名区分。</summary>
+    public string? WorldFolder { get; set; }
+
+    /// <summary>服务器地址：启动时指定则直接进入该服务器。</summary>
+    public string? ServerAddress { get; set; }
+
+    /// <summary>服务器端口：直接进入服务器时指定，缺省 25565。</summary>
+    public int? ServerPort { get; set; }
 }
 
 public sealed record PortalLoaderSpec(string Kind, string? Version);

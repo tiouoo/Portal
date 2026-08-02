@@ -12,7 +12,8 @@ Portal 支持通过命令行参数或 `portal://` 链接调用启动器内的安
 Portal.Desktop.exe install vanilla <版本> [--folder <文件夹>] [--id <实例ID>]
 Portal.Desktop.exe install loader <版本> --loader <加载器[@版本]> [--loader ...] [--folder <文件夹>] [--id <实例ID>]
 Portal.Desktop.exe install modpack <来源> [--from modrinth|curseforge] [--version <版本或fileId>] [--folder <文件夹>] [--id <实例ID>]
-Portal.Desktop.exe launch <实例ID> [--folder <文件夹>]
+Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--world <世界文件夹>]
+Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--server <服务器地址>] [--port <端口>]
 Portal.Desktop.exe help
 ```
 
@@ -46,6 +47,12 @@ Portal.Desktop.exe install modpack 715572 --from curseforge --file 6985843
 # 启动实例
 Portal.Desktop.exe launch "1.20.1-forge"
 Portal.Desktop.exe launch "1.20.1-forge" --folder "D:\Minecraft\.minecraft"
+
+# 启动并直接进入某个世界（传世界在 saves 目录下的文件夹名；版本隔离下同名世界可重复，以文件夹名区分）
+Portal.Desktop.exe launch "1.20.1-forge" --folder "D:\Minecraft\.minecraft" --world "New World"
+
+# 启动并直接进入服务器（--port 缺省为 25565）
+Portal.Desktop.exe launch "1.20.1-forge" --folder "D:\Minecraft\.minecraft" --server "play.example.com" --port 25565
 ```
 
 ## 浏览器命令
@@ -63,6 +70,8 @@ portal://install/modpack?source=Fabulously%20Optimized
 portal://install/modpack?source=fabulously-optimized&from=modrinth&version=14.0.0-beta.2
 portal://install/modpack?source=715572&from=curseforge&file=6985843
 portal://launch?id=1.20.1-forge&folder=D%3A%5CMinecraft%5C.minecraft
+portal://launch?id=1.20.1-forge&folder=D%3A%5CMinecraft%5C.minecraft&world=New%20World
+portal://launch?id=1.20.1-forge&folder=D%3A%5CMinecraft%5C.minecraft&server=play.example.com&port=25565
 ```
 
 `portal://launch/<实例ID>` 这种把实例 ID 放在路径里的写法也被接受。
@@ -83,6 +92,8 @@ portal://<动词>/<子命令>?<参数>=<值>&<参数>=<值>
 | `install loader 1.21.8 --loader fabric` | `portal://install/loader?version=1.21.8&loader=fabric` |
 | `install modpack <来源>` | `portal://install/modpack?source=<来源>` |
 | `launch <实例ID>` | `portal://launch?id=<实例ID>` |
+| `launch <实例ID> --world <世界文件夹>` | `portal://launch?id=<实例ID>&world=<世界文件夹>` |
+| `launch <实例ID> --server <地址> [--port <端口>]` | `portal://launch?id=<实例ID>&server=<地址>&port=<端口>` |
 
 ### 参数
 
@@ -96,6 +107,9 @@ portal://<动词>/<子命令>?<参数>=<值>&<参数>=<值>
 | `--id` | `id` | 安装时的自定义实例 ID |
 | `--from` / `--platform` | `from` / `platform` | 整合包平台：`modrinth` 或 `curseforge` |
 | `--version` / `-v` / `--file` | `version` / `v` / `file` | 整合包版本，见下 |
+| `--world` | `world` | 直接进入的世界（saves 目录下的文件夹名），需配合 `launch` |
+| `--server` / `--address` | `server` / `address` | 直接进入的服务器地址，需配合 `launch` |
+| `--port` | `port` | 服务器端口（1-65535），缺省 25565，需配合 `--server` |
 
 ### 取值规则
 
@@ -112,6 +126,8 @@ portal://<动词>/<子命令>?<参数>=<值>&<参数>=<值>
 文件夹：取值为启动器内已添加的 Minecraft 文件夹的名称或路径。安装时不指定则使用默认（第一个）文件夹；路径存在但未添加到启动器时也可作为安装目标，不会写入启动器配置。启动时不指定则在所有文件夹中取第一个匹配实例 ID 的实例，指定后只在该文件夹内查找。
 
 实例 ID：启动时按版本 ID（versions 下的目录名）匹配，实例显示名称也可匹配。安装时不指定 `--id` 则自动生成：原版为版本号，带加载器为「版本 加载器-版本」，整合包取包内清单中的名称。
+
+世界与服务器：`launch` 可通过 `--world` 或 `--server` 直接进入世界 / 服务器，两者互斥。进入世界时除实例 ID 与实例文件夹外必须指定世界所在文件夹（saves 下的目录名）——版本隔离下世界与实例不绑定、多个实例可对应同一个世界，同名世界也可能存在多个，因此用文件夹名精确区分。进入服务器时需指定服务器地址，`--port` 缺省为 25565。
 
 ### 编码
 

@@ -20,6 +20,7 @@ using Portal.Core.Operations;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
+using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Components;
@@ -131,6 +132,14 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
 
+    private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not MinecraftInstance instance)
+            return;
+
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(instance));
+    }
+
     private void NewTabPage_OnSizeChanged(object? sender, SizeChangedEventArgs e) =>
         NewTabViewModel.SetRecentPlayWidth(e.NewSize.Width);
 
@@ -141,6 +150,16 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
 
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    }
+
+    private async void RecentPlayCreateShortcut_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not RecentPlayItem item)
+            return;
+
+        var target = item.Target;
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
+            () => DesktopShortcutService.CreateAsync(target.Instance, target));
     }
 
     private async void RecentPlayItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)

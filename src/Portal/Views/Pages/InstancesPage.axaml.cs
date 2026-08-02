@@ -14,6 +14,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
+using Portal.Module.DesktopShortcut;
 using Portal.ViewModels;
 using Portal.Services;
 using Portal.Views.Pages.DownloadPages;
@@ -100,6 +101,14 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
         _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
+    }
+
+    private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not MinecraftInstance instance)
+            return;
+
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(instance));
     }
 
     private void BlockInstance_Click(object? sender, RoutedEventArgs e)

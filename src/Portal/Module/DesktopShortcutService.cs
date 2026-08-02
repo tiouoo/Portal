@@ -10,7 +10,8 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 namespace Portal.Module.DesktopShortcut;
 
 /// <summary>
-/// 在桌面创建快捷方式，通过 portal://launch?id=...&amp;folder=... 协议链接启动实例。
+/// 在桌面创建快捷方式，通过 portal://launch?id=...&amp;folder=... 协议链接启动实例，
+/// 也可通过附加 world / server 参数直接进入世界或服务器。
 /// Windows：写 .url Internet 快捷方式；Linux：写可执行的 .desktop 启动器；macOS：写 .webloc。
 /// </summary>
 public static class DesktopShortcutService
@@ -23,14 +24,67 @@ public static class DesktopShortcutService
         return $"portal://launch?id={Uri.EscapeDataString(id)}&folder={Uri.EscapeDataString(instance.FolderPath)}";
     }
 
+    /// <summary>构造直接进入指定世界（saves 下的文件夹名）的 portal://launch 链接。</summary>
+    public static string BuildWorldLaunchUrl(MinecraftInstance instance, string worldFolder) =>
+        $"{BuildLaunchUrl(instance)}&world={Uri.EscapeDataString(worldFolder)}";
+
+    /// <summary>构造直接进入指定服务器的 portal://launch 链接。</summary>
+    public static string BuildServerLaunchUrl(MinecraftInstance instance, string address, int port) =>
+        $"{BuildLaunchUrl(instance)}&server={Uri.EscapeDataString(address)}&port={port}";
+
     /// <summary>在桌面创建快捷方式，返回快捷方式文件路径。</summary>
-    public static async Task<string> CreateAsync(MinecraftInstance instance)
+    public static Task<string> CreateAsync(MinecraftInstance instance) =>
+        CreateAsync(instance, BuildLaunchUrl(instance), instance.InstanceName, instance.Icons[256] as Bitmap);
+
+    /// <summary>为最近游玩目标（世界 / 服务器）在桌面创建快捷方式，返回快捷方式文件路径。</summary>
+    public static Task<string> CreateAsync(MinecraftInstance instance, RecentPlayTarget target)
     {
-        var url = BuildLaunchUrl(instance);
-        if (OperatingSystem.IsWindows()) return CreateWindowsShortcut(instance, url);
-        if (OperatingSystem.IsLinux()) return await CreateLinuxShortcutAsync(instance, url);
-        if (OperatingSystem.IsMacOS()) return CreateMacShortcut(instance, url);
+        var url = target.Type switch
+        {
+            RecentPlayTargetType.World when !string.IsNullOrWhiteSpace(target.Id) => BuildWorldLaunchUrl(instance, target.Id),
+            RecentPlayTargetType.Server when !string.IsNullOrWhiteSpace(target.ServerAddress) =>
+                BuildServerLaunchUrl(instance, target.ServerAddress, target.ServerPort ?? 25565),
+            _ => BuildLaunchUrl(instance)
+        };
+
+        var name = target.Type == RecentPlayTargetType.World && !string.IsNullOrWhiteSpace(target.Id) &&
+                   !string.Equals(target.Name, target.Id, StringComparison.Ordinal)
+            ? $"{target.Name} ({target.Id})"
+            : target.Name;
+        var icon = TryLoadIcon(target.WorldIconPath, target.ServerIconData) ?? (instance.Icons[256] as Bitmap);
+        return CreateAsync(instance, url, $"{instance.InstanceName} - {name}", icon);
+    }
+
+    private static async Task<string> CreateAsync(MinecraftInstance instance, string url, string displayName, Bitmap? icon)
+    {
+        if (OperatingSystem.IsWindows()) return CreateWindowsShortcut(url, displayName, icon);
+        if (OperatingSystem.IsLinux()) return await CreateLinuxShortcutAsync(url, displayName, icon);
+        if (OperatingSystem.IsMacOS()) return CreateMacShortcut(url, displayName);
         throw new PlatformNotSupportedException("当前系统暂不支持创建桌面快捷方式。");
+    }
+
+    private static Bitmap? TryLoadIcon(string? path, byte[]? data)
+    {
+        try
+        {
+            if (data is { Length: > 0 })
+            {
+                using var stream = new MemoryStream(data);
+                return Bitmap.DecodeToWidth(stream, 256);
+            }
+
+            if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+            {
+                using var stream = File.OpenRead(path);
+                return Bitmap.DecodeToWidth(stream, 256);
+            }
+        }
+        catch (Exception)
+        {
+            // 图标只是锦上添花，读取失败时退回实例图标。
+        }
+
+        return null;
     }
 
     private static string GetDesktopDirectory()
@@ -67,18 +121,18 @@ public static class DesktopShortcutService
         return string.IsNullOrEmpty(result) ? "Portal" : result;
     }
 
-    private static string CreateWindowsShortcut(MinecraftInstance instance, string url)
+    private static string CreateWindowsShortcut(string url, string displayName, Bitmap? icon)
     {
         var desktop = GetDesktopDirectory();
-        var fileName = $"{SanitizeFileName(instance.InstanceName)}.url";
-        var path = Path.Combine(desktop, fileName);
+        var safeName = SanitizeFileName(displayName);
+        var path = Path.Combine(desktop, $"{safeName}.url");
 
         var builder = new StringBuilder();
         builder.AppendLine("[InternetShortcut]");
         builder.AppendLine($"URL={url}");
 
-        // 优先用实例图标，写失败时退回启动器图标，仍能正常创建快捷方式。
-        var iconFile = TryWriteIcon(instance, EncodeIco, ".ico") ?? GetExecutablePath();
+        // 优先用目标图标，写失败时退回启动器图标，仍能正常创建快捷方式。
+        var iconFile = TryWriteIcon(icon, EncodeIco, ".ico", safeName) ?? GetExecutablePath();
         builder.AppendLine($"IconFile={iconFile}");
         builder.AppendLine("IconIndex=0");
 
@@ -87,25 +141,24 @@ public static class DesktopShortcutService
         return path;
     }
 
-    private static async Task<string> CreateLinuxShortcutAsync(MinecraftInstance instance, string url)
+    private static async Task<string> CreateLinuxShortcutAsync(string url, string displayName, Bitmap? icon)
     {
         var desktop = GetDesktopDirectory();
         if (!Directory.Exists(desktop))
             throw new DirectoryNotFoundException($"未找到桌面文件夹：{desktop}");
 
-        var name = instance.InstanceName;
-        var safeName = SanitizeFileName(name);
+        var safeName = SanitizeFileName(displayName);
         var path = Path.Combine(desktop, $"{safeName}.desktop");
 
-        var icon = TryWriteIcon(instance, EncodePng, ".png");
+        var iconPath = TryWriteIcon(icon, EncodePng, ".png", safeName);
 
         var builder = new StringBuilder();
         builder.AppendLine("[Desktop Entry]");
         builder.AppendLine("Type=Application");
-        builder.AppendLine($"Name={EscapeDesktopValue(name)}");
-        builder.AppendLine($"Comment=通过 Portal 启动 {EscapeDesktopValue(name)}");
+        builder.AppendLine($"Name={EscapeDesktopValue(displayName)}");
+        builder.AppendLine($"Comment=通过 Portal 启动 {EscapeDesktopValue(displayName)}");
         builder.AppendLine($"Exec={EscapeDesktopExec(GetExecutablePath())} {EscapeDesktopExec(url)}");
-        if (icon != null) builder.AppendLine($"Icon={icon}");
+        if (iconPath != null) builder.AppendLine($"Icon={iconPath}");
         builder.AppendLine("Terminal=false");
         builder.AppendLine("Categories=Game;");
         await File.WriteAllTextAsync(path, builder.ToString());
@@ -116,11 +169,10 @@ public static class DesktopShortcutService
         return path;
     }
 
-    private static string CreateMacShortcut(MinecraftInstance instance, string url)
+    private static string CreateMacShortcut(string url, string displayName)
     {
         var desktop = GetDesktopDirectory();
-        var fileName = $"{SanitizeFileName(instance.InstanceName)}.webloc";
-        var path = Path.Combine(desktop, fileName);
+        var path = Path.Combine(desktop, $"{SanitizeFileName(displayName)}.webloc");
 
         var plist = $"""
             <?xml version="1.0" encoding="UTF-8"?>
@@ -137,17 +189,16 @@ public static class DesktopShortcutService
         return path;
     }
 
-    private static string? TryWriteIcon(MinecraftInstance instance, Func<Bitmap, byte[]> encoder, string extension)
+    private static string? TryWriteIcon(Bitmap? icon, Func<Bitmap, byte[]> encoder, string extension, string name)
     {
         try
         {
-            var bitmap = instance.Icons[256] as Bitmap;
-            if (bitmap == null) return null;
+            if (icon == null) return null;
 
-            var bytes = encoder(bitmap);
+            var bytes = encoder(icon);
             var folder = Path.Combine(ConfigPath.UserDataRootPath, "DesktopShortcuts");
             Directory.CreateDirectory(folder);
-            var path = Path.Combine(folder, $"{SanitizeFileName(instance.InstanceName)}{extension}");
+            var path = Path.Combine(folder, $"{SanitizeFileName(name)}{extension}");
             File.WriteAllBytes(path, bytes);
             return path;
         }

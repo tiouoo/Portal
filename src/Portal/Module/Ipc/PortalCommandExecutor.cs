@@ -508,9 +508,38 @@ public static class PortalCommandExecutor
                            ? $"未找到实例“{id}”。"
                            : $"文件夹“{command.Folder}”中未找到实例“{id}”。");
 
+        var target = BuildLaunchTarget(instance, command);
         // window.Notice($"正在启动 {instance.InstanceName}（{instance.FolderName}）");
         _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(logSession =>
-            MinecraftLogPage.Open(logSession, window)));
+            MinecraftLogPage.Open(logSession, window)), target);
+    }
+
+    /// <summary>
+    /// 根据命令行/URI 参数构造直接进入世界或服务器的启动目标；
+    /// 未指定世界或服务器时返回 null（普通启动）。
+    /// </summary>
+    private static RecentPlayTarget? BuildLaunchTarget(MinecraftInstance instance, PortalCommand command)
+    {
+        if (!string.IsNullOrWhiteSpace(command.WorldFolder))
+        {
+            var worldFolder = command.WorldFolder.Trim();
+            var savesPath = instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder);
+            if (!Directory.Exists(Path.Combine(savesPath, worldFolder)))
+                throw new InvalidOperationException($"实例“{instance.InstanceName}”的存档目录中未找到世界文件夹“{worldFolder}”。");
+            return new RecentPlayTarget(instance, RecentPlayTargetType.World, worldFolder, worldFolder,
+                $"存档·{worldFolder}", DateTime.Now);
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.ServerAddress))
+        {
+            var address = command.ServerAddress.Trim();
+            var port = command.ServerPort ?? 25565;
+            return new RecentPlayTarget(instance, RecentPlayTargetType.Server,
+                $"server:{address}:{port}", address, $"服务器·{address}", DateTime.Now,
+                ServerAddress: address, ServerPort: port);
+        }
+
+        return null;
     }
 
     private static bool MatchesInstanceId(MinecraftInstance instance, string id) =>

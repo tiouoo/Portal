@@ -17,6 +17,7 @@ using Portal.Core.Minecraft.Services;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
+using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;
@@ -220,6 +221,14 @@ public partial class StartPage : DataUserControl, ITioTabPage
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
 
+    private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not MinecraftInstance instance)
+            return;
+
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(instance));
+    }
+
     private void FavoritedButton_OnClick(object? sender, RoutedEventArgs e)
     {
         var instance = (sender as Control)?.Tag as MinecraftInstance;
@@ -319,6 +328,16 @@ public partial class StartPage : DataUserControl, ITioTabPage
 
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    }
+
+    private async void RecentPlayCreateShortcut_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not RecentPlayItem item)
+            return;
+
+        var target = item.Target;
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
+            () => DesktopShortcutService.CreateAsync(target.Instance, target));
     }
 
     private async void RecentPlayItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)

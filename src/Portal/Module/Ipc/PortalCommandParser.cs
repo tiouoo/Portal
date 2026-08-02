@@ -46,7 +46,8 @@ public static class PortalCommandParser
           Portal.Desktop.exe install vanilla <版本> [--folder <文件夹>] [--id <实例ID>]
           Portal.Desktop.exe install loader <版本> --loader <加载器[@版本]> [--loader ...] [--folder <文件夹>] [--id <实例ID>]
           Portal.Desktop.exe install modpack <路径|链接|项目名或ID> [--from modrinth|curseforge] [--version <版本或fileId>] [--folder <文件夹>] [--id <实例ID>]
-          Portal.Desktop.exe launch <实例ID> [--folder <文件夹>]
+          Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--world <世界文件夹>]
+          Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--server <服务器地址>] [--port <端口>]
           Portal.Desktop.exe help
 
         加载器：fabric / forge / neoforge / quilt / optifine（可用 @ 指定版本，如 fabric@0.16.9）
@@ -54,6 +55,9 @@ public static class PortalCommandParser
                 不指定 --version 时安装最新版本（--version 为 Modrinth 版本 ID/版本号或 CurseForge fileId，--file 等价）。
         文件夹：启动器内已添加的 Minecraft 文件夹名称或路径；不传时使用默认（第一个）文件夹。
         启动时未指定文件夹则启动第一个匹配该实例 ID 的实例。
+        世界：--world 传世界在 saves 目录下的文件夹名，启动后直接进入该世界（同名世界以文件夹名区分）。
+        服务器：--server 传服务器地址，--port 传端口（缺省 25565），启动后直接进入该服务器。
+        --world 与 --server 互斥。
 
         等价的 portal:// 协议形式（注册协议后浏览器可直接调用）：
           portal://install/vanilla?version=1.21.8&folder=B&id=my-1.21.8
@@ -61,6 +65,8 @@ public static class PortalCommandParser
           portal://install/modpack?source=fabulously-optimized&from=modrinth&version=cZY3Bvs9
           portal://install/modpack?source=https%3A%2F%2Fexample.com%2Fpack.mrpack&folder=B
           portal://launch?id=26.2&folder=B
+          portal://launch?id=26.2&folder=B&world=New%20World
+          portal://launch?id=26.2&folder=B&server=play.example.com&port=25565
         """;
 
     private static PortalCliParseStatus ParseInstallCli(string[] args, out PortalCommand? command, out string? error)
@@ -151,17 +157,31 @@ public static class PortalCommandParser
             return PortalCliParseStatus.Error;
         }
 
+        if (!string.IsNullOrWhiteSpace(options.WorldFolder) && !string.IsNullOrWhiteSpace(options.ServerAddress))
+        {
+            error = "--world 与 --server 不能同时指定。";
+            return PortalCliParseStatus.Error;
+        }
+        if (options.ServerPort != null && string.IsNullOrWhiteSpace(options.ServerAddress))
+        {
+            error = "--port 需要配合 --server 使用。";
+            return PortalCliParseStatus.Error;
+        }
+
         command = new PortalCommand
         {
             Kind = PortalCommandKind.Launch,
             InstanceId = positionals[0],
-            Folder = options.Folder
+            Folder = options.Folder,
+            WorldFolder = options.WorldFolder,
+            ServerAddress = options.ServerAddress,
+            ServerPort = options.ServerPort
         };
         return PortalCliParseStatus.Command;
     }
 
     private sealed record CliOptions(string? Folder, string? InstanceId, List<PortalLoaderSpec> Loaders,
-        string? Provider, string? PackVersion);
+        string? Provider, string? PackVersion, string? WorldFolder, string? ServerAddress, int? ServerPort);
 
     private static bool TryParseOptions(string[] args, int start, out List<string> positionals, out CliOptions options,
         out string? error)
@@ -171,6 +191,9 @@ public static class PortalCommandParser
         string? instanceId = null;
         string? provider = null;
         string? packVersion = null;
+        string? worldFolder = null;
+        string? serverAddress = null;
+        int? serverPort = null;
         var loaders = new List<PortalLoaderSpec>();
         options = null!;
         error = null;
@@ -208,6 +231,21 @@ public static class PortalCommandParser
                 case "--version" or "-v" or "--file":
                     if (!TryReadValue(args, ref index, inlineValue, name, out packVersion, out error)) return false;
                     break;
+                case "--world":
+                    if (!TryReadValue(args, ref index, inlineValue, name, out worldFolder, out error)) return false;
+                    break;
+                case "--server":
+                    if (!TryReadValue(args, ref index, inlineValue, name, out serverAddress, out error)) return false;
+                    break;
+                case "--port":
+                    if (!TryReadValue(args, ref index, inlineValue, name, out var portValue, out error)) return false;
+                    if (!int.TryParse(portValue, out var parsedPort) || parsedPort is <= 0 or > 65535)
+                    {
+                        error = $"参数 {name} 需要 1-65535 之间的端口号。";
+                        return false;
+                    }
+                    serverPort = parsedPort;
+                    break;
                 default:
                     if (name.StartsWith('-'))
                     {
@@ -219,7 +257,7 @@ public static class PortalCommandParser
             }
         }
 
-        options = new CliOptions(folder, instanceId, loaders, provider, packVersion);
+        options = new CliOptions(folder, instanceId, loaders, provider, packVersion, worldFolder, serverAddress, serverPort);
         return true;
     }
 
@@ -289,11 +327,32 @@ public static class PortalCommandParser
                     error = "portal://launch 缺少实例 ID，例如 portal://launch?id=xxx。";
                     return PortalCliParseStatus.Error;
                 }
+                var worldFolder = GetValue(parameters, "world");
+                var serverAddress = GetValue(parameters, "server", "address");
+                var serverPort = ParsePort(GetValue(parameters, "port"), out var portError);
+                if (portError is not null)
+                {
+                    error = portError;
+                    return PortalCliParseStatus.Error;
+                }
+                if (!string.IsNullOrWhiteSpace(worldFolder) && !string.IsNullOrWhiteSpace(serverAddress))
+                {
+                    error = "world 与 server 不能同时指定。";
+                    return PortalCliParseStatus.Error;
+                }
+                if (serverPort != null && string.IsNullOrWhiteSpace(serverAddress))
+                {
+                    error = "port 需要配合 server 使用。";
+                    return PortalCliParseStatus.Error;
+                }
                 command = new PortalCommand
                 {
                     Kind = PortalCommandKind.Launch,
                     InstanceId = id,
-                    Folder = GetValue(parameters, "folder", "dir")
+                    Folder = GetValue(parameters, "folder", "dir"),
+                    WorldFolder = worldFolder,
+                    ServerAddress = serverAddress,
+                    ServerPort = serverPort
                 };
                 return PortalCliParseStatus.Command;
             }
@@ -385,4 +444,15 @@ public static class PortalCommandParser
     private static IEnumerable<string> GetValues(List<KeyValuePair<string, string>> parameters, string name) =>
         parameters.Where(pair => string.Equals(pair.Key, name, StringComparison.OrdinalIgnoreCase))
             .Select(pair => pair.Value).Where(value => value.Length > 0);
+
+    private static int? ParsePort(string? value, out string? error)
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+        if (int.TryParse(value, out var port) && port is > 0 and <= 65535)
+            return port;
+        error = $"port 需要 1-65535 之间的端口号，收到“{value}”。";
+        return null;
+    }
 }

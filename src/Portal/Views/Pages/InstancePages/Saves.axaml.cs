@@ -18,6 +18,7 @@ using Avalonia.VisualTree;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.Views.StaticPages;
 using SkiaSharp;
@@ -272,6 +273,27 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
 
         _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    }
+
+    private async void CreateShortcut_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetItem(sender) is not { } item || _instance == null)
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        var target = new RecentPlayTarget(
+            _instance,
+            RecentPlayTargetType.World,
+            item.Info.FolderName,
+            string.IsNullOrWhiteSpace(item.Info.LevelName) ? item.Info.FolderName : item.Info.LevelName,
+            $"存档·{item.Info.Version ?? "未知版本"}·{GetGameModeText(item.Info.GameMode)}",
+            item.Info.LastPlayedTime ?? DateTime.MinValue,
+            item.Info.IconPath);
+
+        await DesktopShortcutUi.CreateAsync(topLevel, () => DesktopShortcutService.CreateAsync(_instance, target));
     }
 
     private static string GetGameModeText(int? gameMode) =>

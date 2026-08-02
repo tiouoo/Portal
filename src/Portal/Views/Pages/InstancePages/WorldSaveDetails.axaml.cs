@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using TioUi.Common.Interfaces;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -339,18 +340,28 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         if (topLevel == null)
             return;
 
-        var target = new RecentPlayTarget(
-            _instance,
-            RecentPlayTargetType.World,
-            _info.FolderName,
-            string.IsNullOrWhiteSpace(_info.LevelName) ? _info.FolderName : _info.LevelName,
-            $"存档·{_info.Version ?? "未知版本"}·{GetGameModeText(_info.GameMode)}",
-            _info.LastPlayedTime ?? DateTime.MinValue,
-            _info.IconPath);
-
         _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), BuildTarget());
     }
+
+    [RelayCommand]
+    private async Task CreateShortcut()
+    {
+        var topLevel = GetTopLevel();
+        if (topLevel == null)
+            return;
+
+        await DesktopShortcutUi.CreateAsync(topLevel, () => DesktopShortcutService.CreateAsync(_instance, BuildTarget()));
+    }
+
+    private RecentPlayTarget BuildTarget() => new(
+        _instance,
+        RecentPlayTargetType.World,
+        _info.FolderName,
+        DisplayName,
+        $"存档·{_info.Version ?? "未知版本"}·{GetGameModeText(_info.GameMode)}",
+        _info.LastPlayedTime ?? DateTime.MinValue,
+        _info.IconPath);
 
     private static TopLevel? GetTopLevel() =>
         Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime { MainWindow: { } window }

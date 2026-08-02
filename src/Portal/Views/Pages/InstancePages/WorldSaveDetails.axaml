@@ -65,12 +65,19 @@
                     <CrossFade Duration="0:0:0.2" />
                 </TransitioningContentControl.PageTransition>
             </TransitioningContentControl>
-            <Button
-                Command="{Binding QuickEnterCommand}"
-                Content="快速进入"
+            <StackPanel
                 HorizontalAlignment="Right"
                 Margin="0,0,20,0"
-                VerticalAlignment="Top" />
+                Orientation="Horizontal"
+                Spacing="8"
+                VerticalAlignment="Top">
+                <Button
+                    Command="{Binding CreateShortcutCommand}"
+                    Content="创建桌面快捷方式" />
+                <Button
+                    Command="{Binding QuickEnterCommand}"
+                    Content="快速进入" />
+            </StackPanel>
         </Panel>
     </DockPanel>
 </UserControl>

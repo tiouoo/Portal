@@ -355,18 +355,6 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
 
     private async void CreateLink_Click(object? sender, RoutedEventArgs e)
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
-
-        try
-        {
-            var shortcutPath = await DesktopShortcutService.CreateAsync(Instance);
-            NotificationGateway.Notice(topLevel, $"桌面快捷方式已创建：{shortcutPath}", NotificationType.Success);
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ex);
-            NotificationGateway.Notice(topLevel, $"创建桌面快捷方式失败：{ex.Message}", NotificationType.Error);
-        }
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(Instance));
     }
 }
