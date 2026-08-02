@@ -41,7 +41,7 @@
                         Height="21"
                         Margin="0,-1,0,0"
                         Name="PathIcon"
-                        Width="21" />
+                        Width="20" />
                     <TextBlock
                         FontSize="15"
                         Foreground="{DynamicResource InnerForegroundColor}"

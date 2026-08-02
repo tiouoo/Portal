@@ -29,9 +29,6 @@ public partial class NewsPage : DataUserControl, ITioTabPage
         {
             Margin = new Thickness(10, 0, 10, 10);
             ScrollView.VerticalScrollMode = ScrollMode.Enabled;
-            PathIcon.Width = 24;
-            PathIcon.Height = 24;
-            TextBlock.FontSize = 18;
             Button.Margin = new Thickness(15, 2, 0, 0);
         }
     }
