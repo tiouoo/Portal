@@ -19,7 +19,7 @@ on:
         required: true
 
 jobs:
-  aur:
+  publish:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
@@ -44,12 +44,22 @@ jobs:
             "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/Portal.linux.x64.AppImage"
           echo "sha=$(sha256sum Portal.AppImage | cut -d' ' -f1)" >> $GITHUB_ENV
 
-      - name: Clone AUR repo
+      - name: Init / fetch AUR repo
         env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
         run: |
-          git clone "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git" aur || \
-            git init aur && git -C aur remote add origin "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git"
+          # 幂等初始化：本地建 master 分支，尝试 fetch 远程。
+          # - 远程已有包：fetch 成功后 reset --hard 对齐远端，再走正常更新流程
+          # - 远程不存在（首推）：fetch 失败被忽略，本地保留空 init，后续用模板首推
+          rm -rf aur
+          git init -b master aur
+          git -C aur remote add origin "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git"
+          if git -C aur fetch origin master 2>/dev/null; then
+            git -C aur reset --hard origin/master
+            echo "::notice::AUR 仓库已存在，本次为更新"
+          else
+            echo "::notice::AUR 仓库不存在或为空，本次为首推"
+          fi
 
       - name: Render PKGBUILD
         working-directory: aur
@@ -70,11 +80,13 @@ jobs:
       - name: Commit & push
         working-directory: aur
         env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
         run: |
           git config user.name  "${{ secrets.AUR_USERNAME }}"
           git config user.email "actions@github.com"
           git checkout -B master
           git add PKGBUILD .SRCINFO
+          # 无变化时退出码非 0，正常跳过
           git commit -m "Update ${{ inputs.pkgname }} to ${{ inputs.app_version }}" || exit 0
-          git push origin master
+          # 首推用 -u 建立跟踪；已跟踪时 -u 无副作用
+          git push -u origin master
