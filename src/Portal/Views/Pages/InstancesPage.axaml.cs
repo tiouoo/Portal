@@ -108,7 +108,8 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         if ((sender as Control)?.Tag is not MinecraftInstance instance)
             return;
 
-        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(instance));
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
+            () => DesktopShortcutService.CreateAsync(instance));
     }
 
     private void BlockInstance_Click(object? sender, RoutedEventArgs e)
@@ -157,7 +158,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         var result = await OverlayDialog
             .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
                 new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders.Select(x
-                    => x.FolderPath).ToList()), hostId: (sender as Control)!.TryGetHostId(), options: options);
+                    => x.FolderPath).ToList()), hostId: this.TryGetHostId(), options: options);
 
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
