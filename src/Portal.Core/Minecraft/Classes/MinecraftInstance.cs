@@ -21,6 +21,22 @@ public class MinecraftInstance : ObservableObject
 {
     public MinecraftInstanceType Type { get; init; }
 
+    private bool _isBlocked;
+
+    [JsonIgnore]
+    public bool IsBlocked
+    {
+        get => _isBlocked;
+        set
+        {
+            if (SetProperty(ref _isBlocked, value))
+                OnPropertyChanged(nameof(BlockHeaderText));
+        }
+    }
+
+    public string BlockHeaderText => IsBlocked ? "取消屏蔽" : "屏蔽";
+    public string FavoriteHeaderText => Config?.IsFavorite == true ? "取消收藏" : "收藏";
+
     public MinecraftEntry? MinecraftEntry { get; init; }
 
     public BedrockInstanceConfig? BedrockConfig { get; init; }
@@ -311,6 +327,11 @@ public class MinecraftInstance : ObservableObject
             {
                 StorageUsage.Refresh();
                 OnPropertyChanged(nameof(StorageUsage));
+            }
+
+            if (e.PropertyName == nameof(MinecraftInstanceConfig.IsFavorite))
+            {
+                OnPropertyChanged(nameof(FavoriteHeaderText));
             }
         };
     }

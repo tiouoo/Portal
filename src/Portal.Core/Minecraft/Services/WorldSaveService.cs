@@ -13,6 +13,20 @@ public sealed class WorldSaveService
 
     public Task<bool> IsWorldLockedAsync(string worldPath) => Task.Run(() => IsWorldLocked(worldPath));
 
+    public Task<WorldSaveInfo?> ReadAsync(MinecraftInstance instance, string folderName,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() =>
+        {
+            if (instance.Type != MinecraftInstanceType.Java)
+                return null;
+
+            var savesPath = instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder);
+            var worldPath = Path.Combine(savesPath, folderName);
+            return ReadWorld(worldPath, cancellationToken);
+        }, cancellationToken);
+    }
+
     private static IReadOnlyList<WorldSaveInfo> Scan(MinecraftInstance instance, CancellationToken cancellationToken)
     {
         if (instance.Type != MinecraftInstanceType.Java)

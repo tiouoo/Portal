@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -14,6 +15,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Operations;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.AggregatedSearch;
@@ -22,6 +24,7 @@ using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Components;
 using Portal.Views.Pages.DownloadPages;
+using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -140,6 +143,38 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
+    private async void RecentPlayItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+        if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() != null))
+            return;
+
+        if (sender is not Control { DataContext: RecentPlayItem item })
+            return;
+
+        var target = item.Target;
+        if (target.Type != RecentPlayTargetType.World)
+            return;
+
+        var saveService = new WorldSaveService();
+        var worldInfo = await saveService.ReadAsync(target.Instance, target.Id);
+        if (worldInfo == null)
+            return;
+
+        await OverlayDialog.ShowCustomAsync<WorldSaveDetails, WorldSaveDetailsViewModel, object>(
+            new WorldSaveDetailsViewModel(worldInfo, target.Instance), this.TryGetHostId(),
+            new OverlayDialogOptions
+            {
+                Mode = DialogMode.None,
+                Buttons = DialogButton.None,
+                CanLightDismiss = false,
+                CanResize = false,
+                IsCloseButtonVisible = true,
+                CloseBtnMargin = new Thickness(0, 12, 12, 0)
+            });
+    }
+
     private void RecentPlayFavorite_Click(object? sender, RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is RecentPlayItem item)
@@ -177,6 +212,22 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         instance.Config.IsFavorite = !instance.Config.IsFavorite;
         instance.SaveConfig();
         NewTabViewModel.ApplyFilterAndSort();
+    }
+
+    private void BlockInstance_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not MinecraftInstance instance)
+            return;
+
+        BlockListService.Instance.ToggleInstanceBlock(instance);
+    }
+
+    private void BlockRecentPlay_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not RecentPlayTarget target)
+            return;
+
+        BlockListService.Instance.ToggleRecentPlayBlock(target);
     }
 
     private void ButtonOpenInstance_OnClick(object? sender, RoutedEventArgs e)
@@ -265,7 +316,6 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     private readonly RecentPlayListService _recentPlayListService = RecentPlayListService.Instance;
     private List<RecentPlayItem> _allRecentPlays = [];
     private int _recentPlayCapacity = 1;
-    private bool _areRecentPlaysExpanded;
     private bool _isDisposed;
 
     public NewTabViewModel()
@@ -278,8 +328,9 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     public NewsPage NewsPage { get; } = new(true);
     public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
     public bool HasRecentPlays => RecentPlays.Count > 0;
-    public bool CanExpandRecentPlays => _allRecentPlays.Count > _recentPlayCapacity;
-    public string ToggleRecentPlaysText => _areRecentPlaysExpanded ? "收起" : $"展开全部 ({_allRecentPlays.Count})";
+    public bool CanExpandRecentPlays => GetVisibleRecentPlays().Count > _recentPlayCapacity;
+    public string ToggleRecentPlaysText =>
+        BlockListService.Instance.AreRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
 
     private RecentPlayItem? _recentPlayTargetItem;
 
@@ -295,14 +346,38 @@ public partial class NewTabViewModel : InstanceListViewModelBase
 
     public bool HasRecentPlayTargetItem => RecentPlayTargetItem != null;
 
+    private List<RecentPlayItem> GetVisibleRecentPlays()
+    {
+        return BlockListService.Instance.ShowBlockedRecentPlays
+            ? _allRecentPlays
+            : _allRecentPlays.Where(item => !BlockListService.Instance.IsRecentPlayBlocked(item.Target)).ToList();
+    }
+
+    protected override void RefreshRecentPlaysForBlockList()
+    {
+        foreach (var item in _allRecentPlays)
+            item.RefreshBlockState();
+        ApplyRecentPlayCapacity();
+        UpdateRecentPlayTargetItem();
+    }
+
+    protected override IEnumerable<RecentPlayTarget> GetRecentPlayTargets() =>
+        _allRecentPlays.Select(item => item.Target);
+
     private void UpdateRecentPlays(IEnumerable<RecentPlayTarget> targets)
     {
         RecentPlays.Clear();
         DisposeRecentPlays();
         _allRecentPlays = targets.Select(target => new RecentPlayItem(target)).ToList();
-        RecentPlayTargetItem = _allRecentPlays.OrderByDescending(item => item.LastPlayedTime).FirstOrDefault();
         SortRecentPlays();
         ApplyRecentPlayCapacity();
+        UpdateRecentPlayTargetItem();
+    }
+
+    private void UpdateRecentPlayTargetItem()
+    {
+        var visible = GetVisibleRecentPlays();
+        RecentPlayTargetItem = visible.OrderByDescending(item => item.LastPlayedTime).FirstOrDefault();
     }
 
     private void OnRecentPlaysRefreshed(object? sender, EventArgs e)
@@ -322,9 +397,10 @@ public partial class NewTabViewModel : InstanceListViewModelBase
 
     private void ApplyRecentPlayCapacity()
     {
+        var visiblePlays = GetVisibleRecentPlays();
+        var take = BlockListService.Instance.AreRecentPlaysExpanded ? visiblePlays.Count : _recentPlayCapacity;
         RecentPlays.Clear();
-        foreach (var item in
-                 _allRecentPlays.Take(_areRecentPlaysExpanded ? _allRecentPlays.Count : _recentPlayCapacity))
+        foreach (var item in visiblePlays.Take(take))
             RecentPlays.Add(item);
         OnPropertyChanged(nameof(HasRecentPlays));
         OnPropertyChanged(nameof(CanExpandRecentPlays));
@@ -334,7 +410,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     [RelayCommand]
     private void ToggleRecentPlays()
     {
-        _areRecentPlaysExpanded = !_areRecentPlaysExpanded;
+        BlockListService.Instance.AreRecentPlaysExpanded = !BlockListService.Instance.AreRecentPlaysExpanded;
         ApplyRecentPlayCapacity();
     }
 
@@ -382,13 +458,15 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     }
 }
 
-public sealed class RecentPlayItem : IDisposable
+public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
 {
     private readonly RecentPlayTarget _target;
     private Bitmap? _ownedIcon;
     private bool _iconLoaded;
 
     public RecentPlayItem(RecentPlayTarget target) => _target = target;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public RecentPlayTarget Target => _target;
     public string Name => _target.Name;
@@ -404,6 +482,10 @@ public sealed class RecentPlayItem : IDisposable
 
     public bool IsFavorite =>
         _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;
+
+    public bool IsBlocked => BlockListService.Instance.IsRecentPlayBlocked(_target);
+    public string BlockHeaderText => IsBlocked ? "取消屏蔽" : "屏蔽";
+    public string FavoriteHeaderText => IsFavorite ? "取消收藏" : "收藏";
 
     public Bitmap Icon
     {
@@ -431,7 +513,18 @@ public sealed class RecentPlayItem : IDisposable
         else
             favorites[_target.Id] = true;
         _target.Instance.SaveConfig();
+        OnPropertyChanged(nameof(IsFavorite));
+        OnPropertyChanged(nameof(FavoriteHeaderText));
     }
+
+    public void RefreshBlockState()
+    {
+        OnPropertyChanged(nameof(IsBlocked));
+        OnPropertyChanged(nameof(BlockHeaderText));
+    }
+
+    private void OnPropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     private static Bitmap? LoadIcon(byte[] data)
     {

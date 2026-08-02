@@ -15,8 +15,10 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Services;
 using Portal.Views.StaticPages;
 using SkiaSharp;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -250,6 +252,31 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         await ShowInfoAsync(item);
     }
 
+    private void QuickEnter_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetItem(sender) is not { } item || _instance == null)
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        var target = new RecentPlayTarget(
+            _instance,
+            RecentPlayTargetType.World,
+            item.Info.FolderName,
+            string.IsNullOrWhiteSpace(item.Info.LevelName) ? item.Info.FolderName : item.Info.LevelName,
+            $"存档·{item.Info.Version ?? "未知版本"}·{GetGameModeText(item.Info.GameMode)}",
+            item.Info.LastPlayedTime ?? DateTime.MinValue,
+            item.Info.IconPath);
+
+        _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
+            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    }
+
+    private static string GetGameModeText(int? gameMode) =>
+        gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+
     private async void DeleteWorld_OnClick(object? sender, RoutedEventArgs e)
     {
         if (GetItem(sender) is not { } item || !Directory.Exists(item.Info.FolderPath))
@@ -418,7 +445,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
     }
 
     private Task ShowInfoAsync(SaveItem item) => OverlayDialog.ShowCustomAsync<WorldSaveDetails, WorldSaveDetailsViewModel, object>(
-        new WorldSaveDetailsViewModel(item.Info), this.TryGetHostId(),
+        new WorldSaveDetailsViewModel(item.Info, _instance!), this.TryGetHostId(),
         new OverlayDialogOptions
         {
             Mode = DialogMode.None,

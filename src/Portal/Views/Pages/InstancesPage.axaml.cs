@@ -102,6 +102,14 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
 
+    private void BlockInstance_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not MinecraftInstance instance)
+            return;
+
+        BlockListService.Instance.ToggleInstanceBlock(instance);
+    }
+
     private void RefreshInstance_Click(object? sender, RoutedEventArgs e)
     {
         Refresh();

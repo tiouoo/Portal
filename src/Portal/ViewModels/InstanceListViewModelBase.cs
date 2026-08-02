@@ -3,11 +3,13 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.Views.Pages;
@@ -53,6 +55,8 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     {
         InstanceManager.Instance.InstanceIconChanged += OnInstanceIconChanged;
         InstanceManager.Instance.InstancesChanged += OnInstancesChanged;
+        BlockListService.Instance.Changed += OnBlockListChanged;
+        BlockListService.Instance.UiStateChanged += OnBlockListUiStateChanged;
     }
 
     private void OnInstancesChanged(object? sender, EventArgs e)
@@ -60,8 +64,17 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         Dispatcher.UIThread.Post(() =>
         {
             if (!_isDisposed)
+            {
+                RefreshBlockStates();
                 ApplyFilterAndSort();
+            }
         });
+    }
+
+    private void RefreshBlockStates()
+    {
+        foreach (var instance in InstanceManager.Instance.Instances)
+            instance.IsBlocked = BlockListService.Instance.IsInstanceBlocked(instance);
     }
 
     private void OnInstanceIconChanged(object? sender, MinecraftInstance instance)
@@ -75,6 +88,69 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
             var index = FilteredMinecraftInstances.IndexOf(item);
             FilteredMinecraftInstances[index] = item;
         }
+    }
+
+    private void OnBlockListChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_isDisposed)
+            {
+                RefreshBlockStates();
+                ApplyFilterAndSort();
+                RefreshRecentPlaysForBlockList();
+                OnPropertyChanged(nameof(HasBlockedInstancesOnly));
+                OnPropertyChanged(nameof(ToggleBlockedInstancesText));
+                OnPropertyChanged(nameof(HasBlockedRecentPlaysOnly));
+                OnPropertyChanged(nameof(ToggleBlockedRecentPlaysText));
+            }
+        });
+    }
+
+    private void OnBlockListUiStateChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_isDisposed)
+            {
+                ApplyFilterAndSort();
+                RefreshRecentPlaysForBlockList();
+                OnPropertyChanged(nameof(HasBlockedInstancesOnly));
+                OnPropertyChanged(nameof(ToggleBlockedInstancesText));
+                OnPropertyChanged(nameof(HasBlockedRecentPlaysOnly));
+                OnPropertyChanged(nameof(ToggleBlockedRecentPlaysText));
+            }
+        });
+    }
+
+    protected virtual void RefreshRecentPlaysForBlockList()
+    {
+    }
+
+    protected virtual IEnumerable<RecentPlayTarget> GetRecentPlayTargets() => [];
+
+    public bool HasBlockedInstancesOnly =>
+        BlockListService.Instance.HasBlockedInstances(InstanceManager.Instance.Instances);
+
+    public string ToggleBlockedInstancesText =>
+        BlockListService.Instance.ShowBlockedInstances ? "隐藏屏蔽项" : "显示屏蔽项";
+
+    [RelayCommand]
+    private void ToggleBlockedInstances()
+    {
+        BlockListService.Instance.ShowBlockedInstances = !BlockListService.Instance.ShowBlockedInstances;
+    }
+
+    public bool HasBlockedRecentPlaysOnly =>
+        BlockListService.Instance.HasBlockedRecentPlays(GetRecentPlayTargets());
+
+    public string ToggleBlockedRecentPlaysText =>
+        BlockListService.Instance.ShowBlockedRecentPlays ? "隐藏屏蔽项" : "显示屏蔽项";
+
+    [RelayCommand]
+    private void ToggleBlockedRecentPlays()
+    {
+        BlockListService.Instance.ShowBlockedRecentPlays = !BlockListService.Instance.ShowBlockedRecentPlays;
     }
 
     private long _totalPlayTimeSeconds;
@@ -214,6 +290,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         if (_isDisposed)
             return;
 
+        RefreshBlockStates();
         UpdateRecentInstance();
         UpdatePlayStatistics();
         FilteredMinecraftInstances.Clear();
@@ -229,6 +306,9 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         }
         
         HasFilter = !string.IsNullOrWhiteSpace(SearchText);
+
+        if (!BlockListService.Instance.ShowBlockedInstances)
+            query = query.Where(x => !BlockListService.Instance.IsInstanceBlocked(x));
 
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
@@ -315,6 +395,8 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         _isDisposed = true;
         InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
         InstanceManager.Instance.InstancesChanged -= OnInstancesChanged;
+        BlockListService.Instance.Changed -= OnBlockListChanged;
+        BlockListService.Instance.UiStateChanged -= OnBlockListUiStateChanged;
         FilteredMinecraftInstances.Clear();
         _pinyinCache.Clear();
         FolderFilterOptions.Clear();

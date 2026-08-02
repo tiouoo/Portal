@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Services;
 using TioUi.Common.Interfaces;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
@@ -74,6 +77,7 @@ public enum WorldSaveDetailsPage { Overview, GameRules, Weather, Clocks, Players
 public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContext
 {
     private readonly WorldSaveInfo _info;
+    private readonly MinecraftInstance _instance;
     private readonly WorldGameRuleService _gameRuleService = new();
     private readonly WorldEnvironmentService _environmentService = new();
     private readonly WorldScoreboardService _scoreboardService = new();
@@ -114,9 +118,10 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public bool IsLocked => _info.IsLocked;
     public bool IsUnlocked => !IsLocked;
 
-    public WorldSaveDetailsViewModel(WorldSaveInfo info)
+    public WorldSaveDetailsViewModel(WorldSaveInfo info, MinecraftInstance instance)
     {
         _info = info;
+        _instance = instance;
         _pages = new Dictionary<WorldSaveDetailsPage, UserControl>
         {
             [WorldSaveDetailsPage.Overview] = new WorldSaveOverview(),
@@ -326,6 +331,36 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     }
 
     private static bool IsFileLocked(IOException exception) => (exception.HResult & 0xffff) is 32 or 33;
+
+    [RelayCommand]
+    private void QuickEnter()
+    {
+        var topLevel = GetTopLevel();
+        if (topLevel == null)
+            return;
+
+        var target = new RecentPlayTarget(
+            _instance,
+            RecentPlayTargetType.World,
+            _info.FolderName,
+            string.IsNullOrWhiteSpace(_info.LevelName) ? _info.FolderName : _info.LevelName,
+            $"存档·{_info.Version ?? "未知版本"}·{GetGameModeText(_info.GameMode)}",
+            _info.LastPlayedTime ?? DateTime.MinValue,
+            _info.IconPath);
+
+        _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
+            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    }
+
+    private static TopLevel? GetTopLevel() =>
+        Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime { MainWindow: { } window }
+            ? window
+            : null;
+
+    private static string GetGameModeText(int? gameMode) => gameMode switch
+    {
+        0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式"
+    };
 
     private void ShowNotice(string message, NotificationType type)
     {

@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -13,12 +13,14 @@ using Portal.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;
+using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -319,11 +321,60 @@ public partial class StartPage : DataUserControl, ITioTabPage
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
+    private async void RecentPlayItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+        if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() != null))
+            return;
+
+        if (sender is not Control { DataContext: RecentPlayItem item })
+            return;
+
+        var target = item.Target;
+        if (target.Type != RecentPlayTargetType.World)
+            return;
+
+        var saveService = new WorldSaveService();
+        var worldInfo = await saveService.ReadAsync(target.Instance, target.Id);
+        if (worldInfo == null)
+            return;
+
+        await OverlayDialog.ShowCustomAsync<WorldSaveDetails, WorldSaveDetailsViewModel, object>(
+            new WorldSaveDetailsViewModel(worldInfo, target.Instance), this.TryGetHostId(),
+            new OverlayDialogOptions
+            {
+                Mode = DialogMode.None,
+                Buttons = DialogButton.None,
+                CanLightDismiss = false,
+                CanResize = false,
+                IsCloseButtonVisible = true,
+                CloseBtnMargin = new Thickness(0, 12, 12, 0)
+            });
+    }
+
     private void RecentPlayFavorite_Click(object? sender, RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is RecentPlayItem item)
             _viewModel.ToggleRecentPlayFavorite(item);
     }
+
+    private void BlockInstance_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not MinecraftInstance instance)
+            return;
+
+        BlockListService.Instance.ToggleInstanceBlock(instance);
+    }
+
+    private void BlockRecentPlay_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is not RecentPlayTarget target)
+            return;
+
+        BlockListService.Instance.ToggleRecentPlayBlock(target);
+    }
+
 }
 
 public sealed record SearchMode(string DisplayText, Type? PageType, IReadOnlyList<string> Aliases)
@@ -336,7 +387,6 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     private readonly RecentPlayListService _recentPlayListService = RecentPlayListService.Instance;
     private List<RecentPlayItem> _allRecentPlays = [];
     private int _recentPlayCapacity = 1;
-    private bool _areRecentPlaysExpanded;
     private bool _isDisposed;
 
     public IReadOnlyList<SearchMode> SearchModes { get; } =
@@ -406,8 +456,9 @@ public partial class StartPageViewModel : InstanceListViewModelBase
 
     public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
     public bool HasRecentPlays => RecentPlays.Count > 0;
-    public bool CanExpandRecentPlays => _allRecentPlays.Count > _recentPlayCapacity;
-    public string ToggleRecentPlaysText => _areRecentPlaysExpanded ? "收起" : $"展开全部 ({_allRecentPlays.Count})";
+    public bool CanExpandRecentPlays => GetVisibleRecentPlays().Count > _recentPlayCapacity;
+    public string ToggleRecentPlaysText =>
+        BlockListService.Instance.AreRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
 
     public StartPageViewModel()
     {
@@ -416,6 +467,23 @@ public partial class StartPageViewModel : InstanceListViewModelBase
         _recentPlayListService.Refreshed += OnRecentPlaysRefreshed;
         UpdateRecentPlays(_recentPlayListService.Items);
     }
+
+    private List<RecentPlayItem> GetVisibleRecentPlays()
+    {
+        return BlockListService.Instance.ShowBlockedRecentPlays
+            ? _allRecentPlays
+            : _allRecentPlays.Where(item => !BlockListService.Instance.IsRecentPlayBlocked(item.Target)).ToList();
+    }
+
+    protected override void RefreshRecentPlaysForBlockList()
+    {
+        foreach (var item in _allRecentPlays)
+            item.RefreshBlockState();
+        ApplyRecentPlayCapacity();
+    }
+
+    protected override IEnumerable<RecentPlayTarget> GetRecentPlayTargets() =>
+        _allRecentPlays.Select(item => item.Target);
 
     private void UpdateRecentPlays(IEnumerable<RecentPlayTarget> targets)
     {
@@ -443,9 +511,10 @@ public partial class StartPageViewModel : InstanceListViewModelBase
 
     private void ApplyRecentPlayCapacity()
     {
+        var visiblePlays = GetVisibleRecentPlays();
+        var take = BlockListService.Instance.AreRecentPlaysExpanded ? visiblePlays.Count : _recentPlayCapacity;
         RecentPlays.Clear();
-        foreach (var item in
-                 _allRecentPlays.Take(_areRecentPlaysExpanded ? _allRecentPlays.Count : _recentPlayCapacity))
+        foreach (var item in visiblePlays.Take(take))
             RecentPlays.Add(item);
         OnPropertyChanged(nameof(HasRecentPlays));
         OnPropertyChanged(nameof(CanExpandRecentPlays));
@@ -455,7 +524,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     [RelayCommand]
     private void ToggleRecentPlays()
     {
-        _areRecentPlaysExpanded = !_areRecentPlaysExpanded;
+        BlockListService.Instance.AreRecentPlaysExpanded = !BlockListService.Instance.AreRecentPlaysExpanded;
         ApplyRecentPlayCapacity();
     }
 

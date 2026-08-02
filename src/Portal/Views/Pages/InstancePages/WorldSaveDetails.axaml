@@ -59,10 +59,18 @@
             Fill="{DynamicResource TranslucentBorderBrush}"
             Margin="0,0,0,10"
             Width="1" />
-        <TransitioningContentControl Content="{Binding CurrentPage}" Margin="24,18,20,12">
-            <TransitioningContentControl.PageTransition>
-                <CrossFade Duration="0:0:0.2" />
-            </TransitioningContentControl.PageTransition>
-        </TransitioningContentControl>
+        <Panel>
+            <TransitioningContentControl Content="{Binding CurrentPage}" Margin="24,18,20,12">
+                <TransitioningContentControl.PageTransition>
+                    <CrossFade Duration="0:0:0.2" />
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
+            <Button
+                Command="{Binding QuickEnterCommand}"
+                Content="快速进入"
+                HorizontalAlignment="Right"
+                Margin="0,0,20,0"
+                VerticalAlignment="Top" />
+        </Panel>
     </DockPanel>
 </UserControl>

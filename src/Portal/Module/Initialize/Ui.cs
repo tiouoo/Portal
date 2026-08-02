@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -67,6 +67,7 @@ public static partial class Initializer
             _ = CheckUpdate();
 
         RecentPlayListService.Initialize();
+        BlockListService.Initialize();
         await LoadUiDataAsync();
 
         InitializationEvents.RaiseAfterUiLoaded();
