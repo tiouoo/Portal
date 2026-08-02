@@ -43,7 +43,7 @@ public partial class WidgetsPage : UserControl, ITioTabPage
             IsCloseButtonVisible = true
         };
         _ = OverlayDialog.ShowCustomAsync<AddWidgetDialog, AddWidgetDialogViewModel, bool>(
-            new AddWidgetDialogViewModel(_workspace), hostId: this.TryGetHostId(), options: options);
+            new AddWidgetDialogViewModel(_workspace, this.TryGetHostId()), hostId: this.TryGetHostId(), options: options);
     }
 
     public PageInfo PageInfo { get; init; } = new()

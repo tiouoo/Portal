@@ -2,7 +2,10 @@ namespace Portal.Module.Widgets;
 
 public enum WidgetKind
 {
-    Clock
+    Clock,
+    Instance,
+    QuickWorld,
+    QuickServer
 }
 
 public readonly record struct WidgetCellSize(int Columns, int Rows)

@@ -1,0 +1,63 @@
+<UserControl
+    Height="280"
+    MinHeight="260"
+    MinWidth="440"
+    Width="480"
+    d:DesignHeight="280"
+    d:DesignWidth="480"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.ServerConnectDialog"
+    x:DataType="widgets:ServerConnectDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:widgets="clr-namespace:Portal.Views.Widgets"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto,*,Auto"
+        RowSpacing="12">
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock
+                FontSize="20"
+                FontWeight="SemiBold"
+                Text="输入服务器地址" />
+            <TextBlock
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="{Binding InstanceHint}" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Spacing="6">
+            <Label
+                Content="服务器地址"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                PlaceholderText="例如 127.0.0.1 或 play.example.net"
+                Text="{Binding Address}" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Spacing="6">
+            <Label
+                Content="端口"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                PlaceholderText="默认 25565"
+                Text="{Binding PortText}" />
+        </StackPanel>
+        <TextBlock
+            FontSize="12"
+            Foreground="{DynamicResource InnerForegroundColor}"
+            Grid.Row="3"
+            TextWrapping="Wrap"
+            Text="连接后会通过所选实例启动游戏，并自动加入该服务器。" />
+        <StackPanel
+            Grid.Row="4"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding ConfirmCommand}" Content="确定" />
+        </StackPanel>
+    </Grid>
+</UserControl>

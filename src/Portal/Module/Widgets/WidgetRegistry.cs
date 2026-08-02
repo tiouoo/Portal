@@ -107,5 +107,29 @@ public static class WidgetRegistry
         }
             .AddPage<Clock1x1>(new WidgetCellSize(1, 1))
             .AddPage<Clock2x1>(new WidgetCellSize(2, 1)));
+
+        Register(new WidgetDefinition
+        {
+            Kind = WidgetKind.Instance,
+            Name = "实例",
+            Description = "快速查看与启动实例",
+            DefaultSize = new WidgetCellSize(2, 1)
+        }.AddPage<InstanceWidget2x1>(new WidgetCellSize(2, 1)));
+
+        Register(new WidgetDefinition
+        {
+            Kind = WidgetKind.QuickWorld,
+            Name = "快速进入世界",
+            Description = "选择实例与存档，一键进入",
+            DefaultSize = new WidgetCellSize(2, 1)
+        }.AddPage<QuickWorldWidget2x1>(new WidgetCellSize(2, 1)));
+
+        Register(new WidgetDefinition
+        {
+            Kind = WidgetKind.QuickServer,
+            Name = "快速进入服务器",
+            Description = "选择实例并输入地址，一键进入",
+            DefaultSize = new WidgetCellSize(2, 1)
+        }.AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
     }
 }

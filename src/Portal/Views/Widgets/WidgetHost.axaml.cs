@@ -25,6 +25,8 @@ public partial class WidgetHost : UserControl
         set
         {
             _widgetContent = value;
+            if (_widgetContent != null)
+                _widgetContent.Initialize(Layout);
             if (ContentHost != null)
                 ContentHost.Content = value;
         }

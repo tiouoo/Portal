@@ -207,6 +207,12 @@ public class WidgetWorkspace : UserControl
     /// <summary>添加组件，自动放到最近的空闲位置。</summary>
     public WidgetHost? AddWidget(WidgetKind kind)
     {
+        return AddWidget(kind, null);
+    }
+
+    /// <summary>添加组件并应用模板布局数据中的配置字段（实例、世界、服务器等），自动放到最近的空闲位置。</summary>
+    public WidgetHost? AddWidget(WidgetKind kind, WidgetLayoutData? template)
+    {
         if (_canvas == null)
             return null;
 
@@ -217,6 +223,14 @@ public class WidgetWorkspace : UserControl
         var host = CreateHost(kind);
         if (host == null)
             return null;
+
+        if (template != null)
+        {
+            host.Layout.InstanceFolderPath = template.InstanceFolderPath;
+            host.Layout.WorldFolderName = template.WorldFolderName;
+            host.Layout.ServerAddress = template.ServerAddress;
+            host.Layout.ServerPort = template.ServerPort;
+        }
 
         host.Layout.Size = definition.DefaultSize;
         host.SetSize(definition.DefaultSize);
@@ -357,7 +371,12 @@ public class WidgetWorkspace : UserControl
             return;
         }
 
-        _pendingDragHost = null;
+        // 未发生拖动时视为点击，交给组件内容自行处理（例如打开详情页）。
+        if (_pendingDragHost is { } clickedHost)
+        {
+            _pendingDragHost = null;
+            clickedHost.WidgetContent?.PerformClick();
+        }
     }
 
     private void OnWorkspacePointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)

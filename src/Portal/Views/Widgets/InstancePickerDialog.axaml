@@ -1,0 +1,109 @@
+<UserControl
+    Height="560"
+    MinHeight="420"
+    MinWidth="640"
+    Width="780"
+    d:DesignHeight="560"
+    d:DesignWidth="780"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.InstancePickerDialog"
+    x:DataType="widgets:InstancePickerDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:widgets="clr-namespace:Portal.Views.Widgets"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="20"
+        RowDefinitions="Auto,*,Auto"
+        RowSpacing="14">
+        <StackPanel Grid.Row="0" Spacing="10">
+            <TextBlock
+                FontSize="22"
+                FontWeight="SemiBold"
+                Text="选择实例" />
+            <TextBox
+                PlaceholderText="搜索实例"
+                Text="{Binding SearchText}"
+                Width="300">
+                <TextBox.InnerRightContent>
+                    <PathIcon
+                        Data="F1 M512,512z M0,0z M416,208C416,253.9,401.1,296.3,376,330.7L502.6,457.4C515.1,469.9 515.1,490.2 502.6,502.7 490.1,515.2 469.8,515.2 457.3,502.7L330.7,376C296.3,401.1 253.9,416 208,416 93.1,416 0,322.9 0,208 0,93.1 93.1,0 208,0 322.9,0 416,93.1 416,208z M208,352A144,144,0,1,0,208,64A144,144,0,1,0,208,352z"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Height="14"
+                        Width="14" />
+                </TextBox.InnerRightContent>
+            </TextBox>
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <ItemsRepeater ItemsSource="{Binding FilteredInstances}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="12"
+                        MinItemHeight="110"
+                        MinItemWidth="240"
+                        MinRowSpacing="12"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="classes:MinecraftInstance">
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Cursor="Hand"
+                            Padding="12"
+                            PointerPressed="InstanceItem_OnPointerPressed"
+                            Tag="{Binding}">
+                            <StackPanel Spacing="6">
+                                <DockPanel>
+                                    <Border
+                                        ClipToBounds="True"
+                                        CornerRadius="8"
+                                        Height="36"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Width="36">
+                                        <Image
+                                            Height="36"
+                                            Source="{Binding Icon}"
+                                            Width="36" />
+                                    </Border>
+                                    <TextBlock
+                                        Margin="0,2,0,0"
+                                        MaxLines="2"
+                                        Text="{Binding InstanceName}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="Wrap"
+                                        VerticalAlignment="Center" />
+                                </DockPanel>
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    MaxLines="1"
+                                    Text="{Binding FolderName}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    MaxLines="1"
+                                    Text="{Binding ShortDisplay}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Command="{Binding CancelCommand}" Content="取消" />
+        </StackPanel>
+    </Grid>
+</UserControl>
