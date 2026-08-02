@@ -16,6 +16,7 @@ using CommunityToolkit.Mvvm.Input;
 using HotAvalonia;
 #endif
 using Portal.Classes.Entries;
+using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Module.DefaultPage;
 using Portal.Module.DragDrop;
@@ -69,7 +70,10 @@ public partial class TabWindow : TioTabWindowBase
         AttachDropDrag();
         CreateNewTabFunc = () =>
         {
-            var tab = new TabEntry(this, new NewTabPage())
+            var page = Data.ConfigEntry.NewTabContent == NewTabContent.StartPage
+                ? (ITioTabPage)new StartPage()
+                : new NewTabPage();
+            var tab = new TabEntry(this, page)
             {
                 IconHeight = 17,
                 IconWidth = 17,

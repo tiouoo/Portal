@@ -45,7 +45,6 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool EnableProxyServer { get; set; }
     [ObservableProperty] public partial bool DisableSystemProxy { get; set; }
     [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
-    [ObservableProperty] public partial GithubMirrorMode GithubMirrorMode { get; set; } = GithubMirrorMode.Prefix;
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
@@ -67,6 +66,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
     [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
     [ObservableProperty] public partial Color CustomWindowBorderColor { get; set; } = Color.Parse("#6a6c70");
+    [ObservableProperty] public partial NewTabContent NewTabContent { get; set; } = NewTabContent.NewTabPage;    
+    [ObservableProperty] public partial GithubMirrorMode GithubMirrorMode { get; set; } = GithubMirrorMode.Prefix;
     [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
     [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;

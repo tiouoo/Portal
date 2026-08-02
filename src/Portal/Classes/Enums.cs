@@ -38,3 +38,9 @@ public enum GithubMirrorMode
     /// <summary>直接访问式（替换域名）：https://bgithub.xyz/a/b</summary>
     Direct
 }
+
+public enum NewTabContent
+{
+    NewTabPage,
+    StartPage
+}

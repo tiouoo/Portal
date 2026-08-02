@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -21,6 +21,16 @@
                 HorizontalAlignment="Stretch"
                 ItemsSource="{Binding DefaultPages}"
                 SelectedItem="{Binding SelectedDefaultPage}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="新标签页内容"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.NewTabContent}">
+                <ComboBoxItem Content="新标签页" />
+                <ComboBoxItem Content="起始页" />
+            </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
