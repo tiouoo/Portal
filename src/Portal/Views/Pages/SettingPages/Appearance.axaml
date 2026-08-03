@@ -162,6 +162,47 @@
                     Width="40" />
             </Grid>
         </StackPanel>
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
+            <Label
+                Content="启用背景遮罩"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding EnableImageMask, Source={x:Static const:Data.ConfigEntry}}" />
+        </StackPanel>
+        <StackPanel IsVisible="{Binding EnableImageMask, Source={x:Static const:Data.ConfigEntry}}" Spacing="5">
+            <Label
+                Content="遮罩颜色"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <tio:TioColorPicker
+                Color="{Binding Data.ConfigEntry.ImageMaskColor}"
+                ColorSpectrumShape="Box"
+                HorizontalAlignment="Stretch"
+                SelectedIndex="1">
+                <tio:TioColorPicker.Palette>
+                    <tio:TioColorLightPalette />
+                </tio:TioColorPicker.Palette>
+            </tio:TioColorPicker>
+        </StackPanel>
+        <StackPanel IsVisible="{Binding EnableImageMask, Source={x:Static const:Data.ConfigEntry}}" Spacing="5">
+            <Label
+                Content="遮罩透明度"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Slider
+                    Grid.Column="0"
+                    Maximum="1.0"
+                    Minimum="0.0"
+                    Value="{Binding ImageMaskOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="6,0,0,0"
+                    Text="{Binding ImageMaskOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    VerticalAlignment="Center"
+                    Width="40" />
+            </Grid>
+        </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}" Spacing="5">
             <Label
                 Content="亚克力颜色"

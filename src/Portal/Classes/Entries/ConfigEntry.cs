@@ -87,6 +87,9 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
     [ObservableProperty] public partial double MicaOpacity { get; set; } = 0.8;
     [ObservableProperty] public partial double BlurOpacity { get; set; } = 0.5;
+    [ObservableProperty] public partial bool EnableImageMask { get; set; }
+    [ObservableProperty] public partial Color ImageMaskColor { get; set; } = Color.Parse("#000000");
+    [ObservableProperty] public partial double ImageMaskOpacity { get; set; } = 0.3;
     [ObservableProperty] public partial bool ShowWidgetBackground { get; set; } = true;
     [ObservableProperty] public partial List<WidgetLayoutData> WidgetLayout { get; set; } = [];
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
@@ -126,6 +129,11 @@ public partial class ConfigEntry : ObservableObject
             case nameof(EnableManagedWindowBorderOnWindows):
             case nameof(EnableManagedWindowDecorationsOnWindows):
                 TabWindow.ApplyBackgroundToAllWindows();
+                break;
+            case nameof(EnableImageMask):
+            case nameof(ImageMaskColor):
+            case nameof(ImageMaskOpacity):
+                TabWindow.ApplyImageMaskToAllWindows();
                 break;
             case nameof(ControlOpacity):
             case nameof(TranslucentControlOpacity):

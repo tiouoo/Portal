@@ -10,6 +10,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 #if DEBUG
@@ -40,6 +41,8 @@ public partial class TabWindow : TioTabWindowBase
     private bool _isConfigEntrySubscribed;
     private IntPtr _macOsWindowHandle;
     private PixelSize _backgroundPixelSize;
+    private SKBitmap? _cachedOriginalBackground;
+    private string? _cachedBackgroundPath;
 
     public bool IsTabMaskVisible
     {
@@ -230,6 +233,7 @@ public partial class TabWindow : TioTabWindowBase
         Closed -= TabWindow_OnClosed;
 
         ClearOwnedBackground();
+        ClearOriginalBackgroundCache();
         DataContext = null;
     }
 
@@ -242,7 +246,10 @@ public partial class TabWindow : TioTabWindowBase
         var width = (int)Math.Ceiling(e.NewSize.Width * scale);
         var height = (int)Math.Ceiling(e.NewSize.Height * scale);
         if (width > _backgroundPixelSize.Width * 1.5 || height > _backgroundPixelSize.Height * 1.5)
+        {
+            ClearOriginalBackgroundCache();
             ApplyBackground();
+        }
     }
 
     private void OpenAggregatedSearchDialog()
@@ -392,6 +399,15 @@ public partial class TabWindow : TioTabWindowBase
         }
     }
 
+    public static void ApplyImageMaskToAllWindows()
+    {
+        foreach (var windowBase in AllWindows)
+        {
+            if (windowBase is TabWindow tabWin)
+                tabWin.ApplyImageMaskOverlay();
+        }
+    }
+
     public void ApplyBackground()
     {
         var entry = Data.ConfigEntry;
@@ -420,6 +436,7 @@ public partial class TabWindow : TioTabWindowBase
         switch (entry.BackgroundMode)
         {
             case BackgroundMode.Default:
+                ClearOriginalBackgroundCache();
                 if (RootBorder != null)
                     ClearOwnedBackground();
                 ClearValue(BackgroundProperty);
@@ -428,6 +445,7 @@ public partial class TabWindow : TioTabWindowBase
                 break;
 
             case BackgroundMode.Transparent:
+                ClearOriginalBackgroundCache();
                 ClearOwnedBackground();
                 Background = Brushes.Transparent;
                 TransparencyBackgroundFallback = Brushes.Transparent;
@@ -441,35 +459,18 @@ public partial class TabWindow : TioTabWindowBase
                     {
                         try
                         {
-                            using var original = DecodeBackground(entry.BackgroundImagePath);
-                            var blurRadius = entry.ImageBlurRadius * 20;
-                            if (blurRadius > 0.5)
-                            {
-                                using var surface = SKSurface.Create(new SKImageInfo(original.Width, original.Height));
-                                var canvas = surface.Canvas;
-                                using var paint = new SKPaint
-                                {
-                                    ImageFilter = SKImageFilter.CreateBlur((float)blurRadius, (float)blurRadius)
-                                };
-                                canvas.DrawBitmap(original, 0, 0, new SKSamplingOptions(), paint);
-                                using var blurredImage = surface.Snapshot();
-                                using var data = blurredImage.Encode(SKEncodedImageFormat.Png, 80);
-                                SetOwnedBackground(new Bitmap(data.AsStream()));
-                            }
-                            else
-                            {
-                                using var image = SKImage.FromBitmap(original);
-                                using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-                                SetOwnedBackground(new Bitmap(data.AsStream()));
-                            }
+                            var original = GetOrCreateOriginalBackground(entry.BackgroundImagePath);
+                            SetOwnedBackground(CreateBackgroundBitmap(original, entry.ImageBlurRadius));
                         }
                         catch
                         {
+                            ClearOriginalBackgroundCache();
                             ClearOwnedBackground();
                         }
                     }
                     else
                     {
+                        ClearOriginalBackgroundCache();
                         ClearOwnedBackground();
                     }
                 }
@@ -479,6 +480,7 @@ public partial class TabWindow : TioTabWindowBase
                 break;
 
             case BackgroundMode.Color:
+                ClearOriginalBackgroundCache();
                 ClearOwnedBackground();
                 Background = Brushes.Transparent;
                 if (RootBorder != null)
@@ -488,6 +490,7 @@ public partial class TabWindow : TioTabWindowBase
                 break;
 
             case BackgroundMode.Acrylic:
+                ClearOriginalBackgroundCache();
                 ClearOwnedBackground();
                 var color = entry.BackgroundSolidColor;
                 var alpha = (byte)(entry.AcrylicOpacity * 255);
@@ -500,6 +503,7 @@ public partial class TabWindow : TioTabWindowBase
                 break;
 
             // case BackgroundMode.Blur:
+            //     ClearOriginalBackgroundCache();
             //     ClearOwnedBackground();
             //     var blurColor = entry.BackgroundSolidColor;
             //     var blurAlpha = (byte)(entry.BlurOpacity * 255);
@@ -513,6 +517,7 @@ public partial class TabWindow : TioTabWindowBase
             //     break;
 
             case BackgroundMode.Mica:
+                ClearOriginalBackgroundCache();
                 ClearOwnedBackground();
                 var micaColor = entry.BackgroundSolidColor;
                 var micaAlpha = (byte)(entry.MicaOpacity * 255);
@@ -524,6 +529,25 @@ public partial class TabWindow : TioTabWindowBase
                     new SolidColorBrush(Color.FromArgb(255, micaColor.R, micaColor.G, micaColor.B));
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.Mica };
                 break;
+        }
+
+        ApplyImageMaskOverlay();
+    }
+
+    private void ApplyImageMaskOverlay()
+    {
+        if (RootBorder?.Child is not Panel panel) return;
+
+        var entry = Data.ConfigEntry;
+        if (entry.BackgroundMode == BackgroundMode.Image && entry.EnableImageMask)
+        {
+            var alpha = (byte)(entry.ImageMaskOpacity * 255);
+            panel.Background = new SolidColorBrush(
+                Color.FromArgb(alpha, entry.ImageMaskColor.R, entry.ImageMaskColor.G, entry.ImageMaskColor.B));
+        }
+        else
+        {
+            panel.Background = null;
         }
     }
 
@@ -555,6 +579,58 @@ public partial class TabWindow : TioTabWindowBase
             Dispatcher.UIThread.Post(bitmap.Dispose, DispatcherPriority.Background);
     }
 
+    private SKBitmap GetOrCreateOriginalBackground(string path)
+    {
+        if (_cachedOriginalBackground != null && _cachedBackgroundPath == path)
+            return _cachedOriginalBackground;
+
+        _cachedOriginalBackground?.Dispose();
+        _cachedOriginalBackground = DecodeBackground(path);
+        _cachedBackgroundPath = path;
+        return _cachedOriginalBackground;
+    }
+
+    private void ClearOriginalBackgroundCache()
+    {
+        _cachedOriginalBackground?.Dispose();
+        _cachedOriginalBackground = null;
+        _cachedBackgroundPath = null;
+    }
+
+    private Bitmap CreateBackgroundBitmap(SKBitmap original, double imageBlurRadius)
+    {
+        var blurRadiusPx = imageBlurRadius * 20;
+
+        if (blurRadiusPx <= 0.5)
+            return CreateAvaloniaBitmapFromSkBitmap(original);
+
+        var info = new SKImageInfo(original.Width, original.Height,
+            SKColorType.Bgra8888, SKAlphaType.Premul);
+        using var surface = SKSurface.Create(info);
+        using var paint = new SKPaint
+        {
+            ImageFilter = SKImageFilter.CreateBlur((float)blurRadiusPx, (float)blurRadiusPx)
+        };
+        surface.Canvas.DrawBitmap(original, 0, 0, new SKSamplingOptions(), paint);
+        surface.Canvas.Flush();
+
+        using var snapshot = surface.Snapshot();
+        using var blurred = new SKBitmap(info);
+        snapshot.ReadPixels(info, blurred.GetPixels(), info.RowBytes, 0, 0);
+        return CreateAvaloniaBitmapFromSkBitmap(blurred);
+    }
+
+    private static Bitmap CreateAvaloniaBitmapFromSkBitmap(SKBitmap bitmap)
+    {
+        return new Bitmap(
+            PixelFormat.Bgra8888,
+            AlphaFormat.Premul,
+            bitmap.GetPixels(),
+            new PixelSize(bitmap.Width, bitmap.Height),
+            new Vector(96, 96),
+            bitmap.RowBytes);
+    }
+
     private SKBitmap DecodeBackground(string path)
     {
         using var codec = SKCodec.Create(path) ?? throw new InvalidDataException("无法读取背景图片。");
@@ -565,7 +641,7 @@ public partial class TabWindow : TioTabWindowBase
         var scale = Math.Min(1, Math.Max(targetWidth / source.Width, targetHeight / source.Height));
         var dimensions = codec.GetScaledDimensions((float)scale);
         var info = new SKImageInfo(Math.Max(1, dimensions.Width), Math.Max(1, dimensions.Height),
-            source.ColorType, source.AlphaType, source.ColorSpace);
+            SKColorType.Bgra8888, SKAlphaType.Premul, source.ColorSpace);
         var bitmap = new SKBitmap(info);
         var result = codec.GetPixels(info, bitmap.GetPixels());
         if (result is SKCodecResult.Success or SKCodecResult.IncompleteInput)
