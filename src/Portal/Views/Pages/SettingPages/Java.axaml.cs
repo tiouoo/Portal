@@ -38,7 +38,10 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
     public int TotalMemoryMb => _totalMemoryMb;
     public GridLength SystemMemoryWidth => CreateMemoryWidth(SystemUsedMemoryMb);
     public GridLength MinecraftMemoryWidth => CreateMemoryWidth(Data.ConfigEntry.MinecraftMaxMemory);
-    public GridLength RemainingMemoryWidth => new(Math.Max(0, TotalMemoryMb - SystemUsedMemoryMb - Data.ConfigEntry.MinecraftMaxMemory), GridUnitType.Star);
+
+    public GridLength RemainingMemoryWidth =>
+        new(Math.Max(0, TotalMemoryMb - SystemUsedMemoryMb - Data.ConfigEntry.MinecraftMaxMemory), GridUnitType.Star);
+
     public int SystemUsedMemoryMb => Math.Max(0, _totalMemoryMb - _availableMemoryMb);
     public string SystemMemoryDescription => $"系统已使用 {SystemUsedMemoryMb:N0} MB";
     public string MinecraftMemoryDescription => $"Minecraft {Data.ConfigEntry.MinecraftMaxMemory:N0} MB";
@@ -52,6 +55,7 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         Data.ConfigEntry.PropertyChanged += ConfigEntry_PropertyChanged;
         Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
         Slider.ValueChanged += (_, _) => Data.ConfigEntry.MinecraftMaxMemory = (int)Slider.Value;
+        Loaded += (_, _) => Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -124,8 +128,8 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         {
             _totalMemoryMb = 65536;
             _availableMemoryMb = 65536;
-        
-            HasMemoryStatus = false; 
+
+            HasMemoryStatus = false;
         }
 
         OnPropertyChanged(nameof(HasMemoryStatus));
@@ -181,7 +185,9 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         if (pageSize <= 0) return false;
 
         totalMemoryMb = ToMegabytes(totalMemoryBytes);
-        availableMemoryMb = ToMegabytes((ulong)(vmStatistics.FreeCount + vmStatistics.InactiveCount + vmStatistics.PurgeableCount + vmStatistics.SpeculativeCount) * (ulong)pageSize);
+        availableMemoryMb =
+            ToMegabytes((ulong)(vmStatistics.FreeCount + vmStatistics.InactiveCount + vmStatistics.PurgeableCount +
+                                vmStatistics.SpeculativeCount) * (ulong)pageSize);
         return totalMemoryMb > 0 && availableMemoryMb >= 0;
     }
 
@@ -243,13 +249,15 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
     }
 
     [DllImport("libSystem.B.dylib", EntryPoint = "sysctlbyname")]
-    private static extern int SysctlByName(string name, ref ulong oldValue, ref nuint oldValueLength, IntPtr newValue, nuint newValueLength);
+    private static extern int SysctlByName(string name, ref ulong oldValue, ref nuint oldValueLength, IntPtr newValue,
+        nuint newValueLength);
 
     [DllImport("libSystem.B.dylib", EntryPoint = "mach_host_self")]
     private static extern IntPtr MachHostSelf();
 
     [DllImport("libSystem.B.dylib", EntryPoint = "host_statistics")]
-    private static extern int HostStatistics(IntPtr host, int flavor, ref VmStatistics hostInfo, ref uint hostInfoCount);
+    private static extern int HostStatistics(IntPtr host, int flavor, ref VmStatistics hostInfo,
+        ref uint hostInfoCount);
 
     [DllImport("libSystem.B.dylib", EntryPoint = "sysconf")]
     private static extern long Sysconf(int name);
