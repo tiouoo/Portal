@@ -35,6 +35,7 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
     }
 
     public bool HasMemoryStatus { get; private set; }
+    public bool IsWindows => OperatingSystem.IsWindows();
     public int TotalMemoryMb => _totalMemoryMb;
     public GridLength SystemMemoryWidth => CreateMemoryWidth(SystemUsedMemoryMb);
     public GridLength MinecraftMemoryWidth => CreateMemoryWidth(Data.ConfigEntry.MinecraftMaxMemory);

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using Microsoft.Win32;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -165,6 +166,8 @@ public static class MinecraftLaunchService
             {
                 context.SetRunning("正在检查可用 Java 运行时");
                 java = await SelectJavaAsync(instance, options, context.CancellationToken);
+                if (options.AutoSetJavaHighPerformanceGpu)
+                    TrySetHighPerformanceGpuPreference(java.JavaPath);
                 context.ReportProgress(1);
             });
             await selectJava.Completion;
@@ -389,6 +392,24 @@ public static class MinecraftLaunchService
         JavaPath = java.JavaPath, JavaType = java.JavaType, JavaVersion = java.JavaVersion,
         MajorVersion = java.MajorVersion, Is64bit = java.Is64Bit
     };
+
+    private static void TrySetHighPerformanceGpuPreference(string executablePath)
+    {
+        if (!OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(executablePath))
+            return;
+
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\DirectX\UserGpuPreferences");
+            const string preference = "GpuPreference=2;";
+            if (!string.Equals(key.GetValue(executablePath) as string, preference, StringComparison.Ordinal))
+                key.SetValue(executablePath, preference, RegistryValueKind.String);
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"设置 Java 高性能显卡首选项失败：{exception.Message}");
+        }
+    }
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
         MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders) => new()
@@ -660,6 +681,7 @@ public sealed class MinecraftLaunchOptions
     public int WindowWidth { get; init; }
     public int WindowHeight { get; init; }
     public int MaxMemory { get; init; }
+    public bool AutoSetJavaHighPerformanceGpu { get; init; }
     public string? WindowTitle { get; init; }
     public string? JvmArguments { get; init; }
     public string? BeforeLaunchCommand { get; init; }

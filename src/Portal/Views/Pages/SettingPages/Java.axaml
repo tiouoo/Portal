@@ -73,6 +73,25 @@
                 IsVisible="{Binding HasMemoryWarning}"
                 Text=" *超出当前系统可用内存" />
         </StackPanel>
+        <Grid
+            ColumnDefinitions="*,Auto"
+            IsVisible="{Binding IsWindows}">
+            <StackPanel Spacing="2">
+                <Label
+                    Content="自动为 Java 使用高性能显卡"
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Padding="0" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="启动游戏时，自动在 Windows 图形设置中将 Java 设为使用高性能显卡" />
+            </StackPanel>
+            <ToggleSwitch
+                Grid.Column="1"
+                IsChecked="{Binding Data.ConfigEntry.AutoSetJavaHighPerformanceGpu}"
+                VerticalAlignment="Center" />
+        </Grid>
         <StackPanel Spacing="5">
             <Label
                 Content="默认 Java"
