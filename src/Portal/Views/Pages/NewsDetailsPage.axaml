@@ -93,19 +93,25 @@
             </controls:ScrollView>
 
             <!--  加载中提示  -->
-            <StackPanel
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="10"
                 HorizontalAlignment="Center"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,24,0,0"
-                Spacing="8"
+                Padding="10"
                 VerticalAlignment="Top">
-                <ProgressBar IsIndeterminate="True" Width="200" />
-                <TextBlock
-                    FontSize="13"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    HorizontalAlignment="Center"
-                    Text="正在加载新闻正文…" />
-            </StackPanel>
+                <StackPanel Spacing="8">
+                    <ProgressBar IsIndeterminate="True" Width="200" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Center"
+                        Text="正在加载新闻正文…" />
+                </StackPanel>
+            </Border>
 
             <!--  错误提示  -->
             <StackPanel

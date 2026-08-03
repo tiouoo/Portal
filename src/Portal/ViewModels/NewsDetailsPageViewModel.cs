@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft;
@@ -127,9 +128,27 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         if (_disposed) return;
         var doc = await Task.Run(() => NewsHtmlRenderer.Parse(html));
         if (_disposed) return;
-        var controls = NewsHtmlRenderer.Render(doc);
+
+        // 先挂一个空集合，让 ItemsRepeater 立即绑定到新集合，后续分批 Add 触发增量渲染。
+        BodyControls = new ObservableCollection<Control>();
+
+        // 分批创建并添加控件，每批之间让出 UI 线程，避免一次性创建大量控件导致界面卡顿。
+        // 配合 ItemsRepeater 虚拟化，未进入视口的块不会触发 measure/arrange。
+        const int batchSize = 8;
+        var batch = new List<Control>(batchSize);
+        foreach (var control in NewsHtmlRenderer.RenderEnumerable(doc))
+        {
+            if (_disposed) return;
+            batch.Add(control);
+            if (batch.Count >= batchSize)
+            {
+                foreach (var c in batch) BodyControls.Add(c);
+                batch.Clear();
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+            }
+        }
         if (_disposed) return;
-        BodyControls = new ObservableCollection<Control>(controls);
+        foreach (var c in batch) BodyControls.Add(c);
     }
 
     public void Dispose()

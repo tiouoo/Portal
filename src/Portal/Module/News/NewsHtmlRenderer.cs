@@ -25,6 +25,9 @@ public static class NewsHtmlRenderer
     private static readonly FontFamily MonospaceFamily =
         new("Cascadia Code,Consolas,Menlo,Monaco,monospace");
 
+    // ControlTheme 查找较重，进程内缓存一次，避免每个 <a> 都走 FindResource。
+    private static Avalonia.Styling.ControlTheme? s_hyperlinkTheme;
+
     /// <summary>仅解析 HTML 返回文档（纯 CPU，可放后台线程执行）。</summary>
     public static HtmlDocument Parse(string html)
     {
@@ -42,15 +45,22 @@ public static class NewsHtmlRenderer
     /// <summary>把已解析的 HTML 文档渲染为块级控件序列（必须在 UI 线程执行）。</summary>
     public static IReadOnlyList<Control> Render(HtmlDocument doc)
     {
+        return RenderEnumerable(doc).ToList();
+    }
+
+    /// <summary>
+    /// 流式产出块级控件（必须在 UI 线程执行）。调用方可分批 Add 到集合并让出 UI 线程，
+    /// 避免一次性创建大量控件导致界面卡顿。
+    /// </summary>
+    public static IEnumerable<Control> RenderEnumerable(HtmlDocument doc)
+    {
         var root = doc.DocumentNode;
-        var output = new List<Control>();
         var container = root.SelectSingleNode("//body") ?? root;
         foreach (var node in container.ChildNodes)
         {
             var controls = RenderBlockNode(node, indentLevel: 0);
-            output.AddRange(controls);
+            foreach (var c in controls) yield return c;
         }
-        return output;
     }
 
     private static IReadOnlyList<Control> RenderBlockNode(HtmlNode node, int indentLevel)
@@ -313,9 +323,14 @@ public static class NewsHtmlRenderer
             Margin = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        if (Application.Current?.FindResource("UnderlineHyperlinkButton") is Avalonia.Styling.ControlTheme theme)
+        if (s_hyperlinkTheme is null
+            && Application.Current?.FindResource("UnderlineHyperlinkButton") is Avalonia.Styling.ControlTheme theme)
         {
-            button.Theme = theme;
+            s_hyperlinkTheme = theme;
+        }
+        if (s_hyperlinkTheme is not null)
+        {
+            button.Theme = s_hyperlinkTheme;
         }
 
         if (!string.IsNullOrWhiteSpace(href) && Uri.TryCreate(href, UriKind.Absolute, out var uri))
