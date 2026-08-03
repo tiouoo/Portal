@@ -38,43 +38,24 @@
                     Command="{Binding SearchCommand}"
                     Content="搜索"
                     DockPanel.Dock="Right" />
+                <ComboBox
+                    DockPanel.Dock="Right"
+                    ItemsSource="{Binding SortOptions}"
+                    Margin="0,0,10,0"
+                    SelectedItem="{Binding SelectedSort}"
+                    Width="140">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <TextBox
                     KeyDown="SearchBox_OnKeyDown"
                     Margin="0,0,10,0"
                     PlaceholderText="{Binding SearchPlaceholder}"
                     Text="{Binding SearchText}" />
             </DockPanel>
-            <UniformGrid
-                ColumnSpacing="10"
-                Height="32"
-                Rows="1">
-                <ComboBox
-                    HorizontalAlignment="Stretch"
-                    ItemsSource="{Binding Sources}"
-                    SelectedItem="{Binding SelectedSource}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DisplayName}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <ComboBox
-                    HorizontalAlignment="Stretch"
-                    IsEditable="True"
-                    ItemsSource="{Binding MinecraftVersions}"
-                    PlaceholderText="游戏版本"
-                    Text="{Binding GameVersion, Mode=TwoWay}" />
-                <ComboBox
-                    HorizontalAlignment="Stretch"
-                    ItemsSource="{Binding SortOptions}"
-                    SelectedItem="{Binding SelectedSort}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DisplayName}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </UniformGrid>
             <Button
                 Command="{Binding RetryCommand}"
                 Content="重试"
