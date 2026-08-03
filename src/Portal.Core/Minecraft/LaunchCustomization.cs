@@ -142,9 +142,9 @@ public static class LaunchCustomization
                 if (!process.HasExited)
                     process.Kill(entireProcessTree: true);
             }
-            catch
+            catch (Exception exception)
             {
-                // 进程可能已经退出
+                Logger.Debug($"取消自定义命令后终止进程失败，进程可能已退出。{Environment.NewLine}{exception}");
             }
             throw;
         }
@@ -158,7 +158,7 @@ public static class LaunchCustomization
     public static void RunShellCommandDetached(string command, string? workingDirectory)
     {
         Logger.Info($"已安排后台启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
-        _ = Task.Run(async () =>
+        Task.Run(async () =>
         {
             try
             {
@@ -167,9 +167,11 @@ public static class LaunchCustomization
             catch (Exception exception)
             {
                 // 后台命令失败不影响游戏进程
-                Logger.Warning($"后台启动自定义命令失败：{exception.Message}");
+                Logger.Warning($"后台启动自定义命令失败。{Environment.NewLine}{exception}");
             }
-        });
+        }).ContinueWith(completedTask => Logger.Error($"后台启动自定义命令异常结束：{command}", completedTask.Exception!),
+            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
     }
 
     /// <summary>
@@ -181,7 +183,7 @@ public static class LaunchCustomization
         if (!OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(title))
             return;
 
-        _ = Task.Run(async () =>
+        Task.Run(async () =>
         {
             Logger.Debug($"开始监视游戏窗口标题，进程：{process.Id}");
             try
@@ -204,9 +206,11 @@ public static class LaunchCustomization
             catch (Exception exception)
             {
                 // 进程已退出或句柄失效
-                Logger.Debug($"停止监视游戏窗口标题，进程：{process.Id}，原因：{exception.Message}");
+                Logger.Debug($"停止监视游戏窗口标题，进程：{process.Id}。{Environment.NewLine}{exception}");
             }
-        });
+        }).ContinueWith(completedTask => Logger.Error($"游戏窗口标题监视异常结束，进程：{process.Id}", completedTask.Exception!),
+            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]

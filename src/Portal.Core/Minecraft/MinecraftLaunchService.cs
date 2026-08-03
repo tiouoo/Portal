@@ -118,14 +118,16 @@ public static class MinecraftLaunchService
             Progress = 0
         });
         task.Start();
-        _ = RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments, completeResources,
+        RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments, completeResources,
             startGame, logSession,
             launchedProcess =>
             {
                 process = launchedProcess;
                 launchCompleted = true;
                 task.RefreshActions();
-            });
+            }).ContinueWith(completedTask => Logger.Error($"启动 Minecraft 实例工作流异常结束：{instance.InstanceName}", completedTask.Exception!),
+                CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
         return task.Completion;
     }
 
@@ -233,6 +235,7 @@ public static class MinecraftLaunchService
             }
             catch (Exception exception)
             {
+                Logger.Warning($"游戏启动前内存优化失败，将继续启动游戏。{Environment.NewLine}{exception}");
                 Notice(topLevel, $"内存优化未完成，将继续启动游戏：{exception.Message}", NotificationType.Warning);
             }
         }
@@ -424,7 +427,7 @@ public static class MinecraftLaunchService
         }
         catch (Exception exception)
         {
-            Logger.Warning($"设置 Java 高性能显卡首选项失败：{exception.Message}");
+            Logger.Warning($"设置 Java 高性能显卡首选项失败。{Environment.NewLine}{exception}");
         }
     }
 

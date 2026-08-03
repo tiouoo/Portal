@@ -19,8 +19,10 @@ public static class NewsService
 
     public static void InitializeFromCache()
     {
+        Logger.Info("开始加载新闻缓存。");
         JavaNews = LoadCache(NewsEdition.Java);
         BedrockNews = LoadCache(NewsEdition.Bedrock);
+        Logger.Info($"新闻缓存加载完成，Java：{JavaNews.Count} 条，Bedrock：{BedrockNews.Count} 条。");
     }
 
     public static void RaiseNewsUpdated()
@@ -31,6 +33,8 @@ public static class NewsService
 
     public static async Task FetchAndRefreshAsync()
     {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        Logger.Info("开始从远程服务刷新新闻。");
         try
         {
             var jTask = FetchAsync(JavaApiUrl, NewsEdition.Java);
@@ -44,10 +48,11 @@ public static class NewsService
             if (bedrock?.Count > 0) { BedrockNews = bedrock; changed = true; }
 
             if (changed) NewsUpdated?.Invoke(null, EventArgs.Empty);
+            Logger.Info($"远程新闻刷新完成，数据是否变更：{changed}，耗时 {stopwatch.ElapsedMilliseconds} ms。");
         }
         catch (Exception ex)
         {
-            Logger.Error($"刷新新闻失败: {ex.Message}");
+            Logger.Error("刷新新闻失败。", ex);
         }
     }
 
@@ -59,7 +64,7 @@ public static class NewsService
         }
         catch (Exception ex)
         {
-            Logger.Error($"加载新闻缓存失败: {ex.Message}");
+            Logger.Error($"加载 {edition} 新闻缓存失败。", ex);
             return [];
         }
     }
@@ -75,7 +80,7 @@ public static class NewsService
         }
         catch (Exception ex)
         {
-            Logger.Error($"获取新闻失败 ({url}): {ex.Message}");
+            Logger.Error($"获取 {edition} 新闻失败：{url}", ex);
             return null;
         }
     }

@@ -465,8 +465,9 @@ public partial class TabWindow : TioTabWindowBase
                         ClearValue(TransparencyBackgroundFallbackProperty);
                         TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
                     }
-                    catch
+                    catch (Exception exception)
                     {
+                        Logger.Error(exception);
                         ClearOriginalBackgroundCache();
                         ClearBackgroundLayers();
                     }

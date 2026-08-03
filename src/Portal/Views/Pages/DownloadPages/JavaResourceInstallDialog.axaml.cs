@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using TioUi.Common.Interfaces;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -135,9 +136,11 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
+            Logger.Debug("[Download] World list loading cancelled.");
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Error(exception);
         }
         finally
         {

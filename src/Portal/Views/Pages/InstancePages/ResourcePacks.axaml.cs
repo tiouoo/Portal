@@ -11,6 +11,7 @@ using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -90,7 +91,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             foreach (var pack in packs) Items.Add(new ResourcePackItem(pack, _isCompactLayout));
             ApplyFilter();
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException exception) { Logger.Debug($"[ResourcePacks] {_packName} scan cancelled: {exception}"); }
         finally
         {
             if (!_isDisposed) { IsLoading = false; RaiseListProperties(); }
@@ -221,8 +222,8 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             if (item.Info.IsBedrock) Directory.Delete(item.Info.FilePath, true);
             else File.Delete(item.Info.FilePath);
         }
-        catch (IOException) { failed++; }
-        catch (UnauthorizedAccessException) { failed++; }
+        catch (IOException exception) { Logger.Warning($"[ResourcePacks] Failed to delete {item.Info.FilePath}: {exception}"); failed++; }
+        catch (UnauthorizedAccessException exception) { Logger.Warning($"[ResourcePacks] Failed to delete {item.Info.FilePath}: {exception}"); failed++; }
         _hasLoaded = false;
         await LoadAsync();
         if (TopLevel.GetTopLevel(this) is { } topLevel)

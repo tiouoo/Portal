@@ -1,5 +1,6 @@
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Utilities;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Instance.Java;
 
@@ -124,7 +125,10 @@ public static class JavaRuntimeManager
                                     $"深度扫描找到 Java: {Path.GetFileName(Path.GetDirectoryName(javaPath))}"));
                             }
                         }
-                        catch { }
+                        catch (Exception exception)
+                        {
+                            Logger.Error($"读取深度扫描发现的 Java 运行时失败：{javaPath}", exception);
+                        }
                     }
                 }
                 catch (OperationCanceledException)

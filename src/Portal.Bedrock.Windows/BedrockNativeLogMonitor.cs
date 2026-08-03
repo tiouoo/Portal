@@ -12,7 +12,7 @@ internal static class BedrockNativeLogMonitor
     {
         if (log == null)
             return;
-        _ = Task.Run(() => FollowAsync(logPath, processProvider, log));
+        _ = Task.Run(() => FollowAsync(logPath, processProvider, log)); // FollowAsync records every terminal failure.
     }
 
     private static async Task FollowAsync(string logPath, Func<Process?> processProvider,
@@ -63,7 +63,8 @@ internal static class BedrockNativeLogMonitor
         }
         catch (Exception exception)
         {
-            log($"读取 PreloadCpp 日志失败：{exception.Message}", BedrockLogLevel.Warning);
+            Trace.TraceError($"读取 PreloadCpp 日志失败：{logPath}{Environment.NewLine}{exception}");
+            log($"读取 PreloadCpp 日志失败：{exception}", BedrockLogLevel.Warning);
         }
     }
 
@@ -77,6 +78,10 @@ internal static class BedrockNativeLogMonitor
     private static bool IsRunning(Process process)
     {
         try { return !process.HasExited; }
-        catch (InvalidOperationException) { return false; }
+        catch (InvalidOperationException exception)
+        {
+            Trace.TraceError($"检查 Minecraft 进程状态失败。{Environment.NewLine}{exception}");
+            return false;
+        }
     }
 }

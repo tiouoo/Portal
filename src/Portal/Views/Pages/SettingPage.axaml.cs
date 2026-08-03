@@ -12,6 +12,7 @@ using Portal.Module.DefaultPage;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Controls;
 
 namespace Portal.Views.Pages;
@@ -28,6 +29,7 @@ public partial class SettingPage : UserControl, ITioTabPage
         DataContext = SettingPageViewModel;
         Loaded += (s, e) =>
         {
+            Logger.Info("[Settings] Settings page loaded.");
             var a = SettingPageViewModel.CurrentPage;
             SettingPageViewModel.CurrentPage = null;
             SettingPageViewModel.CurrentPage = a;
@@ -45,12 +47,14 @@ public partial class SettingPage : UserControl, ITioTabPage
 
     public void OnClose()
     {
+        Logger.Info("[Settings] Settings page closing; disposing cached setting pages.");
         SettingPageViewModel.Dispose();
         DataContext = null;
     }
 
     public void NavigateTo(Type pageType)
     {
+        Logger.Info($"[Settings] Navigating to {pageType.Name}.");
         SettingPageViewModel.NavigateType(pageType);
         SelectNavMenuItem(pageType);
     }
@@ -99,6 +103,7 @@ public partial class SettingPageViewModel : ObservableObject, IDisposable
             {
                 page = newPage;
                 _settingPageCache[pageType] = page;
+                Logger.Info($"[Settings] Created settings page {pageType.Name}.");
             }
         }
 
@@ -110,6 +115,7 @@ public partial class SettingPageViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        Logger.Info($"[Settings] Disposing {_settingPageCache.Count} cached setting page(s).");
         CurrentPage = null;
         foreach (var page in _settingPageCache.Values.OfType<IDisposable>())
             page.Dispose();

@@ -12,6 +12,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -112,6 +113,7 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
 
         try
         {
+            Logger.Info($"[BedrockWorlds] Deleting world {item.DisplayName} at {item.Info.FolderPath}.");
             Directory.Delete(item.Info.FolderPath, true);
             Items.Remove(item);
             ApplyFilter();
@@ -120,10 +122,12 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
         }
         catch (IOException ex)
         {
+            Logger.Warning($"[BedrockWorlds] Failed to delete world {item.Info.FolderPath}: {ex}");
             ShowDeleteFailure(ex.Message);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
+            Logger.Warning($"[BedrockWorlds] Failed to delete world {item.Info.FolderPath}: {exception}");
             ShowDeleteFailure("没有删除此存档的权限。");
         }
     }
@@ -172,7 +176,7 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
             foreach (var world in worlds) Items.Add(new BedrockWorldItem(world));
             ApplyFilter();
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException exception) { Logger.Debug($"[BedrockWorlds] World scan cancelled: {exception}"); }
         finally
         {
             if (!_isDisposed && sequence == _loadSequence) { IsLoading = false; RaiseListProperties(); }

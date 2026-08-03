@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
@@ -59,6 +60,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
+        Logger.Info($"[Multiplayer] Page loaded for {ViewModel.Edition} edition.");
         ViewModel.Activate();
         ShowEditionContent();
         Loaded += (s, e) =>
@@ -77,6 +79,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     public void OnClose()
     {
+        Logger.Info($"[Multiplayer] Page closing for {ViewModel.Edition} edition.");
         Loaded -= OnLoaded;
         ViewModel.Deactivate();
         DataContext = null;
@@ -214,19 +217,27 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     public async Task InitializeAsync()
     {
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Multiplayer] Initializing {Edition} multiplayer service.");
         // FindInstalled() does synchronous file IO and JSON deserialization;
         // run it on a background thread to avoid blocking the UI on first open.
         var installation = await Task.Run(GravityConeInstaller.FindInstalled);
         IsComponentMissing = installation is null;
         StatusText = installation is null ? "联机组件未安装" : string.Empty;
-        if (installation is null) return;
+        if (installation is null)
+        {
+            Logger.Warning($"[Multiplayer] {Edition} multiplayer component was not found after {stopwatch.Elapsed}.");
+            return;
+        }
         try
         {
             await StartClientAsync(installation);
+            Logger.Info($"[Multiplayer] {Edition} multiplayer service initialized in {stopwatch.Elapsed}.");
         }
         catch (Exception ex)
         {
             IsBackendReady = false;
+            Logger.Error(ex);
             Notify($"联机服务启动失败：{FriendlyError(ex)}", NotificationType.Error);
         }
     }
@@ -242,6 +253,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private async Task InstallAsync()
     {
         if (IsBusy) return;
+        Logger.Info($"[Multiplayer] Starting component installation for {Edition} edition.");
         IsBusy = true;
         StatusText = "正在下载联机组件";
         var task = TaskManager.Instance.CreateTask(new TaskOptions
@@ -285,12 +297,18 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     private async Task ObserveInstallationAsync(ManagedTask task)
     {
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             await task.Completion;
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[Multiplayer] Component installation was cancelled after {stopwatch.Elapsed}: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
         }
         finally
         {
@@ -299,15 +317,23 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 IsBusy = false;
                 StatusText = IsComponentMissing ? "联机组件未安装" : string.Empty;
                 if (task.Status == ManagedTaskStatus.Completed)
+                {
+                    Logger.Info($"[Multiplayer] Component installation completed in {stopwatch.Elapsed}.");
                     Notify("联机组件已安装", NotificationType.Success);
+                }
                 else if (task.Status == ManagedTaskStatus.Faulted)
+                {
+                    Logger.Warning($"[Multiplayer] Component installation failed after {stopwatch.Elapsed}: {task.Exception}");
                     Notify("联机组件下载失败", NotificationType.Error);
+                }
             });
         }
     }
 
     private async Task StartClientAsync(GravityConeInstallation installation)
     {
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Multiplayer] Starting {Edition} multiplayer client from {installation.CliPath}.");
         await SharedClientStartLock.WaitAsync(_lifetime.Token);
         try
         {
@@ -329,6 +355,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         await RefreshRoomStatusAsync(true, Edition);
         ApplyActiveRoomState();
         if (IsJava) await DiscoverJavaServersAsync();
+        Logger.Info($"[Multiplayer] {Edition} multiplayer client started in {stopwatch.Elapsed}.");
     }
 
     [RelayCommand]
@@ -336,15 +363,19 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         if (_client is null || IsBusy || IsDiscoveringJavaServers) return;
         IsDiscoveringJavaServers = true;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info("[Multiplayer] Starting Java LAN server discovery.");
         try
         {
             await _client.RequestAsync("lan.start_discovery", cancellationToken: _lifetime.Token);
             await Task.Delay(TimeSpan.FromSeconds(3), _lifetime.Token);
             var response = await _client.RequestAsync("lan.list_servers", cancellationToken: _lifetime.Token);
             UpdateLanServers(response.Data);
+            Logger.Info($"[Multiplayer] Java LAN discovery found {LanServers.Count} server(s) in {stopwatch.Elapsed}.");
         }
         catch (Exception ex)
         {
+            Logger.Error(ex);
             Notify($"局域网世界检测失败：{FriendlyError(ex)}", NotificationType.Error);
         }
         finally
@@ -358,6 +389,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         if (_client is null || !CanCreateRoom || !ValidatePlayerName()) return;
         var edition = Edition;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Multiplayer] Creating {edition} room for player {PlayerName.Trim()}.");
         IsBusy = true;
         IsCreatingRoom = true;
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
@@ -377,15 +410,18 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             var response = await _client.RequestAsync("room.create", parameters,
                 timeout: TimeSpan.FromSeconds(35), cancellationToken: cancellation.Token);
             ApplyRoomData(response.Data, "host", edition);
+            Logger.Info($"[Multiplayer] Created {edition} room {CurrentRoomCode} in {stopwatch.Elapsed}.");
             Notify("房间已创建", NotificationType.Success);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
+            Logger.Debug($"[Multiplayer] {edition} room creation cancelled after {stopwatch.Elapsed}.");
             await RollbackCancelledRoomOperationAsync(edition);
             Notify("已取消创建房间", NotificationType.Information);
         }
         catch (Exception ex)
         {
+            Logger.Error(ex);
             Notify($"创建失败：{FriendlyError(ex)}", NotificationType.Error);
         }
         finally
@@ -435,6 +471,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (_client is null || IsBusy || !ValidatePlayerName()) return;
         var edition = Edition;
         var code = JoinCode.Trim().ToUpperInvariant();
+        var stopwatch = Stopwatch.StartNew();
         var prefix = edition == MinecraftEdition.Java ? "U/" : "P/";
         if (!code.StartsWith(prefix, StringComparison.Ordinal))
         {
@@ -444,6 +481,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
         IsBusy = true;
         IsJoiningRoom = true;
+        Logger.Info($"[Multiplayer] Joining {edition} room {code} as {PlayerName.Trim()}.");
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
         _roomOperationCancellation = cancellation;
         try
@@ -455,15 +493,18 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             var response = await _client.RequestAsync("room.join", parameters,
                 progress, TimeSpan.FromSeconds(60), cancellation.Token);
             ApplyRoomData(response.Data, "guest", edition);
+            Logger.Info($"[Multiplayer] Joined {edition} room {CurrentRoomCode} in {stopwatch.Elapsed}.");
             Notify(edition == MinecraftEdition.Bedrock ? "控制通道已连接，正在建立游戏连接" : "已加入房间", NotificationType.Success);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
+            Logger.Debug($"[Multiplayer] Joining {edition} room {code} was cancelled after {stopwatch.Elapsed}.");
             await RollbackCancelledRoomOperationAsync(edition);
             Notify("已取消加入房间", NotificationType.Information);
         }
         catch (Exception ex)
         {
+            Logger.Error(ex);
             Notify($"加入失败：{FriendlyError(ex)}", NotificationType.Error);
         }
         finally
@@ -498,7 +539,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !_lifetime.IsCancellationRequested)
         {
-            Logger.Warning($"[Multiplayer] Failed to roll back cancelled room operation: {ex.Message}");
+            Logger.Warning($"[Multiplayer] Failed to roll back cancelled room operation: {ex}");
         }
         finally
         {
@@ -533,6 +574,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         if (_client is null || !IsInRoom) return;
         IsBusy = true;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Multiplayer] Leaving {Edition} room {CurrentRoomCode}.");
         try
         {
             var room = GetRoomState(Edition);
@@ -544,10 +587,12 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 await RestartClientAsync();
             }
             ClearRoom(Edition);
+            Logger.Info($"[Multiplayer] Left {Edition} room in {stopwatch.Elapsed}.");
             Notify("已离开房间", NotificationType.Success);
         }
         catch (Exception ex)
         {
+            Logger.Error(ex);
             Notify($"退出房间失败：{FriendlyError(ex)}", NotificationType.Error);
         }
         finally
@@ -568,7 +613,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !_lifetime.IsCancellationRequested)
         {
-            Logger.Warning($"[Multiplayer] Skipped CLI restart because the other room status is unavailable: {ex.Message}");
+            Logger.Warning($"[Multiplayer] Skipped CLI restart because the other room status is unavailable: {ex}");
             return false;
         }
     }
@@ -593,6 +638,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         if (_client is null || !CanProbeNat) return;
         IsProbingNat = true;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Multiplayer] Starting NAT probe for {Edition} edition.");
         try
         {
             var response = await _client.RequestAsync("stun.probe", timeout: TimeSpan.FromSeconds(15),
@@ -604,10 +651,12 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 ? string.Join(", ", ipValue.EnumerateArray().Select(item => item.GetString()))
                 : "未知";
             NatSummary = $"公网地址：{ip}·UDP：{NatName(udp)}·TCP：{NatName(tcp)}";
+            Logger.Info($"[Multiplayer] NAT probe completed for {Edition} in {stopwatch.Elapsed}: {NatSummary}.");
             Notify("NAT 检测完成", NotificationType.Success);
         }
         catch (Exception ex)
         {
+            Logger.Error(ex);
             Notify($"NAT 检测失败：{FriendlyError(ex)}", NotificationType.Error);
         }
         finally
@@ -690,11 +739,13 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
             ApplyRoomData(response.Data, role, targetEdition);
         }
-        catch when (_lifetime.IsCancellationRequested)
+        catch (OperationCanceledException exception) when (_lifetime.IsCancellationRequested)
         {
+            Logger.Debug($"[Multiplayer] Room status refresh cancelled: {exception}");
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Warning($"[Multiplayer] Room status refresh failed: {exception}");
         }
         finally
         {

@@ -5,6 +5,7 @@ using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Minecraft.Services;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -27,6 +28,7 @@ public static class BedrockResourceDownload
             });
         try
         {
+            Logger.Info($"[BedrockDownload] Loading latest file for project {target.ProjectId}.");
             var files = await new CurseforgeProvider().GetModFilesAsync(long.Parse(target.ProjectId));
             var file = files.Select(JavaResourceFileItem.From).OrderByDescending(item => item.Published).FirstOrDefault();
             if (file is null) throw new InvalidDataException("未找到可下载的基岩版资源文件。");
@@ -35,8 +37,15 @@ public static class BedrockResourceDownload
             await loadingDialog;
             await DownloadAndImportAsync(topLevel, target.Definition, file, destination);
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[BedrockDownload] Quick download cancelled for project {target.ProjectId}: {exception}");
+            loading.Fail();
+            await loadingDialog;
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
             loading.Fail();
             await loadingDialog;
         }
@@ -58,6 +67,7 @@ public static class BedrockResourceDownload
         }
 
         var temporaryPath = Path.Combine(Path.GetTempPath(), "Portal", $"{Guid.NewGuid():N}{extension}");
+        Logger.Info($"[BedrockDownload] Downloading {file.FileName} to temporary path {temporaryPath} for import.");
         Directory.CreateDirectory(Path.GetDirectoryName(temporaryPath)!);
         var task = JavaResourceDownload.StartDownload(topLevel, definition, file, temporaryPath);
         try
@@ -69,12 +79,13 @@ public static class BedrockResourceDownload
         }
         catch (Exception exception)
         {
+            Logger.Error(exception);
             NotificationGateway.Notice(topLevel, $"无法导入基岩版包：{exception.Message}", NotificationType.Error);
         }
         finally
         {
             try { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
-            catch (IOException) { }
+            catch (IOException exception) { Logger.Warning($"[BedrockDownload] Failed to delete temporary package {temporaryPath}: {exception}"); }
         }
     }
 
@@ -89,6 +100,7 @@ public static class BedrockResourceDownload
         }
 
         var temporaryPath = Path.Combine(Path.GetTempPath(), "Portal", $"{Guid.NewGuid():N}{extension}");
+        Logger.Info($"[BedrockDownload] Downloading {file.FileName} to temporary path {temporaryPath} for direct import.");
         Directory.CreateDirectory(Path.GetDirectoryName(temporaryPath)!);
         var task = JavaResourceDownload.StartDownload(topLevel, definition, file, temporaryPath);
         try
@@ -99,15 +111,17 @@ public static class BedrockResourceDownload
             await Task.Run(() => new BedrockPackageImportService().Import(temporaryPath, inspection,
                 destination.Instance, destination.WorldUserId));
             NotificationGateway.Notice(topLevel, $"{file.FileName} 已导入", NotificationType.Success);
+            Logger.Info($"[BedrockDownload] Imported {file.FileName} into {destination.Instance.InstanceName}.");
         }
         catch (Exception exception)
         {
+            Logger.Error(exception);
             NotificationGateway.Notice(topLevel, $"无法导入基岩版包：{exception.Message}", NotificationType.Error);
         }
         finally
         {
             try { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
-            catch (IOException) { }
+            catch (IOException exception) { Logger.Warning($"[BedrockDownload] Failed to delete temporary package {temporaryPath}: {exception}"); }
         }
     }
 }

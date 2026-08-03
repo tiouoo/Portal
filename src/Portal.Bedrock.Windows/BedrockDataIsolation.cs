@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -24,6 +25,7 @@ internal static class BedrockDataIsolation
             throw new FileNotFoundException("未找到用于启用数据隔离的基岩版主程序。", gameExecutable);
 
         var currentDllName = GetPreloadImportName(gameExecutable) ?? PreloadDllName;
+        log?.Invoke($"准备基岩版数据隔离：{gameExecutable}", BedrockLogLevel.Information);
         SyncPreloadMods(config, log);
         CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
         var preloadDllName = DeployPreloadDll(config.InstancePath, currentDllName);
@@ -68,8 +70,8 @@ internal static class BedrockDataIsolation
         {
             if (activeFiles.Contains(Path.GetFileName(path))) continue;
             try { File.Delete(path); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException exception) { log?.Invoke($"删除过期预加载模组失败：{path}，{exception}", BedrockLogLevel.Warning); }
+            catch (UnauthorizedAccessException exception) { log?.Invoke($"删除过期预加载模组被拒绝：{path}，{exception}", BedrockLogLevel.Warning); }
         }
     }
 
@@ -134,6 +136,7 @@ internal static class BedrockDataIsolation
         };
 
         var configPath = Path.Combine(configFolder, "config.json");
+        Trace.TraceInformation($"写入基岩版数据隔离配置：{configPath}。");
         File.WriteAllText(configPath, JsonSerializer.Serialize(preloadConfig));
         return Path.Combine(logFolder, nativeLogFile);
     }
@@ -222,13 +225,15 @@ internal static class BedrockDataIsolation
             {
                 File.Delete(path);
             }
-            catch (IOException)
+            catch (IOException exception)
             {
                 // A running game still has this DLL loaded; remove it on a later launch.
+                Trace.TraceError($"删除过期基岩版数据隔离组件失败：{path}{Environment.NewLine}{exception}");
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException exception)
             {
                 // Leave files protected by the operating system untouched.
+                Trace.TraceError($"删除过期基岩版数据隔离组件被拒绝：{path}{Environment.NewLine}{exception}");
             }
         }
     }

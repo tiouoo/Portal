@@ -50,7 +50,7 @@ internal static class BedrockModInjector
         catch (Exception exception)
         {
             Trace.TraceError($"读取基岩版 DLL 模组失败：{exception}");
-            log?.Invoke($"读取 DLL 模组失败：{exception.Message}", BedrockLogLevel.Error);
+            log?.Invoke($"读取 DLL 模组失败：{exception}", BedrockLogLevel.Error);
             return;
         }
 
@@ -59,7 +59,7 @@ internal static class BedrockModInjector
         {
             log?.Invoke($"已安排模组注入：{mod.FileName}，延迟 {mod.Config.DelayMs} ms",
                 BedrockLogLevel.Information);
-            _ = Task.Run(() => Inject(process, mod, log));
+            _ = Task.Run(() => Inject(process, mod, log)); // Inject records every terminal failure.
         }
     }
 
@@ -99,7 +99,7 @@ internal static class BedrockModInjector
         catch (Exception exception)
         {
             Trace.TraceError($"Portal 注入基岩版模组失败：{mod.FileName}，{exception}");
-            log?.Invoke($"模组注入异常：{mod.FileName}，{exception.Message}", BedrockLogLevel.Error);
+            log?.Invoke($"模组注入异常：{mod.FileName}，{exception}", BedrockLogLevel.Error);
         }
     }
 
@@ -107,12 +107,16 @@ internal static class BedrockModInjector
     {
         var portalFolder = Directory.GetParent(Path.GetDirectoryName(mod.FilePath)!)!.FullName;
         var runtimeFolder = Path.Combine(portalFolder, "runtime", "mods");
+        Trace.TraceInformation($"准备基岩版模组运行时副本：{mod.FilePath} -> {runtimeFolder}。");
         Directory.CreateDirectory(runtimeFolder);
         using var stream = File.OpenRead(mod.FilePath);
         var fileName = $"{Convert.ToHexString(SHA256.HashData(stream))[..16]}.dll";
         var destination = Path.GetFullPath(Path.Combine(runtimeFolder, fileName));
         if (!File.Exists(destination))
+        {
+            Trace.TraceInformation($"复制基岩版模组到运行时目录：{destination}。");
             File.Copy(mod.FilePath, destination);
+        }
         return destination;
     }
 
@@ -151,8 +155,9 @@ internal static class BedrockModInjector
                 _inject = Marshal.GetDelegateForFunctionPointer<InjectDelegate>(export);
                 _module = module;
             }
-            catch
+            catch (Exception exception)
             {
+                Trace.TraceError($"加载基岩版模组注入器失败。{Environment.NewLine}{exception}");
                 NativeLibrary.Free(module);
                 throw;
             }

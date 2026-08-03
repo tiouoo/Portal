@@ -365,14 +365,14 @@ public class MinecraftInstance : ObservableObject
             catch (Exception e)
             {
                 // 配置文件损坏时先备份再回退到默认配置，避免异常中断实例扫描、覆盖丢失用户数据
-                Logger.Error($"读取实例配置失败，已回退默认配置: {configPath} {e.Message}");
+                Logger.Error($"读取实例配置失败，已回退默认配置：{configPath}", e);
                 try
                 {
                     File.Copy(configPath, configPath + ".bak", true);
                 }
                 catch (Exception backupException)
                 {
-                    Logger.Error($"备份损坏的实例配置失败: {backupException.Message}");
+                    Logger.Error("备份损坏的实例配置失败。", backupException);
                 }
             }
         }

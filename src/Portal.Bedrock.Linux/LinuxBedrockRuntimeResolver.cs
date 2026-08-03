@@ -38,6 +38,7 @@ public sealed class LinuxBedrockRuntimeResolver
     {
         EnsureSupportedPlatform();
 
+        Trace.TraceInformation("开始解析 Linux 基岩版 Proton 运行时。");
         var protonScript = await ResolveProtonScriptAsync(progress, cancellationToken).ConfigureAwait(false);
         var protonRoot = Path.GetDirectoryName(protonScript)!;
         ApplyManagedRuntimePatch(protonRoot, progress);
@@ -45,6 +46,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var steamClientPath = ResolveSteamCompatPath();
 
         Directory.CreateDirectory(prefixPath);
+        Trace.TraceInformation($"Linux 基岩版 Proton 运行时已就绪：{protonScript}，前缀：{prefixPath}。");
         return new LinuxBedrockRuntime(protonScript, protonRoot, prefixPath, steamClientPath);
     }
 
@@ -77,7 +79,11 @@ public sealed class LinuxBedrockRuntimeResolver
         if (!string.IsNullOrWhiteSpace(configuredPath))
         {
             var configuredScript = NormalizeProtonScript(configuredPath);
-            if (File.Exists(configuredScript)) return configuredScript;
+            if (File.Exists(configuredScript))
+            {
+                Trace.TraceInformation($"使用 PORTAL_PROTON_PATH 指定的 Proton：{configuredScript}。");
+                return configuredScript;
+            }
 
             throw new FileNotFoundException(
                 $"{ProtonPathVariable} 未指向可用的 Proton 脚本。请将它设置为 proton 文件或包含 proton 文件的目录。",
@@ -85,16 +91,28 @@ public sealed class LinuxBedrockRuntimeResolver
         }
 
         var discovered = FindSteamProton();
-        if (discovered is not null) return discovered;
+        if (discovered is not null)
+        {
+            Trace.TraceInformation($"发现 Steam 安装的 Proton：{discovered}。");
+            return discovered;
+        }
 
         var installed = FindInstalledProton();
-        if (installed is not null) return installed;
+        if (installed is not null)
+        {
+            Trace.TraceInformation($"使用 Portal 已安装的 Proton：{installed}。");
+            return installed;
+        }
 
         await InstallLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             installed = FindInstalledProton();
-            if (installed is not null) return installed;
+            if (installed is not null)
+            {
+                Trace.TraceInformation($"等待安装锁期间 Proton 已安装：{installed}。");
+                return installed;
+            }
 
             try
             {
@@ -106,6 +124,7 @@ public sealed class LinuxBedrockRuntimeResolver
             }
             catch (Exception exception)
             {
+                Trace.TraceError($"自动下载 Linux 基岩版 GDK-Proton 失败。{Environment.NewLine}{exception}");
                 throw new InvalidOperationException(
                     $"自动下载 GDK-Proton 失败：{exception.Message}。可手动下载兼容的 Linux x64 GDK-Proton，" +
                     $"并将 {ProtonPathVariable} 设置为其 proton 脚本或安装目录。", exception);
@@ -156,12 +175,17 @@ public sealed class LinuxBedrockRuntimeResolver
         CancellationToken cancellationToken)
     {
         progress?.Invoke(new LinuxBedrockRuntimeProgress("正在查询 GDK-Proton x64 release"));
+        Trace.TraceInformation("查询 Linux 基岩版 GDK-Proton release。");
         var release = await GetReleaseAsync(cancellationToken).ConfigureAwait(false);
         var tag = SafePathSegment(release.TagName);
         var installRoot = GetProtonInstallRoot();
         var destination = Path.Combine(installRoot, tag);
         var existing = FindProtonInDirectory(destination);
-        if (existing is not null) return existing;
+        if (existing is not null)
+        {
+            Trace.TraceInformation($"GDK-Proton 已安装：{existing}。");
+            return existing;
+        }
 
         var cacheDirectory = Path.Combine(GetCacheRoot(), "proton", tag);
         var archivePath = Path.Combine(cacheDirectory, SafePathSegment(release.Asset.Name));
@@ -170,15 +194,22 @@ public sealed class LinuxBedrockRuntimeResolver
         Directory.CreateDirectory(installRoot);
 
         if (!await IsCachedArchiveValidAsync(archivePath, expectedHash, cancellationToken).ConfigureAwait(false))
+        {
+            Trace.TraceInformation($"GDK-Proton 缓存不存在或校验失败，开始下载：{archivePath}。");
             await DownloadArchiveAsync(release.Asset.BrowserDownloadUrl, archivePath, expectedHash, progress,
                 cancellationToken).ConfigureAwait(false);
+        }
         else
+        {
+            Trace.TraceInformation($"使用已校验的 GDK-Proton 缓存：{archivePath}。");
             progress?.Invoke(new LinuxBedrockRuntimeProgress($"使用已校验的 Proton 缓存：{release.Asset.Name}"));
+        }
 
         var staging = Path.Combine(installRoot, $".install-{tag}-{Guid.NewGuid():N}");
         try
         {
             progress?.Invoke(new LinuxBedrockRuntimeProgress($"正在验证并解压 GDK-Proton {release.TagName}"));
+            Trace.TraceInformation($"验证并解压 GDK-Proton：{archivePath} -> {staging}。");
             Directory.CreateDirectory(staging);
             await ValidateArchiveAsync(archivePath, staging, cancellationToken).ConfigureAwait(false);
             await ExtractArchiveAsync(archivePath, staging, progress, cancellationToken).ConfigureAwait(false);
@@ -206,11 +237,16 @@ public sealed class LinuxBedrockRuntimeResolver
             proton = Path.Combine(destination, "proton");
             EnsureExecutable(proton);
             progress?.Invoke(new LinuxBedrockRuntimeProgress($"GDK-Proton {release.TagName} 已安装", 1, 1));
+            Trace.TraceInformation($"GDK-Proton 安装完成：{destination}。");
             return proton;
         }
         finally
         {
-            if (Directory.Exists(staging)) Directory.Delete(staging, true);
+            if (Directory.Exists(staging))
+            {
+                Trace.TraceInformation($"清理 GDK-Proton 临时解压目录：{staging}。");
+                Directory.Delete(staging, true);
+            }
         }
     }
 
@@ -231,6 +267,7 @@ public sealed class LinuxBedrockRuntimeResolver
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
+                Trace.TraceError($"查询 GDK-Proton release 失败：{apiUrl}{Environment.NewLine}{exception}");
                 errors.Add($"{new Uri(apiUrl).Host}: {exception.Message}");
             }
         }
@@ -253,6 +290,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var temporaryPath = archivePath + $".{Guid.NewGuid():N}.download";
         try
         {
+            Trace.TraceInformation($"开始下载 GDK-Proton 归档：{url} -> {temporaryPath}。");
             using var response = await DownloadClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
@@ -291,10 +329,15 @@ public sealed class LinuxBedrockRuntimeResolver
             await File.WriteAllTextAsync(GetHashSidecarPath(archivePath), actualHash + "\n", cancellationToken)
                 .ConfigureAwait(false);
             progress?.Invoke(new LinuxBedrockRuntimeProgress("GDK-Proton 下载及 SHA256 校验完成", received, total));
+            Trace.TraceInformation($"GDK-Proton 归档下载及 SHA256 校验完成：{archivePath}，{received} 字节。");
         }
         finally
         {
-            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            if (File.Exists(temporaryPath))
+            {
+                Trace.TraceInformation($"清理 GDK-Proton 临时下载文件：{temporaryPath}。");
+                File.Delete(temporaryPath);
+            }
         }
     }
 
@@ -320,6 +363,7 @@ public sealed class LinuxBedrockRuntimeResolver
         CancellationToken cancellationToken)
     {
         await using var file = File.OpenRead(archivePath);
+        Trace.TraceInformation($"校验 GDK-Proton 归档路径：{archivePath}。");
         await using var gzip = new GZipStream(file, CompressionMode.Decompress);
         using var reader = new TarReader(gzip);
         TarEntry? entry;
@@ -343,6 +387,7 @@ public sealed class LinuxBedrockRuntimeResolver
         Action<LinuxBedrockRuntimeProgress>? progress, CancellationToken cancellationToken)
     {
         await using var file = File.OpenRead(archivePath);
+        Trace.TraceInformation($"解压 GDK-Proton 归档：{archivePath} -> {extractionRoot}。");
         var total = file.Length;
         await using var counting = new CountingStream(file);
         await using var gzip = new GZipStream(counting, CompressionMode.Decompress);

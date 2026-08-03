@@ -9,6 +9,7 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Const;
 using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -68,8 +69,9 @@ public partial class CustomDownloadPage : UserControl
             fileName = CustomDownloadPageViewModel.DeduplicateFileName(folder, fileName);
             destination = Path.GetFullPath(Path.Combine(folder, fileName));
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Warning($"[CustomDownload] Invalid destination {folder}/{fileName}: {exception}");
             NotificationGateway.Notice(topLevel, "保存文件夹或文件名无效", NotificationType.Warning);
             return;
         }
@@ -139,8 +141,13 @@ public partial class CustomDownloadPage : UserControl
         {
             await task.Completion;
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[CustomDownload] Download {fileName} was cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
         }
 
         if (task.Status == ManagedTaskStatus.Completed)
@@ -199,8 +206,9 @@ public partial class CustomDownloadPageViewModel : ObservableObject
             var name = Path.GetFileName(uri.LocalPath);
             return string.IsNullOrWhiteSpace(name) ? null : name;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Debug($"[CustomDownload] Could not derive a file name from {url}: {exception}");
             return null;
         }
     }
@@ -228,8 +236,9 @@ public partial class CustomDownloadPageViewModel : ObservableObject
                     return candidate;
             }
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Warning($"[CustomDownload] Could not deduplicate {name} in {folder}: {exception}");
             return name;
         }
     }

@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -46,8 +47,16 @@ internal static class CacheDatabase
                 entry = ReadModEntry(reader);
             }
         }
-        catch (SqliteException) { return null; }
-        catch (IOException) { return null; }
+        catch (SqliteException exception)
+        {
+            Logger.Warning($"读取模组缓存失败（指纹：{fingerprint}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
+        catch (IOException exception)
+        {
+            Logger.Warning($"读取模组缓存文件失败（指纹：{fingerprint}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
 
         ModCache.Set(fingerprint, entry);
         return entry;
@@ -72,8 +81,16 @@ internal static class CacheDatabase
             using var reader = command.ExecuteReader();
             entry = reader.Read() ? ReadModEntry(reader) : null;
         }
-        catch (SqliteException) { return null; }
-        catch (IOException) { return null; }
+        catch (SqliteException exception)
+        {
+            Logger.Warning($"读取模组缓存失败（SHA-1：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
+        catch (IOException exception)
+        {
+            Logger.Warning($"读取模组缓存文件失败（SHA-1：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
 
         ModSha1Cache.Set(sha1, entry);
         return entry;
@@ -101,8 +118,14 @@ internal static class CacheDatabase
             command.ExecuteNonQuery();
             ModCache.Set(fingerprint, entry);
         }
-        catch (SqliteException) { }
-        catch (IOException) { }
+        catch (SqliteException exception)
+        {
+            Logger.Error($"写入模组缓存失败（指纹：{fingerprint}）。", exception);
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"写入模组缓存文件失败（指纹：{fingerprint}）。", exception);
+        }
     }
 
     public static void WriteMod(string sha1, ModCacheEntry entry)
@@ -127,8 +150,14 @@ internal static class CacheDatabase
             command.ExecuteNonQuery();
             ModSha1Cache.Set(sha1, entry);
         }
-        catch (SqliteException) { }
-        catch (IOException) { }
+        catch (SqliteException exception)
+        {
+            Logger.Error($"写入模组缓存失败（SHA-1：{sha1}）。", exception);
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"写入模组缓存文件失败（SHA-1：{sha1}）。", exception);
+        }
     }
 
     public static void WriteMod(uint fingerprint, string sha1, ModCacheEntry entry)
@@ -160,8 +189,14 @@ internal static class CacheDatabase
             ModCache.Set(fingerprint, entry);
             ModSha1Cache.Set(sha1, entry);
         }
-        catch (SqliteException) { }
-        catch (IOException) { }
+        catch (SqliteException exception)
+        {
+            Logger.Error($"写入模组缓存失败（指纹：{fingerprint}，SHA-1：{sha1}）。", exception);
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"写入模组缓存文件失败（指纹：{fingerprint}，SHA-1：{sha1}）。", exception);
+        }
     }
 
     public static List<NewsEntry> ReadNews(NewsEdition edition)
@@ -198,8 +233,16 @@ internal static class CacheDatabase
 
             return entries;
         }
-        catch (SqliteException) { return []; }
-        catch (IOException) { return []; }
+        catch (SqliteException exception)
+        {
+            Logger.Warning($"读取 {edition} 新闻缓存失败，将使用空缓存。{Environment.NewLine}{exception}");
+            return [];
+        }
+        catch (IOException exception)
+        {
+            Logger.Warning($"读取 {edition} 新闻缓存文件失败，将使用空缓存。{Environment.NewLine}{exception}");
+            return [];
+        }
     }
 
     public static void WriteNews(NewsEdition edition, IReadOnlyCollection<NewsEntry> entries)
@@ -243,8 +286,14 @@ internal static class CacheDatabase
 
             transaction.Commit();
         }
-        catch (SqliteException) { }
-        catch (IOException) { }
+        catch (SqliteException exception)
+        {
+            Logger.Error($"写入 {edition} 新闻缓存失败。", exception);
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"写入 {edition} 新闻缓存文件失败。", exception);
+        }
     }
 
     /// <summary>
@@ -276,8 +325,16 @@ internal static class CacheDatabase
                 NeedsTranslation = reader.IsDBNull(7) ? null : reader.GetInt64(7) != 0
             };
         }
-        catch (SqliteException) { return null; }
-        catch (IOException) { return null; }
+        catch (SqliteException exception)
+        {
+            Logger.Warning($"读取新闻详情缓存失败（ID：{id}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
+        catch (IOException exception)
+        {
+            Logger.Warning($"读取新闻详情缓存文件失败（ID：{id}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
     }
 
     /// <summary>写入/更新一条新闻详情正文缓存。</summary>
@@ -309,8 +366,14 @@ internal static class CacheDatabase
                 : DBNull.Value);
             command.ExecuteNonQuery();
         }
-        catch (SqliteException) { }
-        catch (IOException) { }
+        catch (SqliteException exception)
+        {
+            Logger.Error($"写入新闻详情缓存失败（ID：{detail.Id}）。", exception);
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"写入新闻详情缓存文件失败（ID：{detail.Id}）。", exception);
+        }
     }
 
     private static SqliteConnection OpenConnection()
@@ -329,6 +392,7 @@ internal static class CacheDatabase
         lock (InitializationLock)
         {
             if (_initialized) return;
+            Logger.Info($"正在初始化本地缓存数据库：{DatabasePath}");
             SQLitePCL.Batteries.Init();
             Directory.CreateDirectory(Path.GetDirectoryName(DatabasePath)!);
             using var connection = new SqliteConnection($"Data Source={DatabasePath};Pooling=True");
@@ -361,6 +425,7 @@ internal static class CacheDatabase
             EnsureNewsDetailColumns(connection);
             MigrateLegacyNews(connection);
             _initialized = true;
+            Logger.Info("本地缓存数据库初始化完成。");
         }
     }
 
@@ -490,8 +555,9 @@ internal static class CacheDatabase
                 {
                     response = JsonConvert.DeserializeObject<PatchNotesResponse>(reader.GetString(1));
                 }
-                catch (JsonException)
+                catch (JsonException exception)
                 {
+                    Logger.Error("迁移旧新闻缓存失败，旧缓存将保持不变。", exception);
                     return;
                 }
 

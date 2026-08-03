@@ -109,6 +109,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        Logger.Info($"[Mods] Page attached for instance {_instance?.InstanceName} at {_instance?.FolderPath}.");
         _ = LoadAsync();
     }
 
@@ -117,6 +118,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (_hasLoaded || _instance == null) return;
 
         _hasLoaded = true;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Mods] Scanning mods for {_instance.InstanceName} at {_instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder)}.");
         var version = ++_loadVersion;
         IsLoading = true;
         RaiseListProperties();
@@ -141,6 +144,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         }
         IsLoading = false;
         RaiseListProperties();
+        Logger.Info($"[Mods] Scanned {Items.Count} mod(s) for {_instance.InstanceName} in {stopwatch.Elapsed}.");
         _ = Task.Run(() => RefreshMetadataAndFriendlyNamesAsync(mods, _disposeCancellation.Token),
             _disposeCancellation.Token);
     }
@@ -163,8 +167,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                         Items.FirstOrDefault(item => item.Info.FilePath == updated.FilePath)?.Update(updated);
                 }, Avalonia.Threading.DispatcherPriority.Background), cancellationToken);
         }
-        catch (OperationCanceledException) { }
-        catch (Exception) { }
+        catch (OperationCanceledException exception) { Logger.Debug($"[Mods] Friendly-name caching cancelled: {exception}"); }
+        catch (Exception exception) { Logger.Warning($"[Mods] Friendly-name caching failed: {exception}"); }
     }
 
     private async Task RefreshMetadataAsync(IReadOnlyList<ModInfo> mods, CancellationToken cancellationToken)
@@ -183,15 +187,15 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                         IsLoadingMetadata = isLoading;
                 }, Avalonia.Threading.DispatcherPriority.Background), cancellationToken);
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException exception) { Logger.Debug($"[Mods] Metadata refresh cancelled: {exception}"); }
         catch (FlurlHttpException exception)
         {
             var statusCode = exception.Call.Response?.StatusCode;
-            Logger.Error($"获取模组平台信息失败 ({statusCode?.ToString() ?? "网络错误"}): {exception.Message}");
+            Logger.Error(exception);
         }
         catch (Exception exception)
         {
-            Logger.Error($"获取模组平台信息失败: {exception.Message}");
+            Logger.Error(exception);
         }
     }
 
@@ -227,6 +231,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (_instance == null) return;
         var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
         var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
+        Logger.Info($"[Mods] Importing mod(s) into {destination} for {_instance.InstanceName}.");
         if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, "选择模组", destination, "模组", [".jar"], false, refresh);
         else await JavaResourceImport.ImportDropAsync(this, drop, destination, "模组", [".jar"], false, refresh);
     }
@@ -373,7 +378,9 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         Func<ModItem, ModInfo>? localUpdate, string actionName)
     {
         var failed = 0;
-        foreach (var item in selected)
+        var selectedItems = selected.ToArray();
+        Logger.Info($"[Mods] {actionName} requested for {selectedItems.Length} mod(s) in {_instance?.InstanceName}.");
+        foreach (var item in selectedItems)
         {
             try
             {
@@ -389,12 +396,14 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                     item.IsSelected = false;
                 }
             }
-            catch (IOException)
+            catch (IOException exception)
             {
+                Logger.Warning($"[Mods] {actionName} failed for {item.Info.FilePath}: {exception}");
                 failed++;
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException exception)
             {
+                Logger.Warning($"[Mods] {actionName} failed for {item.Info.FilePath}: {exception}");
                 failed++;
             }
         }
@@ -403,6 +412,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         RaiseSelectionProperties();
         ShowNotice(failed == 0 ? $"已{actionName}所选模组" : $"{actionName}完成，但有 {failed} 个模组操作失败",
             failed == 0 ? NotificationType.Success : NotificationType.Warning);
+        Logger.Info($"[Mods] {actionName} completed for {selectedItems.Length} mod(s): {failed} failure(s).");
         return Task.CompletedTask;
     }
 

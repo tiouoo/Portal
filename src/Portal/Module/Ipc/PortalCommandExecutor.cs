@@ -17,6 +17,7 @@ using Portal.Services;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
@@ -246,14 +247,18 @@ public static class PortalCommandExecutor
         finally
         {
             if (temporaryFolder is not null)
-                _ = Task.Run(() =>
+                Task.Run(() =>
                 {
                     try
                     {
-                        if (Directory.Exists(temporaryFolder)) Directory.Delete(temporaryFolder, true);
+                        if (Directory.Exists(temporaryFolder))
+                        {
+                            Logger.Info($"清理外部命令整合包临时目录：{temporaryFolder}");
+                            Directory.Delete(temporaryFolder, true);
+                        }
                     }
-                    catch (Exception) { }
-                });
+                    catch (Exception exception) { Logger.Error($"清理外部命令整合包临时目录失败：{temporaryFolder}", exception); }
+                }).Forget("清理外部命令整合包临时目录");
         }
     }
 
@@ -264,14 +269,14 @@ public static class PortalCommandExecutor
             var entry = ModrinthModpackInstaller.ParseModpackInstallEntry(archivePath);
             return (ModDetailsSource.Modrinth, entry.Name);
         }
-        catch (Exception) { }
+        catch (Exception exception) { Logger.Error($"按 Modrinth 格式识别整合包失败：{archivePath}", exception); }
 
         try
         {
             var entry = CurseforgeModpackInstaller.ParseModpackInstallEntry(archivePath);
             return (ModDetailsSource.CurseForge, entry.Id);
         }
-        catch (Exception) { }
+        catch (Exception exception) { Logger.Error($"按 CurseForge 格式识别整合包失败：{archivePath}", exception); }
 
         throw new InvalidOperationException("无法识别的整合包：仅支持 Modrinth（.mrpack）与 CurseForge（.zip）整合包。");
     }

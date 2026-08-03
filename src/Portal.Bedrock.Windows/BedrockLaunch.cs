@@ -75,6 +75,7 @@ public class BedrockLaunch : IBedrockLaunch
         // Keep it off Avalonia's UI thread so the task drawer remains responsive.
         var existingProcessIds = Process.GetProcessesByName("Minecraft.Windows").Select(process => process.Id).ToHashSet();
         var launchStarted = DateTime.Now;
+        Log(BedrockLogLevel.Information, $"启动 Minecraft.Windows，实例目录：{_instanceConfig.InstancePath}");
         launchedProcess = await Task.Run(() => new BedrockCore().LaunchGameAsync(options)).ConfigureAwait(false);
         if (launchedProcess == null)
         {
@@ -147,13 +148,21 @@ public class BedrockLaunch : IBedrockLaunch
     private static DateTime GetStartTimeSafe(Process process)
     {
         try { return process.StartTime; }
-        catch { return DateTime.MinValue; }
+        catch (Exception exception)
+        {
+            Trace.TraceError($"读取 Minecraft 进程启动时间失败：{process.Id}{Environment.NewLine}{exception}");
+            return DateTime.MinValue;
+        }
     }
 
     private static string? GetProcessPathSafe(Process process)
     {
         try { return process.MainModule?.FileName; }
-        catch { return null; }
+        catch (Exception exception)
+        {
+            Trace.TraceError($"读取 Minecraft 进程路径失败：{process.Id}{Environment.NewLine}{exception}");
+            return null;
+        }
     }
 
     public override Process GetProcess()

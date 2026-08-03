@@ -19,6 +19,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -114,9 +115,11 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
+            Logger.Debug($"[Download] Details loading cancelled for {Target.ProjectId}.");
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Error(exception);
             HasError = true;
         }
         finally
@@ -248,7 +251,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         {
             await cancellation.CancelAsync();
         }
-        catch (ObjectDisposedException) { }
+        catch (ObjectDisposedException exception) { Logger.Debug($"[Download] Cancellation source was already disposed: {exception}"); }
         finally { cancellation.Dispose(); }
     }
 }
@@ -325,6 +328,7 @@ public static class JavaResourceDownload
             });
         try
         {
+            Logger.Info($"[Download] Loading quick-download files for {target.Definition.DisplayName} project {target.ProjectId} from {target.Source}.");
             IReadOnlyList<JavaResourceFileItem> files = target.Source switch
             {
                 ModDetailsSource.Modrinth => (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
@@ -356,8 +360,15 @@ public static class JavaResourceDownload
 
             await InstallFromDialogAsync(topLevel, target.Definition, file, result.Instance, result.World);
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[Download] Quick download selection cancelled for project {target.ProjectId}: {exception}");
+            loading.Fail();
+            await loadingDialog;
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
             loading.Fail();
             await loadingDialog;
         }
@@ -428,6 +439,7 @@ public static class JavaResourceDownload
         var destination = selected?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(destination)) return;
 
+        Logger.Info($"[Download] Exporting {definition.DisplayName} {file.FileName} to {destination}.");
         StartDownload(topLevel, definition, file, destination);
     }
 
@@ -491,6 +503,7 @@ public static class JavaResourceDownload
             context.ReportProgress(1);
             context.SetDescription(extractSave ? "存档已安装" : "下载完成");
         });
+        Logger.Info($"[Download] Starting {definition.DisplayName} download {file.FileName} from {file.DownloadUrl} to {destination}; extractSave={extractSave}.");
         task.Start();
         _ = ObserveAsync(task, topLevel, file.FileName);
         return task;
@@ -579,11 +592,19 @@ public static class JavaResourceDownload
 
     private static async Task ObserveAsync(ManagedTask task, TopLevel topLevel, string fileName)
     {
-        try { await task.Completion; } catch { }
+        try { await task.Completion; }
+        catch (OperationCanceledException exception) { Logger.Debug($"[Download] Download {fileName} was cancelled: {exception}"); }
+        catch (Exception exception) { Logger.Error(exception); }
         if (task.Status == ManagedTaskStatus.Completed)
+        {
+            Logger.Info($"[Download] Download completed for {fileName}.");
             Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel, $"{fileName} 下载完成", NotificationType.Success));
+        }
         else if (task.Status == ManagedTaskStatus.Faulted)
+        {
+            Logger.Warning($"[Download] Download failed for {fileName}: {task.Exception}");
             Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel, $"{fileName} 下载失败", NotificationType.Error));
+        }
         await Task.Delay(TimeSpan.FromSeconds(3));
         Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
     }

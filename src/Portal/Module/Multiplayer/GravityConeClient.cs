@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Portal.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Module.Multiplayer;
 
@@ -64,8 +65,8 @@ public sealed class GravityConeClient : IAsyncDisposable
             return p;
         });
         _process.Exited += (_, _) => FailAllPending("GravityCone CLI 已退出。");
-        _ = ReadOutputAsync(_process);
-        _ = ReadErrorAsync(_process);
+        ReadOutputAsync(_process).Forget($"读取 GravityCone 标准输出，进程：{_process.Id}");
+        ReadErrorAsync(_process).Forget($"读取 GravityCone 错误输出，进程：{_process.Id}");
 
         using var ready = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ready.Token);
@@ -119,7 +120,7 @@ public sealed class GravityConeClient : IAsyncDisposable
                                    ex is HttpRequestException or JsonException or InvalidDataException or IOException or
                                        OperationCanceledException)
         {
-            Logger.Warning($"[Multiplayer] Failed to download relay configuration: {ex.Message}");
+            Logger.Warning($"下载联机中转服务器配置失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
             var cachedConfig = await ReadCachedRelayConfigAsync(cancellationToken);
             if (cachedConfig is not null) return cachedConfig.Peers;
             throw new InvalidOperationException("无法获取联机中转服务器配置，请检查网络后重试。", ex);
@@ -151,7 +152,7 @@ public sealed class GravityConeClient : IAsyncDisposable
         }
         catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException)
         {
-            Logger.Warning($"[Multiplayer] Failed to read cached relay configuration: {ex.Message}");
+            Logger.Warning($"读取联机中转服务器缓存失败。{Environment.NewLine}{ex}");
             return null;
         }
     }

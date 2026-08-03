@@ -53,7 +53,7 @@ public partial class App : Application
 #if DEBUG
             Logger.Debug("挂载 Devtools");
             this.AttachDeveloperTools();
-#elif RELEASE
+#else
             Logger.Info("注册全局异常处理");
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Dispatcher.UIThread.UnhandledException += UIThread_UnhandledException;
@@ -128,13 +128,15 @@ public partial class App : Application
         Logger.Info("UI加载完成");
         _win.Loaded -= Function;
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             await Initializer.UiAsync();
+            Logger.Info($"后台 UI 数据加载完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
         }
         catch (Exception exception)
         {
-            Logger.Error($"后台加载 UI 数据失败：{exception}");
+            Logger.Error("后台加载 UI 数据失败。", exception);
         }
         finally
         {
@@ -145,7 +147,10 @@ public partial class App : Application
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        Logger.Fatal($"AppDomain 异常: {e}");
+        if (e.ExceptionObject is Exception exception)
+            Logger.Fatal("AppDomain 异常。", exception);
+        else
+            Logger.Fatal($"AppDomain 异常：{e.ExceptionObject}");
         try
         {
             var win = new CrashWindow(e.ToString() ?? "Unhandled Exception");
@@ -153,13 +158,13 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Logger.Fatal($"显示崩溃窗口失败: {ex}");
+            Logger.Fatal("显示崩溃窗口失败。", ex);
         }
     }
 
     private void UIThread_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        Logger.Fatal($"UI线程异常: {e.Exception}");
+        Logger.Fatal("UI线程异常。", e.Exception);
         try
         {
             var win = new CrashWindow(e.Exception.ToString());
@@ -167,7 +172,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Logger.Fatal($"显示崩溃窗口失败: {ex}");
+            Logger.Fatal("显示崩溃窗口失败。", ex);
         }
         finally
         {

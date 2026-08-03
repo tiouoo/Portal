@@ -6,6 +6,7 @@ using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -43,6 +44,7 @@ internal static class BedrockResourceImport
     {
         var files = paths.Where(File.Exists).Where(path => extensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)).ToArray();
         if (files.Length == 0 || TopLevel.GetTopLevel(owner) is not { } topLevel) return;
+        Logger.Info($"[BedrockImport] Inspecting {files.Length} {resourceName} file(s) for {instance.InstanceName}.");
         var service = new BedrockPackageImportService();
         var validFiles = new List<(string Path, BedrockPackageInspection Inspection)>();
         var mismatched = 0;
@@ -56,7 +58,7 @@ internal static class BedrockResourceImport
                 else
                     mismatched++;
             }
-            catch (Exception) { }
+            catch (Exception exception) { Logger.Warning($"[BedrockImport] Failed to inspect {file}: {exception}"); }
         }
         if (validFiles.Count == 0)
         {
@@ -80,12 +82,14 @@ internal static class BedrockResourceImport
             {
                 service.Import(file, inspection, instance, userId);
                 succeeded++;
+                Logger.Info($"[BedrockImport] Imported {resourceName} {file} into {instance.InstanceName}.");
             }
-            catch (Exception) { }
+            catch (Exception exception) { Logger.Error(exception); }
         }
         if (succeeded > 0) await refresh();
         var allSucceeded = succeeded == validFiles.Count && mismatched == 0;
         NotificationGateway.Notice(topLevel, allSucceeded ? "导入成功" : succeeded == 0 ? "导入失败" : "部分导入成功",
             allSucceeded ? NotificationType.Success : succeeded == 0 ? NotificationType.Error : NotificationType.Warning);
+        Logger.Info($"[BedrockImport] {resourceName} import completed for {instance.InstanceName}: {succeeded}/{validFiles.Count} valid file(s) succeeded, {mismatched} mismatched.");
     }
 }

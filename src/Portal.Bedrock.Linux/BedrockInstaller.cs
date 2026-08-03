@@ -27,6 +27,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         LinuxBedrockRuntimeResolver.EnsureSupportedPlatform();
         if (!refresh && _cachedVersions is not null) return _cachedVersions;
 
+        Trace.TraceInformation($"加载 Linux 基岩版 GDK 版本列表，刷新：{refresh}。");
         await VersionLoadLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -42,10 +43,12 @@ public sealed class BedrockInstaller : IBedrockInstaller
                     build.Type == MinecraftGameTypeVersion.Preview));
             }
 
-            return _cachedVersions = versions.OrderByDescending(version => version.ReleaseTime)
+            _cachedVersions = versions.OrderByDescending(version => version.ReleaseTime)
                 .ThenByDescending(version => ParseVersion(version.Id))
                 .ThenByDescending(version => version.Id, StringComparer.Ordinal)
                 .ToList();
+            Trace.TraceInformation($"Linux 基岩版 GDK 版本列表加载完成，共 {_cachedVersions.Count} 个版本。");
+            return _cachedVersions;
         }
         finally
         {
@@ -63,6 +66,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         var destination = Path.GetFullPath(request.DestinationPath);
         if (Directory.Exists(destination)) throw new InvalidOperationException("目标实例目录已存在。");
 
+        Trace.TraceInformation($"开始安装 Linux 基岩版 GDK：版本 {request.Version.Id}，目标 {destination}。");
         var build = await FindBuildAsync(request.Version, request.CancellationToken).ConfigureAwait(false);
         var variation = GetX64Variation(build);
         if (string.IsNullOrWhiteSpace(variation.MD5))
@@ -94,6 +98,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
         if (!installed || !File.Exists(Path.Combine(destination, "Minecraft.Windows.exe")))
             throw new InvalidOperationException("BedrockLauncher.Core.Linux 未能生成有效的 GDK 实例。");
+        Trace.TraceInformation($"Linux 基岩版 GDK 安装完成：版本 {request.Version.Id}，目标 {destination}。");
     }
 
     private static bool IsSupportedBuild(BuildInfo build) =>
@@ -124,16 +129,22 @@ public sealed class BedrockInstaller : IBedrockInstaller
         Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
         if (File.Exists(packagePath) && await MatchesMd5Async(packagePath, expectedMd5, cancellationToken))
         {
+            Trace.TraceInformation($"使用已校验的 Linux 基岩版 GDK 安装包缓存：{packagePath}。");
             progress?.Report(new BedrockInstallProgress(1, 1, Path.GetFileName(packagePath), "Using cached package"));
             return;
         }
 
-        if (File.Exists(packagePath)) File.Delete(packagePath);
+        if (File.Exists(packagePath))
+        {
+            Trace.TraceInformation($"删除校验失败的 Linux 基岩版 GDK 缓存：{packagePath}。");
+            File.Delete(packagePath);
+        }
         var temporaryPath = packagePath + ".download";
         if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
 
         try
         {
+            Trace.TraceInformation($"开始下载 Linux 基岩版 GDK 安装包：{url} -> {temporaryPath}。");
             using var response = await GetDownloadClient().GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
@@ -163,10 +174,15 @@ public sealed class BedrockInstaller : IBedrockInstaller
                 throw new InvalidDataException("GDK 安装包 MD5 校验失败，文件已丢弃。");
 
             File.Move(temporaryPath, packagePath);
+            Trace.TraceInformation($"Linux 基岩版 GDK 安装包下载并校验完成：{packagePath}，{downloaded} 字节。");
         }
         finally
         {
-            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            if (File.Exists(temporaryPath))
+            {
+                Trace.TraceInformation($"清理 Linux 基岩版 GDK 临时下载文件：{temporaryPath}。");
+                File.Delete(temporaryPath);
+            }
         }
     }
 
@@ -202,6 +218,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
             _downloadClient = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
             _downloadClient.DefaultRequestHeaders.UserAgent.ParseAdd(BedrockNetworkConfiguration.UserAgent);
             _downloadClientConfigurationVersion = BedrockNetworkConfiguration.Version;
+            Trace.TraceInformation($"已创建 Linux 基岩版下载客户端，代理：{(hasProxy ? proxyUri : null)}，系统代理：{!BedrockNetworkConfiguration.DisableSystemProxy}。");
             return _downloadClient;
         }
     }

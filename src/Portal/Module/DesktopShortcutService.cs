@@ -205,7 +205,7 @@ public static class DesktopShortcutService
         catch (Exception e)
         {
             // 图标只是锦上添花，写失败不影响快捷方式本身。
-            Logger.Error($"写入快捷方式图标失败：{e.Message}");
+            Logger.Error("写入快捷方式图标失败。", e);
             return null;
         }
     }

@@ -23,6 +23,7 @@ public partial class App : Application
 
         public static void SaveConfig()
         {
+            Logger.Debug("已请求保存应用配置（防抖）。");
             Debouncer.Invoke();
         }
 
@@ -33,6 +34,8 @@ public partial class App : Application
         /// </summary>
         public static void FlushConfig()
         {
+            var stopwatch = Stopwatch.StartNew();
+            Logger.Info($"开始保存应用配置：{ConfigPath.SettingDataPath}");
             try
             {
                 var payload = Dispatcher.UIThread.CheckAccess()
@@ -44,10 +47,11 @@ public partial class App : Application
                     WriteAtomic(Path.Combine(ConfigPath.UserDataRootPath, "ManagedSystemDialogs.portal"),
                         payload.ManagedDialogs);
                 }
+                Logger.Info($"应用配置保存完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
             }
             catch (Exception ex)
             {
-                Logger.Error($"保存配置失败：{ex}");
+                Logger.Error($"保存应用配置失败：{ConfigPath.SettingDataPath}", ex);
             }
         }
 

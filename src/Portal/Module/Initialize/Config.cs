@@ -20,13 +20,20 @@ public class Config
 
     public static CiVersionInfo LoadVersionInfo()
     {
+        Logger.Info("正在加载应用版本信息。");
         const string RESOURCE_NAME = "Portal.version-ci.txt";
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream(RESOURCE_NAME);
-        if (stream is null) return CreateLocalVersionInfo();
+        if (stream is null)
+        {
+            Logger.Warning("未找到内嵌版本信息，使用本地开发版本信息。");
+            return CreateLocalVersionInfo();
+        }
 
         using var reader = new StreamReader(stream);
-        return JsonConvert.DeserializeObject<CiVersionInfo>(reader.ReadToEnd()) ?? CreateLocalVersionInfo();
+        var versionInfo = JsonConvert.DeserializeObject<CiVersionInfo>(reader.ReadToEnd()) ?? CreateLocalVersionInfo();
+        Logger.Info($"应用版本信息加载完成：{versionInfo.VersionTitle} ({versionInfo.Type})。");
+        return versionInfo;
     }
 
     private static CiVersionInfo CreateLocalVersionInfo() => new()
@@ -61,6 +68,7 @@ public class Config
                 Error = (_, item) =>
                 {
                     FailedSettingKeys.Add(item);
+                    Logger.Error($"配置项反序列化失败：{item.ErrorContext.Path}", item.ErrorContext.Error);
                     item.ErrorContext.Handled = true;
                 },
                 MissingMemberHandling = MissingMemberHandling.Ignore,
@@ -75,6 +83,7 @@ public class Config
         }
         catch (Exception ex)
         {
+            Logger.Error($"读取或解析配置文件失败：{ConfigPath.SettingDataPath}", ex);
             FailedSettingKeys.Add($"Setting completely load failed: {ex.Message}");
             try
             {
@@ -85,7 +94,7 @@ public class Config
             }
             catch (Exception backupEx)
             {
-                Logger.Error($"备份损坏配置文件失败：{backupEx.Message}");
+                Logger.Error($"备份损坏配置文件失败：{ConfigPath.SettingDataPath}", backupEx);
             }
             Data.ConfigEntry = new ConfigEntry();
         }

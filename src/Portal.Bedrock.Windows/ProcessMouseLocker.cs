@@ -74,10 +74,12 @@ internal sealed class ProcessMouseLocker : IDisposable
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
         {
+            Trace.TraceInformation($"基岩版鼠标锁定监视已取消：进程 {_processId}。");
         }
-        catch
+        catch (Exception exception)
         {
             // A failed monitor must never leave a process-wide cursor clip behind.
+            Trace.TraceError($"基岩版鼠标锁定监视失败：进程 {_processId}。{Environment.NewLine}{exception}");
         }
         finally
         {
@@ -151,8 +153,9 @@ internal sealed class ProcessMouseLocker : IDisposable
         {
             return _process.HasExited;
         }
-        catch
+        catch (Exception exception)
         {
+            Trace.TraceError($"检查基岩版鼠标锁定目标进程失败：进程 {_processId}。{Environment.NewLine}{exception}");
             return true;
         }
     }

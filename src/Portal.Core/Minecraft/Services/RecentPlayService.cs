@@ -80,7 +80,7 @@ public sealed class RecentPlayService
         catch (Exception e)
         {
             // 该方法在进程输出事件线程上执行，异常不能外抛，否则会导致进程崩溃
-            Logger.Error($"记录服务器游玩历史失败: {e.Message}");
+            Logger.Error("记录服务器游玩历史失败。", e);
         }
     }
 
@@ -105,8 +105,16 @@ public sealed class RecentPlayService
             paths = Directory.EnumerateFiles(logsPath, "*.log").Append(Path.Combine(logsPath, "latest.log"))
                 .Concat(Directory.EnumerateFiles(logsPath, "*.log.gz")).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         }
-        catch (IOException) { return; }
-        catch (UnauthorizedAccessException) { return; }
+        catch (IOException exception)
+        {
+            Logger.Warning($"枚举 Minecraft 日志目录失败：{logsPath}{Environment.NewLine}{exception}");
+            return;
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.Warning($"没有权限枚举 Minecraft 日志目录：{logsPath}{Environment.NewLine}{exception}");
+            return;
+        }
 
         foreach (var path in paths.Where(File.Exists))
         {
@@ -136,9 +144,18 @@ public sealed class RecentPlayService
                 }
                 }
             }
-            catch (IOException) { }
-            catch (InvalidDataException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException exception)
+            {
+                Logger.Warning($"读取 Minecraft 日志以分析最近服务器失败：{path}{Environment.NewLine}{exception}");
+            }
+            catch (InvalidDataException exception)
+            {
+                Logger.Warning($"解析 Minecraft 日志以分析最近服务器失败：{path}{Environment.NewLine}{exception}");
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                Logger.Warning($"没有权限读取 Minecraft 日志：{path}{Environment.NewLine}{exception}");
+            }
         }
     }
 
@@ -161,8 +178,9 @@ public sealed class RecentPlayService
                 .Cast<ServerEntry>()
                 .ToArray() ?? [];
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Warning($"读取服务器列表失败：{path}{Environment.NewLine}{exception}");
             return [];
         }
     }
@@ -180,7 +198,10 @@ public sealed class RecentPlayService
         {
             var encoded = iconText[(iconText.IndexOf(',') + 1)..];
             try { icon = Convert.FromBase64String(encoded); }
-            catch (FormatException) { }
+            catch (FormatException exception)
+            {
+                Logger.Warning($"服务器图标 Base64 数据无效，将忽略图标。{Environment.NewLine}{exception}");
+            }
         }
 
         return new ServerEntry((server["name"] as NbtString)?.Value ?? host, address, host, port, icon);

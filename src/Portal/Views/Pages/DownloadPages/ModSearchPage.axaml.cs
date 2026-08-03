@@ -15,6 +15,7 @@ using Portal.Views.Pages.InstancePages;
 using Portal.Views.Pages;
 using Portal.Services;
 using Portal.Core.Minecraft.Services;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -309,7 +310,14 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
             MinecraftVersions.Clear();
             foreach (var version in versions) MinecraftVersions.Add(version);
         }
-        catch (Exception) { }
+        catch (OperationCanceledException exception) when (_disposeCancellation.IsCancellationRequested)
+        {
+            Logger.Debug($"[ModSearch] Version loading cancelled because the page closed: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[ModSearch] Version loading failed: {exception}");
+        }
         finally { VersionLoadLock.Release(); }
     }
 

@@ -21,6 +21,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Views.Pages.InstancePages;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -163,8 +164,15 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
 
             await ShowInstallDialogAsync(topLevel, files);
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[ModDownload] Quick download cancelled for {target.ProjectId}: {exception}");
+            loading.Fail();
+            await loadingDialog;
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
             loading.Fail();
             await loadingDialog;
         }
@@ -251,8 +259,13 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         {
             await task.Completion;
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[ModDownload] Download {fileName} was cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
         }
 
         if (task.Status == ManagedTaskStatus.Completed)
@@ -569,7 +582,10 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         {
             await cancellation.CancelAsync();
         }
-        catch (ObjectDisposedException) { }
+        catch (ObjectDisposedException exception)
+        {
+            Logger.Debug($"[ModDetails] Cancellation source was already disposed: {exception}");
+        }
         finally { cancellation.Dispose(); }
     }
 }

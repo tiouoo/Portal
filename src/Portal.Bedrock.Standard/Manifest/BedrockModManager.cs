@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Portal.Bedrock.Standard.Manifest;
 
@@ -31,6 +32,7 @@ public static class BedrockModManager
         lock (GetLock(config))
         {
             var folder = GetModsFolder(config);
+            Trace.TraceInformation($"扫描基岩版 DLL 模组：{folder}");
             Directory.CreateDirectory(folder);
             var manifest = LoadCore(config);
             var configured = manifest.Mods
@@ -59,6 +61,7 @@ public static class BedrockModManager
             }
 
             SaveCore(config, manifest);
+            Trace.TraceInformation($"基岩版 DLL 模组扫描完成：{folder}，发现 {result.Count} 个有效模组。");
             return result;
         }
     }
@@ -86,6 +89,7 @@ public static class BedrockModManager
         }
         catch (JsonException)
         {
+            Trace.TraceWarning($"基岩版 DLL 模组配置无效，正在备份：{path}");
             File.Copy(path, path + ".bak", true);
             return new BedrockModConfig();
         }
@@ -103,6 +107,7 @@ public static class BedrockModManager
         var path = GetConfigPath(config);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var temporaryPath = path + ".tmp";
+        Trace.TraceInformation($"写入基岩版 DLL 模组配置：{path}");
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(manifest, JsonOptions));
         File.Move(temporaryPath, path, true);
     }
@@ -152,12 +157,14 @@ public static class BedrockModManager
                 return false;
             return reader.ReadUInt16() == 0x20B;
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            Trace.TraceError($"读取基岩版 DLL 模组失败：{path}{Environment.NewLine}{exception}");
             return false;
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
+            Trace.TraceError($"读取基岩版 DLL 模组被拒绝：{path}{Environment.NewLine}{exception}");
             return false;
         }
     }

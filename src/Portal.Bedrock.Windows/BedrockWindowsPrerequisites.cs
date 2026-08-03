@@ -49,6 +49,7 @@ internal static class BedrockWindowsPrerequisites
         CancellationToken cancellationToken = default)
     {
         var state = LoadState();
+        log?.Invoke($"开始检查基岩版依赖：实例 {instancePath}，构建类型 {buildType}", BedrockLogLevel.Information);
         var architecture = RuntimeInformation.OSArchitecture;
         var core = new BedrockCore();
         var (hasVcUwp, hasVcWin32) = core.IsHasVCRuntime(architecture);
@@ -103,6 +104,7 @@ internal static class BedrockWindowsPrerequisites
         }
 
         SaveState(state);
+        log?.Invoke("基岩版依赖检查完成", BedrockLogLevel.Information);
         progress?.Invoke("系统运行环境检查完成", 100);
     }
 
@@ -166,7 +168,8 @@ internal static class BedrockWindowsPrerequisites
         catch (Exception exception)
         {
             state.VcUwpFailedAt = DateTime.UtcNow;
-            log?.Invoke($"UWP VC++ 运行库安装异常：{exception.Message}", BedrockLogLevel.Warning);
+            Trace.TraceError($"UWP VC++ 运行库安装异常。{Environment.NewLine}{exception}");
+            log?.Invoke($"UWP VC++ 运行库安装异常：{exception}", BedrockLogLevel.Warning);
         }
     }
 
@@ -216,7 +219,8 @@ internal static class BedrockWindowsPrerequisites
         catch (Exception exception)
         {
             state.GameInputFailedAt = DateTime.UtcNow;
-            log?.Invoke($"GameInput 运行组件安装失败：{exception.Message}", BedrockLogLevel.Warning);
+            Trace.TraceError($"GameInput 运行组件安装失败。{Environment.NewLine}{exception}");
+            log?.Invoke($"GameInput 运行组件安装失败：{exception}", BedrockLogLevel.Warning);
         }
     }
 
@@ -260,6 +264,7 @@ internal static class BedrockWindowsPrerequisites
             catch (Exception exception)
             {
                 lastError = exception;
+                Trace.TraceError($"下载 VC++ 运行库失败：{url}{Environment.NewLine}{exception}");
                 continue;
             }
 
@@ -278,8 +283,9 @@ internal static class BedrockWindowsPrerequisites
             var state = MsiQueryProductState("{" + GameInputProductGuid + "}");
             return state is 7 or 9;
         }
-        catch
+        catch (Exception exception)
         {
+            Trace.TraceError($"检查 GameInput 安装状态失败。{Environment.NewLine}{exception}");
             return false;
         }
     }
@@ -291,8 +297,9 @@ internal static class BedrockWindowsPrerequisites
             return new PackageManager().FindPackagesForUser(string.Empty)
                 .Any(package => package.Id.Name.Contains("Microsoft.VCLibs.140", StringComparison.OrdinalIgnoreCase));
         }
-        catch
+        catch (Exception exception)
         {
+            Trace.TraceError($"检查 UWP VC++ 运行库状态失败。{Environment.NewLine}{exception}");
             return false;
         }
     }
@@ -327,6 +334,7 @@ internal static class BedrockWindowsPrerequisites
         Action<double>? onProgress = null)
     {
         using var client = new HttpClient();
+        Trace.TraceInformation($"下载基岩版运行依赖：{url} -> {path}。");
         using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -353,8 +361,9 @@ internal static class BedrockWindowsPrerequisites
             return JsonSerializer.Deserialize<PrerequisitesState>(File.ReadAllText(StateFilePath))
                    ?? new PrerequisitesState();
         }
-        catch
+        catch (Exception exception)
         {
+            Trace.TraceError($"读取基岩版依赖状态失败：{StateFilePath}{Environment.NewLine}{exception}");
             return new PrerequisitesState();
         }
     }
@@ -366,9 +375,9 @@ internal static class BedrockWindowsPrerequisites
             Directory.CreateDirectory(Path.GetDirectoryName(StateFilePath)!);
             File.WriteAllText(StateFilePath, JsonSerializer.Serialize(state));
         }
-        catch
+        catch (Exception exception)
         {
-            // 状态文件写入失败不影响启动。
+            Trace.TraceError($"写入基岩版依赖状态失败：{StateFilePath}{Environment.NewLine}{exception}");
         }
     }
 

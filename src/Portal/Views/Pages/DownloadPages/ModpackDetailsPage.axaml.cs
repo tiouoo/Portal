@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using System.Diagnostics;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -21,6 +22,7 @@ using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -38,13 +40,18 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         InitializeComponent(); ViewModel = new ModpackDetailsPageViewModel(target); DataContext = ViewModel;
         ViewModel.TargetVersionGroupReady += ScrollToTargetVersionGroup;
         PageInfo = new PageInfo { Title = "整合包详情", Icon = StreamGeometry.Parse(JavaResourceDetailsIcon.Data) };
-        Loaded += async (_, _) => await ViewModel.LoadAsync();
+        Loaded += async (_, _) =>
+        {
+            Logger.Info($"[Modpack] Details page loaded for {target.Source} project {target.ProjectId}.");
+            await ViewModel.LoadAsync();
+        };
     }
     public ModpackDetailsPageViewModel ViewModel { get; }
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
     public void OnClose()
     {
+        Logger.Info($"[Modpack] Details page closing for {ViewModel.Name}.");
         ViewModel.TargetVersionGroupReady -= ScrollToTargetVersionGroup;
         LayoutUpdated -= OnLayoutUpdated;
         _targetVersionGroup = null;
@@ -112,6 +119,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
 
         var displayName = Path.GetFileName(archivePath);
+        Logger.Info($"[Modpack] Queuing local {source} modpack installation from {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
@@ -134,6 +142,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     {
         if (!TryGetModpack(path, out var archivePath, out var source, out var suggestedInstanceId))
         {
+            Logger.Warning($"[Modpack] Rejected invalid local modpack archive {path}.");
             topLevel.Notice("无效整合包文件", NotificationType.Error);
             return;
         }
@@ -149,6 +158,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
 
         var displayName = Path.GetFileName(archivePath);
+        Logger.Info($"[Modpack] Queuing imported {source} modpack {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
@@ -199,7 +209,10 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 return true;
             }
         }
-        catch (Exception) { }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Modpack] Failed to inspect local archive {path}: {exception}");
+        }
 
         return false;
     }
@@ -213,6 +226,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         });
         var destination = selected?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(destination)) return;
+        Logger.Info($"[Modpack] Exporting {file.FileName} to {destination}.");
         JavaResourceDownload.StartDownload(topLevel, JavaResourceDefinitions.Modpack, file, destination);
     }
 
@@ -246,6 +260,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
         var temporaryFolder = Path.Combine(Path.GetTempPath(), "Portal", "modpacks", Guid.NewGuid().ToString("N"));
         var archivePath = Path.Combine(temporaryFolder, Path.GetFileName(file.FileName));
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Modpack] Installing remote {source} modpack {file.FileName} to {instancePath}.");
         try
         {
             await Task.Run(() => Directory.CreateDirectory(temporaryFolder));
@@ -268,9 +284,17 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 return Task.CompletedTask;
             });
             context.SetDescription($"整合包 {minecraft.Id} 安装完成");
+            Logger.Info($"[Modpack] Installed remote modpack {file.FileName} as {minecraft.Id} in {stopwatch.Elapsed}.");
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[Modpack] Remote installation of {file.FileName} was cancelled after {stopwatch.Elapsed}: {exception}");
+            await DeleteDirectoryAsync(instancePath);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
             await DeleteDirectoryAsync(instancePath);
             throw;
         }
@@ -285,6 +309,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     {
         var instancePath = Path.Combine(folder, "versions", instanceId);
         if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Modpack] Installing local {source} modpack {archivePath} to {instancePath}.");
 
         try
         {
@@ -302,9 +328,17 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 return Task.CompletedTask;
             });
             context.SetDescription($"整合包 {minecraft.Id} 安装完成");
+            Logger.Info($"[Modpack] Installed local modpack {archivePath} as {minecraft.Id} in {stopwatch.Elapsed}.");
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[Modpack] Local installation of {archivePath} was cancelled after {stopwatch.Elapsed}: {exception}");
+            await DeleteDirectoryAsync(instancePath);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
             await DeleteDirectoryAsync(instancePath);
             throw;
         }
@@ -317,7 +351,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }
         // Preserve the original installation error if an antivirus or another process holds a partial file.
-        catch (Exception) { }
+        catch (Exception exception) { Logger.Warning($"[Modpack] Failed to clean up {directory}: {exception}"); }
     });
 
     private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file, string destination)
@@ -339,6 +373,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
 
         try
         {
+            Logger.Info($"[Modpack] Downloading optional project icon from {iconUrl} to {instancePath}.");
             using var response = await HttpUtil.Client.GetAsync(iconUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
             Directory.CreateDirectory(instancePath);
@@ -349,9 +384,13 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 await source.CopyToAsync(output, cancellationToken);
             File.Move(temporaryPath, iconPath, true);
         }
-        catch (OperationCanceledException) { throw; }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[Modpack] Optional project icon download was cancelled: {exception}");
+            throw;
+        }
         // A project cover is optional and must never invalidate a completed installation.
-        catch (Exception) { }
+        catch (Exception exception) { Logger.Warning($"[Modpack] Failed to save optional project icon to {instancePath}: {exception}"); }
     }
 
     private static async Task<MinecraftEntry> InstallModrinthAsync(TaskExecutionContext context, string folder, string id,
@@ -621,9 +660,15 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
 
     internal static async Task ObserveInstallationAsync(ManagedTask task, TopLevel topLevel, string name)
     {
-        try { await task.Completion; } catch { }
+        var stopwatch = Stopwatch.StartNew();
+        try { await task.Completion; }
+        catch (OperationCanceledException exception) { Logger.Debug($"[Modpack] Installation {name} was cancelled after {stopwatch.Elapsed}: {exception}"); }
+        catch (Exception exception) { Logger.Error(exception); }
         if (task.Status == ManagedTaskStatus.Completed)
+        {
+            Logger.Info($"[Modpack] Installation {name} completed in {stopwatch.Elapsed}.");
             Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel, $"{name} 安装完成", NotificationType.Success));
+        }
         else if (task.Status == ManagedTaskStatus.Faulted)
             Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel,
                 $"{name} 安装失败：{GetRootCauseMessage(task.Exception) ?? task.ErrorMessage ?? "请查看任务日志"}", NotificationType.Error));

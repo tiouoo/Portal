@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json;
 using Portal.Core.Minecraft.Classes;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -17,6 +18,7 @@ public sealed class ResourcePackService
         try
         {
             var root = instance.GetSpecialFolder(folder);
+            Logger.Debug($"扫描资源包：实例 {instance.InstanceName}，目录 {root}。");
             var packs = instance.Type == MinecraftInstanceType.Java
                 ? Directory.EnumerateFiles(root, "*.zip").Select(path => ReadJavaPack(path, cancellationToken))
                 : folder == MinecraftSpecialFolder.SkinPacksFolder
@@ -25,13 +27,15 @@ public sealed class ResourcePackService
                     : Directory.EnumerateDirectories(root)
                         .Where(path => File.Exists(Path.Combine(path, "manifest.json")))
                         .Select(path => ReadBedrockPack(path, cancellationToken));
-            return packs
+            var result = packs
                 .OrderBy(pack => pack.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(pack => pack.FileName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
+            Logger.Debug($"资源包扫描完成：实例 {instance.InstanceName}，发现 {result.Length} 个资源包。");
+            return result;
         }
-        catch (IOException) { return []; }
-        catch (UnauthorizedAccessException) { return []; }
+        catch (IOException exception) { Logger.Error($"扫描资源包失败：{instance.InstanceName}", exception); return []; }
+        catch (UnauthorizedAccessException exception) { Logger.Error($"扫描资源包被拒绝：{instance.InstanceName}", exception); return []; }
     }
 
     private static ResourcePackInfo ReadJavaPack(string path, CancellationToken cancellationToken)
@@ -63,9 +67,9 @@ public sealed class ResourcePackService
                 iconData = data.ToArray();
             }
         }
-        catch (InvalidDataException) { }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
+        catch (InvalidDataException exception) { Logger.Error($"解析 Java 资源包失败：{path}", exception); }
+        catch (IOException exception) { Logger.Error($"读取 Java 资源包失败：{path}", exception); }
+        catch (UnauthorizedAccessException exception) { Logger.Error($"读取 Java 资源包被拒绝：{path}", exception); }
 
         return new ResourcePackInfo(path, fileName, displayName, description, supportedFormats, file.Length,
             file.LastWriteTime, iconData, false, null, null, [], [], [], [], []);
@@ -117,9 +121,9 @@ public sealed class ResourcePackService
                 dependencies.AddRange(dependencyValues.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.Object)
                     .Select(value => GetString(value, "module_name") ?? GetString(value, "uuid")).OfType<string>());
         }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
-        catch (JsonException) { }
+        catch (IOException exception) { Logger.Error($"读取基岩版资源包清单失败：{path}", exception); }
+        catch (UnauthorizedAccessException exception) { Logger.Error($"读取基岩版资源包清单被拒绝：{path}", exception); }
+        catch (JsonException exception) { Logger.Error($"解析基岩版资源包清单失败：{path}", exception); }
 
         return new ResourcePackInfo(path, fileName, displayName, description, version, GetDirectorySize(directory, cancellationToken),
             directory.LastWriteTime, ReadIcon(Path.Combine(path, "pack_icon.png")), true, minEngineVersion, uuid, authors, subpacks, capabilities, modules, dependencies);
@@ -160,9 +164,9 @@ public sealed class ResourcePackService
             uuid = GetString(header, "uuid");
             modules.AddRange(skinPackModules.Select(module => GetString(module, "type")).OfType<string>());
         }
-        catch (IOException) { return null; }
-        catch (UnauthorizedAccessException) { return null; }
-        catch (JsonException) { return null; }
+        catch (IOException exception) { Logger.Error($"读取基岩版皮肤包清单失败：{path}", exception); return null; }
+        catch (UnauthorizedAccessException exception) { Logger.Error($"读取基岩版皮肤包清单被拒绝：{path}", exception); return null; }
+        catch (JsonException exception) { Logger.Error($"解析基岩版皮肤包清单失败：{path}", exception); return null; }
 
         var skinCount = ReadSkinCount(Path.Combine(path, "skins.json"));
         return new ResourcePackInfo(path, fileName, displayName, description, version,
@@ -183,9 +187,9 @@ public sealed class ResourcePackService
                 return 0;
             return skins.GetArrayLength();
         }
-        catch (IOException) { return null; }
-        catch (UnauthorizedAccessException) { return null; }
-        catch (JsonException) { return null; }
+        catch (IOException exception) { Logger.Error($"读取皮肤包数量失败：{path}", exception); return null; }
+        catch (UnauthorizedAccessException exception) { Logger.Error($"读取皮肤包数量被拒绝：{path}", exception); return null; }
+        catch (JsonException exception) { Logger.Error($"解析皮肤包数量失败：{path}", exception); return null; }
     }
 
     private static string? GetString(JsonElement element, string property) => element.TryGetProperty(property, out var value) &&
@@ -206,8 +210,8 @@ public sealed class ResourcePackService
     private static byte[]? ReadIcon(string path)
     {
         try { return File.Exists(path) ? File.ReadAllBytes(path) : null; }
-        catch (IOException) { return null; }
-        catch (UnauthorizedAccessException) { return null; }
+        catch (IOException exception) { Logger.Error($"读取资源包图标失败：{path}", exception); return null; }
+        catch (UnauthorizedAccessException exception) { Logger.Error($"读取资源包图标被拒绝：{path}", exception); return null; }
     }
 
     private static long GetDirectorySize(DirectoryInfo directory, CancellationToken cancellationToken)
@@ -220,8 +224,8 @@ public sealed class ResourcePackService
                 return file.Length;
             });
         }
-        catch (IOException) { return 0; }
-        catch (UnauthorizedAccessException) { return 0; }
+        catch (IOException exception) { Logger.Error($"统计资源包大小失败：{directory.FullName}", exception); return 0; }
+        catch (UnauthorizedAccessException exception) { Logger.Error($"统计资源包大小被拒绝：{directory.FullName}", exception); return 0; }
     }
 
     private static (string? Description, string? SupportedFormats) ReadMetadata(ZipArchiveEntry entry)
@@ -240,7 +244,7 @@ public sealed class ResourcePackService
                 : pack.TryGetProperty("pack_format", out var format) ? GetFormats(format) : null;
             return (description, formats);
         }
-        catch (JsonException) { return (null, null); }
+        catch (JsonException exception) { Logger.Error($"解析 Java 资源包元数据失败：{entry.FullName}", exception); return (null, null); }
     }
 
     private static string? GetFormats(JsonElement element) => element.ValueKind switch

@@ -13,6 +13,7 @@ using Portal.Views.Pages.InstancePages;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Widgets;
 
@@ -69,8 +70,9 @@ public partial class QuickWorldWidget2x1 : InstanceBoundWidgetBase
             var service = new WorldSaveService();
             _world = await service.ReadAsync(instance, folderName);
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Warning($"[Widget] Failed to load world {folderName} for {instance.InstanceName}: {exception}");
             _world = null;
         }
         finally

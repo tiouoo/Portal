@@ -18,6 +18,7 @@ using TioUi.Common;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Operations.Account;
 
@@ -142,7 +143,19 @@ public static class ChangeSkinDialog
         var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(
             new ChangeSkinViewModel(skinPath, true), hostId: hostId, options: options);
 
-        try { File.Delete(skinPath); } catch { }
+        try
+        {
+            File.Delete(skinPath);
+            Logger.Debug($"已删除皮肤预览临时文件：{skinPath}");
+        }
+        catch (IOException exception)
+        {
+            Logger.Warning($"删除皮肤预览临时文件失败：{skinPath}{Environment.NewLine}{exception}");
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.Warning($"没有权限删除皮肤预览临时文件：{skinPath}{Environment.NewLine}{exception}");
+        }
         return result;
     }
 }

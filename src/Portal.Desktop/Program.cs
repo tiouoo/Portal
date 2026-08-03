@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Runtime.ExceptionServices;
+using System.Threading;
 using Avalonia;
 #if DEBUG
 using HotAvalonia;
@@ -14,12 +16,40 @@ namespace Portal.Desktop;
 
 sealed class Program
 {
+    private static int _isLoggingFirstChanceException;
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args)
     {
+        AppDomain.CurrentDomain.FirstChanceException += (_, eventArgs) =>
+        {
+            // Logger itself can encounter I/O exceptions; avoid recursively logging those exceptions.
+            if (Interlocked.Exchange(ref _isLoggingFirstChanceException, 1) != 0) return;
+            try
+            {
+                Logger.Error("运行时引发异常（可能随后被业务代码处理）。", eventArgs.Exception);
+            }
+            finally
+            {
+                Volatile.Write(ref _isLoggingFirstChanceException, 0);
+            }
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+        {
+            if (eventArgs.ExceptionObject is Exception exception)
+                Logger.Fatal("未处理的 AppDomain 异常。", exception);
+            else
+                Logger.Fatal($"未处理的 AppDomain 非异常对象：{eventArgs.ExceptionObject}");
+        };
+        TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
+        {
+            Logger.Error("检测到未观察的任务异常。", eventArgs.Exception);
+            eventArgs.SetObserved();
+        };
+
         if (args.Length == 1 && args[0] == "--memory-optimize")
         {
             Environment.Exit(MemoryOptimizationService.OptimizeCurrentProcessContext());
@@ -47,6 +77,7 @@ sealed class Program
             PortalCommandService.StartCommandServer();
             PortalCommandService.Initialize();
         }
+        Logger.Info($"开始启动应用，命令行参数数量：{args.Length}");
         var versionInfo = Module.Initialize.Config.LoadVersionInfo();
         Initializer.Program("Portal", "xyz.tiouo.Portal", versionInfo.VersionTitle);
 #if WINDOWS

@@ -287,7 +287,10 @@ public class Handler
                 return true;
             }
         }
-        catch (Exception) { }
+        catch (Exception exception)
+        {
+            Logger.Error($"解析拖放整合包失败：{path}", exception);
+        }
 
         return false;
     }
@@ -323,8 +326,9 @@ public class Handler
             archivePath = path;
             return true;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Error($"检查拖放基岩版包失败：{path}", exception);
             return false;
         }
     }

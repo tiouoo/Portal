@@ -66,12 +66,18 @@ public class InstanceManager
 
     public List<MinecraftInstance> ScanAll(IEnumerable<MinecraftFolderEntry> folders)
     {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var result = new List<MinecraftInstance>();
         foreach (var folder in folders)
         {
             var folderPath = folder.FolderPath;
-            if (!Directory.Exists(folderPath)) continue;
+            if (!Directory.Exists(folderPath))
+            {
+                Logger.Warning($"Minecraft 文件夹不存在，跳过扫描：{folderPath}");
+                continue;
+            }
 
+            Logger.Info($"正在扫描 Minecraft 文件夹：{folderPath}");
             var layout = folder.DetectedLayout;
             var instances = layout.Kind == MinecraftFolderKind.Standard
                 ? new FolderScanner(layout.RootPath, folder.FolderName, VersionFolders).Scan()
@@ -79,6 +85,7 @@ public class InstanceManager
             result.AddRange(instances);
         }
 
+        Logger.Info($"全部 Minecraft 实例扫描完成，共 {result.Count} 个实例，耗时 {stopwatch.ElapsedMilliseconds} ms。");
         return result;
     }
 
@@ -104,7 +111,7 @@ public class InstanceManager
                 }
                 catch (Exception exception)
                 {
-                    Logger.Error($"扫描基岩版实例失败: {instanceFolder} {exception.Message}");
+                    Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
                 }
             }
         }
@@ -114,8 +121,10 @@ public class InstanceManager
 
     public void ApplyInstances(IEnumerable<MinecraftInstance> instances)
     {
+        var loadedInstances = instances as ICollection<MinecraftInstance> ?? instances.ToList();
+        Logger.Info($"正在将扫描结果应用到实例列表，共 {loadedInstances.Count} 个实例。");
         Instances.Clear();
-        foreach (var instance in instances)
+        foreach (var instance in loadedInstances)
             Instances.Add(instance);
 
         InstancesChanged?.Invoke(this, EventArgs.Empty);
@@ -200,7 +209,7 @@ internal class FolderScanner
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"扫描 Java 实例失败: {instanceFolder} {e.Message}");
+                        Logger.Error($"扫描 Java 实例失败：{instanceFolder}", e);
                     }
                 }
                 else if (instanceType == MinecraftInstanceType.Bedrock)
@@ -210,8 +219,9 @@ internal class FolderScanner
                         var bedrockConfig = BedrockHelper.GetInstanceConfig(instanceFolder);
                         instances.Add(new MinecraftInstance(bedrockConfig, _folderName, _gameRootFolder));
                     }
-                    catch
+                    catch (Exception exception)
                     {
+                        Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
                     }
                 }
             }
@@ -230,12 +240,14 @@ internal class FolderScanner
                    clientVersion.ValueKind == JsonValueKind.String &&
                    !string.IsNullOrWhiteSpace(clientVersion.GetString());
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            Logger.Warning($"读取实例版本元数据失败：{entry.ClientJsonPath}{Environment.NewLine}{exception}");
             return false;
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
+            Logger.Warning($"解析实例版本元数据失败：{entry.ClientJsonPath}{Environment.NewLine}{exception}");
             return false;
         }
     }

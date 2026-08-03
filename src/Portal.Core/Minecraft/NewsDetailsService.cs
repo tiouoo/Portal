@@ -110,7 +110,7 @@ public static class NewsDetailsService
             }
             catch (Exception ex)
             {
-                Logger.Error($"后台刷新翻译新闻失败 ({entry.ContentPath}): {ex.Message}");
+                Logger.Error($"后台刷新翻译新闻失败：{entry.ContentPath}", ex);
             }
             finally
             {
@@ -155,7 +155,7 @@ public static class NewsDetailsService
         }
         catch (Exception ex)
         {
-            Logger.Error($"获取新闻详情失败 ({entry.ContentPath}): {ex.Message}");
+            Logger.Error($"获取新闻详情失败：{entry.ContentPath}", ex);
             return null;
         }
     }

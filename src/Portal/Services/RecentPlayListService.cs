@@ -54,7 +54,7 @@ public sealed class RecentPlayListService
         }
         catch (Exception exception)
         {
-            Logger.Error($"刷新最近游玩失败: {exception.Message}");
+            Logger.Error("刷新最近游玩失败。", exception);
         }
         finally
         {

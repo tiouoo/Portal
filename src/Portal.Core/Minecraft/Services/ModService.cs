@@ -423,8 +423,8 @@ public sealed class ModService
                 WriteCache(fingerprint, cached);
                 friendlyNameUpdated(ApplyMetadata(mod, cached));
             }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException exception) { Logger.Error($"更新模组友好名称缓存失败：{mod.FilePath}", exception); }
+            catch (UnauthorizedAccessException exception) { Logger.Error($"更新模组友好名称缓存被拒绝：{mod.FilePath}", exception); }
         }
     }
 

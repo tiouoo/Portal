@@ -12,6 +12,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Views.Pages.InstancePages;
 using TioUi.Common.Interfaces;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -208,8 +209,9 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
             foreach (var item in items) Dependencies.Add(item);
             OnPropertyChanged(nameof(HasDependencies));
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Error(exception);
             if (generation == _dependencyLoadGeneration) HasDependencyLoadError = true;
         }
         finally
@@ -237,8 +239,9 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
                     dependencies.Add(new ModFileDependency(project.ProjectId, project.Name));
             }
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Warning($"[ModInstall] Failed to inspect NeoForge requirements for {file.FileName}: {exception}");
             // Platform metadata remains the primary source when the archive cannot be inspected.
         }
 

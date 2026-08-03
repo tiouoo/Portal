@@ -34,7 +34,7 @@ public static class AccountRefresher
             }
             catch (Exception e)
             {
-                Logger.Error("获取皮肤失败  " + e.Message);
+                Logger.Error("获取皮肤失败。", e);
             }
 
             var newAccount = new MinecraftAccount(AccountType.Microsoft)
@@ -147,7 +147,7 @@ public static class AccountRefresher
         }
         catch (Exception e)
         {
-            Logger.Error("获取皮肤失败  " + e.Message);
+            Logger.Error("获取皮肤失败。", e);
         }
 
         return new MinecraftAccount(AccountType.Yggdrasil)

@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using Portal.Module.Ipc;
+using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Desktop;
 
@@ -45,7 +47,11 @@ internal static class PortalCommandService
 
     public static void Initialize() => PortalCommandQueue.Initialize();
 
-    public static void StartCommandServer() => _ = Task.Run(ListenForCommandsAsync);
+    public static void StartCommandServer()
+    {
+        Logger.Info("正在启动命令行命名管道服务。");
+        Task.Run(ListenForCommandsAsync).Forget("命令行命名管道服务");
+    }
 
     private static bool TryForwardToRunningInstance(PortalCommand command)
     {
@@ -57,12 +63,14 @@ internal static class PortalCommandService
             writer.Write(JsonSerializer.Serialize(command));
             return true;
         }
-        catch (TimeoutException)
+        catch (TimeoutException exception)
         {
+            Logger.Debug($"连接已有 Portal 命令服务超时，将启动新实例。{Environment.NewLine}{exception}");
             return false;
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            Logger.Debug($"无法连接已有 Portal 命令服务，将启动新实例。{Environment.NewLine}{exception}");
             return false;
         }
     }
@@ -82,20 +90,23 @@ internal static class PortalCommandService
                 if (string.IsNullOrWhiteSpace(json))
                     continue;
                 if (JsonSerializer.Deserialize<PortalCommand>(json) is { } command)
+                {
+                    Logger.Info("已从命名管道接收到外部命令。");
                     PortalCommandQueue.Enqueue(command);
+                }
             }
-            catch (JsonException)
+            catch (JsonException exception)
             {
-                // 客户端提前断开或发送了截断的负载；丢弃本次连接，继续监听。
+                Logger.Warning($"命令行命名管道收到无效负载，已丢弃。{Environment.NewLine}{exception}");
             }
-            catch (IOException)
+            catch (IOException exception)
             {
-                // 管道被另一个实例占用，或客户端提前断开；稍后重试，避免空转。
+                Logger.Warning($"命令行命名管道发生 I/O 错误，1 秒后重试。{Environment.NewLine}{exception}");
                 await Task.Delay(1000);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                // 监听循环不能因意外异常终止，否则后续命令会启动重复实例。
+                Logger.Error("命令行命名管道发生未预期错误，1 秒后重试。", exception);
                 await Task.Delay(1000);
             }
         }

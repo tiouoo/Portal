@@ -35,6 +35,8 @@ public static class UpdateApp
 
     public static async Task<PreparedUpdate?> Prepare(TopLevel sender)
     {
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info("开始检查并准备应用更新。");
         try
         {
             var release = await UpdateChecker.GetRelease();
@@ -52,6 +54,7 @@ public static class UpdateApp
             Directory.CreateDirectory(updateDirectory);
             CleanupOldUpdateDirectories(updateDirectory);
             var packagePath = Path.Combine(updateDirectory, asset.Name);
+            Logger.Info($"已选择更新包：{asset.Name}，下载目录：{updateDirectory}");
 
             sender.Notice($"正在下载 {asset.Name}", NotificationType.Information);
             var taskHandle = await Download(asset, packagePath);
@@ -79,10 +82,12 @@ public static class UpdateApp
 
             var preparedUpdate = new PreparedUpdate(updater, false);
             CompletePreparation(taskHandle, preparedUpdate);
+            Logger.Info($"应用更新准备完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
             return preparedUpdate;
         }
         catch (Exception ex)
         {
+            Logger.Error("准备应用更新失败。", ex);
             sender.Notice($"更新失败：{ex.Message}", NotificationType.Error);
             return null;
         }
@@ -272,13 +277,13 @@ public static class UpdateApp
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Failed to remove old update directory {directory.FullName}: {ex.Message}");
+                    Logger.Error($"删除过期更新目录失败：{directory.FullName}", ex);
                 }
             }
         }
         catch (Exception ex)
         {
-            Logger.Error($"Failed to clean old update directories: {ex.Message}");
+            Logger.Error("清理过期更新目录失败。", ex);
         }
     }
 
@@ -436,7 +441,11 @@ public static class UpdateApp
             using (File.Create(probe, 1, FileOptions.DeleteOnClose)) { }
             return true;
         }
-        catch { return false; }
+        catch (Exception exception)
+        {
+            Logger.Warning($"检测目录写入权限失败：{directory}{Environment.NewLine}{exception}");
+            return false;
+        }
     }
 
     private static void RunAndWait(string fileName, params string[] arguments)

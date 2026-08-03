@@ -17,6 +17,7 @@ using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -191,8 +192,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                 CustomVersionId = CreateRecommendedVersionId();
             }
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Error(exception);
             if (IsSelected(kind) && _loadGenerations.GetValueOrDefault(kind) == generation)
             {
                 _selectedLoaders.Remove(kind);
@@ -369,8 +371,17 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             });
             context.SetDescription($"已完成 Minecraft Java {minecraft.Id} 的安装");
         }
-        catch
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[MinecraftInstall] Installation {versionId} was cancelled: {exception}");
+            await DeleteVersionDirectoryAsync(versionDirectory);
+            if (!vanillaDirectoryExisted && vanillaDirectory != versionDirectory)
+                await DeleteVersionDirectoryAsync(vanillaDirectory);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
             await DeleteVersionDirectoryAsync(versionDirectory);
             if (!vanillaDirectoryExisted && vanillaDirectory != versionDirectory)
                 await DeleteVersionDirectoryAsync(vanillaDirectory);
@@ -384,8 +395,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         {
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Warning($"[MinecraftInstall] Failed to clean up {directory}: {exception}");
             // Preserve the original installation or cancellation error.
         }
     });

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -19,6 +20,7 @@ using Portal.ViewModels;
 using Portal.Services;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.Extensions;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -47,14 +49,18 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
                 return;
 
             _isInitialized = true;
+            Logger.Info("[Instances] Page loaded; applying initial instance filter and sort.");
             InstancesPageViewModel.ApplyFilterAndSort();
         };
     }
 
     public void Refresh()
     {
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[Instances] Refreshing instances in {Data.ConfigEntry.MinecraftFolders.Count} configured folder(s).");
         InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
         InstancesPageViewModel.ApplyFilterAndSort();
+        Logger.Info($"[Instances] Refreshed {InstanceManager.Instance.Instances.Count} instance(s) in {stopwatch.Elapsed}.");
     }
 
     public PageInfo PageInfo { get; init; } = new()
@@ -68,6 +74,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
     public void OnClose()
     {
+        Logger.Info("[Instances] Page closing.");
         InstancesPageViewModel.Dispose();
         DataContext = null;
     }
@@ -81,7 +88,10 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
         if (sender is Control { DataContext: MinecraftInstance instance } &&
             TopLevel.GetTopLevel(this) is { } topLevel)
+        {
+            Logger.Info($"[Instances] Opening instance details for {instance.InstanceName} at {instance.FolderPath}.");
             InstanceDetailPage.Open(instance, topLevel);
+        }
     }
 
     private void FavoritedButton_OnClick(object? sender, RoutedEventArgs e)
@@ -91,6 +101,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
         instance.Config.IsFavorite = !instance.Config.IsFavorite;
         instance.SaveConfig();
+        Logger.Info($"[Instances] {(instance.Config.IsFavorite ? "Added" : "Removed")} favorite for {instance.InstanceName} at {instance.FolderPath}.");
         InstancesPageViewModel.ApplyFilterAndSort();
     }
 
@@ -99,6 +110,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         if ((sender as Control)?.Tag is not MinecraftInstance instance)
             return;
 
+        Logger.Info($"[Instances] Starting instance {instance.InstanceName} at {instance.FolderPath}.");
         _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
             MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
@@ -138,6 +150,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         if (string.IsNullOrWhiteSpace(archivePath))
             return;
 
+        Logger.Info($"[Instances] Importing modpack archive {archivePath}.");
         _ = ModpackDetailsPage.TryInstallFromPath(topLevel, archivePath);
     }
 
@@ -162,6 +175,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
+        Logger.Info($"[Instances] Added Minecraft folder {result.FolderPath}.");
     }
 
     private async void ToDownload_Click(object? sender, RoutedEventArgs e)

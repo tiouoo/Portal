@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -55,7 +56,7 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
             foreach (var template in templates) Items.Add(new WorldTemplateItem(template));
             ApplyFilter();
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException exception) { Logger.Debug($"[WorldTemplates] Template scan cancelled: {exception}"); }
         finally { if (!_isDisposed) { IsLoading = false; RaiseListProperties(); } }
     }
 
@@ -95,7 +96,7 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
     private async Task<DialogResult> ConfirmDeleteAsync(string message) => await OverlayDialog.ShowStandardAsync(new TextBlock { Margin = new Thickness(24), Text = message, TextWrapping = TextWrapping.Wrap }, null, this.TryGetHostId(), new OverlayDialogOptions { Title = "删除世界模板", Mode = DialogMode.Error, Buttons = DialogButton.YesNo, OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false });
     private async Task DeleteAsync(IEnumerable<WorldTemplateItem> items)
     {
-        var failed = 0; foreach (var item in items) try { Directory.Delete(item.Info.FilePath, true); } catch (IOException) { failed++; } catch (UnauthorizedAccessException) { failed++; }
+        var failed = 0; foreach (var item in items) try { Logger.Info($"[WorldTemplates] Deleting template {item.DisplayName} at {item.Info.FilePath}."); Directory.Delete(item.Info.FilePath, true); } catch (IOException exception) { Logger.Warning($"[WorldTemplates] Failed to delete {item.Info.FilePath}: {exception}"); failed++; } catch (UnauthorizedAccessException exception) { Logger.Warning($"[WorldTemplates] Failed to delete {item.Info.FilePath}: {exception}"); failed++; }
         _hasLoaded = false; await LoadAsync();
         if (TopLevel.GetTopLevel(this) is { } topLevel) NotificationGateway.Notice(topLevel, failed == 0 ? "已删除所选世界模板" : $"删除完成，但有 {failed} 个世界模板操作失败", failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }

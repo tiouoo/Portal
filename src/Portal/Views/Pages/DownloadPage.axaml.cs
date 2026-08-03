@@ -7,6 +7,7 @@ using Portal.Module.DefaultPage;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages;
 
@@ -22,6 +23,7 @@ public partial class DownloadPage : UserControl, ITioTabPage
         DataContext = DownloadPageViewModel;
         Loaded += (s, e) =>
         {
+            Logger.Info("[Download] Download page loaded.");
             var a = DownloadPageViewModel.CurrentPage;
             DownloadPageViewModel.CurrentPage = null;
             DownloadPageViewModel.CurrentPage = a;
@@ -38,6 +40,7 @@ public partial class DownloadPage : UserControl, ITioTabPage
 
     public void OnClose()
     {
+        Logger.Info("[Download] Download page closing.");
         DownloadPageViewModel.Dispose();
         DataContext = null;
     }
@@ -65,13 +68,16 @@ public partial class DownloadPageViewModel : ObservableObject, IDisposable
         {
             page = newPage;
             _pageCache[pageType] = page;
+            Logger.Info($"[Download] Created download page {pageType.Name}.");
         }
 
+        Logger.Info($"[Download] Navigating to {pageType.Name}.");
         CurrentPage = page;
     }
 
     public void Dispose()
     {
+        Logger.Info($"[Download] Disposing {_pageCache.Count} cached download page(s).");
         CurrentPage = null;
         foreach (var page in _pageCache.Values)
         {

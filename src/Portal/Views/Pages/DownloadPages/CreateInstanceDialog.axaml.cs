@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -16,6 +17,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Common.Interfaces;
@@ -481,6 +483,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         if (!CanCreate || _isCreating || SelectedVersion?.Value is not { } selected) return;
         _isCreating = true;
         OnPropertyChanged(nameof(CanCreate));
+        Logger.Info($"[CreateInstance] Creating {SelectedPlatform?.Platform} instance {InstanceId.Trim()} in {SelectedMinecraftFolder?.FolderPath} from version {SelectedVersion.DisplayText}.");
 
         if (selected is VersionManifestEntry vanilla)
             CreateJava(vanilla);
@@ -496,6 +499,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     public void Dispose()
     {
         if (_disposed) return;
+        Logger.Info("[CreateInstance] Dialog disposed; cancelling pending version and loader requests.");
         _disposed = true;
         _disposeCancellation.Cancel();
     }
@@ -523,6 +527,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         var generation = ++_versionLoadGeneration;
 
         IsVersionsLoading = true;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[CreateInstance] Loading {filter.Kind} version list.");
         VersionsPlaceholder = "加载中...";
         Versions.Clear();
         SelectedVersion = null;
@@ -536,12 +542,15 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                 await EnsureBedrockVersionsLoadedAsync();
             if (generation != _versionLoadGeneration || _disposed) return;
             PopulateVersions(filter);
+            Logger.Info($"[CreateInstance] Loaded {_categoryVersions.Count} {filter.Kind} version(s) in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
+            Logger.Debug($"[CreateInstance] Loading {filter.Kind} version list was cancelled after {stopwatch.Elapsed}.");
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Error(exception);
             if (generation != _versionLoadGeneration || _disposed) return;
             IsVersionsLoading = false;
             VersionsPlaceholder = "无法获取版本列表，请检查网络连接";
@@ -701,6 +710,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
 
         IsCustomLoaderVersionsLoading = true;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion}.");
         CustomLoaderVersionsPlaceholder = "加载中...";
         UpdateVersionState();
         try
@@ -710,12 +721,15 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             _loaderOptionsCache[(mcVersion, kind)] = options;
             if (generation != _loaderLoadGeneration || _disposed) return;
             ApplyLoaderOptions(kind, mcVersion, options);
+            Logger.Info($"[CreateInstance] Loaded {options.Count} {kind} version(s) for Minecraft {mcVersion} in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
+            Logger.Debug($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion} was cancelled after {stopwatch.Elapsed}.");
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Error(exception);
             if (generation != _loaderLoadGeneration || _disposed) return;
             LoaderStatus = "获取加载器版本失败，请重试";
         }
@@ -869,6 +883,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         if (_currentLoaderKind is { } kind && EffectiveLoaderEntry is { } entry)
             entries[kind] = entry;
         var javaPath = MinecraftInstallationViewModel.GetJavaPath();
+        Logger.Info($"[CreateInstance] Queuing Java installation {versionId} in {folder.FolderPath} with {entries.Count} loader(s).");
         var task = MinecraftInstallationViewModel.CreateInstallationTask(vanilla, folder, versionId, entries, javaPath);
         task.Start();
         if (_pendingIconData is not null)
@@ -881,6 +896,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         if (SelectedMinecraftFolder is not { } folder) return;
 
         var instanceName = version.BuildType == BedrockBuildType.UWP ? $"{version.Id}-UWP" : version.Id;
+        Logger.Info($"[CreateInstance] Starting Bedrock installation {instanceName} in {folder.FolderPath}.");
         _ = new BedrockInstallationViewModel().InstallAsync(version, folder);
         if (_pendingIconData is not null)
             _ = ApplyBedrockIconAfterInstallAsync(folder, instanceName, _pendingIconData);
@@ -894,8 +910,14 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         {
             await task.Completion;
         }
-        catch (Exception)
+        catch (OperationCanceledException exception)
         {
+            Logger.Debug($"[CreateInstance] Java icon application was cancelled for {versionId}: {exception}");
+            return;
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[CreateInstance] Java icon application failed for {versionId}: {exception}");
             return;
         }
 
@@ -938,8 +960,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             using var bitmap = new Bitmap(stream);
             instance.SetIcon(bitmap);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.Warning($"[CreateInstance] Failed to apply icon to {instance.InstanceName}: {exception}");
         }
     }
 }

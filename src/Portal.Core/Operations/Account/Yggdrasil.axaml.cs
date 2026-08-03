@@ -266,7 +266,7 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                     }
                     catch (Exception e)
                     {
-                        Logger.Error("获取皮肤失败 " + e.Message);
+                        Logger.Error("获取皮肤失败。", e);
                     }
 
                     var minecraftAccount = new MinecraftAccount(AccountType.Yggdrasil)

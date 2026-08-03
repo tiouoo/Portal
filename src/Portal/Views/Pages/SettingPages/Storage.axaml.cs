@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -75,11 +76,13 @@ public partial class StorageViewModel : ObservableObject
     [RelayCommand]
     public async Task RefreshStorageDataAsync()
     {
+        var stopwatch = Stopwatch.StartNew();
         string portalPath = _portalDataPath;
         PortalBytesRaw = 0;
         GameBytesRaw = 0;
         TotalBytesRaw = 0;
         var folders = Data.ConfigEntry.MinecraftFolders.ToList();
+        Logger.Info($"[Storage] Refreshing storage usage for {folders.Count} Minecraft folder(s), Portal data at {portalPath}.");
 
         PortalFolders.Clear();
         PortalFolders.Add(new GameFolderStorageItem(
@@ -148,11 +151,12 @@ public partial class StorageViewModel : ObservableObject
                     }
                     GameBytesRaw = gameBytes;
                     TotalBytesRaw = portalBytes + gameBytes;
+                    Logger.Info($"[Storage] Storage usage refreshed in {stopwatch.Elapsed}: Portal={portalBytes} bytes, game={gameBytes} bytes.");
                 });
             }
             catch (Exception ex)
             {
-                Logger.Error($"Error: {ex.Message}");
+                Logger.Error(ex);
             }
         });
     }
@@ -195,7 +199,7 @@ public partial class StorageViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Logger.Error($"Directory walk failed: {ex.Message}");
+            Logger.Error(ex);
         }
 
         return totalBytes;
@@ -227,6 +231,7 @@ public partial class GameFolderStorageItem : ObservableObject
     {
         if (parameter is Control control)
         {
+            Logger.Info($"[Storage] Opening storage folder {FolderPath}.");
             _ = control.GetTopLevel().Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(FolderPath));
         }
     }

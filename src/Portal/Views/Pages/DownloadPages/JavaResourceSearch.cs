@@ -12,6 +12,7 @@ using Portal.Const;
 using Portal.Services;
 using Portal.Views.Pages.InstancePages;
 using Portal.Core.Minecraft.Services;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -184,9 +185,11 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
+            Logger.Debug($"[Download] {Definition.DisplayName} search cancelled.");
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Error(exception);
             if (!IsCurrent(request)) return;
             HasError = true;
             StatusText = "网络错误，无法完成搜索。";
@@ -290,8 +293,13 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             MinecraftVersions.Clear();
             foreach (var version in versions) MinecraftVersions.Add(version);
         }
-        catch
+        catch (OperationCanceledException exception) when (_disposeCancellation.IsCancellationRequested)
         {
+            Logger.Debug($"[Download] {Definition.DisplayName} version loading cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
         }
         finally
         {

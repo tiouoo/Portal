@@ -1,4 +1,5 @@
 using Hardware.Info;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.SystemResources;
 
@@ -25,7 +26,8 @@ public sealed class SystemResourceService
     private SystemResourceService()
     {
         // 预热：先刷新显卡列表，避免首次采样拿不到 GPU 名称
-        try { _hardware.RefreshVideoControllerList(refreshMonitorList: false); } catch { /* 忽略 */ }
+        try { _hardware.RefreshVideoControllerList(refreshMonitorList: false); }
+        catch (Exception exception) { Logger.Error("预热 GPU 信息采集失败。", exception); }
         // CPU 使用率由 CpuUsageProvider 负责采集（需两次采样取差值），这里先触发一次预热
         _ = CpuUsageProvider.GetUsage();
         // GPU 使用率同样需要两次采样取差值，预热一次
@@ -44,9 +46,9 @@ public sealed class SystemResourceService
         {
             _hardware.RefreshMemoryStatus();
         }
-        catch
+        catch (Exception exception)
         {
-            // 忽略采集异常，保留上次结果
+            Logger.Error("采集内存资源信息失败。", exception);
         }
 
         var memStatus = _hardware.MemoryStatus;
@@ -71,9 +73,9 @@ public sealed class SystemResourceService
                 diskUsage = totalDisk == 0 ? 0 : usedDisk * 100f / totalDisk;
             }
         }
-        catch
+        catch (Exception exception)
         {
-            // 忽略
+            Logger.Error("采集磁盘资源信息失败。", exception);
         }
 
         // 网络速率：用 NetworkInterface 统计两次采样差值（跨平台）
@@ -106,9 +108,9 @@ public sealed class SystemResourceService
             _lastNetBytesSent = totalSent;
             _lastNetSampleTime = now;
         }
-        catch
+        catch (Exception exception)
         {
-            // 忽略
+            Logger.Error("采集网络资源信息失败。", exception);
         }
 
         var snapshot = Latest with
@@ -143,9 +145,9 @@ public sealed class SystemResourceService
             if (gpu != null)
                 gpuName = gpu.Name;
         }
-        catch
+        catch (Exception exception)
         {
-            // 忽略
+            Logger.Error("采集 GPU 资源信息失败。", exception);
         }
 
         var snapshot = Latest with

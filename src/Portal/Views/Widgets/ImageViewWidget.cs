@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Portal.Classes.Entries;
 using Portal.Module.Widgets;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Widgets;
 
@@ -92,8 +93,9 @@ public sealed class ImageViewWidget : IWidgetContent
             using var fs = File.OpenRead(path);
             _image.Source = new Bitmap(fs);
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Warning($"[Widget] Failed to load image {path}: {exception}");
             _image.Source = null;
         }
     }

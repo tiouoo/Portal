@@ -10,6 +10,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -95,9 +96,11 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         }
         catch (OperationCanceledException) when (_pageCancellation.IsCancellationRequested)
         {
+            Logger.Debug("[BedrockInstall] Version list request cancelled because the page closed.");
         }
         catch (Exception exception)
         {
+            Logger.Error(exception);
             StatusText = $"无法获取基岩版版本列表：{exception.Message}";
         }
         finally
@@ -125,6 +128,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         var instanceName = GetInstanceName(version);
         var buildLabel = version.BuildLabel;
         var destination = Path.Combine(folder.FolderPath, "bedrock_versions", instanceName);
+        Logger.Info($"[BedrockInstall] Queuing {buildLabel} {instanceName} installation to {destination}.");
         IsInstalling = true;
 
         var task = TaskManager.Instance.CreateTask(new TaskOptions
@@ -260,7 +264,8 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         WeakReference<BedrockInstallationViewModel> viewModelReference)
     {
         try { await task.Completion; }
-        catch { }
+        catch (OperationCanceledException exception) { Logger.Debug($"[BedrockInstall] Installation cancelled: {exception}"); }
+        catch (Exception exception) { Logger.Error(exception); }
 
         if (viewModelReference.TryGetTarget(out var viewModel) && !viewModel._disposed)
             viewModel.IsInstalling = false;
@@ -347,8 +352,9 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         {
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }
-        catch
+        catch (Exception exception)
         {
+            Logger.Warning($"[BedrockInstall] Failed to clean up {directory}: {exception}");
             // Preserve the original installation or cancellation error.
         }
     });
