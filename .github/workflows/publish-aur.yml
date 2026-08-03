@@ -57,7 +57,8 @@ jobs:
           git init -b master aur
           cd aur
           git remote add origin "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git"
-          if git fetch origin master 2>/dev/null; then
+          git fetch origin
+          if git show-ref --verify --quiet refs/remotes/origin/master; then
             git reset --hard origin/master
           fi
 
@@ -88,5 +89,9 @@ jobs:
           git config user.email "actions@github.com"
           git checkout -B master
           git add PKGBUILD .SRCINFO
-          git commit -m "Update ${{ inputs.pkgname }} to ${{ inputs.app_version }}" || exit 0
+          if git diff --cached --quiet; then
+            echo "No AUR package changes to publish"
+            exit 0
+          fi
+          git commit -m "Update ${{ inputs.pkgname }} to ${{ inputs.app_version }}"
           git push -u origin master
