@@ -14,10 +14,19 @@
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="运行环境" />
         <StackPanel Spacing="5">
-            <Label
-                Content="最大内存"
-                FontSize="13"
-                Foreground="{DynamicResource InnerForegroundColor}" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Label
+                    Content="最大内存"
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}" />
+                <Button
+                    Click="OptimizeMemory_Click"
+                    FontSize="13"
+                    IsVisible="{Binding IsWindows}"
+                    Theme="{StaticResource TransparentButton}">
+                    <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="内存优化" />
+                </Button>
+            </StackPanel>
             <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasMemoryStatus}">
                 <Slider
                     Grid.Column="0"
@@ -73,9 +82,24 @@
                 IsVisible="{Binding HasMemoryWarning}"
                 Text=" *超出当前系统可用内存" />
         </StackPanel>
-        <Grid
-            ColumnDefinitions="*,Auto"
-            IsVisible="{Binding IsWindows}">
+        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsWindows}">
+            <StackPanel Spacing="2">
+                <Label
+                    Content="游戏启动前自动清理内存"
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Padding="0" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="游戏启动时将申请管理员权限以清理内存，可能会弹出 UAC 提示。" />
+            </StackPanel>
+            <ToggleSwitch
+                Grid.Column="1"
+                IsChecked="{Binding Data.ConfigEntry.AutoOptimizeMemoryBeforeGameLaunch}"
+                VerticalAlignment="Center" />
+        </Grid>
+        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsWindows}">
             <StackPanel Spacing="2">
                 <Label
                     Content="自动为 Java 使用高性能显卡"

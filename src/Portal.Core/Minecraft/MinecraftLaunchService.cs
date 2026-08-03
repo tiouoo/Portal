@@ -18,6 +18,7 @@ using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.SystemResources;
 using Portal.Core.Operations.Account;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -219,6 +220,22 @@ public static class MinecraftLaunchService
         MinecraftLaunchOptions options, Dictionary<string, string> placeholders, Action<Process> processStarted)
     {
         await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
+        if (options.AutoOptimizeMemoryBeforeGameLaunch && OperatingSystem.IsWindows())
+        {
+            context.SetRunning("正在优化系统内存");
+            try
+            {
+                await MemoryOptimizationService.OptimizeAsync(context.CancellationToken);
+            }
+            catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Notice(topLevel, $"内存优化未完成，将继续启动游戏：{exception.Message}", NotificationType.Warning);
+            }
+        }
         context.SetRunning("正在启动 Minecraft 进程");
         var mcProcess = await Task.Run(async () =>
         {
@@ -682,6 +699,7 @@ public sealed class MinecraftLaunchOptions
     public int WindowHeight { get; init; }
     public int MaxMemory { get; init; }
     public bool AutoSetJavaHighPerformanceGpu { get; init; }
+    public bool AutoOptimizeMemoryBeforeGameLaunch { get; init; }
     public string? WindowTitle { get; init; }
     public string? JvmArguments { get; init; }
     public string? BeforeLaunchCommand { get; init; }

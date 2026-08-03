@@ -15,6 +15,7 @@ public static class MinecraftLaunchOptionsFactory
         WindowHeight = Data.ConfigEntry.MinecraftWindowHeight,
         MaxMemory = Data.ConfigEntry.MinecraftMaxMemory,
         AutoSetJavaHighPerformanceGpu = Data.ConfigEntry.AutoSetJavaHighPerformanceGpu,
+        AutoOptimizeMemoryBeforeGameLaunch = Data.ConfigEntry.AutoOptimizeMemoryBeforeGameLaunch,
         WindowTitle = Data.ConfigEntry.OverrideMinecraftWindowTitle,
         JvmArguments = Data.ConfigEntry.JvmArgs,
         BeforeLaunchCommand = Data.ConfigEntry.BeforeLaunchCommand,

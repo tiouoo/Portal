@@ -9,6 +9,7 @@ using Avalonia.VisualTree;
 using Portal.Const;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Operations.Java;
+using Portal.Core.SystemResources;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -262,6 +263,28 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
 
     [DllImport("libSystem.B.dylib", EntryPoint = "sysconf")]
     private static extern long Sysconf(int name);
+
+    private async void OptimizeMemory_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null || !OperatingSystem.IsWindows()) return;
+
+        try
+        {
+            topLevel.Notice("正在优化系统内存");
+            var result = await MemoryOptimizationService.OptimizeAsync();
+            RefreshMemoryStatus();
+            topLevel.Notice($"内存优化完成，已释放 {FormatMemory(result.ReclaimedBytes)}", NotificationType.Success);
+        }
+        catch (Exception ex)
+        {
+            topLevel.Notice($"内存优化失败：{ex.Message}", NotificationType.Error);
+        }
+    }
+
+    private static string FormatMemory(long bytes) => bytes >= 1024L * 1024 * 1024
+        ? $"{bytes / 1024d / 1024 / 1024:F1} GB 内存"
+        : $"{bytes / 1024d / 1024:F0} MB 内存";
 
     private async void AddJava_Click(object? sender, RoutedEventArgs e)
     {

@@ -6,6 +6,7 @@ using HotAvalonia;
 #endif
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.SystemResources;
 using Tio.Avalonia.Standard.Modules;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -19,6 +20,12 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args.Length == 1 && args[0] == "--memory-optimize")
+        {
+            Environment.Exit(MemoryOptimizationService.OptimizeCurrentProcessContext());
+            return;
+        }
+
         if (TryGetBedrockPackagePath(args, out var packagePath))
             App.BedrockPackagePath = packagePath;
 
