@@ -1,4 +1,3 @@
-using Flurl.Http;
 using Newtonsoft.Json;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
@@ -129,7 +128,7 @@ public static class NewsDetailsService
         try
         {
             var url = BaseContentUrl + entry.ContentPath;
-            var json = await url.GetStringAsync();
+            var json = await NewsHttp.Client.GetStringAsync(url);
             var content = JsonConvert.DeserializeObject<NewsContentResponse>(json);
             if (content == null) return null;
 

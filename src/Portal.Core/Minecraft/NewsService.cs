@@ -1,4 +1,4 @@
-using Flurl.Http;
+using System.Net.Http;
 using Newtonsoft.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
@@ -15,7 +15,6 @@ public static class NewsService
 
     private const string JavaApiUrl = "https://mcnews.tiouo.cc/v2/javaPatchNotes";
     private const string BedrockApiUrl = "https://mcnews.tiouo.cc/v2/bedrockPatchNotes";
-    // 图片由镜像源返回相对路径（/v2/images/...），但镜像不托管图片，需拼接官方源。
     private const string BaseImageUrl = "https://launchercontent.mojang.com";
 
     public static void InitializeFromCache()
@@ -69,7 +68,7 @@ public static class NewsService
     {
         try
         {
-            var json = await url.GetStringAsync();
+            var json = await NewsHttp.Client.GetStringAsync(url);
             var entries = ParseJson(json, edition);
             CacheDatabase.WriteNews(edition, entries);
             return entries;
@@ -109,4 +108,14 @@ public static class NewsService
             Edition = edition
         };
     }
+}
+
+internal static class NewsHttp
+{
+    public static readonly HttpClient Client = new HttpClient(
+        new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+        },
+        disposeHandler: true);
 }
