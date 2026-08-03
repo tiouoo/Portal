@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft;
@@ -9,7 +8,6 @@ using Portal.Module.News;
 
 namespace Portal.ViewModels;
 
-/// <summary>新闻详情页视图模型。每个详情标签页独立持有，不复用单例。</summary>
 public partial class NewsDetailsPageViewModel : ObservableObject
 {
     private readonly NewsEntry _entry;
@@ -28,7 +26,8 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         RelativeDate = entry.RelativeDate;
     }
 
-    public ObservableCollection<Control> BodyControls { get; } = [];
+    [ObservableProperty]
+    public partial ObservableCollection<Control> BodyControls { get; set; } = [];
 
     [ObservableProperty] public partial string Title { get; set; }
     [ObservableProperty] public partial string Version { get; set; }
@@ -74,7 +73,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
             FetchedAt = detail.FetchedAt;
             IsCached = true;
 
-            RenderBody(detail.Body);
+            await RenderBodyAsync(detail.Body);
         }
         catch (Exception ex)
         {
@@ -110,7 +109,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
             Date = detail.Date;
             FetchedAt = detail.FetchedAt;
             IsCached = true;
-            RenderBody(detail.Body);
+            await RenderBodyAsync(detail.Body);
         }
         catch (Exception ex)
         {
@@ -123,16 +122,14 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         }
     }
 
-    private void RenderBody(string html)
+    private async Task RenderBodyAsync(string html)
     {
-        // 在 UI 线程上构建控件树（Avalonia 控件必须依附 UI 线程）。
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (_disposed) return;
-            BodyControls.Clear();
-            var controls = NewsHtmlRenderer.Render(html);
-            foreach (var c in controls) BodyControls.Add(c);
-        });
+        if (_disposed) return;
+        var doc = await Task.Run(() => NewsHtmlRenderer.Parse(html));
+        if (_disposed) return;
+        var controls = NewsHtmlRenderer.Render(doc);
+        if (_disposed) return;
+        BodyControls = new ObservableCollection<Control>(controls);
     }
 
     public void Dispose()

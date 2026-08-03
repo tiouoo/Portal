@@ -25,12 +25,23 @@ public static class NewsHtmlRenderer
     private static readonly FontFamily MonospaceFamily =
         new("Cascadia Code,Consolas,Menlo,Monaco,monospace");
 
-    /// <summary>解析 HTML 字符串并返回块级控件序列（按文档顺序）。</summary>
-    public static IReadOnlyList<Control> Render(string html)
+    /// <summary>仅解析 HTML 返回文档（纯 CPU，可放后台线程执行）。</summary>
+    public static HtmlDocument Parse(string html)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(html ?? string.Empty);
+        return doc;
+    }
 
+    /// <summary>解析 HTML 字符串并返回块级控件序列（按文档顺序）。</summary>
+    public static IReadOnlyList<Control> Render(string html)
+    {
+        return Render(Parse(html));
+    }
+
+    /// <summary>把已解析的 HTML 文档渲染为块级控件序列（必须在 UI 线程执行）。</summary>
+    public static IReadOnlyList<Control> Render(HtmlDocument doc)
+    {
         var root = doc.DocumentNode;
         var output = new List<Control>();
         var container = root.SelectSingleNode("//body") ?? root;
@@ -300,8 +311,12 @@ public static class NewsHtmlRenderer
             FontWeight = BodyWeight,
             Padding = new Thickness(0),
             Margin = new Thickness(0),
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
         };
+        if (Application.Current?.FindResource("UnderlineHyperlinkButton") is Avalonia.Styling.ControlTheme theme)
+        {
+            button.Theme = theme;
+        }
 
         if (!string.IsNullOrWhiteSpace(href) && Uri.TryCreate(href, UriKind.Absolute, out var uri))
         {

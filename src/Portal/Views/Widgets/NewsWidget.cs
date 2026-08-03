@@ -97,8 +97,8 @@ public sealed class NewsWidget : IWidgetContent
     /// <summary>水平布局（2×1 ~ 6×1）：左侧正方形图标，右侧上描述、下 tag。</summary>
     private Control CreateHorizontalLayout()
     {
-        _descText.MaxLines = 4;
-        _descText.Margin = new Thickness(0, -5, 0, 0);
+        _descText.MaxLines = 3;
+        _descText.Margin = new Thickness(0, -2, 0, 0);
         
         // 图片固定正方形，边长跟随布局高度（由父容器拉伸）
         var imageBorder = new Border
@@ -146,7 +146,7 @@ public sealed class NewsWidget : IWidgetContent
         var rightPanel = new DockPanel
         {
             LastChildFill = true,
-            Margin = new Thickness(0, 5, 12, 5)
+            Margin = new Thickness(0, 10, 12, 10)
         };
         DockPanel.SetDock(bottomRow, Dock.Bottom);
         rightPanel.Children.Add(bottomRow);

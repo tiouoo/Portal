@@ -17,89 +17,63 @@
     </UserControl.Resources>
 
     <DockPanel Margin="12,0,12,12">
-        <!--  顶部：封面 + 标题（靠上）/ 标签和时间（右下角）  -->
-        <Grid
-            ColumnDefinitions="120, *"
-            DockPanel.Dock="Top"
-            Margin="0,0,0,8">
-            <Border
-                ClipToBounds="True"
-                CornerRadius="12"
-                Grid.Column="0"
-                Height="120"
+        <Panel DockPanel.Dock="Top" Margin="14,0,12,0">
+            <TextBlock
+                FontSize="26"
+                FontWeight="DemiBold"
                 HorizontalAlignment="Left"
-                IsVisible="{Binding ImageUrl, Converter={StaticResource StringNotEmptyConv}}"
-                Width="120">
-                <owned:NewsImage
-                    Height="120"
-                    Source="{Binding ImageUrl}"
-                    Stretch="UniformToFill" />
-            </Border>
+                Margin="0,0,0,5"
+                Text="{Binding Title}"
+                TextWrapping="WrapWithOverflow"
+                VerticalAlignment="Top" />
 
-            <Grid
-                Grid.Column="1"
-                Margin="14,0,12,0"
-                RowDefinitions="*, Auto">
-                <!--  标题：靠上  -->
-                <TextBlock
-                    FontSize="26"
-                    FontWeight="DemiBold"
-                    Grid.Row="0"
-                    Margin="5,10,0,0"
-                    Text="{Binding Title}"
-                    TextWrapping="WrapWithOverflow"
-                    VerticalAlignment="Top" />
-
-                <!--  标签 + 时间：右下角  -->
-                <StackPanel
-                    Grid.Row="1"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal"
-                    Spacing="8"
-                    VerticalAlignment="Bottom">
-                    <Border
-                        Background="{DynamicResource TranslucentBackgroundColor}"
-                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="10"
-                        Padding="6,2">
-                        <TextBlock
-                            FontSize="11"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Binding EditionDisplay}" />
-                    </Border>
-                    <Border
-                        Background="{DynamicResource TranslucentBackgroundColor}"
-                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="10"
-                        IsVisible="{Binding HasVersion}"
-                        Padding="6,2">
-                        <TextBlock
-                            FontSize="11"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Binding Version}" />
-                    </Border>
-                    <Border
-                        Background="{DynamicResource TranslucentBackgroundColor}"
-                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="10"
-                        IsVisible="{Binding HasType}"
-                        Padding="6,2">
-                        <TextBlock
-                            FontSize="11"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Binding Type}" />
-                    </Border>
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8"
+                VerticalAlignment="Center">
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="6,2">
                     <TextBlock
-                        FontSize="12"
+                        FontSize="11"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="{Binding RelativeDate}"
-                        VerticalAlignment="Center" />
-                </StackPanel>
-            </Grid>
-        </Grid>
+                        Text="{Binding EditionDisplay}" />
+                </Border>
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    IsVisible="{Binding HasVersion}"
+                    Padding="6,2">
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding Version}" />
+                </Border>
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    IsVisible="{Binding HasType}"
+                    Padding="6,2">
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding Type}" />
+                </Border>
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Binding RelativeDate}"
+                    VerticalAlignment="Center" />
+            </StackPanel>
+        </Panel>
 
         <Separator
             Background="{DynamicResource TranslucentBorderBrush}"
