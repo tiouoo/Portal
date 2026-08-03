@@ -105,6 +105,12 @@
                 Orientation="Horizontal"
                 Spacing="10">
                 <HyperlinkButton
+                    Click="DeepScan_Click"
+                    Content="强力扫描"
+                    FontSize="13"
+                    Name="DeepScanButton"
+                    Theme="{StaticResource TransparentHyperlinkButton}" />
+                <HyperlinkButton
                     Click="AutoScan_Click"
                     Content="自动扫描"
                     FontSize="13"

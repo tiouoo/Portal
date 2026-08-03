@@ -292,6 +292,56 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         }
     }
 
+    private async void DeepScan_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        // 防止重复点击
+        DeepScanButton.IsEnabled = false;
+        try
+        {
+            var (task, resultTask) = JavaRuntimeOperations.CreateDeepScanTask(Data.ConfigEntry.JavaRuntimes);
+            task.Start();
+            topLevel.Notice("强力扫描已启动，可在右上角任务列表中取消");
+
+            (int Added, int Duplicate) result;
+            try
+            {
+                result = await resultTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // 取消时也可能抛出，此时任务描述里已经有结果
+                result = (0, 0);
+            }
+
+            if (Data.ConfigEntry.DefaultJavaRuntime == null)
+                Data.ConfigEntry.DefaultJavaRuntime = Data.ConfigEntry.JavaRuntimes.FirstOrDefault();
+
+            if (task.Status == Tio.Avalonia.Standard.Modules.Tasks.ManagedTaskStatus.Cancelled)
+            {
+                topLevel.Notice(
+                    $"扫描已取消，已找到的 Java 已添加：{result.Added} 个新增，{result.Duplicate} 个重复",
+                    NotificationType.Warning);
+            }
+            else
+            {
+                topLevel.Notice(
+                    $"强力扫描完成：新增 {result.Added} 个 Java，重复 {result.Duplicate} 个",
+                    NotificationType.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            topLevel.Notice($"强力扫描失败：{ex.Message}", NotificationType.Error);
+        }
+        finally
+        {
+            DeepScanButton.IsEnabled = true;
+        }
+    }
+
     private async Task AddJavaAsync(TopLevel topLevel)
     {
         try

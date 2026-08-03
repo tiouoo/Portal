@@ -1,6 +1,7 @@
 using Portal.Core.Minecraft.Instance.Java;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Core.Operations.Java;
 
@@ -74,6 +75,101 @@ public static class JavaRuntimeOperations
         }
 
         return new JavaRuntimeScanResult(addedCount, duplicateCount);
+    }
+
+    /// <summary>
+    /// 创建一个 Managed Task 来执行强力扫描 Java。取消时会返回已经扫描到的结果。
+    /// 返回结果通过 out 参数提供：(新增数，重复数)。
+    /// </summary>
+    public static (ManagedTask Task, Task<(int Added, int Duplicate)> Result) CreateDeepScanTask(
+        ICollection<JavaRuntimeEntry> javaRuntimes)
+    {
+        var resultSource = new TaskCompletionSource<(int Added, int Duplicate)>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var task = TaskManager.Instance.CreateTask(
+            new TaskOptions
+            {
+                Name = "强力扫描 Java",
+                Description = "准备扫描…",
+                Progress = 0.0,
+                Actions = []
+            },
+            async ctx =>
+            {
+                var addedCount = 0;
+                var duplicateCount = 0;
+                try
+                {
+                    ctx.SetRunning("准备扫描磁盘中的 Java 运行时…");
+
+                    var progress = new Progress<DeepScanProgress>(p =>
+                    {
+                        // 取消后 ManagedTask 已进入终态，ReportProgress/SetDescription 会抛异常
+                        if (ctx.CancellationToken.IsCancellationRequested) return;
+                        try
+                        {
+                            var progressRatio = p.DirectoriesQueued > 0
+                                ? Math.Clamp((double)p.DirectoriesScanned / p.DirectoriesQueued, 0.0, 1.0)
+                                : null as double?;
+
+                            ctx.ReportProgress(progressRatio);
+                            ctx.SetDescription($"{p.CurrentStatus}（已找到 {p.JavasFound} 个）");
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // 任务已被取消或完成，忽略进度更新
+                        }
+                    });
+
+                    IReadOnlyList<JavaRuntimeEntry> found;
+                    try
+                    {
+                        found = await JavaRuntimeManager.DeepScanAsync(progress, ctx.CancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // 取消时不抛，DeepScanAsync 会返回已找到的；但这里是防护性的
+                        found = Array.Empty<JavaRuntimeEntry>();
+                    }
+
+                    foreach (var java in found)
+                    {
+                        // 即使取消了，也要把已找到的添加进去
+                        if (javaRuntimes.Contains(java))
+                        {
+                            duplicateCount++;
+                        }
+                        else
+                        {
+                            javaRuntimes.Add(java);
+                            addedCount++;
+                        }
+                    }
+
+                    var cancelled = ctx.CancellationToken.IsCancellationRequested;
+                    var finishText = cancelled
+                        ? $"已取消，已找到的新增 {addedCount} 个 Java，重复 {duplicateCount} 个"
+                        : $"扫描完成：新增 {addedCount} 个 Java，重复 {duplicateCount} 个";
+
+                    // 取消时 ManagedTask 已进入终态，不能再更新状态
+                    if (!cancelled)
+                    {
+                        ctx.SetDescription(finishText);
+                        ctx.ReportProgress(1.0);
+                    }
+
+                    resultSource.TrySetResult((addedCount, duplicateCount));
+                }
+                catch (Exception ex)
+                {
+                    resultSource.TrySetException(ex);
+                    ctx.SetDescription($"扫描失败：{ex.Message}");
+                    throw;
+                }
+            });
+
+        return (task, resultSource.Task);
     }
 
     public static JavaRuntimeEntry? Remove(
