@@ -37,11 +37,11 @@ namespace Portal.Views;
 
 public partial class TabWindow : TioTabWindowBase
 {
-    private Bitmap? _ownedBackgroundBitmap;
     private bool _isConfigEntrySubscribed;
     private IntPtr _macOsWindowHandle;
-    private PixelSize _backgroundPixelSize;
-    private SKBitmap? _cachedOriginalBackground;
+    private Image? _backgroundImageLayer;
+    private Border? _backgroundMaskLayer;
+    private Bitmap? _cachedOriginalBackground;
     private string? _cachedBackgroundPath;
 
     public bool IsTabMaskVisible
@@ -232,20 +232,21 @@ public partial class TabWindow : TioTabWindowBase
         SizeChanged -= TabWindow_OnSizeChanged;
         Closed -= TabWindow_OnClosed;
 
-        ClearOwnedBackground();
+        ClearBackgroundLayers();
         ClearOriginalBackgroundCache();
         DataContext = null;
     }
 
     private void TabWindow_OnSizeChanged(object? sender, SizeChangedEventArgs e)
     {
-        if (Data.ConfigEntry.BackgroundMode != BackgroundMode.Image || _backgroundPixelSize.Width <= 0)
+        if (Data.ConfigEntry.BackgroundMode != BackgroundMode.Image || _cachedOriginalBackground == null)
             return;
 
+        var pixelSize = _cachedOriginalBackground.PixelSize;
         var scale = RenderScaling;
         var width = (int)Math.Ceiling(e.NewSize.Width * scale);
         var height = (int)Math.Ceiling(e.NewSize.Height * scale);
-        if (width > _backgroundPixelSize.Width * 1.5 || height > _backgroundPixelSize.Height * 1.5)
+        if (width > pixelSize.Width * 1.5 || height > pixelSize.Height * 1.5)
         {
             ClearOriginalBackgroundCache();
             ApplyBackground();
@@ -437,8 +438,7 @@ public partial class TabWindow : TioTabWindowBase
         {
             case BackgroundMode.Default:
                 ClearOriginalBackgroundCache();
-                if (RootBorder != null)
-                    ClearOwnedBackground();
+                ClearBackgroundLayers();
                 ClearValue(BackgroundProperty);
                 ClearValue(TransparencyBackgroundFallbackProperty);
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
@@ -446,42 +446,43 @@ public partial class TabWindow : TioTabWindowBase
 
             case BackgroundMode.Transparent:
                 ClearOriginalBackgroundCache();
-                ClearOwnedBackground();
+                ClearBackgroundLayers();
                 Background = Brushes.Transparent;
                 TransparencyBackgroundFallback = Brushes.Transparent;
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
                 break;
 
             case BackgroundMode.Image:
-                if (RootBorder != null)
+                if (!string.IsNullOrEmpty(entry.BackgroundImagePath) && File.Exists(entry.BackgroundImagePath))
                 {
-                    if (!string.IsNullOrEmpty(entry.BackgroundImagePath) && File.Exists(entry.BackgroundImagePath))
+                    try
                     {
-                        try
-                        {
-                            var original = GetOrCreateOriginalBackground(entry.BackgroundImagePath);
-                            SetOwnedBackground(CreateBackgroundBitmap(original, entry.ImageBlurRadius));
-                        }
-                        catch
-                        {
-                            ClearOriginalBackgroundCache();
-                            ClearOwnedBackground();
-                        }
+                        var original = GetOrCreateOriginalBackground(entry.BackgroundImagePath);
+                        EnsureBackgroundLayers();
+                        _backgroundImageLayer!.Source = original;
+                        UpdateImageBlurEffect(entry.ImageBlurRadius);
+                        ClearValue(BackgroundProperty);
+                        ClearValue(TransparencyBackgroundFallbackProperty);
+                        TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
                     }
-                    else
+                    catch
                     {
                         ClearOriginalBackgroundCache();
-                        ClearOwnedBackground();
+                        ClearBackgroundLayers();
                     }
                 }
-
-                ClearValue(TransparencyBackgroundFallbackProperty);
-                TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                else
+                {
+                    ClearOriginalBackgroundCache();
+                    ClearBackgroundLayers();
+                    ClearValue(TransparencyBackgroundFallbackProperty);
+                    TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                }
                 break;
 
             case BackgroundMode.Color:
                 ClearOriginalBackgroundCache();
-                ClearOwnedBackground();
+                ClearBackgroundLayers();
                 Background = Brushes.Transparent;
                 if (RootBorder != null)
                     RootBorder.Background = new SolidColorBrush(entry.BackgroundSolidColor);
@@ -491,7 +492,7 @@ public partial class TabWindow : TioTabWindowBase
 
             case BackgroundMode.Acrylic:
                 ClearOriginalBackgroundCache();
-                ClearOwnedBackground();
+                ClearBackgroundLayers();
                 var color = entry.BackgroundSolidColor;
                 var alpha = (byte)(entry.AcrylicOpacity * 255);
                 var acrylicBrush = new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B));
@@ -504,7 +505,7 @@ public partial class TabWindow : TioTabWindowBase
 
             // case BackgroundMode.Blur:
             //     ClearOriginalBackgroundCache();
-            //     ClearOwnedBackground();
+            //     ClearBackgroundLayers();
             //     var blurColor = entry.BackgroundSolidColor;
             //     var blurAlpha = (byte)(entry.BlurOpacity * 255);
             //     var blurBrush = new SolidColorBrush(Color.FromArgb(blurAlpha, blurColor.R, blurColor.G, blurColor.B));
@@ -518,7 +519,7 @@ public partial class TabWindow : TioTabWindowBase
 
             case BackgroundMode.Mica:
                 ClearOriginalBackgroundCache();
-                ClearOwnedBackground();
+                ClearBackgroundLayers();
                 var micaColor = entry.BackgroundSolidColor;
                 var micaAlpha = (byte)(entry.MicaOpacity * 255);
                 var micaBrush = new SolidColorBrush(Color.FromArgb(micaAlpha, micaColor.R, micaColor.G, micaColor.B));
@@ -536,56 +537,88 @@ public partial class TabWindow : TioTabWindowBase
 
     private void ApplyImageMaskOverlay()
     {
-        if (RootBorder?.Child is not Panel panel) return;
+        if (_backgroundMaskLayer == null) return;
 
         var entry = Data.ConfigEntry;
         if (entry.BackgroundMode == BackgroundMode.Image && entry.EnableImageMask)
         {
             var alpha = (byte)(entry.ImageMaskOpacity * 255);
-            panel.Background = new SolidColorBrush(
+            _backgroundMaskLayer.Background = new SolidColorBrush(
                 Color.FromArgb(alpha, entry.ImageMaskColor.R, entry.ImageMaskColor.G, entry.ImageMaskColor.B));
         }
         else
         {
-            panel.Background = null;
+            _backgroundMaskLayer.Background = null;
         }
     }
 
-    private void SetOwnedBackground(Bitmap bitmap)
+    /// <summary>
+    ///     将模板中的 DockPanel 包装进 Panel，并插入背景 Image 层与遮罩 Border 层。
+    ///     背景图 Image 应用 BlurEffect（GPU 实时模糊），遮罩 Border 覆盖其上、内容之下。
+    /// </summary>
+    private void EnsureBackgroundLayers()
     {
-        var oldBitmap = _ownedBackgroundBitmap;
-        _ownedBackgroundBitmap = bitmap;
-        _backgroundPixelSize = bitmap.PixelSize;
-        RootBorder.Background = new ImageBrush(bitmap)
+        if (RootBorder == null) return;
+        if (_backgroundImageLayer != null) return;
+        if (RootBorder.Child is not DockPanel dockPanel) return;
+
+        _backgroundImageLayer = new Image
         {
             Stretch = Stretch.UniformToFill,
-            AlignmentX = AlignmentX.Center,
-            AlignmentY = AlignmentY.Center
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            IsHitTestVisible = false
         };
-        DisposeBitmapAfterRender(oldBitmap);
+
+        _backgroundMaskLayer = new Border
+        {
+            IsHitTestVisible = false
+        };
+
+        var panel = new Panel();
+        RootBorder.Child = panel;
+        panel.Children.Add(_backgroundImageLayer);
+        panel.Children.Add(_backgroundMaskLayer);
+        panel.Children.Add(dockPanel);
     }
 
-    private void ClearOwnedBackground()
+    private void ClearBackgroundLayers()
     {
-        RootBorder?.ClearValue(Border.BackgroundProperty);
-        DisposeBitmapAfterRender(_ownedBackgroundBitmap);
-        _ownedBackgroundBitmap = null;
-        _backgroundPixelSize = default;
+        if (_backgroundImageLayer != null)
+        {
+            _backgroundImageLayer.Source = null;
+            _backgroundImageLayer.Effect = null;
+        }
+
+        if (_backgroundMaskLayer != null)
+            _backgroundMaskLayer.Background = null;
+
+        if (RootBorder != null)
+            RootBorder.ClearValue(Border.BackgroundProperty);
     }
 
-    private static void DisposeBitmapAfterRender(Bitmap? bitmap)
+    private void UpdateImageBlurEffect(double imageBlurRadius)
     {
-        if (bitmap != null)
-            Dispatcher.UIThread.Post(bitmap.Dispose, DispatcherPriority.Background);
+        if (_backgroundImageLayer == null) return;
+
+        var radius = imageBlurRadius * 20;
+        if (radius <= 0.5)
+        {
+            _backgroundImageLayer.Effect = null;
+            return;
+        }
+
+        _backgroundImageLayer.Effect = new BlurEffect { Radius = radius };
     }
 
-    private SKBitmap GetOrCreateOriginalBackground(string path)
+    private Bitmap GetOrCreateOriginalBackground(string path)
     {
         if (_cachedOriginalBackground != null && _cachedBackgroundPath == path)
             return _cachedOriginalBackground;
 
         _cachedOriginalBackground?.Dispose();
-        _cachedOriginalBackground = DecodeBackground(path);
+        using var sk = DecodeBackground(path);
+        _cachedOriginalBackground = CreateAvaloniaBitmapFromSkBitmap(sk);
         _cachedBackgroundPath = path;
         return _cachedOriginalBackground;
     }
@@ -595,29 +628,6 @@ public partial class TabWindow : TioTabWindowBase
         _cachedOriginalBackground?.Dispose();
         _cachedOriginalBackground = null;
         _cachedBackgroundPath = null;
-    }
-
-    private Bitmap CreateBackgroundBitmap(SKBitmap original, double imageBlurRadius)
-    {
-        var blurRadiusPx = imageBlurRadius * 20;
-
-        if (blurRadiusPx <= 0.5)
-            return CreateAvaloniaBitmapFromSkBitmap(original);
-
-        var info = new SKImageInfo(original.Width, original.Height,
-            SKColorType.Bgra8888, SKAlphaType.Premul);
-        using var surface = SKSurface.Create(info);
-        using var paint = new SKPaint
-        {
-            ImageFilter = SKImageFilter.CreateBlur((float)blurRadiusPx, (float)blurRadiusPx)
-        };
-        surface.Canvas.DrawBitmap(original, 0, 0, new SKSamplingOptions(), paint);
-        surface.Canvas.Flush();
-
-        using var snapshot = surface.Snapshot();
-        using var blurred = new SKBitmap(info);
-        snapshot.ReadPixels(info, blurred.GetPixels(), info.RowBytes, 0, 0);
-        return CreateAvaloniaBitmapFromSkBitmap(blurred);
     }
 
     private static Bitmap CreateAvaloniaBitmapFromSkBitmap(SKBitmap bitmap)
