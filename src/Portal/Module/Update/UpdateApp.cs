@@ -23,6 +23,8 @@ namespace Portal.Module.Update;
 
 public static class UpdateApp
 {
+    private const int RetainedUpdateDirectories = 1;
+
     public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller);
 
     private sealed class UpdateTaskHandle
@@ -48,6 +50,7 @@ public static class UpdateApp
                 ? release.Sequence.ToString()
                 : DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString());
             Directory.CreateDirectory(updateDirectory);
+            CleanupOldUpdateDirectories(updateDirectory);
             var packagePath = Path.Combine(updateDirectory, asset.Name);
 
             sender.Notice($"正在下载 {asset.Name}", NotificationType.Information);
@@ -249,6 +252,34 @@ public static class UpdateApp
     {
         handle.PreparedUpdate = update;
         handle.Task.RefreshActions();
+    }
+
+    private static void CleanupOldUpdateDirectories(string currentDirectory)
+    {
+        try
+        {
+            var oldDirectories = Directory.GetDirectories(ConfigPath.UpdateFolderPath)
+                .Select(path => new DirectoryInfo(path))
+                .OrderByDescending(directory =>
+                    directory.FullName.Equals(currentDirectory, StringComparison.OrdinalIgnoreCase))
+                .ThenByDescending(directory => directory.LastWriteTimeUtc)
+                .Skip(RetainedUpdateDirectories);
+            foreach (var directory in oldDirectories)
+            {
+                try
+                {
+                    directory.Delete(true);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Failed to remove old update directory {directory.FullName}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to clean old update directories: {ex.Message}");
+        }
     }
 
     private static ProcessStartInfo PrepareWindowsPortable(string zipPath, string updateDirectory, string target)
