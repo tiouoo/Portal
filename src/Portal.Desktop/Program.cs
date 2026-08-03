@@ -56,6 +56,8 @@ sealed class Program
             return;
         }
 
+        DebugConsole.ShowIfEnabled();
+
         if (TryGetBedrockPackagePath(args, out var packagePath))
             App.BedrockPackagePath = packagePath;
 

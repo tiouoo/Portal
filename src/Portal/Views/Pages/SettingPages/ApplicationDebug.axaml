@@ -1,0 +1,41 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.SettingPages.ApplicationDebug"
+    x:DataType="settingPages:ApplicationDebug"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="15">
+        <TextBlock FontSize="26" Text="其他设置" />
+        <StackPanel IsVisible="{Binding CanRegisterProtocol}" Spacing="5">
+            <Label
+                Content="Portal 协议"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Button
+                Click="RegisterProtocol_OnClick"
+                Content="{Binding RegisterProtocolButtonText}"
+                HorizontalAlignment="Left"
+                Margin="0,5" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text=" *注册后，可在浏览器通过协议调起启动器" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="调试模式"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableDebugConsole}" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text=" *显示应用启动和运行日志，需要重启程序后生效。" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

@@ -57,7 +57,7 @@ Portal.Desktop.exe launch "1.20.1-forge" --folder "D:\Minecraft\.minecraft" --se
 
 ## 浏览器命令
 
-在设置 → 默认行为 → Portal 协议中注册协议后，浏览器地址栏或网页链接可以直接调起启动器。macOS 版无需注册，协议已在应用包中声明；Linux 通过包管理器或 AppImage 桌面集成安装时也会自动注册。
+在设置 → 其他设置 → Portal 协议中注册协议后，浏览器地址栏或网页链接可以直接调起启动器。macOS 版无需注册，协议已在应用包中声明；Linux 通过包管理器或 AppImage 桌面集成安装时也会自动注册。
 
 与上面命令行等价的链接：
 

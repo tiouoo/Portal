@@ -45,6 +45,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool EnableProxyServer { get; set; }
     [ObservableProperty] public partial bool DisableSystemProxy { get; set; }
     [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
+    [ObservableProperty] public partial bool EnableDebugConsole { get; set; }
     [ObservableProperty] public partial bool AutoSetJavaHighPerformanceGpu { get; set; } = true;
     [ObservableProperty] public partial bool AutoOptimizeMemoryBeforeGameLaunch { get; set; }
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
