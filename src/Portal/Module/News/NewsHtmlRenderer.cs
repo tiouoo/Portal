@@ -69,7 +69,8 @@ public static class NewsHtmlRenderer
         {
             var text = node.InnerText?.Trim();
             if (string.IsNullOrEmpty(text)) return [];
-            return [CreateParagraph(BuildInlines(node), indentLevel)];
+            // 文本节点是叶子节点，没有 ChildNodes；不能调用 BuildInlines（会返回空集合导致空段落）。
+            return [CreateParagraph([new Run(text) { FontWeight = BodyWeight }], indentLevel)];
         }
 
         if (node.NodeType != HtmlNodeType.Element) return [];
@@ -214,7 +215,11 @@ public static class NewsHtmlRenderer
             case HtmlNodeType.Text:
             {
                 var text = node.InnerText;
-                if (!string.IsNullOrEmpty(text)) output.Add(new Run(text) { FontWeight = BodyWeight });
+                if (string.IsNullOrEmpty(text)) return;
+                // HTML 会将换行符折叠为空格；若直接传入 Run，Avalonia TextBlock 会把 \n 渲染为换行，
+                // 导致每段/每项文本末尾多出一行空白。
+                text = text.Replace("\r\n", " ").Replace('\r', ' ').Replace('\n', ' ');
+                output.Add(new Run(text) { FontWeight = BodyWeight });
                 return;
             }
             case HtmlNodeType.Element:

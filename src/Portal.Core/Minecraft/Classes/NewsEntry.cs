@@ -73,12 +73,14 @@ public class NewsDetail
     public string Type { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
     public DateTime Date { get; set; }
-    /// <summary>Mojang 返回的 HTML 正文（已原样缓存）。</summary>
+    /// <summary>返回的 HTML 正文（已原样缓存）。</summary>
     public string Body { get; set; } = string.Empty;
     public DateTime FetchedAt { get; set; }
+    /// <summary>是否需要翻译。为 true 时会在后台尝试拉取已翻译版本并动态替换。</summary>
+    public bool? NeedsTranslation { get; set; }
 }
 
-/// <summary>Mojang 内容接口返回的 JSON 结构。</summary>
+/// <summary>内容接口返回的 JSON 结构。</summary>
 public class NewsContentResponse
 {
     public string Title { get; set; } = string.Empty;
@@ -86,4 +88,5 @@ public class NewsContentResponse
     public string Type { get; set; } = string.Empty;
     public PatchNoteImage? Image { get; set; }
     public string Body { get; set; } = string.Empty;
+    public bool? NeedsTranslation { get; set; }
 }

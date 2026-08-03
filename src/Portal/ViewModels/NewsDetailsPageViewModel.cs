@@ -25,6 +25,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         Date = entry.Date;
         Edition = entry.Edition;
         RelativeDate = entry.RelativeDate;
+        NewsDetailsService.NewsDetailUpdated += OnNewsDetailUpdated;
     }
 
     [ObservableProperty]
@@ -154,6 +155,28 @@ public partial class NewsDetailsPageViewModel : ObservableObject
     public void Dispose()
     {
         _disposed = true;
+        NewsDetailsService.NewsDetailUpdated -= OnNewsDetailUpdated;
         BodyControls.Clear();
+    }
+
+    /// <summary>
+    /// 后台翻译刷新成功时的回调。当取回的已翻译版本与当前新闻同 ID 时，
+    /// 在 UI 线程上动态替换标题、版本、正文等字段并重新渲染正文。
+    /// </summary>
+    private void OnNewsDetailUpdated(NewsDetail detail)
+    {
+        if (_disposed || detail.Id != _entry.Id) return;
+        Dispatcher.UIThread.Post(async () =>
+        {
+            if (_disposed) return;
+            Title = detail.Title;
+            Version = detail.Version;
+            Type = detail.Type;
+            if (!string.IsNullOrEmpty(detail.ImageUrl)) ImageUrl = detail.ImageUrl;
+            Date = detail.Date;
+            FetchedAt = detail.FetchedAt;
+            IsCached = true;
+            await RenderBodyAsync(detail.Body);
+        });
     }
 }

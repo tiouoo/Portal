@@ -257,7 +257,7 @@ internal static class CacheDatabase
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                SELECT title, version, type, image_url, published_at, body, fetched_at
+                SELECT title, version, type, image_url, published_at, body, fetched_at, needs_translation
                 FROM news_detail_cache WHERE id = $id;
                 """;
             command.Parameters.AddWithValue("$id", id);
@@ -272,7 +272,8 @@ internal static class CacheDatabase
                 ImageUrl = reader.GetString(3),
                 Date = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(4)).LocalDateTime,
                 Body = reader.GetString(5),
-                FetchedAt = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(6)).LocalDateTime
+                FetchedAt = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(6)).LocalDateTime,
+                NeedsTranslation = reader.IsDBNull(7) ? null : reader.GetInt64(7) != 0
             };
         }
         catch (SqliteException) { return null; }
@@ -287,12 +288,13 @@ internal static class CacheDatabase
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                INSERT INTO news_detail_cache (id, title, version, type, image_url, published_at, body, fetched_at)
-                VALUES ($id, $title, $version, $type, $imageUrl, $publishedAt, $body, $fetchedAt)
+                INSERT INTO news_detail_cache (id, title, version, type, image_url, published_at, body, fetched_at, needs_translation)
+                VALUES ($id, $title, $version, $type, $imageUrl, $publishedAt, $body, $fetchedAt, $needsTranslation)
                 ON CONFLICT(id) DO UPDATE SET
                     title = excluded.title, version = excluded.version, type = excluded.type,
                     image_url = excluded.image_url, published_at = excluded.published_at,
-                    body = excluded.body, fetched_at = excluded.fetched_at;
+                    body = excluded.body, fetched_at = excluded.fetched_at,
+                    needs_translation = excluded.needs_translation;
                 """;
             command.Parameters.AddWithValue("$id", detail.Id);
             command.Parameters.AddWithValue("$title", detail.Title);
@@ -302,6 +304,9 @@ internal static class CacheDatabase
             command.Parameters.AddWithValue("$publishedAt", new DateTimeOffset(detail.Date).ToUnixTimeSeconds());
             command.Parameters.AddWithValue("$body", detail.Body);
             command.Parameters.AddWithValue("$fetchedAt", new DateTimeOffset(detail.FetchedAt).ToUnixTimeSeconds());
+            command.Parameters.AddWithValue("$needsTranslation", detail.NeedsTranslation.HasValue
+                ? detail.NeedsTranslation.Value ? 1 : 0
+                : DBNull.Value);
             command.ExecuteNonQuery();
         }
         catch (SqliteException) { }
@@ -353,8 +358,26 @@ internal static class CacheDatabase
                 """;
             command.ExecuteNonQuery();
             EnsureModCacheColumns(connection);
+            EnsureNewsDetailColumns(connection);
             MigrateLegacyNews(connection);
             _initialized = true;
+        }
+    }
+
+    private static void EnsureNewsDetailColumns(SqliteConnection connection)
+    {
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(news_detail_cache);";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            columns.Add(reader.GetString(1));
+
+        reader.Close();
+        if (!columns.Contains("needs_translation"))
+        {
+            command.CommandText = "ALTER TABLE news_detail_cache ADD COLUMN needs_translation INTEGER NULL;";
+            command.ExecuteNonQuery();
         }
     }
 

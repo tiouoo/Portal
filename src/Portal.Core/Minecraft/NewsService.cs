@@ -13,8 +13,9 @@ public static class NewsService
     public static List<NewsEntry> JavaNews { get; private set; } = [];
     public static List<NewsEntry> BedrockNews { get; private set; } = [];
 
-    private const string JavaApiUrl = "https://launchercontent.mojang.com/v2/javaPatchNotes.json";
-    private const string BedrockApiUrl = "https://launchercontent.mojang.com/v2/bedrockPatchNotes.json";
+    private const string JavaApiUrl = "https://mcnews.tiouo.cc/v2/javaPatchNotes";
+    private const string BedrockApiUrl = "https://mcnews.tiouo.cc/v2/bedrockPatchNotes";
+    // 图片由镜像源返回相对路径（/v2/images/...），但镜像不托管图片，需拼接官方源。
     private const string BaseImageUrl = "https://launchercontent.mojang.com";
 
     public static void InitializeFromCache()
