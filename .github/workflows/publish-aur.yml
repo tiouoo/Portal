@@ -19,12 +19,14 @@ on:
         required: true
 
 jobs:
-  publish:
+  aur:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
       - name: Install dependencies
-        run: pacman -Sy --noconfirm openssh git curl
+        run: |
+          pacman -Sy --noconfirm openssh git curl
+          git config --global safe.directory '*'
 
       - name: Checkout repo (for PKGBUILD template)
         uses: actions/checkout@v7
@@ -40,46 +42,48 @@ jobs:
 
       - name: Download AppImage & compute sha256
         run: |
+          cd "$GITHUB_WORKSPACE"
           curl -fL -o Portal.AppImage \
             "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/Portal.linux.x64.AppImage"
           echo "sha=$(sha256sum Portal.AppImage | cut -d' ' -f1)" >> $GITHUB_ENV
 
       - name: Init / fetch AUR repo
         env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
+          GIT_SSH_COMMAND: ssh -4 -i ~/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
         run: |
+          set -e
+          cd "$GITHUB_WORKSPACE"
           rm -rf aur
           git init -b master aur
-          git -C aur remote add origin "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git"
-          if git -C aur fetch origin master 2>/dev/null; then
-            git -C aur reset --hard origin/master
-            echo "::notice::AUR 仓库已存在，本次为更新"
-          else
-            echo "::notice::AUR 仓库不存在或为空，本次为首推"
+          cd aur
+          git remote add origin "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git"
+          if git fetch origin master 2>/dev/null; then
+            git reset --hard origin/master
           fi
 
       - name: Render PKGBUILD
-        working-directory: aur
         run: |
+          set -e
+          cd "$GITHUB_WORKSPACE/aur"
           cp "$GITHUB_WORKSPACE/packaging/aur/${{ inputs.pkgname }}.PKGBUILD" PKGBUILD
           sed -i "s|^pkgver=.*|pkgver=${{ inputs.app_version }}|" PKGBUILD
           sed -i "s|^sha256sums_x86_64=.*|sha256sums_x86_64=('${{ env.sha }}' 'SKIP')|" PKGBUILD
-          echo "----- Rendered PKGBUILD -----"
-          cat PKGBUILD
 
       - name: Generate .SRCINFO (non-root)
-        working-directory: aur
         run: |
-          useradd -m builder
+          set -e
+          cd "$GITHUB_WORKSPACE/aur"
+          useradd -m -s /bin/bash builder 2>/dev/null || true
           chown -R builder:builder .
-          runuser -u builder -- bash -lc 'makepkg --printsrcinfo > .SRCINFO'
+          runuser -u builder -- bash -lc 'cd "$1" && makepkg --printsrcinfo > .SRCINFO' -- "$(pwd)"
           chown -R root:root .
 
       - name: Commit & push
-        working-directory: aur
         env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
+          GIT_SSH_COMMAND: ssh -4 -i ~/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
         run: |
+          set -e
+          cd "$GITHUB_WORKSPACE/aur"
           git config user.name  "${{ secrets.AUR_USERNAME }}"
           git config user.email "actions@github.com"
           git checkout -B master
