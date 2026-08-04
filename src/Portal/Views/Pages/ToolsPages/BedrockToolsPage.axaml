@@ -1,0 +1,101 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.ToolsPages.BedrockToolsPage"
+    x:DataType="toolsPages:BedrockToolsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolsPages="clr-namespace:Portal.Views.Pages.ToolsPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer Classes="Flat">
+        <StackPanel
+            Margin="10,2,10,20"
+            MaxWidth="900"
+            Spacing="10">
+            <TextBlock
+                FontSize="22"
+                FontWeight="SemiBold"
+                Margin="4,4,0,6"
+                Text="基岩版工具" />
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="4">
+                <StackPanel>
+                    <Button
+                        Background="Transparent"
+                        Click="DownloadFramework_OnClick"
+                        HorizontalContentAlignment="Stretch"
+                        IsVisible="{Binding IsWindows}"
+                        Padding="14,12"
+                        Theme="{StaticResource TransparentButton}">
+                        <DockPanel>
+                            <PathIcon
+                                Data="F1 M640,640z M0,0z M439.1,297.4C451.6,309.9,451.6,330.2,439.1,342.7L279.1,502.7C266.6,515.2 246.3,515.2 233.8,502.7 221.3,490.2 221.3,469.9 233.8,457.4L371.2,320 233.9,182.6C221.4,170.1 221.4,149.8 233.9,137.3 246.4,124.8 266.7,124.8 279.2,137.3L439.2,297.3z"
+                                DockPanel.Dock="Right"
+                                Height="20" />
+                            <StackPanel Spacing="3">
+                                <TextBlock FontWeight="SemiBold" Text="下载UWP游戏框架" />
+                                <TextBlock
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="打开 MC Appx 的游戏框架下载页面"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Button>
+                    <Separator IsVisible="{Binding IsWindows}" Margin="14,0" />
+                    <Button
+                        Background="Transparent"
+                        Click="CheckSdk_OnClick"
+                        HorizontalContentAlignment="Stretch"
+                        IsVisible="{Binding IsWindows}"
+                        Padding="14,12"
+                        Theme="{StaticResource TransparentButton}">
+                        <DockPanel>
+                            <PathIcon
+                                Data="F1 M640,640z M0,0z M439.1,297.4C451.6,309.9,451.6,330.2,439.1,342.7L279.1,502.7C266.6,515.2 246.3,515.2 233.8,502.7 221.3,490.2 221.3,469.9 233.8,457.4L371.2,320 233.9,182.6C221.4,170.1 221.4,149.8 233.9,137.3 246.4,124.8 266.7,124.8 279.2,137.3L439.2,297.3z"
+                                DockPanel.Dock="Right"
+                                Height="20" />
+                            <StackPanel Spacing="3">
+                                <TextBlock FontWeight="SemiBold" Text="检测 SDK 1.8 的安装" />
+                                <TextBlock
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="检查 Windows App SDK 1.8 (8000.x) 的 Main、Singleton 和 DDLM 组件"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Button>
+                    <Separator IsVisible="{Binding IsWindows}" Margin="14,0" />
+                    <Button
+                        Background="Transparent"
+                        Click="UninstallMinecraft_OnClick"
+                        HorizontalContentAlignment="Stretch"
+                        IsVisible="{Binding IsWindows}"
+                        Padding="14,12"
+                        Theme="{StaticResource TransparentButton}">
+                        <DockPanel>
+                            <PathIcon
+                                Data="F1 M640,640z M0,0z M439.1,297.4C451.6,309.9,451.6,330.2,439.1,342.7L279.1,502.7C266.6,515.2 246.3,515.2 233.8,502.7 221.3,490.2 221.3,469.9 233.8,457.4L371.2,320 233.9,182.6C221.4,170.1 221.4,149.8 233.9,137.3 246.4,124.8 266.7,124.8 279.2,137.3L439.2,297.3z"
+                                DockPanel.Dock="Right"
+                                Height="20" />
+                            <StackPanel Spacing="3">
+                                <TextBlock FontWeight="SemiBold" Text="卸载本机已安装的 Minecraft" />
+                                <TextBlock
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="移除从 Microsoft Store 安装的 Minecraft 基岩版"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

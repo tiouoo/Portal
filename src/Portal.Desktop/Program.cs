@@ -145,6 +145,8 @@ sealed class Program
             config => new Portal.Bedrock.BedrockLaunch(config);
         Portal.Bedrock.Standard.Interface.BedrockInstallationService.DefaultInstaller =
             new Portal.Bedrock.BedrockInstaller();
+        Portal.Bedrock.Standard.Interface.BedrockToolsService.Default =
+            new Portal.Bedrock.BedrockWindowsToolsService();
 #elif LINUX
         MinecraftLaunchService.DefaultBedrockLauncherFactory =
             config => new Portal.Bedrock.Linux.BedrockLaunch(config);

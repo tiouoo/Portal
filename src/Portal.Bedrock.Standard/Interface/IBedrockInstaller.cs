@@ -80,6 +80,17 @@ public static class BedrockInstallationService
     public static IBedrockInstaller? DefaultInstaller { get; set; }
 }
 
+public interface IBedrockToolsService
+{
+    Task<bool> IsWindowsAppSdk18InstalledAsync(CancellationToken cancellationToken = default);
+    Task UninstallMinecraftAsync(CancellationToken cancellationToken = default);
+}
+
+public static class BedrockToolsService
+{
+    public static IBedrockToolsService? Default { get; set; }
+}
+
 public static class BedrockNetworkConfiguration
 {
     public static bool DisableSystemProxy { get; private set; }
