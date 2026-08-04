@@ -9,6 +9,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations;
@@ -33,10 +34,23 @@ namespace Portal.Views.Components;
 
 public partial class TitleBarComponent : Grid
 {
+    private const double TaskTitleScrollStep = 0.7;
+    private const int TaskTitlePauseTicks = 40;
+    private readonly DispatcherTimer _taskTitleScrollTimer;
+    private double _taskTitleOverflow;
+    private int _taskTitleDirection = 1;
+    private int _taskTitlePauseTicksRemaining;
+
     public TitleBarComponent()
     {
         InitializeComponent();
         DataContext = this;
+        _taskTitleScrollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+        _taskTitleScrollTimer.Tick += TaskTitleScrollTimer_OnTick;
+        CurrentTaskTitleText.PropertyChanged += CurrentTaskTitleText_OnPropertyChanged;
+        CurrentTaskTitleText.SizeChanged += (_, _) => UpdateTaskTitleAnimation();
+        Loaded += (_, _) => Dispatcher.UIThread.Post(UpdateTaskTitleAnimation, DispatcherPriority.Render);
+        DetachedFromVisualTree += (_, _) => _taskTitleScrollTimer.Stop();
     }
 
     public static readonly StyledProperty<string?> DropMsgProperty =
@@ -53,6 +67,56 @@ public partial class TitleBarComponent : Grid
     public bool IsWindows => OperatingSystem.IsWindows();
 
     public TaskManager Tasks => TaskManager.Instance;
+
+    private void CurrentTaskTitleText_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == TextBlock.TextProperty)
+            Dispatcher.UIThread.Post(UpdateTaskTitleAnimation, DispatcherPriority.Render);
+    }
+
+    private void UpdateTaskTitleAnimation()
+    {
+        TaskTitleScrollViewer.Offset = default;
+        _taskTitleDirection = 1;
+        _taskTitlePauseTicksRemaining = TaskTitlePauseTicks;
+        Dispatcher.UIThread.Post(UpdateTaskTitleOverflow, DispatcherPriority.Render);
+    }
+
+    private void UpdateTaskTitleOverflow()
+    {
+        _taskTitleOverflow = Math.Max(0, TaskTitleScrollViewer.Extent.Width - TaskTitleScrollViewer.Viewport.Width);
+        if (_taskTitleOverflow > 0)
+            _taskTitleScrollTimer.Start();
+        else
+            _taskTitleScrollTimer.Stop();
+    }
+
+    private void TaskTitleScrollTimer_OnTick(object? sender, EventArgs e)
+    {
+        if (_taskTitlePauseTicksRemaining > 0)
+        {
+            _taskTitlePauseTicksRemaining--;
+            return;
+        }
+
+        var nextOffset = TaskTitleScrollViewer.Offset.X + _taskTitleDirection * TaskTitleScrollStep;
+        if (nextOffset >= _taskTitleOverflow)
+        {
+            TaskTitleScrollViewer.Offset = new Vector(_taskTitleOverflow, 0);
+            _taskTitleDirection = -1;
+            _taskTitlePauseTicksRemaining = TaskTitlePauseTicks;
+        }
+        else if (nextOffset <= 0)
+        {
+            TaskTitleScrollViewer.Offset = default;
+            _taskTitleDirection = 1;
+            _taskTitlePauseTicksRemaining = TaskTitlePauseTicks;
+        }
+        else
+        {
+            TaskTitleScrollViewer.Offset = new Vector(nextOffset, 0);
+        }
+    }
 
     private void OpenTasks(object? sender, RoutedEventArgs e)
     {

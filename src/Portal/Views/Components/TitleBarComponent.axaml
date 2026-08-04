@@ -119,10 +119,20 @@
                         Height="8"
                         VerticalAlignment="Center"
                         Width="8" />
-                    <TextBlock
-                        FontSize="13"
-                        Text="{Binding Tasks.CurrentTaskTitle}"
-                        VerticalAlignment="Center" />
+                    <ScrollViewer
+                        HorizontalScrollBarVisibility="Hidden"
+                        IsHitTestVisible="False"
+                        MaxWidth="220"
+                        Name="TaskTitleScrollViewer"
+                        VerticalScrollBarVisibility="Disabled"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="13"
+                            Name="CurrentTaskTitleText"
+                            Text="{Binding Tasks.CurrentTaskTitle}"
+                            TextWrapping="NoWrap"
+                            VerticalAlignment="Center" />
+                    </ScrollViewer>
                 </StackPanel>
             </Border>
         </Button>
