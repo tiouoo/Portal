@@ -51,6 +51,7 @@ public static partial class Initializer
         }
         
         LoopGc.BeginLoop();
+        MemoryOptimizationService.StartAutomaticWorkingSetTrim();
 
         Functions.CreateNewTabWindowFunc = _ => new TabWindow(false);
         NotificationGateway.IsToastFunc = () => Data.ConfigEntry.NoticeWay == NoticeWay.Toast;

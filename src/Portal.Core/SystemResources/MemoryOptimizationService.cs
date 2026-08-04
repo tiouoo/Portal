@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.SystemResources;
 
@@ -8,6 +9,28 @@ public readonly record struct MemoryOptimizationResult(long ReclaimedBytes);
 
 public static class MemoryOptimizationService
 {
+    private static readonly object WorkingSetTrimLock = new();
+    private static Timer? _workingSetTrimTimer;
+    private static int _workingSetTrimInProgress;
+
+    public static void StartAutomaticWorkingSetTrim()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+
+        lock (WorkingSetTrimLock)
+        {
+            if (_workingSetTrimTimer is not null) return;
+
+            _workingSetTrimTimer = new Timer(_ => TrimWorkingSetOnTimer(), null, 0, 2000);
+        }
+    }
+
+    public static bool TrimCurrentProcessWorkingSet()
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        return K32EmptyWorkingSet(GetCurrentProcess());
+    }
+
     public static async Task<MemoryOptimizationResult> OptimizeAsync(CancellationToken cancellationToken = default)
     {
         if (!OperatingSystem.IsWindows())
@@ -122,6 +145,36 @@ public static class MemoryOptimizationService
         return GlobalMemoryStatusEx(ref status) ? (long)Math.Min(status.AvailablePhysical, long.MaxValue) : 0;
     }
 
+    private static void TrimWorkingSetOnTimer()
+    {
+        if (Interlocked.Exchange(ref _workingSetTrimInProgress, 1) != 0) return;
+
+        try
+        {
+            using var process = Process.GetCurrentProcess();
+            process.Refresh();
+            var before = process.WorkingSet64;
+
+            if (!TrimCurrentProcessWorkingSet())
+            {
+                Logger.Warning($"进程工作集修剪失败，Win32 错误码：{Marshal.GetLastWin32Error()}。");
+                return;
+            }
+
+            process.Refresh();
+            // Logger.Info($"进程工作集修剪完成：{before / 1024d / 1024d:F1} MiB -> " +
+            //             $"{process.WorkingSet64 / 1024d / 1024d:F1} MiB。");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error("进程工作集自动修剪发生异常。", exception);
+        }
+        finally
+        {
+            Volatile.Write(ref _workingSetTrimInProgress, 0);
+        }
+    }
+
     private static Exception CreatePrivilegeException()
     {
         var error = Marshal.GetLastWin32Error();
@@ -159,6 +212,7 @@ public static class MemoryOptimizationService
     }
 
     [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr GetCurrentProcess();
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool K32EmptyWorkingSet(IntPtr process);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool CloseHandle(IntPtr handle);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx buffer);
     [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
