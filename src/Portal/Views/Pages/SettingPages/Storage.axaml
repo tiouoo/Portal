@@ -68,9 +68,8 @@
                     </StackPanel>
                 </StackPanel>
                 <Rectangle
-                    Fill="{DynamicResource LineColor}"
+                    Fill="{DynamicResource TranslucentBorderBrush}"
                     Margin="0,0,0,0"
-                    Opacity="0.5"
                     VerticalAlignment="Stretch"
                     Width="1" />
                 <StackPanel>
@@ -94,10 +93,7 @@
             </StackPanel>
         </DockPanel>
 
-        <Separator
-            Background="{DynamicResource LineColor}"
-            Margin="0,5,0,15"
-            Opacity="0.5" />
+        <Separator Background="{DynamicResource TranslucentBorderBrush}" Margin="0,5,0,15" />
 
         <StackPanel Spacing="10">
             <ItemsControl ItemsSource="{Binding PortalFolders}">

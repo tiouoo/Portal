@@ -66,6 +66,9 @@ public partial class App : Application
             }
             else if (Data.ConfigEntry.IsInitialized)
             {
+                // App.axaml loads the default theme after the configuration is read.
+                // Restore the persisted appearance before the main window is constructed.
+                Initializer.Oobe();
                 ShowMainWindow(desktop);
             }
             else

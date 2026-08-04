@@ -169,7 +169,17 @@
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableImageMask, Source={x:Static const:Data.ConfigEntry}}" />
         </StackPanel>
-        <StackPanel IsVisible="{Binding EnableImageMask, Source={x:Static const:Data.ConfigEntry}}" Spacing="5">
+        <StackPanel Spacing="5">
+            <StackPanel.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding
+                        Converter="{StaticResource BackgroundModeCompareConverter}"
+                        ConverterParameter="Image"
+                        Path="BackgroundMode"
+                        Source="{x:Static const:Data.ConfigEntry}" />
+                    <Binding Path="EnableImageMask" Source="{x:Static const:Data.ConfigEntry}" />
+                </MultiBinding>
+            </StackPanel.IsVisible>
             <Label
                 Content="遮罩颜色"
                 FontSize="13"
@@ -184,7 +194,17 @@
                 </tio:TioColorPicker.Palette>
             </tio:TioColorPicker>
         </StackPanel>
-        <StackPanel IsVisible="{Binding EnableImageMask, Source={x:Static const:Data.ConfigEntry}}" Spacing="5">
+        <StackPanel Spacing="5">
+            <StackPanel.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding
+                        Converter="{StaticResource BackgroundModeCompareConverter}"
+                        ConverterParameter="Image"
+                        Path="BackgroundMode"
+                        Source="{x:Static const:Data.ConfigEntry}" />
+                    <Binding Path="EnableImageMask" Source="{x:Static const:Data.ConfigEntry}" />
+                </MultiBinding>
+            </StackPanel.IsVisible>
             <Label
                 Content="遮罩透明度"
                 FontSize="13"
