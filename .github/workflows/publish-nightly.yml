@@ -35,10 +35,12 @@ jobs:
           MD=$(TZ='Asia/Shanghai' date +'%m%d')
           HM=$(TZ='Asia/Shanghai' date +'%H%M')
           FULL_TIMESTAMP="${Y_FULL}${MD}${HM}"
-          START_EPOCH=$(date -d "2026-01-01 00:00:00" +%s)
+          START_EPOCH=$(TZ='Asia/Shanghai' date -d "2026-07-10 00:00:00" +%s)
           NOW_EPOCH=$(date +%s)
-          TOTAL_HOURS=$(( (NOW_EPOCH - START_EPOCH) / 3600 ))
-          APP_VERSION="${BASE_VERSION}.${TOTAL_HOURS}"
+          TOTAL_MINUTES=$(( (NOW_EPOCH - START_EPOCH) / 60 ))
+          TOTAL_HOURS=$(( TOTAL_MINUTES / 60 ))
+          ELAPSED_MINUTES=$(( TOTAL_MINUTES % 60 ))
+          APP_VERSION="0.0.${TOTAL_HOURS}.${ELAPSED_MINUTES}"
           COMMIT_HASH=$(git rev-parse --short=6 HEAD)
           BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
           VERSION_TITLE="build-nightly-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
