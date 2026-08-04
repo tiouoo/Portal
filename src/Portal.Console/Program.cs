@@ -1,12 +1,14 @@
 using MinecraftLaunch;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
+using MinecraftLaunch.Base.Enums;
 
 InitializeHelper.Initialize(settings => {
     settings.MaxThread = 256;
     settings.MaxFragment = 128;
     settings.MaxRetryCount = 4;
-    settings.IsEnableMirror = false;
+    settings.MinecraftMetadataSource = DownloadSourceMode.OfficialOnly;
+    settings.MinecraftFileSource = DownloadSourceMode.OfficialOnly;
     settings.IsEnableFragment = false;
     settings.CurseForgeApiKey = "Your Curseforge API";
     settings.UserAgent = "MLTest/1.0";

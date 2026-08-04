@@ -314,13 +314,15 @@ public static class MinecraftLaunchService
 
         // ML verifies files synchronously before its first await. Isolate it from the UI and
         // limit hashing concurrency so cancellation does not starve rendering or disk access.
-        await Task.Factory.StartNew(
+        var result = await Task.Factory.StartNew(
                 () => downloader.VerifyAndDownloadDependenciesAsync(fileVerificationParallelism: 2,
                     cancellationToken: context.CancellationToken),
                 CancellationToken.None,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default)
             .Unwrap();
+        if (result.Failed.Any())
+            throw new IOException($"资源补全失败：{result.Failed.Count()} 个文件下载失败。");
         context.ReportProgress(1);
         context.SetDescription("资源补全完成");
     }

@@ -31,7 +31,7 @@ public static class JavaAutoInstallCoordinator
             existing = Data.ConfigEntry.JavaRuntimes.FirstOrDefault(x => x.MajorVersion == majorVersion && File.Exists(x.JavaPath));
             if (existing is not null) return existing;
             var runtime = await JavaDistributionService.InstallMojangAsync(majorVersion, ConfigPath.JavaRuntimesPath,
-                Data.ConfigEntry.EnableJavaMirror, progress, cancellationToken);
+                progress, cancellationToken);
             if (runtime is null)
             {
                 var version = await JavaDistributionService.GetFastestVersionAsync(majorVersion, cancellationToken)

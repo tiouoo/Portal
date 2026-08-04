@@ -44,7 +44,10 @@ public static partial class Initializer
             MaxThread = Data.ConfigEntry.DownloadMaxThreadCount,
             MaxFragment = Data.ConfigEntry.DownloadMaxFragmentCount,
             MaxRetryCount = Data.ConfigEntry.DownloadMaxRetryCount,
-            IsEnableMirror = Data.ConfigEntry.EnableMinecraftMirror,
+            MinecraftMetadataSource = Data.ConfigEntry.MinecraftMetadataSource,
+            MinecraftFileSource = Data.ConfigEntry.MinecraftFileSource,
+            ModrinthSource = Data.ConfigEntry.ModrinthSource,
+            CurseForgeSource = Data.ConfigEntry.CurseForgeSource,
             IsEnableFragment = Data.ConfigEntry.EnableFragmentDownload
         });
         Logger.Info("应用服务初始化完成");

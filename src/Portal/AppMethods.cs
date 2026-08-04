@@ -23,7 +23,7 @@ public partial class App : Application
 
         public static void SaveConfig()
         {
-            Logger.Debug("已请求保存应用配置（防抖）。");
+            // Logger.Debug("已请求保存应用配置（防抖）。");
             Debouncer.Invoke();
         }
 

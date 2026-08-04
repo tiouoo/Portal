@@ -7,6 +7,7 @@ using MinecraftLaunch;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
+using MinecraftLaunch.Utilities;
 using Portal.Core.Minecraft.Instance.Java;
 
 namespace Portal.Core.Operations.Java;
@@ -30,7 +31,7 @@ public static class JavaDistributionService
 {
     private const string FeedUrl = "https://download.jetbrains.com/jdk/feed/v1/jdks.json.xz";
     private const string MojangRuntimeIndexUrl = "https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
-    private static readonly HttpClient Client = new() { Timeout = Timeout.InfiniteTimeSpan };
+    private static HttpClient Client => HttpUtil.Client;
     private static readonly SemaphoreSlim FeedLock = new(1, 1);
     private static IReadOnlyList<JavaDistributionVersion>? FeedCache;
 
@@ -110,7 +111,7 @@ public static class JavaDistributionService
         }
     }
 
-    public static async Task<JavaRuntimeEntry?> InstallMojangAsync(int majorVersion, string runtimesPath, bool useMirror,
+    public static async Task<JavaRuntimeEntry?> InstallMojangAsync(int majorVersion, string runtimesPath,
         JavaInstallProgressHandler? progress = null, CancellationToken cancellationToken = default)
     {
         var component = majorVersion switch
@@ -125,12 +126,12 @@ public static class JavaDistributionService
         if (component is null || platform is null) return null;
 
         progress?.Invoke(new JavaInstallProgress("获取元数据", null, 0, 0, 0));
-        using var index = await GetJsonAsync(MojangRuntimeIndexUrl, useMirror, cancellationToken);
+        using var index = await GetJsonAsync(MojangRuntimeIndexUrl, cancellationToken);
         if (!index.RootElement.TryGetProperty(platform, out var platformNode) ||
             !platformNode.TryGetProperty(component, out var components) || components.GetArrayLength() == 0)
             return null;
         var manifestUrl = components[0].GetProperty("manifest").GetProperty("url").GetString()!;
-        using var manifest = await GetJsonAsync(manifestUrl, useMirror, cancellationToken);
+        using var manifest = await GetJsonAsync(manifestUrl, cancellationToken);
 
         var target = GetUniqueDirectory(Path.Combine(runtimesPath, $"Mojang-{majorVersion}"));
         var staging = target + $".{Guid.NewGuid():N}.installing";
@@ -165,7 +166,7 @@ public static class JavaDistributionService
                         var raw = file.Element.GetProperty("downloads").GetProperty("raw");
                         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                         await DownloadFileVerifiedAsync(raw.GetProperty("url").GetString()!, path,
-                            raw.GetProperty("sha1").GetString()!, raw.GetProperty("size").GetInt64(), useMirror,
+                            raw.GetProperty("sha1").GetString()!, raw.GetProperty("size").GetInt64(),
                             received =>
                             {
                                 var downloaded = Interlocked.Add(ref downloadedBytes, received);
@@ -245,11 +246,9 @@ public static class JavaDistributionService
             throw result.Exception ?? new IOException("Java 安装包下载失败。");
     }
 
-    private static async Task DownloadFileVerifiedAsync(string url, string destination, string sha1, long size, bool useMirror,
+    private static async Task DownloadFileVerifiedAsync(string url, string destination, string sha1, long size,
         Action<long> progressCallback, CancellationToken cancellationToken)
     {
-        var downloadUrl = useMirror && url.Contains("mojang.com", StringComparison.OrdinalIgnoreCase)
-            ? "https://bmclapi2.bangbang93.com" + new Uri(url).AbsolutePath : url;
         var maxRetries = Math.Max(1, DownloadManager.MaxRetryCount);
         Exception? lastError = null;
         for (var attempt = 1; attempt <= maxRetries && !cancellationToken.IsCancellationRequested; attempt++)
@@ -257,11 +256,11 @@ public static class JavaDistributionService
             try
             {
                 if (File.Exists(destination)) File.Delete(destination);
-                var request = new DownloadRequest(downloadUrl, destination, size)
+                var request = new DownloadRequest(url, destination, size)
                 {
                     ProgressChanged = e => progressCallback(Math.Max(0, e.DownloadedBytes))
                 };
-                var result = await new DefaultDownloader().DownloadAsync(request, cancellationToken);
+                var result = await new DefaultDownloader { MaxRetryCount = 1 }.DownloadAsync(request, cancellationToken);
                 if (result.Type == DownloadResultType.Cancelled)
                     throw new OperationCanceledException(cancellationToken);
                 if (result.Type != DownloadResultType.Successful)
@@ -285,11 +284,9 @@ public static class JavaDistributionService
         throw lastError ?? new IOException("Java 运行时文件下载失败。");
     }
 
-    private static async Task<JsonDocument> GetJsonAsync(string url, bool useMirror, CancellationToken cancellationToken)
+    private static async Task<JsonDocument> GetJsonAsync(string url, CancellationToken cancellationToken)
     {
-        var responseUrl = useMirror && url.Contains("mojang.com", StringComparison.OrdinalIgnoreCase)
-            ? "https://bmclapi2.bangbang93.com" + new Uri(url).AbsolutePath : url;
-        await using var stream = await Client.GetStreamAsync(responseUrl, cancellationToken);
+        await using var stream = await Client.GetStreamAsync(url, cancellationToken);
         return await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
     }
 

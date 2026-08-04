@@ -1,19 +1,23 @@
 ﻿namespace Portal.Core.Minecraft;
 
 using MinecraftLaunch;
+using MinecraftLaunch.Base.Enums;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 public static class MinecraftCoreInitializer
 {
     public static void Initialize(MinecraftCoreInitializeOptions options)
     {
-        Logger.Info($"初始化 Minecraft 核心：线程数 {options.MaxThread}，分片数 {options.MaxFragment}，重试次数 {options.MaxRetryCount}，镜像 {(options.IsEnableMirror ? "已启用" : "未启用")}，分片下载 {(options.IsEnableFragment ? "已启用" : "未启用")}");
+        Logger.Info($"初始化 Minecraft 核心：线程数 {options.MaxThread}，分片数 {options.MaxFragment}，重试次数 {options.MaxRetryCount}，分片下载 {(options.IsEnableFragment ? "已启用" : "未启用")}");
         InitializeHelper.Initialize(settings =>
         {
             settings.MaxThread = options.MaxThread;
             settings.MaxFragment = options.MaxFragment;
             settings.MaxRetryCount = options.MaxRetryCount;
-            settings.IsEnableMirror = options.IsEnableMirror;
+            settings.MinecraftMetadataSource = options.MinecraftMetadataSource;
+            settings.MinecraftFileSource = options.MinecraftFileSource;
+            settings.ModrinthSource = options.ModrinthSource;
+            settings.CurseForgeSource = options.CurseForgeSource;
             settings.IsEnableFragment = options.IsEnableFragment;
             settings.CurseForgeApiKey = ServiceCredentials.CurseForgeApiKey;
             settings.UserAgent = $"Portal/{options.AppVersion}";
@@ -43,6 +47,9 @@ public class MinecraftCoreInitializeOptions
     public int MaxThread { get; set; } = 16;
     public int MaxFragment { get; set; } = 16;
     public int MaxRetryCount { get; set; } = 4;
-    public bool IsEnableMirror { get; set; } = false;
+    public DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
+    public DownloadSourceMode MinecraftFileSource { get; set; } = DownloadSourceMode.Auto;
+    public DownloadSourceMode ModrinthSource { get; set; } = DownloadSourceMode.Auto;
+    public DownloadSourceMode CurseForgeSource { get; set; } = DownloadSourceMode.Auto;
     public bool IsEnableFragment { get; set; } = false;
 }

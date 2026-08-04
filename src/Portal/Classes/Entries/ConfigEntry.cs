@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch;
+using MinecraftLaunch.Base.Enums;
 using Portal.Views;
 using Portal.Views.Pages;
 using Portal.Classes.Enums;
@@ -37,8 +38,10 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool IsInitialized { get; set; } = true; // 仅在配置文件首次创建时由 Config.Initialize 置为 false
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
-    [ObservableProperty] public partial bool EnableMinecraftMirror { get; set; }
-    [ObservableProperty] public partial bool EnableJavaMirror { get; set; }
+    [ObservableProperty] public partial DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
+    [ObservableProperty] public partial DownloadSourceMode MinecraftFileSource { get; set; } = DownloadSourceMode.Auto;
+    [ObservableProperty] public partial DownloadSourceMode ModrinthSource { get; set; } = DownloadSourceMode.Auto;
+    [ObservableProperty] public partial DownloadSourceMode CurseForgeSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
     [ObservableProperty] public partial bool EnableManagedWindowDecorationsOnWindows { get; set; }
     [ObservableProperty] public partial bool EnableManagedWindowBorderOnWindows { get; set; } = true;
@@ -150,8 +153,17 @@ public partial class ConfigEntry : ObservableObject
             case nameof(EnableFragmentDownload):
                 DownloadManager.IsEnableFragment = EnableFragmentDownload;
                 break;
-            case nameof(EnableMinecraftMirror):
-                DownloadManager.IsEnableMirror = EnableMinecraftMirror;
+            case nameof(MinecraftMetadataSource):
+                DownloadManager.MinecraftMetadataSource = MinecraftMetadataSource;
+                break;
+            case nameof(MinecraftFileSource):
+                DownloadManager.MinecraftFileSource = MinecraftFileSource;
+                break;
+            case nameof(ModrinthSource):
+                DownloadManager.ModrinthSource = ModrinthSource;
+                break;
+            case nameof(CurseForgeSource):
+                DownloadManager.CurseForgeSource = CurseForgeSource;
                 break;
             case nameof(DownloadMaxThreadCount):
                 DownloadManager.MaxThread = DownloadMaxThreadCount;

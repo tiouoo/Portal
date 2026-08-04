@@ -12,19 +12,64 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="下载设置" />
-        <StackPanel Spacing="5">
-            <Label
-                Content="使用国内镜像源 BMCLAPI"
-                FontSize="13"
-                Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableMinecraftMirror}" />
-        </StackPanel>
-        <StackPanel Spacing="5">
-            <Label
-                Content="下载 Java 时使用镜像源"
-                FontSize="13"
-                Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableJavaMirror}" />
+        <StackPanel Spacing="8">
+            <TextBlock FontSize="18" Text="资源下载源" />
+            <StackPanel Spacing="5">
+                <TextBlock Text="Minecraft 元数据" VerticalAlignment="Center" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding SourceOptions}"
+                    SelectedValue="{Binding Data.ConfigEntry.MinecraftMetadataSource}"
+                    SelectedValueBinding="{Binding Mode}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Spacing="5">
+                <TextBlock Text="Minecraft 文件、加载器、Java" VerticalAlignment="Center" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding SourceOptions}"
+                    SelectedValue="{Binding Data.ConfigEntry.MinecraftFileSource}"
+                    SelectedValueBinding="{Binding Mode}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Spacing="5">
+                <TextBlock Text="Modrinth" VerticalAlignment="Center" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding SourceOptions}"
+                    SelectedValue="{Binding Data.ConfigEntry.ModrinthSource}"
+                    SelectedValueBinding="{Binding Mode}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Spacing="5">
+                <TextBlock Text="CurseForge" VerticalAlignment="Center" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding SourceOptions}"
+                    SelectedValue="{Binding Data.ConfigEntry.CurseForgeSource}"
+                    SelectedValueBinding="{Binding Mode}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label

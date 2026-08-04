@@ -6,6 +6,7 @@ using Portal.Classes.Entries;
 using Portal.Const;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
+using MinecraftLaunch.Base.Enums;
 
 namespace Portal.Views.Pages.SettingPages;
 
@@ -29,7 +30,15 @@ public partial class Download : DataUserControl, INotifyPropertyChanged, IDispos
     }
 
     public bool HasHighConcurrencyWarning => Data.ConfigEntry.DownloadMaxThreadCount > 70 ||
-                                             Data.ConfigEntry.DownloadMaxFragmentCount > 40;
+                                              Data.ConfigEntry.DownloadMaxFragmentCount > 40;
+
+    public IReadOnlyList<DownloadSourceOption> SourceOptions { get; } =
+    [
+        new(DownloadSourceMode.Auto, "自动（动态选择较快源）"),
+        new(DownloadSourceMode.OfficialPreferred, "官方优先（失败后使用镜像）"),
+        new(DownloadSourceMode.MirrorPreferred, "镜像优先（失败后使用官方）"),
+        new(DownloadSourceMode.OfficialOnly, "仅原始源")
+    ];
 
     private void ConfigEntry_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -47,3 +56,5 @@ public partial class Download : DataUserControl, INotifyPropertyChanged, IDispos
         DataContext = null;
     }
 }
+
+public sealed record DownloadSourceOption(DownloadSourceMode Mode, string Name);
