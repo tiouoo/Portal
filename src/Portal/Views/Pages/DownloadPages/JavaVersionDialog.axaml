@@ -1,0 +1,133 @@
+<UserControl
+    d:DesignHeight="420"
+    d:DesignWidth="520"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.JavaVersionDialog"
+    x:DataType="downloadPages:JavaVersionDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBoxItem Border.java-card">
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBoxItem Border.java-card-inner">
+            <Setter Property="BorderBrush" Value="{DynamicResource TranslucentBorderBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected Border.java-card">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected Border.java-card-inner">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+    </UserControl.Styles>
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,*,Auto"
+        Width="500">
+        <TextBlock
+            FontSize="16"
+            FontWeight="SemiBold"
+            Text="{Binding HeaderText}"
+            TextWrapping="Wrap" />
+        <ScrollViewer
+            Classes="Flat"
+            Grid.Row="1"
+            Margin="0,14,0,0">
+            <ListBox
+                Background="Transparent"
+                ItemsSource="{Binding Versions}"
+                SelectedItem="{Binding SelectedOption}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid
+                            ColumnSpacing="10"
+                            Columns="3"
+                            RowSpacing="10" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="downloadPages:JavaVersionOption">
+                        <Border
+                            BorderThickness="1"
+                            Classes.java-card="True"
+                            CornerRadius="11"
+                            Padding="0">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <BrushTransition
+                                        Duration="0:0:0.16"
+                                        Easing="SineEaseOut"
+                                        Property="BorderBrush" />
+                                </Transitions>
+                            </Border.Transitions>
+                            <Border
+                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                BorderThickness="1"
+                                Classes.java-card-inner="True"
+                                CornerRadius="10"
+                                MinHeight="62"
+                                Padding="12">
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <BrushTransition
+                                            Duration="0:0:0.16"
+                                            Easing="SineEaseOut"
+                                            Property="BorderBrush" />
+                                    </Transitions>
+                                </Border.Transitions>
+                                <StackPanel Spacing="4">
+                                    <DockPanel>
+                                        <TextBlock
+                                            FontSize="15"
+                                            FontWeight="SemiBold"
+                                            Text="{Binding DisplayName}" />
+                                        <Border
+                                            Background="{DynamicResource PopupBackgroundColor}"
+                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            DockPanel.Dock="Right"
+                                            IsVisible="{Binding IsInstalled}"
+                                            Padding="5,2">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="已安装" />
+                                        </Border>
+                                    </DockPanel>
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Text="{Binding DetailText}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Border>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Margin="0,16,0,0"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Click="Cancel_OnClick" Content="取消" />
+            <Button
+                Click="Confirm_OnClick"
+                Content="安装"
+                IsEnabled="{Binding CanConfirm}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

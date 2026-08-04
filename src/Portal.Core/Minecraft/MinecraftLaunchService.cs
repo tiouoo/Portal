@@ -20,6 +20,7 @@ using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.SystemResources;
 using Portal.Core.Operations.Account;
+using Portal.Core.Operations.Java;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -168,7 +169,7 @@ public static class MinecraftLaunchService
             selectJava!.Start(async context =>
             {
                 context.SetRunning("正在检查可用 Java 运行时");
-                java = await SelectJavaAsync(instance, options, context.CancellationToken);
+                java = await SelectJavaAsync(instance, options, context, context.CancellationToken);
                 if (options.AutoSetJavaHighPerformanceGpu)
                     TrySetHighPerformanceGpuPreference(java.JavaPath);
                 context.ReportProgress(1);
@@ -369,28 +370,69 @@ public static class MinecraftLaunchService
     }
 
     private static async Task<JavaEntry> SelectJavaAsync(MinecraftInstance instance, MinecraftLaunchOptions options,
-        CancellationToken cancellationToken)
+        TaskExecutionContext context, CancellationToken cancellationToken)
     {
         var javaConfig = instance.JavaConfig
                          ?? throw new InvalidOperationException("Java 版实例配置缺失。");
         var preferred = javaConfig.EnableSpecificJava ? javaConfig.SpecificJavaEntry : null;
         var candidates = preferred != null ? [preferred] : options.JavaRuntimes.ToList();
+        var requiredVersion = instance.MinecraftEntry!.GetAppropriateJavaVersion();
+
+        // 先用已配置的 Java 挑选兼容运行时；为空或不兼容时才询问自动安装。
+        var selected = TrySelectConfiguredJava(instance, preferred, candidates);
+        if (selected is not null) return selected;
+
+        if (options.InstallMissingJava is not null && requiredVersion > 0)
+        {
+            context.SetRunning($"正在安装 Java {requiredVersion}");
+            var installed = await options.InstallMissingJava(requiredVersion,
+                progress => ReportJavaInstallProgress(context, progress), cancellationToken);
+            if (installed is not null) return ToJavaEntry(installed);
+        }
+
+        // 用户拒绝自动安装后，回退到磁盘扫描（保留原有行为）。
         if (candidates.Count == 0)
             candidates = (await JavaRuntimeManager.ScanAsync(cancellationToken)).ToList();
         if (candidates.Count == 0)
             throw new InvalidOperationException("没有可用的 Java 运行时，请在设置中添加 Java。");
-
         var javaEntries = candidates.Select(ToJavaEntry).ToList();
-        JavaEntry? selected;
-        if (preferred != null)
+        return preferred != null ? javaEntries[0] : SelectAppropriateJava(instance.MinecraftEntry!, javaEntries);
+    }
+
+    private static JavaEntry? TrySelectConfiguredJava(MinecraftInstance instance, JavaRuntimeEntry? preferred,
+        IReadOnlyList<JavaRuntimeEntry> candidates)
+    {
+        if (candidates.Count == 0) return null;
+        var javaEntries = candidates.Select(ToJavaEntry).ToList();
+        if (preferred != null) return javaEntries[0];
+        try
         {
-            selected = javaEntries[0];
+            return SelectAppropriateJava(instance.MinecraftEntry!, javaEntries);
         }
-        else
+        catch (InvalidOperationException)
         {
-            selected = SelectAppropriateJava(instance.MinecraftEntry!, javaEntries);
+            return null;
         }
-        return selected;
+    }
+
+    private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
+    {
+        if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+            try
+            {
+                context.ReportProgress(progress.Fraction);
+                context.SetDescription(progress.SpeedBytesPerSecond > 0
+                    ? $"{progress.Stage}，下载速度：{DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true)}"
+                    : progress.Stage);
+            }
+            catch (InvalidOperationException)
+            {
+                // 任务已进入终态，忽略进度更新
+            }
+        });
     }
 
     private static JavaEntry SelectAppropriateJava(MinecraftEntry minecraft, IReadOnlyList<JavaEntry> javaEntries)
@@ -712,5 +754,6 @@ public sealed class MinecraftLaunchOptions
     public Action? GameExited { get; init; }
     public Action<MinecraftAccount, MinecraftAccount>? AccountRefreshed { get; init; }
     public Action<MinecraftLogSession>? OpenLog { get; init; }
+    public Func<int, JavaInstallProgressHandler, CancellationToken, Task<JavaRuntimeEntry?>>? InstallMissingJava { get; init; }
     public Func<BedrockInstanceConfig, IBedrockLaunch>? BedrockLauncherFactory { get; init; }
 }

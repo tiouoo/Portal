@@ -11,11 +11,14 @@ using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Interfaces;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Base.Models.Network;
+using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
 using Portal.Const;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Operations.Java;
+using Portal.Services;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -38,15 +41,6 @@ internal partial class MinecraftInstallationPage : UserControl
 
     private void Install_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (_viewModel.HasMissingRequiredJavaRuntime)
-        {
-            if (TopLevel.GetTopLevel(this) is { } topLevel)
-                NotificationGateway.Notice(topLevel,
-                    "所选加载器需要 Java 运行时。请先在设置中添加有效的 Java，再开始安装。",
-                    NotificationType.Warning);
-            return;
-        }
-
         _ = _viewModel.InstallAsync();
         _viewModel.Complete();
     }
@@ -300,7 +294,13 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
         {
             if (RequiresJavaRuntime(selectedEntries.Keys) && string.IsNullOrWhiteSpace(javaPath))
-                throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
+            {
+                var runtime = await JavaAutoInstallCoordinator.EnsureAsync(GetRecommendedJavaVersion(vanilla.Id),
+                    progress => ReportJavaInstallProgress(step, progress), step.CancellationToken);
+                javaPath = runtime?.JavaPath;
+                if (string.IsNullOrWhiteSpace(javaPath))
+                    throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
+            }
             if (Directory.Exists(Path.Combine(folder.FolderPath, "versions", versionId)))
                 throw new InvalidOperationException($"实例 ID “{versionId}”已存在于所选文件夹，请更换名称。");
             step.ReportProgress(1);
@@ -495,6 +495,25 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         context.SetDescription($"{GetInstallStepDescription(progress.StepName)}{count}{speed}");
     }
 
+    private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
+    {
+        if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+            try
+            {
+                context.ReportProgress(progress.Fraction);
+                context.SetDescription(progress.SpeedBytesPerSecond > 0
+                    ? $"{progress.Stage}，下载速度：{DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true)}"
+                    : progress.Stage);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        });
+    }
+
     private static string GetInstallStepDescription(InstallStep step) => step switch
     {
         InstallStep.Started => "正在准备安装器",
@@ -595,6 +614,18 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         var preferred = Data.ConfigEntry.DefaultJavaRuntime;
         if (preferred is { JavaPath: { } path } && File.Exists(path)) return path;
         return Data.ConfigEntry.JavaRuntimes.Select(runtime => runtime.JavaPath).FirstOrDefault(File.Exists);
+    }
+
+    internal static int GetRecommendedJavaVersion(string minecraftVersion)
+    {
+        var parts = minecraftVersion.Split('.', '-', '_');
+        if (parts.Length < 2 || !int.TryParse(parts[0], out var major) || !int.TryParse(parts[1], out var minor) || major != 1)
+            return 21;
+        if (minor >= 21) return 21;
+        if (minor == 20 && parts.Length > 2 && int.TryParse(parts[2], out var patch) && patch >= 5) return 21;
+        if (minor >= 18) return 17;
+        if (minor == 17) return 16;
+        return 8;
     }
 
     public bool HasErrors => _errors.Count > 0;

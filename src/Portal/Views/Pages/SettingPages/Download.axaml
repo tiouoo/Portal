@@ -21,6 +21,13 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
+                Content="下载 Java 时使用镜像源"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableJavaMirror}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
                 Content="最大下载线程数"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />

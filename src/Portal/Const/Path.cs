@@ -15,6 +15,7 @@ public static class ConfigPath
     public static string CacheFolderPath => Path.Combine(UserDataRootPath, "Cache");
     public static string UpdateFolderPath => Path.Combine(UserDataRootPath, "Updates");
     public static string BedrockDataRootPath => Path.Combine(UserDataRootPath, "Bedrock");
+    public static string JavaRuntimesPath => Path.Combine(UserDataRootPath, "Runtimes", "Java");
 
     public static string SettingDataPath => Path.Combine(UserDataRootPath, "Setting.portal");
     public static string AppPathDataPath => Path.Combine(UserDataRootPath, "AppPath.portal");

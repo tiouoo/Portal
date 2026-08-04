@@ -67,6 +67,7 @@ public partial class StorageViewModel : ObservableObject
     private readonly string _portalDataPath = ConfigPath.UserDataRootPath;
     private readonly string _cachePath = ConfigPath.CacheFolderPath;
     private readonly string _bedrockDataPath = ConfigPath.BedrockDataRootPath;
+    private readonly string _javaRuntimesPath = ConfigPath.JavaRuntimesPath;
 
     public StorageViewModel()
     {
@@ -95,6 +96,11 @@ public partial class StorageViewModel : ObservableObject
             "Portal 下载与运行产生的缓存数据，删除后会在需要时重新生成。",
             _cachePath,
             0));
+        PortalFolders.Add(new GameFolderStorageItem(
+            "运行时文件夹",
+            "Portal 管理的 Java 运行时，不计入游戏或 Portal 分类。",
+            _javaRuntimesPath,
+            0));
         
         GameFolders.Clear();
 
@@ -116,9 +122,10 @@ public partial class StorageViewModel : ObservableObject
         {
             try
             {
-                long dataBytes = GetDirectorySize(portalPath, [_cachePath, _bedrockDataPath]);
+                long dataBytes = GetDirectorySize(portalPath, [_cachePath, _bedrockDataPath, _javaRuntimesPath]);
                 long cacheBytes = GetDirectorySize(_cachePath);
                 long portalBytes = dataBytes + cacheBytes;
+                long javaBytes = GetDirectorySize(_javaRuntimesPath);
 
                 long totalGameBytes = 0;
                 var gameSizes = new List<(string FolderPath, long Size)>();
@@ -143,6 +150,7 @@ public partial class StorageViewModel : ObservableObject
                     PortalBytesRaw = portalBytes;
                     PortalFolders[0].SizeBytes = dataBytes;
                     PortalFolders[1].SizeBytes = cacheBytes;
+                    PortalFolders[2].SizeBytes = javaBytes;
                     foreach (var (folderPath, size) in gameSizes)
                     {
                         var item = GameFolders.FirstOrDefault(x => x.FolderPath == folderPath);
@@ -150,7 +158,7 @@ public partial class StorageViewModel : ObservableObject
                             item.SizeBytes = size;
                     }
                     GameBytesRaw = gameBytes;
-                    TotalBytesRaw = portalBytes + gameBytes;
+                    TotalBytesRaw = portalBytes + gameBytes + javaBytes;
                     Logger.Info($"[Storage] Storage usage refreshed in {stopwatch.Elapsed}: Portal={portalBytes} bytes, game={gameBytes} bytes.");
                 });
             }

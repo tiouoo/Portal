@@ -1,0 +1,100 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.JavaDownloadPage"
+    x:DataType="downloadPages:JavaDownloadPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="12,0,12,12">
+        <StackPanel
+            DockPanel.Dock="Top"
+            Margin="0,0,0,12"
+            Spacing="6">
+            <DockPanel>
+                <StackPanel
+                    DockPanel.Dock="Left"
+                    HorizontalAlignment="Left"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Bottom">
+                    <TextBlock
+                        FontSize="20"
+                        FontWeight="SemiBold"
+                        Text="Java 运行时" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="8,9,0,0"
+                        Text="{Binding StatusText}"
+                        VerticalAlignment="Top" />
+                </StackPanel>
+                <Button
+                    Command="{Binding ReloadCommand}"
+                    Content="重试"
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    IsVisible="{Binding HasError}"
+                    VerticalAlignment="Top" />
+            </DockPanel>
+            <TextBlock
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoading}"
+                Text="正在获取可用发行版…" />
+            <TextBlock
+                Foreground="#d4380d"
+                IsVisible="{Binding HasError}"
+                Text="{Binding ErrorText}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <controls:ScrollView Classes="Flat">
+            <ItemsRepeater ItemsSource="{Binding Distributions}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="10"
+                        MinItemHeight="96"
+                        MinItemWidth="306"
+                        MinRowSpacing="10"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="downloadPages:JavaDistributionItem">
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Cursor="Hand"
+                            Padding="12"
+                            PointerPressed="DistributionCard_OnPointerPressed">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <PathIcon
+                                        Data="F1 M640,640z M0,0z M184,48C170.7,48 160,58.7 160,72 160,110.9 183.4,131.4 199.1,145.1L200.2,146.1C216.5,160.4 224,167.9 224,184 224,197.3 234.7,208 248,208 261.3,208 272,197.3 272,184 272,145.1 248.6,124.6 232.9,110.9L231.8,109.9C215.5,95.7 208,88.1 208,72 208,58.7 197.3,48 184,48z M128,256C110.3,256,96,270.3,96,288L96,480C96,533,139,576,192,576L384,576C425.8,576,461.4,549.3,474.5,512L480,512C550.7,512 608,454.7 608,384 608,313.3 550.7,256 480,256L128,256z M480,448L480,320C515.3,320 544,348.7 544,384 544,419.3 515.3,448 480,448z"
+                                        Height="24"
+                                        Width="24" />
+                                    <TextBlock
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding DisplayName}"
+                                        TextTrimming="CharacterEllipsis"
+                                        VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="{Binding VersionSummary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
+    </DockPanel>
+</UserControl>

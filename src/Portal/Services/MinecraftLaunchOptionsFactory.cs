@@ -24,7 +24,8 @@ public static class MinecraftLaunchOptionsFactory
         GameStarted = PortalVisibilityService.OnGameStarted,
         GameExited = PortalVisibilityService.OnGameExited,
         AccountRefreshed = UpdateMicrosoftAccount,
-        OpenLog = openLog
+        OpenLog = openLog,
+        InstallMissingJava = (version, progress, token) => JavaAutoInstallCoordinator.EnsureAsync(version, progress, token)
     };
 
     private static void UpdateMicrosoftAccount(MinecraftAccount original, MinecraftAccount refreshed)

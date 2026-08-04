@@ -19,6 +19,8 @@ using MinecraftLaunch.Utilities;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Operations.Java;
+using Portal.Services;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -411,7 +413,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         await Task.WhenAll(loaderTask, vanillaTask);
         var loader = await loaderTask;
         var vanilla = await vanillaTask;
-        EnsureJavaRuntime(loader, javaPath);
+        javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
             VanillaInstaller.Create(folder, vanilla));
         var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行下载整合包模组",
@@ -451,7 +453,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         await Task.WhenAll(loadersTask, vanillaTask);
         var loaders = await loadersTask;
         var vanilla = await vanillaTask;
-        foreach (var loader in loaders) EnsureJavaRuntime(loader, javaPath);
+        foreach (var loader in loaders)
+            javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
             VanillaInstaller.Create(folder, vanilla));
         var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行解析并下载整合包模组",
@@ -468,10 +471,34 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         return minecraft;
     }
 
-    private static void EnsureJavaRuntime(IInstallEntry loader, string? javaPath)
+    private static async Task<string?> EnsureJavaRuntimeAsync(IInstallEntry loader, string? javaPath,
+        string minecraftVersion, TaskExecutionContext context, CancellationToken cancellationToken)
     {
-        if (loader is ForgeInstallEntry && (string.IsNullOrWhiteSpace(javaPath) || !File.Exists(javaPath)))
-            throw new InvalidOperationException("该整合包使用 Forge 或 NeoForge，请在设置中配置有效的 Java 运行时。");
+        if (loader is not ForgeInstallEntry || !string.IsNullOrWhiteSpace(javaPath) && File.Exists(javaPath))
+            return javaPath;
+        var runtime = await JavaAutoInstallCoordinator.EnsureAsync(
+            MinecraftInstallationViewModel.GetRecommendedJavaVersion(minecraftVersion),
+            progress => ReportJavaInstallProgress(context, progress), cancellationToken);
+        return runtime?.JavaPath ?? throw new InvalidOperationException("该整合包使用 Forge 或 NeoForge，需要有效的 Java 运行时。");
+    }
+
+    private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
+    {
+        if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+            try
+            {
+                context.ReportProgress(progress.Fraction);
+                context.SetDescription(progress.SpeedBytesPerSecond > 0
+                    ? $"{progress.Stage}，下载速度：{DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true)}"
+                    : progress.Stage);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        });
     }
 
     private static string? GetForgeJavaPath()

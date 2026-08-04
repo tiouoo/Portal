@@ -860,10 +860,6 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             return "请先在设置中添加一个标准游戏目录";
         if (SelectedVersion.Value is not VersionManifestEntry) return null;
 
-        if (SelectedLoader?.Kind is LoaderKind.Forge or LoaderKind.NeoForge or LoaderKind.OptiFine &&
-            MinecraftInstallationViewModel.GetJavaPath() is null)
-            return "所选加载器需要 Java 运行时，请在设置中添加";
-
         var id = InstanceId.Trim();
         if (string.IsNullOrWhiteSpace(id)) return "实例 ID 不能为空";
         if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)

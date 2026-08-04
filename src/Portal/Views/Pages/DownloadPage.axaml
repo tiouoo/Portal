@@ -157,6 +157,17 @@
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type downloadPages:JavaDownloadPage}"
+                        Header="Java">
+                        <tio:NavMenuItem.Icon>
+                            <PathIcon
+                                Data="F1 M640,640z M0,0z M184,48C170.7,48 160,58.7 160,72 160,110.9 183.4,131.4 199.1,145.1L200.2,146.1C216.5,160.4 224,167.9 224,184 224,197.3 234.7,208 248,208 261.3,208 272,197.3 272,184 272,145.1 248.6,124.6 232.9,110.9L231.8,109.9C215.5,95.7 208,88.1 208,72 208,58.7 197.3,48 184,48z M128,256C110.3,256,96,270.3,96,288L96,480C96,533,139,576,192,576L384,576C425.8,576,461.4,549.3,474.5,512L480,512C550.7,512 608,454.7 608,384 608,313.3 550.7,256 480,256L128,256z M480,448L480,320C515.3,320 544,348.7 544,384 544,419.3 515.3,448 480,448z"
+                                Height="16"
+                                Width="16" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:CustomDownloadPage}"
                         Header="自定义下载">
                         <tio:NavMenuItem.Icon>
