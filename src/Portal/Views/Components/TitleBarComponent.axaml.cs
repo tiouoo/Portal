@@ -196,6 +196,13 @@ public partial class TitleBarComponent : Grid
         tioTabWindowBase.CreateTab(tabEntry);
         tioTabWindowBase.SelectTab(tabEntry);
     }
+    private void ToolsButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var tioTabWindowBase = Root.GetTopLevel() as TioTabWindowBase;
+        var tabEntry = new TabEntry(tioTabWindowBase!, new ToolsPage());
+        tioTabWindowBase.CreateTab(tabEntry);
+        tioTabWindowBase.SelectTab(tabEntry);
+    }
 
     private async void OpenCreateInstance(object? sender, RoutedEventArgs e)
     {
