@@ -35,16 +35,16 @@
                         Header="默认行为" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
-                        CommandParameter="{x:Type p:ApplicationDebug}"
-                        Header="其他设置" />
-                    <tio:NavMenuItem
-                        Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
                         Header="通知选项" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Storage}"
                         Header="存储空间" />
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:ApplicationDebug}"
+                        Header="其他设置" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:About}"
