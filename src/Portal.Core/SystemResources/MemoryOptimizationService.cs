@@ -126,6 +126,7 @@ public static class MemoryOptimizationService
                 info = value;
                 statuses.Add(NtSetSystemInformation(80, ref info, sizeof(int)));
             }
+
             statuses.Add(NtSetSystemInformation(155, IntPtr.Zero, 0));
             var combine = new MemoryCombineInformationEx();
             statuses.Add(NtSetSystemInformation(130, ref combine, Marshal.SizeOf<MemoryCombineInformationEx>()));
@@ -154,6 +155,7 @@ public static class MemoryOptimizationService
             using var process = Process.GetCurrentProcess();
             process.Refresh();
             var before = process.WorkingSet64;
+            if (before < 120 * 1024 * 1024) return;
 
             if (!TrimCurrentProcessWorkingSet())
             {
@@ -184,42 +186,100 @@ public static class MemoryOptimizationService
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct Luid { public uint LowPart; public int HighPart; }
+    private struct Luid
+    {
+        public uint LowPart;
+        public int HighPart;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct LuidAndAttributes { public Luid Luid; public uint Attributes; }
+    private struct LuidAndAttributes
+    {
+        public Luid Luid;
+        public uint Attributes;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct TokenPrivileges { public uint PrivilegeCount; public LuidAndAttributes Privileges; }
+    private struct TokenPrivileges
+    {
+        public uint PrivilegeCount;
+        public LuidAndAttributes Privileges;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct SystemFileCacheInformation
     {
         public nuint CurrentSize, PeakSize;
         public uint PageFaultCount;
-        public nuint MinimumWorkingSet, MaximumWorkingSet, CurrentSizeIncludingTransitionInPages, PeakSizeIncludingTransitionInPages;
+
+        public nuint MinimumWorkingSet,
+            MaximumWorkingSet,
+            CurrentSizeIncludingTransitionInPages,
+            PeakSizeIncludingTransitionInPages;
+
         public uint TransitionRePurposeCount, Flags;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct MemoryCombineInformationEx { public IntPtr Handle; public nuint PagesCombined, Flags; }
+    private struct MemoryCombineInformationEx
+    {
+        public IntPtr Handle;
+        public nuint PagesCombined, Flags;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MemoryStatusEx
     {
         public uint Length, MemoryLoad;
-        public ulong TotalPhysical, AvailablePhysical, TotalPageFile, AvailablePageFile, TotalVirtual, AvailableVirtual, AvailableExtendedVirtual;
+
+        public ulong TotalPhysical,
+            AvailablePhysical,
+            TotalPageFile,
+            AvailablePageFile,
+            TotalVirtual,
+            AvailableVirtual,
+            AvailableExtendedVirtual;
     }
 
-    [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr GetCurrentProcess();
-    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool K32EmptyWorkingSet(IntPtr process);
-    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool CloseHandle(IntPtr handle);
-    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx buffer);
-    [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool LookupPrivilegeValue(string? systemName, string name, out Luid luid);
-    [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool AdjustTokenPrivileges(IntPtr token, [MarshalAs(UnmanagedType.Bool)] bool disableAll, ref TokenPrivileges newState, uint bufferLength, IntPtr previousState, IntPtr returnLength);
-    [DllImport("ntdll.dll")] private static extern int NtSetSystemInformation(int informationClass, ref int information, int informationLength);
-    [DllImport("ntdll.dll")] private static extern int NtSetSystemInformation(int informationClass, ref SystemFileCacheInformation information, int informationLength);
-    [DllImport("ntdll.dll")] private static extern int NtSetSystemInformation(int informationClass, ref MemoryCombineInformationEx information, int informationLength);
-    [DllImport("ntdll.dll")] private static extern int NtSetSystemInformation(int informationClass, IntPtr information, int informationLength);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool K32EmptyWorkingSet(IntPtr process);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx buffer);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool LookupPrivilegeValue(string? systemName, string name, out Luid luid);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool AdjustTokenPrivileges(IntPtr token, [MarshalAs(UnmanagedType.Bool)] bool disableAll,
+        ref TokenPrivileges newState, uint bufferLength, IntPtr previousState, IntPtr returnLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, ref int information, int informationLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, ref SystemFileCacheInformation information,
+        int informationLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, ref MemoryCombineInformationEx information,
+        int informationLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, IntPtr information, int informationLength);
 }
