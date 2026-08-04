@@ -175,7 +175,7 @@ void InitializeBaseDir()
 		wchar_t appDataPath[MAX_PATH];
 		if (SUCCEEDED(SHGetFolderPathW(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, appDataPath)))
 		{
-			g_logicalBaseDir = fs::path(appDataPath) / "xyz.tiouo.Portal" / "Bedrock";
+			g_logicalBaseDir = fs::path(appDataPath) / "cc.tiouo.Portal" / "Bedrock";
 		}
 		else
 		{

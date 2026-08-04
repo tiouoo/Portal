@@ -215,7 +215,7 @@ jobs:
           PLIST="./src/Portal.Desktop/bin/Release/net10.0/${{ matrix.rid }}/publish/Portal.app/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string xyz.tiouoo.portal" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string cc.tiouoo.portal" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLRole string Viewer" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string portal" "$PLIST"
