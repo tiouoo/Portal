@@ -196,7 +196,10 @@
                             FontSize="17"
                             FontWeight="SemiBold"
                             Text="加入房间" />
-                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="先进入房间，再打开游戏；如已打开游戏，请先关闭。" />
+                        <TextBlock
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            IsVisible="{Binding ShowBedrockRoomActions}"
+                            Text="先进入房间，再打开游戏；如已打开游戏，请先关闭。" />
                         <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                             <Button
                                 Command="{Binding ClearJoinCodeCommand}"
