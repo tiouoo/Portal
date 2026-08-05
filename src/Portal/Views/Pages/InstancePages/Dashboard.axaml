@@ -69,7 +69,10 @@
                             TextTrimming="CharacterEllipsis"
                             TextWrapping="NoWrap" />
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <DropDownButton Content="编辑" Margin="0,0,10,0">
+                            <DropDownButton
+                                Content="编辑"
+                                Margin="0,0,10,0"
+                                x:Name="EditButton">
                                 <DropDownButton.Flyout>
                                     <MenuFlyout>
                                         <MenuItem
@@ -120,7 +123,8 @@
                                 Click="LaunchInstance_Click"
                                 Content="启动此实例"
                                 Margin="0,0,10,0"
-                                Width="97" />
+                                Width="97"
+                                x:Name="LaunchButton" />
                         </StackPanel>
                     </DockPanel>
                     <TextBlock

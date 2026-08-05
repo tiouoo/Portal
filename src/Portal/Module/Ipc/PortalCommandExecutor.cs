@@ -515,7 +515,7 @@ public static class PortalCommandExecutor
 
         var target = BuildLaunchTarget(instance, command);
         // window.Notice($"正在启动 {instance.InstanceName}（{instance.FolderName}）");
-        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(logSession =>
+        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(instance, logSession =>
             MinecraftLogPage.Open(logSession, window)), target);
     }
 

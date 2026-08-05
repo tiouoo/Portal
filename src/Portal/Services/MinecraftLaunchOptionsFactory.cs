@@ -9,27 +9,13 @@ namespace Portal.Services;
 
 public static class MinecraftLaunchOptionsFactory
 {
-    public static MinecraftLaunchOptions Create(Action<MinecraftLogSession>? openLog = null) => new()
+    public static MinecraftLaunchOptions Create(MinecraftInstance instance, Action<MinecraftLogSession>? openLog = null) => new()
     {
         Account = Data.ConfigEntry.UsingMinecraftMinecraftAccount,
         BedrockAccount = Data.ConfigEntry.UsingBedrockAccount,
         EnableBedrockAccountInjection = Data.ConfigEntry.EnableBedrockAccountInjection,
         EnableGameOverlay = Data.ConfigEntry.EnableGameOverlay,
-        ShowGameOverlay = process =>
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                try
-                {
-                    var overlay = new OverlayWindow(process);
-                    overlay.Show();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"显示游戏覆盖层失败: {ex.Message}");
-                }
-            });
-        },
+        ShowGameOverlay = ShowOverlay,
         JavaRuntimes = Data.ConfigEntry.JavaRuntimes,
         DefaultJavaRuntime = Data.ConfigEntry.DefaultJavaRuntime,
         WindowWidth = Data.ConfigEntry.MinecraftWindowWidth,
@@ -49,6 +35,22 @@ public static class MinecraftLaunchOptionsFactory
         OpenLog = openLog,
         InstallMissingJava = (version, progress, token) => JavaAutoInstallCoordinator.EnsureAsync(version, progress, token)
     };
+
+    private static void ShowOverlay(Process process, MinecraftInstance inst)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            try
+            {
+                var overlay = new OverlayWindow(process, inst);
+                overlay.Show();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"显示游戏覆盖层失败: {ex.Message}");
+            }
+        });
+    }
 
     private static void UpdateMicrosoftAccount(MinecraftAccount original, MinecraftAccount refreshed)
     {

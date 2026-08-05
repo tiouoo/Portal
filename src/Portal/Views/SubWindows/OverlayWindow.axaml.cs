@@ -8,6 +8,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Portal.Const;
+using Portal.Core.Minecraft.Classes;
+using Portal.Views.Pages;
 
 namespace Portal.Views.SubWindows;
 
@@ -15,6 +17,7 @@ public partial class OverlayWindow : Window
 {
     private readonly DispatcherTimer _clockTimer;
     private readonly TextBlock _timeBlock;
+    private readonly MinecraftInstance _instance;
     // --- Win32 常量 ---
     private const int GWL_EXSTYLE = -20;
     private const int GWL_STYLE = -16;
@@ -60,11 +63,12 @@ public partial class OverlayWindow : Window
     private DispatcherTimer? _syncTimer;
     private IntPtr _targetHwnd = IntPtr.Zero;
 
-    public OverlayWindow(Process targetProcess)
+    public OverlayWindow(Process targetProcess, MinecraftInstance instance)
     {
         InitializeComponent();
 
         _targetProcess = targetProcess;
+        _instance = instance;
 
         _timeBlock = TimeBlock;
 
@@ -396,6 +400,9 @@ public partial class OverlayWindow : Window
     {
         _isOverlayVisible = true;
 
+        InstanceBorder.Opacity = 0;
+        _isInstanceDetailVisible = false;
+
         if (_targetHwnd != IntPtr.Zero)
         {
             if (_isUWPApp)
@@ -613,7 +620,78 @@ public partial class OverlayWindow : Window
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
+    private bool _isInstanceDetailAnimating;
+    private bool _isInstanceDetailVisible;
+
     private void InputElement_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        ToggleInstanceDetail();
+    }
+
+    private void ToggleInstanceDetail()
+    {
+        if (_isInstanceDetailAnimating) return;
+
+        _isInstanceDetailAnimating = true;
+
+        if (InstanceContentControl.Content == null)
+        {
+            var detailPage = new InstanceDetailPage(_instance);
+            InstanceContentControl.Content = detailPage;
+        }
+
+        if (_isInstanceDetailVisible)
+        {
+            HideInstanceDetailAsync();
+        }
+        else
+        {
+            ShowInstanceDetailAsync();
+        }
+    }
+
+    private async void ShowInstanceDetailAsync()
+    {
+        InstanceBorder.IsHitTestVisible = true;
+        InstanceBorder.Opacity = 0;
+
+        var durationMs = 200;
+        const int steps = 10;
+        var stepDuration = durationMs / steps;
+        var stepValue = 1.0 / steps;
+
+        for (var i = 1; i <= steps; i++)
+        {
+            InstanceBorder.Opacity = stepValue * i;
+            await Task.Delay(stepDuration);
+        }
+
+        InstanceBorder.Opacity = 1;
+        _isInstanceDetailVisible = true;
+        _isInstanceDetailAnimating = false;
+    }
+
+    private async void HideInstanceDetailAsync()
+    {
+        var durationMs = 150;
+        const int steps = 10;
+        var stepDuration = durationMs / steps;
+        var stepValue = 1.0 / steps;
+
+        for (var i = 1; i <= steps; i++)
+        {
+            InstanceBorder.Opacity = 1 - stepValue * i;
+            await Task.Delay(stepDuration);
+        }
+
+        InstanceBorder.Opacity = 0;
+        InstanceBorder.IsHitTestVisible = false;
+        _isInstanceDetailVisible = false;
+        _isInstanceDetailAnimating = false;
+    }
+
+    private void CloseInstance(object? sender, RoutedEventArgs e)
+    {
+        HideInstanceDetailAsync();
     }
 }

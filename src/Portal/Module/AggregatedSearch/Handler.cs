@@ -89,7 +89,7 @@ public class Handler
         if (entry.Data is not RecentPlayTarget target) return;
 
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, sender,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, sender)), target);
+            MinecraftLaunchOptionsFactory.Create(target.Instance, logSession => MinecraftLogPage.Open(logSession, sender)), target);
     }
 
     private static async Task EditAuthServer(AggregatedSearchEntry entry, TopLevel sender)

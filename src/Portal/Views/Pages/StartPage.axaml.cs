@@ -219,7 +219,7 @@ public partial class StartPage : DataUserControl, ITioTabPage
             return;
 
         _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
+            MinecraftLaunchOptionsFactory.Create(instance, logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
 
     private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)
@@ -329,7 +329,7 @@ public partial class StartPage : DataUserControl, ITioTabPage
             return;
 
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(target.Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private async void RecentPlayCreateShortcut_Click(object? sender, RoutedEventArgs e)

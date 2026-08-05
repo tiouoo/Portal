@@ -83,6 +83,6 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
             ServerPort: port);
 
         _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 }

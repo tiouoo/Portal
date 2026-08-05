@@ -341,7 +341,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
             return;
 
         _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), BuildTarget());
+            MinecraftLaunchOptionsFactory.Create(_instance, logSession => MinecraftLogPage.Open(logSession, topLevel)), BuildTarget());
     }
 
     [RelayCommand]

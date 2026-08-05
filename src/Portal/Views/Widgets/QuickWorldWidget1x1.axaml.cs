@@ -151,7 +151,7 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
             world?.IconPath);
 
         _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private static string GetGameModeText(int? gameMode) =>

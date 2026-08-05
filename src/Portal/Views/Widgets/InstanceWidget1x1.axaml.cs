@@ -56,6 +56,6 @@ public partial class InstanceWidget1x1 : InstanceBoundWidgetBase
             return;
 
         _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)));
+            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)));
     }
 }

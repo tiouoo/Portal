@@ -251,7 +251,7 @@ public static class MinecraftLaunchService
             throw new InvalidOperationException("Minecraft 启动器未返回进程信息。");
         ObserveProcess(instance, topLevel, mcProcess, task, context, logSession, options);
         processStarted(mcProcess.Process);
-        OnGameProcessStarted(mcProcess.Process, options, placeholders, overrideWindowTitle: true);
+        OnGameProcessStarted(mcProcess.Process, options, placeholders, overrideWindowTitle: true, instance);
         context.ReportProgress(1);
     }
 
@@ -270,13 +270,13 @@ public static class MinecraftLaunchService
     }
 
     private static void OnGameProcessStarted(Process process, MinecraftLaunchOptions options,
-        Dictionary<string, string> placeholders, bool overrideWindowTitle)
+        Dictionary<string, string> placeholders, bool overrideWindowTitle, MinecraftInstance instance)
     {
         placeholders["{process_id}"] = process.Id.ToString();
 
         if (options.EnableGameOverlay && options.ShowGameOverlay != null)
         {
-            Dispatcher.UIThread.Post(() => options.ShowGameOverlay(process));
+            Dispatcher.UIThread.Post(() => options.ShowGameOverlay(process, instance));
         }
 
         if (overrideWindowTitle && placeholders.GetValueOrDefault("{title}") is { Length: > 0 } title)
@@ -649,7 +649,7 @@ public static class MinecraftLaunchService
 
         ObserveBedrockProcess(instance, topLevel, process, task, context, options);
         ReportProcess(process);
-        OnGameProcessStarted(process, options, placeholders, overrideWindowTitle: false);
+        OnGameProcessStarted(process, options, placeholders, overrideWindowTitle: false, instance);
         context.ReportProgress(1);
     }
 
@@ -770,7 +770,7 @@ public sealed class MinecraftLaunchOptions
     public BedrockAccount? BedrockAccount { get; init; }
     public bool EnableBedrockAccountInjection { get; init; }
     public bool EnableGameOverlay { get; init; }
-    public Action<Process>? ShowGameOverlay { get; init; }
+    public Action<Process, MinecraftInstance>? ShowGameOverlay { get; init; }
     public IReadOnlyList<JavaRuntimeEntry> JavaRuntimes { get; init; } = [];
     public JavaRuntimeEntry? DefaultJavaRuntime { get; init; }
     public int WindowWidth { get; init; }

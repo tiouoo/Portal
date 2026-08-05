@@ -10,6 +10,7 @@
     x:Class="Portal.Views.SubWindows.OverlayWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Name="OverlayRoot" Opacity="0">
         <Grid Background="#66000000" Opacity="1" />
@@ -19,6 +20,7 @@
             Name="MainContent"
             RowDefinitions="Auto,*">
             <Button
+                Background="#66000000"
                 Classes="NoBorder"
                 Click="CloseBtn_OnClick"
                 Grid.Row="0"
@@ -26,10 +28,11 @@
                 HorizontalAlignment="Right"
                 Name="CloseBtn"
                 Width="48">
-                <TextBlock
-                    FontSize="18"
+                <PathIcon
+                    Data="F1 M640,640z M0,0z M183.1,137.4C170.6,124.9 150.3,124.9 137.8,137.4 125.3,149.9 125.3,170.2 137.8,182.7L275.2,320 137.9,457.4C125.4,469.9 125.4,490.2 137.9,502.7 150.4,515.2 170.7,515.2 183.2,502.7L320.5,365.3 457.9,502.6C470.4,515.1 490.7,515.1 503.2,502.6 515.7,490.1 515.7,469.8 503.2,457.3L365.8,320 503.1,182.6C515.6,170.1 515.6,149.8 503.1,137.3 490.6,124.8 470.3,124.8 457.8,137.3L320.5,274.7 183.1,137.4z"
                     Foreground="#FFFFFF"
-                    Text="✕" />
+                    Height="18"
+                    Width="18" />
             </Button>
 
             <TextBlock
@@ -47,8 +50,10 @@
         <StackPanel
             Grid.Row="0"
             HorizontalAlignment="Left"
+            Margin="30,40,0,0"
             Orientation="Horizontal"
-            Spacing="22">
+            Spacing="22"
+            VerticalAlignment="Top">
             <StackPanel
                 Cursor="Hand"
                 Orientation="Horizontal"
@@ -81,8 +86,31 @@
             Text="Portal v1.0.0"
             VerticalAlignment="Top" />
 
-        <Border Margin="40">
-            <ContentControl Name="InstanceContentControl" />
+        <Border
+            Background="{DynamicResource PopupBackgroundColor}"
+            BorderBrush="{DynamicResource PopupBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            IsHitTestVisible="False"
+            Margin="55"
+            Name="InstanceBorder"
+            Opacity="0"
+            Padding="0,5,0,0">
+            <Panel>
+                <ContentControl Name="InstanceContentControl" />
+                <Button
+                    Background="Transparent"
+                    Click="CloseInstance"
+                    HorizontalAlignment="Right"
+                    Margin="0,10,20,0"
+                    Theme="{StaticResource TransparentButton}"
+                    VerticalAlignment="Top">
+                    <PathIcon
+                        Data="F1 M640,640z M0,0z M183.1,137.4C170.6,124.9 150.3,124.9 137.8,137.4 125.3,149.9 125.3,170.2 137.8,182.7L275.2,320 137.9,457.4C125.4,469.9 125.4,490.2 137.9,502.7 150.4,515.2 170.7,515.2 183.2,502.7L320.5,365.3 457.9,502.6C470.4,515.1 490.7,515.1 503.2,502.6 515.7,490.1 515.7,469.8 503.2,457.3L365.8,320 503.1,182.6C515.6,170.1 515.6,149.8 503.1,137.3 490.6,124.8 470.3,124.8 457.8,137.3L320.5,274.7 183.1,137.4z"
+                        Height="18"
+                        Width="18" />
+                </Button>
+            </Panel>
         </Border>
     </Grid>
 </Window>

@@ -207,7 +207,7 @@ internal static class WindowsJumpListService
                 return;
         }
 
-        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(), target);
+        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(instance), target);
     }
 
     private static async Task RefreshAsync()

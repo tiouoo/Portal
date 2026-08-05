@@ -19,6 +19,7 @@ using Portal.Core.Minecraft.Instance.Java;
 using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.ViewModels;
+using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -70,6 +71,13 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             RefreshWorldUserIds();
             Instance.StorageUsage.Refresh();
             Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
+
+            // 如果嵌入在 OverlayWindow 中，隐藏编辑和启动按钮
+            if (TopLevel.GetTopLevel(this) is OverlayWindow)
+            {
+                EditButton.IsVisible = false;
+                LaunchButton.IsVisible = false;
+            }
         };
         Unloaded += (_, _) =>
         {
@@ -94,7 +102,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
     {
         var topLevel = TopLevel.GetTopLevel(this);
         _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession =>
+            MinecraftLaunchOptionsFactory.Create(Instance, logSession =>
             {
                 if (topLevel != null)
                     MinecraftLogPage.Open(logSession, topLevel);

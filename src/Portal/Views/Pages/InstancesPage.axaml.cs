@@ -112,7 +112,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
         Logger.Info($"[Instances] Starting instance {instance.InstanceName} at {instance.FolderPath}.");
         _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
+            MinecraftLaunchOptionsFactory.Create(instance, logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
 
     private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)

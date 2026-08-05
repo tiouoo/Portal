@@ -272,7 +272,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             item.Info.IconPath);
 
         _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(_instance, logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private async void CreateShortcut_OnClick(object? sender, RoutedEventArgs e)

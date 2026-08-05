@@ -117,10 +117,8 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     {
         if (NewTabViewModel.RecentInstance != null)
             _ = MinecraftLaunchService.LaunchAsync(NewTabViewModel.RecentInstance, TopLevel.GetTopLevel(this),
-                MinecraftLaunchOptionsFactory.Create(logSession =>
-                {
-                    MinecraftLogPage.Open(logSession, this.GetTopLevel());
-                }));
+                MinecraftLaunchOptionsFactory.Create(NewTabViewModel.RecentInstance,
+                    logSession => { MinecraftLogPage.Open(logSession, this.GetTopLevel()); }));
     }
 
     private void LaunchInstance_Click(object? sender, RoutedEventArgs e)
@@ -129,7 +127,8 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             return;
 
         _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
+            MinecraftLaunchOptionsFactory.Create(instance,
+                logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
 
     private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)
@@ -137,7 +136,8 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         if ((sender as Control)?.Tag is not MinecraftInstance instance)
             return;
 
-        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(instance));
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
+            () => DesktopShortcutService.CreateAsync(instance));
     }
 
     private void NewTabPage_OnSizeChanged(object? sender, SizeChangedEventArgs e) =>
@@ -149,7 +149,8 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             return;
 
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(target.Instance,
+                logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private async void RecentPlayCreateShortcut_Click(object? sender, RoutedEventArgs e)
@@ -210,7 +211,8 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         if (sender is Control { Tag: RecentPlayTarget target } &&
             TopLevel.GetTopLevel(this) is { } topLevel)
             _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
-                MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+                MinecraftLaunchOptionsFactory.Create(target.Instance,
+                    logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private void ContinueTargetGame_Click(object? sender, RoutedEventArgs e)
@@ -220,7 +222,8 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             return;
 
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(target.Instance,
+                logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
     }
 
     private void FavoritedButton_OnClick(object? sender, RoutedEventArgs e)
@@ -348,6 +351,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
     public bool HasRecentPlays => RecentPlays.Count > 0;
     public bool CanExpandRecentPlays => GetVisibleRecentPlays().Count > _recentPlayCapacity;
+
     public string ToggleRecentPlaysText =>
         BlockListService.Instance.AreRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
 
@@ -497,6 +501,7 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
     public string? FolderName => _target.Type == RecentPlayTargetType.World
         ? _target.Id
         : null;
+
     public bool HasFolderName => FolderName is not null;
 
     public bool IsFavorite =>
