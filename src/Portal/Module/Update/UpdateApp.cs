@@ -25,7 +25,7 @@ public static class UpdateApp
 {
     private const int RetainedUpdateDirectories = 1;
 
-    public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller);
+    public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller, bool WaitForStart = false);
 
     private sealed class UpdateTaskHandle
     {
@@ -69,21 +69,23 @@ public static class UpdateApp
             }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType is "deb" or "rpm")
             {
+                var processPath = Environment.ProcessPath
+                                  ?? throw new InvalidOperationException("无法确定当前程序路径。");
                 var packageUpdate = new PreparedUpdate(
-                    await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType)), true);
+                    await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType, processPath)), true, true);
                 CompletePreparation(taskHandle, packageUpdate);
                 return packageUpdate;
             }
 
-            var processPath = Environment.ProcessPath
+            var path = Environment.ProcessPath
                               ?? throw new InvalidOperationException("无法确定当前程序路径。");
             ProcessStartInfo updater;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "portable")
-                updater = await Task.Run(() => PrepareWindowsPortable(packagePath, updateDirectory, processPath));
+                updater = await Task.Run(() => PrepareWindowsPortable(packagePath, updateDirectory, path));
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType == "appimage")
                 updater = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && packageType is "app" or "dmg")
-                updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, processPath));
+                updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, path));
             else
                 throw new NotSupportedException($"当前系统不支持安装类型“{packageType}”的自动更新。");
 
@@ -104,7 +106,14 @@ public static class UpdateApp
     {
         if (!await ApplicationEvents.RaiseAppExiting()) return;
         App.Method.FlushConfig();
-        Process.Start(update.StartInfo);
+        using var process = Process.Start(update.StartInfo)
+                            ?? throw new InvalidOperationException("无法启动更新安装程序。");
+        if (update.WaitForStart)
+        {
+            await process.WaitForExitAsync();
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException($"更新安装程序未能启动（退出代码 {process.ExitCode}）。");
+        }
         Environment.Exit(0);
     }
 
@@ -357,41 +366,96 @@ public static class UpdateApp
         return UnixScript(script, !CanWriteDirectory(Path.GetDirectoryName(target)!));
     }
 
-    private static ProcessStartInfo PrepareLinuxPackage(string packagePath, string updateDirectory, string packageType)
+    private static ProcessStartInfo PrepareLinuxPackage(
+        string packagePath, string updateDirectory, string packageType, string processPath)
     {
-        var script = Path.Combine(updateDirectory, "install-package-update.sh");
+        var workerScript = Path.Combine(updateDirectory, "install-package-update.sh");
+        var launcherScript = Path.Combine(updateDirectory, "start-package-update.sh");
+        var log = Path.Combine(updateDirectory, "install-package-update.log");
         var install = packageType switch
         {
             "deb" => $$"""
                 if command -v apt-get >/dev/null 2>&1; then
-                  exec apt-get install -y {{Sh(packagePath)}}
+                  apt-get install -y {{Sh(packagePath)}}
+                else
+                  dpkg -i {{Sh(packagePath)}}
                 fi
-                exec dpkg -i {{Sh(packagePath)}}
                 """,
             "rpm" => $$"""
                 if command -v dnf >/dev/null 2>&1; then
-                  exec dnf install -y {{Sh(packagePath)}}
+                  dnf install -y {{Sh(packagePath)}}
+                elif command -v zypper >/dev/null 2>&1; then
+                  zypper --non-interactive install {{Sh(packagePath)}}
+                else
+                  rpm -Uvh {{Sh(packagePath)}}
                 fi
-                if command -v zypper >/dev/null 2>&1; then
-                  exec zypper --non-interactive install {{Sh(packagePath)}}
-                fi
-                exec rpm -Uvh {{Sh(packagePath)}}
                 """,
             _ => throw new ArgumentOutOfRangeException(nameof(packageType), packageType, "不支持的 Linux 安装包类型。")
         };
-        File.WriteAllText(script, $$"""
+        File.WriteAllText(workerScript, $$"""
             #!/bin/sh
             set -eu
+            log={{Sh(log)}}
+            exec >>"$log" 2>&1
+            echo "Portal package update started: $(date -Is)"
             pid='{{Environment.ProcessId}}'
+            target={{Sh(processPath)}}
+            uid="${PKEXEC_UID:-}"
             i=0
             while kill -0 "$pid" 2>/dev/null; do
               i=$((i + 1)); [ "$i" -gt 120 ] && exit 1
               sleep 0.5
             done
             {{install}}
+            if [ -z "$uid" ]; then
+              echo "pkexec did not provide the original user ID."
+              exit 1
+            fi
+            passwd_entry="$(getent passwd "$uid")"
+            user="$(printf '%s' "$passwd_entry" | cut -d: -f1)"
+            home="$(printf '%s' "$passwd_entry" | cut -d: -f6)"
+            if [ -z "$user" ]; then
+              echo "Unable to resolve the original user ID: $uid"
+              exit 1
+            fi
+            if [ -z "$home" ]; then
+              echo "Unable to resolve the home directory for user: $user"
+              exit 1
+            fi
+            display={{Sh(Environment.GetEnvironmentVariable("DISPLAY") ?? "")}}
+            wayland_display={{Sh(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY") ?? "")}}
+            xauthority={{Sh(Environment.GetEnvironmentVariable("XAUTHORITY") ?? "")}}
+            dbus_address={{Sh(Environment.GetEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS") ?? "")}}
+            xdg_runtime_dir={{Sh(Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR") ?? "")}}
+            [ -n "$xdg_runtime_dir" ] || xdg_runtime_dir="/run/user/$uid"
+            echo "Starting the updated Portal process as $user."
+            if ! command -v runuser >/dev/null 2>&1; then
+              echo "The system does not provide runuser; Portal was installed but not restarted."
+              exit 1
+            fi
+            runuser -u "$user" -- env \
+              HOME="$home" \
+              USER="$user" \
+              LOGNAME="$user" \
+              DISPLAY="$display" \
+              WAYLAND_DISPLAY="$wayland_display" \
+              XAUTHORITY="$xauthority" \
+              DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
+              XDG_RUNTIME_DIR="$xdg_runtime_dir" \
+              nohup "$target" >/dev/null 2>&1 &
+            echo "Portal package update completed: $(date -Is)"
             """);
-        RunAndWait("/bin/chmod", "+x", script);
-        return UnixScript(script, true);
+        File.WriteAllText(launcherScript, $$"""
+            #!/bin/sh
+            set -eu
+            worker={{Sh(workerScript)}}
+            log={{Sh(log)}}
+            echo "Portal update authentication accepted: $(date -Is)" >>"$log"
+            nohup "$worker" >>"$log" 2>&1 </dev/null &
+            exit 0
+            """);
+        RunAndWait("/bin/chmod", "+x", workerScript, launcherScript);
+        return UnixScript(launcherScript, true);
     }
 
     private static ProcessStartInfo PrepareMacApp(string packagePath, string updateDirectory, string processPath)
