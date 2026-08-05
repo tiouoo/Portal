@@ -150,8 +150,8 @@
                 <TextBlock Text=" License:" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
-                    CommandParameter="https://www.gnu.org/licenses/gpl-3.0.html"
-                    Content="GPL v3.0"
+                    CommandParameter="https://www.gnu.org/licenses/agpl-3.0.html"
+                    Content="AGPL v3.0"
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5">
@@ -176,27 +176,6 @@
                     Click="OpenLink_OnClick"
                     CommandParameter="https://github.com/tiouoo/TioUi.Avalonia"
                     Content="TioUi.Avalonia"
-                    Theme="{StaticResource UnderlineHyperlinkButton}" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Skin Viewer Library:" />
-                <HyperlinkButton
-                    Click="OpenLink_OnClick"
-                    CommandParameter="https://github.com/tiouoo/LiteSkinViewer"
-                    Content="LiteSkinViewer"
-                    Theme="{StaticResource UnderlineHyperlinkButton}" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Minecraft Launch Library:" />
-                <HyperlinkButton
-                    Click="OpenLink_OnClick"
-                    CommandParameter="https://github.com/tiouoo/MinecraftLaunch"
-                    Content="MinecraftLaunch"
-                    Theme="{StaticResource UnderlineHyperlinkButton}" />
-                <HyperlinkButton
-                    Click="OpenLink_OnClick"
-                    CommandParameter="https://github.com/Round-Studio/BedrockLauncher.Core"
-                    Content="BedrockLauncher.Core"
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
         </StackPanel>
