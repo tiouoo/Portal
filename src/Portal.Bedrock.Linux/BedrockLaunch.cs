@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO.Compression;
+using System.Net.Http;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 
@@ -47,6 +49,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
             Log(BedrockLogLevel.Warning, "未收到基岩版 Xbox 账户，跳过登录注入；请启用基岩版账户注入并选择账户");
         }
         await EnsureGameInputAsync(runtime, cancellationToken).ConfigureAwait(false);
+        await EnsureGamePatchAsync(executablePath, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         var startInfo = new ProcessStartInfo
         {
@@ -103,6 +106,114 @@ public sealed class BedrockLaunch : IBedrockLaunch
     }
 
     private void Log(BedrockLogLevel level, string message) => LogReceived?.Invoke(message, level);
+
+    private static string FormatBytes(double bytes)
+    {
+        var units = new[] { "B", "KiB", "MiB", "GiB" };
+        var unit = 0;
+        while (bytes >= 1024 && unit < units.Length - 1)
+        {
+            bytes /= 1024;
+            unit++;
+        }
+        return unit == 0 ? $"{bytes:F0} {units[unit]}" : $"{bytes:F1} {units[unit]}";
+    }
+
+    private static string FormatDuration(TimeSpan duration) => duration.TotalHours >= 1
+        ? $"{(int)duration.TotalHours}小时{duration.Minutes:D2}分"
+        : duration.TotalMinutes >= 1
+            ? $"{(int)duration.TotalMinutes}分{duration.Seconds:D2}秒"
+            : $"{Math.Max(1, (int)duration.TotalSeconds)}秒";
+
+    private async Task EnsureGamePatchAsync(string executablePath, CancellationToken cancellationToken)
+    {
+        var instancePath = Path.GetDirectoryName(executablePath)!;
+        var preload = Path.Combine(instancePath, "preload");
+        var patch = Path.Combine(preload, "mcpatcher_core.dll");
+        if (File.Exists(patch)) return;
+
+        const string url = "https://github.com/RoundMCDev/ProtonGDK-Release/releases/download/Release10-32/GamePatch.zip";
+        var cacheRoot = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
+        if (string.IsNullOrWhiteSpace(cacheRoot))
+            cacheRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
+        var archivePath = Path.Combine(cacheRoot, "Portal", "Bedrock", "GamePatch.zip");
+        Directory.CreateDirectory(Path.GetDirectoryName(archivePath)!);
+
+        try
+        {
+            if (!File.Exists(archivePath))
+            {
+                Log(BedrockLogLevel.Information, "正在下载基岩版窗口兼容补丁");
+                using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Portal-Bedrock-Linux/1.0");
+                using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+                var totalBytes = response.Content.Headers.ContentLength ?? 0;
+                await using var input = await response.Content.ReadAsStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                await using var output = new FileStream(archivePath, FileMode.Create, FileAccess.Write,
+                    FileShare.None, 1024 * 64, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                var buffer = new byte[1024 * 64];
+                long downloadedBytes = 0;
+                var stopwatch = Stopwatch.StartNew();
+                var lastReport = TimeSpan.Zero;
+                var lastLoggedPercentage = -1;
+                int read;
+                while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+                {
+                    await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                    downloadedBytes += read;
+                    if (stopwatch.Elapsed - lastReport < TimeSpan.FromMilliseconds(250) &&
+                        !(totalBytes > 0 && downloadedBytes == totalBytes)) continue;
+
+                    var speed = stopwatch.Elapsed.TotalSeconds > 0
+                        ? downloadedBytes / stopwatch.Elapsed.TotalSeconds
+                        : 0;
+                    var percentage = totalBytes > 0
+                        ? downloadedBytes * 100d / totalBytes
+                        : (double?)null;
+                    TimeSpan? remaining = speed > 0 && totalBytes > 0
+                        ? TimeSpan.FromSeconds(Math.Max(0, totalBytes - downloadedBytes) / speed)
+                        : null;
+                    var text = totalBytes > 0
+                        ? $"下载窗口兼容补丁 {percentage:F1}% ({FormatBytes(downloadedBytes)}/{FormatBytes(totalBytes)})，速度 {FormatBytes(speed)}/s" +
+                          (remaining is { } time ? $"，剩余 {FormatDuration(time)}" : string.Empty)
+                        : $"下载窗口兼容补丁 ({FormatBytes(downloadedBytes)})，速度 {FormatBytes(speed)}/s";
+                    UpdateProgress?.Invoke($"状态：{text}", percentage);
+                    var integerPercentage = totalBytes > 0 ? (int)percentage!.Value : -1;
+                    if (integerPercentage != lastLoggedPercentage)
+                    {
+                        Log(BedrockLogLevel.Information, text);
+                        lastLoggedPercentage = integerPercentage;
+                    }
+                    lastReport = stopwatch.Elapsed;
+                }
+                UpdateProgress?.Invoke("状态：窗口兼容补丁下载完成", 100);
+            }
+
+            using var archive = ZipFile.OpenRead(archivePath);
+            var entry = archive.Entries.FirstOrDefault(item =>
+                item.FullName.Replace('\\', '/').Equals("gdk/mcpatcher_core.dll",
+                    StringComparison.OrdinalIgnoreCase));
+            if (entry is null) throw new InvalidDataException("GamePatch.zip 中缺少 gdk/mcpatcher_core.dll。");
+
+            Directory.CreateDirectory(preload);
+            await using var source = entry.Open();
+            await using var destination = new FileStream(patch, FileMode.Create, FileAccess.Write,
+                FileShare.Read, 1024 * 64, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await source.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
+            Log(BedrockLogLevel.Information, "基岩版窗口兼容补丁已部署");
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            Log(BedrockLogLevel.Warning, $"窗口兼容补丁不可用，继续启动游戏：{exception.Message}");
+        }
+    }
 
     private async Task EnsureGameInputAsync(LinuxBedrockRuntime runtime, CancellationToken cancellationToken)
     {

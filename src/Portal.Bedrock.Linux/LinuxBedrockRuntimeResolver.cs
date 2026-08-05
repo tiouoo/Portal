@@ -49,7 +49,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var protonScript = await ResolveProtonScriptAsync(progress, cancellationToken).ConfigureAwait(false);
         var protonRoot = Path.GetDirectoryName(protonScript)!;
         ApplyManagedRuntimePatch(protonRoot, progress);
-        var prefixPath = ResolvePrefixPath(protonRoot);
+        var prefixPath = ResolvePrefixPath();
         var steamClientPath = ResolveSteamCompatPath();
 
         Directory.CreateDirectory(prefixPath);
@@ -628,16 +628,11 @@ public sealed class LinuxBedrockRuntimeResolver
             throw new InvalidDataException($"归档路径越出安装目录：{archivePath}");
     }
 
-    private static string ResolvePrefixPath(string protonRoot)
+    private static string ResolvePrefixPath()
     {
         var configuredPath = Environment.GetEnvironmentVariable(PrefixPathVariable);
         if (!string.IsNullOrWhiteSpace(configuredPath)) return Path.GetFullPath(configuredPath);
-
-        var runtimeName = Path.GetFileName(protonRoot);
-        var suffix = runtimeName.Contains("xuser", StringComparison.OrdinalIgnoreCase)
-            ? "legacy"
-            : SafePathSegment(runtimeName);
-        return Path.Combine(GetDataHome(), "Portal", "Bedrock", $"proton-prefix-{suffix}");
+        return Path.Combine(GetDataHome(), "Portal", "Bedrock", "proton-prefix");
     }
 
     private static string ResolveSteamCompatPath()
