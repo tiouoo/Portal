@@ -9,6 +9,7 @@ using HotAvalonia;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.SystemResources;
+using Portal.Module.Ipc;
 using Tio.Avalonia.Standard.Modules;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -57,6 +58,10 @@ sealed class Program
         }
 
         DebugConsole.ShowIfEnabled();
+
+        // AppImage does not reliably leave a permanent desktop entry behind. Keep its
+        // portal:// handler registered before processing the incoming protocol argument.
+        ProtocolRegistration.TryRegisterLinuxOnStartupAsync().GetAwaiter().GetResult();
 
         if (TryGetBedrockPackagePath(args, out var packagePath))
             App.BedrockPackagePath = packagePath;

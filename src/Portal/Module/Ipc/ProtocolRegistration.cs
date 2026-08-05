@@ -34,7 +34,7 @@ public static class ProtocolRegistration
         Type=Application
         Name=Portal
         Comment=Portal URL protocol handler
-        Exec="__PORTAL_EXE__" %u
+        Exec=__PORTAL_EXE__ %u
         Terminal=false
         NoDisplay=true
         MimeType=x-scheme-handler/portal;
@@ -47,6 +47,32 @@ public static class ProtocolRegistration
         if (OperatingSystem.IsWindows()) await RegisterWindowsAsync(executablePath);
         else if (OperatingSystem.IsLinux()) await RegisterLinuxAsync(executablePath);
         else throw new PlatformNotSupportedException("当前系统暂不支持注册 portal:// 协议。");
+    }
+
+    /// <summary>
+    /// 在 Linux 的已发布应用启动时保持 URL 处理器有效。AppImage 不会像系统包一样
+    /// 自动安装 desktop 文件，因此不能只依赖桌面环境的集成步骤。
+    /// </summary>
+    public static async Task TryRegisterLinuxOnStartupAsync()
+    {
+        if (!OperatingSystem.IsLinux()) return;
+
+        var executablePath = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(executablePath) ||
+            string.Equals(Path.GetFileNameWithoutExtension(executablePath), "dotnet",
+                StringComparison.OrdinalIgnoreCase))
+            return;
+
+        try
+        {
+            await RegisterLinuxAsync(executablePath);
+        }
+        catch (Exception exception)
+        {
+            // Protocol registration must never prevent the launcher itself from opening.
+            Logger.Warning("Linux portal:// 协议自动注册失败，可在设置中重试。" +
+                           Environment.NewLine + exception);
+        }
     }
 
     private static async Task RegisterWindowsAsync(string executablePath)
@@ -91,13 +117,20 @@ public static class ProtocolRegistration
         const string desktopFileName = "xyz.tiouo.Portal.url-handler.desktop";
         var desktopFilePath = Path.Combine(applicationsFolder, desktopFileName);
         await File.WriteAllTextAsync(desktopFilePath,
-            LinuxDesktopTemplate.Replace("__PORTAL_EXE__", executablePath) + "\n");
+            LinuxDesktopTemplate.Replace("__PORTAL_EXE__", EscapeDesktopExecArgument(executablePath)) + "\n");
         Logger.Info($"已写出协议处理器：{desktopFilePath}");
 
         await RunProcessAsync("xdg-mime", ["default", desktopFileName, "x-scheme-handler/portal"], required: true);
         // 刷新桌面数据库属于锦上添花，失败不影响 xdg-mime 的注册结果。
         await RunProcessAsync("update-desktop-database", [applicationsFolder], required: false);
     }
+
+    private static string EscapeDesktopExecArgument(string value) => '"' + value
+        .Replace("\\", "\\\\")
+        .Replace("\"", "\\\"")
+        .Replace("$", "\\$")
+        .Replace("`", "\\`")
+        .Replace("%", "%%") + '"';
 
     private static async Task RunProcessAsync(string fileName, string[] arguments, bool required)
     {
