@@ -36,12 +36,24 @@ jobs:
           echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
           echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
 
-  appImage:
+  linux-package:
     runs-on: ubuntu-22.04
     needs: prepare
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+    strategy:
+      matrix:
+        include:
+          - kind: appimage
+            package_type: appimage
+            output: Portal.linux.x64.AppImage
+          - kind: deb
+            package_type: deb
+            output: Portal.linux.x64.deb
+          - kind: rpm
+            package_type: rpm
+            output: Portal.linux.x64.rpm
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -56,23 +68,23 @@ jobs:
       - name: Write CI Config
         run: |
           echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo 'appimage' > ./src/package-type.txt
+          echo '${{ matrix.package_type }}' > ./src/package-type.txt
 
       - name: Dependency
         run: |
           dotnet tool install -g KuiperZone.PupNet --version 1.8.0
-          sudo apt-get update && sudo apt-get install -y fuse
+          sudo apt-get update && sudo apt-get install -y fuse rpm
 
-      - name: Build-AppImage
+      - name: Build ${{ matrix.kind }} Package
         run: |
           cd ./src/Portal.Desktop
-          pupnet --runtime linux-x64 --kind appimage -o Portal.linux.x64.AppImage -y --app-version ${{ needs.prepare.outputs.app_version }}
+          pupnet --runtime linux-x64 --kind ${{ matrix.kind }} -o ${{ matrix.output }} -y --app-version ${{ needs.prepare.outputs.app_version }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: linux-artifacts
-          path: src/Portal.Desktop/Deploy/OUT/Portal.linux.*.AppImage
+          name: linux-${{ matrix.kind }}-artifacts
+          path: src/Portal.Desktop/Deploy/OUT/${{ matrix.output }}
 
   win-exe:
     runs-on: windows-latest
@@ -232,7 +244,7 @@ jobs:
             ./Portal.osx.mac.${{ matrix.dmg_arch }}.app.zip
 
   publish:
-    needs: [prepare, appImage, win-exe, win-installer, mac-dmg]
+    needs: [prepare, linux-package, win-exe, win-installer, mac-dmg]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -322,14 +334,17 @@ jobs:
             ./Portal.Release/*.dmg
             ./Portal.Release/*.zip
             ./Portal.Release/*.AppImage
+            ./Portal.Release/*.deb
+            ./Portal.Release/*.rpm
 
-  aur:
-    needs: [prepare, publish]
-    uses: ./.github/workflows/publish-aur.yml
-    with:
-      pkgname: portal-mc-commit-bin
-      tag: publish-commit
-      app_version: ${{ needs.prepare.outputs.app_version }}
-    secrets:
-      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+  # AUR publishing is currently disabled.
+  # aur:
+  #   needs: [prepare, publish]
+  #   uses: ./.github/workflows/publish-aur.yml
+  #   with:
+  #     pkgname: portal-mc-commit-bin
+  #     tag: publish-commit
+  #     app_version: ${{ needs.prepare.outputs.app_version }}
+  #   secrets:
+  #     AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+  #     AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
