@@ -29,7 +29,8 @@ public sealed class LinuxBedrockRuntimeResolver
     private const long MinimumSegmentSize = 8L * 1024 * 1024;
     private static readonly string[] ReleaseApiUrls =
     [
-        "https://api.github.com/repos/RoundMCDev/ProtonGDK-Release/releases/latest"
+        "https://api.github.com/repos/Weather-OS/GDK-Proton/releases/latest",
+        "https://api.github.com/repos/LukasPAH/GDK-Proton-Custom/releases/latest"
     ];
 
     private static readonly object DownloadClientLock = new();
@@ -48,7 +49,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var protonScript = await ResolveProtonScriptAsync(progress, cancellationToken).ConfigureAwait(false);
         var protonRoot = Path.GetDirectoryName(protonScript)!;
         ApplyManagedRuntimePatch(protonRoot, progress);
-        var prefixPath = ResolvePrefixPath();
+        var prefixPath = ResolvePrefixPath(protonRoot);
         var steamClientPath = ResolveSteamCompatPath();
 
         Directory.CreateDirectory(prefixPath);
@@ -56,7 +57,8 @@ public sealed class LinuxBedrockRuntimeResolver
         return new LinuxBedrockRuntime(protonScript, protonRoot, prefixPath, steamClientPath);
     }
 
-    private static void ApplyManagedRuntimePatch(string protonRoot, Action<LinuxBedrockRuntimeProgress>? progress)
+    private static void ApplyManagedRuntimePatch(string protonRoot,
+        Action<LinuxBedrockRuntimeProgress>? progress)
     {
         if (!IsManagedProtonRoot(protonRoot)) return;
         if (GdkRuntimePatcher.PatchCombaseRoOriginateErrorW(protonRoot))
@@ -87,9 +89,6 @@ public sealed class LinuxBedrockRuntimeResolver
             var configuredScript = NormalizeProtonScript(configuredPath);
             if (File.Exists(configuredScript))
             {
-                if (!IsXUserProton(configuredScript))
-                    throw new InvalidDataException(
-                        $"{ProtonPathVariable} 必须指向 GDK-Proton-xuser；普通 GDK-Proton 不支持 Xbox 账户预认证。");
                 Trace.TraceInformation($"使用 PORTAL_PROTON_PATH 指定的 Proton：{configuredScript}。");
                 return configuredScript;
             }
@@ -159,7 +158,7 @@ public sealed class LinuxBedrockRuntimeResolver
 
         return roots.Where(Directory.Exists)
             .SelectMany(root => Directory.EnumerateFiles(root, "proton", SearchOption.AllDirectories))
-            .Where(IsXUserProton)
+            .Where(path => IsGdkProton(path) && !IsKnownBrokenXUserRuntime(path))
             .OrderByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault();
     }
@@ -174,7 +173,7 @@ public sealed class LinuxBedrockRuntimeResolver
             .Select(FindProtonInDirectory)
             .Where(path => path is not null)
             .Select(path => path!)
-            .Where(IsXUserProton)
+            .Where(path => IsGdkProton(path) && !IsKnownBrokenXUserRuntime(path))
             .OrderByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault();
         if (proton is not null) EnsureExecutable(proton);
@@ -269,8 +268,8 @@ public sealed class LinuxBedrockRuntimeResolver
             {
                 var release = await GetDownloadClient().GetFromJsonAsync<GitHubRelease>(apiUrl, cancellationToken)
                     .ConfigureAwait(false) ?? throw new InvalidDataException("GitHub API 返回空响应");
-                var asset = release.Assets.FirstOrDefault(IsXUserTarGzAsset)
-                            ?? throw new InvalidDataException("release 中没有 GDK-Proton-xuser tar.gz 资产");
+                var asset = release.Assets.FirstOrDefault(IsX64TarGzAsset)
+                            ?? throw new InvalidDataException("release 中没有 Linux x64 GDK-Proton tar.gz 资产");
                 if (string.IsNullOrWhiteSpace(release.TagName) || string.IsNullOrWhiteSpace(asset.BrowserDownloadUrl))
                     throw new InvalidDataException("release 元数据缺少 tag 或下载 URL");
                 return new ProtonRelease(release.TagName, asset);
@@ -285,12 +284,11 @@ public sealed class LinuxBedrockRuntimeResolver
         throw new HttpRequestException(string.Join("；", errors));
     }
 
-    private static bool IsXUserTarGzAsset(GitHubAsset asset)
+    private static bool IsX64TarGzAsset(GitHubAsset asset)
     {
         var name = asset.Name;
         if (!name.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase)) return false;
-        return name.Contains("xuser", StringComparison.OrdinalIgnoreCase) &&
-               !name.Contains("arm", StringComparison.OrdinalIgnoreCase) &&
+        return !name.Contains("arm", StringComparison.OrdinalIgnoreCase) &&
                !name.Contains("aarch", StringComparison.OrdinalIgnoreCase) &&
                !name.Contains("source", StringComparison.OrdinalIgnoreCase);
     }
@@ -630,11 +628,16 @@ public sealed class LinuxBedrockRuntimeResolver
             throw new InvalidDataException($"归档路径越出安装目录：{archivePath}");
     }
 
-    private static string ResolvePrefixPath()
+    private static string ResolvePrefixPath(string protonRoot)
     {
         var configuredPath = Environment.GetEnvironmentVariable(PrefixPathVariable);
         if (!string.IsNullOrWhiteSpace(configuredPath)) return Path.GetFullPath(configuredPath);
-        return Path.Combine(GetDataHome(), "Portal", "Bedrock", "proton-prefix");
+
+        var runtimeName = Path.GetFileName(protonRoot);
+        var suffix = runtimeName.Contains("xuser", StringComparison.OrdinalIgnoreCase)
+            ? "legacy"
+            : SafePathSegment(runtimeName);
+        return Path.Combine(GetDataHome(), "Portal", "Bedrock", $"proton-prefix-{suffix}");
     }
 
     private static string ResolveSteamCompatPath()
@@ -719,8 +722,8 @@ public sealed class LinuxBedrockRuntimeResolver
         path.Contains("gdk-proton", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("protongdk", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsXUserProton(string path) =>
-        IsGdkProton(path) && path.Contains("xuser", StringComparison.OrdinalIgnoreCase);
+    private static bool IsKnownBrokenXUserRuntime(string path) =>
+        path.Contains("xuser", StringComparison.OrdinalIgnoreCase);
 
     private static HttpClient GetDownloadClient()
     {

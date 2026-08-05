@@ -42,6 +42,10 @@ public sealed class BedrockLaunch : IBedrockLaunch
                 .PrepareAsync(Authentication, cancellationToken).ConfigureAwait(false);
             await SetRefreshTokenAsync(runtime, Authentication.RefreshToken, cancellationToken).ConfigureAwait(false);
         }
+        else
+        {
+            Log(BedrockLogLevel.Warning, "未收到基岩版 Xbox 账户，跳过登录注入；请启用基岩版账户注入并选择账户");
+        }
         await EnsureGameInputAsync(runtime, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         var startInfo = new ProcessStartInfo
@@ -102,11 +106,17 @@ public sealed class BedrockLaunch : IBedrockLaunch
 
     private async Task EnsureGameInputAsync(LinuxBedrockRuntime runtime, CancellationToken cancellationToken)
     {
+        if (OperatingSystem.IsLinux())
+        {
+            await InstallGameInputOfflineAsync(runtime, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         var installer = Path.Combine(_instanceConfig.InstancePath, "Installers", "GameInputRedist.msi");
         if (!File.Exists(installer)) return;
 
         var marker = Path.Combine(runtime.PrefixPath, ".portal-gameinput-installed");
-        if (File.Exists(marker)) return;
+        if (File.Exists(marker) || HasGameInput(runtime.PrefixPath)) return;
 
         cancellationToken.ThrowIfCancellationRequested();
         Log(BedrockLogLevel.Information, "正在通过 Proton 安装 GameInput 运行组件");
@@ -144,7 +154,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         process.BeginErrorReadLine();
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromMinutes(10));
+        timeout.CancelAfter(TimeSpan.FromMinutes(2));
         using var cancellation = timeout.Token.Register(() => KillProcess(process));
         try
         {
@@ -160,18 +170,166 @@ public sealed class BedrockLaunch : IBedrockLaunch
                 throw;
             }
 
-            Log(BedrockLogLevel.Error, "GameInput 安装超时，安装进程已被终止");
-            UpdateProgress?.Invoke("状态：GameInput 安装超时", null);
-            throw new TimeoutException("GameInput 安装超时（10 分钟），请检查 Wine/Proton 环境后重试。");
+            Log(BedrockLogLevel.Warning, "GameInput 安装超时，安装进程已被终止；继续启动游戏");
+            UpdateProgress?.Invoke("状态：GameInput 安装超时，继续启动游戏", null);
+            return;
         }
         var errorText = errorBuffer.ToString().Trim();
         if (process.ExitCode != 0)
-            throw new InvalidOperationException($"GameInput 安装失败（退出码 {process.ExitCode}）：{errorText}");
+        {
+            Log(BedrockLogLevel.Warning,
+                $"GameInput 安装失败（退出码 {process.ExitCode}），继续启动游戏。{errorText}");
+            UpdateProgress?.Invoke("状态：GameInput 安装失败，继续启动游戏", null);
+            return;
+        }
 
         Directory.CreateDirectory(runtime.PrefixPath);
         await File.WriteAllTextAsync(marker, DateTimeOffset.UtcNow.ToString("O")).ConfigureAwait(false);
         UpdateProgress?.Invoke("状态：GameInput 运行组件安装完成", 100);
         Log(BedrockLogLevel.Information, "GameInput 运行组件安装完成");
+    }
+
+    private async Task InstallGameInputOfflineAsync(LinuxBedrockRuntime runtime,
+        CancellationToken cancellationToken)
+    {
+        var installer = Path.Combine(_instanceConfig.InstancePath, "Installers", "GameInputRedist.msi");
+        if (!File.Exists(installer))
+        {
+            Log(BedrockLogLevel.Warning, "未找到 GameInputRedist.msi，无法安装 GameInput 运行组件");
+            return;
+        }
+
+        var marker = Path.Combine(runtime.PrefixPath, ".portal-gameinput-installed-v2");
+        if (File.Exists(marker) && HasGameInput(runtime.PrefixPath)) return;
+
+        cancellationToken.ThrowIfCancellationRequested();
+        Log(BedrockLogLevel.Information, "正在离线提取 GameInput 运行组件");
+        UpdateProgress?.Invoke("状态：正在安装 GameInput", null);
+        InstallCryptbase(runtime);
+        var cab = ExtractEmbeddedCab(installer);
+        if (cab is null) throw new InvalidDataException("GameInput MSI 中没有内嵌 CAB。");
+        var extractor = Path.Combine(runtime.ProtonRoot, "protonfixes", "files", "bin", "cabextract");
+        if (!File.Exists(extractor)) throw new FileNotFoundException("当前 Proton 缺少 cabextract。", extractor);
+
+        var temp = Path.Combine(Path.GetTempPath(), $"portal-gameinput-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temp);
+        try
+        {
+            var cabPath = Path.Combine(temp, "GameInput.cab");
+            await File.WriteAllBytesAsync(cabPath, cab, cancellationToken).ConfigureAwait(false);
+            var extract = new ProcessStartInfo(extractor, $"-q -d \"{temp}\" \"{cabPath}\"")
+            {
+                UseShellExecute = false, RedirectStandardError = true, CreateNoWindow = true
+            };
+            using var process = Process.Start(extract) ?? throw new InvalidOperationException("无法启动 cabextract。");
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            if (process.ExitCode != 0)
+                throw new InvalidDataException($"GameInput CAB 提取失败：{await process.StandardError.ReadToEndAsync(cancellationToken)}");
+
+            var dlls = Directory.EnumerateFiles(temp, "*", SearchOption.AllDirectories)
+                .Where(path => IsPe(path, dll: true)).OrderByDescending(path => new FileInfo(path).Length).ToList();
+            var exes = Directory.EnumerateFiles(temp, "*", SearchOption.AllDirectories)
+                .Where(path => IsPe(path, dll: false)).OrderByDescending(path => new FileInfo(path).Length).ToList();
+            if (dlls.Count == 0 || exes.Count == 0) throw new InvalidDataException("GameInput CAB 中没有有效组件。");
+
+            var x64 = Path.Combine(runtime.PrefixPath, "pfx", "drive_c", "Program Files", "Microsoft GameInput", "x64");
+            var x86 = Path.Combine(runtime.PrefixPath, "pfx", "drive_c", "Program Files", "Microsoft GameInput", "x86");
+            var system32 = Path.Combine(runtime.PrefixPath, "pfx", "drive_c", "windows", "system32");
+            Directory.CreateDirectory(x64); Directory.CreateDirectory(system32);
+            File.Copy(dlls[0], Path.Combine(x64, "GameInputRedist.dll"), true);
+            File.Copy(dlls[0], Path.Combine(system32, "GameInputRedist.dll"), true);
+            File.Copy(exes[0], Path.Combine(x64, "GameInputRedistService.exe"), true);
+            if (dlls.Count > 1) File.Copy(dlls[1], Path.Combine(x64, "GameInputBridge.dll"), true);
+            if (exes.Count > 1) File.Copy(exes[1], Path.Combine(x64, "GameInputRawInputProxy.exe"), true);
+            if (dlls.Count > 2)
+            {
+                Directory.CreateDirectory(x86);
+                File.Copy(dlls[2], Path.Combine(x86, "GameInputRedist.dll"), true);
+            }
+            await RegisterGameInputServiceAsync(runtime, cancellationToken).ConfigureAwait(false);
+        }
+        finally { Directory.Delete(temp, true); }
+
+        Directory.CreateDirectory(runtime.PrefixPath);
+        await File.WriteAllTextAsync(marker, DateTimeOffset.UtcNow.ToString("O"), cancellationToken)
+            .ConfigureAwait(false);
+        UpdateProgress?.Invoke("状态：GameInput 运行组件安装完成", 100);
+        Log(BedrockLogLevel.Information, "GameInput 运行组件安装完成");
+    }
+
+    private static bool IsPe(string path, bool dll)
+    {
+        using var stream = File.OpenRead(path);
+        if (stream.Length < 0x40) return false;
+        var header = new byte[0x40]; stream.ReadExactly(header);
+        if (header[0] != 'M' || header[1] != 'Z') return false;
+        stream.Position = BitConverter.ToInt32(header, 0x3c);
+        var pe = new byte[24]; stream.ReadExactly(pe);
+        return pe[0] == 'P' && pe[1] == 'E' && ((BitConverter.ToUInt16(pe, 22) & 0x2000) != 0) == dll;
+    }
+
+    private async Task RegisterGameInputServiceAsync(LinuxBedrockRuntime runtime, CancellationToken cancellationToken)
+    {
+        var reg = Path.Combine(runtime.PrefixPath, $"portal-gameinput-{Guid.NewGuid():N}.reg");
+        var redist = @"C:\Program Files\Microsoft GameInput\x64";
+        var service = @"System\ControlSet001\Services\GameInputRedistService";
+        await File.WriteAllTextAsync(reg,
+            "Windows Registry Editor Version 5.00\n\n" +
+            "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\GameInput]\n" +
+            $"\"RedistDir\"=\"{redist.Replace("\\", "\\\\")}\"\n\n" +
+            $"[HKEY_LOCAL_MACHINE\\{service}]\n" +
+            "\"DisplayName\"=\"GameInput Redist Service\"\n" +
+            "\"Description\"=\"GameInput Redist Service\"\n" +
+            $"\"ImagePath\"=\"{redist.Replace("\\", "\\\\")}\\\\GameInputRedistService.exe\"\n" +
+            "\"ObjectName\"=\"LocalSystem\"\n\"ErrorControl\"=dword:00000000\n\"Start\"=dword:00000003\n\"Type\"=dword:00000010\n", cancellationToken);
+        try
+        {
+            var info = new ProcessStartInfo(runtime.ProtonScript, $"run reg import \"{ToWinePath(reg)}\"")
+            { UseShellExecute = false, CreateNoWindow = true };
+            ApplyRuntimeEnvironment(info, runtime);
+            using var process = Process.Start(info) ?? throw new InvalidOperationException("无法注册 GameInput 服务。");
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            if (process.ExitCode != 0) throw new InvalidOperationException("GameInput 服务注册失败。");
+        }
+        finally { File.Delete(reg); }
+    }
+
+    private static byte[]? ExtractEmbeddedCab(string path)
+    {
+        var data = File.ReadAllBytes(path);
+        if (data.Length < 8 || data[0] != 0xd0 || data[1] != 0xcf) return null;
+        var sectorSize = 1 << BitConverter.ToUInt16(data, 0x1e);
+        var directory = BitConverter.ToInt32(data, 0x30);
+        var miniCutoff = BitConverter.ToInt32(data, 0x38);
+        const int End = -2, Free = -1;
+        byte[] Sector(int n) => data.AsSpan((n + 1) * sectorSize, sectorSize).ToArray();
+        var difat = Enumerable.Range(0, 109).Select(i => BitConverter.ToInt32(data, 0x4c + i * 4)).Where(x => x != Free).ToList();
+        var next = BitConverter.ToInt32(data, 0x44);
+        for (var i = 0; i < BitConverter.ToInt32(data, 0x48) && next != End && next != Free; i++) { var s = Sector(next); difat.AddRange(Enumerable.Range(0, sectorSize / 4 - 1).Select(j => BitConverter.ToInt32(s, j * 4))); next = BitConverter.ToInt32(s, sectorSize - 4); }
+        var fat = difat.SelectMany(n => Enumerable.Range(0, sectorSize / 4).Select(i => BitConverter.ToInt32(Sector(n), i * 4))).ToArray();
+        List<int> Chain(int start) { var result = new List<int>(); var seen = new HashSet<int>(); for (var n = start; n != End && n != Free && n >= 0 && n < fat.Length && seen.Add(n); n = fat[n]) result.Add(n); return result; }
+        byte[] ReadBig(int start, int size) { var result = new byte[size]; var offset = 0; foreach (var n in Chain(start)) { var part = Sector(n); var count = Math.Min(part.Length, size - offset); Buffer.BlockCopy(part, 0, result, offset, count); offset += count; } return result; }
+        var dir = ReadBig(directory, Chain(directory).Count * sectorSize);
+        for (var i = 0; i + 128 <= dir.Length; i += 128) if (dir[i + 66] == 2) { var start = BitConverter.ToInt32(dir, i + 116); var size = (int)BitConverter.ToInt64(dir, i + 120); if (size >= 4 && size >= miniCutoff) { var stream = ReadBig(start, size); if (stream[0] == 'M' && stream[1] == 'S' && stream[2] == 'C' && stream[3] == 'F') return stream; } }
+        return null;
+    }
+
+    private static void InstallCryptbase(LinuxBedrockRuntime runtime)
+    {
+        var source = Path.Combine(runtime.ProtonRoot, "files", "lib", "wine", "x86_64-windows", "cryptbase.dll");
+        var destination = Path.Combine(runtime.PrefixPath, "pfx", "drive_c", "windows", "system32", "cryptbase.dll");
+        if (!File.Exists(source) || File.Exists(destination)) return;
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination);
+    }
+
+    private static bool HasGameInput(string prefixPath)
+    {
+        var x64 = Path.Combine(prefixPath, "pfx", "drive_c", "Program Files", "Microsoft GameInput", "x64");
+        var system32 = Path.Combine(prefixPath, "pfx", "drive_c", "windows", "system32");
+        return File.Exists(Path.Combine(x64, "GameInputRedist.dll")) &&
+               File.Exists(Path.Combine(x64, "GameInputRedistService.exe")) &&
+               File.Exists(Path.Combine(system32, "GameInputRedist.dll"));
     }
 
     private static void ApplyRuntimeEnvironment(ProcessStartInfo startInfo, LinuxBedrockRuntime runtime)
@@ -180,10 +338,6 @@ public sealed class BedrockLaunch : IBedrockLaunch
         startInfo.Environment["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = runtime.SteamCompatPath;
         startInfo.Environment["LD_LIBRARY_PATH"] = BuildLibraryPath(runtime.ProtonRoot);
         startInfo.Environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core,d3d9=b";
-        // 使用内置 WoW64 运行时（files/bin-wow64），避免依赖宿主机 32 位运行库
-        // （/lib/ld-linux.so.2）。32 位组件（如 msiexec / GameInput 安装）无需
-        // 宿主机安装 32 位 multilib 也能运行。
-        startInfo.Environment["PROTON_USE_WOW64"] = "1";
     }
 
     private async Task SetRefreshTokenAsync(LinuxBedrockRuntime runtime, string refreshToken,
