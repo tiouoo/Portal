@@ -58,6 +58,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial DownloadSourceMode ModrinthSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial DownloadSourceMode CurseForgeSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
+    [ObservableProperty] public partial bool EnableGameOverlay { get; set; } = true;
     [ObservableProperty] public partial bool EnableManagedWindowDecorationsOnWindows { get; set; }
     [ObservableProperty] public partial bool EnableManagedWindowBorderOnWindows { get; set; } = true;
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }

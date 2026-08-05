@@ -1,6 +1,9 @@
+using System.Diagnostics;
+using Avalonia.Threading;
 using Portal.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
+using Portal.Views.SubWindows;
 
 namespace Portal.Services;
 
@@ -11,6 +14,22 @@ public static class MinecraftLaunchOptionsFactory
         Account = Data.ConfigEntry.UsingMinecraftMinecraftAccount,
         BedrockAccount = Data.ConfigEntry.UsingBedrockAccount,
         EnableBedrockAccountInjection = Data.ConfigEntry.EnableBedrockAccountInjection,
+        EnableGameOverlay = Data.ConfigEntry.EnableGameOverlay,
+        ShowGameOverlay = process =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                try
+                {
+                    var overlay = new OverlayWindow(process);
+                    overlay.Show();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"显示游戏覆盖层失败: {ex.Message}");
+                }
+            });
+        },
         JavaRuntimes = Data.ConfigEntry.JavaRuntimes,
         DefaultJavaRuntime = Data.ConfigEntry.DefaultJavaRuntime,
         WindowWidth = Data.ConfigEntry.MinecraftWindowWidth,

@@ -1,0 +1,88 @@
+<Window
+    Background="Transparent"
+    CanResize="False"
+    ShowInTaskbar="False"
+    Title="Portal Overlay"
+    TransparencyLevelHint="Transparent"
+    WindowDecorations="None"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:Class="Portal.Views.SubWindows.OverlayWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Name="OverlayRoot" Opacity="0">
+        <Grid Background="#66000000" Opacity="1" />
+
+        <Grid
+            Margin="30"
+            Name="MainContent"
+            RowDefinitions="Auto,*">
+            <Button
+                Classes="NoBorder"
+                Click="CloseBtn_OnClick"
+                Grid.Row="0"
+                Height="48"
+                HorizontalAlignment="Right"
+                Name="CloseBtn"
+                Width="48">
+                <TextBlock
+                    FontSize="18"
+                    Foreground="#FFFFFF"
+                    Text="✕" />
+            </Button>
+
+            <TextBlock
+                FontSize="120"
+                FontWeight="950"
+                Foreground="#FFFFFF"
+                Grid.Row="1"
+                HorizontalAlignment="Left"
+                Margin="15,0,0,0"
+                Name="TimeBlock"
+                Opacity="0.3"
+                VerticalAlignment="Bottom" />
+        </Grid>
+
+        <StackPanel
+            Grid.Row="0"
+            HorizontalAlignment="Left"
+            Orientation="Horizontal"
+            Spacing="22">
+            <StackPanel
+                Cursor="Hand"
+                Orientation="Horizontal"
+                PointerPressed="InputElement_OnPointerPressed"
+                Spacing="8">
+                <TextBlock
+                    FontSize="22"
+                    Foreground="#FFFFFF"
+                    Text="⬢"
+                    VerticalAlignment="Center" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        Foreground="#FFFFFF"
+                        Opacity="0.85"
+                        Text="Instance" />
+                    <TextBlock
+                        FontSize="18"
+                        Foreground="#FFFFFF"
+                        Text="实例详情" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock
+            Foreground="#FFFFFF"
+            HorizontalAlignment="Left"
+            Margin="10,6,0,0"
+            Name="VersionBox"
+            Opacity="0.85"
+            Text="Portal v1.0.0"
+            VerticalAlignment="Top" />
+
+        <Border Margin="40">
+            <ContentControl Name="InstanceContentControl" />
+        </Border>
+    </Grid>
+</Window>

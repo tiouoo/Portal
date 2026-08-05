@@ -274,6 +274,11 @@ public static class MinecraftLaunchService
     {
         placeholders["{process_id}"] = process.Id.ToString();
 
+        if (options.EnableGameOverlay && options.ShowGameOverlay != null)
+        {
+            Dispatcher.UIThread.Post(() => options.ShowGameOverlay(process));
+        }
+
         if (overrideWindowTitle && placeholders.GetValueOrDefault("{title}") is { Length: > 0 } title)
             LaunchCustomization.WatchWindowTitle(process, title);
 
@@ -764,6 +769,8 @@ public sealed class MinecraftLaunchOptions
     public MinecraftAccount? Account { get; init; }
     public BedrockAccount? BedrockAccount { get; init; }
     public bool EnableBedrockAccountInjection { get; init; }
+    public bool EnableGameOverlay { get; init; }
+    public Action<Process>? ShowGameOverlay { get; init; }
     public IReadOnlyList<JavaRuntimeEntry> JavaRuntimes { get; init; } = [];
     public JavaRuntimeEntry? DefaultJavaRuntime { get; init; }
     public int WindowWidth { get; init; }

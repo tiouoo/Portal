@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -14,4 +15,6 @@ public partial class Advanced : DataUserControl
         InitializeComponent();
         DataContext = this;
     }
+
+    public bool IsOverlaySupported => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 }
