@@ -97,7 +97,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         var build = await FindBuildAsync(request.Version, request.CancellationToken);
         var packageUrl = await core.GetPackageUri(build, Architecture.X64);
         var packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "xyz.tiouo.Portal", "Cache", "Bedrock", $"{request.Version.Id}-{request.Version.BuildLabel}.insPack");
+            "cc.tiouo.Portal", "Cache", "Bedrock", $"{request.Version.Id}-{request.Version.BuildLabel}.insPack");
 
         await DownloadPackageAsync(packageUrl, packagePath, build, request.Version.BuildType, progress,
             request.CancellationToken);

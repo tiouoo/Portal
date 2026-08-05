@@ -10,6 +10,7 @@ using Portal.Const;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.Update;
 using Portal.ViewModels;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -103,7 +104,16 @@ public partial class About : DataUserControl
                 CanLightDismiss = false,
                 CanResize = false
             });
-        if (result == DialogResult.Yes) await UpdateApp.Apply(update);
+        if (result != DialogResult.Yes) return;
+        try
+        {
+            await UpdateApp.Apply(update);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error("启动应用更新失败。", exception);
+            this.AsTopLevel().Notice($"无法启动更新：{exception.Message}", NotificationType.Error);
+        }
     }
 
     private void OpenLink_OnClick(object? sender, RoutedEventArgs e)

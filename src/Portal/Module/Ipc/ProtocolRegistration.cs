@@ -114,7 +114,7 @@ public static class ProtocolRegistration
         var applicationsFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "applications");
         Directory.CreateDirectory(applicationsFolder);
-        const string desktopFileName = "xyz.tiouo.Portal.url-handler.desktop";
+        const string desktopFileName = "cc.tiouo.Portal.url-handler.desktop";
         var desktopFilePath = Path.Combine(applicationsFolder, desktopFileName);
         await File.WriteAllTextAsync(desktopFilePath,
             LinuxDesktopTemplate.Replace("__PORTAL_EXE__", EscapeDesktopExecArgument(executablePath)) + "\n");

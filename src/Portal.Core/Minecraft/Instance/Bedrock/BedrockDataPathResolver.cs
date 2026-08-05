@@ -94,7 +94,7 @@ public static class BedrockDataPathResolver
     }
 
     private static string GetPortalDataRoot() => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "xyz.tiouo.Portal", "Bedrock");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "cc.tiouo.Portal", "Bedrock");
 
     private static string GetUwpLocalStateRoot(BedrockInstanceConfig config)
     {

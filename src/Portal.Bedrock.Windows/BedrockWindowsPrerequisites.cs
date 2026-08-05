@@ -25,7 +25,7 @@ internal static class BedrockWindowsPrerequisites
 
     private static string StateFilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "xyz.tiouo.Portal", "Bedrock", "prerequisites.json");
+        "cc.tiouo.Portal", "Bedrock", "prerequisites.json");
 
     public static void Validate(BedrockInstanceConfig config)
     {

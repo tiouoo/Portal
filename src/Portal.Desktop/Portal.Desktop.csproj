@@ -33,7 +33,7 @@
 
         <CFBundleName>Portal</CFBundleName>
         <CFBundleDisplayName>Portal</CFBundleDisplayName>
-        <CFBundleIdentifier>xyz.tiouoo.portal</CFBundleIdentifier>
+        <CFBundleIdentifier>cc.tiouoo.portal</CFBundleIdentifier>
         <CFBundleVersion>1.0.0</CFBundleVersion>
         <CFBundlePackageType>AAPL</CFBundlePackageType>
         <CFBundleSignature>Porta</CFBundleSignature>

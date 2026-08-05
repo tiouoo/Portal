@@ -96,7 +96,7 @@ internal static class BedrockDataIsolation
     {
         var nativeFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "xyz.tiouo.Portal", "Native");
+            "cc.tiouo.Portal", "Native");
         var nativePath = Path.Combine(nativeFolder, PreloadDllName);
         Directory.CreateDirectory(nativeFolder);
 

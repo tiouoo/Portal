@@ -19,7 +19,7 @@ internal static class CacheDatabase
         new(ModCacheCapacity, StringComparer.OrdinalIgnoreCase);
     private static bool _initialized;
     private static string DatabasePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "xyz.tiouo.Portal", "Cache", "cache.db");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "cc.tiouo.Portal", "Cache", "cache.db");
 
     public static ModCacheEntry? ReadMod(uint fingerprint)
     {

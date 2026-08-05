@@ -15,7 +15,7 @@ namespace Portal.Desktop;
 /// </summary>
 internal static class PortalCommandService
 {
-    private const string PipeName = "xyz.tiouo.Portal.Command";
+    private const string PipeName = "cc.tiouo.Portal.Command";
 
     /// <summary>
     /// 在 Main 最前面调用。返回 true 表示本进程只承担命令转发/帮助输出，应直接退出。

@@ -131,7 +131,7 @@ internal static class BedrockModInjector
                 return _inject;
 
             var nativeFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "xyz.tiouo.Portal", "Native");
+                "cc.tiouo.Portal", "Native");
             Directory.CreateDirectory(nativeFolder);
             var assembly = Assembly.GetExecutingAssembly();
             byte[] bytes;

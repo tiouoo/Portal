@@ -411,7 +411,7 @@ public class MinecraftInstance : ObservableObject
         var identity = $"{Layout.Kind}|{Path.GetFullPath(Layout.InstanceRoot)}";
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "xyz.tiouo.Portal", "Instances", $"{hash}.json");
+            "cc.tiouo.Portal", "Instances", $"{hash}.json");
     }
 
     /// <summary>

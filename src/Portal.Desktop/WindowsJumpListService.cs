@@ -18,8 +18,8 @@ namespace Portal.Desktop;
 
 internal static class WindowsJumpListService
 {
-    private const string AppUserModelId = "xyz.tiouo.Portal";
-    private const string PipeName = "xyz.tiouo.Portal.JumpList";
+    private const string AppUserModelId = "cc.tiouo.Portal";
+    private const string PipeName = "cc.tiouo.Portal.JumpList";
     private const string CommandArgument = "--jump-list-command";
     private static readonly RecentPlayService RecentPlayService = new();
     private static readonly Queue<JumpListCommand> PendingCommands = [];

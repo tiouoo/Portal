@@ -86,7 +86,7 @@ sealed class Program
         }
         Logger.Info($"开始启动应用，命令行参数数量：{args.Length}");
         var versionInfo = Module.Initialize.Config.LoadVersionInfo();
-        Initializer.Program("Portal", "xyz.tiouo.Portal", versionInfo.VersionTitle);
+        Initializer.Program("Portal", "cc.tiouo.Portal", versionInfo.VersionTitle);
 #if WINDOWS
         WindowsBedrockFileAssociationService.Register();
 #endif
