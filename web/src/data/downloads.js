@@ -30,12 +30,14 @@ export const platforms = [
   {
     id: 'linux',
     name: 'Linux',
-    detail: 'AppImage 免安装运行',
+    detail: 'Linux x64',
     icon: 'linux',
     primary: 'x64 AppImage',
     primaryUrl: `${releaseBase}/Portal.linux.x64.AppImage`,
     links: [
-      { label: 'x64 AppImage', meta: 'x64 · appimage', url: `${releaseBase}/Portal.linux.x64.AppImage` }
+      { label: 'x64 AppImage', meta: 'x64 · appimage', url: `${releaseBase}/Portal.linux.x64.AppImage` },
+      { label: 'x64 deb 包', meta: 'x64 · deb', url: `${releaseBase}/Portal.linux.x64.deb` },
+      { label: 'x64 rpm 包', meta: 'x64 · rpm', url: `${releaseBase}/Portal.linux.x64.rpm` }
     ]
   }
 ]
