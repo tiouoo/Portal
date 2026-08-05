@@ -101,12 +101,18 @@ public class Config
 
         Logger.MinimumLevel = Data.ConfigEntry.MinimumLogLevel;
 
+        if (Data.ConfigEntry.UsingBedrockAccount is { } selectedBedrockAccount)
+            Data.ConfigEntry.UsingBedrockAccount = Data.ConfigEntry.BedrockAccounts
+                .FirstOrDefault(account => account.Id == selectedBedrockAccount.Id || account.Xuid == selectedBedrockAccount.Xuid);
+        Data.ConfigEntry.UsingBedrockAccount ??= Data.ConfigEntry.BedrockAccounts.FirstOrDefault();
+
         if (isFirstRun) Data.ConfigEntry.IsInitialized = false;
 
         if (FailedSettingKeys.Count > 0) Logger.Error($"Setting load with errors: {FailedSettingKeys.AsJson()}");
 
         // 账户与认证服务器变更时使聚合搜索索引失效（实例集合的失效逻辑在 UiProperty 中）
         Data.ConfigEntry.MinecraftAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
+        Data.ConfigEntry.BedrockAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
         Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
 
         Data.Instance.Version = LoadVersionInfo();

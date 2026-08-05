@@ -156,22 +156,7 @@ public partial class TitleBarComponent : Grid
 
     private async void AccountButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (Data.ConfigEntry.MinecraftAccounts.Count != 0)
-        {
-            AccountFlyout.Flyout.ShowAt(AccountFlyoutPoint);
-            return;
-        }
-
-        var result = await AddAccount.Main(((Control)sender!).TryGetHostId()!, Data.ConfigEntry.AuthServers);
-        if (result == null || result.Length == 0) return;
-        foreach (var minecraftAccount in result)
-        {
-            if (minecraftAccount is null) continue;
-            Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
-        }
-
-        if (result.Length == 1 && result[0] == null) return;
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
+        AccountFlyout.Flyout.ShowAt(AccountFlyoutPoint);
     }
 
     private async void AddAcountButton_OnClick(object? sender, RoutedEventArgs e)
@@ -179,15 +164,20 @@ public partial class TitleBarComponent : Grid
         AccountFlyout.Flyout.Hide();
         var tryGetHostId = ((Control)Root!).TryGetHostId()!;
         var result = await AddAccount.Main(tryGetHostId, Data.ConfigEntry.AuthServers);
-        if (result == null || result.Length == 0) return;
-        foreach (var minecraftAccount in result)
+        if (result == null) return;
+        foreach (var minecraftAccount in result.JavaAccounts)
         {
-            if (minecraftAccount is null) continue;
             Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
         }
-
-        if (result.Length == 1 && result[0] == null) return;
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
+        if (result.JavaAccounts.Count > 0)
+            Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.JavaAccounts[^1];
+        if (result.BedrockAccount is { } bedrockAccount)
+        {
+            var existing = Data.ConfigEntry.BedrockAccounts.FirstOrDefault(item => item.Xuid == bedrockAccount.Xuid);
+            if (existing != null) Data.ConfigEntry.BedrockAccounts.Remove(existing);
+            Data.ConfigEntry.BedrockAccounts.Add(bedrockAccount);
+            Data.ConfigEntry.UsingBedrockAccount = bedrockAccount;
+        }
     }
 
     public void DeleteAccount(object parameter)
@@ -220,6 +210,15 @@ public partial class TitleBarComponent : Grid
 
         if (Data.ConfigEntry.MinecraftAccounts.Count == 0)
             AccountFlyout.Flyout.Hide();
+    }
+
+    private void DeleteBedrockAccount_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: BedrockAccount account }) return;
+        Data.ConfigEntry.BedrockAccounts.Remove(account);
+        if (Data.ConfigEntry.UsingBedrockAccount == account)
+            Data.ConfigEntry.UsingBedrockAccount = Data.ConfigEntry.BedrockAccounts.FirstOrDefault();
+        if (!Data.ConfigEntry.HasAnyAccounts) AccountFlyout.Flyout.Hide();
     }
 
     private void OpenSearch(object? sender, RoutedEventArgs e)

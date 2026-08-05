@@ -9,6 +9,8 @@ public static class MinecraftLaunchOptionsFactory
     public static MinecraftLaunchOptions Create(Action<MinecraftLogSession>? openLog = null) => new()
     {
         Account = Data.ConfigEntry.UsingMinecraftMinecraftAccount,
+        BedrockAccount = Data.ConfigEntry.UsingBedrockAccount,
+        EnableBedrockAccountInjection = Data.ConfigEntry.EnableBedrockAccountInjection,
         JavaRuntimes = Data.ConfigEntry.JavaRuntimes,
         DefaultJavaRuntime = Data.ConfigEntry.DefaultJavaRuntime,
         WindowWidth = Data.ConfigEntry.MinecraftWindowWidth,
@@ -24,6 +26,7 @@ public static class MinecraftLaunchOptionsFactory
         GameStarted = PortalVisibilityService.OnGameStarted,
         GameExited = PortalVisibilityService.OnGameExited,
         AccountRefreshed = UpdateMicrosoftAccount,
+        BedrockAccountRefreshed = UpdateBedrockAccount,
         OpenLog = openLog,
         InstallMissingJava = (version, progress, token) => JavaAutoInstallCoordinator.EnsureAsync(version, progress, token)
     };
@@ -35,5 +38,13 @@ public static class MinecraftLaunchOptionsFactory
         if (index >= 0)
             accounts[index] = refreshed;
         Data.ConfigEntry.UsingMinecraftMinecraftAccount = refreshed;
+    }
+
+    private static void UpdateBedrockAccount(BedrockAccount original, BedrockAccount refreshed)
+    {
+        var accounts = Data.ConfigEntry.BedrockAccounts;
+        var index = accounts.IndexOf(original);
+        if (index >= 0) accounts[index] = refreshed;
+        Data.ConfigEntry.UsingBedrockAccount = refreshed;
     }
 }

@@ -38,3 +38,18 @@ public sealed class NewsImage : OwnedAdvancedImage
         Loader = LoaderInstance;
     }
 }
+
+public sealed class XboxAvatarImage : OwnedAdvancedImage
+{
+    private static readonly IAsyncImageLoader LoaderInstance = new XboxAvatarImageLoader();
+
+    public XboxAvatarImage(Uri? baseUri) : base(baseUri)
+    {
+        Loader = LoaderInstance;
+    }
+
+    public XboxAvatarImage(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+        Loader = LoaderInstance;
+    }
+}

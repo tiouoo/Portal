@@ -4,5 +4,6 @@ public enum AccountType
 {
     Offline,
     Microsoft,
-    Yggdrasil
+    Yggdrasil,
+    Bedrock
 }

@@ -12,7 +12,24 @@ namespace Portal.Core.Operations.Account;
 
 public class AddAccount
 {
-    public static async Task<MinecraftAccount?[]?> Main(string hostId,
+    public static async Task<BedrockAccount?> Bedrock(string? hostId)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
+        };
+        return await OverlayDialog.ShowCustomAsync<BedrockMicrosoft, BedrockMicrosoftViewModel, BedrockAccount>(
+            new BedrockMicrosoftViewModel(), hostId: hostId, options: options);
+    }
+
+    public static async Task<AccountAdditionResult?> Main(string hostId,
         ObservableCollection<Minecraft.Classes.AuthServer> authServers)
     {
         var options = new OverlayDialogOptions
@@ -36,6 +53,12 @@ public class AddAccount
             return null;
         }
 
+        if (result.SelectedServer.AuthType == AccountType.Bedrock)
+        {
+            var bedrockAccount = await Bedrock(hostId);
+            return bedrockAccount == null ? null : new AccountAdditionResult([], bedrockAccount);
+        }
+
         var accounts = await HandleAccountType(result.SelectedServer, authServers, hostId);
 
         if (accounts == null || accounts.Length == 0 || accounts.All(a => a == null))
@@ -50,7 +73,7 @@ public class AddAccount
 
         if (viewResult is ObservableCollection<MinecraftAccount> resultAccounts)
         {
-            return resultAccounts.ToArray();
+            return new AccountAdditionResult(resultAccounts.ToArray(), null);
         }
 
         return null;
@@ -123,3 +146,5 @@ public class AddAccount
         return result;
     }
 }
+
+public sealed record AccountAdditionResult(IReadOnlyList<MinecraftAccount> JavaAccounts, BedrockAccount? BedrockAccount);

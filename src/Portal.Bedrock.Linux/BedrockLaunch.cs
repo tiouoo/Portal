@@ -34,6 +34,14 @@ public sealed class BedrockLaunch : IBedrockLaunch
                 ? runtimeProgress.Percentage
                 : null);
         }, cancellationToken).ConfigureAwait(false);
+        string? preauthDevice = null;
+        if (Authentication != null)
+        {
+            Log(BedrockLogLevel.Information, $"正在为 Xbox 账户 {Authentication.Gamertag} 准备 WineGDK 预认证");
+            preauthDevice = await new XboxPreauthService(runtime.PrefixPath)
+                .PrepareAsync(Authentication, cancellationToken).ConfigureAwait(false);
+            await SetRefreshTokenAsync(runtime, Authentication.RefreshToken, cancellationToken).ConfigureAwait(false);
+        }
         await EnsureGameInputAsync(runtime, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         var startInfo = new ProcessStartInfo
@@ -52,6 +60,8 @@ public sealed class BedrockLaunch : IBedrockLaunch
         if (_instanceConfig.EnableCreatorEditor)
             startInfo.ArgumentList.Add("minecraft://creator/?Editor=true");
         ApplyRuntimeEnvironment(startInfo, runtime);
+        if (preauthDevice != null)
+            startInfo.Environment["WINEGDK_PREAUTH_DEVICE"] = ToWinePath(preauthDevice);
 
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, args) => ForwardLog(args.Data, BedrockLogLevel.Information);
@@ -174,6 +184,46 @@ public sealed class BedrockLaunch : IBedrockLaunch
         // 宿主机安装 32 位 multilib 也能运行。
         startInfo.Environment["PROTON_USE_WOW64"] = "1";
     }
+
+    private async Task SetRefreshTokenAsync(LinuxBedrockRuntime runtime, string refreshToken,
+        CancellationToken cancellationToken)
+    {
+        var registryFile = Path.Combine(runtime.PrefixPath, $"portal-xbox-{Guid.NewGuid():N}.reg");
+        Directory.CreateDirectory(runtime.PrefixPath);
+        await File.WriteAllTextAsync(registryFile,
+            "Windows Registry Editor Version 5.00\n\n[HKEY_CURRENT_USER\\Software\\Wine\\WineGDK]\n" +
+            $"\"RefreshToken\"=\"{EscapeRegistryValue(refreshToken)}\"\n", cancellationToken).ConfigureAwait(false);
+        try { File.SetUnixFileMode(registryFile, UnixFileMode.UserRead | UnixFileMode.UserWrite); }
+        catch (PlatformNotSupportedException) { }
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = runtime.ProtonScript,
+            WorkingDirectory = runtime.ProtonRoot,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        startInfo.ArgumentList.Add("run");
+        startInfo.ArgumentList.Add("reg");
+        startInfo.ArgumentList.Add("import");
+        startInfo.ArgumentList.Add(ToWinePath(registryFile));
+        ApplyRuntimeEnvironment(startInfo, runtime);
+        try
+        {
+            using var process = Process.Start(startInfo)
+                                ?? throw new InvalidOperationException("无法写入 WineGDK 账户配置。");
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException("写入 WineGDK 账户配置失败。");
+        }
+        finally
+        {
+            File.Delete(registryFile);
+        }
+    }
+
+    private static string ToWinePath(string path) => $"Z:{Path.GetFullPath(path).Replace('/', '\\')}";
+    private static string EscapeRegistryValue(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static void KillProcess(Process process)
     {

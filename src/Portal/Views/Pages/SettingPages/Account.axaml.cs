@@ -203,15 +203,53 @@ public partial class Account : DataUserControl
     {
         var tryGetHostId = this.TryGetHostId()!;
         var result = await AddAccount.Main(tryGetHostId, Data.ConfigEntry.AuthServers);
-        if (result == null || result.Length == 0) return;
-        foreach (var minecraftAccount in result)
+        if (result == null) return;
+        foreach (var minecraftAccount in result.JavaAccounts)
         {
-            if (minecraftAccount is null) continue;
             Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
         }
+        if (result.JavaAccounts.Count > 0)
+            Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.JavaAccounts[^1];
+        if (result.BedrockAccount is { } bedrockAccount)
+        {
+            var existing = Data.ConfigEntry.BedrockAccounts.FirstOrDefault(item => item.Xuid == bedrockAccount.Xuid);
+            if (existing != null) Data.ConfigEntry.BedrockAccounts.Remove(existing);
+            Data.ConfigEntry.BedrockAccounts.Add(bedrockAccount);
+            Data.ConfigEntry.UsingBedrockAccount = bedrockAccount;
+        }
+    }
 
-        if (result.Length == 1 && result[0] == null) return;
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
+    private async void RefreshBedrock_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: BedrockAccount account }) return;
+        var topLevel = TopLevel.GetTopLevel(this);
+        try
+        {
+            var refreshed = await new BedrockAuthenticationService().RefreshAsync(account);
+            var index = Data.ConfigEntry.BedrockAccounts.IndexOf(account);
+            if (index >= 0) Data.ConfigEntry.BedrockAccounts[index] = refreshed;
+            Data.ConfigEntry.UsingBedrockAccount = refreshed;
+            topLevel?.Notice("基岩账户信息已更新", NotificationType.Success);
+        }
+        catch (Exception exception)
+        {
+            topLevel?.Notice($"更新失败：{exception.Message}", NotificationType.Error);
+        }
+    }
+
+    private async void RenoteBedrock_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: BedrockAccount account }) return;
+        var result = await EditAccountNoteDialog.Show(this.TryGetHostId()!, account.AccountNote ?? string.Empty);
+        if (result != null) account.AccountNote = result;
+    }
+
+    private void RemoveBedrock_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: BedrockAccount account }) return;
+        Data.ConfigEntry.BedrockAccounts.Remove(account);
+        if (Data.ConfigEntry.UsingBedrockAccount == account)
+            Data.ConfigEntry.UsingBedrockAccount = Data.ConfigEntry.BedrockAccounts.FirstOrDefault();
     }
 
     private async void Renote_Click(object? sender, RoutedEventArgs e)

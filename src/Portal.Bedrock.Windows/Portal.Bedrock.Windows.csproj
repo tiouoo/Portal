@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="BedrockLauncher.Core" />
+      <PackageReference Include="XUserLauncher.Core" />
     </ItemGroup>
 
     <ItemGroup>

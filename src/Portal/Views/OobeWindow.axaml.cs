@@ -199,15 +199,20 @@ public partial class OobeWindow : TioWindow
     private async void AddAccount_OnClick(object? sender, RoutedEventArgs e)
     {
         var result = await AddAccount.Main(HostId, Data.ConfigEntry.AuthServers);
-        if (result == null || result.Length == 0) return;
-        foreach (var minecraftAccount in result)
+        if (result == null) return;
+        foreach (var minecraftAccount in result.JavaAccounts)
         {
-            if (minecraftAccount is null) continue;
             Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
         }
-
-        if (result.Length == 1 && result[0] == null) return;
-        Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.LastOrDefault();
+        if (result.JavaAccounts.Count > 0)
+            Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.JavaAccounts[^1];
+        if (result.BedrockAccount is { } bedrockAccount)
+        {
+            var existing = Data.ConfigEntry.BedrockAccounts.FirstOrDefault(item => item.Xuid == bedrockAccount.Xuid);
+            if (existing != null) Data.ConfigEntry.BedrockAccounts.Remove(existing);
+            Data.ConfigEntry.BedrockAccounts.Add(bedrockAccount);
+            Data.ConfigEntry.UsingBedrockAccount = bedrockAccount;
+        }
     }
 
     private async void ScanJava_OnClick(object? sender, RoutedEventArgs e)

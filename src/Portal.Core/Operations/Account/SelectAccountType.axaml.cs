@@ -44,6 +44,8 @@ public partial class SelectAccountTypeViewModel : ObservableObject, IDialogConte
         AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Offline, "离线模式"));
         AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Microsoft, "微软账户"));
         AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Yggdrasil, "外置登录"));
+        if (!OperatingSystem.IsMacOS())
+            AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Bedrock, "关联Xbox"));
 
         NextCommand = new RelayCommand(Next, CanNext);
         CancelCommand = new RelayCommand(Cancel);

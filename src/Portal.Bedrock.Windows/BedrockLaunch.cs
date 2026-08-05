@@ -76,7 +76,14 @@ public class BedrockLaunch : IBedrockLaunch
         var existingProcessIds = Process.GetProcessesByName("Minecraft.Windows").Select(process => process.Id).ToHashSet();
         var launchStarted = DateTime.Now;
         Log(BedrockLogLevel.Information, $"启动 Minecraft.Windows，实例目录：{_instanceConfig.InstancePath}");
-        launchedProcess = await Task.Run(() => new BedrockCore().LaunchGameAsync(options)).ConfigureAwait(false);
+        if (Authentication != null && _instanceConfig.BuildType == BedrockBuildType.GDK)
+        {
+            launchedProcess = await LaunchWithXboxAccountAsync(Authentication).ConfigureAwait(false);
+        }
+        else
+        {
+            launchedProcess = await Task.Run(() => new BedrockCore().LaunchGameAsync(options)).ConfigureAwait(false);
+        }
         if (launchedProcess == null)
         {
             Log(BedrockLogLevel.Warning, "BedrockLauncher.Core 未在 5 秒内返回 Minecraft 进程，继续等待进程启动");
@@ -108,6 +115,22 @@ public class BedrockLaunch : IBedrockLaunch
     }
 
     private void Log(BedrockLogLevel level, string message) => LogReceived?.Invoke(message, level);
+
+    private async Task<Process> LaunchWithXboxAccountAsync(BedrockAuthentication account)
+    {
+        Log(BedrockLogLevel.Information, $"正在关联 Xbox 账户 {account.Gamertag}");
+        var launcher = new PortalXUserLauncher(_instanceConfig.InstancePath);
+        launcher.DeployHook();
+        using var authentication = await PortalXUserLauncher.AuthenticateAsync(account.AccessToken);
+        var executable = Path.Combine(_instanceConfig.InstancePath, "Minecraft.Windows.exe");
+        var result = await PortalXUserLauncher.LaunchAndInjectAsync(executable, BuildLaunchArguments(),
+            _instanceConfig.InstancePath,
+            authentication, TimeSpan.FromSeconds(60));
+        var process = Process.GetProcessById((int)result.ProcessId);
+        await PortalXUserLauncher.InjectAsync(process.Id, authentication, TimeSpan.FromSeconds(60));
+        Log(BedrockLogLevel.Information, "Xbox 账户已注入基岩版游戏进程");
+        return process;
+    }
 
     private string? BuildLaunchArguments()
     {

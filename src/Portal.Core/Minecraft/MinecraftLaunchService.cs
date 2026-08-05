@@ -577,6 +577,20 @@ public static class MinecraftLaunchService
             throw new InvalidOperationException("基岩版实例配置缺失。");
 
         var placeholders = LaunchCustomization.BuildPlaceholders(instance, null, null, options);
+        BedrockAuthentication? authentication = null;
+        if (options.EnableBedrockAccountInjection && options.BedrockAccount is { } bedrockAccount)
+        {
+            context.SetRunning("正在刷新基岩版 Xbox 账户");
+            var refreshedAccount = await new BedrockAuthenticationService().RefreshAsync(bedrockAccount,
+                context.CancellationToken);
+            refreshedAccount.LastLoginTime = DateTime.Now;
+            options.BedrockAccountRefreshed?.Invoke(bedrockAccount, refreshedAccount);
+            placeholders["{player_name}"] = refreshedAccount.Gamertag;
+            placeholders["{player_uuid}"] = refreshedAccount.Xuid;
+            placeholders["{account_type}"] = "bedrock";
+            authentication = new BedrockAuthentication(refreshedAccount.Gamertag, refreshedAccount.Xuid,
+                refreshedAccount.AccessToken, refreshedAccount.RefreshToken, refreshedAccount.ExpiresAt);
+        }
         await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
         context.SetRunning("正在启动基岩版游戏");
 
@@ -584,6 +598,7 @@ public static class MinecraftLaunchService
                        ?? throw new PlatformNotSupportedException("当前平台不支持启动基岩版。");
 
         var launcher = factory(instance.BedrockConfig);
+        launcher.Authentication = authentication;
         launcher.LogReceived = (message, level) =>
         {
             var text = $"[Portal/Bedrock] {message}";
@@ -740,6 +755,8 @@ public sealed class MinecraftLogSession
 public sealed class MinecraftLaunchOptions
 {
     public MinecraftAccount? Account { get; init; }
+    public BedrockAccount? BedrockAccount { get; init; }
+    public bool EnableBedrockAccountInjection { get; init; }
     public IReadOnlyList<JavaRuntimeEntry> JavaRuntimes { get; init; } = [];
     public JavaRuntimeEntry? DefaultJavaRuntime { get; init; }
     public int WindowWidth { get; init; }
@@ -755,6 +772,7 @@ public sealed class MinecraftLaunchOptions
     public Action? GameStarted { get; init; }
     public Action? GameExited { get; init; }
     public Action<MinecraftAccount, MinecraftAccount>? AccountRefreshed { get; init; }
+    public Action<BedrockAccount, BedrockAccount>? BedrockAccountRefreshed { get; init; }
     public Action<MinecraftLogSession>? OpenLog { get; init; }
     public Func<int, JavaInstallProgressHandler, CancellationToken, Task<JavaRuntimeEntry?>>? InstallMissingJava { get; init; }
     public Func<BedrockInstanceConfig, IBedrockLaunch>? BedrockLauncherFactory { get; init; }

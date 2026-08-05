@@ -25,6 +25,11 @@ public sealed class ModScreenshotLoader() : DiskCachedImageLoader("#mod-screensh
 public sealed class NewsImageLoader() : DiskCachedImageLoader("#news-images", 520);
 
 /// <summary>
+/// Xbox 档案头像加载器。头像按 URL 缓存到本地，避免每次打开账户列表都重新请求。
+/// </summary>
+public sealed class XboxAvatarImageLoader() : DiskCachedImageLoader("#xbox-avatars", 128);
+
+/// <summary>
 /// 程序集嵌入资源图片加载器（resm: URI）：按需解码到目标宽度，不做内存缓存。
 /// 以前这些图片走 AdvancedImage 默认的全局内存缓存，打开一次后位图永久驻留。
 /// </summary>

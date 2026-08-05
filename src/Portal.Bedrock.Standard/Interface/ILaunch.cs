@@ -7,6 +7,7 @@ namespace Portal.Bedrock.Standard.Interface;
 
 public abstract class IBedrockLaunch
 {
+    public BedrockAuthentication? Authentication { get; set; }
     public abstract Task Launch(CancellationToken cancellationToken);
     public abstract Process GetProcess();
     public Process MinecraftProcess;

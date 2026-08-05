@@ -29,7 +29,22 @@ public partial class ConfigEntry : ObservableObject
     public ConfigEntry()
     {
         PropertyChanged += OnPropertyChanged;
-        MinecraftAccounts.CollectionChanged += (_, _) => App.Method.SaveConfig();
+        MinecraftAccounts.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasJavaAccounts));
+            OnPropertyChanged(nameof(HasBothAccountEditions));
+            OnPropertyChanged(nameof(HasAnyAccounts));
+            OnPropertyChanged(nameof(CurrentAccountDisplay));
+            App.Method.SaveConfig();
+        };
+        BedrockAccounts.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasBedrockAccounts));
+            OnPropertyChanged(nameof(HasBothAccountEditions));
+            OnPropertyChanged(nameof(HasAnyAccounts));
+            OnPropertyChanged(nameof(CurrentAccountDisplay));
+            App.Method.SaveConfig();
+        };
         AuthServers.CollectionChanged += (_, _) => App.Method.SaveConfig();
         MinecraftFolders.CollectionChanged += OnMinecraftFoldersChanged;
         JavaRuntimes.CollectionChanged += (_, _) => App.Method.SaveConfig();
@@ -53,6 +68,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Logger.LogLevel MinimumLogLevel { get; set; } = Logger.LogLevel.Info;
     [ObservableProperty] public partial bool AutoSetJavaHighPerformanceGpu { get; set; } = true;
     [ObservableProperty] public partial bool AutoOptimizeMemoryBeforeGameLaunch { get; set; }
+    [ObservableProperty] public partial bool EnableBedrockAccountInjection { get; set; }
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
@@ -101,9 +117,18 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowWidgetBackground { get; set; } = true;
     [ObservableProperty] public partial List<WidgetLayoutData> WidgetLayout { get; set; } = [];
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
+    [ObservableProperty] public partial BedrockAccount? UsingBedrockAccount { get; set; }
     [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
     [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
+    public ObservableCollection<BedrockAccount> BedrockAccounts { get; } = [];
+    public bool HasJavaAccounts => MinecraftAccounts.Count > 0;
+    public bool HasBedrockAccounts => !OperatingSystem.IsMacOS() && BedrockAccounts.Count > 0;
+    public bool HasBothAccountEditions => HasJavaAccounts && HasBedrockAccounts;
+    public bool HasAnyAccounts => HasJavaAccounts || HasBedrockAccounts;
+    public string CurrentAccountDisplay => UsingMinecraftMinecraftAccount?.ShortDisplay
+                                           ?? (OperatingSystem.IsMacOS() ? null : UsingBedrockAccount?.ShortDisplay)
+                                           ?? "无账户";
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
     public bool CanDisableSystemProxy => !EnableProxyServer;
 
@@ -197,6 +222,12 @@ public partial class ConfigEntry : ObservableObject
 
         App.Method.SaveConfig();
     }
+
+    partial void OnUsingMinecraftMinecraftAccountChanged(MinecraftAccount? value) =>
+        OnPropertyChanged(nameof(CurrentAccountDisplay));
+
+    partial void OnUsingBedrockAccountChanged(BedrockAccount? value) =>
+        OnPropertyChanged(nameof(CurrentAccountDisplay));
 
     private void OnMinecraftFoldersChanged(object? sender,
         System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
