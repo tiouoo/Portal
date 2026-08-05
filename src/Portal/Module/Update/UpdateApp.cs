@@ -67,6 +67,13 @@ public static class UpdateApp
                 CompletePreparation(taskHandle, installerUpdate);
                 return installerUpdate;
             }
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType is "deb" or "rpm")
+            {
+                var packageUpdate = new PreparedUpdate(
+                    await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType)), true);
+                CompletePreparation(taskHandle, packageUpdate);
+                return packageUpdate;
+            }
 
             var processPath = Environment.ProcessPath
                               ?? throw new InvalidOperationException("无法确定当前程序路径。");
@@ -123,9 +130,14 @@ public static class UpdateApp
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            if (packageType != "appimage") throw new NotSupportedException("Linux 自动更新目前仅支持 AppImage。");
             if (arch != "x64") throw new PlatformNotSupportedException("Portal Linux 版本目前仅发布 x64 更新包。");
-            expectedName = "Portal.linux.x64.AppImage";
+            expectedName = packageType switch
+            {
+                "appimage" => "Portal.linux.x64.AppImage",
+                "deb" => "Portal.linux.x64.deb",
+                "rpm" => "Portal.linux.x64.rpm",
+                _ => throw new NotSupportedException($"无法自动更新 Linux 安装类型“{packageType}”。")
+            };
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -343,6 +355,43 @@ public static class UpdateApp
             throw new InvalidOperationException("无法定位当前 AppImage；请从 AppImage 文件启动后重试。");
         var script = WriteUnixScript(updateDirectory, target, packagePath, false);
         return UnixScript(script, !CanWriteDirectory(Path.GetDirectoryName(target)!));
+    }
+
+    private static ProcessStartInfo PrepareLinuxPackage(string packagePath, string updateDirectory, string packageType)
+    {
+        var script = Path.Combine(updateDirectory, "install-package-update.sh");
+        var install = packageType switch
+        {
+            "deb" => $$"""
+                if command -v apt-get >/dev/null 2>&1; then
+                  exec apt-get install -y {{Sh(packagePath)}}
+                fi
+                exec dpkg -i {{Sh(packagePath)}}
+                """,
+            "rpm" => $$"""
+                if command -v dnf >/dev/null 2>&1; then
+                  exec dnf install -y {{Sh(packagePath)}}
+                fi
+                if command -v zypper >/dev/null 2>&1; then
+                  exec zypper --non-interactive install {{Sh(packagePath)}}
+                fi
+                exec rpm -Uvh {{Sh(packagePath)}}
+                """,
+            _ => throw new ArgumentOutOfRangeException(nameof(packageType), packageType, "不支持的 Linux 安装包类型。")
+        };
+        File.WriteAllText(script, $$"""
+            #!/bin/sh
+            set -eu
+            pid='{{Environment.ProcessId}}'
+            i=0
+            while kill -0 "$pid" 2>/dev/null; do
+              i=$((i + 1)); [ "$i" -gt 120 ] && exit 1
+              sleep 0.5
+            done
+            {{install}}
+            """);
+        RunAndWait("/bin/chmod", "+x", script);
+        return UnixScript(script, true);
     }
 
     private static ProcessStartInfo PrepareMacApp(string packagePath, string updateDirectory, string processPath)
