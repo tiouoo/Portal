@@ -99,6 +99,8 @@ public class Config
             Data.ConfigEntry = new ConfigEntry();
         }
 
+        Logger.MinimumLevel = Data.ConfigEntry.MinimumLogLevel;
+
         if (isFirstRun) Data.ConfigEntry.IsInitialized = false;
 
         if (FailedSettingKeys.Count > 0) Logger.Error($"Setting load with errors: {FailedSettingKeys.AsJson()}");

@@ -50,6 +50,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool DisableSystemProxy { get; set; }
     [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
     [ObservableProperty] public partial bool EnableDebugConsole { get; set; }
+    [ObservableProperty] public partial Logger.LogLevel MinimumLogLevel { get; set; } = Logger.LogLevel.Info;
     [ObservableProperty] public partial bool AutoSetJavaHighPerformanceGpu { get; set; } = true;
     [ObservableProperty] public partial bool AutoOptimizeMemoryBeforeGameLaunch { get; set; }
     [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
@@ -152,6 +153,9 @@ public partial class ConfigEntry : ObservableObject
                 break;
             case nameof(EnableFragmentDownload):
                 DownloadManager.IsEnableFragment = EnableFragmentDownload;
+                break;
+            case nameof(MinimumLogLevel):
+                Logger.MinimumLevel = MinimumLogLevel;
                 break;
             case nameof(MinecraftMetadataSource):
                 DownloadManager.MinecraftMetadataSource = MinecraftMetadataSource;

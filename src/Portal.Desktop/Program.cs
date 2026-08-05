@@ -31,7 +31,7 @@ sealed class Program
             if (Interlocked.Exchange(ref _isLoggingFirstChanceException, 1) != 0) return;
             try
             {
-                Logger.Error("运行时引发异常（可能随后被业务代码处理）。", eventArgs.Exception);
+                Logger.Debug($"运行时引发异常（可能随后被业务代码处理）。{Environment.NewLine}{eventArgs.Exception}");
             }
             finally
             {

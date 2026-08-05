@@ -6,6 +6,7 @@ using Portal.Const;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.Ipc;
 using Portal.ViewModels;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Extensions;
 
@@ -22,6 +23,7 @@ public partial class ApplicationDebug : DataUserControl
 
     public bool CanRegisterProtocol => ProtocolRegistration.IsSupported;
     public string RegisterProtocolButtonText => OperatingSystem.IsWindows() ? "写入注册表" : "注册协议";
+    public Logger.LogLevel[] LogLevels { get; } = Enum.GetValues<Logger.LogLevel>();
 
     private async void RegisterProtocol_OnClick(object? sender, RoutedEventArgs e)
     {

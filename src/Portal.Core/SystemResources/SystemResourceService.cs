@@ -48,7 +48,7 @@ public sealed class SystemResourceService
         }
         catch (Exception exception)
         {
-            Logger.Error("采集内存资源信息失败。", exception);
+            Logger.Debug($"采集内存资源信息失败。{Environment.NewLine}{exception}");
         }
 
         var memStatus = _hardware.MemoryStatus;
@@ -75,7 +75,7 @@ public sealed class SystemResourceService
         }
         catch (Exception exception)
         {
-            Logger.Error("采集磁盘资源信息失败。", exception);
+            Logger.Debug($"采集磁盘资源信息失败。{Environment.NewLine}{exception}");
         }
 
         // 网络速率：用 NetworkInterface 统计两次采样差值（跨平台）
@@ -110,7 +110,7 @@ public sealed class SystemResourceService
         }
         catch (Exception exception)
         {
-            Logger.Error("采集网络资源信息失败。", exception);
+            Logger.Debug($"采集网络资源信息失败。{Environment.NewLine}{exception}");
         }
 
         var snapshot = Latest with
@@ -147,7 +147,7 @@ public sealed class SystemResourceService
         }
         catch (Exception exception)
         {
-            Logger.Error("采集 GPU 资源信息失败。", exception);
+            Logger.Debug($"采集 GPU 资源信息失败。{Environment.NewLine}{exception}");
         }
 
         var snapshot = Latest with

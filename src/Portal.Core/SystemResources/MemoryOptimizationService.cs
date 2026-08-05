@@ -164,8 +164,8 @@ public static class MemoryOptimizationService
             }
 
             process.Refresh();
-            // Logger.Info($"进程工作集修剪完成：{before / 1024d / 1024d:F1} MiB -> " +
-            //             $"{process.WorkingSet64 / 1024d / 1024d:F1} MiB。");
+            Logger.Debug($"进程工作集修剪完成：{before / 1024d / 1024d:F1} MiB -> " +
+                        $"{process.WorkingSet64 / 1024d / 1024d:F1} MiB。");
         }
         catch (Exception exception)
         {
