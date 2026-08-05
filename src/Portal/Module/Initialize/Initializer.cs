@@ -33,7 +33,11 @@ public static partial class Initializer
         Logger.Info("开始初始化应用服务");
         Config.Initialize();
         BedrockNetworkConfiguration.Configure(Data.ConfigEntry.DisableSystemProxy,
-            Data.ConfigEntry.EnableProxyServer ? Data.ConfigEntry.ProxyServer : null, Data.Instance.UserAgent);
+            Data.ConfigEntry.EnableProxyServer ? Data.ConfigEntry.ProxyServer : null, Data.Instance.UserAgent,
+            Data.ConfigEntry.EnableGithubMirror, Data.ConfigEntry.GithubMirrorUrl,
+            Data.ConfigEntry.GithubMirrorMode == Classes.Enums.GithubMirrorMode.Direct,
+            Data.ConfigEntry.EnableFragmentDownload, Data.ConfigEntry.DownloadMaxFragmentCount,
+            Data.ConfigEntry.DownloadMaxRetryCount);
         MinecraftCoreInitializer.Initialize(new MinecraftCoreInitializeOptions()
         {
             AppVersion = Data.Instance.Version.VersionTitle,

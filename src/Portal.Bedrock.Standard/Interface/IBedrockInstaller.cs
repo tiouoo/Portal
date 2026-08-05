@@ -96,13 +96,27 @@ public static class BedrockNetworkConfiguration
     public static bool DisableSystemProxy { get; private set; }
     public static string? ProxyServer { get; private set; }
     public static string UserAgent { get; private set; } = "Portal Bedrock GDK Downloader";
+    public static bool EnableGithubMirror { get; private set; }
+    public static string? GithubMirrorUrl { get; private set; }
+    public static bool GithubMirrorDirect { get; private set; }
+    public static bool EnableFragmentDownload { get; private set; }
+    public static int MaxFragmentCount { get; private set; } = 8;
+    public static int MaxRetryCount { get; private set; } = 4;
     public static int Version { get; private set; }
 
-    public static void Configure(bool disableSystemProxy, string? proxyServer, string userAgent)
+    public static void Configure(bool disableSystemProxy, string? proxyServer, string userAgent,
+        bool enableGithubMirror = false, string? githubMirrorUrl = null, bool githubMirrorDirect = false,
+        bool enableFragmentDownload = true, int maxFragmentCount = 8, int maxRetryCount = 4)
     {
         DisableSystemProxy = disableSystemProxy;
         ProxyServer = proxyServer;
         UserAgent = userAgent;
+        EnableGithubMirror = enableGithubMirror;
+        GithubMirrorUrl = githubMirrorUrl;
+        GithubMirrorDirect = githubMirrorDirect;
+        EnableFragmentDownload = enableFragmentDownload;
+        MaxFragmentCount = Math.Clamp(maxFragmentCount, 1, 32);
+        MaxRetryCount = Math.Clamp(maxRetryCount, 1, 10);
         Version++;
     }
 }

@@ -192,7 +192,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         var registryFile = Path.Combine(runtime.PrefixPath, $"portal-xbox-{Guid.NewGuid():N}.reg");
         Directory.CreateDirectory(runtime.PrefixPath);
         await File.WriteAllTextAsync(registryFile,
-            "Windows Registry Editor Version 5.00\n\n[HKEY_CURRENT_USER\\Software\\Wine\\WineGDK]\n" +
+            "Windows Registry Editor Version 5.00\n\n[HKEY_LOCAL_MACHINE\\Software\\Wine\\WineGDK]\n" +
             $"\"RefreshToken\"=\"{EscapeRegistryValue(refreshToken)}\"\n", cancellationToken).ConfigureAwait(false);
         try { File.SetUnixFileMode(registryFile, UnixFileMode.UserRead | UnixFileMode.UserWrite); }
         catch (PlatformNotSupportedException) { }
@@ -216,6 +216,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             if (process.ExitCode != 0)
                 throw new InvalidOperationException("写入 WineGDK 账户配置失败。");
+            Log(BedrockLogLevel.Information, "Xbox 刷新令牌已写入 WineGDK machine registry");
         }
         finally
         {

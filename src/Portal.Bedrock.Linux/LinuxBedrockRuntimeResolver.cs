@@ -1,10 +1,13 @@
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
+using System.Net;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using Portal.Bedrock.Standard.Interface;
 
 namespace Portal.Bedrock.Linux;
 
@@ -22,13 +25,16 @@ public sealed class LinuxBedrockRuntimeResolver
     public const string PrefixPathVariable = "PORTAL_BEDROCK_PREFIX";
 
     private const int DownloadBufferSize = 1024 * 256;
+    private const int SourceProbeBytes = 1024 * 1024;
+    private const long MinimumSegmentSize = 8L * 1024 * 1024;
     private static readonly string[] ReleaseApiUrls =
     [
-        "https://api.github.com/repos/Weather-OS/GDK-Proton/releases/latest",
-        "https://api.github.com/repos/LukasPAH/GDK-Proton-Custom/releases/latest"
+        "https://api.github.com/repos/RoundMCDev/ProtonGDK-Release/releases/latest"
     ];
 
-    private static readonly HttpClient DownloadClient = CreateDownloadClient();
+    private static readonly object DownloadClientLock = new();
+    private static HttpClient? _downloadClient;
+    private static int _downloadClientConfigurationVersion = -1;
     private static readonly SemaphoreSlim InstallLock = new(1, 1);
 
     public LinuxBedrockRuntime Resolve() => ResolveAsync().GetAwaiter().GetResult();
@@ -81,6 +87,9 @@ public sealed class LinuxBedrockRuntimeResolver
             var configuredScript = NormalizeProtonScript(configuredPath);
             if (File.Exists(configuredScript))
             {
+                if (!IsXUserProton(configuredScript))
+                    throw new InvalidDataException(
+                        $"{ProtonPathVariable} 必须指向 GDK-Proton-xuser；普通 GDK-Proton 不支持 Xbox 账户预认证。");
                 Trace.TraceInformation($"使用 PORTAL_PROTON_PATH 指定的 Proton：{configuredScript}。");
                 return configuredScript;
             }
@@ -150,8 +159,8 @@ public sealed class LinuxBedrockRuntimeResolver
 
         return roots.Where(Directory.Exists)
             .SelectMany(root => Directory.EnumerateFiles(root, "proton", SearchOption.AllDirectories))
-            .OrderByDescending(path => IsGdkProton(path))
-            .ThenByDescending(File.GetLastWriteTimeUtc)
+            .Where(IsXUserProton)
+            .OrderByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault();
     }
 
@@ -165,6 +174,7 @@ public sealed class LinuxBedrockRuntimeResolver
             .Select(FindProtonInDirectory)
             .Where(path => path is not null)
             .Select(path => path!)
+            .Where(IsXUserProton)
             .OrderByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault();
         if (proton is not null) EnsureExecutable(proton);
@@ -179,7 +189,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var release = await GetReleaseAsync(cancellationToken).ConfigureAwait(false);
         var tag = SafePathSegment(release.TagName);
         var installRoot = GetProtonInstallRoot();
-        var destination = Path.Combine(installRoot, tag);
+        var destination = Path.Combine(installRoot, $"{tag}-{SafePathSegment(release.Asset.Name)}");
         var existing = FindProtonInDirectory(destination);
         if (existing is not null)
         {
@@ -257,10 +267,10 @@ public sealed class LinuxBedrockRuntimeResolver
         {
             try
             {
-                var release = await DownloadClient.GetFromJsonAsync<GitHubRelease>(apiUrl, cancellationToken)
+                var release = await GetDownloadClient().GetFromJsonAsync<GitHubRelease>(apiUrl, cancellationToken)
                     .ConfigureAwait(false) ?? throw new InvalidDataException("GitHub API 返回空响应");
-                var asset = release.Assets.FirstOrDefault(IsX64TarGzAsset)
-                            ?? throw new InvalidDataException("release 中没有 Linux x64 tar.gz 资产");
+                var asset = release.Assets.FirstOrDefault(IsXUserTarGzAsset)
+                            ?? throw new InvalidDataException("release 中没有 GDK-Proton-xuser tar.gz 资产");
                 if (string.IsNullOrWhiteSpace(release.TagName) || string.IsNullOrWhiteSpace(asset.BrowserDownloadUrl))
                     throw new InvalidDataException("release 元数据缺少 tag 或下载 URL");
                 return new ProtonRelease(release.TagName, asset);
@@ -275,11 +285,12 @@ public sealed class LinuxBedrockRuntimeResolver
         throw new HttpRequestException(string.Join("；", errors));
     }
 
-    private static bool IsX64TarGzAsset(GitHubAsset asset)
+    private static bool IsXUserTarGzAsset(GitHubAsset asset)
     {
         var name = asset.Name;
         if (!name.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase)) return false;
-        return !name.Contains("arm", StringComparison.OrdinalIgnoreCase) &&
+        return name.Contains("xuser", StringComparison.OrdinalIgnoreCase) &&
+               !name.Contains("arm", StringComparison.OrdinalIgnoreCase) &&
                !name.Contains("aarch", StringComparison.OrdinalIgnoreCase) &&
                !name.Contains("source", StringComparison.OrdinalIgnoreCase);
     }
@@ -290,46 +301,65 @@ public sealed class LinuxBedrockRuntimeResolver
         var temporaryPath = archivePath + $".{Guid.NewGuid():N}.download";
         try
         {
-            Trace.TraceInformation($"开始下载 GDK-Proton 归档：{url} -> {temporaryPath}。");
-            using var response = await DownloadClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            var total = response.Content.Headers.ContentLength ?? 0;
-            await using var input = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            await using var output = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None,
-                DownloadBufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
-            using var sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            var buffer = new byte[DownloadBufferSize];
-            var stopwatch = Stopwatch.StartNew();
-            long received = 0;
-            var lastPercentage = -5;
-            var lastReport = TimeSpan.Zero;
-            int read;
-            while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+            progress?.Invoke(new LinuxBedrockRuntimeProgress("正在测速 GitHub 镜像和官方源"));
+            var sources = await RankDownloadSourcesAsync(url, cancellationToken).ConfigureAwait(false);
+            var errors = new List<string>();
+            foreach (var source in sources)
             {
-                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
-                sha256.AppendData(buffer, 0, read);
-                received += read;
-                var percentage = total > 0 ? (int)(received * 100 / total) : 0;
-                if (percentage >= lastPercentage + 5 || stopwatch.Elapsed - lastReport >= TimeSpan.FromSeconds(2))
+                for (var attempt = 1; attempt <= BedrockNetworkConfiguration.MaxRetryCount; attempt++)
                 {
-                    progress?.Invoke(new LinuxBedrockRuntimeProgress("正在下载 GDK-Proton", received, total));
-                    lastPercentage = percentage;
-                    lastReport = stopwatch.Elapsed;
+                    try
+                    {
+                        if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+                        Trace.TraceInformation(
+                            $"下载 GDK-Proton：source={source.Url}，range={source.SupportsRange}，attempt={attempt}。");
+                        if (BedrockNetworkConfiguration.EnableFragmentDownload && source.SupportsRange && source.Total > 0)
+                        {
+                            try
+                            {
+                                await DownloadMultiPartAsync(source.Url, temporaryPath, source.Total, progress,
+                                    cancellationToken).ConfigureAwait(false);
+                            }
+                            catch (HttpRequestException exception)
+                            {
+                                Trace.TraceWarning($"GDK-Proton 分片下载不可用，回退单流：{exception.Message}");
+                                if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+                                await DownloadSinglePartAsync(source.Url, temporaryPath, source.Total, progress,
+                                    cancellationToken).ConfigureAwait(false);
+                            }
+                        }
+                        else
+                            await DownloadSinglePartAsync(source.Url, temporaryPath, source.Total, progress,
+                                cancellationToken).ConfigureAwait(false);
+
+                        await using var downloaded = File.OpenRead(temporaryPath);
+                        var actualHash = Convert.ToHexString(
+                            await SHA256.HashDataAsync(downloaded, cancellationToken).ConfigureAwait(false));
+                        if (expectedHash is not null &&
+                            !string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase))
+                            throw new InvalidDataException("GDK-Proton 归档 SHA256 与 GitHub digest 不一致");
+
+                        File.Move(temporaryPath, archivePath, true);
+                        await File.WriteAllTextAsync(GetHashSidecarPath(archivePath), actualHash.ToLowerInvariant() + "\n",
+                            cancellationToken).ConfigureAwait(false);
+                        progress?.Invoke(new LinuxBedrockRuntimeProgress("GDK-Proton 下载及 SHA256 校验完成",
+                            source.Total, source.Total));
+                        return;
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception exception)
+                    {
+                        errors.Add($"{new Uri(source.Url).Host} 第 {attempt} 次：{exception.Message}");
+                        Trace.TraceError($"GDK-Proton 下载失败。{Environment.NewLine}{exception}");
+                        if (attempt < BedrockNetworkConfiguration.MaxRetryCount)
+                            await Task.Delay(TimeSpan.FromSeconds(attempt), cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
-
-            await output.FlushAsync(cancellationToken).ConfigureAwait(false);
-            output.Close();
-            var actualHash = Convert.ToHexString(sha256.GetHashAndReset()).ToLowerInvariant();
-            if (expectedHash is not null && !string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("GDK-Proton 归档 SHA256 与 GitHub digest 不一致");
-
-            File.Move(temporaryPath, archivePath, true);
-            await File.WriteAllTextAsync(GetHashSidecarPath(archivePath), actualHash + "\n", cancellationToken)
-                .ConfigureAwait(false);
-            progress?.Invoke(new LinuxBedrockRuntimeProgress("GDK-Proton 下载及 SHA256 校验完成", received, total));
-            Trace.TraceInformation($"GDK-Proton 归档下载及 SHA256 校验完成：{archivePath}，{received} 字节。");
+            throw new HttpRequestException($"所有 GDK-Proton 下载源均失败：{string.Join("；", errors)}");
         }
         finally
         {
@@ -339,6 +369,183 @@ public sealed class LinuxBedrockRuntimeResolver
                 File.Delete(temporaryPath);
             }
         }
+    }
+
+    private static async Task<IReadOnlyList<DownloadSource>> RankDownloadSourcesAsync(string officialUrl,
+        CancellationToken cancellationToken)
+    {
+        var urls = BuildDownloadUrls(officialUrl);
+        var probes = await Task.WhenAll(urls.Select(url => ProbeSourceAsync(url, cancellationToken)))
+            .ConfigureAwait(false);
+        var available = probes.Where(source => source is not null).Select(source => source!).ToList();
+        if (available.Count == 0)
+            throw new HttpRequestException("GitHub 镜像和官方源均无法访问。");
+        return available.OrderByDescending(source => source.SupportsRange)
+            .ThenByDescending(source => source.Speed).ToArray();
+    }
+
+    private static async Task<DownloadSource?> ProbeSourceAsync(string url, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(15));
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Range = new RangeHeaderValue(0, SourceProbeBytes - 1);
+            var stopwatch = Stopwatch.StartNew();
+            using var response = await GetDownloadClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                timeout.Token).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            var supportsRange = response.StatusCode == HttpStatusCode.PartialContent &&
+                                response.Content.Headers.ContentRange?.From == 0;
+            var total = response.Content.Headers.ContentRange?.Length ?? response.Content.Headers.ContentLength ?? 0;
+            if (!supportsRange) return new DownloadSource(url, 0, total, false);
+
+            await using var input = await response.Content.ReadAsStreamAsync(timeout.Token).ConfigureAwait(false);
+            var buffer = new byte[DownloadBufferSize];
+            var received = 0;
+            while (received < SourceProbeBytes)
+            {
+                var read = await input.ReadAsync(buffer.AsMemory(0,
+                    Math.Min(buffer.Length, SourceProbeBytes - received)), timeout.Token).ConfigureAwait(false);
+                if (read == 0) break;
+                received += read;
+            }
+            return new DownloadSource(url,
+                stopwatch.Elapsed.TotalSeconds > 0 ? received / stopwatch.Elapsed.TotalSeconds : 0, total, true);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            Trace.TraceWarning($"GDK-Proton 下载源探测失败：{url}，{exception.Message}");
+            return null;
+        }
+    }
+
+    private static async Task DownloadMultiPartAsync(string url, string path, long total,
+        Action<LinuxBedrockRuntimeProgress>? progress, CancellationToken cancellationToken)
+    {
+        var segmentCount = (int)Math.Min(BedrockNetworkConfiguration.MaxFragmentCount,
+            Math.Max(1, (total + MinimumSegmentSize - 1) / MinimumSegmentSize));
+        await using (var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Write,
+                         DownloadBufferSize, FileOptions.Asynchronous))
+            file.SetLength(total);
+
+        long downloaded = 0;
+        var reporter = CreateProgressReporter(progress, total, () => Interlocked.Read(ref downloaded));
+        var segmentSize = (total + segmentCount - 1) / segmentCount;
+        await Task.WhenAll(Enumerable.Range(0, segmentCount).Select(async index =>
+        {
+            var start = index * segmentSize;
+            if (start >= total) return;
+            var end = Math.Min(total, start + segmentSize) - 1;
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Range = new RangeHeaderValue(start, end);
+            using var response = await GetDownloadClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken).ConfigureAwait(false);
+            var range = response.Content.Headers.ContentRange;
+            if (response.StatusCode != HttpStatusCode.PartialContent || range?.From != start || range.To != end)
+                throw new HttpRequestException($"下载源返回了无效分片：{start}-{end}。");
+            await using var input = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            await using var output = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Write,
+                DownloadBufferSize, FileOptions.Asynchronous | FileOptions.RandomAccess);
+            output.Seek(start, SeekOrigin.Begin);
+            var buffer = new byte[DownloadBufferSize];
+            long segmentReceived = 0;
+            int read;
+            while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+            {
+                segmentReceived += read;
+                if (segmentReceived > end - start + 1)
+                    throw new HttpRequestException($"下载分片超过预期长度：{start}-{end}。");
+                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                Interlocked.Add(ref downloaded, read);
+                reporter();
+            }
+            if (segmentReceived != end - start + 1)
+                throw new EndOfStreamException($"下载分片不完整：{start}-{end}。");
+        })).ConfigureAwait(false);
+        progress?.Invoke(new LinuxBedrockRuntimeProgress("正在下载 GDK-Proton", total, total));
+    }
+
+    private static async Task DownloadSinglePartAsync(string url, string path, long expectedTotal,
+        Action<LinuxBedrockRuntimeProgress>? progress, CancellationToken cancellationToken)
+    {
+        using var response = await GetDownloadClient().GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        var total = response.Content.Headers.ContentLength ?? expectedTotal;
+        await using var input = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        await using var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+            DownloadBufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        long downloaded = 0;
+        var reporter = CreateProgressReporter(progress, total, () => Interlocked.Read(ref downloaded));
+        var buffer = new byte[DownloadBufferSize];
+        int read;
+        while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+            Interlocked.Add(ref downloaded, read);
+            reporter();
+        }
+        if (total > 0 && downloaded != total) throw new EndOfStreamException("GDK-Proton 下载不完整。");
+    }
+
+    private static Action CreateProgressReporter(Action<LinuxBedrockRuntimeProgress>? progress, long total,
+        Func<long> getDownloaded)
+    {
+        var gate = new object();
+        var lastReport = Stopwatch.GetTimestamp();
+        var lastPercentage = -1;
+        return () =>
+        {
+            if (progress is null) return;
+            lock (gate)
+            {
+                var downloaded = getDownloaded();
+                var percentage = total > 0 ? (int)(downloaded * 100 / total) : 0;
+                if (percentage == lastPercentage && Stopwatch.GetElapsedTime(lastReport) < TimeSpan.FromSeconds(1)) return;
+                lastPercentage = percentage;
+                lastReport = Stopwatch.GetTimestamp();
+                progress(new LinuxBedrockRuntimeProgress("正在下载 GDK-Proton", downloaded, total));
+            }
+        };
+    }
+
+    private static IReadOnlyList<string> BuildDownloadUrls(string officialUrl)
+    {
+        var urls = new List<string>();
+        var mirror = ApplyGithubMirror(officialUrl);
+        if (!string.Equals(mirror, officialUrl, StringComparison.Ordinal)) urls.Add(mirror);
+        urls.Add(officialUrl);
+        return urls.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    private static string ApplyGithubMirror(string url)
+    {
+        if (!BedrockNetworkConfiguration.EnableGithubMirror ||
+            string.IsNullOrWhiteSpace(BedrockNetworkConfiguration.GithubMirrorUrl)) return url;
+        var mirror = BedrockNetworkConfiguration.GithubMirrorUrl.Trim();
+        if (mirror.Contains("{url}", StringComparison.OrdinalIgnoreCase))
+        {
+            var index = mirror.IndexOf("{url}", StringComparison.OrdinalIgnoreCase);
+            return mirror[..index] + url + mirror[(index + 5)..];
+        }
+        if (!mirror.Contains("://", StringComparison.Ordinal)) mirror = "https://" + mirror;
+        if (!Uri.TryCreate(mirror, UriKind.Absolute, out var mirrorUri)) return url;
+        if (!BedrockNetworkConfiguration.GithubMirrorDirect) return $"{mirror.TrimEnd('/')}/{url}";
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var original)) return url;
+        var builder = new UriBuilder(original)
+        {
+            Scheme = mirrorUri.Scheme,
+            Host = mirrorUri.Host,
+            Port = mirrorUri.IsDefaultPort ? -1 : mirrorUri.Port,
+            Path = mirrorUri.AbsolutePath.TrimEnd('/') + original.AbsolutePath
+        };
+        return builder.Uri.AbsoluteUri;
     }
 
     private static async Task<bool> IsCachedArchiveValidAsync(string archivePath, string? expectedHash,
@@ -512,15 +719,36 @@ public sealed class LinuxBedrockRuntimeResolver
         path.Contains("gdk-proton", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("protongdk", StringComparison.OrdinalIgnoreCase);
 
-    private static HttpClient CreateDownloadClient()
+    private static bool IsXUserProton(string path) =>
+        IsGdkProton(path) && path.Contains("xuser", StringComparison.OrdinalIgnoreCase);
+
+    private static HttpClient GetDownloadClient()
     {
-        var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Portal-Bedrock-Linux/1.0");
-        client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
-        return client;
+        lock (DownloadClientLock)
+        {
+            if (_downloadClient is not null &&
+                _downloadClientConfigurationVersion == BedrockNetworkConfiguration.Version) return _downloadClient;
+            _downloadClient?.Dispose();
+            var proxyServer = BedrockNetworkConfiguration.ProxyServer;
+            var hasProxy = Uri.TryCreate(proxyServer, UriKind.Absolute, out var proxyUri);
+            var handler = new SocketsHttpHandler
+            {
+                UseProxy = !BedrockNetworkConfiguration.DisableSystemProxy || hasProxy,
+                Proxy = hasProxy ? new WebProxy(proxyUri!) : null,
+                AutomaticDecompression = DecompressionMethods.All,
+                MaxConnectionsPerServer = Math.Max(8, BedrockNetworkConfiguration.MaxFragmentCount * 2),
+                ConnectTimeout = TimeSpan.FromSeconds(20)
+            };
+            _downloadClient = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
+            _downloadClient.DefaultRequestHeaders.UserAgent.ParseAdd(BedrockNetworkConfiguration.UserAgent);
+            _downloadClient.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            _downloadClientConfigurationVersion = BedrockNetworkConfiguration.Version;
+            return _downloadClient;
+        }
     }
 
     private sealed record ProtonRelease(string TagName, GitHubAsset Asset);
+    private sealed record DownloadSource(string Url, double Speed, long Total, bool SupportsRange);
 
     private sealed class GitHubRelease
     {

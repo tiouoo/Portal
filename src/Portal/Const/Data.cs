@@ -54,10 +54,20 @@ public partial class Data : ObservableObject
             case nameof(ConfigEntry.EnableProxyServer):
             case nameof(ConfigEntry.DisableSystemProxy):
             case nameof(ConfigEntry.ProxyServer):
+            case nameof(ConfigEntry.EnableGithubMirror):
+            case nameof(ConfigEntry.GithubMirrorUrl):
+            case nameof(ConfigEntry.GithubMirrorMode):
+            case nameof(ConfigEntry.EnableFragmentDownload):
+            case nameof(ConfigEntry.DownloadMaxFragmentCount):
+            case nameof(ConfigEntry.DownloadMaxRetryCount):
                 HttpUtil.Configure(ConfigEntry.DisableSystemProxy,
                     ConfigEntry.EnableProxyServer ? ConfigEntry.ProxyServer : null, UserAgent);
                 BedrockNetworkConfiguration.Configure(ConfigEntry.DisableSystemProxy,
-                    ConfigEntry.EnableProxyServer ? ConfigEntry.ProxyServer : null, UserAgent);
+                    ConfigEntry.EnableProxyServer ? ConfigEntry.ProxyServer : null, UserAgent,
+                    ConfigEntry.EnableGithubMirror, ConfigEntry.GithubMirrorUrl,
+                    ConfigEntry.GithubMirrorMode == Classes.Enums.GithubMirrorMode.Direct,
+                    ConfigEntry.EnableFragmentDownload, ConfigEntry.DownloadMaxFragmentCount,
+                    ConfigEntry.DownloadMaxRetryCount);
                 break;
         }
     }
