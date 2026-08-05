@@ -629,6 +629,13 @@ public static class MinecraftLaunchService
                 context.ReportProgress(progress / 100.0);
             });
         };
+        var processReported = 0;
+        void ReportProcess(Process launchedProcess)
+        {
+            if (Interlocked.Exchange(ref processReported, 1) == 0)
+                processStarted(launchedProcess);
+        }
+        launcher.ProcessStarted = ReportProcess;
 
         await launcher.Launch(context.CancellationToken);
 
@@ -636,7 +643,7 @@ public static class MinecraftLaunchService
                       ?? throw new InvalidOperationException("基岩版启动器未返回进程信息。");
 
         ObserveBedrockProcess(instance, topLevel, process, task, context, options);
-        processStarted(process);
+        ReportProcess(process);
         OnGameProcessStarted(process, options, placeholders, overrideWindowTitle: false);
         context.ReportProgress(1);
     }

@@ -72,6 +72,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         if (!process.Start()) throw new InvalidOperationException("Proton 进程未能启动。");
 
         MinecraftProcess = process;
+        ProcessStarted?.Invoke(process);
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         Log(BedrockLogLevel.Information, $"Proton 已启动，PID：{process.Id}");

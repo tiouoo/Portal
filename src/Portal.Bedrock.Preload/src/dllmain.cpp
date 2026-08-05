@@ -623,8 +623,22 @@ int LoadPreloadDlls(HINSTANCE hinstDLL,
 
 	try
 	{
+		// XUserHook must start before other preload mods so its one-shot account pipe
+		// is ready while Xbox Gaming Runtime initializes.
+		fs::path xUserHook = preloadDir / L"XUserHook.dll";
+		if (fs::exists(xUserHook) && fs::is_regular_file(xUserHook))
+		{
+			Logger::Info("Loading Portal Xbox account hook first");
+			loadDll(xUserHook);
+		}
+		else
+		{
+			Logger::Info("Portal Xbox account hook is not present; using the default Xbox session");
+		}
+
 		for (const auto& entry : fs::directory_iterator(preloadDir))
-			if (entry.is_regular_file()) loadDll(entry.path());
+			if (entry.is_regular_file() &&
+				entry.path().filename() != xUserHook.filename()) loadDll(entry.path());
 
 		fs::path portalDir = preloadDir / L"Portal";
 		std::ifstream manifest(portalDir / L"mods.txt");

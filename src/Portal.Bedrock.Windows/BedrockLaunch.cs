@@ -125,9 +125,12 @@ public class BedrockLaunch : IBedrockLaunch
         var executable = Path.Combine(_instanceConfig.InstancePath, "Minecraft.Windows.exe");
         var result = await PortalXUserLauncher.LaunchAndInjectAsync(executable, BuildLaunchArguments(),
             _instanceConfig.InstancePath,
-            authentication, TimeSpan.FromSeconds(60));
+            authentication, TimeSpan.FromSeconds(60), processId =>
+            {
+                MinecraftProcess = Process.GetProcessById((int)processId);
+                ProcessStarted?.Invoke(MinecraftProcess);
+            });
         var process = Process.GetProcessById((int)result.ProcessId);
-        await PortalXUserLauncher.InjectAsync(process.Id, authentication, TimeSpan.FromSeconds(60));
         Log(BedrockLogLevel.Information, "Xbox 账户已注入基岩版游戏进程");
         return process;
     }

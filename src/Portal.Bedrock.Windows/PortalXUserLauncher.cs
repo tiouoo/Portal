@@ -1,4 +1,3 @@
-using System.Text;
 using XUserLauncher.Core;
 
 namespace Portal.Bedrock;
@@ -15,13 +14,8 @@ internal sealed class PortalXUserLauncher(string instancePath)
         var hookPath = Path.Combine(preloadDirectory, "XUserHook.dll");
         using var input = typeof(XboxAuthClient).Assembly.GetManifestResourceStream(resourceName)
                           ?? throw new InvalidOperationException("XUserLauncher.Core 未包含 XUserHook.dll。 ");
-        using var buffer = new MemoryStream();
-        input.CopyTo(buffer);
-        var hook = buffer.ToArray();
-        ReplaceHookValue(hook, Encoding.Unicode.GetBytes(@"\\.\pipe\BedrockBoot.XUser"),
-            Encoding.Unicode.GetBytes(@"\\.\pipe\Portal.XUser"));
-        ReplaceHookValue(hook, "BRBOOTX1"u8.ToArray(), "PORTALX1"u8.ToArray());
-        File.WriteAllBytes(hookPath, hook);
+        using var output = new FileStream(hookPath, FileMode.Create, FileAccess.Write, FileShare.Read);
+        input.CopyTo(output);
     }
 
     public static async Task<XboxPreauth> AuthenticateAsync(string accessToken,
@@ -47,13 +41,14 @@ internal sealed class PortalXUserLauncher(string instancePath)
     }
 
     public static async Task<SuspendedProcess> LaunchAndInjectAsync(string executable, string? arguments,
-        string workingDirectory, XboxPreauth preauth, TimeSpan timeout)
+        string workingDirectory, XboxPreauth preauth, TimeSpan timeout, Action<uint>? processStarted = null)
     {
         var process = SuspendedProcess.Start(executable, arguments, workingDirectory);
         try
         {
             var injectTask = InjectAsync((int)process.ProcessId, preauth, timeout);
             process.Resume();
+            processStarted?.Invoke(process.ProcessId);
             await injectTask.ConfigureAwait(false);
             return process;
         }
@@ -67,18 +62,7 @@ internal sealed class PortalXUserLauncher(string instancePath)
 
     public static async Task InjectAsync(int processId, XboxPreauth preauth, TimeSpan timeout)
     {
-        using var pipeServer = new PortalXUserPipeServer(processId, preauth.CreateSessionPayload(), timeout);
-        await pipeServer.ServeAsync().ConfigureAwait(false);
-    }
-
-    private static void ReplaceHookValue(byte[] data, byte[] original, byte[] replacement)
-    {
-        if (replacement.Length > original.Length)
-            throw new InvalidOperationException("Portal XUserHook 替换值长度超出原始空间。");
-        var index = data.AsSpan().IndexOf(original);
-        if (index < 0)
-            throw new InvalidOperationException("XUserHook 协议与 Portal 支持的版本不匹配。");
-        data.AsSpan(index, original.Length).Clear();
-        replacement.CopyTo(data, index);
+        using var pipeServer = new XUserPipeServer(processId, preauth.CreateSessionPayload(), timeout);
+        await pipeServer.StartAsync().ConfigureAwait(false);
     }
 }

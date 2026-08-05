@@ -13,6 +13,7 @@ public abstract class IBedrockLaunch
     public Process MinecraftProcess;
     public Action<string, double?>? UpdateProgress;
     public Action<string, BedrockLogLevel>? LogReceived;
+    public Action<Process>? ProcessStarted;
     public Action? LaunchFinish;
 }
 
