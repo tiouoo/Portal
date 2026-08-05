@@ -139,7 +139,7 @@
             </ComboBox>
         </StackPanel>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
-        <StackPanel Spacing="5">
+        <StackPanel Margin="5,0,0,0" Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="5">
                 <TextBlock Text="Source Code:" />
                 <HyperlinkButton
@@ -179,5 +179,37 @@
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
         </StackPanel>
+        <Expander
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            Header="第三方组件库"
+            HorizontalAlignment="Stretch">
+            <StackPanel>
+                <ItemsRepeater ItemsSource="{Binding OpenSourceProjects}" Margin="16,0,12,16">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="settingPages:OpenSourceProject">
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock FontSize="18" Text="{Binding Name}" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="{Binding License}" />
+                                <HyperlinkButton
+                                    Click="OpenLink_OnClick"
+                                    CommandParameter="{Binding Url}"
+                                    Content="{Binding Url}"
+                                    FontSize="13"
+                                    HorizontalAlignment="Left"
+                                    Theme="{StaticResource TransparentHyperlinkButton}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
+        </Expander>
     </StackPanel>
 </UserControl>
