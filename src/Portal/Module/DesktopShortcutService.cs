@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using Avalonia.Media.Imaging;
@@ -12,7 +13,7 @@ namespace Portal.Module.DesktopShortcut;
 /// <summary>
 /// 在桌面创建快捷方式，通过 portal://launch?id=...&amp;folder=... 协议链接启动实例，
 /// 也可通过附加 world / server 参数直接进入世界或服务器。
-/// Windows：写 .url Internet 快捷方式；Linux：写可执行的 .desktop 启动器；macOS：写 .webloc。
+/// Windows：写 .lnk 快捷方式；Linux：写可执行的 .desktop 启动器；macOS：写 .webloc。
 /// </summary>
 public static class DesktopShortcutService
 {
@@ -125,20 +126,73 @@ public static class DesktopShortcutService
     {
         var desktop = GetDesktopDirectory();
         var safeName = SanitizeFileName(displayName);
-        var path = Path.Combine(desktop, $"{safeName}.url");
-
-        var builder = new StringBuilder();
-        builder.AppendLine("[InternetShortcut]");
-        builder.AppendLine($"URL={url}");
+        var path = Path.Combine(desktop, $"{safeName}.lnk");
 
         // 优先用目标图标，写失败时退回启动器图标，仍能正常创建快捷方式。
         var iconFile = TryWriteIcon(icon, EncodeIco, ".ico", safeName) ?? GetExecutablePath();
-        builder.AppendLine($"IconFile={iconFile}");
-        builder.AppendLine("IconIndex=0");
 
-        File.WriteAllText(path, builder.ToString());
+        var link = (IShellLinkW)new ShellLink();
+        try
+        {
+            link.SetPath(GetExecutablePath());
+            link.SetArguments(url);
+            link.SetDescription($"通过 Portal 启动 {displayName}");
+            link.SetWorkingDirectory(Path.GetDirectoryName(GetExecutablePath()) ?? string.Empty);
+            link.SetIconLocation(iconFile, 0);
+
+            ((IPersistFile)link).Save(path, false);
+        }
+        finally
+        {
+            Marshal.FinalReleaseComObject(link);
+        }
+
         Logger.Info($"已创建桌面快捷方式：{path}");
         return path;
+    }
+
+    [ComImport]
+    [Guid("000214F9-0000-0000-C000-000000000046")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IShellLinkW
+    {
+        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int maxPath, IntPtr findData, uint flags);
+        void GetIDList(out IntPtr idList);
+        void SetIDList(IntPtr idList);
+        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int maxName);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
+        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory, int maxPath);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string directory);
+        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments, int maxPath);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
+        void GetHotkey(out short hotkey);
+        void SetHotkey(short hotkey);
+        void GetShowCmd(out int showCommand);
+        void SetShowCmd(int showCommand);
+        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int maxPath, out int iconIndex);
+        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string iconPath, int iconIndex);
+        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string path, uint reserved);
+        void Resolve(IntPtr windowHandle, uint flags);
+        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string path);
+    }
+
+    [ComImport]
+    [Guid("0000010B-0000-0000-C000-000000000046")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IPersistFile
+    {
+        void GetClassID(out Guid classId);
+        void IsDirty();
+        void Load([MarshalAs(UnmanagedType.LPWStr)] string fileName, uint mode);
+        void Save([MarshalAs(UnmanagedType.LPWStr)] string fileName, [MarshalAs(UnmanagedType.Bool)] bool remember);
+        void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string fileName);
+        void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string fileName);
+    }
+
+    [ComImport]
+    [Guid("00021401-0000-0000-C000-000000000046")]
+    private class ShellLink
+    {
     }
 
     private static async Task<string> CreateLinuxShortcutAsync(string url, string displayName, Bitmap? icon)
