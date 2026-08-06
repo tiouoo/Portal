@@ -23,7 +23,11 @@
                 Content="Minecraft窗口标题"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <TextBox PlaceholderText="留空默认" Text="{Binding Data.ConfigEntry.OverrideMinecraftWindowTitle}" />
+            <TextBox
+                AcceptsReturn="True"
+                PlaceholderText="留空默认"
+                Text="{Binding Data.ConfigEntry.OverrideMinecraftWindowTitle}"
+                TextWrapping="Wrap" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
@@ -32,16 +36,20 @@
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,*" VerticalAlignment="Top">
                 <TextBox
+                    AcceptsReturn="True"
                     Grid.Column="0"
                     InnerLeftContent="宽度 "
                     Margin="0,0,10,0"
                     Text="{Binding Data.ConfigEntry.MinecraftWindowWidth}"
+                    TextWrapping="Wrap"
                     VerticalAlignment="Top" />
                 <TextBox
+                    AcceptsReturn="True"
                     Grid.Column="1"
                     InnerLeftContent="高度 "
                     Margin="10,0,0,0"
                     Text="{Binding Data.ConfigEntry.MinecraftWindowHeight}"
+                    TextWrapping="Wrap"
                     VerticalAlignment="Top" />
             </Grid>
         </StackPanel>
@@ -51,8 +59,10 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
+                AcceptsReturn="True"
                 PlaceholderText="默认留空"
                 Text="{Binding Data.ConfigEntry.JvmArgs}"
+                TextWrapping="Wrap"
                 VerticalAlignment="Top" />
         </StackPanel>
         <StackPanel Spacing="5">
@@ -61,8 +71,10 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
+                AcceptsReturn="True"
                 PlaceholderText="默认留空 在游戏启动前执行并等待其完成"
                 Text="{Binding Data.ConfigEntry.BeforeLaunchCommand}"
+                TextWrapping="Wrap"
                 VerticalAlignment="Top" />
         </StackPanel>
         <StackPanel Spacing="5">
@@ -71,8 +83,10 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
+                AcceptsReturn="True"
                 PlaceholderText="默认留空 在游戏进程创建后于后台执行"
                 Text="{Binding Data.ConfigEntry.AfterLaunchCommand}"
+                TextWrapping="Wrap"
                 VerticalAlignment="Top" />
         </StackPanel>
         <StackPanel Spacing="5">
@@ -81,8 +95,10 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
+                AcceptsReturn="True"
                 PlaceholderText="默认留空 例：cmd /c {command}"
                 Text="{Binding Data.ConfigEntry.PackagedCommand}"
+                TextWrapping="Wrap"
                 VerticalAlignment="Top" />
         </StackPanel>
     </StackPanel>

@@ -78,7 +78,7 @@ public static class LaunchCustomization
     }
 
     /// <summary>
-    /// 按空格拆分一段命令行为参数列表，支持双引号包裹含空格的参数。
+    /// 按空白字符拆分一段命令行为参数列表，支持双引号包裹含空格的参数。
     /// </summary>
     public static IReadOnlyList<string> SplitArguments(string? commandLine)
     {
@@ -95,12 +95,20 @@ public static class LaunchCustomization
                 case '"':
                     inQuotes = !inQuotes;
                     break;
-                case ' ' when !inQuotes:
-                    if (current.Length > 0)
+                case ' ':
+                case '\r':
+                case '\n':
+                case '\t':
+                    if (!inQuotes)
                     {
-                        arguments.Add(current.ToString());
-                        current.Clear();
+                        if (current.Length > 0)
+                        {
+                            arguments.Add(current.ToString());
+                            current.Clear();
+                        }
+                        break;
                     }
+                    current.Append(character);
                     break;
                 default:
                     current.Append(character);

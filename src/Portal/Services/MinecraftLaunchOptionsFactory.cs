@@ -24,7 +24,9 @@ public static class MinecraftLaunchOptionsFactory
         AutoSetJavaHighPerformanceGpu = Data.ConfigEntry.AutoSetJavaHighPerformanceGpu,
         AutoOptimizeMemoryBeforeGameLaunch = Data.ConfigEntry.AutoOptimizeMemoryBeforeGameLaunch,
         WindowTitle = Data.ConfigEntry.OverrideMinecraftWindowTitle,
-        JvmArguments = Data.ConfigEntry.JvmArgs,
+        JvmArguments = string.IsNullOrWhiteSpace(instance.JavaConfig?.JvmArgs)
+            ? Data.ConfigEntry.JvmArgs
+            : instance.JavaConfig.JvmArgs,
         BeforeLaunchCommand = Data.ConfigEntry.BeforeLaunchCommand,
         AfterLaunchCommand = Data.ConfigEntry.AfterLaunchCommand,
         WrapperCommand = Data.ConfigEntry.PackagedCommand,

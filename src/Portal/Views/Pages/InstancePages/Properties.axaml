@@ -108,6 +108,18 @@
                         <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" />
                     </StackPanel>
                     <StackPanel Spacing="5">
+                        <Label
+                            Content="JVM虚拟机参数"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}" />
+                        <TextBox
+                            AcceptsReturn="True"
+                            PlaceholderText="默认留空 留空时使用全局 JVM 参数"
+                            Text="{Binding Instance.JavaConfig.JvmArgs}"
+                            TextWrapping="Wrap"
+                            VerticalAlignment="Top" />
+                    </StackPanel>
+                    <StackPanel Spacing="5">
                         <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" Spacing="5">
                             <Label
                                 Content="最大内存"

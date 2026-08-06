@@ -921,6 +921,7 @@ public partial class JavaInstanceConfig : MinecraftInstanceConfig
     [ObservableProperty] public partial bool EnableSpecificJava { get; set; }
     [ObservableProperty] public partial bool EnableOverrideMaxMemory { get; set; }
     [ObservableProperty] public partial int MinecraftMaxMemory { get; set; }
+    [ObservableProperty] public partial string? JvmArgs { get; set; }
     [ObservableProperty] public partial JavaRuntimeEntry? SpecificJavaEntry { get; set; }
 }
 
