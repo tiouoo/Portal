@@ -18,10 +18,16 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
         get
         {
             var detected = MinecraftFolderLayout.Detect(FolderPath);
-            return detected.Kind == MinecraftFolderKind.Unknown && FolderKind == MinecraftFolderKind.Standard
-                ? new MinecraftFolderLayout(MinecraftFolderKind.Standard, FolderPath, FolderPath,
-                    "传统 .minecraft 文件夹")
-                : detected;
+            if (detected.Kind == MinecraftFolderKind.Unknown && FolderKind == MinecraftFolderKind.Standard)
+                return new MinecraftFolderLayout(MinecraftFolderKind.Standard, FolderPath, FolderPath,
+                    "传统 .minecraft 文件夹");
+            // 已保存为外部启动器类型时，即使目录尚未被初始化（如空文件夹）也按其类型识别，
+            // 避免被重新识别为传统 .minecraft 文件夹。
+            if (detected.Kind is MinecraftFolderKind.Standard or MinecraftFolderKind.Unknown &&
+                FolderKind is not (MinecraftFolderKind.Auto or MinecraftFolderKind.Standard or
+                    MinecraftFolderKind.Unknown))
+                return MinecraftFolderLayout.FromFolderKind(FolderKind, FolderPath);
+            return detected;
         }
     }
     public string FolderTypeDescription => DetectedLayout.DisplayName;

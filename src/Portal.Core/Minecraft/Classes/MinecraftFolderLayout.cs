@@ -59,6 +59,14 @@ public sealed record MinecraftFolderLayout(
             TryFindParentDirectory(selected, "Install", "Instances", out var curseForgeRoot))
             return new(MinecraftFolderKind.CurseForgeInstance, selected, curseForgeRoot, "CurseForge App 实例");
 
+        // 全新安装的 CurseForge App 可能尚未创建 Install/versions 或 Instances，
+        // 仅凭 UserProfile\curseforge\minecraft 目录结构即可识别。
+        if (Directory.Exists(Path.Combine(selected, "Install")) &&
+            Path.GetFileName(selected).Equals("minecraft", StringComparison.OrdinalIgnoreCase) &&
+            Path.GetFileName(Directory.GetParent(selected)?.FullName ?? string.Empty)
+                .Equals("curseforge", StringComparison.OrdinalIgnoreCase))
+            return new(MinecraftFolderKind.CurseForge, selected, selected, "CurseForge App");
+
         // Axolotl（Theseus）结构与 Modrinth 相同，靠应用根目录名区分。
         if (IsAxolotlRoot(selected) &&
             File.Exists(Path.Combine(selected, "app.db")) &&
@@ -111,6 +119,28 @@ public sealed record MinecraftFolderLayout(
         // Retain the legacy behavior for manually added roots. A valid game root may be empty,
         // contain only Bedrock versions, or receive its versions after it is configured.
         return new(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
+    }
+
+    /// <summary>
+    /// 由已保存的文件夹类型重建布局，用于对应启动器尚未初始化目标目录
+    /// （例如空目录）时，无法通过目录结构识别类型的场景。
+    /// </summary>
+    public static MinecraftFolderLayout FromFolderKind(MinecraftFolderKind kind, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return new(MinecraftFolderKind.Unknown, string.Empty, string.Empty, "未识别的 Minecraft 文件夹");
+        var selected = Path.GetFullPath(path.Trim());
+        var displayName = kind switch
+        {
+            MinecraftFolderKind.ModrinthApp or MinecraftFolderKind.ModrinthProfile => "Modrinth App",
+            MinecraftFolderKind.AxolotlApp or MinecraftFolderKind.AxolotlProfile => "Axolotl",
+            MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher",
+            MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance => "BakaXL",
+            MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge App",
+            MinecraftFolderKind.Standard => "传统 .minecraft 文件夹",
+            _ => "未识别的 Minecraft 文件夹"
+        };
+        return new(kind, selected, selected, displayName);
     }
 
     /// <summary>
