@@ -17,19 +17,20 @@ using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Services;
 
-/// <summary>
-/// 修改已安装 Java 实例的游戏版本/加载器版本，保留存档、模组、资源包等用户数据。
-/// 修改过程中会备份版本文件，失败时自动恢复。
-/// </summary>
 public static class VersionModifyService
 {
     private const string BackupFolderName = ".PortalModifyBackup";
 
     public static ManagedTask CreateModifyTask(MinecraftInstance instance, VersionManifestEntry vanilla,
-        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath) =>
-        TaskManager.Instance.CreateTask(new TaskOptions
+        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
+    {
+        var hasLoaders = selectedEntries.Count > 0;
+        var isUninstall = !hasLoaders &&
+                          instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } loaders } &&
+                          loaders.Any();
+        return TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"修改实例 {instance.InstanceName}",
+            Name = isUninstall ? $"卸载实例 {instance.InstanceName} 的加载器" : $"修改实例 {instance.InstanceName}",
             Description = "正在准备修改实例版本",
             Progress = 0,
             Actions =
@@ -49,6 +50,7 @@ public static class VersionModifyService
                 }
             ]
         }, context => RunModifyAsync(context, instance, vanilla, selectedEntries, javaPath));
+    }
 
     private static async Task RunModifyAsync(TaskExecutionContext context, MinecraftInstance instance,
         VersionManifestEntry vanilla, IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
@@ -58,10 +60,7 @@ public static class VersionModifyService
 
         if (!instance.CanModifyVersion)
             throw new InvalidOperationException("仅支持修改 Portal 游戏目录下的实例版本，其他格式的实例请在对应启动器中修改。");
-
-        // 若其他版本（如加载器基座）通过 inheritsFrom 依赖本实例，直接修改会破坏它们。
-        // 例如安装 1.21.6 的 Forge 时会顺带安装 1.21.6 原版基座，若把 1.21.6 改成别的
-        // 版本，依赖它的 Forge 版本就再也无法启动。此时应让用户改为修改依赖链末端的实例。
+        
         var dependents = FindDependentVersionIds(minecraftEntry.MinecraftFolderPath, minecraftEntry.Id);
         if (dependents.Count > 0)
         {
@@ -72,14 +71,14 @@ public static class VersionModifyService
 
         var folderPath = minecraftEntry.MinecraftFolderPath;
         var instanceId = minecraftEntry.Id;
-        var versionDirectory = Path.Combine(folderPath, "versions", instanceId);
-        // Portal MC 实例目录即版本目录，原版基座与加载器统一安装到共享的 meta 目录。
         var isPortalMc = MinecraftFolderLayout.TryFindPortalMcRoot(folderPath, out var portalMcRoot);
         var metadataRoot = isPortalMc ? Path.Combine(portalMcRoot, "meta") : folderPath;
-        if (isPortalMc)
-            versionDirectory = folderPath;
+        var instanceDirectory = isPortalMc
+            ? instance.Layout?.InstanceRoot ?? Path.Combine(portalMcRoot, "instances", instanceId)
+            : Path.Combine(folderPath, "versions", instanceId);
         var hasLoaders = selectedEntries.Count > 0;
-        var usesTempBase = hasLoaders && string.Equals(instanceId, vanilla.Id, StringComparison.OrdinalIgnoreCase);
+        var usesTempBase = !isPortalMc && hasLoaders &&
+                           string.Equals(instanceId, vanilla.Id, StringComparison.OrdinalIgnoreCase);
         var tempBaseId = $".portal-{instanceId}-base";
 
         try
@@ -100,8 +99,7 @@ public static class VersionModifyService
                 step.ReportProgress(1);
                 await Task.CompletedTask;
             });
-
-            // 安装/校验原版基座。Portal MC 的原版基座位于共享 meta，无需临时基座。
+            
             if (hasLoaders)
             {
                 if (isPortalMc)
@@ -112,23 +110,23 @@ public static class VersionModifyService
                     await EnsureVanillaBaseAsync(context, folderPath, vanilla);
             }
 
-            await BackupAsync(context, versionDirectory, instanceId);
+            await BackupAsync(context, instanceDirectory, instanceId);
 
             if (hasLoaders)
             {
                 if (isPortalMc)
-                    await InstallLoadersPortalMcAsync(context, metadataRoot, folderPath, instanceId, vanilla,
+                    await InstallLoadersPortalMcAsync(context, metadataRoot, instanceDirectory, instanceId, vanilla,
                         selectedEntries, javaPath);
                 else
-                    await InstallLoadersAsync(context, folderPath, instanceId, vanilla, selectedEntries,
-                        javaPath, usesTempBase, tempBaseId);
+                    await InstallLoadersAsync(context, folderPath, instanceDirectory, instanceId, vanilla,
+                        selectedEntries, javaPath, usesTempBase, tempBaseId);
             }
             else
             {
                 if (isPortalMc)
-                    await InstallPureVanillaPortalMcAsync(context, metadataRoot, folderPath, instanceId, vanilla);
+                    await InstallPureVanillaPortalMcAsync(context, metadataRoot, instanceDirectory, instanceId, vanilla);
                 else
-                    await InstallPureVanillaAsync(context, folderPath, instanceId, vanilla);
+                    await InstallPureVanillaAsync(context, folderPath, instanceDirectory, instanceId, vanilla);
             }
 
             if (usesTempBase)
@@ -137,22 +135,18 @@ public static class VersionModifyService
             await RefreshInstancesAsync(context);
             context.SetDescription($"已完成实例“{instance.InstanceName}”的版本修改");
 
-            DeleteDirectory(Path.Combine(versionDirectory, BackupFolderName));
+            DeleteDirectory(Path.Combine(instanceDirectory, BackupFolderName));
         }
         catch (Exception exception)
         {
             Logger.Error($"[VersionModify] 修改实例“{instance.InstanceName}”失败，正在恢复原版本文件。{Environment.NewLine}{exception}");
-            RestoreBackup(versionDirectory, instanceId);
-            DeleteDirectory(Path.Combine(versionDirectory, BackupFolderName));
+            RestoreBackup(instanceDirectory, instanceId);
+            DeleteDirectory(Path.Combine(instanceDirectory, BackupFolderName));
             if (usesTempBase) DeleteDirectory(Path.Combine(folderPath, "versions", tempBaseId));
             throw;
         }
     }
-
-    /// <summary>
-    /// 查找通过 inheritsFrom 依赖指定实例 id 的其他版本目录（如加载器基座）。
-    /// 修改被依赖的实例会破坏这些版本，需在修改前阻止。
-    /// </summary>
+    
     internal static List<string> FindDependentVersionIds(string folderPath, string instanceId)
     {
         var dependents = new List<string>();
@@ -186,9 +180,6 @@ public static class VersionModifyService
         return dependents;
     }
 
-    /// <summary>
-    /// 校验并复用已存在的原版基座，文件缺失时重新安装。
-    /// </summary>
     private static async Task<MinecraftEntry> EnsureVanillaBaseAsync(TaskExecutionContext context, string folderPath,
         VersionManifestEntry vanilla)
     {
@@ -210,10 +201,6 @@ public static class VersionModifyService
         return await InstallVanillaBaseAsync(context, folderPath, vanilla, vanilla.Id);
     }
 
-    /// <summary>
-    /// 确保同版本修改所需的临时原版基座存在。优先复制实例自身的原版 json 与 jar，
-    /// 避免同版本加载器修改时重复下载整个客户端；文件不完整时才重新下载。
-    /// </summary>
     private static async Task EnsureTempBaseAsync(TaskExecutionContext context, string folderPath,
         VersionManifestEntry vanilla, string instanceId, string tempBaseId)
     {
@@ -260,30 +247,30 @@ public static class VersionModifyService
             return await MinecraftInstallationViewModel.RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
         });
 
-    private static async Task BackupAsync(TaskExecutionContext context, string versionDirectory, string instanceId)
+    private static async Task BackupAsync(TaskExecutionContext context, string instanceDirectory, string instanceId)
     {
         await MinecraftInstallationViewModel.RunStepAsync(context, "备份版本文件", "正在备份当前版本文件", step =>
         {
-            var backupDirectory = Path.Combine(versionDirectory, BackupFolderName);
+            var backupDirectory = Path.Combine(instanceDirectory, BackupFolderName);
             Directory.CreateDirectory(backupDirectory);
-            CopyIfExists(Path.Combine(versionDirectory, $"{instanceId}.json"),
+            CopyIfExists(Path.Combine(instanceDirectory, $"{instanceId}.json"),
                 Path.Combine(backupDirectory, $"{instanceId}.json"));
-            CopyIfExists(Path.Combine(versionDirectory, $"{instanceId}.jar"),
+            CopyIfExists(Path.Combine(instanceDirectory, $"{instanceId}.jar"),
                 Path.Combine(backupDirectory, $"{instanceId}.jar"));
             step.ReportProgress(1);
             return Task.CompletedTask;
         });
     }
 
-    private static void RestoreBackup(string versionDirectory, string instanceId)
+    private static void RestoreBackup(string instanceDirectory, string instanceId)
     {
-        var backupDirectory = Path.Combine(versionDirectory, BackupFolderName);
+        var backupDirectory = Path.Combine(instanceDirectory, BackupFolderName);
         try
         {
             CopyIfExists(Path.Combine(backupDirectory, $"{instanceId}.json"),
-                Path.Combine(versionDirectory, $"{instanceId}.json"));
+                Path.Combine(instanceDirectory, $"{instanceId}.json"));
             CopyIfExists(Path.Combine(backupDirectory, $"{instanceId}.jar"),
-                Path.Combine(versionDirectory, $"{instanceId}.jar"));
+                Path.Combine(instanceDirectory, $"{instanceId}.jar"));
         }
         catch (Exception exception)
         {
@@ -322,16 +309,14 @@ public static class VersionModifyService
         }
     }
 
-    private static async Task InstallLoadersAsync(TaskExecutionContext context, string folderPath, string instanceId,
-        VersionManifestEntry vanilla,
+    private static async Task InstallLoadersAsync(TaskExecutionContext context, string folderPath,
+        string instanceDirectory, string instanceId, VersionManifestEntry vanilla,
         IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath, bool flatten, string tempBaseId)
     {
-        // 移除旧版本文件，避免 Fabric/Quilt 安装器复用旧配置文件
-        var versionDirectory = Path.Combine(folderPath, "versions", instanceId);
         await Task.Run(() =>
         {
-            TryDeleteFile(Path.Combine(versionDirectory, $"{instanceId}.json"));
-            TryDeleteFile(Path.Combine(versionDirectory, $"{instanceId}.jar"));
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.json"));
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.jar"));
         });
 
         var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
@@ -386,68 +371,56 @@ public static class VersionModifyService
             await FlattenAsync(context, folderPath, instanceId, vanilla.Id, tempBaseId);
     }
 
-    private static async Task InstallPureVanillaAsync(TaskExecutionContext context, string folderPath, string instanceId,
-        VersionManifestEntry vanilla)
+    private static async Task InstallPureVanillaAsync(TaskExecutionContext context, string folderPath,
+        string instanceDirectory, string instanceId, VersionManifestEntry vanilla)
     {
-        var versionDirectory = Path.Combine(folderPath, "versions", instanceId);
         await Task.Run(() =>
         {
-            TryDeleteFile(Path.Combine(versionDirectory, $"{instanceId}.json"));
-            TryDeleteFile(Path.Combine(versionDirectory, $"{instanceId}.jar"));
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.json"));
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.jar"));
         });
 
         await RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}",
             VanillaInstaller.Create(folderPath, vanilla, instanceId));
     }
 
-    /// <summary>
-    /// Portal MC 纯原版修改：仅确保共享 meta 中的原版基座完整，并重写实例目录的极简继承 json。
-    /// </summary>
     private static async Task InstallPureVanillaPortalMcAsync(TaskExecutionContext context, string metadataRoot,
-        string instanceRoot, string instanceId, VersionManifestEntry vanilla)
+        string instanceDirectory, string instanceId, VersionManifestEntry vanilla)
     {
         await Task.Run(() =>
         {
-            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.json"));
-            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.jar"));
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.json"));
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.jar"));
         });
 
         await EnsureVanillaBaseAsync(context, metadataRoot, vanilla);
         await MinecraftInstallationViewModel.RunStepAsync(context, "写入实例配置", "正在生成原版实例配置", step =>
         {
-            MinecraftInstallationViewModel.WritePortalMcMinimalInstanceJson(instanceRoot, instanceId, vanilla.Id);
+            MinecraftInstallationViewModel.WritePortalMcMinimalInstanceJson(instanceDirectory, instanceId, vanilla.Id);
             step.ReportProgress(1);
             return Task.CompletedTask;
         });
     }
-
-    /// <summary>
-    /// Portal MC 加载器修改：在共享 meta 中安装加载器（id 与原版相同时使用临时 id 避免复用
-    /// 既有 json），再将版本目录整体并入实例目录，保留 mods 等用户数据。
-    /// </summary>
+    
     private static async Task InstallLoadersPortalMcAsync(TaskExecutionContext context, string metadataRoot,
-        string instanceRoot, string instanceId, VersionManifestEntry vanilla,
+        string instanceDirectory, string instanceId, VersionManifestEntry vanilla,
         IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
     {
-        var effectiveLoaderId = instanceId.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
-            ? $"{instanceId}.portal-tmp"
-            : instanceId;
-        var loaderDirectory = Path.Combine(metadataRoot, "versions", effectiveLoaderId);
+        var tempLoaderId = $"{instanceId}.portal-tmp";
+        var loaderDirectory = Path.Combine(metadataRoot, "versions", tempLoaderId);
 
-        // 移除旧版本文件（已备份），并清除同 id 安装残留的临时加载器目录，避免安装器复用旧配置。
         await Task.Run(() =>
         {
-            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.json"));
-            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.jar"));
-            if (JsonHasInheritsFrom(Path.Combine(loaderDirectory, $"{effectiveLoaderId}.json")))
-                DeleteDirectory(loaderDirectory);
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.json"));
+            TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.jar"));
+            DeleteDirectory(loaderDirectory);
         });
 
         var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
         var primaryEntry = primary.Value;
         var primaryInstaller = primaryEntry is null
             ? null
-            : CreatePrimaryInstaller(primary.Key, primaryEntry, metadataRoot, effectiveLoaderId, javaPath);
+            : CreatePrimaryInstaller(primary.Key, primaryEntry, metadataRoot, tempLoaderId, javaPath);
         var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
             ? CreatePreloadOptifineInstaller(metadataRoot, (OptifineInstallEntry)optifineEntry, javaPath)
             : null;
@@ -488,25 +461,25 @@ public static class VersionModifyService
             var installer = primaryInstaller is not null
                 ? OptifineInstaller.Create(metadataRoot, (OptifineInstallEntry)optifineEntry!, minecraft)
                 : OptifineInstaller.Create(metadataRoot, javaPath!, (OptifineInstallEntry)optifineEntry!,
-                    effectiveLoaderId);
+                    tempLoaderId);
             minecraft = await RunInstallerStepAsync(context, "安装 OptiFine", "正在将 OptiFine 应用到当前实例", installer);
         }
 
         await MinecraftInstallationViewModel.RunStepAsync(context, "整合版本文件", "正在将加载器应用到实例目录", step =>
         {
-            MoveDirectoryContents(loaderDirectory, instanceRoot, effectiveLoaderId, instanceId);
+            Directory.CreateDirectory(instanceDirectory);
+            MoveDirectoryContents(loaderDirectory, instanceDirectory, tempLoaderId, instanceId);
+            RewriteInstanceJsonId(instanceDirectory, instanceId, tempLoaderId);
             step.ReportProgress(1);
             return Task.CompletedTask;
         });
         DeleteDirectory(loaderDirectory);
     }
 
-    /// <summary>
-    /// 将加载器版本目录的内容并入实例目录：json/jar 按目标 id 重命名，其余文件与子目录（如 mods）合并。
-    /// </summary>
     private static void MoveDirectoryContents(string sourceDirectory, string destinationDirectory,
         string sourceId, string destinationId)
     {
+        if (!Directory.Exists(sourceDirectory)) return;
         Directory.CreateDirectory(destinationDirectory);
         foreach (var file in Directory.EnumerateFiles(sourceDirectory))
         {
@@ -524,25 +497,23 @@ public static class VersionModifyService
                 sourceId, destinationId);
     }
 
-    private static bool JsonHasInheritsFrom(string jsonPath)
+    private static void RewriteInstanceJsonId(string instanceDirectory, string instanceId, string expectedSourceId)
     {
-        if (!File.Exists(jsonPath)) return false;
+        var jsonPath = Path.Combine(instanceDirectory, $"{instanceId}.json");
+        if (!File.Exists(jsonPath)) return;
         try
         {
-            var node = JsonNode.Parse(File.ReadAllText(jsonPath)) as JsonObject;
-            return node?["inheritsFrom"]?.GetValue<string>() is not null;
+            if (JsonNode.Parse(File.ReadAllText(jsonPath)) is not JsonObject node) return;
+            if (node["id"]?.GetValue<string>() != expectedSourceId) return;
+            node["id"] = instanceId;
+            File.WriteAllText(jsonPath, node.ToJsonString());
         }
         catch (Exception exception)
         {
-            Logger.Debug($"[VersionModify] Failed to parse {jsonPath}: {exception}");
-            return false;
+            Logger.Warning($"[VersionModify] Failed to rewrite instance id in {jsonPath}: {exception}");
         }
     }
-
-    /// <summary>
-    /// 当实例 id 与原版 id 相同（如直接修改“1.20.1”为加载器版本）时，
-    /// 将继承结构整合为独立的版本文件：json 合并 + 客户端 jar 处理。
-    /// </summary>
+    
     private static async Task FlattenAsync(TaskExecutionContext context, string folderPath, string instanceId,
         string vanillaId, string tempBaseId)
     {
@@ -561,7 +532,6 @@ public static class VersionModifyService
             var merged = MergeVersionJson(vanillaNode, [loaderNode], instanceId);
             File.WriteAllText(loaderJsonPath, merged.ToJsonString());
 
-            // 仅当加载器不提供自己的客户端 jar（如旧版 Forge）时，才复用原版客户端 jar
             var hasOwnClientJar = loaderNode["downloads"] is JsonObject downloads && downloads["client"] is not null;
             var instanceJar = Path.Combine(instanceDirectory, $"{instanceId}.jar");
             var baseJar = Path.Combine(baseDirectory, $"{tempBaseId}.jar");
@@ -601,7 +571,6 @@ public static class VersionModifyService
             if (sourceValue is null)
                 continue;
 
-            // 旧版本使用 minecraftArguments 而非 arguments，启动参数需要拼接而不是覆盖
             if (key == "minecraftArguments" && target[key] is JsonValue targetValue && sourceValue is JsonValue sourceString)
             {
                 var baseArgs = targetValue.GetValue<string>();

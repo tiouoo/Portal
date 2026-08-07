@@ -28,8 +28,6 @@ internal partial class VersionModifyDialog : UserControl
     {
         InitializeComponent();
         DataContext = new VersionModifyDialogViewModel(instance);
-        // 可编辑 ComboBox 不会在输入时自动弹出下拉列表，这里在文本变化时打开，
-        // 让用户输入关键字即可看到过滤后的版本。空引用时安全跳过，避免对话框无法打开。
         if (VersionCombo is { } combo)
             combo.PropertyChanged += (_, e) =>
             {
@@ -42,7 +40,6 @@ internal partial class VersionModifyDialog : UserControl
 
     private void VersionCombo_OnTextInput(object? sender, TextInputEventArgs e)
     {
-        // 键盘输入视为“正在筛选”，由 ViewModel 区分“点开展示全部”与“输入后过滤”。
         if (DataContext is VersionModifyDialogViewModel viewModel)
             viewModel.NotifyVersionTextInput();
     }
@@ -51,6 +48,12 @@ internal partial class VersionModifyDialog : UserControl
     {
         if (DataContext is VersionModifyDialogViewModel viewModel)
             await viewModel.SelectLoaderVersionAsync(this);
+    }
+
+    private void UninstallAllLoaders_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is VersionModifyDialogViewModel viewModel)
+            viewModel.UninstallAllLoaders();
     }
 
     private void Modify_OnClick(object? sender, RoutedEventArgs e)
@@ -138,13 +141,18 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
     public bool CanSelectLoaderVersion => HasModLoader && _loadingCount == 0 && SelectedLoadersAreReady();
     public bool CanModify => !_isModifying && _loadingCount == 0 && !IsVersionsLoading &&
                              SelectedVersion?.Value is VersionManifestEntry && SelectedLoadersAreReady() &&
-                             !HasDependentWarning;
+                             HasChanges && !HasDependentWarning;
 
-    /// <summary>当前实例被其他版本依赖时的提示，修改会破坏这些版本。</summary>
+    public bool CanUninstallAllLoaders =>
+        _instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } loaders } && loaders.Any();
+
+    [ObservableProperty] public partial string ModifyPreviewText { get; set; } = string.Empty;
+
+    public bool HasChanges { get; private set; }
+
     public string DependentWarning { get; }
     public bool HasDependentWarning => DependentWarning.Length > 0;
 
-    /// <summary>修改任务已启动后的句柄，供调用方在完成后刷新实例页面。</summary>
     public ManagedTask? StartedTask { get; private set; }
 
     public VersionModifyDialogViewModel(MinecraftInstance instance)
@@ -167,10 +175,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             : $"该实例被其他版本依赖（{string.Join("、", dependents)}），修改本实例会破坏它们。" +
               "请改为修改依赖链末端的实例（如加载器实例），或先删除这些依赖版本。";
     }
-
-    /// <summary>
-    /// 根据实例已安装的加载器预选对应复选框，并记录已安装版本用于匹配加载器版本列表。
-    /// </summary>
+    
     private void PreselectInstalledLoaders()
     {
         if (_instance.MinecraftEntry is not ModifiedMinecraftEntry { ModLoaders: { } modLoaders })
@@ -178,26 +183,32 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
         foreach (var loader in modLoaders)
         {
-            var kind = loader.Type switch
-            {
-                ModLoaderType.Fabric => LoaderKind.Fabric,
-                ModLoaderType.Forge => LoaderKind.Forge,
-                ModLoaderType.NeoForge => LoaderKind.NeoForge,
-                ModLoaderType.Quilt => LoaderKind.Quilt,
-                ModLoaderType.OptiFine => LoaderKind.OptiFine,
-                _ => (LoaderKind?)null
-            };
-            if (kind is not { } selectedKind) continue;
+            if (ToLoaderKind(loader.Type) is not { } selectedKind) continue;
 
             _installedLoaderVersions[selectedKind] = loader.Version;
-            switch (selectedKind)
-            {
-                case LoaderKind.Fabric: IsFabricSelected = true; break;
-                case LoaderKind.Forge: IsForgeSelected = true; break;
-                case LoaderKind.NeoForge: IsNeoForgeSelected = true; break;
-                case LoaderKind.Quilt: IsQuiltSelected = true; break;
-                case LoaderKind.OptiFine: IsOptiFineSelected = true; break;
-            }
+            SetLoaderChecked(selectedKind, true);
+        }
+    }
+
+    private static LoaderKind? ToLoaderKind(ModLoaderType type) => type switch
+    {
+        ModLoaderType.Fabric => LoaderKind.Fabric,
+        ModLoaderType.Forge => LoaderKind.Forge,
+        ModLoaderType.NeoForge => LoaderKind.NeoForge,
+        ModLoaderType.Quilt => LoaderKind.Quilt,
+        ModLoaderType.OptiFine => LoaderKind.OptiFine,
+        _ => null
+    };
+
+    private void SetLoaderChecked(LoaderKind kind, bool value)
+    {
+        switch (kind)
+        {
+            case LoaderKind.Fabric: IsFabricSelected = value; break;
+            case LoaderKind.Forge: IsForgeSelected = value; break;
+            case LoaderKind.NeoForge: IsNeoForgeSelected = value; break;
+            case LoaderKind.Quilt: IsQuiltSelected = value; break;
+            case LoaderKind.OptiFine: IsOptiFineSelected = value; break;
         }
     }
 
@@ -214,9 +225,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     partial void OnVersionSearchTextChanged(string value)
     {
-        // 可编辑 ComboBox 在输入时会在其内部 TextChanged 中自行处理选中项；
-        // 若在此时同步重建 ItemsSource，会与它的选择逻辑互相干扰，
-        // 导致 ItemsSourceView 索引越界崩溃。这里延迟到输入事件处理完之后再刷新。
         if (IsVersionDropDownOpen && !_isSyncingVersionText)
             _userTyping = true;
         QueueVersionRefresh();
@@ -224,7 +232,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     partial void OnIsVersionDropDownOpenChanged(bool value)
     {
-        // 下拉关闭时结束“正在输入”状态，下次点开默认展示全部。
         if (!value)
             _userTyping = false;
         QueueVersionRefresh();
@@ -235,7 +242,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
     {
         if (value is not null)
         {
-            // 程序化同步文本不算用户输入，避免把“点选”误判为“正在筛选”。
             _isSyncingVersionText = true;
             try
             {
@@ -248,7 +254,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         }
 
         _vanilla = value?.Value as VersionManifestEntry;
-        // 更换目标版本后，已选加载器的条目可能不再适用，重新获取最新版。
         foreach (var kind in Enum.GetValues<LoaderKind>().Where(IsSelected))
             _ = LoadLatestAsync(kind);
         UpdateVersionState();
@@ -260,7 +265,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
     partial void OnIsQuiltSelectedChanged(bool value) => SelectionChanged(LoaderKind.Quilt, value);
     partial void OnIsOptiFineSelectedChanged(bool value) => SelectionChanged(LoaderKind.OptiFine, value);
 
-    /// <summary>键盘输入关键字时视为“正在筛选”，由 ViewModel 区分“点开展示全部”与“输入后过滤”。</summary>
     public void NotifyVersionTextInput() => _userTyping = true;
 
     private void QueueVersionRefresh()
@@ -320,8 +324,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     private void PopulateVersions(VersionFilterOption filter)
     {
-        // 实例当前版本不在默认的“正式版”分类时（如快照版实例），自动切换到对应分类，
-        // 保证默认选中当前安装的版本。
         var currentId = GetCurrentVanillaId();
         if (currentId is not null &&
             _javaVersions.FirstOrDefault(version =>
@@ -358,7 +360,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             _categoryVersions.Add(new VersionOption(version.Name, version.Entry!));
 
         IsVersionsLoading = false;
-        // 优先选中实例当前使用的原版版本，方便直接升级/降级到相邻版本。
         SelectedVersion = _categoryVersions.FirstOrDefault(option =>
             string.Equals(option.DisplayText, currentId, StringComparison.OrdinalIgnoreCase))
             ?? _categoryVersions.FirstOrDefault();
@@ -380,14 +381,9 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
     {
         var query = VersionSearchText.Trim();
         var selected = SelectedVersion;
-
-        // 点开下拉但尚未输入 → 展示该分类下的全部版本；
-        // 用户输入（键盘/粘贴）后才按关键字过滤。
+        
         var isFiltering = IsVersionDropDownOpen && _userTyping && query.Length > 0;
-
-        // 重建下拉列表，但绝不能把当前选中项从列表中移除：一旦选中项被移除，
-        // ComboBox 会清空输入框文本（UpdateInputTextFromSelection(null) 会把 Text 置空），
-        // 从而打断用户正在输入的关键字。
+        
         var keep = new HashSet<VersionOption>(_categoryVersions.Where(version =>
             !isFiltering || version.DisplayText.Contains(query, StringComparison.OrdinalIgnoreCase)));
         if (selected is not null) keep.Add(selected);
@@ -448,7 +444,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             {
                 if (kind == LoaderKind.OptiFine)
                 {
-                    // OptiFine 可叠加在任何主加载器之上，不与其他加载器互斥
                 }
                 else
                 {
@@ -504,7 +499,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             }
             else
             {
-                // 优先匹配实例当前安装的加载器版本，找不到时才回退到最新版
                 var matched = MatchInstalledLoaderVersion(kind, entries);
                 var entry = matched ?? entries[0];
                 _availableLoaderVersions[kind] = entries;
@@ -541,13 +535,11 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             var version = MinecraftInstallationViewModel.GetLoaderVersion(kind, entry);
             if (string.Equals(version, installedVersion, StringComparison.OrdinalIgnoreCase))
                 return entry;
-            // Forge 的安装版本形如“1.21.3-49.0.5”，实例中记录的是“49.0.5”
             if (kind == LoaderKind.Forge &&
                 string.Equals(version.Split('-').LastOrDefault(), installedVersion, StringComparison.OrdinalIgnoreCase))
                 return entry;
         }
 
-        // OptiFine 补丁版本可能带 pre 后缀（如已安装 HD_U_H6 与可用的 HD_U_H6_pre1），允许前缀匹配
         if (kind == LoaderKind.OptiFine)
         {
             foreach (var entry in entries)
@@ -601,7 +593,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     public async Task ModifyAsync()
     {
-        if (!CanModify || SelectedVersion?.Value is not VersionManifestEntry vanilla) return;
+        if (!CanModify || !HasChanges || SelectedVersion?.Value is not VersionManifestEntry vanilla) return;
         _isModifying = true;
         UpdateVersionState();
         var selectedEntries = _selectedLoaders.ToDictionary(x => x.Key, x => x.Value);
@@ -618,6 +610,92 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             _isModifying = false;
             UpdateVersionState();
         }
+    }
+
+    public void UninstallAllLoaders()
+    {
+        _updatingSelection = true;
+        try
+        {
+            foreach (var kind in Enum.GetValues<LoaderKind>())
+            {
+                SetLoaderChecked(kind, false);
+                _selectedLoaders.Remove(kind);
+                _availableLoaderVersions.Remove(kind);
+                SetStatus(kind, "不安装");
+                _loadGenerations[kind] = _loadGenerations.GetValueOrDefault(kind) + 1;
+            }
+        }
+        finally
+        {
+            _updatingSelection = false;
+        }
+        UpdateVersionState();
+    }
+
+    private HashSet<LoaderKind> GetInstalledLoaderKinds() =>
+        _instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } modLoaders }
+            ? modLoaders.Select(loader => ToLoaderKind(loader.Type)).OfType<LoaderKind>().ToHashSet()
+            : [];
+
+    private static bool LoaderVersionsMatch(LoaderKind kind, string selectedVersion, string installedVersion)
+    {
+        if (string.Equals(selectedVersion, installedVersion, StringComparison.OrdinalIgnoreCase)) return true;
+        if (kind == LoaderKind.Forge &&
+            string.Equals(selectedVersion.Split('-').LastOrDefault(), installedVersion, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (kind == LoaderKind.OptiFine &&
+            selectedVersion.StartsWith(installedVersion, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void UpdateModifyPreview()
+    {
+        var actions = new List<string>();
+        var targetId = _vanilla?.Id;
+        var currentId = GetCurrentVanillaId();
+        if (!string.IsNullOrWhiteSpace(targetId) &&
+            !string.Equals(targetId, currentId, StringComparison.OrdinalIgnoreCase))
+            actions.Add($"游戏版本将由 {currentId} 变更为 {targetId}");
+
+        var installedKinds = GetInstalledLoaderKinds();
+        var selectedKinds = Enum.GetValues<LoaderKind>().Where(IsSelected).ToHashSet();
+        if (selectedKinds.Count == 0)
+        {
+            if (installedKinds.Count > 0)
+                actions.Add($"将卸载全部加载器（{string.Join("、", installedKinds)}）并还原为原版");
+        }
+        else
+        {
+            var removedKinds = installedKinds.Where(kind => !selectedKinds.Contains(kind)).ToList();
+            if (removedKinds.Count > 0)
+                actions.Add($"将卸载加载器：{string.Join("、", removedKinds)}");
+
+            var changedKinds = selectedKinds.Where(kind =>
+            {
+                if (!installedKinds.Contains(kind)) return true;
+                if (!_installedLoaderVersions.TryGetValue(kind, out var installedVersion)) return true;
+                return !_selectedLoaders.TryGetValue(kind, out var entry) ||
+                       !LoaderVersionsMatch(kind, MinecraftInstallationViewModel.GetLoaderVersion(kind, entry),
+                           installedVersion);
+            }).ToList();
+            if (changedKinds.Count > 0)
+            {
+                var details = changedKinds.Select(kind =>
+                    _selectedLoaders.TryGetValue(kind, out var entry)
+                        ? $"{kind} {MinecraftInstallationViewModel.GetLoaderVersion(kind, entry)}"
+                        : kind.ToString());
+                actions.Add($"将安装/更新加载器：{string.Join("、", details)}");
+            }
+        }
+
+        ModifyPreviewText = actions.Count == 0
+            ? "当前选择与实例配置一致，无需修改"
+            : string.Join("；", actions);
+        HasChanges = actions.Count > 0;
+        OnPropertyChanged(nameof(ModifyPreviewText));
+        OnPropertyChanged(nameof(HasChanges));
     }
 
     private bool IsSelected(LoaderKind kind) => kind switch
@@ -647,10 +725,12 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     private void UpdateVersionState()
     {
+        UpdateModifyPreview();
         OnPropertyChanged(nameof(HasModLoader));
         OnPropertyChanged(nameof(RequiresJava));
         OnPropertyChanged(nameof(CanSelectLoaderVersion));
         OnPropertyChanged(nameof(CanModify));
+        OnPropertyChanged(nameof(CanUninstallAllLoaders));
     }
 
     public void Complete() => RequestClose?.Invoke(this, new VersionModifyDialogResult());
