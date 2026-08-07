@@ -416,7 +416,16 @@ public class MinecraftInstance : ObservableObject
         if (Layout == null)
             return Path.Combine(MinecraftPath, "Portal.config.json");
 
-        var identity = $"{Layout.Kind}|{Path.GetFullPath(Layout.InstanceRoot)}";
+        return GetExternalConfigPath(Layout.Kind, Layout.InstanceRoot);
+    }
+
+    /// <summary>
+    /// 外部实例（第三方布局）的配置路径：按“布局类型|实例根目录”哈希定位。
+    /// 实例重命名会改变实例根目录，需按新路径迁移原配置、自定义图标等数据。
+    /// </summary>
+    public static string GetExternalConfigPath(MinecraftFolderKind kind, string instanceRoot)
+    {
+        var identity = $"{kind}|{Path.GetFullPath(instanceRoot)}";
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "cc.tiouo.Portal", "Instances", $"{hash}.json");

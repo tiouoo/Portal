@@ -110,6 +110,18 @@
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
+                                            Click="RenameInstance_Click"
+                                            Header="重命名"
+                                            IsEnabled="{Binding Instance.CanModifyVersion}"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M416.9,85.2L372,130.1 509.9,268 554.8,223.1C568.4,209.6 576,191.2 576,172 576,152.8 568.4,134.4 554.8,120.9L519.1,85.2C505.6,71.6 487.2,64 468,64 448.8,64 430.4,71.6 416.9,85.2z M338.1,164L122.9,379.1C112.2,389.8,104.4,403.2,100.3,417.8L64.9,545.6C62.6,553.9 64.9,562.9 71.1,569 77.3,575.1 86.2,577.5 94.5,575.2L222.3,539.7C236.9,535.6,250.2,527.9,261,517.1L476,301.9 338.1,164z"
+                                                    Height="16"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
                                             Click="DeleteInstance_Click"
                                             Header="删除此实例"
                                             Tag="{Binding}">

@@ -414,6 +414,35 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         _ = NotifyModifyOutcomeAsync(viewModel.StartedTask, topLevel);
     }
 
+    private async void RenameInstance_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null || !Instance.CanModifyVersion)
+            return;
+
+        var newId = await RenameInstanceDialog.Show(Instance, this.TryGetHostId());
+        if (string.IsNullOrWhiteSpace(newId))
+            return;
+
+        // 重命名任务在后台继续执行，直接关闭当前实例详情页；任务状态可在任务面板查看
+        var task = InstanceRenameService.CreateRenameTask(Instance, newId);
+        task.Start();
+        _parent.HostTab.Close();
+        _ = NotifyRenameOutcomeAsync(task, topLevel);
+    }
+
+    private static async Task NotifyRenameOutcomeAsync(ManagedTask task, TopLevel? topLevel)
+    {
+        if (topLevel is null) return;
+        await task.Completion;
+        if (task.Status is ManagedTaskStatus.Faulted)
+            NotificationGateway.Notice(topLevel, $"实例重命名失败：{task.ErrorMessage}", NotificationType.Error);
+        else if (task.Status is ManagedTaskStatus.Cancelled)
+            NotificationGateway.Notice(topLevel, "实例重命名已取消，未发生改动。", NotificationType.Warning);
+        else
+            NotificationGateway.Notice(topLevel, "实例已重命名", NotificationType.Success);
+    }
+
     private static async Task NotifyModifyOutcomeAsync(ManagedTask? task, TopLevel? topLevel)
     {
         if (task is null || topLevel is null) return;
