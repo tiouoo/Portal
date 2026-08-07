@@ -74,14 +74,22 @@
                         <TextBlock
                             FontSize="12"
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Binding PackageAuthorsText}" />
+                            Text="{Binding PackageAuthorsText}"
+                            TextTrimming="CharacterEllipsis" />
                         <TextBlock
-                            FontSize="13"
+                            FontSize="12"
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Binding PackageVersionText}" />
+                            Text="{Binding PackageVersionText}"
+                            TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                 </DockPanel>
-                <TextBlock Margin="2,7,0,-3" Text="{Binding PackageDescription}" />
+                <TextBlock
+                    FontSize="13"
+                    Margin="2,7,0,-3"
+                    MaxLines="1"
+                    Text="{Binding PackageDescription}"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap" />
             </StackPanel>
         </Border>
 
@@ -94,13 +102,15 @@
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="导入到哪里" />
+                        Text="导入到哪里"
+                        TextTrimming="CharacterEllipsis" />
                     <TextBlock
                         DockPanel.Dock="Right"
                         FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding ViewModel.HasNoInstances}"
-                        Text="没有可用的基岩版实例" />
+                        Text="没有可用的基岩版实例"
+                        TextTrimming="CharacterEllipsis" />
                 </DockPanel>
                 <ComboBox
                     HorizontalAlignment="Stretch"

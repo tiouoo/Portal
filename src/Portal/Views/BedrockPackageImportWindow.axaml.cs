@@ -97,7 +97,8 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
     public BedrockPackageImportDialogViewModel ViewModel { get; }
     public string ImportTitle => GetImportTitle(_inspection);
     public string WindowTitle => $"Portal - {ImportTitle}";
-    public string PackageDescription => _inspection == null ? Path.GetFileName(_archivePath) : ViewModel.PackageDescription;
+    public string PackageDescription =>
+        string.IsNullOrWhiteSpace(PrimaryContent?.Description) ? "暂无描述" : PrimaryContent!.Description.Trim();
     public bool HasStatus => !string.IsNullOrWhiteSpace(StatusText);
     public string ImportButtonText => IsBusy ? "导入中" : "导入";
     public bool CanImport => !IsBusy && _inspection != null && ViewModel.CanImport;
@@ -105,7 +106,7 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
 
     public BedrockPackageContent? PrimaryContent =>
         _inspection?.Contents.FirstOrDefault();
-    public string PackageName => PrimaryContent?.Name ?? (_inspection?.DisplayName ?? string.Empty);
+    public string PackageName => PrimaryContent?.Name ?? (_inspection?.DisplayName ?? "暂无信息");
     public string PackageVersionText
     {
         get
