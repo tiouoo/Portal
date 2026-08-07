@@ -17,6 +17,7 @@ using MinecraftLaunch.Components.Installer.Modpack;
 using MinecraftLaunch.Components.Provider;
 using MinecraftLaunch.Utilities;
 using Portal.Const;
+using Portal.Classes;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Operations.Java;
@@ -187,36 +188,11 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         suggestedInstanceId = string.Empty;
 
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return false;
-        var extension = Path.GetExtension(path);
-        if (!extension.Equals(".zip", StringComparison.OrdinalIgnoreCase) &&
-            !extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase)) return false;
+        if (!ModpackSniffer.TrySniff(path, out source, out var sniffedInstanceId)) return false;
 
-        try
-        {
-            if (extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase))
-            {
-                var entry = ModrinthModpackInstaller.ParseModpackInstallEntry(path);
-                archivePath = path;
-                source = ModDetailsSource.Modrinth;
-                suggestedInstanceId = entry.Name;
-                return true;
-            }
-
-            if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
-            {
-                var entry = CurseforgeModpackInstaller.ParseModpackInstallEntry(path);
-                archivePath = path;
-                source = ModDetailsSource.CurseForge;
-                suggestedInstanceId = entry.Id;
-                return true;
-            }
-        }
-        catch (Exception exception)
-        {
-            Logger.Warning($"[Modpack] Failed to inspect local archive {path}: {exception}");
-        }
-
-        return false;
+        archivePath = path;
+        suggestedInstanceId = sniffedInstanceId ?? string.Empty;
+        return true;
     }
     
     private static async Task SaveAsAsync(TopLevel topLevel, JavaResourceFileItem file)

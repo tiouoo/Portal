@@ -5,8 +5,8 @@ using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
-using MinecraftLaunch.Components.Installer.Modpack;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Classes;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
@@ -27,6 +27,17 @@ namespace Portal.Module.DragDrop;
 
 public class Handler
 {
+    // DragOver 在拖动的每一帧都会触发，同一内容会被反复询问：
+    // 已识别过的内容直接复用缓存结果；未识别的内容只发起一次后台识别（用 in-flight 签名去重），
+    // 识别完成后由后续的帧一次性切换到新文案，避免提示框逐帧反复闪烁。
+    private static readonly object IdentifyLock = new();
+
+    private static string? _activeSignature;      // 最近一次已识别内容的签名
+    private static string? _activeMessage;        // 其对应的提示文案
+    private static DragDropEffects _activeEffects = DragDropEffects.None;
+
+    private static string? _inFlightSignature;    // 正在后台识别（解析压缩包等）的内容签名
+
     public static async void Handle(DragEventArgs e, TioTabWindowBase window)
     {
         // async void：异常会直接抛给 Dispatcher 导致崩溃，必须在此兜底
@@ -76,46 +87,211 @@ public class Handler
         }
     }
 
-    public static string GetMsg(DragEventArgs e)
+    public static string? GetMsg(DragEventArgs e)
     {
         var data = e.DataTransfer;
-        DragDropEffects dropEffects = DragDropEffects.None;
-        string? msg = null;
-        e.Handled = true;
         if (!data.Contains(DataFormat.Text) && !data.Contains(DataFormat.Bitmap) &&
-            !data.Contains(DataFormat.File)) return null;
-        if (data.Contains(DataFormat.Text))
+            !data.Contains(DataFormat.File))
+            return null; // 数据未就绪的帧：返回 null，由调用方沿用上一次文案。
+
+        e.Handled = true;
+
+        var hasFiles = data.Contains(DataFormat.File);
+        // 拖放可同时携带多种数据，文件优先，忽略文本：
+        // 避免路径/文本在某些帧可用、某些帧不可用而导致的签名来回抖动。
+        var text = hasFiles ? null : SafeGetText(data);
+        var paths = hasFiles ? SafeGetFilePaths(data) : null;
+
+        var signature = BuildDragSignature(text, paths);
+        if (signature is null) return null;
+
+        lock (IdentifyLock)
         {
-            var text = data.TryGetText();
-            if (TryParseAuthlibUrl(text, out var apiUrl, out var domain))
+            // 内容已经识别：返回缓存结果，同一内容移动期间一直保持该值。
+            if (signature == _activeSignature)
             {
-                e.Handled = true;
-                dropEffects = DragDropEffects.Link;
-                msg = "识别到验证服务器";
+                e.DragEffects = _activeEffects;
+                return _activeMessage;
+            }
+
+            // 无需解析压缩包的简单内容（文件夹、文本链接）即时识别，无延迟。
+            if (TryFastClassify(text, paths, out var fastMessage, out var fastEffects))
+            {
+                _activeSignature = signature;
+                _activeMessage = fastMessage;
+                _activeEffects = fastEffects;
+                e.DragEffects = fastEffects;
+                return fastMessage;
+            }
+
+            // 需要解析压缩包：只发起一次后台识别，避免每一帧都重复解析。
+            if (_inFlightSignature != signature)
+            {
+                _inFlightSignature = signature;
+                var capturedText = text;
+                var capturedPaths = paths;
+                _ = Task.Run(() => IdentifyInBackground(signature, capturedText, capturedPaths));
+            }
+
+            // 识别尚未完成：沿用上一次文案，不产生中间态，识别完成后由后续帧一次性切换。
+            e.DragEffects = hasFiles ? DragDropEffects.Copy : _activeEffects;
+            return null;
+        }
+    }
+
+    /// <summary>拖放结束/落下时清除识别缓存与在途识别，避免下一次拖入沿用上一次内容的结果。</summary>
+    public static void ResetDragIdentification()
+    {
+        lock (IdentifyLock)
+        {
+            _activeSignature = null;
+            _activeMessage = null;
+            _activeEffects = DragDropEffects.None;
+            _inFlightSignature = null;
+        }
+    }
+
+    /// <summary>归一化后的内容签名：路径统一小写与分隔符，避免同一路径在不同帧以不同形态出现导致签名抖动。</summary>
+    private static string? BuildDragSignature(string? text, string[]? paths)
+    {
+        if (paths is { Length: > 0 })
+        {
+            var normalized = paths
+                .Select(NormalizePath)
+                .Distinct()
+                .OrderBy(path => path, StringComparer.Ordinal);
+            return "file:" + string.Join("|", normalized);
+        }
+
+        return string.IsNullOrWhiteSpace(text) ? null : "text:" + text.Trim();
+    }
+
+    private static string NormalizePath(string path) =>
+        path.Trim().Replace('\\', '/').TrimEnd('/').ToLowerInvariant();
+
+    /// <summary>免解析压缩包的即时识别：命中即缓存并返回，保证提示即时出现。</summary>
+    private static bool TryFastClassify(string? text, string[]? paths,
+        out string? message, out DragDropEffects effects)
+    {
+        if (paths is [var folderPath] && Directory.Exists(folderPath))
+        {
+            message = "识别到文件夹";
+            effects = DragDropEffects.Copy;
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(text) && TryParseAuthlibUrl(text, out _, out _))
+        {
+            message = "识别到验证服务器";
+            effects = DragDropEffects.Link;
+            return true;
+        }
+
+        message = null;
+        effects = DragDropEffects.None;
+        return false;
+    }
+
+    private static void IdentifyInBackground(string signature, string? text, string[]? paths)
+    {
+        try
+        {
+            DetectSource(text, paths, out var message, out var effects);
+            lock (IdentifyLock)
+            {
+                // 识别期间内容已经变化：丢弃过期结果，避免旧内容文案覆盖新内容。
+                if (_inFlightSignature != signature) return;
+                _inFlightSignature = null;
+                _activeSignature = signature;
+                _activeMessage = message ?? "不支持的拖放内容";
+                _activeEffects = effects;
             }
         }
-
-        if (TryGetModpack(data, out _, out _, out _))
+        catch (Exception exception)
         {
-            dropEffects = DragDropEffects.Copy;
-            msg = "识别到整合包";
+            lock (IdentifyLock)
+            {
+                // 识别期间内容已经变化：丢弃过期结果，不覆盖当前状态。
+                if (_inFlightSignature != signature) return;
+                _inFlightSignature = null;
+                _activeSignature = signature;
+                _activeMessage = "不支持的拖放内容";
+                _activeEffects = DragDropEffects.None;
+            }
+            Logger.Debug($"识别拖放内容失败：{signature}{Environment.NewLine}{exception}");
+        }
+    }
+
+    private static string? SafeGetText(IDataTransfer data)
+    {
+        try
+        {
+            return data.TryGetText();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string[]? SafeGetFilePaths(IDataTransfer data)
+    {
+        try
+        {
+            return data.TryGetFiles()?.OfType<IStorageFile>()
+                .Select(file => file.TryGetLocalPath())
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path!)
+                .ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void DetectSource(string? text, string[]? paths, out string? message, out DragDropEffects effects)
+    {
+        message = null;
+        effects = DragDropEffects.None;
+
+        if (!string.IsNullOrWhiteSpace(text) && TryParseAuthlibUrl(text, out _, out _))
+        {
+            message = "识别到验证服务器";
+            effects = DragDropEffects.Link;
         }
 
-        if (BedrockInstallationService.DefaultInstaller is not null && TryGetBedrockPackage(data, out _, out _))
+        if (paths is [var modpackPath] && ModpackSniffer.TrySniff(modpackPath, out _, out _))
         {
-            dropEffects = DragDropEffects.Copy;
-            msg = "识别到基岩版包";
+            message = "识别到整合包";
+            effects = DragDropEffects.Copy;
         }
 
-        if (TryGetMinecraftFolder(data, out _))
+        if (BedrockInstallationService.DefaultInstaller is not null && paths is [var bedrockPath] && IsBedrockPackage(bedrockPath))
         {
-            dropEffects = DragDropEffects.Copy;
-            msg = "识别到文件夹";
+            message = "识别到基岩版包";
+            effects = DragDropEffects.Copy;
         }
 
+        if (paths is [var folderPath] && Directory.Exists(folderPath))
+        {
+            message = "识别到文件夹";
+            effects = DragDropEffects.Copy;
+        }
+    }
 
-        e.DragEffects = dropEffects;
-        return msg ?? "不支持的拖放内容";
+    private static bool IsBedrockPackage(string path)
+    {
+        if (!File.Exists(path) || !BedrockPackageImportService.TryGetArchiveType(path, out _)) return false;
+        try
+        {
+            _ = new BedrockPackageImportService().Inspect(path);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static async Task HandleAuthServerUrlAsync(string url, string domain, TioTabWindowBase window)
@@ -263,36 +439,11 @@ public class Handler
 
         var path = file.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return false;
-        var extension = Path.GetExtension(path);
-        if (!extension.Equals(".zip", StringComparison.OrdinalIgnoreCase) &&
-            !extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase)) return false;
+        if (!ModpackSniffer.TrySniff(path, out source, out var sniffedInstanceId)) return false;
 
-        try
-        {
-            if (extension.Equals(".mrpack", StringComparison.OrdinalIgnoreCase))
-            {
-                var entry = ModrinthModpackInstaller.ParseModpackInstallEntry(path);
-                archivePath = path;
-                source = ModDetailsSource.Modrinth;
-                suggestedInstanceId = entry.Name;
-                return true;
-            }
-
-            if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
-            {
-                var entry = CurseforgeModpackInstaller.ParseModpackInstallEntry(path);
-                archivePath = path;
-                source = ModDetailsSource.CurseForge;
-                suggestedInstanceId = entry.Id;
-                return true;
-            }
-        }
-        catch (Exception exception)
-        {
-            Logger.Error($"解析拖放整合包失败：{path}", exception);
-        }
-
-        return false;
+        archivePath = path;
+        suggestedInstanceId = sniffedInstanceId ?? string.Empty;
+        return true;
     }
 
     private static bool TryGetMinecraftFolder(IDataTransfer data, out string folderPath)

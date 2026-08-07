@@ -10,6 +10,7 @@ using MinecraftLaunch.Components.Installer.Modpack;
 using MinecraftLaunch.Components.Provider;
 using MinecraftLaunch.Utilities;
 using Portal.Const;
+using Portal.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
@@ -264,19 +265,8 @@ public static class PortalCommandExecutor
 
     private static (ModDetailsSource Source, string? SuggestedInstanceId) SniffModpack(string archivePath)
     {
-        try
-        {
-            var entry = ModrinthModpackInstaller.ParseModpackInstallEntry(archivePath);
-            return (ModDetailsSource.Modrinth, entry.Name);
-        }
-        catch (Exception exception) { Logger.Error($"按 Modrinth 格式识别整合包失败：{archivePath}", exception); }
-
-        try
-        {
-            var entry = CurseforgeModpackInstaller.ParseModpackInstallEntry(archivePath);
-            return (ModDetailsSource.CurseForge, entry.Id);
-        }
-        catch (Exception exception) { Logger.Error($"按 CurseForge 格式识别整合包失败：{archivePath}", exception); }
+        if (ModpackSniffer.TrySniff(archivePath, out var source, out var suggestedInstanceId))
+            return (source, suggestedInstanceId);
 
         throw new InvalidOperationException("无法识别的整合包：仅支持 Modrinth（.mrpack）与 CurseForge（.zip）整合包。");
     }

@@ -43,6 +43,12 @@ public partial class TabWindow : TioTabWindowBase
     private Border? _backgroundMaskLayer;
     private Bitmap? _cachedOriginalBackground;
     private string? _cachedBackgroundPath;
+    private string? _lastDragMessage;
+
+    // DragLeave 后不立即隐藏提示：快速拖出又拖回时会产生一次闪烁。
+    // 登记延时隐藏，若期间仍有 DragOver（拖放仍在窗口内）则取消，真正拖出后才消失。
+    private bool _hideDropTipScheduled;
+    private Debouncer _hideDropTipDebouncer;
 
     public bool IsTabMaskVisible
     {
@@ -63,6 +69,7 @@ public partial class TabWindow : TioTabWindowBase
 
     private void Build()
     {
+        _hideDropTipDebouncer = new Debouncer(OnHideDropTipDebounce, 300);
         InitializeComponent();
         Notification = new TioNotificationManager(this);
         Toast = new TioToastManager(this);
@@ -376,18 +383,45 @@ public partial class TabWindow : TioTabWindowBase
 
     private void OnDragHandler(object? sender, DragEventArgs e)
     {
-        BarComponent.DropMsg = Handler.GetMsg(e);
+        // 拖放仍在窗口内：取消 DragLeave 登记的延时隐藏，提示不闪。
+        _hideDropTipScheduled = false;
+
+        var msg = Handler.GetMsg(e);
+        // DragOver 在鼠标移动的每一帧都会触发，且个别事件里数据可能尚未就绪（msg 为 null）。
+        // 只有提示文案真正变化时才更新标题栏，避免提示标签反复闪烁。
+        if (string.IsNullOrEmpty(msg) || msg == _lastDragMessage) return;
+        _lastDragMessage = msg;
+        BarComponent.DropMsg = msg;
     }
 
     private void OnLeaveHandler(object? sender, DragEventArgs e)
     {
         e.DragEffects = DragDropEffects.None;
-        BarComponent.DropMsg = null;
+        // 不立即隐藏（快速拖出又拖回会闪）：登记延时隐藏，真正拖出窗口后才消失。
+        // 不重置识别缓存：同一内容拖回可立即复用上一次识别结果，不会长时间空白。
+        _hideDropTipScheduled = true;
+        _hideDropTipDebouncer.Invoke();
+    }
+
+    /// <summary>真正离开窗口后（约 300ms 无 DragOver）才隐藏提示；期间收到 DragOver 则取消。</summary>
+    private void OnHideDropTipDebounce()
+    {
+        // System.Timers.Timer 在后台线程回调，必须切回 UI 线程再改界面属性。
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_hideDropTipScheduled) return;
+            _hideDropTipScheduled = false;
+            BarComponent.DropMsg = null;
+            _lastDragMessage = null;
+        });
     }
 
     private void OnDropHandler(object? sender, DragEventArgs e)
     {
+        _hideDropTipScheduled = false;
         BarComponent.DropMsg = null;
+        _lastDragMessage = null;
+        Handler.ResetDragIdentification();
         Handler.Handle(e, this);
     }
 
