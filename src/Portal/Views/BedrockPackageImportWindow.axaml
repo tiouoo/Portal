@@ -6,7 +6,7 @@
     IsMaxBtnShow="False"
     IsMinBtnShow="{OnPlatform Default=True,
                               macOS=False}"
-    Title="{Binding ImportTitle}"
+    Title="{Binding WindowTitle}"
     Width="620"
     WindowStartupLocation="CenterScreen"
     d:DesignHeight="420"
@@ -29,28 +29,79 @@
             FontSize="16"
             Margin="{OnPlatform '12,2,0,0',
                                 macOS='78,2,0,0'}"
-            Text="Portal"
+            Text="{Binding WindowTitle}"
             VerticalAlignment="Center" />
     </tio:TioWindow.TitleBarLeftContent>
-    <Grid Margin="30,10,30,24" RowDefinitions="Auto,*,Auto">
-        <StackPanel Spacing="5">
-            <TextBlock FontSize="25" Text="{Binding ImportTitle}" />
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                MaxWidth="550"
-                Text="{Binding PackageDescription}"
-                TextTrimming="CharacterEllipsis" />
-        </StackPanel>
+    <Grid Margin="26,12,26,20" RowDefinitions="Auto,*,Auto">
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Grid.Row="0"
+            Padding="12">
+            <StackPanel>
+                <DockPanel>
+                    <Border
+                        Background="{DynamicResource TranslucentBorderBrush}"
+                        ClipToBounds="True"
+                        CornerRadius="10"
+                        DockPanel.Dock="Left"
+                        Height="56"
+                        Margin="2,0,12,0"
+                        VerticalAlignment="Top"
+                        Width="56">
+                        <Grid>
+                            <Image
+                                IsVisible="{Binding HasPackageIcon}"
+                                Source="{Binding PackageIcon}"
+                                Stretch="UniformToFill" />
+                            <PathIcon
+                                Data="F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58,308.6,58,289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L40.2,250C23.4,280.4,34.7,319.1,65,337.7L88.5,352 112.2,366.4C120.7,371.7,131.1,370.8,138.6,364.2 190.9,319.7 269.8,272 320,272 370.2,272 449.1,319.7 501.4,364.2 508.9,370.8 519.3,371.7 527.8,366.4L551.5,352 575,337.7C605.3,319.1 608.5,280.4 591.8,250L555.8,192.8 560.3,301.2z M192,352C206.3,352 218.2,363.9 218.2,378.2 218.2,392.4 206.3,404.4 192,404.4 170.2,404.4 162,378.2 192,352z M448,352C462.2,352 474.2,363.9 474.2,378.2 474.2,392.4 462.2,404.4 448,404.4 426.2,404.4 418,378.2 448,352z"
+                                Height="30"
+                                IsVisible="{Binding !HasPackageIcon}"
+                                Width="30" />
+                        </Grid>
+                    </Border>
+                    <StackPanel Margin="0,1,0,0" Spacing="2">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            MaxLines="1"
+                            Text="{Binding PackageName}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Binding PackageAuthorsText}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Binding PackageVersionText}" />
+                    </StackPanel>
+                </DockPanel>
+                <TextBlock Margin="2,7,0,-3" Text="{Binding PackageDescription}" />
+            </StackPanel>
+        </Border>
 
         <StackPanel
             Grid.Row="1"
-            Margin="0,26,0,0"
-            Spacing="18">
-            <StackPanel Spacing="7">
-                <TextBlock
-                    FontSize="13"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="导入到" />
+            Margin="0,18,0,0"
+            Spacing="14">
+            <StackPanel Spacing="6">
+                <DockPanel LastChildFill="False">
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="导入到哪里" />
+                    <TextBlock
+                        DockPanel.Dock="Right"
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding ViewModel.HasNoInstances}"
+                        Text="没有可用的基岩版实例" />
+                </DockPanel>
                 <ComboBox
                     HorizontalAlignment="Stretch"
                     IsEnabled="{Binding !IsBusy}"
@@ -69,16 +120,12 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <TextBlock
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    IsVisible="{Binding ViewModel.HasNoInstances}"
-                    Text="没有可用的基岩版实例" />
             </StackPanel>
-            <StackPanel IsVisible="{Binding ViewModel.RequiresUserId}" Spacing="7">
+            <StackPanel IsVisible="{Binding ViewModel.RequiresUserId}" Spacing="6">
                 <TextBlock
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="存档用户" />
+                    Text="导入到哪个存档用户" />
                 <ComboBox
                     HorizontalAlignment="Stretch"
                     IsEnabled="{Binding !IsBusy}"
@@ -87,6 +134,7 @@
             </StackPanel>
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
             <TextBlock
+                FontSize="12"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasStatus}"
                 Text="{Binding StatusText}"
@@ -96,6 +144,7 @@
         <StackPanel
             Grid.Row="2"
             HorizontalAlignment="Right"
+            Margin="0,18,0,0"
             Orientation="Horizontal"
             Spacing="10">
             <Button

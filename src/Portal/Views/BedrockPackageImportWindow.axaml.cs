@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Services;
 using Portal.Module.Initialize;
@@ -95,11 +96,46 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
 
     public BedrockPackageImportDialogViewModel ViewModel { get; }
     public string ImportTitle => GetImportTitle(_inspection);
+    public string WindowTitle => $"Portal - {ImportTitle}";
     public string PackageDescription => _inspection == null ? Path.GetFileName(_archivePath) : ViewModel.PackageDescription;
     public bool HasStatus => !string.IsNullOrWhiteSpace(StatusText);
     public string ImportButtonText => IsBusy ? "导入中" : "导入";
     public bool CanImport => !IsBusy && _inspection != null && ViewModel.CanImport;
     public bool IsInitialized { get; }
+
+    public BedrockPackageContent? PrimaryContent =>
+        _inspection?.Contents.FirstOrDefault();
+    public string PackageName => PrimaryContent?.Name ?? (_inspection?.DisplayName ?? string.Empty);
+    public string PackageVersionText
+    {
+        get
+        {
+            var version = PrimaryContent?.Version;
+            var engine = PrimaryContent?.MinEngineVersion;
+
+            var hasVersion = !string.IsNullOrWhiteSpace(version);
+            var hasEngine = !string.IsNullOrWhiteSpace(engine);
+
+            return hasVersion switch
+            {
+                true when hasEngine => $"{version} ({engine})",
+                true => version,
+                _ => hasEngine ? engine : "暂无版本信息"
+            };
+        }
+    }
+    public string PackageAuthorsText =>
+        PrimaryContent?.Authors is { Count: > 0 } authors ? $"{string.Join("、", authors)}" : "暂无作者信息";
+    public Bitmap? PackageIcon => _packageIcon ??= CreateIcon(PrimaryContent?.IconData);
+    public bool HasPackageIcon => PackageIcon != null;
+    private Bitmap? _packageIcon;
+
+    private static Bitmap? CreateIcon(byte[]? data)
+    {
+        if (data == null) return null;
+        try { return new Bitmap(new MemoryStream(data)); }
+        catch (Exception) { return null; }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasStatus))]
