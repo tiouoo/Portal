@@ -431,13 +431,13 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         return await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
     });
 
-    private static Task RunInBackgroundAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken) =>
+    internal static Task RunInBackgroundAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken) =>
         Task.Run(() => operation(cancellationToken), cancellationToken);
 
-    private static Task<T> RunInBackgroundAsync<T>(Func<CancellationToken, Task<T>> operation,
+    internal static Task<T> RunInBackgroundAsync<T>(Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken) => Task.Run(() => operation(cancellationToken), cancellationToken);
 
-    private static void AttachProgressReporter(InstallerBase installer, TaskExecutionContext context) =>
+    internal static void AttachProgressReporter(InstallerBase installer, TaskExecutionContext context) =>
         installer.ProgressChanged += CreateProgressReporter(context);
 
     private static EventHandler<InstallProgressChangedEventArgs> CreateProgressReporter(TaskExecutionContext context)
@@ -461,7 +461,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         };
     }
 
-    private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
+    internal static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
         Func<TaskExecutionContext, Task> operation)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
@@ -472,7 +472,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         context.CancellationToken.ThrowIfCancellationRequested();
     }
 
-    private static async Task<T> RunStepAsync<T>(TaskExecutionContext context, string name, string description,
+    internal static async Task<T> RunStepAsync<T>(TaskExecutionContext context, string name, string description,
         Func<TaskExecutionContext, Task<T>> operation)
     {
         T? result = default;
@@ -495,7 +495,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         context.SetDescription($"{GetInstallStepDescription(progress.StepName)}{count}{speed}");
     }
 
-    private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
+    internal static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
     {
         if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
         Dispatcher.UIThread.Post(() =>

@@ -98,6 +98,17 @@
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
+                                            Click="ModifyVersion_Click"
+                                            Header="修改版本"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M488.6,79.4c5.8,3.1 9.4,9.1 9.4,15.7 0,6.6-3.6,12.6-9.4,15.7l-200,107.5c-5.9,3.2-13.1,3.2-19,0l-200-107.5c-5.8-3.1-9.4-9.1-9.4-15.7 0-6.6 3.6-12.6 9.4-15.7l200-107.5c5.9-3.2 13.1-3.2 19,0l200,107.5z M480,256v107.5l-40,21.5 -40-21.5V256l-200-107.5v192.8c0,17.7 9.4,34.1 24.5,42.9l215.5,115.9 215.5-115.9c15.1-8.1 24.5-24.5 24.5-42.9V148.5L480,256z"
+                                                    Height="16"
+                                                    Width="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
                                             Click="DeleteInstance_Click"
                                             Header="删除此实例"
                                             Tag="{Binding}">

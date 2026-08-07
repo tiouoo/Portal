@@ -11,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using MinecraftLaunch.Base.Models.Game;
 using Portal.Const;
+using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
@@ -19,9 +20,11 @@ using Portal.Core.Minecraft.Instance.Java;
 using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.ViewModels;
+using Portal.Views.Pages.DownloadPages;
 using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -364,5 +367,44 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
     private async void CreateLink_Click(object? sender, RoutedEventArgs e)
     {
         await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(Instance));
+    }
+
+    private async void ModifyVersion_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null || !Instance.IsJava || Instance.MinecraftEntry is null)
+            return;
+
+        if (Instance.IsExternallyManaged)
+        {
+            NotificationGateway.Notice(topLevel, "外部启动器实例请使用对应启动器修改版本。", NotificationType.Warning);
+            return;
+        }
+
+        var dialog = new VersionModifyDialog(Instance);
+        var result = await OverlayDialog.ShowCustomAsync<VersionModifyDialogResult>(dialog, dialog.DataContext,
+            this.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = "修改版本",
+                Buttons = DialogButton.None,
+                CanLightDismiss = false,
+                CanResize = false
+            });
+        if (result is null) return;
+
+        var viewModel = (VersionModifyDialogViewModel)dialog.DataContext!;
+        // 修改任务在后台继续执行，直接关闭当前实例详情页；任务状态可在任务面板查看
+        _parent.HostTab.Close();
+        _ = NotifyModifyOutcomeAsync(viewModel.StartedTask, topLevel);
+    }
+
+    private static async Task NotifyModifyOutcomeAsync(ManagedTask? task, TopLevel? topLevel)
+    {
+        if (task is null || topLevel is null) return;
+        await task.Completion;
+        if (task.Status is ManagedTaskStatus.Faulted)
+            NotificationGateway.Notice(topLevel, $"版本修改失败：{task.ErrorMessage}", NotificationType.Error);
+        else if (task.Status is ManagedTaskStatus.Cancelled)
+            NotificationGateway.Notice(topLevel, "版本修改已取消，实例未发生改动。", NotificationType.Warning);
     }
 }

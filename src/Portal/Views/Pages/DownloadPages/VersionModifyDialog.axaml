@@ -1,0 +1,178 @@
+<UserControl
+    d:DesignHeight="520"
+    d:DesignWidth="692"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.VersionModifyDialog"
+    x:ClassModifier="internal"
+    x:DataType="downloadPages:VersionModifyDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto"
+        Width="692">
+        <StackPanel Spacing="10">
+            <DockPanel>
+                <TextBlock
+                    DockPanel.Dock="Left"
+                    FontSize="16"
+                    FontWeight="600"
+                    HorizontalAlignment="Left"
+                    Margin="0,2,0,0">
+                    <Run Text="修改实例 " />
+                    <Run Text="{Binding InstanceName}" />
+                </TextBlock>
+            </DockPanel>
+            <DockPanel>
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Margin="10,0,0,0"
+                    MinWidth="180">
+                    <TextBlock Margin="5,0,0,2" Text="版本类型" />
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding VersionFilters}"
+                        SelectedItem="{Binding SelectedVersionFilter}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Margin="5,0,0,2" Text="目标游戏版本" />
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        IsDropDownOpen="{Binding IsVersionDropDownOpen, Mode=TwoWay}"
+                        IsEditable="True"
+                        IsEnabled="{Binding IsVersionComboEnabled}"
+                        ItemsSource="{Binding Versions}"
+                        PlaceholderText="{Binding VersionsPlaceholder}"
+                        SelectedItem="{Binding SelectedVersion}"
+                        Text="{Binding VersionSearchText}"
+                        TextInput="VersionCombo_OnTextInput"
+                        x:Name="VersionCombo">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+            </DockPanel>
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="{Binding CurrentVersionText}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                FontSize="12"
+                FontWeight="SemiBold"
+                Foreground="Red"
+                IsVisible="{Binding HasDependentWarning}"
+                Text="{Binding DependentWarning}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            Spacing="10">
+            <TextBlock
+                FontSize="16"
+                FontWeight="SemiBold"
+                Margin="5,0,0,0"
+                Text="选择加载器" />
+            <WrapPanel>
+                <CheckBox
+                    IsChecked="{Binding IsForgeSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="Forge" />
+                        <TextBlock Text="{Binding ForgeStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsNeoForgeSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="NeoForge" />
+                        <TextBlock Text="{Binding NeoForgeStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsFabricSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="Fabric" />
+                        <TextBlock Text="{Binding FabricStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsQuiltSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="Quilt" />
+                        <TextBlock Text="{Binding QuiltStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox
+                    IsChecked="{Binding IsOptiFineSelected, Mode=TwoWay}"
+                    Margin="0,0,10,10"
+                    Theme="{DynamicResource PureCardCheckBox}"
+                    Width="220">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="OptiFine" />
+                        <TextBlock Text="{Binding OptiFineStatus}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </CheckBox>
+            </WrapPanel>
+            <Panel>
+                <Button
+                    Click="SelectLoaderVersion_OnClick"
+                    Content="选择加载器版本"
+                    DockPanel.Dock="Left"
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding CanSelectLoaderVersion}" />
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button Click="Cancel_OnClick" Content="取消" />
+                    <Button
+                        Click="Modify_OnClick"
+                        Content="开始修改"
+                        IsEnabled="{Binding CanModify}" />
+                </StackPanel>
+            </Panel>
+        </StackPanel>
+    </Grid>
+</UserControl>
