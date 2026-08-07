@@ -59,6 +59,13 @@ public class MinecraftInstance : ObservableObject
         MinecraftFolderKind.PortalMc;
     public bool CanDisableIndependentInstance => !RequiresIndependentInstance;
 
+    /// <summary>
+    /// 是否支持“修改游戏版本 / 加载器”功能：仅 Portal MC（自创）格式实例支持。
+    /// </summary>
+    public bool CanModifyVersion =>
+        Type == MinecraftInstanceType.Java && MinecraftEntry is not null &&
+        Layout?.Kind == MinecraftFolderKind.PortalMc;
+
     public DateTime LastPlayTime => Config?.LastPlayTime ?? DateTime.MinValue;
 
     [JsonIgnore]
@@ -413,6 +420,33 @@ public class MinecraftInstance : ObservableObject
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "cc.tiouo.Portal", "Instances", $"{hash}.json");
+    }
+
+    /// <summary>
+    /// 获取删除实例时需一并移除的全部路径。不同文件夹格式的实例目录结构不同：
+    /// 传统 .minecraft 实例仅需删除版本目录；Portal MC 实例还散落在共享 meta 目录下的
+    /// 实例专属 native 目录；外部实例的配置、游玩统计与自定义图标存放于
+    /// %AppData%\cc.tiouo.Portal\Instances\&lt;hash&gt;，也一并清理。
+    /// </summary>
+    public IReadOnlyList<string> GetDeletionPaths()
+    {
+        var paths = new List<string> { InstanceFolderPath };
+
+        if (Layout is not { } layout)
+            return paths;
+
+        if (layout.Kind == MinecraftFolderKind.PortalMc && MinecraftEntry is { } entry)
+        {
+            var nativesDirectory = Path.Combine(layout.MetadataRoot, "natives", entry.Id);
+            if (Directory.Exists(nativesDirectory))
+                paths.Add(nativesDirectory);
+        }
+
+        var instanceDataDirectory = Path.GetDirectoryName(GetConfigPath());
+        if (instanceDataDirectory is not null && Directory.Exists(instanceDataDirectory))
+            paths.Add(instanceDataDirectory);
+
+        return paths;
     }
 
     public void AddPlayTime(long seconds)

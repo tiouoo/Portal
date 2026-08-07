@@ -56,6 +56,9 @@ public static class VersionModifyService
         if (instance.Type != MinecraftInstanceType.Java || instance.MinecraftEntry is not { } minecraftEntry)
             throw new InvalidOperationException("仅支持修改 Java 版实例。");
 
+        if (!instance.CanModifyVersion)
+            throw new InvalidOperationException("仅支持修改 Portal 游戏目录下的实例版本，其他格式的实例请在对应启动器中修改。");
+
         // 若其他版本（如加载器基座）通过 inheritsFrom 依赖本实例，直接修改会破坏它们。
         // 例如安装 1.21.6 的 Forge 时会顺带安装 1.21.6 原版基座，若把 1.21.6 改成别的
         // 版本，依赖它的 Forge 版本就再也无法启动。此时应让用户改为修改依赖链末端的实例。

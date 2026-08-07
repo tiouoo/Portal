@@ -144,12 +144,6 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (result != DialogResult.Yes)
             return;
 
-        if (Instance.IsExternallyManaged)
-        {
-            NotificationGateway.Notice(topLevel, "外部启动器实例请在对应启动器中删除。", NotificationType.Warning);
-            return;
-        }
-
         if (!InstanceDeletionCoordinator.TryBegin(Instance))
         {
             NotificationGateway.Notice(topLevel, "该实例正在删除中。", NotificationType.Warning);
@@ -159,7 +153,16 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         try
         {
             InstanceDeletionCoordinator.CloseRelatedPages(Instance);
-            await Task.Run(() => Directory.Delete(Instance.InstanceFolderPath, true));
+            await Task.Run(() =>
+            {
+                foreach (var path in Instance.GetDeletionPaths())
+                {
+                    if (Directory.Exists(path))
+                        Directory.Delete(path, true);
+                    else if (File.Exists(path))
+                        File.Delete(path);
+                }
+            });
             var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
             var instances = await Task.Run(() => InstanceManager.Instance.ScanAll(folders));
             InstanceManager.Instance.ApplyInstances(instances);
@@ -167,7 +170,9 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         }
         catch (IOException ex)
         {
-            NotificationGateway.Notice(topLevel, $"无法删除实例：{ex.Message}", NotificationType.Error);
+            NotificationGateway.Notice(topLevel, IsFileInUse(ex)
+                ? "无法删除实例：实例文件正在被其他程序占用。请先关闭正在运行的游戏、文件管理器或占用该实例文件夹的程序，再重试删除。"
+                : $"无法删除实例：{ex.Message}", NotificationType.Error);
         }
         catch (UnauthorizedAccessException)
         {
@@ -177,6 +182,23 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         {
             InstanceDeletionCoordinator.Complete(Instance);
         }
+    }
+
+    /// <summary>
+    /// 判断 IOException 是否为文件/目录被其他进程占用（共享冲突或锁定冲突）。
+    /// </summary>
+    private static bool IsFileInUse(IOException exception)
+    {
+        if (exception.HResult is unchecked((int)0x80070020) or unchecked((int)0x80070021))
+            return true;
+
+        for (var inner = exception.InnerException; inner is not null; inner = inner.InnerException)
+        {
+            if (inner is Win32Exception { NativeErrorCode: 32 or 33 })
+                return true;
+        }
+
+        return false;
     }
 
     private void OnStatisticsChanged(object? sender, EventArgs e)
@@ -372,14 +394,8 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
     private async void ModifyVersion_Click(object? sender, RoutedEventArgs e)
     {
         var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null || !Instance.IsJava || Instance.MinecraftEntry is null)
+        if (topLevel == null || !Instance.CanModifyVersion)
             return;
-
-        if (Instance.IsExternallyManaged)
-        {
-            NotificationGateway.Notice(topLevel, "外部启动器实例请使用对应启动器修改版本。", NotificationType.Warning);
-            return;
-        }
 
         var dialog = new VersionModifyDialog(Instance);
         var result = await OverlayDialog.ShowCustomAsync<VersionModifyDialogResult>(dialog, dialog.DataContext,

@@ -244,10 +244,11 @@ public static class MinecraftLaunchService
         }
         context.SetRunning("正在启动 Minecraft 进程");
         await PrepareGraphicsBeforeLaunchAsync(instance, config, context.CancellationToken);
-        if (options.SetChineseLanguageOnLaunch)
+        if (options.SetChineseLanguageOnLaunch && instance.MinecraftEntry != null)
         {
             context.SetRunning("正在设置游戏语言");
-            GameOptionsService.SetChineseLanguage(instance.MinecraftEntry.ToWorkingPath(config.IsEnableIndependency));
+            var entry = instance.MinecraftEntry;
+            GameOptionsService.SetChineseLanguage(entry.ToWorkingPath(config.IsEnableIndependency), entry.ReleaseTime);
         }
         var mcProcess = await Task.Run(async () =>
         {

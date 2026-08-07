@@ -100,6 +100,7 @@
                                         <MenuItem
                                             Click="ModifyVersion_Click"
                                             Header="修改版本"
+                                            IsEnabled="{Binding Instance.CanModifyVersion}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
