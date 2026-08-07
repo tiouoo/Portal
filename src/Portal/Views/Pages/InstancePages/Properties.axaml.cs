@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -11,7 +12,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Properties : DataUserControl
+public partial class Properties : DataUserControl, System.ComponentModel.INotifyPropertyChanged
 {
     public MinecraftInstance Instance { get; }
     public bool IsWindows => OperatingSystem.IsWindows();
@@ -68,6 +69,11 @@ public partial class Properties : DataUserControl
         DataContext = this;
     }
 
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null) =>
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+
     private void Save_Click(object? sender, RoutedEventArgs e) => Instance.SaveConfig();
 
     private void OpenFolder_Click(object? sender, RoutedEventArgs e)
@@ -84,4 +90,110 @@ public partial class Properties : DataUserControl
         update(Instance.BedrockConfig);
         BedrockHelper.SaveInstanceConfig(Instance.BedrockConfig);
     }
+
+    private string InstanceVersionId
+    {
+        get
+        {
+            var entry = Instance?.MinecraftEntry;
+            if (entry is null)
+                return string.Empty;
+            return entry is MinecraftLaunch.Base.Models.Game.ModifiedMinecraftEntry { HasInheritance: true } modified
+                ? modified.InheritedMinecraft.Version.VersionId
+                : entry.Version.VersionId;
+        }
+    }
+
+    public bool CanChooseGraphicsBackend
+    {
+        get
+        {
+            if (Instance?.JavaConfig == null)
+                return false;
+            return GameVersion.Parse(InstanceVersionId).CanChooseBackend();
+        }
+    }
+
+    public bool CanChooseVulkan
+    {
+        get
+        {
+            if (Instance?.JavaConfig == null)
+                return false;
+            return GraphicsApi.Vulkan.IsSupported(GameVersion.Parse(InstanceVersionId));
+        }
+    }
+
+    public sealed record GraphicsApiOption(GraphicsApi Value, string DisplayName)
+    {
+        public override string ToString() => DisplayName;
+    }
+
+    public IReadOnlyList<GraphicsApiOption> GraphicsApiOptions { get; } = new[]
+    {
+        new GraphicsApiOption(GraphicsApi.Default, "默认"),
+        new GraphicsApiOption(GraphicsApi.OpenGL, "OpenGL"),
+        new GraphicsApiOption(GraphicsApi.Vulkan, "Vulkan"),
+    };
+
+    public GraphicsApiOption? SelectedGraphicsApi
+    {
+        get => GraphicsApiOptions.FirstOrDefault(option => Equals(option.Value, CurrentGraphicsApi));
+        set
+        {
+            if (Instance?.JavaConfig == null || value is null)
+                return;
+            if (Instance.JavaConfig.GraphicsBackend != value.Value)
+            {
+                Instance.JavaConfig.GraphicsBackend = value.Value;
+                Instance.SaveConfig();
+                OnPropertyChanged(nameof(SelectedGraphicsApi));
+            }
+        }
+    }
+
+    private GraphicsApi CurrentGraphicsApi =>
+        Instance?.JavaConfig?.GraphicsBackend ?? GraphicsApi.Default;
+
+    public IReadOnlyList<Renderer> OpenGlRendererOptions =>
+        Renderers.GetOpenGlRenderers();
+
+    public IReadOnlyList<Renderer> VulkanRendererOptions =>
+        Renderers.GetVulkanRenderers();
+
+    public Renderer SelectedOpenGlRenderer
+    {
+        get => Renderers.Resolve(Instance?.JavaConfig?.OpenGlRenderer);
+        set
+        {
+            if (Instance?.JavaConfig == null)
+                return;
+            if (!string.Equals(Instance.JavaConfig.OpenGlRenderer, value.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                Instance.JavaConfig.OpenGlRenderer = value.Name;
+                Instance.SaveConfig();
+                OnPropertyChanged(nameof(SelectedOpenGlRenderer));
+            }
+        }
+    }
+
+    public Renderer SelectedVulkanRenderer
+    {
+        get => Renderers.Resolve(Instance?.JavaConfig?.VulkanRenderer);
+        set
+        {
+            if (Instance?.JavaConfig == null)
+                return;
+            if (!string.Equals(Instance.JavaConfig.VulkanRenderer, value.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                Instance.JavaConfig.VulkanRenderer = value.Name;
+                Instance.SaveConfig();
+                OnPropertyChanged(nameof(SelectedVulkanRenderer));
+            }
+        }
+    }
+
+    public bool IsVulkanRendererVisible => CanChooseVulkan;
+
+    public bool IsOpenGlRendererVisible => true;
 }

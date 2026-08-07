@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Avalonia;
 using Avalonia.Controls;
@@ -16,6 +17,7 @@ using MinecraftLaunch.Launch;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.SystemResources;
@@ -241,6 +243,7 @@ public static class MinecraftLaunchService
             }
         }
         context.SetRunning("正在启动 Minecraft 进程");
+        await PrepareGraphicsBeforeLaunchAsync(instance, config, context.CancellationToken);
         var mcProcess = await Task.Run(async () =>
         {
             var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
@@ -253,6 +256,38 @@ public static class MinecraftLaunchService
         processStarted(mcProcess.Process);
         OnGameProcessStarted(mcProcess.Process, options, placeholders, overrideWindowTitle: true, instance);
         context.ReportProgress(1);
+    }
+
+    private static async Task PrepareGraphicsBeforeLaunchAsync(MinecraftInstance instance, LaunchConfig config,
+        CancellationToken cancellationToken)
+    {
+        var entry = instance.MinecraftEntry;
+        if (entry == null || instance.JavaConfig == null)
+            return;
+
+        string? versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
+            ? modified.InheritedMinecraft.Version.VersionId
+            : entry.Version.VersionId;
+        var graphics = instance.JavaConfig.GraphicsBackend;
+        var version = GameVersion.Parse(versionId ?? entry.Id);
+        var effective = GraphicsEnvironmentResolver.Resolve(graphics,
+            instance.JavaConfig.OpenGlRenderer, instance.JavaConfig.VulkanRenderer, version);
+
+        if (effective.Renderer is not { MesaDriverName: { } mesaDriverName })
+            return;
+
+        var platform = Renderers.CurrentPlatform;
+        if (platform.Os != OperatingSystemKind.Windows)
+            return;
+
+        string nativeDir = Path.Combine(entry.NativesDirectoryPath ??
+            Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives"), "mesa-loader");
+        Directory.CreateDirectory(nativeDir);
+
+        string jarPath = await MesaLoaderService.EnsureMesaLoaderAsync(cancellationToken);
+
+        string agent = GraphicsLaunchArgumentsBuilder.BuildJavaAgent(jarPath, mesaDriverName);
+        config.JvmArguments = config.JvmArguments.Append("-javaagent:" + agent);
     }
 
     private static async Task RunBeforeLaunchCommandAsync(TaskExecutionContext context, TopLevel? topLevel,
@@ -385,8 +420,7 @@ public static class MinecraftLaunchService
         var candidates = preferred != null ? [preferred] : options.JavaRuntimes.ToList();
         var requiredVersion = instance.MinecraftEntry!.GetAppropriateJavaVersion();
 
-        // 先用已配置的 Java 挑选兼容运行时；为空或不兼容时才询问自动安装。
-        var selected = TrySelectConfiguredJava(instance, preferred, candidates);
+        var selected = await SelectViableJavaAsync(instance, preferred, candidates, cancellationToken);
         if (selected is not null) return selected;
 
         if (options.InstallMissingJava is not null && requiredVersion > 0)
@@ -394,32 +428,59 @@ public static class MinecraftLaunchService
             context.SetRunning($"正在安装 Java {requiredVersion}");
             var installed = await options.InstallMissingJava(requiredVersion,
                 progress => ReportJavaInstallProgress(context, progress), cancellationToken);
-            if (installed is not null) return ToJavaEntry(installed);
+            if (installed is not null)
+            {
+                var usable = await JavaRuntimeVerifier.IsUsableAsync(installed.JavaPath, installed.MajorVersion, cancellationToken);
+                if (usable) return ToJavaEntry(installed);
+                throw new InvalidOperationException(
+                    $"自动安装的 Java {installed.JavaVersion} 模块不完整（缺少 jdk.zipfs / jdk.unsupported），无法启动 Minecraft。请更换完整的 Java 运行时。");
+            }
         }
 
         // 用户拒绝自动安装后，回退到磁盘扫描（保留原有行为）。
         if (candidates.Count == 0)
             candidates = (await JavaRuntimeManager.ScanAsync(cancellationToken)).ToList();
-        if (candidates.Count == 0)
-            throw new InvalidOperationException("没有可用的 Java 运行时，请在设置中添加 Java。");
-        var javaEntries = candidates.Select(ToJavaEntry).ToList();
-        return preferred != null ? javaEntries[0] : SelectAppropriateJava(instance.MinecraftEntry!, javaEntries);
-    }
+        selected = await SelectViableJavaAsync(instance, preferred, candidates, cancellationToken);
+        if (selected is not null) return selected;
 
-    private static JavaEntry? TrySelectConfiguredJava(MinecraftInstance instance, JavaRuntimeEntry? preferred,
-        IReadOnlyList<JavaRuntimeEntry> candidates)
+        throw new InvalidOperationException(
+            "没有可用的 Java 运行时，或已添加的 Java 运行时均模块不完整（缺少 jdk.zipfs / jdk.unsupported），无法启动 Minecraft。请在设置中重新添加完整的 Java 运行时。");
+    }
+    
+    private static async Task<JavaEntry?> SelectViableJavaAsync(MinecraftInstance instance, JavaRuntimeEntry? preferred,
+        IReadOnlyList<JavaRuntimeEntry> candidates, CancellationToken cancellationToken)
     {
         if (candidates.Count == 0) return null;
         var javaEntries = candidates.Select(ToJavaEntry).ToList();
-        if (preferred != null) return javaEntries[0];
-        try
+        var ordered = preferred != null
+            ? javaEntries
+            : OrderJavaCandidates(instance.MinecraftEntry!, javaEntries);
+
+        foreach (var candidate in ordered)
         {
-            return SelectAppropriateJava(instance.MinecraftEntry!, javaEntries);
+            if (!await JavaRuntimeVerifier.IsUsableAsync(candidate.JavaPath, candidate.MajorVersion, cancellationToken))
+                continue;
+            return candidate;
         }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
+        return null;
+    }
+
+    private static List<JavaEntry> OrderJavaCandidates(MinecraftEntry minecraft, IReadOnlyList<JavaEntry> javaEntries)
+    {
+        var requiredVersion = minecraft.GetAppropriateJavaVersion();
+        var requiresExactVersion = minecraft is ModifiedMinecraftEntry modified &&
+            modified.ModLoaders.Any(loader => loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
+        bool IsCompatible(JavaEntry candidate) => requiredVersion is 0 or -1
+            ? true
+            : requiresExactVersion
+                ? candidate.MajorVersion == requiredVersion
+                : candidate.MajorVersion >= requiredVersion;
+
+        var compatible = javaEntries.Where(IsCompatible).ToList();
+        var incompatible = javaEntries.Where(candidate => !IsCompatible(candidate)).ToList();
+        compatible.Sort((a, b) => a.MajorVersion.CompareTo(b.MajorVersion));
+        compatible.Reverse();
+        return [.. compatible, .. incompatible];
     }
 
     private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
@@ -440,20 +501,6 @@ public static class MinecraftLaunchService
                 // 任务已进入终态，忽略进度更新
             }
         });
-    }
-
-    private static JavaEntry SelectAppropriateJava(MinecraftEntry minecraft, IReadOnlyList<JavaEntry> javaEntries)
-    {
-        var requiredVersion = minecraft.GetAppropriateJavaVersion();
-        if (requiredVersion is 0 or -1) return javaEntries[^1];
-
-        var requiresExactVersion = minecraft is ModifiedMinecraftEntry modified &&
-            modified.ModLoaders.Any(loader => loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
-        var java = javaEntries.LastOrDefault(candidate => requiresExactVersion
-            ? candidate.MajorVersion == requiredVersion
-            : candidate.MajorVersion >= requiredVersion);
-        return java ?? throw new InvalidOperationException(
-            $"当前 Minecraft 版本需要 Java {requiredVersion}，已添加的 Java 运行时均不兼容。请在设置中添加 Java {requiredVersion} 后重试。");
     }
 
     private static JavaEntry ToJavaEntry(JavaRuntimeEntry java) => new()
@@ -481,27 +528,65 @@ public static class MinecraftLaunchService
     }
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
-        MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders) => new()
+        MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders)
     {
-        JvmArguments = LaunchCustomization.SplitArguments(
-            LaunchCustomization.Apply(options.JvmArguments, placeholders)),
-        WrapperCommand = LaunchCustomization.Apply(options.WrapperCommand, placeholders),
-        Account = account,
-        JavaPath = java,
-        LauncherName = "Portal",
-        IsEnableIndependency = instance.RequiresIndependentInstance ||
-                               instance.JavaConfig?.EnableIndependentInstance == true,
-        Width = options.WindowWidth,
-        Height = options.WindowHeight,
-        MinMemorySize = 512,
-        MaxMemorySize = instance.JavaConfig?.EnableOverrideMaxMemory == true
-            ? instance.JavaConfig.MinecraftMaxMemory
-            : options.MaxMemory,
-        SaveName = target is { Type: RecentPlayTargetType.World } ? target.Id : null,
-        ServerInfo = target is { Type: RecentPlayTargetType.Server, ServerPort: { } port, ServerAddress: { } address }
-            ? new ServerInfo { Address = address, Port = port }
-            : null
-    };
+        var config = new LaunchConfig
+        {
+            JvmArguments = LaunchCustomization.SplitArguments(
+                LaunchCustomization.Apply(options.JvmArguments, placeholders)),
+            WrapperCommand = LaunchCustomization.Apply(options.WrapperCommand, placeholders),
+            Account = account,
+            JavaPath = java,
+            LauncherName = "Portal",
+            IsEnableIndependency = instance.RequiresIndependentInstance ||
+                                   instance.JavaConfig?.EnableIndependentInstance == true,
+            Width = options.WindowWidth,
+            Height = options.WindowHeight,
+            MinMemorySize = 512,
+            MaxMemorySize = instance.JavaConfig?.EnableOverrideMaxMemory == true
+                ? instance.JavaConfig.MinecraftMaxMemory
+                : options.MaxMemory,
+            SaveName = target is { Type: RecentPlayTargetType.World } ? target.Id : null,
+            ServerInfo = target is { Type: RecentPlayTargetType.Server, ServerPort: { } port, ServerAddress: { } address }
+                ? new ServerInfo { Address = address, Port = port }
+                : null
+        };
+
+        ApplyGraphicsLaunchConfiguration(instance, config, placeholders);
+        return config;
+    }
+    
+    private static void ApplyGraphicsLaunchConfiguration(MinecraftInstance instance, LaunchConfig config,
+        Dictionary<string, string> placeholders)
+    {
+        var entry = instance.MinecraftEntry;
+        if (entry == null)
+            return;
+
+        string? versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
+            ? modified.InheritedMinecraft.Version.VersionId
+            : entry.Version.VersionId;
+
+        var graphics = instance.JavaConfig?.GraphicsBackend ?? GraphicsApi.Default;
+        var version = GameVersion.Parse(versionId ?? entry.Id);
+        var effective = GraphicsEnvironmentResolver.Resolve(graphics,
+            instance.JavaConfig?.OpenGlRenderer, instance.JavaConfig?.VulkanRenderer, version);
+
+        string? nativesFolder = string.IsNullOrEmpty(config.NativesFolder)
+            ? entry.NativesDirectoryPath ?? Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives")
+            : config.NativesFolder;
+
+        var launch = GraphicsLaunchArgumentsBuilder.Build(effective, graphics, version, nativesFolder,
+            Renderers.CurrentPlatform);
+
+        if (launch.EnvironmentVariables.Count > 0)
+            config.EnvironmentVariables = new Dictionary<string, string>(launch.EnvironmentVariables);
+        if (launch.GameArguments.Any())
+            config.GameArguments = launch.GameArguments;
+
+        if (launch.NeedsMesaAgent)
+            config.JvmArguments = config.JvmArguments.Concat(launch.JvmArguments);
+    }
 
     private static void ObserveProcess(MinecraftInstance instance, TopLevel? topLevel, MinecraftProcess process,
         ManagedTask task, TaskExecutionContext context, MinecraftLogSession logSession, MinecraftLaunchOptions options)

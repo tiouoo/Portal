@@ -9,6 +9,7 @@ using System.Text;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using MinecraftLaunch.Base.Enums;
+using Portal.Core.Minecraft.Graphics;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance;
@@ -168,7 +169,6 @@ public class MinecraftInstance : ObservableObject
     public Bitmap Icon => _icon ??= GetInstanceIcon(48);
     private Bitmap? _icon;
 
-    // This is deliberately not resized so it can be exported without losing detail.
     public Bitmap sourceIcon => _sourceIcon ??= GetSourceIcon();
     private Bitmap? _sourceIcon;
 
@@ -414,21 +414,11 @@ public class MinecraftInstance : ObservableObject
             "cc.tiouo.Portal", "Instances", $"{hash}.json");
     }
 
-    /// <summary>
-    /// 增加游玩时长（秒），立即保存配置文件
-    /// 用于手动增加时长的场景（如导入历史数据）
-    /// </summary>
-    /// <param name="seconds">要增加的秒数</param>
     public void AddPlayTime(long seconds)
     {
         AddPlayTime(seconds, true);
     }
 
-    /// <summary>
-    /// 增加游玩时长（秒）
-    /// </summary>
-    /// <param name="seconds">要增加的秒数</param>
-    /// <param name="saveImmediately">是否立即保存配置文件</param>
     public void AddPlayTime(long seconds, bool saveImmediately)
     {
         lock (_timerLock)
@@ -443,9 +433,6 @@ public class MinecraftInstance : ObservableObject
         NotifyPlayTimeChanged();
     }
 
-    /// <summary>
-    /// 增加游戏会话次数
-    /// </summary>
     public void IncrementPlaySessions()
     {
         Config.PlaySessions++;
@@ -453,9 +440,6 @@ public class MinecraftInstance : ObservableObject
         Dispatcher.UIThread.Post(InstanceManager.Instance.NotifyStatisticsChanged);
     }
 
-    /// <summary>
-    /// 计时相关调用可能来自定时器线程或进程退出回调，属性通知需回到 UI 线程
-    /// </summary>
     private void NotifyPlayTimeChanged()
     {
         Dispatcher.UIThread.Post(() =>
@@ -468,12 +452,7 @@ public class MinecraftInstance : ObservableObject
     private System.Threading.Timer? _playTimer;
     private readonly object _timerLock = new();
     private readonly Dictionary<string, long> _unsavedPlayTimeByDate = [];
-
-    /// <summary>
-    /// 开始计时（用于实时更新游玩时长）
-    /// 使用低资源占用的 Timer，每秒触发一次，但每60秒才保存一次配置文件
-    /// UI会实时更新显示，但配置文件只在间隔时间保存
-    /// </summary>
+    
     public void StartPlayTimer()
     {
         lock (_timerLock)
@@ -504,9 +483,6 @@ public class MinecraftInstance : ObservableObject
         }
     }
 
-    /// <summary>
-    /// 停止计时，立即保存所有未保存的秒数
-    /// </summary>
     public void StopPlayTimer()
     {
         var changed = false;
@@ -527,9 +503,6 @@ public class MinecraftInstance : ObservableObject
             NotifyPlayTimeChanged();
     }
 
-    /// <summary>
-    /// 获取当前实例的总游玩时长（秒），包括已保存和未保存的秒数
-    /// </summary>
     public long GetTotalPlayTimeSeconds()
     {
         lock (_timerLock)
@@ -540,10 +513,7 @@ public class MinecraftInstance : ObservableObject
                    + _unsavedPlayTimeByDate.Values.Sum();
         }
     }
-
-    /// <summary>
-    /// 获取包含今天在内的最近每日游玩时长；没有记录的日期以零补齐。
-    /// </summary>
+    
     public IReadOnlyList<(DateTime Date, long Seconds)> GetRecentDailyPlayTime(int days)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(days, 1);
@@ -594,10 +564,7 @@ public class MinecraftInstance : ObservableObject
     {
         return Config.PlayTimeByDate ??= [];
     }
-
-    /// <summary>
-    /// 将旧版总时长迁移到历史汇总，并将一个月前的日记录合并，控制配置文件大小。
-    /// </summary>
+    
     private void FormatPlayTimeData()
     {
         if (Config.LegacyPlayTimeSeconds > 0)
@@ -729,9 +696,7 @@ public class MinecraftInstance : ObservableObject
     }
 
     public Bitmap this[int width] => GetInstanceIcon(width);
-
-    // 每次访问都重新解码会不断产生无人释放的位图（列表滚动、图标刷新时尤其明显），
-    // 因此按宽度缓存，并在 RefreshIcon 时统一释放。
+    
     private readonly Dictionary<int, Bitmap> _iconsByWidth = [];
 
     private Bitmap GetInstanceIcon(int width)
@@ -746,7 +711,6 @@ public class MinecraftInstance : ObservableObject
 
         lock (_iconsByWidth)
         {
-            // 并发解码时保留先到者，丢弃重复位图，保证同一宽度始终只有一张。
             if (_iconsByWidth.TryGetValue(width, out var existing))
             {
                 icon.Dispose();
@@ -797,7 +761,6 @@ public class MinecraftInstance : ObservableObject
     {
         yield return GetIconOverridePath();
 
-        // Remove legacy overrides too, so reset always returns to the launcher's original icon.
         if (Layout != null)
             yield return Path.Combine(Path.GetDirectoryName(GetConfigPath())!, Path.GetFileNameWithoutExtension(GetConfigPath()),
                 "Icon.png");
@@ -835,7 +798,6 @@ public class MinecraftInstance : ObservableObject
         using var stream = assembly.GetManifestResourceStream(resourcePath);
         if (stream == null)
         {
-            // 修正了你原代码里的一处拼写错误：Assts -> Assets
             var defaultPath = "Portal.Core.Assets.McIcons.01_grass_block_side.png";
             using var defaultStream = assembly.GetManifestResourceStream(defaultPath);
             return defaultStream != null ? Bitmap.DecodeToWidth(defaultStream, width) : null;
@@ -912,9 +874,6 @@ public partial class MinecraftInstanceConfig : ObservableObject
     [ObservableProperty] public partial int PlaySessions { get; set; }
 }
 
-/// <summary>
-/// Java 版实例独有的启动与运行时配置。
-/// </summary>
 public partial class JavaInstanceConfig : MinecraftInstanceConfig
 {
     [ObservableProperty] public partial bool EnableIndependentInstance { get; set; } = true;
@@ -923,6 +882,9 @@ public partial class JavaInstanceConfig : MinecraftInstanceConfig
     [ObservableProperty] public partial int MinecraftMaxMemory { get; set; }
     [ObservableProperty] public partial string? JvmArgs { get; set; }
     [ObservableProperty] public partial JavaRuntimeEntry? SpecificJavaEntry { get; set; }
+    [ObservableProperty] public partial GraphicsApi GraphicsBackend { get; set; } = GraphicsApi.Default;
+    [ObservableProperty] public partial string? OpenGlRenderer { get; set; }
+    [ObservableProperty] public partial string? VulkanRenderer { get; set; }
 }
 
 public enum MinecraftInstanceType
