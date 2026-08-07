@@ -51,13 +51,13 @@ public partial class GameFolder : DataUserControl
         var folder = (sender as Control).Tag as MinecraftFolderEntry;
         if (folder == null)
             return;
-        var restoresDefaultFolder = folder.DetectedLayout.Kind == MinecraftFolderKind.Standard &&
-                                    Data.ConfigEntry.TraditionalMinecraftFolders.Count() == 1;
+        var restoresDefaultFolder = folder.SupportsInstallation &&
+                                    Data.ConfigEntry.InstallableMinecraftFolders.Count() == 1;
         Data.ConfigEntry.MinecraftFolders.Remove(folder);
         if (restoresDefaultFolder)
         {
             Dispatcher.UIThread.Post(() => NotificationGateway.Notice(this.GetTopLevel(),
-                "至少保留一个 .minecraft 传统文件夹",
+                "至少保留一个 Portal MC 游戏目录",
                 NotificationType.Warning));
         }
     }

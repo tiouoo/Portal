@@ -11,6 +11,17 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="高级选项" />
+        <StackPanel Spacing="5">
+            <Label
+                Content="自动设置中文"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.AutoSetChineseLanguage}" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="启动游戏时自动将游戏语言切换为简体中文" />
+        </StackPanel>
         <StackPanel IsVisible="{Binding IsOverlaySupported}" Spacing="5">
             <Label
                 Content="游戏内覆盖层"

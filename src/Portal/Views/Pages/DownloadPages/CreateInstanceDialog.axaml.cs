@@ -253,8 +253,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     public CreateInstanceDialogViewModel()
     {
-        MinecraftFolders = Data.ConfigEntry.TraditionalMinecraftFolders.ToList();
-        SelectedMinecraftFolder = Data.ConfigEntry.DefaultMinecraftFolder is { DetectedLayout.Kind: MinecraftFolderKind.Standard } folder &&
+        MinecraftFolders = Data.ConfigEntry.InstallableMinecraftFolders.ToList();
+        SelectedMinecraftFolder = Data.ConfigEntry.DefaultMinecraftFolder is { SupportsInstallation: true } folder &&
                                   MinecraftFolders.Contains(folder)
             ? folder
             : MinecraftFolders.FirstOrDefault();

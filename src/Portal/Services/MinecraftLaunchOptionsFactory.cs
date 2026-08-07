@@ -23,6 +23,7 @@ public static class MinecraftLaunchOptionsFactory
         MaxMemory = Data.ConfigEntry.MinecraftMaxMemory,
         AutoSetJavaHighPerformanceGpu = Data.ConfigEntry.AutoSetJavaHighPerformanceGpu,
         AutoOptimizeMemoryBeforeGameLaunch = Data.ConfigEntry.AutoOptimizeMemoryBeforeGameLaunch,
+        SetChineseLanguageOnLaunch = Data.ConfigEntry.AutoSetChineseLanguage,
         WindowTitle = Data.ConfigEntry.OverrideMinecraftWindowTitle,
         JvmArguments = string.IsNullOrWhiteSpace(instance.JavaConfig?.JvmArgs)
             ? Data.ConfigEntry.JvmArgs

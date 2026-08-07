@@ -234,7 +234,10 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     {
         var folder = selection.Folder!.FolderPath;
         var instanceId = selection.InstanceId!;
-        var instancePath = Path.Combine(folder, "versions", instanceId);
+        var isPortalMc = MinecraftFolderLayout.TryFindPortalMcRoot(folder, out var portalMcRoot);
+        var installFolder = isPortalMc ? Path.Combine(portalMcRoot, "meta") : folder;
+        var instancesRoot = isPortalMc ? Path.Combine(portalMcRoot, "instances") : null;
+        var instancePath = Path.Combine(instancesRoot ?? Path.Combine(folder, "versions"), instanceId);
         if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
         var temporaryFolder = Path.Combine(Path.GetTempPath(), "Portal", "modpacks", Guid.NewGuid().ToString("N"));
         var archivePath = Path.Combine(temporaryFolder, Path.GetFileName(file.FileName));
@@ -247,33 +250,35 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 step => DownloadArchiveAsync(step, file, archivePath));
             MinecraftEntry minecraft = source switch
             {
-                ModDetailsSource.Modrinth => await InstallModrinthAsync(context, folder, instanceId, archivePath,
-                    GetForgeJavaPath()),
-                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, folder, instanceId, archivePath,
-                    GetForgeJavaPath()),
+                ModDetailsSource.Modrinth => await InstallModrinthAsync(context, installFolder, instanceId, archivePath,
+                    GetForgeJavaPath(), instancesRoot),
+                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId, archivePath,
+                    GetForgeJavaPath(), instancesRoot),
                 _ => throw new NotSupportedException("不支持的整合包来源。")
             };
             await TrySaveProjectIconAsync(iconUrl, instancePath, context.CancellationToken);
             await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-                step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
+                step.SetDescription($"已刷新实例列表，{instanceId} 已可用");
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            context.SetDescription($"整合包 {minecraft.Id} 安装完成");
+            context.SetDescription($"整合包 {instanceId} 安装完成");
             Logger.Info($"[Modpack] Installed remote modpack {file.FileName} as {minecraft.Id} in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException exception)
         {
             Logger.Debug($"[Modpack] Remote installation of {file.FileName} was cancelled after {stopwatch.Elapsed}: {exception}");
             await DeleteDirectoryAsync(instancePath);
+            await DeletePortalMcTemporaryLoaderAsync(instancesRoot, installFolder, instanceId);
             throw;
         }
         catch (Exception exception)
         {
             Logger.Error(exception);
             await DeleteDirectoryAsync(instancePath);
+            await DeletePortalMcTemporaryLoaderAsync(instancesRoot, installFolder, instanceId);
             throw;
         }
         finally
@@ -282,10 +287,20 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
     }
 
-    internal static async Task InstallLocalArchiveAsync(TaskExecutionContext context, ModDetailsSource source, string archivePath,
+    /// <summary>清理 Portal MC 同 id 安装失败时残留的临时加载器目录（meta/versions 下）。</summary>
+    private static Task DeletePortalMcTemporaryLoaderAsync(string? instancesRoot, string installFolder, string instanceId)
+    {
+        if (instancesRoot is null) return Task.CompletedTask;
+        return DeleteDirectoryAsync(Path.Combine(installFolder, "versions", $"{instanceId}.portal-tmp"));
+    }
+
+    internal static async Task<string> InstallLocalArchiveAsync(TaskExecutionContext context, ModDetailsSource source, string archivePath,
         string folder, string instanceId)
     {
-        var instancePath = Path.Combine(folder, "versions", instanceId);
+        var isPortalMc = MinecraftFolderLayout.TryFindPortalMcRoot(folder, out var portalMcRoot);
+        var installFolder = isPortalMc ? Path.Combine(portalMcRoot, "meta") : folder;
+        var instancesRoot = isPortalMc ? Path.Combine(portalMcRoot, "instances") : null;
+        var instancePath = Path.Combine(instancesRoot ?? Path.Combine(folder, "versions"), instanceId);
         if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[Modpack] Installing local {source} modpack {archivePath} to {instancePath}.");
@@ -294,30 +309,33 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         {
             var minecraft = source switch
             {
-                ModDetailsSource.Modrinth => await InstallModrinthAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
-                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, folder, instanceId, archivePath, GetForgeJavaPath()),
+                ModDetailsSource.Modrinth => await InstallModrinthAsync(context, installFolder, instanceId, archivePath, GetForgeJavaPath(), instancesRoot),
+                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId, archivePath, GetForgeJavaPath(), instancesRoot),
                 _ => throw new NotSupportedException("不支持的整合包来源。")
             };
             await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-                step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
+                step.SetDescription($"已刷新实例列表，{instanceId} 已可用");
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            context.SetDescription($"整合包 {minecraft.Id} 安装完成");
+            context.SetDescription($"整合包 {instanceId} 安装完成");
             Logger.Info($"[Modpack] Installed local modpack {archivePath} as {minecraft.Id} in {stopwatch.Elapsed}.");
+            return instancePath;
         }
         catch (OperationCanceledException exception)
         {
             Logger.Debug($"[Modpack] Local installation of {archivePath} was cancelled after {stopwatch.Elapsed}: {exception}");
             await DeleteDirectoryAsync(instancePath);
+            await DeletePortalMcTemporaryLoaderAsync(instancesRoot, installFolder, instanceId);
             throw;
         }
         catch (Exception exception)
         {
             Logger.Error(exception);
             await DeleteDirectoryAsync(instancePath);
+            await DeletePortalMcTemporaryLoaderAsync(instancesRoot, installFolder, instanceId);
             throw;
         }
     }
@@ -355,7 +373,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             using var response = await HttpUtil.Client.GetAsync(iconUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
             Directory.CreateDirectory(instancePath);
-            var iconPath = Path.Combine(instancePath, "Portal.Icon.png");
+            var iconPath = Path.Combine(instancePath, "icon.png");
             var temporaryPath = iconPath + ".tmp";
             await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
             await using (var output = File.Create(temporaryPath))
@@ -372,7 +390,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     }
 
     private static async Task<MinecraftEntry> InstallModrinthAsync(TaskExecutionContext context, string folder, string id,
-        string archivePath, string? javaPath)
+        string archivePath, string? javaPath, string? instancesRoot)
     {
         var entry = await RunStepAsync(context, "解析整合包", "正在读取 Modrinth 整合包清单", step =>
         {
@@ -390,23 +408,35 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var loader = await loaderTask;
         var vanilla = await vanillaTask;
         javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
+        // Portal MC 同 id 安装需用临时 id 安装加载器，避免命中 meta 中原版 json，完成后整体移入 instances。
+        var effectiveLoaderId = instancesRoot is not null && id.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
+            ? $"{id}.portal-tmp"
+            : id;
+        if (instancesRoot is not null && !effectiveLoaderId.Equals(id, StringComparison.OrdinalIgnoreCase))
+            await Task.Run(() =>
+            {
+                var stale = Path.Combine(folder, "versions", effectiveLoaderId);
+                if (Directory.Exists(stale)) Directory.Delete(stale, true);
+            });
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
             VanillaInstaller.Create(folder, vanilla));
         var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行下载整合包模组",
             new ModrinthModpackInstaller
             {
                 MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
-                WorkingPath = Path.Combine(folder, "versions", id)
+                WorkingPath = Path.Combine(folder, "versions", effectiveLoaderId)
             });
         var minecraft = await vanillaInstallation;
         minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
-            CreateModLoaderInstaller(loader, folder, id, javaPath, minecraft));
+            CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft));
         await filesInstallation;
+        if (instancesRoot is not null)
+            await MovePortalMcInstanceAsync(context, folder, effectiveLoaderId, id, instancesRoot);
         return minecraft;
     }
 
     private static async Task<MinecraftEntry> InstallCurseForgeAsync(TaskExecutionContext context, string folder, string id,
-        string archivePath, string? javaPath)
+        string archivePath, string? javaPath, string? instancesRoot)
     {
         var entry = await RunStepAsync(context, "解析整合包", "正在读取 CurseForge 整合包清单", step =>
         {
@@ -431,21 +461,59 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var vanilla = await vanillaTask;
         foreach (var loader in loaders)
             javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
+        // Portal MC 同 id 安装需用临时 id 安装加载器，避免命中 meta 中原版 json，完成后整体移入 instances。
+        var effectiveLoaderId = instancesRoot is not null && id.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
+            ? $"{id}.portal-tmp"
+            : id;
+        if (instancesRoot is not null && !effectiveLoaderId.Equals(id, StringComparison.OrdinalIgnoreCase))
+            await Task.Run(() =>
+            {
+                var stale = Path.Combine(folder, "versions", effectiveLoaderId);
+                if (Directory.Exists(stale)) Directory.Delete(stale, true);
+            });
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
             VanillaInstaller.Create(folder, vanilla));
         var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行解析并下载整合包模组",
             new CurseforgeModpackInstaller
             {
                 MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
-                WorkingPath = Path.Combine(folder, "versions", id)
+                WorkingPath = Path.Combine(folder, "versions", effectiveLoaderId)
             });
         var minecraft = await vanillaInstallation;
         foreach (var loader in loaders)
             minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
-                CreateModLoaderInstaller(loader, folder, id, javaPath, minecraft));
+                CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft));
         await filesInstallation;
+        if (instancesRoot is not null)
+            await MovePortalMcInstanceAsync(context, folder, effectiveLoaderId, id, instancesRoot);
         return minecraft;
     }
+
+    /// <summary>
+    /// 将 Portal MC 的加载器版本目录从 meta/versions 移入 instances，并把版本 json/jar 重命名为实例名。
+    /// </summary>
+    private static Task MovePortalMcInstanceAsync(TaskExecutionContext context, string metadataRoot,
+        string effectiveLoaderId, string instanceId, string instancesRoot) =>
+        RunStepAsync(context, "创建游戏实例", "正在生成实例配置", step =>
+        {
+            var loaderVersionDirectory = Path.Combine(metadataRoot, "versions", effectiveLoaderId);
+            Directory.CreateDirectory(instancesRoot);
+            if (Directory.Exists(loaderVersionDirectory))
+            {
+                Directory.Move(loaderVersionDirectory, Path.Combine(instancesRoot, instanceId));
+                if (!effectiveLoaderId.Equals(instanceId, StringComparison.OrdinalIgnoreCase))
+                {
+                    var jsonFile = Path.Combine(instancesRoot, instanceId, $"{effectiveLoaderId}.json");
+                    if (File.Exists(jsonFile))
+                        File.Move(jsonFile, Path.Combine(instancesRoot, instanceId, $"{instanceId}.json"));
+                    var jarFile = Path.Combine(instancesRoot, instanceId, $"{effectiveLoaderId}.jar");
+                    if (File.Exists(jarFile))
+                        File.Move(jarFile, Path.Combine(instancesRoot, instanceId, $"{instanceId}.jar"));
+                }
+            }
+            step.ReportProgress(1);
+            return Task.CompletedTask;
+        });
 
     private static async Task<string?> EnsureJavaRuntimeAsync(IInstallEntry loader, string? javaPath,
         string minecraftVersion, TaskExecutionContext context, CancellationToken cancellationToken)

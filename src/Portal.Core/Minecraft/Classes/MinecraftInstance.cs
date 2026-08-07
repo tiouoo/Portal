@@ -55,7 +55,8 @@ public class MinecraftInstance : ObservableObject
         MinecraftFolderKind.AxolotlApp or MinecraftFolderKind.AxolotlProfile or
         MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance or
         MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance or
-        MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance;
+        MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance or
+        MinecraftFolderKind.PortalMc;
     public bool CanDisableIndependentInstance => !RequiresIndependentInstance;
 
     public DateTime LastPlayTime => Config?.LastPlayTime ?? DateTime.MinValue;
@@ -178,11 +179,11 @@ public class MinecraftInstance : ObservableObject
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
             {
-                return MinecraftEntry.IsVanilla
+                return MinecraftEntry.IsVanilla ||
+                       (MinecraftEntry as ModifiedMinecraftEntry)?.ModLoaders.Any() == false
                     ? "原版"
                     : string.Join(", ", (MinecraftEntry as ModifiedMinecraftEntry)?
-                        .ModLoaders.Select(x => x.Type.ToString()) ?? []);
-            }
+                        .ModLoaders.Select(x => x.Type.ToString()) ?? []);            }
 
             if (Type == MinecraftInstanceType.Bedrock)
             {
@@ -815,16 +816,7 @@ public class MinecraftInstance : ObservableObject
 
         if (MinecraftEntry == null) return "01_grass_block_side.png";
 
-        if (MinecraftEntry.IsVanilla)
-        {
-            return MinecraftEntry.Version.Type switch
-            {
-                MinecraftVersionType.Snapshot => "02_crafting_table_front.png",
-                _ => "01_grass_block_side.png"
-            };
-        }
-
-        if (MinecraftEntry is ModifiedMinecraftEntry e && e.ModLoaders != null)
+        if (MinecraftEntry is ModifiedMinecraftEntry e && e.ModLoaders.Any())
         {
             if (e.ModLoaders.Any(a => a.Type == ModLoaderType.Forge)) return "06_ForgeIcon.png";
             if (e.ModLoaders.Any(a => a.Type == ModLoaderType.NeoForge)) return "07_NeoForgeIcon.png";
@@ -833,7 +825,11 @@ public class MinecraftInstance : ObservableObject
             if (e.ModLoaders.Any(a => a.Type == ModLoaderType.OptiFine)) return "08_OptiFineIcon.png";
         }
 
-        return "01_grass_block_side.png";
+        return MinecraftEntry.Version.Type switch
+        {
+            MinecraftVersionType.Snapshot => "02_crafting_table_front.png",
+            _ => "01_grass_block_side.png"
+        };
     }
 
     private static Bitmap LoadBitmapFromAssembly(string fileName)

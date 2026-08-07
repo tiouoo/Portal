@@ -38,7 +38,7 @@ public partial class BedrockInstallation : UserControl
         var folders = _viewModel.GetTraditionalInstallFolders();
         if (folders.Count == 0)
         {
-            _viewModel.StatusText = "请先在设置中添加一个标准游戏目录。";
+            _viewModel.StatusText = "请先在设置中添加一个 Portal 游戏目录。";
             return;
         }
 
@@ -121,13 +121,15 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
     public async Task InstallAsync(BedrockVersion version, MinecraftFolderEntry folder)
     {
-        if (!CanInstall || folder.DetectedLayout.Kind != MinecraftFolderKind.Standard ||
+        if (!CanInstall || folder.DetectedLayout.Kind is not (MinecraftFolderKind.Standard or MinecraftFolderKind.PortalMc) ||
             BedrockInstallationService.DefaultInstaller is null) return;
 
         var installer = BedrockInstallationService.DefaultInstaller;
         var instanceName = GetInstanceName(version);
         var buildLabel = version.BuildLabel;
-        var destination = Path.Combine(folder.FolderPath, "bedrock_versions", instanceName);
+        var destination = Path.Combine(folder.FolderPath,
+            folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc ? "bedrock_instances" : "bedrock_versions",
+            instanceName);
         Logger.Info($"[BedrockInstall] Queuing {buildLabel} {instanceName} installation to {destination}.");
         IsInstalling = true;
 
@@ -276,7 +278,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         if (BedrockInstallationService.DefaultInstaller is null)
             StatusText = "基岩版安装仅支持 Windows。";
         else if (GetTraditionalInstallFolders().Count == 0)
-            StatusText = "请先在设置中添加一个标准游戏目录。";
+            StatusText = "请先在设置中添加一个 Portal 游戏目录。";
         else if (!IsLoading && !IsInstalling && _allVersions.Count == 0)
             StatusText = "没有可用的基岩版版本。";
 
@@ -312,17 +314,19 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
     }
 
     public string GetDestinationPath(BedrockGdkVersion version, MinecraftFolderEntry folder) =>
-        Path.Combine(folder.FolderPath, "bedrock_versions", GetInstanceName(version));
+        Path.Combine(folder.FolderPath,
+            folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc ? "bedrock_instances" : "bedrock_versions",
+            GetInstanceName(version));
 
     private static string GetInstanceName(BedrockGdkVersion version) =>
         version is BedrockVersion { BuildType: Portal.Bedrock.Standard.Manifest.BedrockBuildType.UWP }
             ? $"{version.Id}-UWP"
             : version.Id;
 
-    public List<MinecraftFolderEntry> GetTraditionalInstallFolders() => Data.ConfigEntry.TraditionalMinecraftFolders.ToList();
+    public List<MinecraftFolderEntry> GetTraditionalInstallFolders() => Data.ConfigEntry.InstallableMinecraftFolders.ToList();
 
     public MinecraftFolderEntry GetPreferredInstallFolder(IReadOnlyList<MinecraftFolderEntry> folders) =>
-        Data.ConfigEntry.DefaultMinecraftFolder is { DetectedLayout.Kind: MinecraftFolderKind.Standard } folder &&
+        Data.ConfigEntry.DefaultMinecraftFolder is { SupportsInstallation: true } folder &&
         folders.Contains(folder) ? folder : folders[0];
 
     private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,

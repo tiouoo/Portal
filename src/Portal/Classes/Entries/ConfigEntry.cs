@@ -59,6 +59,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial DownloadSourceMode CurseForgeSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
     [ObservableProperty] public partial bool EnableGameOverlay { get; set; } = true;
+    [ObservableProperty] public partial bool AutoSetChineseLanguage { get; set; } = true;
     [ObservableProperty] public partial bool EnableManagedWindowDecorationsOnWindows { get; set; }
     [ObservableProperty] public partial bool EnableManagedWindowBorderOnWindows { get; set; } = true;
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
@@ -133,8 +134,8 @@ public partial class ConfigEntry : ObservableObject
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
     public bool CanDisableSystemProxy => !EnableProxyServer;
 
-    public IEnumerable<MinecraftFolderEntry> TraditionalMinecraftFolders =>
-        MinecraftFolders.Where(folder => folder.DetectedLayout.Kind == MinecraftFolderKind.Standard);
+    public IEnumerable<MinecraftFolderEntry> InstallableMinecraftFolders =>
+        MinecraftFolders.Where(folder => folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc);
 
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
     public ObservableCollection<JavaRuntimeEntry> JavaRuntimes { get; } = [];
@@ -251,7 +252,7 @@ public partial class ConfigEntry : ObservableObject
             }
         }
 
-        OnPropertyChanged(nameof(TraditionalMinecraftFolders));
+        OnPropertyChanged(nameof(InstallableMinecraftFolders));
         App.Method.SaveConfig();
         ScheduleMinecraftFolderRecovery();
         ScheduleMinecraftFolderRefresh();
@@ -261,7 +262,7 @@ public partial class ConfigEntry : ObservableObject
     {
         if (!Data.UiProperty.ConfigLoaded || e.PropertyName != nameof(MinecraftFolderEntry.FolderPath))
             return;
-        OnPropertyChanged(nameof(TraditionalMinecraftFolders));
+        OnPropertyChanged(nameof(InstallableMinecraftFolders));
         ConfigIdentifyExtension.MinecraftFolder(this);
     }
 

@@ -21,7 +21,7 @@
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
-                ItemsSource="{Binding Data.ConfigEntry.TraditionalMinecraftFolders}"
+                ItemsSource="{Binding Data.ConfigEntry.InstallableMinecraftFolders}"
                 SelectedItem="{Binding Data.ConfigEntry.DefaultMinecraftFolder}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="classes:MinecraftFolderEntry">

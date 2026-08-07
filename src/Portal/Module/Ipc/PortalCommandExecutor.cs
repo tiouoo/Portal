@@ -240,10 +240,9 @@ public static class PortalCommandExecutor
             if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                 throw new InvalidOperationException($"实例 ID“{id}”包含文件夹名称不允许的字符。");
 
-            await ModpackDetailsPage.InstallLocalArchiveAsync(context, modpackSource, archivePath,
+            var instancePath = await ModpackDetailsPage.InstallLocalArchiveAsync(context, modpackSource, archivePath,
                 folder.FolderPath, id);
-            await ModpackDetailsPage.TrySaveProjectIconAsync(iconUrl,
-                Path.Combine(folder.FolderPath, "versions", id), context.CancellationToken);
+            await ModpackDetailsPage.TrySaveProjectIconAsync(iconUrl, instancePath, context.CancellationToken);
         }
         finally
         {
@@ -547,11 +546,11 @@ public static class PortalCommandExecutor
     private static MinecraftFolderEntry ResolveInstallFolder(string? specification)
     {
         var folders = Data.ConfigEntry.MinecraftFolders
-            .Where(folder => folder.SupportsTraditionalInstallation).ToList();
+            .Where(folder => folder.SupportsInstallation).ToList();
         if (string.IsNullOrWhiteSpace(specification))
         {
             var defaultFolder = Data.ConfigEntry.DefaultMinecraftFolder;
-            if (defaultFolder is not null && defaultFolder.SupportsTraditionalInstallation) return defaultFolder;
+            if (defaultFolder is not null && defaultFolder.SupportsInstallation) return defaultFolder;
             return folders.FirstOrDefault()
                    ?? throw new InvalidOperationException("启动器中没有可用于安装的 Minecraft 文件夹，请先在设置中添加。");
         }
@@ -574,8 +573,8 @@ public static class PortalCommandExecutor
                     FolderName = Path.GetFileName(fullPath) is { Length: > 0 } name ? name : fullPath,
                     FolderPath = fullPath
                 };
-                if (!entry.SupportsTraditionalInstallation)
-                    throw new InvalidOperationException($"文件夹“{specification}”不是可安装的标准 Minecraft 文件夹。");
+                if (!entry.SupportsInstallation)
+                    throw new InvalidOperationException($"文件夹“{specification}”不是可安装的 Portal MC 文件夹。");
                 return entry;
             }
         }

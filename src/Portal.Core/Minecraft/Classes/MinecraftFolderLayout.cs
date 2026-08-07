@@ -14,6 +14,7 @@ public enum MinecraftFolderKind
     CurseForgeInstance,
     AxolotlApp,
     AxolotlProfile,
+    PortalMc,
     Unknown
 }
 
@@ -24,6 +25,37 @@ public sealed record MinecraftFolderLayout(
     string DisplayName)
 {
     public bool SupportsTraditionalInstallation => Kind == MinecraftFolderKind.Standard;
+
+    public bool SupportsInstallation => Kind == MinecraftFolderKind.PortalMc;
+
+    private static bool IsPortalMcRoot(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        // 目录已初始化时以结构为准，允许用户重命名根文件夹。
+        if (Directory.Exists(Path.Combine(path, "meta", "versions")) &&
+            Directory.Exists(Path.Combine(path, "instances")))
+            return true;
+        // 尚未安装任何版本的空根目录（如默认文件夹刚创建时）按文件夹名识别。
+        return Path.GetFileName(Path.GetFullPath(path))
+            .Equals("cc.tiouo.portal.minecraft", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>从任意子路径向上查找 Portal MC 根目录（含 meta 与 instances 的结构根）。</summary>
+    public static bool TryFindPortalMcRoot(string path, out string root)
+    {
+        var current = new DirectoryInfo(path);
+        while (current != null)
+        {
+            if (IsPortalMcRoot(current.FullName))
+            {
+                root = current.FullName;
+                return true;
+            }
+            current = current.Parent;
+        }
+        root = string.Empty;
+        return false;
+    }
 
     public static MinecraftFolderLayout Detect(string path)
     {
@@ -43,6 +75,12 @@ public sealed record MinecraftFolderLayout(
         if (File.Exists(Path.Combine(selected, "package.info")) &&
             TryFindBakaXlRoot(selected, out var bakaXlRoot))
             return new(MinecraftFolderKind.BakaXlInstance, selected, bakaXlRoot, "BakaXL 实例");
+
+        // Portal MC 布局：根目录含 meta/versions 与 instances；实例、meta 等子目录选中时向上定位到根。
+        if (IsPortalMcRoot(selected))
+            return new(MinecraftFolderKind.PortalMc, selected, selected, "Portal MC");
+        if (TryFindPortalMcRoot(selected, out var portalMcRoot))
+            return new(MinecraftFolderKind.PortalMc, portalMcRoot, portalMcRoot, "Portal MC");
 
         if (Directory.Exists(Path.Combine(selected, "Install", "versions")) &&
             Directory.Exists(Path.Combine(selected, "Instances")))
@@ -137,6 +175,7 @@ public sealed record MinecraftFolderLayout(
             MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher",
             MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance => "BakaXL",
             MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge App",
+            MinecraftFolderKind.PortalMc => "Portal MC",
             MinecraftFolderKind.Standard => "传统 .minecraft 文件夹",
             _ => "未识别的 Minecraft 文件夹"
         };
@@ -287,6 +326,7 @@ public sealed record MinecraftInstanceLayout(
         MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher",
         MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance => "BakaXL",
         MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge App",
+        MinecraftFolderKind.PortalMc => "Portal MC",
         MinecraftFolderKind.Standard => "传统 .minecraft",
         _ => "未知"
     };

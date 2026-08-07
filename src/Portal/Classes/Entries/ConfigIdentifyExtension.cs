@@ -8,37 +8,48 @@ public class ConfigIdentifyExtension
 {
     public static void MinecraftFolder(ConfigEntry entry)
     {
-        var traditionalFolders = entry.MinecraftFolders.Where(IsTraditionalFolder).ToList();
-        if (traditionalFolders.Count == 0)
+        var installableFolders = entry.MinecraftFolders.Where(IsInstallableFolder).ToList();
+        if (installableFolders.Count == 0)
         {
             entry.DefaultMinecraftFolder = null;
             var defaultFolder = CreateDefaultMinecraftFolder();
             entry.MinecraftFolders.Insert(0, defaultFolder);
-            traditionalFolders.Add(defaultFolder);
+            installableFolders.Add(defaultFolder);
         }
 
         if (entry.DefaultMinecraftFolder == null ||
             !entry.MinecraftFolders.Contains(entry.DefaultMinecraftFolder) ||
-            !IsTraditionalFolder(entry.DefaultMinecraftFolder))
+            !IsInstallableFolder(entry.DefaultMinecraftFolder))
         {
-            entry.DefaultMinecraftFolder = traditionalFolders[0];
+            entry.DefaultMinecraftFolder = installableFolders[0];
         }
     }
 
-    private static bool IsTraditionalFolder(MinecraftFolderEntry folder)
+    private static bool IsInstallableFolder(MinecraftFolderEntry folder)
     {
-        return folder.DetectedLayout.Kind == MinecraftFolderKind.Standard;
+        return folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc;
     }
 
     private static MinecraftFolderEntry CreateDefaultMinecraftFolder()
     {
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "portal.minecraft");
-        Helper.TryCreateFolder(path);
+        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "cc.tiouo.portal.minecraft");
+        // meta 存放各实例共享的原版版本、资源与依赖；instances / bedrock_instances 存放真正启动的实例。
+        foreach (var directory in new[]
+                 {
+                     Path.Combine(path, "meta", "assets"),
+                     Path.Combine(path, "meta", "libraries"),
+                     Path.Combine(path, "meta", "natives"),
+                     Path.Combine(path, "meta", "versions"),
+                     Path.Combine(path, "instances"),
+                     Path.Combine(path, "bedrock_instances")
+                 })
+            Helper.TryCreateFolder(directory);
         return new MinecraftFolderEntry
         {
-            FolderName = "Portal 默认文件夹",
+            FolderName = "Portal MC",
             FolderPath = path,
-            FolderKind = MinecraftFolderKind.Standard
+            FolderKind = MinecraftFolderKind.PortalMc
         };
     }
 }

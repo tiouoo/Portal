@@ -70,6 +70,11 @@ public static class VersionModifyService
         var folderPath = minecraftEntry.MinecraftFolderPath;
         var instanceId = minecraftEntry.Id;
         var versionDirectory = Path.Combine(folderPath, "versions", instanceId);
+        // Portal MC 实例目录即版本目录，原版基座与加载器统一安装到共享的 meta 目录。
+        var isPortalMc = MinecraftFolderLayout.TryFindPortalMcRoot(folderPath, out var portalMcRoot);
+        var metadataRoot = isPortalMc ? Path.Combine(portalMcRoot, "meta") : folderPath;
+        if (isPortalMc)
+            versionDirectory = folderPath;
         var hasLoaders = selectedEntries.Count > 0;
         var usesTempBase = hasLoaders && string.Equals(instanceId, vanilla.Id, StringComparison.OrdinalIgnoreCase);
         var tempBaseId = $".portal-{instanceId}-base";
@@ -93,10 +98,12 @@ public static class VersionModifyService
                 await Task.CompletedTask;
             });
 
-            // 安装/校验原版基座
+            // 安装/校验原版基座。Portal MC 的原版基座位于共享 meta，无需临时基座。
             if (hasLoaders)
             {
-                if (usesTempBase)
+                if (isPortalMc)
+                    await EnsureVanillaBaseAsync(context, metadataRoot, vanilla);
+                else if (usesTempBase)
                     await EnsureTempBaseAsync(context, folderPath, vanilla, instanceId, tempBaseId);
                 else
                     await EnsureVanillaBaseAsync(context, folderPath, vanilla);
@@ -106,12 +113,19 @@ public static class VersionModifyService
 
             if (hasLoaders)
             {
-                await InstallLoadersAsync(context, folderPath, instanceId, vanilla, selectedEntries,
-                    javaPath, usesTempBase, tempBaseId);
+                if (isPortalMc)
+                    await InstallLoadersPortalMcAsync(context, metadataRoot, folderPath, instanceId, vanilla,
+                        selectedEntries, javaPath);
+                else
+                    await InstallLoadersAsync(context, folderPath, instanceId, vanilla, selectedEntries,
+                        javaPath, usesTempBase, tempBaseId);
             }
             else
             {
-                await InstallPureVanillaAsync(context, folderPath, instanceId, vanilla);
+                if (isPortalMc)
+                    await InstallPureVanillaPortalMcAsync(context, metadataRoot, folderPath, instanceId, vanilla);
+                else
+                    await InstallPureVanillaAsync(context, folderPath, instanceId, vanilla);
             }
 
             if (usesTempBase)
@@ -381,6 +395,145 @@ public static class VersionModifyService
 
         await RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}",
             VanillaInstaller.Create(folderPath, vanilla, instanceId));
+    }
+
+    /// <summary>
+    /// Portal MC 纯原版修改：仅确保共享 meta 中的原版基座完整，并重写实例目录的极简继承 json。
+    /// </summary>
+    private static async Task InstallPureVanillaPortalMcAsync(TaskExecutionContext context, string metadataRoot,
+        string instanceRoot, string instanceId, VersionManifestEntry vanilla)
+    {
+        await Task.Run(() =>
+        {
+            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.json"));
+            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.jar"));
+        });
+
+        await EnsureVanillaBaseAsync(context, metadataRoot, vanilla);
+        await MinecraftInstallationViewModel.RunStepAsync(context, "写入实例配置", "正在生成原版实例配置", step =>
+        {
+            MinecraftInstallationViewModel.WritePortalMcMinimalInstanceJson(instanceRoot, instanceId, vanilla.Id);
+            step.ReportProgress(1);
+            return Task.CompletedTask;
+        });
+    }
+
+    /// <summary>
+    /// Portal MC 加载器修改：在共享 meta 中安装加载器（id 与原版相同时使用临时 id 避免复用
+    /// 既有 json），再将版本目录整体并入实例目录，保留 mods 等用户数据。
+    /// </summary>
+    private static async Task InstallLoadersPortalMcAsync(TaskExecutionContext context, string metadataRoot,
+        string instanceRoot, string instanceId, VersionManifestEntry vanilla,
+        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
+    {
+        var effectiveLoaderId = instanceId.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
+            ? $"{instanceId}.portal-tmp"
+            : instanceId;
+        var loaderDirectory = Path.Combine(metadataRoot, "versions", effectiveLoaderId);
+
+        // 移除旧版本文件（已备份），并清除同 id 安装残留的临时加载器目录，避免安装器复用旧配置。
+        await Task.Run(() =>
+        {
+            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.json"));
+            TryDeleteFile(Path.Combine(instanceRoot, $"{instanceId}.jar"));
+            if (JsonHasInheritsFrom(Path.Combine(loaderDirectory, $"{effectiveLoaderId}.json")))
+                DeleteDirectory(loaderDirectory);
+        });
+
+        var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
+        var primaryEntry = primary.Value;
+        var primaryInstaller = primaryEntry is null
+            ? null
+            : CreatePrimaryInstaller(primary.Key, primaryEntry, metadataRoot, effectiveLoaderId, javaPath);
+        var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
+            ? CreatePreloadOptifineInstaller(metadataRoot, (OptifineInstallEntry)optifineEntry, javaPath)
+            : null;
+
+        var preloadTasks = new List<Task>();
+        if (primaryInstaller is not null)
+        {
+            preloadTasks.Add(MinecraftInstallationViewModel.RunStepAsync(context, $"预加载 {primary.Key}",
+                $"正在下载 {primary.Key} 安装所需的文件", step =>
+                {
+                    MinecraftInstallationViewModel.AttachProgressReporter(primaryInstaller, step);
+                    return MinecraftInstallationViewModel.RunInBackgroundAsync(
+                        token => PreloadInstallerAsync(primaryInstaller, token), step.CancellationToken);
+                }));
+        }
+        if (optifineInstaller is not null)
+        {
+            preloadTasks.Add(MinecraftInstallationViewModel.RunStepAsync(context, "预加载 OptiFine",
+                "正在下载 OptiFine 安装所需的文件", step =>
+                {
+                    MinecraftInstallationViewModel.AttachProgressReporter(optifineInstaller, step);
+                    return MinecraftInstallationViewModel.RunInBackgroundAsync(optifineInstaller.PreloadAsync,
+                        step.CancellationToken);
+                }));
+        }
+
+        await Task.WhenAll(preloadTasks);
+
+        MinecraftEntry? minecraft = null;
+        if (primaryInstaller is not null)
+        {
+            minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}",
+                $"正在将 {primary.Key} 应用到当前实例", primaryInstaller);
+        }
+
+        if (optifineInstaller is not null)
+        {
+            var installer = primaryInstaller is not null
+                ? OptifineInstaller.Create(metadataRoot, (OptifineInstallEntry)optifineEntry!, minecraft)
+                : OptifineInstaller.Create(metadataRoot, javaPath!, (OptifineInstallEntry)optifineEntry!,
+                    effectiveLoaderId);
+            minecraft = await RunInstallerStepAsync(context, "安装 OptiFine", "正在将 OptiFine 应用到当前实例", installer);
+        }
+
+        await MinecraftInstallationViewModel.RunStepAsync(context, "整合版本文件", "正在将加载器应用到实例目录", step =>
+        {
+            MoveDirectoryContents(loaderDirectory, instanceRoot, effectiveLoaderId, instanceId);
+            step.ReportProgress(1);
+            return Task.CompletedTask;
+        });
+        DeleteDirectory(loaderDirectory);
+    }
+
+    /// <summary>
+    /// 将加载器版本目录的内容并入实例目录：json/jar 按目标 id 重命名，其余文件与子目录（如 mods）合并。
+    /// </summary>
+    private static void MoveDirectoryContents(string sourceDirectory, string destinationDirectory,
+        string sourceId, string destinationId)
+    {
+        Directory.CreateDirectory(destinationDirectory);
+        foreach (var file in Directory.EnumerateFiles(sourceDirectory))
+        {
+            var fileName = Path.GetFileName(file);
+            var targetName = fileName.Equals($"{sourceId}.json", StringComparison.OrdinalIgnoreCase)
+                ? $"{destinationId}.json"
+                : fileName.Equals($"{sourceId}.jar", StringComparison.OrdinalIgnoreCase)
+                    ? $"{destinationId}.jar"
+                    : fileName;
+            File.Copy(file, Path.Combine(destinationDirectory, targetName), true);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(sourceDirectory))
+            MoveDirectoryContents(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)),
+                sourceId, destinationId);
+    }
+
+    private static bool JsonHasInheritsFrom(string jsonPath)
+    {
+        if (!File.Exists(jsonPath)) return false;
+        try
+        {
+            var node = JsonNode.Parse(File.ReadAllText(jsonPath)) as JsonObject;
+            return node?["inheritsFrom"]?.GetValue<string>() is not null;
+        }
+        catch (Exception exception)
+        {
+            Logger.Debug($"[VersionModify] Failed to parse {jsonPath}: {exception}");
+            return false;
+        }
     }
 
     /// <summary>

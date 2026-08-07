@@ -95,10 +95,11 @@ public class InstanceManager
         foreach (var folder in folders)
         {
             var layout = folder.DetectedLayout;
-            if (layout.Kind != MinecraftFolderKind.Standard)
+            if (layout.Kind is not (MinecraftFolderKind.Standard or MinecraftFolderKind.PortalMc))
                 continue;
 
-            var versionsPath = Path.Combine(layout.RootPath, "bedrock_versions");
+            var versionsPath = Path.Combine(layout.RootPath,
+                layout.Kind == MinecraftFolderKind.PortalMc ? "bedrock_instances" : "bedrock_versions");
             if (!Directory.Exists(versionsPath))
                 continue;
 

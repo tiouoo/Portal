@@ -21,7 +21,173 @@ internal static class ExternalMinecraftScanner
             MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => ScanMultiMc(folder, layout),
             MinecraftFolderKind.BakaXl or MinecraftFolderKind.BakaXlInstance => ScanBakaXl(folder, layout),
             MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => ScanCurseForge(folder, layout),
+            MinecraftFolderKind.PortalMc => ScanPortalMc(folder, layout),
             _ => []
+        };
+    }
+
+    private static IReadOnlyList<MinecraftInstance> ScanPortalMc(MinecraftFolderEntry folder,
+        MinecraftFolderLayout folderLayout)
+    {
+        var instancesRoot = Path.Combine(folderLayout.RootPath, "instances");
+        if (!Directory.Exists(instancesRoot))
+            return [];
+
+        var metadataRoot = Path.Combine(folderLayout.RootPath, "meta");
+        var result = new List<MinecraftInstance>();
+        foreach (var instanceRoot in Directory.GetDirectories(instancesRoot))
+        {
+            var instanceId = Path.GetFileName(instanceRoot);
+            var instanceJsonPath = Path.Combine(instanceRoot, $"{instanceId}.json");
+            if (!File.Exists(instanceJsonPath))
+                continue;
+            try
+            {
+                // 实例 json 为极简继承格式，必须声明继承的原版版本 id。
+                string? vanillaId;
+                bool isReferenceVanilla;
+                using (var document = JsonDocument.Parse(File.ReadAllText(instanceJsonPath)))
+                {
+                    var rootElement = document.RootElement;
+                    vanillaId = rootElement.TryGetProperty("inheritsFrom", out var inheritsFromNode)
+                        ? inheritsFromNode.GetString()
+                        : null;
+                    // id 与原版 id 相同时区分“引用原版”（极简 json，libraries 为空）与
+                    // 同 id 加载器实例（安装时用临时 id，移动后 json 内层 id 与原版不同）。
+                    isReferenceVanilla = !string.IsNullOrEmpty(vanillaId) &&
+                                         instanceId.Equals(vanillaId, StringComparison.OrdinalIgnoreCase) &&
+                                         rootElement.TryGetProperty("libraries", out var librariesNode) &&
+                                         librariesNode.ValueKind == JsonValueKind.Array &&
+                                         librariesNode.GetArrayLength() == 0;
+                }
+                if (string.IsNullOrWhiteSpace(vanillaId))
+                    continue;
+
+                var vanillaJsonPath = Path.Combine(metadataRoot, "versions", vanillaId, $"{vanillaId}.json");
+                if (!File.Exists(vanillaJsonPath))
+                    continue;
+
+                // 原版 json 与实例 json 不在同一根目录，解析前先按实例缓存到临时目录；
+                // 实例 id 与原版 id 相同时缓存中仅保留原版 json，即“引用原版”的原版实例。
+                var cacheRoot = NormalizePortalMcMetadata(folderLayout.RootPath, instanceId, vanillaId,
+                    instanceJsonPath, vanillaJsonPath, isReferenceVanilla);
+                var parsed = new MinecraftParser(cacheRoot).GetMinecraft(instanceId);
+                var nativesDirectory = Path.Combine(metadataRoot, "natives", instanceId);
+                var entry = WithLayout(parsed, instanceId, instanceRoot, metadataRoot,
+                    Path.Combine(metadataRoot, "versions", vanillaId), "vanilla", null,
+                    Path.Combine(metadataRoot, "versions", vanillaId, $"{vanillaId}.jar"), nativesDirectory);
+                // 继承链上的原版入口需一并重映射到 meta，否则其库与资源索引会指向缓存目录。
+                entry = WithPortalMcDependencyPaths(entry, metadataRoot, instanceRoot, nativesDirectory);
+                var iconPath = ResolveIcon(instanceRoot, "icon.png") ?? ResolveIcon(instanceRoot, "Icon.png")
+                    ?? ResolveIcon(instanceRoot, "Portal.Icon.png");
+                result.Add(CreateInstance(entry, folder, new MinecraftInstanceLayout(
+                    MinecraftFolderKind.PortalMc, folderLayout.RootPath, instanceRoot, instanceRoot, metadataRoot,
+                    Path.Combine(metadataRoot, "assets"), Path.Combine(metadataRoot, "libraries"),
+                    nativesDirectory, iconPath), instanceId));
+            }
+            catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or
+                                              ArgumentException or InvalidOperationException)
+            {
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// 将实例 json 与原版 json 复制到临时目录，使 MinecraftParser 能以统一根目录解析继承链。
+    /// </summary>
+    private static string NormalizePortalMcMetadata(string root, string instanceId, string vanillaId,
+        string instanceJsonPath, string vanillaJsonPath, bool isReferenceVanilla)
+    {
+        var cacheRoot = Path.Combine(Path.GetTempPath(), "Portal", "PortalMcMetadata", GetStablePathName(root));
+        var vanillaVersionDirectory = Path.Combine(cacheRoot, "versions", vanillaId);
+        Directory.CreateDirectory(vanillaVersionDirectory);
+        File.Copy(vanillaJsonPath, Path.Combine(vanillaVersionDirectory, $"{vanillaId}.json"), true);
+
+        if (instanceId.Equals(vanillaId, StringComparison.OrdinalIgnoreCase))
+        {
+            // id 与原版 id 相同时，实例 json 与原版 json 无法在缓存中同名共存。
+            // “引用原版”的原版实例直接用缓存中的原版 json；同 id 加载器实例则把缓存副本
+            // 的继承目标改写为别名（&lt;instanceId&gt;.vanilla），并以别名目录存放原版 json 供继承解析。
+            if (isReferenceVanilla)
+                return cacheRoot;
+
+            var instanceVersionDirectory = Path.Combine(cacheRoot, "versions", instanceId);
+            Directory.CreateDirectory(instanceVersionDirectory);
+            File.WriteAllText(Path.Combine(instanceVersionDirectory, $"{instanceId}.json"),
+                RewriteInheritsFrom(instanceJsonPath, $"{instanceId}.vanilla"));
+
+            var vanillaAliasDirectory = Path.Combine(cacheRoot, "versions", $"{instanceId}.vanilla");
+            Directory.CreateDirectory(vanillaAliasDirectory);
+            File.Copy(vanillaJsonPath, Path.Combine(vanillaAliasDirectory, $"{instanceId}.vanilla.json"), true);
+            return cacheRoot;
+        }
+
+        var instanceDirectory = Path.Combine(cacheRoot, "versions", instanceId);
+        Directory.CreateDirectory(instanceDirectory);
+        File.Copy(instanceJsonPath, Path.Combine(instanceDirectory, $"{instanceId}.json"), true);
+        return cacheRoot;
+    }
+
+    /// <summary>重写缓存副本中的继承目标，用于同 id 加载器实例的继承解析。</summary>
+    private static string RewriteInheritsFrom(string instanceJsonPath, string newInheritsFrom)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(instanceJsonPath));
+        using var stream = new MemoryStream();
+        using (var writer = new System.Text.Json.Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            foreach (var property in document.RootElement.EnumerateObject())
+            {
+                if (property.NameEquals("inheritsFrom"))
+                    writer.WriteString("inheritsFrom", newInheritsFrom);
+                else
+                    property.WriteTo(writer);
+            }
+            writer.WriteEndObject();
+        }
+
+        return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    /// <summary>
+    /// 将继承链上的原版入口重映射到 meta 目录，使库、资源索引与运行目录均指向共享的 meta。
+    /// </summary>
+    private static MinecraftEntry WithPortalMcDependencyPaths(MinecraftEntry entry, string metadataRoot,
+        string gameDirectory, string nativesDirectory)
+    {
+        if (entry is not ModifiedMinecraftEntry { HasInheritance: true } modified)
+            return entry;
+
+        var inherited = modified.InheritedMinecraft;
+        var remappedInherited = new VanillaMinecraftEntry
+        {
+            Id = inherited.Id,
+            Version = inherited.Version,
+            ClientJarPath = inherited.ClientJarPath,
+            ReleaseTime = inherited.ReleaseTime,
+            ClientJsonPath = inherited.ClientJsonPath,
+            AssetIndexJsonPath = Path.Combine(metadataRoot, "assets", "indexes",
+                Path.GetFileName(inherited.AssetIndexJsonPath)),
+            MinecraftFolderPath = metadataRoot,
+            // 同 id 加载器实例的缓存副本中继承目录名是别名，真实基座目录须按版本 id 定位。
+            VersionDirectoryPath = Path.Combine(metadataRoot, "versions", inherited.Version.VersionId),
+            GameDirectoryPath = gameDirectory,
+            AssetsDirectoryPath = Path.Combine(metadataRoot, "assets"),
+            LibrariesDirectoryPath = Path.Combine(metadataRoot, "libraries"),
+            NativesDirectoryPath = nativesDirectory
+        };
+
+        return new ModifiedMinecraftEntry
+        {
+            Id = entry.Id, Version = entry.Version, ClientJarPath = entry.ClientJarPath,
+            ReleaseTime = entry.ReleaseTime, ClientJsonPath = entry.ClientJsonPath,
+            AssetIndexJsonPath = entry.AssetIndexJsonPath, MinecraftFolderPath = entry.MinecraftFolderPath,
+            VersionDirectoryPath = entry.VersionDirectoryPath, GameDirectoryPath = entry.GameDirectoryPath,
+            AssetsDirectoryPath = entry.AssetsDirectoryPath, LibrariesDirectoryPath = entry.LibrariesDirectoryPath,
+            NativesDirectoryPath = entry.NativesDirectoryPath,
+            InheritedMinecraft = remappedInherited,
+            ModLoaders = modified.ModLoaders
         };
     }
 

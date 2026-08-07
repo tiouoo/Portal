@@ -244,6 +244,11 @@ public static class MinecraftLaunchService
         }
         context.SetRunning("正在启动 Minecraft 进程");
         await PrepareGraphicsBeforeLaunchAsync(instance, config, context.CancellationToken);
+        if (options.SetChineseLanguageOnLaunch)
+        {
+            context.SetRunning("正在设置游戏语言");
+            GameOptionsService.SetChineseLanguage(instance.MinecraftEntry.ToWorkingPath(config.IsEnableIndependency));
+        }
         var mcProcess = await Task.Run(async () =>
         {
             var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
@@ -863,6 +868,7 @@ public sealed class MinecraftLaunchOptions
     public int MaxMemory { get; init; }
     public bool AutoSetJavaHighPerformanceGpu { get; init; }
     public bool AutoOptimizeMemoryBeforeGameLaunch { get; init; }
+    public bool SetChineseLanguageOnLaunch { get; init; }
     public string? WindowTitle { get; init; }
     public string? JvmArguments { get; init; }
     public string? BeforeLaunchCommand { get; init; }

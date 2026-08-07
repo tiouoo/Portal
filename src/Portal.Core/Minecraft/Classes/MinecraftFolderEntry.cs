@@ -31,7 +31,7 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
         }
     }
     public string FolderTypeDescription => DetectedLayout.DisplayName;
-    public bool SupportsTraditionalInstallation => DetectedLayout.SupportsTraditionalInstallation;
+    public bool SupportsInstallation => DetectedLayout.SupportsInstallation;
 
     private int _instanceCount;
     private string _folderSize = "0.0";
@@ -78,7 +78,7 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                 {
                     OnPropertyChanged(nameof(DetectedLayout));
                     OnPropertyChanged(nameof(FolderTypeDescription));
-                    OnPropertyChanged(nameof(SupportsTraditionalInstallation));
+                    OnPropertyChanged(nameof(SupportsInstallation));
                 }
                 Events.RaiseCoreSaveSettings(); 
             }
@@ -116,6 +116,9 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                         MinecraftFolderKind.CurseForge => CountInstances(Path.Combine(layout.RootPath, "Instances"),
                             "minecraftinstance.json"),
                         MinecraftFolderKind.CurseForgeInstance => 1,
+                        MinecraftFolderKind.PortalMc => CountPortalMcInstances(layout.RootPath) +
+                                                       CountInstances(Path.Combine(layout.RootPath, "bedrock_instances"),
+                                                           "appxmanifest.xml"),
                         _ => 0
                     };
                 }
@@ -156,6 +159,11 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
 
     private static int CountInstances(string path, string marker) => Directory.Exists(path)
         ? Directory.GetDirectories(path).Count(directory => File.Exists(Path.Combine(directory, marker)))
+        : 0;
+
+    private static int CountPortalMcInstances(string rootPath) => Directory.Exists(Path.Combine(rootPath, "instances"))
+        ? Directory.GetDirectories(Path.Combine(rootPath, "instances"))
+            .Count(directory => File.Exists(Path.Combine(directory, $"{Path.GetFileName(directory)}.json")))
         : 0;
 
     private static int CountBedrockInstances(string rootPath) => CountInstances(

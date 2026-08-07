@@ -28,7 +28,10 @@ public partial class ModpackInstallDialogViewModel : ObservableObject, IDialogCo
     public bool HasInvalidInstanceId => string.IsNullOrWhiteSpace(InstanceId) ||
                                         InstanceId.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0;
     public bool InstanceIdExists => SelectedMinecraftFolder is not null && !HasInvalidInstanceId &&
-                                    Directory.Exists(Path.Combine(SelectedMinecraftFolder.Folder.FolderPath, "versions", InstanceId.Trim()));
+                                    Directory.Exists(Path.Combine(SelectedMinecraftFolder.Folder.FolderPath,
+                                        SelectedMinecraftFolder.Folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc
+                                            ? Path.Combine("instances", InstanceId.Trim())
+                                            : Path.Combine("versions", InstanceId.Trim())));
     public bool CanInstall => SelectedMinecraftFolder is not null && !HasInvalidInstanceId && !InstanceIdExists;
     [ObservableProperty] public partial ModpackInstallFolderItem? SelectedMinecraftFolder { get; set; }
     [ObservableProperty] public partial string InstanceId { get; set; }
@@ -38,7 +41,7 @@ public partial class ModpackInstallDialogViewModel : ObservableObject, IDialogCo
     public ModpackInstallDialogViewModel(string suggestedInstanceId, bool showSaveAs = true)
     {
         ShowSaveAs = showSaveAs;
-        foreach (var folder in Data.ConfigEntry.MinecraftFolders.Where(folder => folder.SupportsTraditionalInstallation))
+        foreach (var folder in Data.ConfigEntry.MinecraftFolders.Where(folder => folder.SupportsInstallation))
             MinecraftFolders.Add(new ModpackInstallFolderItem(folder, folder.FolderName, folder.FolderPath));
         SelectedMinecraftFolder = MinecraftFolders.FirstOrDefault(item => item.Folder == Data.ConfigEntry.DefaultMinecraftFolder)
                                   ?? MinecraftFolders.FirstOrDefault();
