@@ -54,6 +54,11 @@
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
+                    CommandParameter="{x:Type instancePages:Servers}"
+                    Header="服务器"
+                    IsVisible="{Binding IsJava}" />
+                <tio:NavMenuItem
+                    Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Screenshots}"
                     Header="截图"
                     IsVisible="{Binding IsJava}" />

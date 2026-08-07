@@ -1,7 +1,5 @@
-using System.IO.Compression;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using fNbt;
 using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -26,8 +24,7 @@ public sealed class RecentPlayService
         {
             cancellationToken.ThrowIfCancellationRequested();
             var history = ReadHistory(instance);
-            var servers = ReadServers(instance, out _).ToArray();
-            MergeConnectionLogs(instance, history, servers);
+            var servers = JavaServerManager.Read(instance).ToArray();
             var worlds = _worldSaveService.ScanAsync(instance, cancellationToken).GetAwaiter().GetResult();
             targets.AddRange(worlds
                 .Where(world => world.LastPlayedTime.HasValue)
@@ -70,7 +67,7 @@ public sealed class RecentPlayService
             lock (HistoryLock)
             {
                 var history = ReadHistory(instance);
-                var servers = ReadServers(instance, out _).ToArray();
+                var servers = JavaServerManager.Read(instance).ToArray();
                 var savedServer = servers.FirstOrDefault(server => IsSameServer(address, port, server.Host, server.Port));
                 history.RemoveAll(item => IsSameServer(item, address, port));
                 history.Add(new RecentServerHistory(address, port, savedServer?.Name, savedServer != null, DateTime.Now));
@@ -92,147 +89,7 @@ public sealed class RecentPlayService
         RecordServerPlay(instance, address, port);
     }
 
-    private static void MergeConnectionLogs(MinecraftInstance instance, List<RecentServerHistory> history,
-        IReadOnlyCollection<ServerEntry> servers)
-    {
-        var logsPath = instance.GetSpecialFolder(MinecraftSpecialFolder.LogsFolder);
-        if (!Directory.Exists(logsPath))
-            return;
-
-        IEnumerable<string> paths;
-        try
-        {
-            paths = Directory.EnumerateFiles(logsPath, "*.log").Append(Path.Combine(logsPath, "latest.log"))
-                .Concat(Directory.EnumerateFiles(logsPath, "*.log.gz")).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        }
-        catch (IOException exception)
-        {
-            Logger.Warning($"枚举 Minecraft 日志目录失败：{logsPath}{Environment.NewLine}{exception}");
-            return;
-        }
-        catch (UnauthorizedAccessException exception)
-        {
-            Logger.Warning($"没有权限枚举 Minecraft 日志目录：{logsPath}{Environment.NewLine}{exception}");
-            return;
-        }
-
-        foreach (var path in paths.Where(File.Exists))
-        {
-            try
-            {
-                using var file = File.OpenRead(path);
-                Stream stream = path.EndsWith(".gz", StringComparison.OrdinalIgnoreCase)
-                    ? new GZipStream(file, CompressionMode.Decompress)
-                    : file;
-                using (stream)
-                {
-                using var reader = new StreamReader(stream);
-                var lastWriteTime = File.GetLastWriteTime(path);
-                while (reader.ReadLine() is { } line)
-                {
-                    if (!TryGetConnection(line, out var address, out var port))
-                        continue;
-
-                    var savedServer = servers.FirstOrDefault(server => IsSameServer(address, port, server.Host, server.Port));
-                    var timestamp = GetLogTimestamp(line, lastWriteTime);
-                    var index = history.FindIndex(item => IsSameServer(item, address, port));
-                    var entry = new RecentServerHistory(address, port, savedServer?.Name, savedServer != null, timestamp);
-                    if (index < 0)
-                        history.Add(entry);
-                    else if (history[index].LastPlayedTime < timestamp)
-                        history[index] = entry;
-                }
-                }
-            }
-            catch (IOException exception)
-            {
-                Logger.Warning($"读取 Minecraft 日志以分析最近服务器失败：{path}{Environment.NewLine}{exception}");
-            }
-            catch (InvalidDataException exception)
-            {
-                Logger.Warning($"解析 Minecraft 日志以分析最近服务器失败：{path}{Environment.NewLine}{exception}");
-            }
-            catch (UnauthorizedAccessException exception)
-            {
-                Logger.Warning($"没有权限读取 Minecraft 日志：{path}{Environment.NewLine}{exception}");
-            }
-        }
-    }
-
-    private static IEnumerable<ServerEntry> ReadServers(MinecraftInstance instance, out DateTime lastWriteTime)
-    {
-        var path = Path.Combine(instance.MinecraftEntry!.MinecraftFolderPath, "servers.dat");
-        lastWriteTime = DateTime.MinValue;
-        if (!File.Exists(path))
-            return [];
-
-        lastWriteTime = File.GetLastWriteTime(path);
-
-        try
-        {
-            var file = new NbtFile();
-            file.LoadFromFile(path);
-            return (file.RootTag["servers"] as NbtList)?.OfType<NbtCompound>()
-                .Select(server => CreateServerEntry(server))
-                .Where(server => server != null)
-                .Cast<ServerEntry>()
-                .ToArray() ?? [];
-        }
-        catch (Exception exception)
-        {
-            Logger.Warning($"读取服务器列表失败：{path}{Environment.NewLine}{exception}");
-            return [];
-        }
-    }
-
-    private static ServerEntry? CreateServerEntry(NbtCompound server)
-    {
-        var address = (server["ip"] as NbtString)?.Value;
-        if (string.IsNullOrWhiteSpace(address))
-            return null;
-
-        var (host, port) = ParseAddress(address);
-        var iconText = (server["icon"] as NbtString)?.Value;
-        byte[]? icon = null;
-        if (!string.IsNullOrWhiteSpace(iconText))
-        {
-            var encoded = iconText[(iconText.IndexOf(',') + 1)..];
-            try { icon = Convert.FromBase64String(encoded); }
-            catch (FormatException exception)
-            {
-                Logger.Warning($"服务器图标 Base64 数据无效，将忽略图标。{Environment.NewLine}{exception}");
-            }
-        }
-
-        return new ServerEntry((server["name"] as NbtString)?.Value ?? host, address, host, port, icon);
-    }
-
-    private static (string Host, int Port) ParseAddress(string address)
-    {
-        // [addr]:port 形式的 IPv6 地址
-        if (address.StartsWith('['))
-        {
-            var end = address.IndexOf(']');
-            if (end > 0)
-            {
-                var host = address[1..end];
-                return address.Length > end + 1 && address[end + 1] == ':' &&
-                       int.TryParse(address[(end + 2)..], out var bracketPort)
-                    ? (host, bracketPort)
-                    : (host, 25565);
-            }
-        }
-
-        // 含多个 ':' 的裸 IPv6 地址整体视为主机
-        var separator = address.LastIndexOf(':');
-        return separator > 0 && address.IndexOf(':') == separator &&
-               int.TryParse(address[(separator + 1)..], out var port)
-            ? (address[..separator], port)
-            : (address, 25565);
-    }
-
     private static readonly Regex ConnectingPattern = new(@"\bConnecting to ([^,\s]+),\s*(\d+)", RegexOptions.Compiled);
-    private static readonly Regex LogTimePattern = new(@"^\[(\d{2}:\d{2}:\d{2})\]", RegexOptions.Compiled);
 
     private static bool TryGetConnection(string logLine, out string address, out int port)
     {
@@ -240,16 +97,6 @@ public sealed class RecentPlayService
         address = match.Success ? match.Groups[1].Value : string.Empty;
         port = 0;
         return match.Success && int.TryParse(match.Groups[2].Value, out port);
-    }
-
-    private static DateTime GetLogTimestamp(string line, DateTime fallback)
-    {
-        var match = LogTimePattern.Match(line);
-        if (!match.Success || !TimeOnly.TryParse(match.Groups[1].Value, out var time))
-            return fallback;
-
-        var timestamp = fallback.Date.Add(time.ToTimeSpan());
-        return timestamp > fallback.AddMinutes(1) ? timestamp.AddDays(-1) : timestamp;
     }
 
     private static string GetServerHistoryKey(string address, int port) => $"server:{address}:{port}";
@@ -310,7 +157,7 @@ public sealed class RecentPlayService
         var separator = addressAndPort.LastIndexOf(':');
         var (address, port) = separator > 0 && int.TryParse(addressAndPort[(separator + 1)..], out var legacyPort)
             ? (addressAndPort[..separator], legacyPort)
-            : ParseAddress(addressAndPort);
+            : JavaServerManager.ParseAddress(addressAndPort);
         return new RecentServerHistory(address, port, null, true, lastPlayedTime);
     }
 
@@ -325,6 +172,5 @@ public sealed class RecentPlayService
         0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式"
     };
 
-    private sealed record ServerEntry(string Name, string Address, string Host, int Port, byte[]? IconData);
     private sealed record RecentServerHistory(string Address, int Port, string? Name, bool WasSaved, DateTime LastPlayedTime);
 }

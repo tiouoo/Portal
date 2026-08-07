@@ -1,0 +1,257 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="1000"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstancePages.Servers"
+    x:DataType="instancePages:Servers"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="10,10,0,10">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
+            <Button
+                Click="AddServer_OnClick"
+                Content="添加服务器"
+                DockPanel.Dock="Right"
+                VerticalAlignment="Top" />
+            <Button
+                Click="Refresh_OnClick"
+                Content="刷新"
+                DockPanel.Dock="Right"
+                Margin="0,0,8,0"
+                VerticalAlignment="Top" />
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock
+                    Cursor="Hand"
+                    FontSize="24"
+                    MaxLines="1"
+                    PointerPressed="Title_OnPointerPressed"
+                    Text="服务器"
+                    TextWrapping="NoWrap" />
+                <TextBlock
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="10,8,0,0"
+                    MaxLines="1"
+                    Text="{Binding ServerCountText}"
+                    TextWrapping="NoWrap" />
+                <TextBlock
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    IsVisible="{Binding IsRefreshing}"
+                    Margin="0,8,0,0"
+                    Text="·正在检测服务器状态"
+                    TextWrapping="NoWrap" />
+            </DockPanel>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoading}"
+                Margin="0,8,0,0"
+                Text="正在读取服务器..." />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsEmpty}"
+                Margin="0,8,0,0"
+                Text="此实例没有服务器" />
+        </DockPanel>
+        <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
+            <ItemsRepeater ItemsSource="{Binding Items}" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="16"
+                        MinItemHeight="164"
+                        MinItemWidth="300"
+                        MinRowSpacing="16"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="instancePages:ServerItem">
+                        <Border
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="11"
+                            Padding="0">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem
+                                        Click="RefreshServer_OnClick"
+                                        Header="刷新数据"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M200.5,128C200.5,110.3 214.8,96 232.5,96L407.5,96C425.2,96 439.5,110.3 439.5,128 439.5,145.7 425.2,160 407.5,160L360,160 360,251.9C361.5,250.3 363.2,248.7 365,247.3L461.7,167.3C474.7,156.5 493.7,158.3 504.5,171.3 515.3,184.3 513.5,203.3 500.5,214.1L403.8,294.1C397.5,299.3 390.3,302.4 383,303.4L383,360 407.5,360C425.2,360 439.5,374.3 439.5,392 439.5,409.7 425.2,424 407.5,424L232.5,424C214.8,424 200.5,409.7 200.5,392 200.5,374.3 214.8,360 232.5,360L257,360 257,303.4C249.7,302.4 242.5,299.3 236.2,294.1L139.5,214.1C126.5,203.3 124.7,184.3 135.5,171.3 146.3,158.3 165.3,156.5 178.3,167.3L275,247.3C276.8,248.7 278.5,250.3 280,251.9L280,160 232.5,160C214.8,160 200.5,145.7 200.5,128z M96,352C96,334.3 110.3,320 128,320L132,320C136.4,320 140.7,320.8 144.8,322.2 150.5,324.1 155.8,327.2 160.1,331.4 169,340.1 173.3,352.4 172.1,364.5 172.5,390.8 182.8,416.2 201.1,436.4 219.4,456.6 243.9,470.1 270.9,474.7 297.9,479.3 325.6,474.6 349.5,461.4 361.6,454.9 375.5,454.6 387.8,460.5L432,482.8C437.9,485.7 444.6,485.2 450,481.6 455.4,478.1 458.5,472 458.1,465.6 458,462.2 456.8,458.9 454.7,456.1L427.1,418.5C454.6,393.8 473.7,360.5 481.1,323.9 481.9,320.3 482.4,316.5 482.4,312.7 482.4,310.8 482.3,309 482.2,307.1 481.6,295.2 487,283.9 496.7,277.7 506.4,271.5 518.7,271.5 528.4,277.7 531.6,279.6 534.4,282.2 536.5,285.3L568.4,333.2C570.9,336.7 574.7,338.9 578.9,338.9 583.1,338.9 586.9,336.7 589.4,333.2L621.3,285.3C623.4,282.2 626.2,279.6 629.4,277.7 632.6,275.8 636.3,275.1 639.9,275.8 655.9,278.8 670.6,286.7 681.7,298.4 692.8,310.2 699.5,325.1 700.9,341.1 702.2,357 697.9,372.7 688.7,385.4 684.3,391.6 678.6,396.7 672.2,400.4L558.1,463.4C556.2,464.4 554.2,465.3 552.2,466.1L512,484.2C508.9,485.7 505.6,486.7 502.2,487.1 500.8,487.3 499.3,487.4 497.9,487.4L360,487.4 360,536 407.5,536C425.2,536 439.5,550.3 439.5,568 439.5,585.7 425.2,600 407.5,600L232.5,600C214.8,600 200.5,585.7 200.5,568 200.5,550.3 214.8,536 232.5,536L280,536 280,487.4C261.2,487.4 242.5,483.5 225.3,476 208.1,468.5 192.7,457.4 180.2,443.6 157.6,418.9 143.5,387.4 139.7,354 137.8,337.7 141.4,321.3 149.6,307.3 153,301.7 157.1,296.6 161.9,292.2 166.6,287.8 171.9,284.2 177.6,281.5 181.5,279.5 185.6,278.2 189.9,277.4 193,276.8 196.1,276.5 199.3,276.5L200.5,276.5C206,276.5 211.4,277.6 216.4,279.6 221.4,281.6 225.9,284.6 229.7,288.4 233.5,292.2 236.5,296.7 238.5,301.7 240.5,306.7 241.6,312.1 241.6,317.6 241.6,329.1 237.1,340.2 229.1,348.2 226.7,350.6 224,352.6 221.2,354.2L221.2,354.3C220.1,355 219,355.5 217.8,355.9 216.6,356.3 215.4,356.5 214.2,356.5L128,356.5C110.3,356.5 96,342.2 96,324.5 96,319.6 96.9,314.7 98.7,310.1 100.5,305.5 103.1,301.3 106.4,297.7 109.7,294.1 113.6,291.2 117.9,289.1 122.2,287 126.8,285.8 131.5,285.5 136.2,285.2 140.9,285.9 145.4,287.4L145.4,287.4C152.6,289.9 158.5,295.1 161.9,301.9 165.3,308.7 165.8,316.7 163.4,323.9 162.6,326.2 161.6,328.4 160.4,330.4L159.4,332.2C158.1,334.5 156.5,336.5 154.7,338.3 153,340 151.1,341.6 149,342.9 146.9,344.2 144.7,345.3 142.4,346.1 140.1,346.9 137.7,347.4 135.3,347.7L128,348.5C110.3,348.5 96,334.2 96,316.5L96,352z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="LaunchServer_OnClick"
+                                        Header="启动进入"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M434.8,54.1C446.7,62.7,451.1,78.3,445.7,91.9L367.3,288 512,288C525.5,288 537.5,296.4 542.1,309.1 546.7,321.8 542.8,336 532.5,344.6L244.5,584.6C233.2,594 217.1,594.5 205.2,585.9 193.3,577.3 188.9,561.7 194.3,548.1L272.7,352 128,352C114.5,352 102.5,343.6 97.9,330.9 93.3,318.2 97.2,304 107.5,295.4L395.5,55.4C406.8,46,422.9,45.5,434.8,54.1z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <Separator />
+                                    <MenuItem
+                                        Click="EditServer_OnClick"
+                                        Header="编辑"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M416.9,85.2L372,130.1 509.9,268 554.8,223.1C568.4,209.6 576,191.2 576,172 576,152.8 568.4,134.4 554.8,120.9L519.1,85.2C505.6,71.6 487.2,64 468,64 448.8,64 430.4,71.6 416.9,85.2z M338.1,164L122.9,379.1C112.2,389.8,104.4,403.2,100.3,417.8L64.9,545.6C62.6,553.9 64.9,562.9 71.1,569 77.3,575.1 86.2,577.5 94.5,575.2L222.3,539.7C236.9,535.6,250.2,527.9,261,517.1L476,301.9 338.1,164z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="CopyAddress_OnClick"
+                                        Header="复制地址"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M384,96C384,78.3 398.3,64 416,64L512,64C547.3,64 576,92.7 576,128L576,288C576,323.3 547.3,352 512,352L480,352C462.3,352 448,337.7 448,320 448,302.3 462.3,288 480,288L512,288C520.8,288 528,280.8 528,272L528,144C528,135.2 520.8,128 512,128L416,128C407.2,128 400,135.2 400,144L400,176C400,193.7 385.7,208 368,208 350.3,208 336,193.7 336,176L336,96z M64,192C64,156.7 92.7,128 128,128L160,128C177.7,128 192,142.3 192,160 192,177.7 177.7,192 160,192L128,192C119.2,192 112,199.2 112,208L112,464C112,472.8 119.2,480 128,480L384,480C392.8,480 400,472.8 400,464L400,432C400,414.3 414.3,400 432,400 449.7,400 464,414.3 464,432L464,464C464,499.3 435.3,528 400,528L128,528C92.7,528 64,499.3 64,464L64,192z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="RemoveServer_OnClick"
+                                        Header="删除"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403.7,56.8,407.4,69.9L416,96 512,96C529.7,96,544,110.3,544,128 544,145.7 529.7,160 512,160L128,160C110.3,160,96,145.7,96,128 96,110.3,110.3,96,128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3,202.7,512 216,512 229.3,512,240,501.3,240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3,306.7,512 320,512 333.3,512,344,501.3,344,488L344,296C344,282.7,306.7,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3,410.7,512 424,512 437.3,512,448,501.3,448,488L448,296C448,282.7,437.3,272,424,272z"
+                                                Height="16"
+                                                Width="16" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+                            <Border
+                                Background="{DynamicResource TranslucentBackgroundColor}"
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10">
+                                <DockPanel>
+                                    <DockPanel Dock="Top">
+                                        <Border
+                                            CornerRadius="12"
+                                            DockPanel.Dock="Left"
+                                            Height="56"
+                                            Margin="2,0,0,0"
+                                            VerticalAlignment="Top"
+                                            Width="56">
+                                            <Grid>
+                                                <Image
+                                                    Height="56"
+                                                    IsVisible="{Binding HasIcon}"
+                                                    Source="{Binding Icon}"
+                                                    Stretch="UniformToFill"
+                                                    Width="56" />
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M451.5,160C434.9,160 418.8,164.5 404.7,172.7 388.9,156.7 370.5,143.3 350.2,133.2 378.4,109.2 414.3,96 451.5,96 537.9,96 608,166 608,252.5 608,294 591.5,333.8 562.2,363.1L491.1,434.2C461.8,463.5 422,480 380.5,480 294.1,480 224,410 224,323.5 224,305.8 238.3,291.5 256,291.5 273.7,291.5 288,305.8 288,323.5 288,374.6 329.4,416 380.5,416 405,416 428.5,406.3 445.9,388.9L517,317.8C534.3,300.5 544,277 544,252.5 544,201.4 502.6,160 451.5,160z M259.5,224C235,224 211.5,233.7 194.1,251.1L123,322.2C105.7,339.5 96,363 96,387.5 96,438.6 137.4,480 188.5,480 205.1,480 221.2,475.5 235.3,467.3 251.1,483.3 269.5,496.7 289.8,506.8 261.6,530.8 225.7,544 188.5,544 102.1,544 32,474 32,387.5 32,346 48.5,306.2 77.8,276.9L148.9,205.8C178.2,176.5 218,160 259.5,160 345.9,160 416,230 416,316.5 416,334.2 401.7,348.5 384,348.5 366.3,348.5 352,334.2 352,316.5 352,265.4 310.6,224 259.5,224z"
+                                                    Height="32"
+                                                    IsVisible="{Binding !HasIcon}"
+                                                    Width="32" />
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">
+                                            <TextBlock
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                MaxLines="1"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="NoWrap" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Margin="0,2,0,0"
+                                                MaxLines="1"
+                                                Text="{Binding AddressText}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="NoWrap" />
+                                            <StackPanel
+                                                Margin="0,3,0,0"
+                                                Orientation="Horizontal"
+                                                Spacing="8">
+                                                <Ellipse
+                                                    Fill="{Binding StatusBrush}"
+                                                    Height="8"
+                                                    Margin="0,0,0,1"
+                                                    VerticalAlignment="Center"
+                                                    Width="8" />
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{Binding StatusBrush}"
+                                                    Text="{Binding StatusText}"
+                                                    VerticalAlignment="Center" />
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{Binding PingBrush}"
+                                                    IsVisible="{Binding HasPing}"
+                                                    Text="{Binding PingText}"
+                                                    VerticalAlignment="Center" />
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                                    IsVisible="{Binding HasPlayers}"
+                                                    Text="{Binding PlayersText}"
+                                                    VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Panel DockPanel.Dock="Bottom" Margin="3,8,3,0">
+                                        <Button
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Click="LaunchServer_OnClick"
+                                            Cursor="Hand"
+                                            DockPanel.Dock="Right"
+                                            HorizontalAlignment="Right"
+                                            Padding="4,-2,2,0"
+                                            Tag="{Binding}"
+                                            Theme="{StaticResource TransparentButton}"
+                                            ToolTip.Tip="启动服务器"
+                                            VerticalAlignment="Bottom"
+                                            VerticalContentAlignment="Bottom">
+                                            <PathIcon
+                                                Data="F1 M640,640z M0,0z M192,384L88.5,384C63.6,384,48.3,356.9,61.1,335.5L114,247.3C122.7,232.8,138.3,224,155.2,224L250.2,224C326.3,95.1 439.8,88.6 515.7,99.7 528.5,101.6 538.5,111.6 540.3,124.3 551.4,200.2 544.9,313.7 416,389.8L416,484.8C416,501.7,407.2,517.3,392.7,526L304.5,578.9C283.2,591.7,256,576.3,256,551.5L256,448C256,412.7,227.3,384,192,384L191.9,384z M464,224C464,197.5 442.5,176 416,176 389.5,176 368,197.5 368,224 368,250.5 389.5,272 416,272 442.5,272 464,250.5 464,224z"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Height="15"
+                                                Width="15" />
+                                        </Button>
+                                        <StackPanel Spacing="3">
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                IsVisible="{Binding HasVersion}"
+                                                Text="{Binding VersionText}"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                MaxLines="2"
+                                                Text="{Binding DescriptionText}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="WrapWithOverflow"
+                                                VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Panel>
+                                </DockPanel>
+                            </Border>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:ScrollView>
+    </DockPanel>
+</UserControl>
