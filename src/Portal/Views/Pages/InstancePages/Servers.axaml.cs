@@ -15,6 +15,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -361,9 +362,16 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         if (_instance == null || TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
+        _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
+            MinecraftLaunchOptionsFactory.Create(_instance,
+                logSession => MinecraftLogPage.Open(logSession, topLevel)), BuildTarget(item));
+    }
+
+    private RecentPlayTarget BuildTarget(ServerItem item)
+    {
         var entry = item.Entry;
-        var target = new RecentPlayTarget(
-            _instance,
+        return new RecentPlayTarget(
+            _instance!,
             RecentPlayTargetType.Server,
             $"{entry.Host}:{entry.Port}",
             entry.Name,
@@ -372,10 +380,19 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
             ServerIconData: entry.IconData,
             ServerAddress: entry.Host,
             ServerPort: entry.Port);
+    }
 
-        _ = MinecraftLaunchService.LaunchAsync(_instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(_instance,
-                logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    private async void CreateShortcut_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (_instance == null || (sender as Control)?.Tag is not ServerItem item)
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        await DesktopShortcutUi.CreateAsync(topLevel,
+            () => DesktopShortcutService.CreateAsync(_instance, BuildTarget(item)));
     }
 
     private async void CopyAddress_OnClick(object? sender, RoutedEventArgs e)
