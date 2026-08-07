@@ -195,7 +195,7 @@ public sealed class MinecraftServerPingService
             if (root == null)
                 return null;
 
-            var description = ToPlainText(root["description"]);
+            var description = ToFormattedText(root["description"]);
             var version = (root["version"] as JsonObject)?["name"]?.GetValue<string>() ?? string.Empty;
 
             var online = 0;
@@ -217,52 +217,92 @@ public sealed class MinecraftServerPingService
     }
 
     /// <summary>
-    /// 将聊天组件（字符串 / 对象 / 数组）转换为纯文本 MOTD。
+    /// 将聊天组件（字符串 / 对象 / 数组）转换为带 § 格式码的 MOTD 文本，
+    /// 参考 PCL-CE 的 MinecraftFormatter.ConvertToMinecraftFormat 实现。
     /// </summary>
-    private static string ToPlainText(JsonNode? node)
+    private static string ToFormattedText(JsonNode? node)
     {
         if (node == null)
             return string.Empty;
 
         var sb = new StringBuilder();
-        var stack = new Stack<JsonNode>();
-        stack.Push(node);
-        while (stack.Count > 0)
-        {
-            var current = stack.Pop();
-            switch (current.GetValueKind())
-            {
-                case JsonValueKind.Object:
-                {
-                    var obj = current.AsObject();
-                    if (obj.TryGetPropertyValue("extra", out var extra) && extra is JsonArray extraArray)
-                    {
-                        for (var i = extraArray.Count - 1; i >= 0; i--)
-                            if (extraArray[i] is { } item)
-                                stack.Push(item);
-                    }
+        AppendComponent(sb, node, []);
+        return sb.ToString();
+    }
 
-                    if (obj.TryGetPropertyValue("text", out var text))
-                        sb.Append(text?.GetValue<string>() ?? string.Empty);
-                    else if (obj.TryGetPropertyValue("translate", out var translate))
-                        sb.Append(translate?.GetValue<string>() ?? string.Empty);
-                    break;
-                }
-                case JsonValueKind.String:
-                    sb.Append(current.GetValue<string>());
-                    break;
-                case JsonValueKind.Array:
+    private static readonly Dictionary<string, string> ChatColorMap = new()
+    {
+        { "black", "0" }, { "dark_blue", "1" }, { "dark_green", "2" }, { "dark_aqua", "3" },
+        { "dark_red", "4" }, { "dark_purple", "5" }, { "gold", "6" }, { "gray", "7" },
+        { "dark_gray", "8" }, { "blue", "9" }, { "green", "a" }, { "aqua", "b" },
+        { "red", "c" }, { "light_purple", "d" }, { "yellow", "e" }, { "white", "f" }
+    };
+
+    private static void AppendComponent(StringBuilder sb, JsonNode node, List<string> formats)
+    {
+        switch (node.GetValueKind())
+        {
+            case JsonValueKind.String:
+                sb.Append(node.GetValue<string>());
+                break;
+            case JsonValueKind.Array:
+                foreach (var item in node.AsArray())
+                    if (item != null)
+                        AppendComponent(sb, item, formats);
+                break;
+            case JsonValueKind.Object:
+            {
+                var obj = node.AsObject();
+                var current = new List<string>(formats);
+
+                if (obj.TryGetPropertyValue("color", out var colorNode) && colorNode is JsonValue colorValue)
                 {
-                    var array = current.AsArray();
-                    for (var i = array.Count - 1; i >= 0; i--)
-                        if (array[i] is { } item)
-                            stack.Push(item);
-                    break;
+                    var color = colorValue.GetValue<string>();
+                    if (ChatColorMap.TryGetValue(color, out var legacy))
+                        current.Add(legacy);
+                    else if (color.StartsWith('#'))
+                        current.Add(color);
+                    else
+                        current.Add("f");
                 }
+
+                ApplyChatFormat(current, obj, "bold", "l");
+                ApplyChatFormat(current, obj, "italic", "o");
+                ApplyChatFormat(current, obj, "underlined", "n");
+                ApplyChatFormat(current, obj, "strikethrough", "m");
+                ApplyChatFormat(current, obj, "obfuscated", "k");
+
+                if (current.Count > 0)
+                    sb.Append('§').Append(string.Join('§', current));
+
+                if (obj.TryGetPropertyValue("text", out var textNode) && textNode is JsonValue textValue)
+                    sb.Append(textValue.GetValue<string>());
+                else if (obj.TryGetPropertyValue("translate", out var translateNode) && translateNode is JsonValue translateValue)
+                    sb.Append(translateValue.GetValue<string>());
+
+                if (obj.TryGetPropertyValue("extra", out var extra) && extra is JsonArray extraArray)
+                    foreach (var item in extraArray)
+                        if (item != null)
+                            AppendComponent(sb, item, current);
+                break;
             }
         }
+    }
 
-        return sb.ToString();
+    private static void ApplyChatFormat(List<string> formats, JsonObject obj, string name, string code)
+    {
+        if (!obj.TryGetPropertyValue(name, out var value) || value is not JsonValue boolValue)
+            return;
+
+        if (boolValue.GetValue<bool>())
+        {
+            if (!formats.Contains(code))
+                formats.Add(code);
+        }
+        else
+        {
+            formats.Remove(code);
+        }
     }
 
     // ===== 现代协议数据包构建 =====
