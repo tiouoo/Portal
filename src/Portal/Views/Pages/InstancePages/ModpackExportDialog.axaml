@@ -1,0 +1,138 @@
+<UserControl
+    d:DesignHeight="640"
+    d:DesignWidth="820"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstancePages.ModpackExportDialog"
+    x:ClassModifier="internal"
+    x:DataType="instancePages:ModpackExportDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, *"
+        Width="820">
+        <StackPanel Spacing="10">
+            <TextBlock
+                FontSize="16"
+                FontWeight="600"
+                Text="导出整合包" />
+            <DockPanel>
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    Margin="0,0,0,0"
+                    Width="160">
+                    <TextBlock Margin="5,0,0,2" Text="整合包版本" />
+                    <TextBox
+                        MaxLength="100"
+                        PlaceholderText="1.0.0"
+                        Text="{Binding PackVersion}" />
+                </StackPanel>
+                <!-- <StackPanel> -->
+                <!--     <TextBlock Margin="5,0,0,2" Text="实例" /> -->
+                <!--  <TextBlock  -->
+                <!--  FontSize="12"  -->
+                <!--  Foreground="{DynamicResource InnerForegroundColor}"  -->
+                <!--  Text="{Binding InstanceName}"  -->
+                <!--  TextTrimming="CharacterEllipsis" />  -->
+                <!-- </StackPanel> -->
+                <StackPanel DockPanel.Dock="Left" Margin="0,0,16,0">
+                    <TextBlock Margin="5,0,0,2" Text="整合包名称" />
+                    <TextBox
+                        MaxLength="100"
+                        PlaceholderText="{Binding DefaultPackName}"
+                        Text="{Binding PackName}" />
+                </StackPanel>
+            </DockPanel>
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasDescription}"
+                Text="{Binding PackSummary}"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Spacing="10">
+            <TextBlock
+                FontSize="15"
+                FontWeight="SemiBold"
+                Margin="5,8,0,0"
+                Text="包含的内容" />
+            <Border
+                Background="{DynamicResource PureCardBackground}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                MaxHeight="300"
+                MinHeight="160"
+                Padding="10,6">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Options}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="instancePages:ExportOptionItem">
+                                <CheckBox
+                                    Content="{Binding}"
+                                    IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                    IsEnabled="{Binding IsEnabled}"
+                                    Margin="{Binding IndentMargin}">
+                                    <CheckBox.ContentTemplate>
+                                        <DataTemplate x:DataType="instancePages:ExportOptionItem">
+                                            <StackPanel Spacing="1">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Text="{Binding Title}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                                    IsVisible="{Binding HasDescription}"
+                                                    Margin="0,1,0,0"
+                                                    Text="{Binding Description}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </CheckBox.ContentTemplate>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <TextBlock
+                FontSize="15"
+                FontWeight="SemiBold"
+                Margin="5,8,0,0"
+                Text="高级选项" />
+            <StackPanel
+                Margin="5,0,0,0"
+                Orientation="Vertical"
+                Spacing="4">
+                <CheckBox Content="打包所有文件（避免联网下载）" IsChecked="{Binding BundleAllFiles, Mode=TwoWay}" />
+                <CheckBox
+                    Content="Modrinth 上传模式（仅向 Modrinth 查询下载地址）"
+                    IsChecked="{Binding ModrinthOnly, Mode=TwoWay}"
+                    IsEnabled="{Binding CanUseModrinthMode}" />
+                <CheckBox Content="包含 Portal 实例设置" IsChecked="{Binding IncludePortalSettings, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Command="{Binding CancelCommand}" Content="取消" />
+                <Button Command="{Binding ConfirmCommand}" Content="开始导出" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

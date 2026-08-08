@@ -431,6 +431,45 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         _ = NotifyRenameOutcomeAsync(task, topLevel);
     }
 
+    private async void ExportModpack_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null || !Instance.IsJava)
+            return;
+
+        var options = await ModpackExportDialogHost.Show(Instance, this.TryGetHostId());
+        if (options is null)
+            return;
+
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "导出整合包",
+            SuggestedFileName = $"{options.PackName} {options.PackVersion}".Trim(),
+            FileTypeChoices =
+            [
+                new FilePickerFileType("Modrinth 整合包") { Patterns = ["*.mrpack"] }
+            ]
+        });
+        if (file is null)
+            return;
+
+        var task = InstanceModpackExportService.CreateExportTask(Instance, options, file.Path.LocalPath);
+        task.Start();
+        _ = NotifyExportOutcomeAsync(task, topLevel);
+    }
+
+    private static async Task NotifyExportOutcomeAsync(ManagedTask task, TopLevel? topLevel)
+    {
+        if (topLevel is null) return;
+        await task.Completion;
+        if (task.Status is ManagedTaskStatus.Faulted)
+            NotificationGateway.Notice(topLevel, $"导出整合包失败：{task.ErrorMessage}", NotificationType.Error);
+        else if (task.Status is ManagedTaskStatus.Cancelled)
+            NotificationGateway.Notice(topLevel, "导出整合包已取消。", NotificationType.Warning);
+        else
+            NotificationGateway.Notice(topLevel, "整合包已导出", NotificationType.Success);
+    }
+
     private static async Task NotifyRenameOutcomeAsync(ManagedTask task, TopLevel? topLevel)
     {
         if (topLevel is null) return;

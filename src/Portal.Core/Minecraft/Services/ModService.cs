@@ -490,11 +490,7 @@ public sealed class ModService
         }));
     }
 
-    /// <summary>
-    /// 用固定大小的缓冲区分两遍流式读取文件：第一遍算 SHA1 并统计过滤后的长度，
-    /// 第二遍增量计算 CurseForge 指纹。全程不把整个文件读进内存。
-    /// </summary>
-    private static (string Sha1, uint Fingerprint) ComputeHashes(string path, CancellationToken cancellationToken)
+    internal static (string Sha1, uint Fingerprint) ComputeHashes(string path, CancellationToken cancellationToken)
     {
         using var sha1 = IncrementalHash.CreateHash(HashAlgorithmName.SHA1);
         var buffer = new byte[HashBufferSize];

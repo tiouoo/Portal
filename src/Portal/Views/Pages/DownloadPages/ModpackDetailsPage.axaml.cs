@@ -313,6 +313,12 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId, archivePath, GetForgeJavaPath(), instancesRoot),
                 _ => throw new NotSupportedException("不支持的整合包来源。")
             };
+            await RunStepAsync(context, "导入实例设置", "正在恢复整合包附带的 Portal 实例设置", step =>
+            {
+                ImportPortalSettings(instancePath, instancesRoot is not null);
+                step.ReportProgress(1);
+                return Task.CompletedTask;
+            });
             await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
@@ -487,6 +493,32 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         if (instancesRoot is not null)
             await MovePortalMcInstanceAsync(context, folder, effectiveLoaderId, id, instancesRoot);
         return minecraft;
+    }
+
+    private static void ImportPortalSettings(string instancePath, bool isPortalMc)
+    {
+        var portalFolder = Path.Combine(instancePath, "Portal");
+        var exportedConfigPath = Path.Combine(portalFolder, MinecraftInstance.PortablePortalConfigFileName);
+        if (!File.Exists(exportedConfigPath))
+            return;
+
+        try
+        {
+            var targetConfigPath = isPortalMc
+                ? MinecraftInstance.GetExternalConfigPath(MinecraftFolderKind.PortalMc, instancePath)
+                : Path.Combine(instancePath, MinecraftInstance.PortablePortalConfigFileName);
+            var targetDirectory = Path.GetDirectoryName(targetConfigPath);
+            if (string.IsNullOrEmpty(targetDirectory))
+                return;
+            Directory.CreateDirectory(targetDirectory);
+            File.Copy(exportedConfigPath, targetConfigPath, true);
+            Directory.Delete(portalFolder, true);
+            Logger.Info($"[Modpack] Imported Portal settings to {targetConfigPath}.");
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Modpack] Failed to import Portal settings from {exportedConfigPath}: {exception}");
+        }
     }
 
     /// <summary>

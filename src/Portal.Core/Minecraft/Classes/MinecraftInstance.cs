@@ -20,6 +20,8 @@ namespace Portal.Core.Minecraft.Classes;
 
 public class MinecraftInstance : ObservableObject
 {
+    public const string PortablePortalConfigFileName = "Portal.config.json";
+
     public MinecraftInstanceType Type { get; init; }
 
     private bool _isBlocked;
@@ -411,7 +413,7 @@ public class MinecraftInstance : ObservableObject
             JavaConfig.EnableIndependentInstance = true;
     }
 
-    private string GetConfigPath()
+    public string GetConfigPath()
     {
         if (Layout == null)
             return Path.Combine(MinecraftPath, "Portal.config.json");
