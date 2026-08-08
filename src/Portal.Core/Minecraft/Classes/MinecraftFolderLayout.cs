@@ -24,6 +24,28 @@ public sealed record MinecraftFolderLayout(
 
     public bool SupportsInstallation => Kind == MinecraftFolderKind.PortalMc;
 
+    private static string GetMultiMcBrand(string path)
+    {
+        var name = Path.GetFileName(Path.GetFullPath(path));
+        if (name.Equals(".BakaXL", StringComparison.OrdinalIgnoreCase)) return "BakaXL";
+        if (name.Equals("PrismLauncher", StringComparison.OrdinalIgnoreCase)) return "Prism Launcher";
+        if (name.Equals("MultiMC", StringComparison.OrdinalIgnoreCase)) return "MultiMC";
+        return "MultiMC / Prism Launcher";
+    }
+
+    private static string GetMultiMcInstanceBrand(string path)
+    {
+        var parent = Directory.GetParent(path);
+        while (parent != null)
+        {
+            var brand = GetMultiMcBrand(parent.FullName);
+            if (brand != "MultiMC / Prism Launcher")
+                return $"{brand} 实例";
+            parent = parent.Parent;
+        }
+        return "MultiMC / Prism Launcher 实例";
+    }
+
     private static bool IsPortalMcRoot(string path)
     {
         if (string.IsNullOrWhiteSpace(path)) return false;
@@ -61,12 +83,12 @@ public sealed record MinecraftFolderLayout(
             Directory.Exists(Path.Combine(selected, "libraries")) &&
             Directory.Exists(Path.Combine(selected, "assets")) &&
             Directory.Exists(Path.Combine(selected, "meta", "net.minecraft")))
-            return new(MinecraftFolderKind.MultiMc, selected, selected, "MultiMC / Prism Launcher");
+            return new(MinecraftFolderKind.MultiMc, selected, selected, GetMultiMcBrand(selected));
 
         // MultiMC / BakaXL 实例目录
         if (File.Exists(Path.Combine(selected, "package.info")) &&
             TryFindMultiMcRoot(selected, out var multiMcRoot))
-            return new(MinecraftFolderKind.MultiMcInstance, selected, multiMcRoot, "MultiMC / Prism Launcher 实例");
+            return new(MinecraftFolderKind.MultiMcInstance, selected, multiMcRoot, GetMultiMcInstanceBrand(selected));
 
         // Portal MC 布局
         if (IsPortalMcRoot(selected))
@@ -119,13 +141,13 @@ public sealed record MinecraftFolderLayout(
         if (Directory.Exists(Path.Combine(selected, "instances")) &&
             Directory.Exists(Path.Combine(selected, "libraries")) &&
             Directory.Exists(Path.Combine(selected, "assets")))
-            return new(MinecraftFolderKind.MultiMc, selected, selected, "MultiMC / Prism Launcher");
+            return new(MinecraftFolderKind.MultiMc, selected, selected, GetMultiMcBrand(selected));
 
         // MultiMC 实例目录（mmc-pack.json）
         if (File.Exists(Path.Combine(selected, "instance.cfg")) && File.Exists(Path.Combine(selected, "mmc-pack.json")))
             return new(MinecraftFolderKind.MultiMcInstance, selected,
                 Directory.GetParent(Directory.GetParent(selected)?.FullName ?? selected)?.FullName ?? selected,
-                "MultiMC / Prism Launcher 实例");
+                GetMultiMcInstanceBrand(selected));
 
         if (Path.GetFileName(selected).Equals(".minecraft", StringComparison.OrdinalIgnoreCase) &&
             File.Exists(Path.Combine(Directory.GetParent(selected)?.FullName ?? string.Empty, "instance.cfg")))
@@ -133,7 +155,7 @@ public sealed record MinecraftFolderLayout(
             var instanceRoot = Directory.GetParent(selected)!.FullName;
             return new(MinecraftFolderKind.MultiMcInstance, instanceRoot,
                 Directory.GetParent(Directory.GetParent(instanceRoot)?.FullName ?? instanceRoot)?.FullName ?? instanceRoot,
-                "MultiMC / Prism Launcher 实例");
+                GetMultiMcInstanceBrand(instanceRoot));
         }
 
         // 传统 .minecraft
@@ -157,7 +179,7 @@ public sealed record MinecraftFolderLayout(
         var displayName = kind switch
         {
             MinecraftFolderKind.Modrinth or MinecraftFolderKind.ModrinthInstance => "Modrinth",
-            MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher",
+            MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => GetMultiMcBrand(selected),
             MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge",
             MinecraftFolderKind.PortalMc => "Portal MC",
             MinecraftFolderKind.Standard => "传统 .minecraft 文件夹",
@@ -303,7 +325,7 @@ public sealed record MinecraftInstanceLayout(
     public string KindDisplayName => Kind switch
     {
         MinecraftFolderKind.Modrinth or MinecraftFolderKind.ModrinthInstance => "Modrinth",
-        MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher",
+        MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher / BakaXL",
         MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge",
         MinecraftFolderKind.PortalMc => "Portal MC",
         MinecraftFolderKind.Standard => "传统 .minecraft",

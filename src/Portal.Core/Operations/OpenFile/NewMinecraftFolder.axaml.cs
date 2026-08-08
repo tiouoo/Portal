@@ -332,7 +332,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
             new(
                 MinecraftFolderKind.Modrinth,
-                "Axolotl / Theseus",
+                "Axolotl",
                 ReadAxolotlFolder),
 
             new(
@@ -368,7 +368,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
             new(
                 MinecraftFolderKind.MultiMc,
-                "MultiMC / Prism Launcher",
+                "MultiMC",
                 () =>
                 {
                     var roots = new[]
@@ -382,16 +382,52 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
                     foreach (var root in roots)
                     {
-                        foreach (var launcherDir in new[] { "MultiMC", "PrismLauncher", ".BakaXL" })
-                        {
-                            var path = Path.Combine(root, launcherDir,
-                                launcherDir == ".BakaXL" ? "minecraft" : string.Empty);
-                            if (Directory.Exists(path))
-                                return path;
-                        }
+                        var path = Path.Combine(root, "MultiMC");
+                        if (Directory.Exists(path))
+                            return path;
                     }
 
                     return null;
+                }),
+
+            new(
+                MinecraftFolderKind.MultiMc,
+                "Prism Launcher",
+                () =>
+                {
+                    var roots = new[]
+                    {
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.ApplicationData),
+
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.UserProfile)
+                    };
+
+                    foreach (var root in roots)
+                    {
+                        var path = Path.Combine(root, "PrismLauncher");
+                        if (Directory.Exists(path))
+                            return path;
+                    }
+
+                    return null;
+                }),
+
+            new(
+                MinecraftFolderKind.MultiMc,
+                "BakaXL",
+                () =>
+                {
+                    var path = Path.Combine(
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.ApplicationData),
+                        ".BakaXL",
+                        "minecraft");
+
+                    return Directory.Exists(path)
+                        ? path
+                        : null;
                 })
         ];
     }
