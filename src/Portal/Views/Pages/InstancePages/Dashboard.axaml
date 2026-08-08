@@ -101,6 +101,7 @@
                                             Click="ModifyVersion_Click"
                                             Header="修改版本"
                                             IsEnabled="{Binding Instance.CanModifyVersion}"
+                                            IsVisible="{Binding Instance.CanModifyVersion}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
@@ -113,6 +114,7 @@
                                             Click="RenameInstance_Click"
                                             Header="重命名"
                                             IsEnabled="{Binding Instance.CanModifyVersion}"
+                                            IsVisible="{Binding Instance.CanModifyVersion}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
