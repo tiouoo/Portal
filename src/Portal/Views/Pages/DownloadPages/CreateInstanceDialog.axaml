@@ -13,7 +13,7 @@
     <Grid
         Margin="24"
         RowDefinitions="Auto,Auto,Auto"
-        Width="600">
+        Width="680">
         <TextBlock
             FontSize="18"
             FontWeight="SemiBold"
