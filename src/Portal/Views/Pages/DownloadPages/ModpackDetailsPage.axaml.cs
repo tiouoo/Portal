@@ -413,8 +413,9 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         await Task.WhenAll(loaderTask, vanillaTask);
         var loader = await loaderTask;
         var vanilla = await vanillaTask;
-        javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
-        // Portal MC 同 id 安装需用临时 id 安装加载器，避免命中 meta 中原版 json，完成后整体移入 instances。
+        var hasLoader = loader is not null;
+        if (loader is not null)
+            javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
         var effectiveLoaderId = instancesRoot is not null && id.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
             ? $"{id}.portal-tmp"
             : id;
@@ -425,20 +426,50 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 if (Directory.Exists(stale)) Directory.Delete(stale, true);
             });
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
-            VanillaInstaller.Create(folder, vanilla));
+            VanillaInstaller.Create(folder, vanilla, hasLoader ? null : id));
+        var modpackWorkingPath = hasLoader
+            ? Path.Combine(folder, "versions", effectiveLoaderId)
+            : instancesRoot is not null
+                ? Path.Combine(instancesRoot, id)
+                : Path.Combine(folder, "versions", id);
         var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行下载整合包模组",
             new ModrinthModpackInstaller
             {
                 MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
-                WorkingPath = Path.Combine(folder, "versions", effectiveLoaderId)
+                WorkingPath = modpackWorkingPath
             });
         var minecraft = await vanillaInstallation;
-        minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
-            CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft));
+        if (loader is not null)
+            minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
+                CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft));
         await filesInstallation;
         if (instancesRoot is not null)
-            await MovePortalMcInstanceAsync(context, folder, effectiveLoaderId, id, instancesRoot);
+        {
+            if (hasLoader)
+                await MovePortalMcInstanceAsync(context, folder, effectiveLoaderId, id, instancesRoot);
+            else
+                WritePortalMcVanillaInstanceAsync(context, instancesRoot, id, id);
+        }
         return minecraft;
+    }
+
+    private static void WritePortalMcVanillaInstanceAsync(TaskExecutionContext context, string instancesRoot,
+        string instanceId, string vanillaId)
+    {
+        Directory.CreateDirectory(instancesRoot);
+        var instanceDirectory = Path.Combine(instancesRoot, instanceId);
+        Directory.CreateDirectory(instanceDirectory);
+        var jsonPath = Path.Combine(instanceDirectory, $"{instanceId}.json");
+        using var stream = File.Create(jsonPath);
+        using var writer = new System.Text.Json.Utf8JsonWriter(stream);
+        writer.WriteStartObject();
+        writer.WriteString("id", instanceId);
+        writer.WriteString("inheritsFrom", vanillaId);
+        writer.WriteString("mainClass", "net.minecraft.client.main.Main");
+        writer.WritePropertyName("libraries");
+        writer.WriteStartArray();
+        writer.WriteEndArray();
+        writer.WriteEndObject();
     }
 
     private static async Task<MinecraftEntry> InstallCurseForgeAsync(TaskExecutionContext context, string folder, string id,
@@ -478,52 +509,80 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 if (Directory.Exists(stale)) Directory.Delete(stale, true);
             });
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
-            VanillaInstaller.Create(folder, vanilla));
+            VanillaInstaller.Create(folder, vanilla, loaders.Count > 0 ? null : id));
+        var modpackWorkingPath = loaders.Count > 0
+            ? Path.Combine(folder, "versions", effectiveLoaderId)
+            : instancesRoot is not null
+                ? Path.Combine(instancesRoot, id)
+                : Path.Combine(folder, "versions", id);
         var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行解析并下载整合包模组",
             new CurseforgeModpackInstaller
             {
                 MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
-                WorkingPath = Path.Combine(folder, "versions", effectiveLoaderId)
+                WorkingPath = modpackWorkingPath
             });
         var minecraft = await vanillaInstallation;
+        var hasLoader = loaders.Count > 0;
         foreach (var loader in loaders)
             minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
                 CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft));
         await filesInstallation;
         if (instancesRoot is not null)
-            await MovePortalMcInstanceAsync(context, folder, effectiveLoaderId, id, instancesRoot);
+        {
+            if (hasLoader)
+                await MovePortalMcInstanceAsync(context, folder, effectiveLoaderId, id, instancesRoot);
+            else
+                WritePortalMcVanillaInstanceAsync(context, instancesRoot, id, id);
+        }
         return minecraft;
     }
 
     private static void ImportPortalSettings(string instancePath, bool isPortalMc)
     {
         var portalFolder = Path.Combine(instancePath, "Portal");
-        var exportedConfigPath = Path.Combine(portalFolder, MinecraftInstance.PortablePortalConfigFileName);
-        if (!File.Exists(exportedConfigPath))
+        if (!Directory.Exists(portalFolder))
             return;
 
         try
         {
-            var targetConfigPath = isPortalMc
-                ? MinecraftInstance.GetExternalConfigPath(MinecraftFolderKind.PortalMc, instancePath)
-                : Path.Combine(instancePath, MinecraftInstance.PortablePortalConfigFileName);
-            var targetDirectory = Path.GetDirectoryName(targetConfigPath);
-            if (string.IsNullOrEmpty(targetDirectory))
-                return;
-            Directory.CreateDirectory(targetDirectory);
-            File.Copy(exportedConfigPath, targetConfigPath, true);
+            var exportedConfigPath = Path.Combine(portalFolder, MinecraftInstance.PortablePortalConfigFileName);
+            if (File.Exists(exportedConfigPath))
+            {
+                var targetConfigPath = isPortalMc
+                    ? MinecraftInstance.GetExternalConfigPath(MinecraftFolderKind.PortalMc, instancePath)
+                    : Path.Combine(instancePath, MinecraftInstance.PortablePortalConfigFileName);
+                var configDirectory = Path.GetDirectoryName(targetConfigPath);
+                if (!string.IsNullOrEmpty(configDirectory))
+                {
+                    Directory.CreateDirectory(configDirectory);
+                    File.Copy(exportedConfigPath, targetConfigPath, true);
+                    Logger.Info($"[Modpack] Imported Portal settings to {targetConfigPath}.");
+                }
+            }
+
+            var exportedIconPath = Path.Combine(portalFolder, MinecraftInstance.PortablePortalIconFileName);
+            if (File.Exists(exportedIconPath))
+            {
+                var targetIconPath = isPortalMc
+                    ? MinecraftInstance.GetExternalConfigPath(MinecraftFolderKind.PortalMc, instancePath) + ".png"
+                    : Path.Combine(instancePath, MinecraftInstance.PortablePortalIconFileName);
+                var iconDirectory = Path.GetDirectoryName(targetIconPath);
+                if (!string.IsNullOrEmpty(iconDirectory))
+                {
+                    Directory.CreateDirectory(iconDirectory);
+                    File.Copy(exportedIconPath, targetIconPath, true);
+                    Logger.Info($"[Modpack] Imported Portal icon to {targetIconPath}.");
+                }
+            }
+
             Directory.Delete(portalFolder, true);
-            Logger.Info($"[Modpack] Imported Portal settings to {targetConfigPath}.");
         }
         catch (Exception exception)
         {
-            Logger.Warning($"[Modpack] Failed to import Portal settings from {exportedConfigPath}: {exception}");
+            Logger.Warning($"[Modpack] Failed to import Portal settings from {portalFolder}: {exception}");
         }
     }
-
-    /// <summary>
-    /// 将 Portal MC 的加载器版本目录从 meta/versions 移入 instances，并把版本 json/jar 重命名为实例名。
-    /// </summary>
+    
     private static Task MovePortalMcInstanceAsync(TaskExecutionContext context, string metadataRoot,
         string effectiveLoaderId, string instanceId, string instancesRoot) =>
         RunStepAsync(context, "创建游戏实例", "正在生成实例配置", step =>

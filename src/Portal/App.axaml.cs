@@ -23,6 +23,7 @@ namespace Portal;
 public partial class App : Application
 {
     public static string? BedrockPackagePath { get; set; }
+    public static string? JavaPackagePath { get; set; }
     
     public delegate void UiLoadedEventHandler(TabWindow ui);
 

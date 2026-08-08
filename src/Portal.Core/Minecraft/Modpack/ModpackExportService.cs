@@ -15,18 +15,13 @@ namespace Portal.Core.Minecraft.Modpack;
 public sealed record ModpackExportOptions
 {
     public required string PackName { get; init; }
-
     public required string PackVersion { get; init; }
-
     public required string PackSummary { get; init; }
-    
     public required IReadOnlyList<string> Rules { get; init; }
-
     public bool CheckHostedAssets { get; init; } = true;
-
     public bool ModrinthOnly { get; init; }
-
     public bool IncludePortalSettings { get; init; } = true;
+    public bool IncludePortalIcon { get; init; } = true;
 }
 
 public sealed record ModpackExportResult
@@ -76,6 +71,9 @@ public sealed class ModpackExportService
 
             if (options.IncludePortalSettings)
                 CopyPortalSettings(instance, overridesFolder);
+
+            if (options.IncludePortalIcon)
+                CopyPortalIcon(instance, overridesFolder);
 
             var filesIndex = new JsonArray();
             if (options.CheckHostedAssets)
@@ -127,6 +125,24 @@ public sealed class ModpackExportService
         catch (Exception exception)
         {
             Logger.Warning($"[Export] 复制 Portal 实例设置失败：{exception}");
+        }
+    }
+    
+    private static void CopyPortalIcon(MinecraftInstance instance, string overridesFolder)
+    {
+        var iconPath = instance.GetExportIconPath();
+        if (string.IsNullOrEmpty(iconPath) || !File.Exists(iconPath))
+            return;
+
+        try
+        {
+            var targetDirectory = Path.Combine(overridesFolder, "Portal");
+            Directory.CreateDirectory(targetDirectory);
+            File.Copy(iconPath, Path.Combine(targetDirectory, MinecraftInstance.PortablePortalIconFileName), true);
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Export] 复制 Portal 实例图标失败：{exception}");
         }
     }
 

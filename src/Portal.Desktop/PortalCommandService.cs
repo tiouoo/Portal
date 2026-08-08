@@ -53,7 +53,7 @@ internal static class PortalCommandService
         Task.Run(ListenForCommandsAsync).Forget("命令行命名管道服务");
     }
 
-    private static bool TryForwardToRunningInstance(PortalCommand command)
+    internal static bool TryForwardToRunningInstance(PortalCommand command)
     {
         try
         {

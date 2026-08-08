@@ -22,6 +22,8 @@ public class MinecraftInstance : ObservableObject
 {
     public const string PortablePortalConfigFileName = "Portal.config.json";
 
+    public const string PortablePortalIconFileName = "Portal.Icon.png";
+
     public MinecraftInstanceType Type { get; init; }
 
     private bool _isBlocked;
@@ -821,6 +823,24 @@ public class MinecraftInstance : ObservableObject
 
     private string? GetCustomIconPath() => GetIconOverridePaths().FirstOrDefault(File.Exists);
 
+    public string? GetExportIconPath()
+    {
+        var customIcon = GetCustomIconPath();
+        if (customIcon != null)
+            return customIcon;
+
+        var instanceFolder = GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder);
+        var nativeIcon = GetNativeIconPath(instanceFolder);
+        if (nativeIcon != null)
+            return nativeIcon;
+
+        var pclIcon = Path.Combine(instanceFolder, "PCL", "Logo.png");
+        if (File.Exists(pclIcon))
+            return pclIcon;
+
+        return null;
+    }
+
     private IEnumerable<string> GetIconOverridePaths()
     {
         yield return GetIconOverridePath();
@@ -836,7 +856,7 @@ public class MinecraftInstance : ObservableObject
     {
         if (Layout == null)
             return Path.Combine(GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder), "Portal.Icon.png");
-        return Path.ChangeExtension(GetConfigPath(), ".png");
+        return GetConfigPath() + ".png";
     }
 
     private string? GetNativeIconPath(string instanceFolder)

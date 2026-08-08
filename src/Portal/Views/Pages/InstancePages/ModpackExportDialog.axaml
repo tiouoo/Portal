@@ -124,6 +124,10 @@
                     IsChecked="{Binding ModrinthOnly, Mode=TwoWay}"
                     IsEnabled="{Binding CanUseModrinthMode}" />
                 <CheckBox Content="包含 Portal 实例设置" IsChecked="{Binding IncludePortalSettings, Mode=TwoWay}" />
+                <CheckBox
+                    Content="包含实例图标"
+                    IsChecked="{Binding IncludePortalIcon, Mode=TwoWay}"
+                    IsEnabled="{Binding CanExportPortalIcon}" />
             </StackPanel>
 
             <StackPanel

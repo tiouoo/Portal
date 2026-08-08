@@ -160,12 +160,18 @@ public static class PortalCommandExecutor
 
     private static void StartModpackInstall(TopLevel window, PortalCommand command)
     {
-        var folder = ResolveInstallFolder(command.Folder);
         var source = command.Source!.Trim();
         var kind = ClassifyModpackSource(source);
+
+        if (kind == ModpackSourceKind.LocalFile)
+        {
+            _ = ModpackDetailsPage.TryInstallFromPath(window, source);
+            return;
+        }
+
+        var folder = ResolveInstallFolder(command.Folder);
         var displayName = kind switch
         {
-            ModpackSourceKind.LocalFile => Path.GetFileName(source),
             ModpackSourceKind.RemoteUrl => GetRemoteFileName(source),
             _ => source
         };

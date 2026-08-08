@@ -54,14 +54,13 @@ public static class InstanceRenameService
 
         var oldConfigPath = MinecraftInstance.GetExternalConfigPath(layout.Kind, oldInstanceDirectory);
         var newConfigPath = MinecraftInstance.GetExternalConfigPath(layout.Kind, newInstanceDirectory);
-        var oldIconPath = Path.ChangeExtension(oldConfigPath, ".png");
-        var newIconPath = Path.ChangeExtension(newConfigPath, ".png");
+        var oldIconPath = oldConfigPath + ".png";
+        var newIconPath = newConfigPath + ".png";
         var oldIconDirectory = Path.Combine(Path.GetDirectoryName(oldConfigPath)!,
             Path.GetFileNameWithoutExtension(oldConfigPath));
         var newIconDirectory = Path.Combine(Path.GetDirectoryName(newConfigPath)!,
             Path.GetFileNameWithoutExtension(newConfigPath));
 
-        // 记录已执行操作，失败时逆序回滚：目录先移回原位置，再恢复其中的 json/jar 文件名与 id。
         var undoActions = new List<Action>();
         try
         {

@@ -58,21 +58,36 @@ sealed class Program
         }
 
         DebugConsole.ShowIfEnabled();
-
-        // AppImage does not reliably leave a permanent desktop entry behind. Keep its
-        // portal:// handler registered before processing the incoming protocol argument.
+        PortalCommandQueue.Initialize();
         ProtocolRegistration.TryRegisterLinuxOnStartupAsync().GetAwaiter().GetResult();
 
         if (TryGetBedrockPackagePath(args, out var packagePath))
             App.BedrockPackagePath = packagePath;
 
-        // 命令行 / portal:// 命令：能转发给已运行实例（或只需输出帮助）就直接退出，
-        // 否则命令已入队，继续正常启动并在 UI 加载后执行。
-        if (packagePath == null && PortalCommandService.TryHandleStartupArgs(args))
+        if (TryGetJavaPackagePath(args, out var javaPackagePath))
+        {
+            var javaCommand = new PortalCommand
+            {
+                Kind = PortalCommandKind.DownloadModpack,
+                Source = javaPackagePath
+            };
+
+            if (packagePath == null && PortalCommandService.TryForwardToRunningInstance(javaCommand))
+            {
+                Logger.Info($"已将 Java 整合包命令转发给正在运行的 Portal 实例：{javaPackagePath}");
+                return;
+            }
+
+            App.JavaPackagePath = javaPackagePath;
+            if (packagePath == null)
+                PortalCommandQueue.Enqueue(javaCommand);
+        }
+
+        if (packagePath == null && javaPackagePath == null && PortalCommandService.TryHandleStartupArgs(args))
             return;
 
 #if WINDOWS
-        if (packagePath == null && WindowsJumpListService.TryForwardToRunningInstance(args))
+        if (packagePath == null && javaPackagePath == null && WindowsJumpListService.TryForwardToRunningInstance(args))
             return;
 
         if (packagePath == null)
@@ -80,15 +95,13 @@ sealed class Program
         WindowsJumpListService.SetAppUserModelId();
 #endif
         if (packagePath == null)
-        {
             PortalCommandService.StartCommandServer();
-            PortalCommandService.Initialize();
-        }
         Logger.Info($"开始启动应用，命令行参数数量：{args.Length}");
         var versionInfo = Module.Initialize.Config.LoadVersionInfo();
         Initializer.Program("Portal", "cc.tiouo.Portal", versionInfo.VersionTitle);
 #if WINDOWS
         WindowsBedrockFileAssociationService.Register();
+        WindowsJavaFileAssociationService.Register();
 #endif
         Logger.Info("Portal MC");
         Logger.Info("  ____                   _             _     __  __    ____ ");
@@ -132,6 +145,28 @@ sealed class Program
             ? uri.LocalPath
             : args[0];
         if (!BedrockPackageImportService.TryGetArchiveType(path, out _))
+            return false;
+
+        var fullPath = Path.GetFullPath(path);
+        if (!File.Exists(fullPath))
+            return false;
+
+        packagePath = fullPath;
+        return true;
+    }
+
+    private static bool TryGetJavaPackagePath(string[] args, out string? packagePath)
+    {
+        packagePath = null;
+        if (args.Length != 1)
+            return false;
+
+        var path = Uri.TryCreate(args[0], UriKind.Absolute, out var uri) && uri.IsFile
+            ? uri.LocalPath
+            : args[0];
+
+        var extension = Path.GetExtension(path);
+        if (!string.Equals(extension, ".mrpack", StringComparison.OrdinalIgnoreCase))
             return false;
 
         var fullPath = Path.GetFullPath(path);

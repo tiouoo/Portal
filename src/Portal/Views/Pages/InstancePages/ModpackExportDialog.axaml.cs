@@ -82,12 +82,15 @@ public partial class ModpackExportDialogViewModel : ObservableObject, IDialogCon
     [ObservableProperty] public partial bool BundleAllFiles { get; set; }
     [ObservableProperty] public partial bool ModrinthOnly { get; set; }
     [ObservableProperty] public partial bool IncludePortalSettings { get; set; }
+    [ObservableProperty] public partial bool IncludePortalIcon { get; set; }
 
     public string DefaultPackName => _instance.InstanceName;
     public string PackSummary => _instance.Description;
     public bool HasDescription => !string.IsNullOrWhiteSpace(PackSummary);
     public string InstanceName => _instance.InstanceName;
     public bool CanUseModrinthMode => !BundleAllFiles;
+
+    public bool CanExportPortalIcon => _instance.GetExportIconPath() != null;
 
     partial void OnBundleAllFilesChanged(bool value)
     {
@@ -109,6 +112,7 @@ public partial class ModpackExportDialogViewModel : ObservableObject, IDialogCon
         ConfirmCommand = new RelayCommand(Confirm);
         CancelCommand = new RelayCommand(Cancel);
         BuildOptions();
+        IncludePortalIcon = CanExportPortalIcon;
     }
 
     private bool HasOptiFine =>
@@ -373,7 +377,8 @@ public partial class ModpackExportDialogViewModel : ObservableObject, IDialogCon
             Rules = rules,
             CheckHostedAssets = !BundleAllFiles,
             ModrinthOnly = ModrinthOnly,
-            IncludePortalSettings = IncludePortalSettings
+            IncludePortalSettings = IncludePortalSettings,
+            IncludePortalIcon = IncludePortalIcon
         };
 
         RequestClose?.Invoke(this, options);

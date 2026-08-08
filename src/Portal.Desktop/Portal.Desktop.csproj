@@ -71,10 +71,28 @@
         <AvaloniaResource Include="Icon-Pattern.ico"/>
         <AvaloniaResource Include="Icon-Pattern.svg"/>
         <AvaloniaResource Include="Icon-Pattern-Shadow.png"/>
+        <AvaloniaResource Remove="publish\**" />
     </ItemGroup>
 
     <ItemGroup>
         <None Remove="Icon-Pattern-Shadow-Border.icns"/>
         <AvaloniaResource Include="Icon-Pattern-Shadow-Border.icns"/>
+        <None Remove="publish\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AvaloniaXaml Remove="publish\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="publish\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="publish\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Remove="publish\**" />
     </ItemGroup>
 </Project>
