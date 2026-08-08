@@ -32,7 +32,7 @@ public sealed record MinecraftFolderLayout(
     {
         if (string.IsNullOrWhiteSpace(path)) return false;
         // 目录已初始化时以结构为准，允许用户重命名根文件夹。
-        if (Directory.Exists(Path.Combine(path, "meta", "versions")) &&
+        if (Directory.Exists(Path.Combine(path, "meta")) &&
             Directory.Exists(Path.Combine(path, "instances")))
             return true;
         // 尚未安装任何版本的空根目录（如默认文件夹刚创建时）按文件夹名识别。

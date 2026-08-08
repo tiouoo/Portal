@@ -136,6 +136,11 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         var layout =
             MinecraftFolderLayout.Detect(folderPath);
 
+        // 空文件夹自动识别为 Portal MC 布局
+        if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
+        {
+            layout = MinecraftFolderLayout.FromFolderKind(MinecraftFolderKind.PortalMc, folderPath);
+        }
 
         FolderName =
             new DirectoryInfo(layout.SelectedPath).Name;
@@ -209,17 +214,47 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
     private void Next()
     {
+        var folderPath = FolderPath!.Trim();
+        var layout = MinecraftFolderLayout.Detect(folderPath);
+
+        // 空文件夹自动初始化为 Portal MC 布局
+        if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
+        {
+            Directory.CreateDirectory(Path.Combine(folderPath, "meta"));
+            Directory.CreateDirectory(Path.Combine(folderPath, "instances"));
+            Directory.CreateDirectory(Path.Combine(folderPath, "bedrock_instances"));
+
+            RequestClose?.Invoke(
+                this,
+                new MinecraftFolderEntry
+                {
+                    FolderName = FolderName!.Trim(),
+                    FolderPath = folderPath,
+                    FolderKind = MinecraftFolderKind.PortalMc
+                });
+            return;
+        }
+
         RequestClose?.Invoke(
             this,
             new MinecraftFolderEntry
             {
                 FolderName = FolderName!.Trim(),
-                FolderPath = FolderPath!.Trim(),
-                FolderKind =
-                    MinecraftFolderLayout
-                        .Detect(FolderPath.Trim())
-                        .Kind
+                FolderPath = folderPath,
+                FolderKind = layout.Kind
             });
+    }
+
+    private static bool IsDirectoryEmpty(string path)
+    {
+        try
+        {
+            return !Directory.EnumerateFileSystemEntries(path).Any();
+        }
+        catch
+        {
+            return false;
+        }
     }
 
 
