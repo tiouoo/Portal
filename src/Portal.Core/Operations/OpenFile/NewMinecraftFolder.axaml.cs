@@ -132,9 +132,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
         var folderPath = value.Trim();
 
-
-        var layout =
-            MinecraftFolderLayout.Detect(folderPath);
+        var layout = MinecraftFolderLayout.Detect(folderPath);
 
         // 空文件夹自动识别为 Portal MC 布局
         if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
@@ -142,34 +140,20 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
             layout = MinecraftFolderLayout.FromFolderKind(MinecraftFolderKind.PortalMc, folderPath);
         }
 
-        FolderName =
-            new DirectoryInfo(layout.SelectedPath).Name;
+        FolderName = new DirectoryInfo(layout.SelectedPath).Name;
+        FolderTypeDescription = layout.DisplayName;
+        IsFolderRecognized = layout.Kind != MinecraftFolderKind.Unknown;
 
+        Contain = _paths.Contains(folderPath, StringComparer.OrdinalIgnoreCase);
 
-        FolderTypeDescription =
-            layout.DisplayName;
-
-
-        IsFolderRecognized =
-            layout.Kind != MinecraftFolderKind.Unknown;
-
-
-        Contain =
-            _paths.Contains(
-                folderPath,
-                StringComparer.OrdinalIgnoreCase);
-
-
-        Warning =
-            layout.Kind == MinecraftFolderKind.Standard &&
-            !MinecraftFolderLayout.LooksLikeMinecraftRoot(folderPath);
-
+        // 只有非空且非 Minecraft 结构的文件夹才显示警告
+        Warning = layout.Kind == MinecraftFolderKind.Standard &&
+                  !IsDirectoryEmpty(folderPath) &&
+                  !MinecraftFolderLayout.LooksLikeMinecraftRoot(folderPath);
 
         NoExist = false;
 
-
-        ((RelayCommand)NextCommand)
-            .NotifyCanExecuteChanged();
+        ((RelayCommand)NextCommand).NotifyCanExecuteChanged();
     }
 
 
@@ -249,7 +233,24 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     {
         try
         {
-            return !Directory.EnumerateFileSystemEntries(path).Any();
+            if (Directory.GetDirectories(path).Length > 0)
+                return false;
+
+            foreach (var file in Directory.GetFiles(path))
+            {
+                try
+                {
+                    var attr = File.GetAttributes(file);
+                    if ((attr & (FileAttributes.Hidden | FileAttributes.System)) == 0)
+                        return false;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
         catch
         {
@@ -325,20 +326,18 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         return
         [
             new(
-                MinecraftFolderKind.ModrinthApp,
-                "Modrinth App",
+                MinecraftFolderKind.Modrinth,
+                "Modrinth",
                 ReadModrinthFolder),
 
-
             new(
-                MinecraftFolderKind.AxolotlApp,
-                "Axolotl",
+                MinecraftFolderKind.Modrinth,
+                "Axolotl / Theseus",
                 ReadAxolotlFolder),
-
 
             new(
                 MinecraftFolderKind.CurseForge,
-                "CurseForge App",
+                "CurseForge",
                 () =>
                 {
                     var roots = new[]
@@ -367,22 +366,32 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                     return null;
                 }),
 
-
             new(
-                MinecraftFolderKind.BakaXl,
-                "BakaXL",
+                MinecraftFolderKind.MultiMc,
+                "MultiMC / Prism Launcher",
                 () =>
                 {
-                    var path = Path.Combine(
+                    var roots = new[]
+                    {
                         Environment.GetFolderPath(
                             Environment.SpecialFolder.ApplicationData),
-                        ".BakaXL",
-                        "minecraft");
 
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.UserProfile)
+                    };
 
-                    return Directory.Exists(path)
-                        ? path
-                        : null;
+                    foreach (var root in roots)
+                    {
+                        foreach (var launcherDir in new[] { "MultiMC", "PrismLauncher", ".BakaXL" })
+                        {
+                            var path = Path.Combine(root, launcherDir,
+                                launcherDir == ".BakaXL" ? "minecraft" : string.Empty);
+                            if (Directory.Exists(path))
+                                return path;
+                        }
+                    }
+
+                    return null;
                 })
         ];
     }

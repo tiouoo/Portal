@@ -21,11 +21,9 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
             if (detected.Kind == MinecraftFolderKind.Unknown && FolderKind == MinecraftFolderKind.Standard)
                 return new MinecraftFolderLayout(MinecraftFolderKind.Standard, FolderPath, FolderPath,
                     "传统 .minecraft 文件夹");
-            // 已保存为外部启动器类型时，即使目录尚未被初始化（如空文件夹）也按其类型识别，
-            // 避免被重新识别为传统 .minecraft 文件夹。
-            if (detected.Kind is MinecraftFolderKind.Standard or MinecraftFolderKind.Unknown &&
-                FolderKind is not (MinecraftFolderKind.Auto or MinecraftFolderKind.Standard or
-                    MinecraftFolderKind.Unknown))
+            if (FolderKind is not (MinecraftFolderKind.Auto or MinecraftFolderKind.Standard or
+                MinecraftFolderKind.Unknown) &&
+                detected.Kind != FolderKind)
                 return MinecraftFolderLayout.FromFolderKind(FolderKind, FolderPath);
             return detected;
         }
@@ -103,16 +101,11 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                     {
                         MinecraftFolderKind.Standard => new MinecraftParser(layout.RootPath).GetMinecrafts().Count +
                                                        CountBedrockInstances(layout.RootPath),
-                        MinecraftFolderKind.ModrinthApp => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
-                        MinecraftFolderKind.ModrinthProfile => 1,
-                        MinecraftFolderKind.AxolotlApp => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
-                        MinecraftFolderKind.AxolotlProfile => 1,
+                        MinecraftFolderKind.Modrinth => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
+                        MinecraftFolderKind.ModrinthInstance => 1,
                         MinecraftFolderKind.MultiMc => CountInstances(Path.Combine(layout.RootPath, "instances"),
-                            "mmc-pack.json"),
+                            "mmc-pack.json") + CountInstances(Path.Combine(layout.RootPath, "instances"), "package.info"),
                         MinecraftFolderKind.MultiMcInstance => 1,
-                        MinecraftFolderKind.BakaXl => CountInstances(Path.Combine(layout.RootPath, "instances"),
-                            "package.info"),
-                        MinecraftFolderKind.BakaXlInstance => 1,
                         MinecraftFolderKind.CurseForge => CountInstances(Path.Combine(layout.RootPath, "Instances"),
                             "minecraftinstance.json"),
                         MinecraftFolderKind.CurseForgeInstance => 1,
