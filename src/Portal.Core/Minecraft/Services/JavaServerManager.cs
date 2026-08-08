@@ -14,10 +14,18 @@ public static class JavaServerManager
     private static readonly object FileLock = new();
 
     public static string GetServersDatPath(MinecraftInstance instance) =>
-        Path.Combine(instance.MinecraftEntry!.MinecraftFolderPath, "servers.dat");
+        Path.Combine(instance.GetJavaGameDirectory(), "servers.dat");
 
     public static bool IsSupported(MinecraftInstance instance) =>
         instance.IsJava && instance.MinecraftEntry != null;
+
+    /// <summary>
+    /// 按原文件的压缩方式保存 servers.dat。
+    /// Minecraft 26.x（以及部分较新版本）以未压缩 NBT 存储该文件，
+    /// 若一律按 GZip 写入会导致游戏无法识别；保留原压缩方式以兼容。
+    /// </summary>
+    private static void Save(NbtFile file, string path) =>
+        file.SaveToFile(path, file.FileCompression);
 
     /// <summary>
     /// 从 servers.dat 读取服务器列表。
@@ -64,6 +72,7 @@ public static class JavaServerManager
             try
             {
                 var path = GetServersDatPath(instance);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 var file = new NbtFile();
                 if (File.Exists(path))
                 {
@@ -83,7 +92,7 @@ public static class JavaServerManager
                 compound["name"] = new NbtString("name", name);
                 compound["ip"] = new NbtString("ip", address);
                 list.Add(compound);
-                file.SaveToFile(path, NbtCompression.GZip);
+                Save(file, path);
                 return true;
             }
             catch (Exception exception)
@@ -119,7 +128,7 @@ public static class JavaServerManager
 
                 server["name"] = new NbtString("name", name);
                 server["ip"] = new NbtString("ip", address);
-                file.SaveToFile(path, NbtCompression.GZip);
+                Save(file, path);
                 return true;
             }
             catch (Exception exception)
@@ -153,7 +162,7 @@ public static class JavaServerManager
                     return false;
 
                 list.RemoveAt(index);
-                file.SaveToFile(path, NbtCompression.GZip);
+                Save(file, path);
                 return true;
             }
             catch (Exception exception)

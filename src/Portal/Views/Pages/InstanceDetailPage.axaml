@@ -89,6 +89,11 @@
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
+                    CommandParameter="{x:Type instancePages:BedrockServers}"
+                    Header="服务器"
+                    IsVisible="{Binding IsBedrock}" />
+                <tio:NavMenuItem
+                    Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockWorldTemplates}"
                     Header="世界模板"
                     IsVisible="{Binding IsBedrock}" />

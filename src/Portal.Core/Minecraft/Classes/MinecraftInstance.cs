@@ -637,26 +637,44 @@ public class MinecraftInstance : ObservableObject
         public Bitmap this[int width] => instance.GetInstanceIcon(width);
     }
 
+    /// <summary>
+    /// Java 实例的游戏根目录（独立实例时为实例目录，否则为 .minecraft 目录），
+    /// 不包含创建目录的副作用，用于定位 servers.dat 等游戏根目录文件。
+    /// </summary>
+    public string GetJavaGameDirectory()
+    {
+        if (Type != MinecraftInstanceType.Java || MinecraftEntry == null)
+            return InstanceFolderPath;
+
+        return Layout?.GameDirectory is { Length: > 0 } gameDirectory
+            ? gameDirectory
+            : JavaConfig?.EnableIndependentInstance == true ? GetJavaInstanceFolder() : MinecraftEntry.MinecraftFolderPath;
+    }
+
+    private string GetJavaInstanceFolder()
+    {
+        if (Layout?.InstanceRoot is { Length: > 0 } instanceRoot)
+            return instanceRoot;
+
+        return MinecraftEntry!.VersionDirectoryPath ??
+               Path.Combine(MinecraftEntry.MinecraftFolderPath, "versions", MinecraftEntry.Id);
+    }
+
     public string GetSpecialFolder(MinecraftSpecialFolder folder)
     {
         if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
         {
-            var instancePath = Layout?.InstanceRoot ?? MinecraftEntry.VersionDirectoryPath ??
-                               Path.Combine(MinecraftEntry.MinecraftFolderPath, "versions", MinecraftEntry.Id);
-            var basePath = Layout?.GameDirectory ?? (JavaConfig?.EnableIndependentInstance == true
-                ? instancePath
-                : MinecraftEntry.MinecraftFolderPath);
             var path = folder switch
             {
-                MinecraftSpecialFolder.InstanceFolder => instancePath,
-                MinecraftSpecialFolder.ModsFolder => Path.Combine(basePath, "mods"),
-                MinecraftSpecialFolder.ResourcePacksFolder => Path.Combine(basePath, "resourcepacks"),
-                MinecraftSpecialFolder.SavesFolder => Path.Combine(basePath, "saves"),
-                MinecraftSpecialFolder.ScreenshotsFolder => Path.Combine(basePath, "screenshots"),
-                MinecraftSpecialFolder.ShaderPacksFolder => Path.Combine(basePath, "shaderpacks"),
-                MinecraftSpecialFolder.ConfigFolder => Path.Combine(basePath, "config"),
-                MinecraftSpecialFolder.LogsFolder => Path.Combine(basePath, "logs"),
-                _ => basePath
+                MinecraftSpecialFolder.InstanceFolder => GetJavaInstanceFolder(),
+                MinecraftSpecialFolder.ModsFolder => Path.Combine(GetJavaGameDirectory(), "mods"),
+                MinecraftSpecialFolder.ResourcePacksFolder => Path.Combine(GetJavaGameDirectory(), "resourcepacks"),
+                MinecraftSpecialFolder.SavesFolder => Path.Combine(GetJavaGameDirectory(), "saves"),
+                MinecraftSpecialFolder.ScreenshotsFolder => Path.Combine(GetJavaGameDirectory(), "screenshots"),
+                MinecraftSpecialFolder.ShaderPacksFolder => Path.Combine(GetJavaGameDirectory(), "shaderpacks"),
+                MinecraftSpecialFolder.ConfigFolder => Path.Combine(GetJavaGameDirectory(), "config"),
+                MinecraftSpecialFolder.LogsFolder => Path.Combine(GetJavaGameDirectory(), "logs"),
+                _ => GetJavaGameDirectory()
             };
 
             if (!Directory.Exists(path))
