@@ -112,6 +112,8 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         new("正式版", VersionFilterKind.JavaRelease),
         new("快照版", VersionFilterKind.JavaSnapshot),
         new("愚人节版", VersionFilterKind.JavaAprilFools),
+        new("反混淆版", VersionFilterKind.JavaUnobfuscated),
+        new("实验版", VersionFilterKind.JavaExperimental),
         new("Beta版", VersionFilterKind.JavaBeta)
     ];
 
@@ -300,7 +302,10 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                 {
                     var loaded = await VanillaInstaller.EnumerableMinecraftAsync(_disposeCancellation.Token);
                     if (entries.Count == 0)
+                    {
                         entries.AddRange(loaded);
+                        UnlistedVersions.MergeInto(entries);
+                    }
                 }
 
                 _javaVersions = entries.Select(MinecraftVersionListItem.FromEntry).ToList();
@@ -352,6 +357,8 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                 VersionFilterKind.JavaSnapshot => version.RawType == "snapshot",
                 VersionFilterKind.JavaAprilFools => MinecraftVersionListItem.IsAprilFoolsVersion(version.Name),
                 VersionFilterKind.JavaBeta => version.RawType is "old_beta" or "old_alpha",
+                VersionFilterKind.JavaUnobfuscated => version.RawType == "unobfuscated",
+                VersionFilterKind.JavaExperimental => version.RawType == "pending",
                 _ => false
             })
             .OrderByDescending(version => version.ReleaseTime)

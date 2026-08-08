@@ -332,8 +332,12 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         _ => SortField.Featured
     };
 
-    private static async Task<IReadOnlyList<VersionManifestEntry>> LoadReleaseManifestAsync() =>
-        (await VanillaInstaller.EnumerableMinecraftAsync()).ToList();
+    private static async Task<IReadOnlyList<VersionManifestEntry>> LoadReleaseManifestAsync()
+    {
+        var entries = (await VanillaInstaller.EnumerableMinecraftAsync()).ToList();
+        UnlistedVersions.MergeInto(entries);
+        return entries;
+    }
 
     private static MinecraftVersionSortKey ParseMinecraftVersion(string value)
     {

@@ -15,6 +15,7 @@ using Portal.Bedrock.Standard.Manifest;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Services;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -91,7 +92,8 @@ public sealed record PlatformOption(string DisplayText, InstancePlatform Platfor
 public sealed record VersionFilterOption(string DisplayText, VersionFilterKind Kind)
 {
     public bool IsJava => Kind is VersionFilterKind.JavaRelease or VersionFilterKind.JavaSnapshot
-        or VersionFilterKind.JavaAprilFools or VersionFilterKind.JavaBeta;
+        or VersionFilterKind.JavaAprilFools or VersionFilterKind.JavaBeta
+        or VersionFilterKind.JavaUnobfuscated or VersionFilterKind.JavaExperimental;
 }
 
 public enum VersionFilterKind
@@ -100,6 +102,8 @@ public enum VersionFilterKind
     JavaSnapshot,
     JavaAprilFools,
     JavaBeta,
+    JavaUnobfuscated,
+    JavaExperimental,
     BedrockGdkRelease,
     BedrockGdkPreview,
     BedrockUwpRelease,
@@ -174,6 +178,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         new("正式版", VersionFilterKind.JavaRelease),
         new("快照版", VersionFilterKind.JavaSnapshot),
         new("愚人节版", VersionFilterKind.JavaAprilFools),
+        new("反混淆版", VersionFilterKind.JavaUnobfuscated),
+        new("实验版", VersionFilterKind.JavaExperimental),
         new("Beta版", VersionFilterKind.JavaBeta)
     ];
 
@@ -566,7 +572,10 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         {
             var loaded = await VanillaInstaller.EnumerableMinecraftAsync(_disposeCancellation.Token);
             if (entries.Count == 0)
+            {
                 entries.AddRange(loaded);
+                UnlistedVersions.MergeInto(entries);
+            }
         }
 
         _javaVersions = entries.Select(MinecraftVersionListItem.FromEntry).ToList();
@@ -600,6 +609,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                     VersionFilterKind.JavaSnapshot => version.RawType == "snapshot",
                     VersionFilterKind.JavaAprilFools => MinecraftVersionListItem.IsAprilFoolsVersion(version.Name),
                     VersionFilterKind.JavaBeta => version.RawType is "old_beta" or "old_alpha",
+                    VersionFilterKind.JavaUnobfuscated => version.RawType == "unobfuscated",
+                    VersionFilterKind.JavaExperimental => version.RawType == "pending",
                     _ => false
                 })
                 .OrderByDescending(version => version.ReleaseTime)

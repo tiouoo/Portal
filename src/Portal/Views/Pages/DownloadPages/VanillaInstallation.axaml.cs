@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Const;
+using Portal.Services;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -48,8 +49,8 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
     public IReadOnlyList<MinecraftVersionFilterOption> FilterOptions { get; } =
     [
         new("全部类型", null), new("正式版", "release"), new("快照版", "snapshot"),
-        new("愚人节版", MinecraftVersionListItem.AprilFoolsType), new("旧 Beta", "old_beta"),
-        new("旧 Alpha", "old_alpha")
+        new("愚人节版", MinecraftVersionListItem.AprilFoolsType), new("反混淆版", "unobfuscated"),
+        new("实验版", "pending"), new("旧 Beta", "old_beta"), new("旧 Alpha", "old_alpha")
     ];
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
@@ -68,7 +69,10 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
                 var loaded = await VanillaInstaller.EnumerableMinecraftAsync(_disposeCancellation.Token);
                 // 等待期间搜索页可能已填充共享列表，重新检查避免重复追加版本条目
                 if (entries.Count == 0)
+                {
                     entries.AddRange(loaded);
+                    UnlistedVersions.MergeInto(entries);
+                }
             }
 
             if (!_disposed && entries.Count > 0)
@@ -132,17 +136,24 @@ public sealed record MinecraftVersionListItem(string Name, string RawType, strin
         "20w14infinite",
         "3D Shareware v1.34",
         "1.RV-Pre1",
-        "15w14a"
+        "15w14a",
+        "2.0_blue",
+        "2.0_red",
+        "2.0_purple"
     };
 
     public string RelativeReleaseTime => FormatRelativeReleaseTime(ReleaseTime);
+
+    public string? UnlistedTag => UnlistedVersions.IsUnlistedSource(Entry) ? "UVMC" : null;
+    public bool ShowUnlistedTag => UnlistedTag is not null;
 
     public static MinecraftVersionListItem FromEntry(VersionManifestEntry entry) =>
         new(entry.Id, entry.Type, IsAprilFoolsVersion(entry.Id)
             ? "愚人节版"
             : entry.Type switch
             {
-                "release" => "正式版", "snapshot" => "快照版", "old_beta" => "旧 Beta", "old_alpha" => "旧 Alpha",
+                "release" => "正式版", "snapshot" => "快照版", "unobfuscated" => "反混淆版",
+                "pending" => "实验版", "old_beta" => "旧 Beta", "old_alpha" => "旧 Alpha",
                 _ => entry.Type
             }, entry.ReleaseTime, entry);
 

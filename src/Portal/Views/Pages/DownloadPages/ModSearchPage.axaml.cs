@@ -342,8 +342,12 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         SearchSort.Newest => SortField.ReleasedDate, _ => SortField.Featured
     };
 
-    private static async Task<IReadOnlyList<MinecraftLaunch.Base.Models.Network.VersionManifestEntry>> LoadReleaseManifestAsync() =>
-        (await VanillaInstaller.EnumerableMinecraftAsync()).ToList();
+    private static async Task<IReadOnlyList<MinecraftLaunch.Base.Models.Network.VersionManifestEntry>> LoadReleaseManifestAsync()
+    {
+        var entries = (await VanillaInstaller.EnumerableMinecraftAsync()).ToList();
+        UnlistedVersions.MergeInto(entries);
+        return entries;
+    }
 
     private static MinecraftVersionSortKey ParseMinecraftVersion(string value)
     {

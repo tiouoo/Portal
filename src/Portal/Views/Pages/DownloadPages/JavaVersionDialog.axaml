@@ -97,6 +97,7 @@
                                             BorderThickness="1"
                                             CornerRadius="8"
                                             DockPanel.Dock="Right"
+                                            HorizontalAlignment="Right"
                                             IsVisible="{Binding IsInstalled}"
                                             Padding="5,2">
                                             <TextBlock

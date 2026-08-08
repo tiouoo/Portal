@@ -79,26 +79,43 @@
                             PointerPressed="VersionCard_OnPointerPressed">
                             <StackPanel Spacing="5">
                                 <DockPanel>
+                                    <StackPanel
+                                        DockPanel.Dock="Right"
+                                        HorizontalAlignment="Right"
+                                        Orientation="Horizontal"
+                                        Spacing="6"
+                                        VerticalAlignment="Top">
+                                        <Border
+                                            Background="{DynamicResource PopupBackgroundColor}"
+                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            IsVisible="{Binding ShowUnlistedTag}"
+                                            Padding="5,3,5,1">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding UnlistedTag}" />
+                                        </Border>
+                                        <Border
+                                            Background="{DynamicResource PopupBackgroundColor}"
+                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="5,3,5,1">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding Type}" />
+                                        </Border>
+                                    </StackPanel>
                                     <TextBlock
                                         FontSize="15"
                                         FontWeight="SemiBold"
                                         Text="{Binding Name}"
                                         TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap"
                                         VerticalAlignment="Center" />
-                                    <Border
-                                        Background="{DynamicResource PopupBackgroundColor}"
-                                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
-                                        DockPanel.Dock="Right"
-                                        HorizontalAlignment="Right"
-                                        Padding="5,3,5,1"
-                                        VerticalAlignment="Top">
-                                        <TextBlock
-                                            FontSize="11"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Text="{Binding Type}" />
-                                    </Border>
                                 </DockPanel>
                                 <TextBlock FontSize="12" Foreground="{DynamicResource InnerForegroundColor}">
                                     <Run Text="{Binding RelativeReleaseTime}" />
