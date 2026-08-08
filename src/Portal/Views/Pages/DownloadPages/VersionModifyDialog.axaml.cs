@@ -113,8 +113,8 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         new("快照版", VersionFilterKind.JavaSnapshot),
         new("愚人节版", VersionFilterKind.JavaAprilFools),
         new("反混淆版", VersionFilterKind.JavaUnobfuscated),
-        new("实验版", VersionFilterKind.JavaExperimental),
-        new("Beta版", VersionFilterKind.JavaBeta)
+        new("Beta版", VersionFilterKind.JavaBeta),
+        new("Alpha版", VersionFilterKind.JavaAlpha)
     ];
 
     [ObservableProperty] public partial VersionFilterOption? SelectedVersionFilter { get; set; }
@@ -337,8 +337,9 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             var expectedKind = rawType switch
             {
                 "release" => VersionFilterKind.JavaRelease,
-                "snapshot" => VersionFilterKind.JavaSnapshot,
-                "old_beta" or "old_alpha" => VersionFilterKind.JavaBeta,
+                "snapshot" or "pending" => VersionFilterKind.JavaSnapshot,
+                "old_beta" => VersionFilterKind.JavaBeta,
+                "old_alpha" => VersionFilterKind.JavaAlpha,
                 _ => (VersionFilterKind?)null
             };
             if (expectedKind is { } kind && kind != filter.Kind &&
@@ -354,11 +355,11 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             .Where(version => filter.Kind switch
             {
                 VersionFilterKind.JavaRelease => version.RawType == "release",
-                VersionFilterKind.JavaSnapshot => version.RawType == "snapshot",
+                VersionFilterKind.JavaSnapshot => version.RawType is "snapshot" or "pending",
                 VersionFilterKind.JavaAprilFools => MinecraftVersionListItem.IsAprilFoolsVersion(version.Name),
-                VersionFilterKind.JavaBeta => version.RawType is "old_beta" or "old_alpha",
+                VersionFilterKind.JavaBeta => version.RawType == "old_beta",
+                VersionFilterKind.JavaAlpha => version.RawType == "old_alpha",
                 VersionFilterKind.JavaUnobfuscated => version.RawType == "unobfuscated",
-                VersionFilterKind.JavaExperimental => version.RawType == "pending",
                 _ => false
             })
             .OrderByDescending(version => version.ReleaseTime)

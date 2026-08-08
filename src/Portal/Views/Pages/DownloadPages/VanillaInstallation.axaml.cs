@@ -50,7 +50,7 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
     [
         new("全部类型", null), new("正式版", "release"), new("快照版", "snapshot"),
         new("愚人节版", MinecraftVersionListItem.AprilFoolsType), new("反混淆版", "unobfuscated"),
-        new("实验版", "pending"), new("旧 Beta", "old_beta"), new("旧 Alpha", "old_alpha")
+        new("旧 Beta", "old_beta"), new("旧 Alpha", "old_alpha")
     ];
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
@@ -110,7 +110,9 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
         if (SelectedFilter?.Type is { } type)
             versions = type == MinecraftVersionListItem.AprilFoolsType
                 ? versions.Where(x => MinecraftVersionListItem.IsAprilFoolsVersion(x.Name))
-                : versions.Where(x => x.RawType == type);
+                : type == "snapshot"
+                    ? versions.Where(x => x.RawType is "snapshot" or "pending")
+                    : versions.Where(x => x.RawType == type);
 
         var results = versions.OrderByDescending(x => x.ReleaseTime).ToList();
         FilteredVersions.Clear();
@@ -153,7 +155,7 @@ public sealed record MinecraftVersionListItem(string Name, string RawType, strin
             : entry.Type switch
             {
                 "release" => "正式版", "snapshot" => "快照版", "unobfuscated" => "反混淆版",
-                "pending" => "实验版", "old_beta" => "旧 Beta", "old_alpha" => "旧 Alpha",
+                "pending" => "快照版", "old_beta" => "旧 Beta", "old_alpha" => "旧 Alpha",
                 _ => entry.Type
             }, entry.ReleaseTime, entry);
 
