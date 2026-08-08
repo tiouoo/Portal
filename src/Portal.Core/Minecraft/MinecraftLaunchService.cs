@@ -476,17 +476,15 @@ public static class MinecraftLaunchService
         var requiredVersion = minecraft.GetAppropriateJavaVersion();
         var requiresExactVersion = minecraft is ModifiedMinecraftEntry modified &&
             modified.ModLoaders.Any(loader => loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
-        bool IsCompatible(JavaEntry candidate) => requiredVersion is 0 or -1
-            ? true
-            : requiresExactVersion
-                ? candidate.MajorVersion == requiredVersion
-                : candidate.MajorVersion >= requiredVersion;
 
         var compatible = javaEntries.Where(IsCompatible).ToList();
         var incompatible = javaEntries.Where(candidate => !IsCompatible(candidate)).ToList();
         compatible.Sort((a, b) => a.MajorVersion.CompareTo(b.MajorVersion));
-        compatible.Reverse();
         return [.. compatible, .. incompatible];
+
+        bool IsCompatible(JavaEntry candidate) => requiredVersion is 0 or -1 || (requiresExactVersion
+            ? candidate.MajorVersion == requiredVersion
+            : candidate.MajorVersion >= requiredVersion);
     }
 
     private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
