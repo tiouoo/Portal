@@ -1,0 +1,23 @@
+# CNB 云原生构建配置（.cnb.yml）
+#
+# 主构建链在 GitHub Actions 完成全平台产物并同步到本仓库 Release；
+# 此处提供一个网页手动触发的 Linux 构建作为备份，产物上传到 CNB Release 附件。
+# 参考：https://docs.cnb.cool/zh/build/configuration.html
+
+"**":
+  web_trigger_build_linux:
+    - name: build-linux-backup
+      docker:
+        image: mcr.microsoft.com/dotnet/sdk:10.0
+      stages:
+        - name: Build Linux Packages
+          script:
+            - bash .cnb/build-linux.sh
+        - name: Upload to CNB Release
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - "./cnb-dist/*.AppImage"
+              - "./cnb-dist/*.deb"
+              - "./cnb-dist/*.rpm"
+            tag: $TAG

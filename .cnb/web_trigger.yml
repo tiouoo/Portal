@@ -1,0 +1,19 @@
+# CNB 自定义按钮：网页手动触发 Linux 备份构建。
+# 参考：https://docs.cnb.cool/zh/build/web-trigger.html
+
+branch:
+  - buttons:
+      - name: 构建 Linux 包并上传 CNB
+        description: 在 CNB 构建 AppImage/deb/rpm 并上传到指定标签的 Release 附件
+        event: web_trigger_build_linux
+        inputs:
+          TAG:
+            name: Release 标签
+            type: select
+            required: true
+            default: publish-nightly
+            options:
+              - name: publish-nightly
+                value: publish-nightly
+              - name: publish-commit
+                value: publish-commit
