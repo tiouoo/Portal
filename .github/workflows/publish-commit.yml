@@ -295,6 +295,24 @@ jobs:
             ./Portal.Release/*.deb
             ./Portal.Release/*.rpm
 
+      - name: Sync to CNB
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          CNB_REPO: tiouo/portal
+          CNB_TAG: publish-commit
+          CNB_COMMIT: ${{ needs.prepare.outputs.commit }}
+          CNB_NAME: "build-commit-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
+          CNB_PRERELEASE: "true"
+          CNB_MAKE_LATEST: "false"
+          CNB_BODY_FILE: RELEASE_CHANGELOG.md
+          CNB_FILES: |
+            ./Portal.Release/*.AppImage
+            ./Portal.Release/*.deb
+            ./Portal.Release/*.rpm
+            ./Portal.Release/*.zip
+            ./Portal.Release/*.dmg
+        run: bash .github/scripts/publish-cnb.sh
+
   # AUR publishing is currently disabled.
   # aur:
   #   needs: [prepare, publish]
