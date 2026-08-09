@@ -99,8 +99,64 @@ cleanup_assets() {
   done < <(jq -r '.assets[]? | "\(.id) \(.name)"' <<<"${json}" 2>/dev/null || true)
 }
 
+# CNB 资产域名已知海外节点（腾讯云香港 CLB：129.226.78.124，实测境外 DoH 亦返回该 IP）。
+# 上传前强制解析到“实测最快可达”节点，绕过地理 DNS 给大陆 runner 下发大陆 IP 的上传慢问题。
+CNB_DOH_URL="${CNB_DOH_URL:-https://cloudflare-dns.com/dns-query}"
+CNB_ASSET_IP_OVERSEAS="${CNB_ASSET_IP_OVERSEAS:-129.226.78.124}"
+
+asset_host_of() {
+  echo "${1}" | sed -E 's#^[a-z]+://([^/:]+).*#\1#'
+}
+
+probe_ip() {
+  local ip="$1"
+  python3 - "$ip" <<PY 2>/dev/null || echo 99999
+import socket, sys, time
+ip = sys.argv[1]
+t = time.time()
+try:
+    s = socket.create_connection((ip, 443), timeout=3)
+    s.close()
+    print(int((time.time() - t) * 1000))
+except Exception:
+    print(99999)
+PY
+}
+
+pick_best_ip() {
+  local host="$1" ips="" t best btime
+  [ -n "${CNB_ASSET_IP:-}" ] && { echo "${CNB_ASSET_IP}"; return; }
+  # 1) 本地解析
+  ips+="$(python3 - "$host" <<PY 2>/dev/null || true
+import socket, sys
+try:
+    print(" ".join(socket.gethostbyname_ex(sys.argv[1])[2]))
+except Exception:
+    pass
+PY
+)"
+  # 2) 境外 DoH 结果 + 已知海外节点 IP
+  ips+=" $(curl -fsS --max-time 8 "${CNB_DOH_URL}?name=${host}&type=A" -H "accept: application/dns-json" 2>/dev/null \
+    | python3 -c 'import sys,json
+try:
+    d=json.load(sys.stdin)
+    print(" ".join(a["data"] for a in d.get("Answer",[]) if a.get("type")==1))
+except Exception: print("")' 2>/dev/null)"
+  case "${host}" in
+    *.cnb.cool) ips+=" ${CNB_ASSET_IP_OVERSEAS}" ;;
+  esac
+  best=""
+  btime=99999999
+  while read -r ip; do
+    [ -z "${ip}" ] && continue
+    t="$(probe_ip "${ip}")"
+    if [ "${t}" -lt "${btime}" ]; then btime="${t}"; best="${ip}"; fi
+  done <<<"$(printf '%s\n' ${ips} | awk 'NF && !seen[$0]++')"
+  echo "${best}"
+}
+
 upload_asset() {
-  local file="$1" release_id="$2" name size json upload_url verify_url
+  local file="$1" release_id="$2" name size json upload_url verify_url host scheme port best resolve_args
   [ -f "${file}" ] || { echo "[cnb] 文件不存在：${file}" >&2; return 1; }
   name="$(basename "${file}")"
   size="$(stat -c%s "${file}" 2>/dev/null || stat -f%z "${file}")"
@@ -112,7 +168,18 @@ upload_asset() {
     echo "[cnb] 获取上传地址失败：${json}" >&2
     return 1
   fi
-  curl -g -sS -X PUT --data-binary "@${file}" "${upload_url}" >/dev/null
+  scheme="${upload_url%%:*}"; port=443; [ "${scheme}" = "http" ] && port=80
+  host="$(asset_host_of "${upload_url}")"
+  best="$(pick_best_ip "${host}")"
+  resolve_args=()
+  if [ -n "${best}" ]; then
+    resolve_args=(--resolve "${host}:${port}:${best}")
+    echo "[cnb] 上传节点（强制解析）：${host} -> ${best}"
+  fi
+  curl -g -sS -X PUT "${resolve_args[@]}" \
+    --connect-timeout 10 --max-time "${CNB_UPLOAD_MAX_TIME:-3600}" \
+    --retry 3 --retry-delay 2 --retry-connrefused --retry-all-errors \
+    --data-binary "@${file}" "${upload_url}" >/dev/null
   cnb_curl POST "${verify_url}" "{}" >/dev/null
   echo "[cnb] 已上传附件：${name}（${size} 字节）"
 }
