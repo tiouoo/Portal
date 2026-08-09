@@ -1,7 +1,7 @@
 # Maintainer: tiouoo <tiouo@qq.com>
 
 pkgname=portal-mc-nightly-bin
-pkgver=1.0.0
+pkgver=0.0.0.0
 pkgrel=1
 pkgdesc="Portal - Minecraft launcher/manager (nightly build)"
 arch=('x86_64')
