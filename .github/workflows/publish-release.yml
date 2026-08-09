@@ -355,19 +355,6 @@ jobs:
             ./Portal.Release/*.AppImage
             ./Portal.Release/*.deb
             ./Portal.Release/*.rpm
-            
-      - name: Sync to CNB Release
-        env:
-          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
-          CNB_REPO: ${{ 'tiouo/portal' }}
-          CNB_TAG: ${{ needs.prepare.outputs.tag }}
-          CNB_NAME: "Portal v${{ needs.prepare.outputs.version }}"
-          CNB_BODY_FILE: RELEASE_BODY.md
-          CNB_COMMIT: ${{ github.sha }}
-          CNB_PRERELEASE: "false"
-          CNB_MAKE_LATEST: "true"
-          CNB_FILES: "./Portal.Release/*"
-        run: bash .github/scripts/publish-cnb.sh
 
   # aur:
   #   needs: [prepare, publish]
