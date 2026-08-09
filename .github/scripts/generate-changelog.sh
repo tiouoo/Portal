@@ -8,7 +8,7 @@ STABLE_TAG=$(git tag -l --sort=-v:refname 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9
 
 if [ -n "$STABLE_TAG" ]; then
   RANGE="${STABLE_TAG}..HEAD"
-  echo "相对正式版 ${STABLE_TAG} 的更改："
+  echo "相对 \`${STABLE_TAG}\` 的更改："
   echo ""
 else
   RANGE="-20"
