@@ -137,7 +137,20 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     [NotifyPropertyChangedFor(nameof(CanOperate))]
     [NotifyPropertyChangedFor(nameof(CanCreateRoom))]
     [NotifyPropertyChangedFor(nameof(CanProbeNat))]
+    [NotifyPropertyChangedFor(nameof(IsComponentBannerVisible))]
+    [NotifyPropertyChangedFor(nameof(ComponentTitle))]
+    [NotifyPropertyChangedFor(nameof(InstallActionText))]
     public partial bool IsComponentMissing { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReady))]
+    [NotifyPropertyChangedFor(nameof(CanOperate))]
+    [NotifyPropertyChangedFor(nameof(CanCreateRoom))]
+    [NotifyPropertyChangedFor(nameof(CanProbeNat))]
+    [NotifyPropertyChangedFor(nameof(IsComponentBannerVisible))]
+    [NotifyPropertyChangedFor(nameof(ComponentTitle))]
+    [NotifyPropertyChangedFor(nameof(InstallActionText))]
+    public partial bool IsComponentOutdated { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReady))]
@@ -146,7 +159,10 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     [NotifyPropertyChangedFor(nameof(CanProbeNat))]
     public partial bool IsBackendReady { get; set; }
 
-    public bool IsReady => !IsComponentMissing && IsBackendReady;
+    public bool IsReady => !IsComponentMissing && !IsComponentOutdated && IsBackendReady;
+    public bool IsComponentBannerVisible => IsComponentMissing || IsComponentOutdated;
+    public string ComponentTitle => IsComponentOutdated ? "联机组件需要更新" : "需要安装联机组件";
+    public string InstallActionText => IsComponentOutdated ? "更新并安装" : "下载并安装";
     public bool HasStatusText => !string.IsNullOrWhiteSpace(StatusText);
 
     public string LanServerCountText => IsDiscoveringJavaServers ? "正在检测中" :
@@ -223,12 +239,22 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         // run it on a background thread to avoid blocking the UI on first open.
         var installation = await Task.Run(GravityConeInstaller.FindInstalled);
         IsComponentMissing = installation is null;
-        StatusText = installation is null ? "联机组件未安装" : string.Empty;
         if (installation is null)
         {
+            StatusText = "联机组件未安装";
             Logger.Warning($"[Multiplayer] {Edition} multiplayer component was not found after {stopwatch.Elapsed}.");
             return;
         }
+
+        if (await GravityConeInstaller.IsUpdateRequiredAsync(_lifetime.Token))
+        {
+            IsComponentOutdated = true;
+            StatusText = "联机组件需要更新";
+            Logger.Warning($"[Multiplayer] {Edition} multiplayer component requires an update after {stopwatch.Elapsed}.");
+            return;
+        }
+
+        StatusText = string.Empty;
         try
         {
             await StartClientAsync(installation);
@@ -285,10 +311,15 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 context.ReportProgress(item.Progress);
                 context.SetDescription(item.Message);
             }));
-            var installation = await GravityConeInstaller.EnsureInstalledAsync(progress, context.CancellationToken);
+            var installation = await GravityConeInstaller.EnsureInstalledAsync(progress, context.CancellationToken,
+                forceUpdate: IsComponentOutdated);
             context.ReportProgress(1);
             context.SetDescription("联机组件下载完成");
-            await Dispatcher.UIThread.InvokeAsync(() => IsComponentMissing = false);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsComponentMissing = false;
+                IsComponentOutdated = false;
+            });
             await StartClientAsync(installation);
         });
         task.Start();
@@ -315,7 +346,11 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsBusy = false;
-                StatusText = IsComponentMissing ? "联机组件未安装" : string.Empty;
+                StatusText = IsComponentMissing
+                    ? "联机组件未安装"
+                    : IsComponentOutdated
+                        ? "联机组件需要更新"
+                        : string.Empty;
                 if (task.Status == ManagedTaskStatus.Completed)
                 {
                     Logger.Info($"[Multiplayer] Component installation completed in {stopwatch.Elapsed}.");

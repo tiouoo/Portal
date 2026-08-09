@@ -40,22 +40,22 @@
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
-                IsVisible="{Binding IsComponentMissing}"
+                IsVisible="{Binding IsComponentBannerVisible}"
                 Padding="15">
                 <StackPanel Spacing="10">
                     <TextBlock
                         FontSize="17"
                         FontWeight="SemiBold"
-                        Text="需要安装联机组件" />
+                        Text="{Binding ComponentTitle}" />
                     <Button
                         Command="{Binding InstallCommand}"
-                        Content="下载并安装"
+                        Content="{Binding InstallActionText}"
                         HorizontalAlignment="Left"
                         IsEnabled="{Binding IsNotBusy}" />
                 </StackPanel>
             </Border>
 
-            <StackPanel IsVisible="{Binding !IsComponentMissing}" Spacing="15">
+            <StackPanel IsVisible="{Binding !IsComponentBannerVisible}" Spacing="15">
                 <Border
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"

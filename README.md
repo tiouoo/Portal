@@ -93,6 +93,7 @@ cd Portal
 ```env
 CURSEFORGE_API_KEY=
 MICROSOFT_CLIENT_ID=
+GRAVITYCONE_UPTIME_API_KEY=
 ```
 
 官网 [`[root]/web`](web) :

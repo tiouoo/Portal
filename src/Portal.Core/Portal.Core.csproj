@@ -3,6 +3,7 @@
     <PropertyGroup>
       <CurseForgeApiKey>$([System.Environment]::GetEnvironmentVariable('CURSEFORGE_API_KEY'))</CurseForgeApiKey>
       <MicrosoftClientId>$([System.Environment]::GetEnvironmentVariable('MICROSOFT_CLIENT_ID'))</MicrosoftClientId>
+      <GravityConeUptimeApiKey>$([System.Environment]::GetEnvironmentVariable('GRAVITYCONE_UPTIME_API_KEY'))</GravityConeUptimeApiKey>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(CurseForgeApiKey)' != ''">
@@ -11,6 +12,10 @@
 
     <ItemGroup Condition="'$(MicrosoftClientId)' != ''">
       <AssemblyMetadata Include="Portal.MicrosoftClientId" Value="$(MicrosoftClientId)" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(GravityConeUptimeApiKey)' != ''">
+      <AssemblyMetadata Include="Portal.GravityConeUptimeApiKey" Value="$(GravityConeUptimeApiKey)" />
     </ItemGroup>
 
     <ItemGroup>

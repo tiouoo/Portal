@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Portal.Const;
+using Portal.Core;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
@@ -12,12 +13,6 @@ namespace Portal.Module.Multiplayer;
 
 public sealed class GravityConeClient : IAsyncDisposable
 {
-    public const string RelayConfigUrl = "https://cdn.tiouo.cc/portal/multiplayer-relays.json";
-
-    private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-    private static string RelayConfigCachePath => Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer", "relays.json");
-
     private readonly ConcurrentDictionary<int, PendingRequest> _pending = new();
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private Process? _process;
@@ -110,67 +105,22 @@ public sealed class GravityConeClient : IAsyncDisposable
 
     private static async Task<IReadOnlyList<string>> GetPeersAsync(CancellationToken cancellationToken)
     {
+        if (!GravityConeNodeClient.IsUptimeConfigured)
+            throw new InvalidOperationException(
+                $"未配置 {ServiceCredentials.GravityConeUptimeApiKeyEnvironmentVariable}，无法获取联机节点列表。");
+
         try
         {
-            var config = await DownloadRelayConfigAsync(cancellationToken);
-            await SaveRelayConfigAsync(config, cancellationToken);
-            return config.Peers;
+            return await GravityConeNodeClient.Instance.FetchPeerUrlsAsync(cancellationToken);
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
-                                   ex is HttpRequestException or JsonException or InvalidDataException or IOException or
-                                       OperationCanceledException)
+                                   ex is HttpRequestException or JsonException or InvalidOperationException or IOException)
         {
-            Logger.Warning($"下载联机中转服务器配置失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
-            var cachedConfig = await ReadCachedRelayConfigAsync(cancellationToken);
-            if (cachedConfig is not null) return cachedConfig.Peers;
-            throw new InvalidOperationException("无法获取联机中转服务器配置，请检查网络后重试。", ex);
+            Logger.Warning($"获取联机节点列表失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
+            return await GravityConeNodeClient.Instance.TryReadCacheAsync(cancellationToken) ??
+                   throw new InvalidOperationException("无法获取联机节点列表，请检查网络后重试。", ex);
         }
     }
-
-    private static async Task<RelayConfig> DownloadRelayConfigAsync(CancellationToken cancellationToken)
-    {
-        await using var stream = await HttpClient.GetStreamAsync(RelayConfigUrl, cancellationToken);
-        var config = await JsonSerializer.DeserializeAsync<RelayConfig>(stream, JsonOptions, cancellationToken)
-                     ?? throw new InvalidDataException("联机中转服务器配置为空。");
-        return ValidateRelayConfig(config);
-    }
-
-    private static async Task SaveRelayConfigAsync(RelayConfig config, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(RelayConfigCachePath)!);
-        await File.WriteAllTextAsync(RelayConfigCachePath, JsonSerializer.Serialize(config), cancellationToken);
-    }
-
-    private static async Task<RelayConfig?> ReadCachedRelayConfigAsync(CancellationToken cancellationToken)
-    {
-        if (!File.Exists(RelayConfigCachePath)) return null;
-        try
-        {
-            var json = await File.ReadAllTextAsync(RelayConfigCachePath, cancellationToken);
-            var config = JsonSerializer.Deserialize<RelayConfig>(json, JsonOptions);
-            return config is null ? null : ValidateRelayConfig(config);
-        }
-        catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException)
-        {
-            Logger.Warning($"读取联机中转服务器缓存失败。{Environment.NewLine}{ex}");
-            return null;
-        }
-    }
-
-    private static RelayConfig ValidateRelayConfig(RelayConfig config)
-    {
-        if (config.SchemaVersion != 1) throw new InvalidDataException("不支持的联机中转服务器配置版本。");
-        if (config.Peers is null || config.Peers.Count == 0)
-            throw new InvalidDataException("联机中转服务器配置中没有可用服务器。");
-        if (config.Peers.Any(peer => !IsValidPeer(peer)))
-            throw new InvalidDataException("联机中转服务器配置包含无效地址。");
-        return config with { Peers = config.Peers.Distinct(StringComparer.Ordinal).ToList() };
-    }
-
-    private static bool IsValidPeer(string peer) =>
-        Uri.TryCreate(peer, UriKind.Absolute, out var uri) &&
-        uri.Scheme is "http" or "https" or "tcp" or "ws" or "wss" &&
-        !string.IsNullOrWhiteSpace(uri.Host);
 
     public async Task<GravityConeResponse> RequestAsync(string method, object? parameters = null,
         IProgress<GravityConeProgress>? progress = null, TimeSpan? timeout = null,
@@ -303,10 +253,6 @@ public sealed class GravityConeClient : IAsyncDisposable
 
     private sealed record PendingRequest(TaskCompletionSource<GravityConeResponse> Completion,
         IProgress<GravityConeProgress>? Progress);
-
-    private sealed record RelayConfig(
-        [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
-        [property: JsonPropertyName("peers")] List<string> Peers);
 }
 
 public sealed class GravityConeResponse

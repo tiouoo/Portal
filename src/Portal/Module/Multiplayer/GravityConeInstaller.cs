@@ -4,19 +4,25 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Portal.Const;
 using Portal.Module.Update;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Multiplayer;
 
 public static class GravityConeInstaller
 {
-    public const string ManifestUrl = "https://cdn.tiouo.cc/portal/gravitycone.json";
-    public const string GravityConeVersion = "0.1.3-alpha";
+    public const string ManifestUrl = "https://portal.tiouo.cc/gc.json";
+    public const string GravityConeVersion = "0.1.4-alpha";
     public const string EasyTierVersion = "2.6.4";
 
     private const int DownloadConcurrency = 4;
     private const int BufferSize = 128 * 1024;
+
+    private static readonly Regex VersionPattern = new(
+        @"^(\d+)\.(\d+)\.(\d+)(?:-([A-Za-z0-9][A-Za-z0-9.\-]*))?$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromMinutes(5) };
     private static string Root => Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer");
@@ -46,9 +52,10 @@ public static class GravityConeInstaller
     }
 
     public static async Task<GravityConeInstallation> EnsureInstalledAsync(
-        IProgress<(double? Progress, string Message)>? progress, CancellationToken cancellationToken)
+        IProgress<(double? Progress, string Message)>? progress, CancellationToken cancellationToken,
+        bool forceUpdate = false)
     {
-        if (FindInstalled() is { } installed) return installed;
+        if (!forceUpdate && FindInstalled() is { } installed) return installed;
 
         progress?.Report((null, "正在获取联机组件清单"));
         await using var manifestStream = await Client.GetStreamAsync(ManifestUrl, cancellationToken);
@@ -94,7 +101,81 @@ public static class GravityConeInstaller
         await File.WriteAllTextAsync(InstallationStatePath, JsonSerializer.Serialize(new InstallationState(
             manifest.GravityCone.Version, manifest.EasyTier.Version, rid, cliName)), cancellationToken);
         progress?.Report((1, "联机组件安装完成"));
+        CleanupOldGravityConeVersions(manifest.GravityCone.Version);
         return new GravityConeInstallation(cliPath, etDirectory);
+    }
+
+    public static string? GetInstalledGravityConeVersion()
+    {
+        var rid = GetRid();
+        var state = ReadInstallationState();
+        return state is { Rid: var stateRid } && stateRid == rid ? state.GravityConeVersion : null;
+    }
+
+    public static async Task<bool> IsUpdateRequiredAsync(CancellationToken cancellationToken)
+    {
+        var installedVersion = GetInstalledGravityConeVersion();
+        if (string.IsNullOrWhiteSpace(installedVersion)) return false;
+
+        var latestVersion = await FetchLatestGravityConeVersionAsync(cancellationToken);
+        return !string.IsNullOrWhiteSpace(latestVersion) &&
+               CompareGravityConeVersions(installedVersion, latestVersion) < 0;
+    }
+
+    private static async Task<string?> FetchLatestGravityConeVersionAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var manifestStream = await Client.GetStreamAsync(ManifestUrl, cancellationToken);
+            var manifest = await JsonSerializer.DeserializeAsync<GravityConeManifest>(manifestStream,
+                cancellationToken: cancellationToken);
+            if (manifest is null || manifest.SchemaVersion != 1) return null;
+            return string.IsNullOrWhiteSpace(manifest.GravityCone.Version) ? null : manifest.GravityCone.Version;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidDataException or IOException)
+        {
+            Logger.Warning($"获取联机组件清单版本失败。{Environment.NewLine}{ex}");
+            return null;
+        }
+    }
+
+    private static int CompareGravityConeVersions(string x, string y)
+    {
+        var xMatch = VersionPattern.Match(x);
+        var yMatch = VersionPattern.Match(y);
+        if (!xMatch.Success || !yMatch.Success) return string.CompareOrdinal(x, y);
+
+        for (var i = 1; i <= 3; i++)
+        {
+            var difference = int.Parse(xMatch.Groups[i].Value).CompareTo(int.Parse(yMatch.Groups[i].Value));
+            if (difference != 0) return difference;
+        }
+
+        var xPre = xMatch.Groups[4].Value;
+        var yPre = yMatch.Groups[4].Value;
+        if (xPre == yPre) return 0;
+        if (xPre.Length == 0) return 1;
+        if (yPre.Length == 0) return -1;
+        return string.CompareOrdinal(xPre, yPre);
+    }
+
+    private static void CleanupOldGravityConeVersions(string currentVersion)
+    {
+        var gravityRoot = Path.Combine(Root, "GravityCone");
+        if (!Directory.Exists(gravityRoot)) return;
+
+        foreach (var directory in Directory.EnumerateDirectories(gravityRoot))
+        {
+            if (Path.GetFileName(directory).Equals(currentVersion, StringComparison.Ordinal)) continue;
+            try
+            {
+                Directory.Delete(directory, true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning($"清理旧版联机组件失败：{directory}{Environment.NewLine}{ex}");
+            }
+        }
     }
 
     private static InstallationState? ReadInstallationState()

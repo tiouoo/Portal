@@ -93,6 +93,7 @@ jobs:
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+      GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
     strategy:
       matrix:
         include:
@@ -143,6 +144,7 @@ jobs:
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+      GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -184,6 +186,7 @@ jobs:
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+      GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -229,6 +232,7 @@ jobs:
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+      GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
     strategy:
       matrix:
         rid: [osx-x64, osx-arm64]
