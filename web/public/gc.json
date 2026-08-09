@@ -1,0 +1,103 @@
+﻿{
+  "schemaVersion": 1,
+  "gravityCone": {
+    "version": "0.1.3-alpha",
+    "packages": {
+      "win-x64": {
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-windows-amd64.zip",
+        "fileName": "gravitycone-cli-windows-amd64.zip",
+        "archiveType": "zip",
+        "size": 4767756,
+        "sha256": "df7ea300a29bb433f22b0dc41ae75f88a29560a4096fd4d1cb8a804d636a9335",
+        "executable": "gravitycone-cli-windows-amd64.exe"
+      },
+      "win-arm64": {
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-windows-arm64.zip",
+        "fileName": "gravitycone-cli-windows-arm64.zip",
+        "archiveType": "zip",
+        "size": 4241934,
+        "sha256": "ffc2487b76cda54b51ad64b46c4d797db9ecd6c63b064046a66fc5fe7c1afdfc",
+        "executable": "gravitycone-cli-windows-arm64.exe"
+      },
+      "linux-x64": {
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-linux-amd64.tar.gz",
+        "fileName": "gravitycone-cli-linux-amd64.tar.gz",
+        "archiveType": "tar.gz",
+        "size": 4692273,
+        "sha256": "f13a5d3dac6cbb84e1778f3188ef8d621185b6aed7e95da1386fa8d32d622b87",
+        "executable": "gravitycone-cli-linux-amd64"
+      },
+      "linux-arm64": {
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-linux-arm64.tar.gz",
+        "fileName": "gravitycone-cli-linux-arm64.tar.gz",
+        "archiveType": "tar.gz",
+        "size": 4220590,
+        "sha256": "a4b9caa9fc2f164eae6210b7d9749d3e702ddd14843983a4588bea83de1eb35f",
+        "executable": "gravitycone-cli-linux-arm64"
+      },
+      "osx-x64": {
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-darwin-amd64.tar.gz",
+        "fileName": "gravitycone-cli-darwin-amd64.tar.gz",
+        "archiveType": "tar.gz",
+        "size": 4745699,
+        "sha256": "6450cb67bac69cc0b5f384a93df6b8385e049c8a3ddc481966079cd09ee5b204",
+        "executable": "gravitycone-cli-darwin-amd64"
+      },
+      "osx-arm64": {
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-darwin-arm64.tar.gz",
+        "fileName": "gravitycone-cli-darwin-arm64.tar.gz",
+        "archiveType": "tar.gz",
+        "size": 4363327,
+        "sha256": "d2b58aaa4c81ac3dcdb3a351fcfb8e4b7ea823604c49df087762af225dbc152b",
+        "executable": "gravitycone-cli-darwin-arm64"
+      }
+    }
+  },
+  "easyTier": {
+    "version": "2.6.4",
+    "packages": {
+      "win-x64": {
+        "url": "https://github.com/EasyTier/EasyTier/releases/download/v2.6.4/easytier-windows-x86_64-v2.6.4.zip",
+        "fileName": "easytier-windows-x86_64-v2.6.4.zip",
+        "archiveType": "zip",
+        "size": 32657720,
+        "sha256": "27af91e270e554709b048bd32327fefd2dfce5062ae1e8701af7550c6f525f84"
+      },
+      "win-arm64": {
+        "url": "https://github.com/EasyTier/EasyTier/releases/download/v2.6.4/easytier-windows-arm64-v2.6.4.zip",
+        "fileName": "easytier-windows-arm64-v2.6.4.zip",
+        "archiveType": "zip",
+        "size": 30136892,
+        "sha256": "37023f8a3451c9234b17ee2089a03dc344ce90d803b5b359cb6c46682b0549b4"
+      },
+      "linux-x64": {
+        "url": "https://github.com/EasyTier/EasyTier/releases/download/v2.6.4/easytier-linux-x86_64-v2.6.4.zip",
+        "fileName": "easytier-linux-x86_64-v2.6.4.zip",
+        "archiveType": "zip",
+        "size": 25506523,
+        "sha256": "61b659eaedba658fa66fe47d17e1426cdd77e5d02fa15fed447bb4357c09dfd6"
+      },
+      "linux-arm64": {
+        "url": "https://github.com/EasyTier/EasyTier/releases/download/v2.6.4/easytier-linux-aarch64-v2.6.4.zip",
+        "fileName": "easytier-linux-aarch64-v2.6.4.zip",
+        "archiveType": "zip",
+        "size": 20487230,
+        "sha256": "f533ec25a7ea714e09f645615012200278058525795cc3bb690ff011aec1a70f"
+      },
+      "osx-x64": {
+        "url": "https://github.com/EasyTier/EasyTier/releases/download/v2.6.4/easytier-macos-x86_64-v2.6.4.zip",
+        "fileName": "easytier-macos-x86_64-v2.6.4.zip",
+        "archiveType": "zip",
+        "size": 33733545,
+        "sha256": "89fc28a6e6995259d76ce3f11775220e8a21c760e94df91a6a9db30a69b6982e"
+      },
+      "osx-arm64": {
+        "url": "https://github.com/EasyTier/EasyTier/releases/download/v2.6.4/easytier-macos-aarch64-v2.6.4.zip",
+        "fileName": "easytier-macos-aarch64-v2.6.4.zip",
+        "archiveType": "zip",
+        "size": 30174017,
+        "sha256": "4be1882d1aa36d31c1d6ba0596f2cf8a097e371f8da124212324b2e0f8df7e4b"
+      }
+    }
+  }
+}

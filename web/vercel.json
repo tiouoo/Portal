@@ -1,7 +1,7 @@
 {
     "rewrites": [
         {
-            "source": "/((?!sitemap|rss|robots|sw|favicon|icon|manifest|BingSiteAuth|assets).*)",
+            "source": "/((?!sitemap|rss|robots|sw|favicon|icon|manifest|BingSiteAuth|assets|gc).*)",
             "destination": "/index.html"
         }
     ]
