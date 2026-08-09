@@ -75,20 +75,18 @@ jobs:
           echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
           echo "commit_hash=${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
 
-      # 同步版本号到所有位置（version.txt / csproj / web / AUR）
-      - name: Sync Version Numbers
-        run: bash .github/scripts/sync-version.sh "${{ steps.meta.outputs.version }}"
-
-      - name: Commit and Tag
+      # 版本号在工作流内部生成并注入构建（version-ci.txt），不修改、不提交仓库文件
+      - name: Create and Push Version Tag
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "[skip ci] chore(release): Portal v${{ steps.meta.outputs.version }}" || true
-          git push origin HEAD:${{ github.ref_name }}
-          git tag v${{ steps.meta.outputs.version }}
-          git push origin v${{ steps.meta.outputs.version }}
+          if git rev-parse -q --verify "refs/tags/v${{ steps.meta.outputs.version }}" >/dev/null; then
+            echo "版本标签 v${{ steps.meta.outputs.version }} 已存在，跳过创建。"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "v${{ steps.meta.outputs.version }}"
+            git push origin "v${{ steps.meta.outputs.version }}"
+          fi
 
   linux-package:
     runs-on: ubuntu-22.04
