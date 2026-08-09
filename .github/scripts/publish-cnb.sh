@@ -39,18 +39,22 @@ CNB_PRERELEASE="${CNB_PRERELEASE:-false}"
 CNB_MAKE_LATEST="${CNB_MAKE_LATEST:-false}"
 
 cnb_curl() {
-  local method="$1" path="$2" body="${3:-}"
-  local args=(-sS -X "$method" -H "Authorization: Bearer ${CNB_TOKEN}" -H "Accept: ${CNB_ACCEPT}")
+  local method="$1" path="$2" body="${3:-}" url
+  local args=(-g -sS -X "$method" -H "Authorization: Bearer ${CNB_TOKEN}" -H "Accept: ${CNB_ACCEPT}")
   if [ -n "$body" ]; then
     args+=(-H "Content-Type: application/json" --data "$body")
   fi
-  curl "${args[@]}" "${CNB_API}${path}"
+  case "${path}" in
+    http://*|https://*) url="${path}" ;;
+    *) url="${CNB_API}${path}" ;;
+  esac
+  curl "${args[@]}" "${url}"
 }
 
 # 按标签查询 Release，成功时输出 release_id 到 stdout
 get_release_id() {
   local json code
-  json=$(curl -sS -o /tmp/cnb_release.json -w "%{http_code}" \
+  json=$(curl -g -sS -o /tmp/cnb_release.json -w "%{http_code}" \
     -H "Authorization: Bearer ${CNB_TOKEN}" -H "Accept: ${CNB_ACCEPT}" \
     "${CNB_API}/${CNB_REPO}/-/releases/tags/${CNB_TAG}" 2>/dev/null || true)
   code="${json}"
@@ -137,7 +141,7 @@ upload_asset() {
   fi
 
   # 上传地址有效期 30 秒，必须立即流式上传
-  curl -sS -X PUT --data-binary "@${file}" "${upload_url}" >/dev/null
+  curl -g -sS -X PUT --data-binary "@${file}" "${upload_url}" >/dev/null
   cnb_curl POST "${verify_url}" "{}" >/dev/null
   echo "[cnb] 已上传附件：${name}（${size} 字节）"
 }
