@@ -1,54 +1,54 @@
 ﻿{
   "schemaVersion": 1,
   "gravityCone": {
-    "version": "0.1.3-alpha",
+    "version": "0.1.4-alpha",
     "packages": {
       "win-x64": {
-        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-windows-amd64.zip",
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.4-alpha/gravitycone-cli-windows-amd64.zip",
         "fileName": "gravitycone-cli-windows-amd64.zip",
         "archiveType": "zip",
-        "size": 4767756,
-        "sha256": "df7ea300a29bb433f22b0dc41ae75f88a29560a4096fd4d1cb8a804d636a9335",
+        "size": 4734705,
+        "sha256": "9de3b1dc4eff0155f3aa24e280aa7b689a4dc74426c9867eb53eb835f739e618",
         "executable": "gravitycone-cli-windows-amd64.exe"
       },
       "win-arm64": {
-        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-windows-arm64.zip",
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.4-alpha/gravitycone-cli-windows-arm64.zip",
         "fileName": "gravitycone-cli-windows-arm64.zip",
         "archiveType": "zip",
-        "size": 4241934,
-        "sha256": "ffc2487b76cda54b51ad64b46c4d797db9ecd6c63b064046a66fc5fe7c1afdfc",
+        "size": 4212321,
+        "sha256": "93901f8ced5b7cbea139694514623c4215f21066fb3e7b81dadfe9b58647aa5f",
         "executable": "gravitycone-cli-windows-arm64.exe"
       },
       "linux-x64": {
-        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-linux-amd64.tar.gz",
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.4-alpha/gravitycone-cli-linux-amd64.tar.gz",
         "fileName": "gravitycone-cli-linux-amd64.tar.gz",
         "archiveType": "tar.gz",
-        "size": 4692273,
-        "sha256": "f13a5d3dac6cbb84e1778f3188ef8d621185b6aed7e95da1386fa8d32d622b87",
+        "size": 4660447,
+        "sha256": "4b2700d69e2712707ca50b2a73d4cdce2d70e040710943c29b345c9be818f854",
         "executable": "gravitycone-cli-linux-amd64"
       },
       "linux-arm64": {
-        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-linux-arm64.tar.gz",
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.4-alpha/gravitycone-cli-linux-arm64.tar.gz",
         "fileName": "gravitycone-cli-linux-arm64.tar.gz",
         "archiveType": "tar.gz",
-        "size": 4220590,
-        "sha256": "a4b9caa9fc2f164eae6210b7d9749d3e702ddd14843983a4588bea83de1eb35f",
+        "size": 4193094,
+        "sha256": "af2aeba48da6b7d4e7c7b46e3826aa00eebfa8d919238d918ca3de37cf1e603d",
         "executable": "gravitycone-cli-linux-arm64"
       },
       "osx-x64": {
-        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-darwin-amd64.tar.gz",
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.4-alpha/gravitycone-cli-darwin-amd64.tar.gz",
         "fileName": "gravitycone-cli-darwin-amd64.tar.gz",
         "archiveType": "tar.gz",
-        "size": 4745699,
-        "sha256": "6450cb67bac69cc0b5f384a93df6b8385e049c8a3ddc481966079cd09ee5b204",
+        "size": 4715925,
+        "sha256": "c4b1f95e2a158d843061495983814afd640e2b1def7934efe9daa84dc5db860f",
         "executable": "gravitycone-cli-darwin-amd64"
       },
       "osx-arm64": {
-        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.3-alpha/gravitycone-cli-darwin-arm64.tar.gz",
+        "url": "https://github.com/Tianpao/GravityCone/releases/download/v0.1.4-alpha/gravitycone-cli-darwin-arm64.tar.gz",
         "fileName": "gravitycone-cli-darwin-arm64.tar.gz",
         "archiveType": "tar.gz",
-        "size": 4363327,
-        "sha256": "d2b58aaa4c81ac3dcdb3a351fcfb8e4b7ea823604c49df087762af225dbc152b",
+        "size": 4333750,
+        "sha256": "4141fdf0cab7467b583587a042950c1b5bd2e65624158799972bb6d54e57488c",
         "executable": "gravitycone-cli-darwin-arm64"
       }
     }
