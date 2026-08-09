@@ -3,7 +3,7 @@
 pkgname=portal-mc-bin
 pkgver=0.0.0.0
 pkgrel=1
-pkgdesc="Portal - Minecraft launcher/manager (stable placeholder, currently tracks nightly)"
+pkgdesc="Portal - Minecraft launcher/manager (stable release)"
 arch=('x86_64')
 url="https://portal.tiouo.cc/"
 license=('GPL-3.0-or-later')
@@ -13,7 +13,7 @@ conflicts=('portal-mc' 'portal-mc-commit-bin' 'portal-mc-nightly-bin')
 options=('!strip' '!emptydirs')
 _appimg="Portal.AppImage"
 source_x86_64=(
-    "$_appimg::https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.AppImage"
+    "$_appimg::https://github.com/tiouoo/Portal/releases/latest/download/Portal.linux.x64.AppImage"
     "portal-mc.svg::https://raw.githubusercontent.com/tiouoo/Portal/main/assets/Icon-Pattern.svg"
 )
 sha256sums_x86_64=('SKIP' 'SKIP')

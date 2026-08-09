@@ -316,15 +316,3 @@ jobs:
   #   secrets:
   #     AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
   #     AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
-
-  # TODO: stable tag.
-  # aur-stable:
-  #   needs: [prepare, publish]
-  #   uses: ./.github/workflows/publish-aur.yml
-  #   with:
-  #     pkgname: portal-mc-bin
-  #     tag: publish-nightly
-  #     app_version: ${{ needs.prepare.outputs.app_version }}
-  #   secrets:
-  #     AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-  #     AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
