@@ -75,7 +75,6 @@ jobs:
           echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
           echo "commit_hash=${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
 
-      # 版本号在工作流内部生成并注入构建（version-ci.txt），不修改、不提交仓库文件
       - name: Create and Push Version Tag
         run: |
           set -euo pipefail
