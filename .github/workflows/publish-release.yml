@@ -1,10 +1,16 @@
-name: publish/commit
+name: publish/release
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+    inputs:
+      version:
+        description: "版本号（留空自动递增，如 1.0.0）"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
 
 jobs:
   prepare:
@@ -13,30 +19,76 @@ jobs:
       version_json: ${{ steps.meta.outputs.json }}
       app_version: ${{ steps.meta.outputs.app_version }}
       commit: ${{ steps.meta.outputs.commit_hash }}
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      base_commit: ${{ steps.meta.outputs.base_commit }}
+      prev_tag: ${{ steps.meta.outputs.prev_tag }}
+      release_date: ${{ steps.meta.outputs.release_date }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
+      # 计算版本号：支持手动指定，或从上一个 v* 标签自动递增
       - name: Generate Meta and JSON
         id: meta
         run: |
-          BASE_VERSION=$(cat ./src/version.txt | tr -d '[:space:]')
-          Y_FULL=$(TZ='Asia/Shanghai' date +'%Y')
-          MD=$(TZ='Asia/Shanghai' date +'%m%d')
-          HM=$(TZ='Asia/Shanghai' date +'%H%M')
-          FULL_TIMESTAMP="${Y_FULL}${MD}${HM}"
-          START_EPOCH=$(TZ='Asia/Shanghai' date -d "2026-07-10 00:00:00" +%s)
-          NOW_EPOCH=$(date +%s)
-          TOTAL_MINUTES=$(( (NOW_EPOCH - START_EPOCH) / 60 ))
-          TOTAL_HOURS=$(( TOTAL_MINUTES / 60 ))
-          ELAPSED_MINUTES=$(( TOTAL_MINUTES % 60 ))
-          APP_VERSION="0.0.${TOTAL_HOURS}.${ELAPSED_MINUTES}"
-          COMMIT_HASH=$(git rev-parse --short=6 HEAD)
+          set -euo pipefail
+
+          BASE_COMMIT=$(git rev-parse --short=7 HEAD)
+          PREV_TAG=$(git tag -l --sort=-v:refname 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+          elif [ -n "$PREV_TAG" ]; then
+            BASE="${PREV_TAG#v}"
+            MAJOR=$(echo "$BASE" | cut -d. -f1)
+            MINOR=$(echo "$BASE" | cut -d. -f2)
+            PATCH=$(echo "$BASE" | cut -d. -f3)
+            PATCH=$((PATCH + 1))
+            if [ "$PATCH" -gt 9 ]; then
+              PATCH=0
+              MINOR=$((MINOR + 1))
+            fi
+            if [ "$MINOR" -gt 9 ]; then
+              MINOR=0
+              MAJOR=$((MAJOR + 1))
+            fi
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          else
+            VERSION="1.0.0"
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "base_commit=${BASE_COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "prev_tag=${PREV_TAG}" >> "$GITHUB_OUTPUT"
+          echo "release_date=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_OUTPUT"
+
+          APP_VERSION="${VERSION}"
+          COMMIT_HASH="${BASE_COMMIT}"
           BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
-          VERSION_TITLE="build-commit-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
-          JSON_STRING="{\"type\":\"commit\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\",\"timestamp\":\"${FULL_TIMESTAMP}\",\"version_title\":\"${VERSION_TITLE}\"}"
-          echo "json=${JSON_STRING}" >> $GITHUB_OUTPUT
-          echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
-          echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+          JSON_STRING="{\"type\":\"release\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${VERSION}\",\"version_title\":\"Portal v${VERSION}\"}"
+          echo "json=${JSON_STRING}" >> "$GITHUB_OUTPUT"
+          echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "commit_hash=${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
+
+      # 同步版本号到所有位置（version.txt / csproj / web / AUR）
+      - name: Sync Version Numbers
+        run: bash .github/scripts/sync-version.sh "${{ steps.meta.outputs.version }}"
+
+      - name: Commit and Tag
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "[skip ci] chore(release): Portal v${{ steps.meta.outputs.version }}" || true
+          git push origin HEAD:${{ github.ref_name }}
+          git tag v${{ steps.meta.outputs.version }}
+          git push origin v${{ steps.meta.outputs.version }}
 
   linux-package:
     runs-on: ubuntu-22.04
@@ -265,44 +317,35 @@ jobs:
       - name: List Files
         run: ls -la ./Portal.Release/
 
-      - name: Generate Changelog
+      # 生成 Release 正文：标题行、发布日期（北京时间）、基准提交（运行工作流时的上一个提交）、更新日志 compare 链接
+      - name: Generate Release Body
         run: |
           REPO_URL="${{ github.server_url }}/${{ github.repository }}"
-          bash .github/scripts/generate-changelog.sh "$REPO_URL" > RELEASE_CHANGELOG.md
-          if [ ! -s RELEASE_CHANGELOG.md ] || [ "$(wc -l < RELEASE_CHANGELOG.md)" -le 1 ]; then
-            echo "自上一个正式版以来没有新的提交" > RELEASE_CHANGELOG.md
-          fi
-          cat RELEASE_CHANGELOG.md
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="${{ needs.prepare.outputs.tag }}"
+          PREV_TAG="${{ needs.prepare.outputs.prev_tag }}"
+          BASE_COMMIT="${{ needs.prepare.outputs.base_commit }}"
+          RELEASE_DATE="${{ needs.prepare.outputs.release_date }}"
 
-      # publish-commit 是移动式标签：先删除旧 Release 与标签，再在当前提交上重建
-      - name: Delete Previous Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete publish-commit --cleanup-tag -y || true
+          {
+            echo "Portal v${VERSION}"
+            echo "发布日期：${RELEASE_DATE}（北京时间）"
+            echo "基准提交：${BASE_COMMIT}"
+            if [ -n "${PREV_TAG}" ]; then
+              echo "更新日志：${REPO_URL}/compare/${PREV_TAG}...${TAG}"
+            fi
+          } > RELEASE_BODY.md
+          cat RELEASE_BODY.md
 
       - name: Publish Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: publish-commit
-          name: "build-commit-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
-          target_commitish: ${{ github.sha }}
-          prerelease: true
-          body_path: RELEASE_CHANGELOG.md
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: "Portal v${{ needs.prepare.outputs.version }}"
+          body_path: RELEASE_BODY.md
           files: |
             ./Portal.Release/*.dmg
             ./Portal.Release/*.zip
             ./Portal.Release/*.AppImage
             ./Portal.Release/*.deb
             ./Portal.Release/*.rpm
-
-  # AUR publishing is currently disabled.
-  # aur:
-  #   needs: [prepare, publish]
-  #   uses: ./.github/workflows/publish-aur.yml
-  #   with:
-  #     pkgname: portal-mc-commit-bin
-  #     tag: publish-commit
-  #     app_version: ${{ needs.prepare.outputs.app_version }}
-  #   secrets:
-  #     AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-  #     AUR_USERNAME: ${{ secrets.AUR_USERNAME }}

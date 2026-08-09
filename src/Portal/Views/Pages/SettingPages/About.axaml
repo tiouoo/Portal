@@ -134,6 +134,7 @@
                 Name="UpdateChannel"
                 SelectedIndex="{Binding Data.UiProperty.OverrideUpdateChannel, Converter={StaticResource UpdateChannelToIndexConverter}, Mode=TwoWay}"
                 SelectionChanged="UpdateChannel_OnSelectionChanged">
+                <ComboBoxItem Content="正式版" />
                 <ComboBoxItem Content="每日构建版本" />
                 <ComboBoxItem Content="提交构建版本" />
             </ComboBox>

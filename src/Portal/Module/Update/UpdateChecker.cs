@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -46,10 +47,26 @@ public static class UpdateChecker
     public static async Task<UpdateRelease> GetRelease()
     {
         var channel = NormalizeChannel(Data.UiProperty.OverrideUpdateChannel);
-        var apiUrl = $"https://api.github.com/repos/tiouoo/Portal/releases/tags/publish-{channel}";
+        var apiUrl = channel == "release"
+            ? "https://api.github.com/repos/tiouoo/Portal/releases?per_page=100"
+            : $"https://api.github.com/repos/tiouoo/Portal/releases/tags/publish-{channel}";
         Logger.Info($"Checking update for {Data.Instance.Version.VersionTitle} from {apiUrl}");
 
-        var json = JObject.Parse(await HttpUtil.Request(apiUrl).GetStringAsync());
+        var text = await HttpUtil.Request(apiUrl).GetStringAsync();
+        JToken json;
+        if (channel == "release")
+        {
+            var releases = JArray.Parse(text);
+            json = releases
+                .Where(r => r["draft"]?.Value<bool>() != true)
+                .Where(r => Regex.IsMatch(r["tag_name"]?.ToString() ?? string.Empty, @"^(v?\d+)\.\d+\.\d+$"))
+                .FirstOrDefault() ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+        }
+        else
+        {
+            json = JObject.Parse(text);
+        }
+
         var title = json["name"]?.ToString().Trim();
         if (string.IsNullOrEmpty(title)) throw new InvalidOperationException("更新发布缺少版本名称。");
 
@@ -79,6 +96,7 @@ public static class UpdateChecker
 
     private static string NormalizeChannel(string channel) => channel.Trim().ToLowerInvariant() switch
     {
+        "release" or "stable" => "release",
         "nightly" => "nightly",
         "commit" => "commit",
         _ => throw new NotSupportedException($"不支持更新通道“{channel}”。")

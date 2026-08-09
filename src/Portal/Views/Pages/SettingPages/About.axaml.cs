@@ -41,7 +41,7 @@ public partial class About : DataUserControl
         Data.UiProperty.IsLatestVersion = false;
         Data.UiProperty.FoundNewVersion = false;
         var channel = Data.UiProperty.OverrideUpdateChannel;
-        if (channel != "nightly" && channel != "commit" && channel != "dev")
+        if (channel != "release" && channel != "nightly" && channel != "commit" && channel != "dev")
         {
             return;
         }

@@ -1,12 +1,12 @@
 <script setup>
 import { computed, ref } from "vue";
-import { platforms } from "../data/downloads.js";
+import { platforms, channelBase } from "../data/downloads.js";
 
 const route = ref("direct");
-const channel = ref("nightly");
+const channel = ref("release");
 
-const downloadUrl = (url) => {
-  const releaseUrl = url.replace("publish-nightly", `publish-${channel.value}`);
+const downloadUrl = (file) => {
+  const releaseUrl = `${channelBase(channel.value)}/${file}`;
 
   if (route.value === "bgithub") {
     return releaseUrl.replace("https://github.com/", "https://bgithub.xyz/");
@@ -38,6 +38,7 @@ const channelHint = computed(() => {
           <label class="download-route">
             <span>版本</span>
             <select v-model="channel" aria-label="选择下载版本">
+              <option value="release">正式版</option>
               <option value="nightly">Nightly</option>
               <option value="commit">Commit</option>
             </select>
@@ -82,8 +83,8 @@ const channelHint = computed(() => {
               <p>{{ platform.detail }}</p>
             </div>
           </div>
-          <a class="platform-primary" :href="downloadUrl(platform.primaryUrl)"
-            >{{ platform.primary }}
+          <a class="platform-primary" :href="downloadUrl(platform.primary.file)"
+            >{{ platform.primary.label }}
             <span
               ><svg
                 style="height: 20px; position: relative; top: 2px; left: 5px"
@@ -99,8 +100,8 @@ const channelHint = computed(() => {
           <div class="platform-links">
             <a
               v-for="link in platform.links"
-              :key="link.url"
-              :href="downloadUrl(link.url)"
+              :key="link.file"
+              :href="downloadUrl(link.file)"
             >
               <span
                 >{{ link.label }}<small>{{ link.meta }}</small></span
