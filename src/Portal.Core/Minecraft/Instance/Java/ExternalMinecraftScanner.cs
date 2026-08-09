@@ -4,6 +4,8 @@ using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Instance.Bedrock;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Instance.Java;
 
@@ -25,6 +27,15 @@ internal static class ExternalMinecraftScanner
     }
 
     private static IReadOnlyList<MinecraftInstance> ScanPortalMc(MinecraftFolderEntry folder,
+        MinecraftFolderLayout folderLayout)
+    {
+        var result = new List<MinecraftInstance>();
+        result.AddRange(ScanPortalMcJava(folder, folderLayout));
+        result.AddRange(ScanPortalMcBedrock(folder, folderLayout));
+        return result;
+    }
+
+    private static IReadOnlyList<MinecraftInstance> ScanPortalMcJava(MinecraftFolderEntry folder,
         MinecraftFolderLayout folderLayout)
     {
         var instancesRoot = Path.Combine(folderLayout.RootPath, "instances");
@@ -86,6 +97,29 @@ internal static class ExternalMinecraftScanner
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or
                                               ArgumentException or InvalidOperationException)
             {
+            }
+        }
+        return result;
+    }
+
+    private static IReadOnlyList<MinecraftInstance> ScanPortalMcBedrock(MinecraftFolderEntry folder,
+        MinecraftFolderLayout folderLayout)
+    {
+        var instancesRoot = Path.Combine(folderLayout.RootPath, "bedrock_instances");
+        if (!Directory.Exists(instancesRoot))
+            return [];
+
+        var result = new List<MinecraftInstance>();
+        foreach (var instanceFolder in Directory.GetDirectories(instancesRoot))
+        {
+            try
+            {
+                var config = BedrockHelper.GetInstanceConfig(instanceFolder);
+                result.Add(new MinecraftInstance(config, folder.FolderName, folderLayout.RootPath));
+            }
+            catch (Exception exception)
+            {
+                Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
             }
         }
         return result;
