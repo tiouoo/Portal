@@ -8,18 +8,22 @@
 #   CNB_TAG    目标 Release 标签，如 v1.0.0 / publish-nightly / publish-commit
 # 可选环境变量：
 #   CNB_API          API 地址，默认 https://api.cnb.cool
+#   CNB_WEB          Web 地址，默认 https://cnb.cool
+#   CNB_GIT_URL      CNB 仓库 git 地址，默认 ${CNB_WEB}/${CNB_REPO}.git
 #   CNB_NAME         Release 标题（默认取标签名）
 #   CNB_BODY_FILE    Release 描述文件路径（可选）
 #   CNB_COMMIT       target_commitish（提交哈希，可选）
-#   CNB_PRERELEASE   是否预发布，true/false，默认 false
+#   CNB_PRERELEASE  是否预发布，true/false，默认 false
 #   CNB_MAKE_LATEST  是否标记为最新，true/false/legacy，默认 false
 #   CNB_FILES        需要上传的附件（空格分隔的 glob），必需
 set -euo pipefail
 
 CNB_API="${CNB_API:-https://api.cnb.cool}"
+CNB_WEB="${CNB_WEB:-https://cnb.cool}"
 CNB_ACCEPT="application/vnd.cnb.api+json"
 CNB_REPO="${CNB_REPO:?CNB_REPO is required, e.g. tiouo/portal}"
 CNB_TAG="${CNB_TAG:?CNB_TAG is required}"
+CNB_GIT_URL="${CNB_GIT_URL:-${CNB_WEB}/${CNB_REPO}.git}"
 
 if [ -z "${CNB_TOKEN:-}" ]; then
   echo "[cnb] CNB_TOKEN 未配置，跳过 CNB 同步。"
@@ -57,6 +61,24 @@ get_release_id() {
   fi
 }
 
+# 把标签推到 CNB 仓库，保证创建 Release 前标签一定存在。
+# 绕过 CNB「先建标签再建 Release」的限制：此处直接用 git 把 refs/tags/{CNB_TAG}
+# 推到 CNB 仓库，随后 OpenAPI 创建 Release 即可成功。
+ensure_cnb_tag() {
+  local commit auth
+  commit="${CNB_COMMIT:-$(git rev-parse HEAD)}"
+  if [ -n "${commit}" ]; then
+    git tag -f "${CNB_TAG}" "${commit}"
+  fi
+
+  echo "[cnb] 推送标签 ${CNB_TAG}（${commit}）到 ${CNB_GIT_URL}"
+  # CNB 用户名固定为 cnb，密码为访问令牌（见 https://docs.cnb.cool/zh/guide/git-access.html）
+  auth="$(printf '%s:%s' 'cnb' "${CNB_TOKEN}" | base64 | tr -d '\n')"
+  git -c "http.extraHeader=Authorization: Basic ${auth}" push --force "${CNB_GIT_URL}" "refs/tags/${CNB_TAG}" >/dev/null || {
+    echo "[cnb] 标签推送失败（非致命，忽略）。" >&2
+  }
+}
+
 # 构造 Release 描述 JSON（含 name/body/prerelease/make_latest）
 release_meta_json() {
   local body=""
@@ -72,9 +94,10 @@ release_meta_json() {
     '{ tag_name: $tag, name: $name, body: $body, prerelease: $pre, make_latest: $latest }'
 }
 
-# 创建或更新 Release
+# 创建或更新 Release，成功时输出 release_id 到 stdout
 ensure_release() {
-  local id meta
+  local id meta response
+  ensure_cnb_tag
   id="$(get_release_id)"
   meta="$(release_meta_json)"
   if [ -n "${CNB_COMMIT:-}" ]; then
@@ -86,9 +109,11 @@ ensure_release() {
     cnb_curl PATCH "/${CNB_REPO}/-/releases/${id}" "${meta}" >/dev/null
   else
     echo "[cnb] 创建 Release ${CNB_TAG}。"
-    id="$(cnb_curl POST "/${CNB_REPO}/-/releases" "${meta}" | jq -r '.id // empty' 2>/dev/null || true)"
+    response="$(cnb_curl POST "/${CNB_REPO}/-/releases" "${meta}")"
+    id="$(jq -r '.id // empty' <<<"${response}" 2>/dev/null || true)"
     if [ -z "${id}" ]; then
-      echo "[cnb] 创建 Release 失败，可能需要先在 CNB 仓库创建标签 ${CNB_TAG}。" >&2
+      echo "[cnb] 创建 Release 失败，响应内容：" >&2
+      echo "${response}" >&2
       return 1
     fi
   fi

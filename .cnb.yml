@@ -1,8 +1,28 @@
 # CNB 云原生构建配置（.cnb.yml）
 #
-# 主构建链在 GitHub Actions 完成全平台产物并同步到本仓库 Release；
-# 此处提供一个网页手动触发的 Linux 构建作为备份，产物上传到 CNB Release 附件。
-# 参考：https://docs.cnb.cool/zh/build/configuration.html
+# 1. main 分支定时任务：每 15 分钟把 GitHub 仓库（分支 + 标签）镜像同步到 CNB。
+#    该任务保证 CNB 仓库的代码与标签始终与 GitHub 一致——创建 Release 前标签已经存在，
+#    无需用户手动去 CNB 创建标签。
+# 2. web_trigger_build_linux：网页手动触发的 Linux 备份构建，产物上传到 CNB Release 附件。
+# 参考：https://docs.cnb.cool/zh/build/crontab.html
+
+main:
+  'crontab: */15 * * * *':
+    - name: Sync source from GitHub
+      stages:
+        - name: Mirror GitHub repository
+          script: |
+            set -eu
+            mirror_dir="$(mktemp -d)"
+            trap 'rm -rf "$mirror_dir"' EXIT
+            git clone --mirror https://github.com/tiouoo/Portal.git "$mirror_dir/repository.git"
+            git -C "$mirror_dir/repository.git" remote add cnb "${CNB_REPO_URL_HTTPS:-https://cnb.cool/tiouo/portal.git}"
+            printf '%s:%s' "${CNB_TOKEN_USER_NAME:-cnb}" "$CNB_TOKEN" > "$mirror_dir/auth"
+            auth="$(base64 "$mirror_dir/auth")"
+            git_cnb() {
+              git -C "$mirror_dir/repository.git" -c "http.extraHeader=Authorization: Basic $auth" "$@"
+            }
+            git_cnb push --force cnb 'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
 
 "**":
   web_trigger_build_linux:
