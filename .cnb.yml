@@ -3,7 +3,6 @@
 # 1. main 分支定时任务：每 15 分钟把 GitHub 仓库（分支 + 标签）镜像同步到 CNB。
 #    该任务保证 CNB 仓库的代码与标签始终与 GitHub 一致——创建 Release 前标签已经存在，
 #    无需用户手动去 CNB 创建标签。
-# 2. web_trigger_build_linux：网页手动触发的 Linux 备份构建，产物上传到 CNB Release 附件。
 # 参考：https://docs.cnb.cool/zh/build/crontab.html
 
 main:
@@ -23,21 +22,3 @@ main:
               git -C "$mirror_dir/repository.git" -c "http.extraHeader=Authorization: Basic $auth" "$@"
             }
             git_cnb push --force cnb 'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
-
-"**":
-  web_trigger_build_linux:
-    - name: build-linux-backup
-      docker:
-        image: mcr.microsoft.com/dotnet/sdk:10.0
-      stages:
-        - name: Build Linux Packages
-          script:
-            - bash .cnb/build-linux.sh
-        - name: Upload to CNB Release
-          image: cnbcool/attachments:latest
-          settings:
-            attachments:
-              - "./cnb-dist/*.AppImage"
-              - "./cnb-dist/*.deb"
-              - "./cnb-dist/*.rpm"
-            tag: $TAG
