@@ -10,6 +10,7 @@
     "dev": "vite",
     "c": "npm run lint && npm run format",
     "build": "run-p \"build-only {@}\" --",
+    "prerender": "node scripts/prerender.mjs",
     "preview": "vite preview",
     "p": "npm run build && npm run preview",
     "build-only": "vite build",

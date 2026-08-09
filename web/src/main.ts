@@ -1,14 +1,8 @@
 import './assets/css/main.css';
 
-import { createApp } from 'vue';
-import App from './App.vue';
-import { createRouter } from './router'
+import { createApp } from './app';
 
-const app = createApp(App);
-
-const router = createRouter()
-
-app.use(router);
+const { app } = createApp(false);
 app.mount('#app');
 
 const updateSW = async () => {
