@@ -10,6 +10,9 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <ContentControl Margin="0,0,5,0" Name="Frame" />
+        <ContentControl
+            Margin="0,0,5,0"
+            MaxWidth="820"
+            Name="Frame" />
     </DockPanel>
 </UserControl>

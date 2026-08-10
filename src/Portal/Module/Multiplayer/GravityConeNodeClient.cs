@@ -7,15 +7,11 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Multiplayer;
 
-/// <summary>
-///     从 1TMC Uptime 获取联机组件使用的节点列表。
-///     只使用 P2P 发现节点，不使用内置节点、不获取中继节点。
-/// </summary>
 public sealed class GravityConeNodeClient
 {
     public const string UptimeBaseUrl = "https://uptime.1tmc.top";
 
-    private const string NodeListEndpoint = "/api/node?relay=true&p2pnode=3";
+    private const string NodeListEndpoint = "/api/node/?relay=true&p2pnode=3";
     private const string NodeUrlEndpoint = "/api/node/get/{0}";
     private const int MaxResponseSizeBytes = 1 * 1024 * 1024;
 
@@ -27,11 +23,7 @@ public sealed class GravityConeNodeClient
 
     public static bool IsUptimeConfigured =>
         !string.IsNullOrWhiteSpace(ServiceCredentials.GravityConeUptimeApiKey);
-
-    /// <summary>
-    ///     获取全部 P2P 发现节点的 -p 连接地址（不含内置/中继节点）。
-    ///     获取不到时将抛出异常，由调用方决定是否回退到本地缓存。
-    /// </summary>
+    
     public async Task<IReadOnlyList<string>> FetchPeerUrlsAsync(CancellationToken cancellationToken)
     {
         var apiKey = ServiceCredentials.GravityConeUptimeApiKey;
@@ -43,26 +35,30 @@ public sealed class GravityConeNodeClient
         if (p2pNodes.Count == 0)
             throw new InvalidOperationException("联机节点服务未返回可用的 P2P 节点。");
 
-        var peers = new List<string>();
-        foreach (var node in p2pNodes)
-        {
-            try
-            {
-                var url = await FetchNodeUrlAsync(apiKey, node.GetKey, cancellationToken);
-                if (!string.IsNullOrWhiteSpace(url) && IsValidPeer(url) && !peers.Contains(url, StringComparer.Ordinal))
-                    peers.Add(url);
-            }
-            catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or IOException)
-            {
-                Logger.Warning($"获取联机节点 {node.DisplayName} 地址失败。{Environment.NewLine}{ex}");
-            }
-        }
+        var urlTasks = p2pNodes.Select(node => FetchNodeUrlSafelyAsync(apiKey, node, cancellationToken)).ToArray();
+        var urls = await Task.WhenAll(urlTasks);
+        var peers = urls.Where(url => !string.IsNullOrWhiteSpace(url)).Distinct(StringComparer.Ordinal).ToList();
 
         if (peers.Count == 0)
             throw new InvalidOperationException("Uptime 中继节点地址获取失败。");
 
         await SaveCacheAsync(peers, cancellationToken);
         return peers;
+    }
+
+    private static async Task<string?> FetchNodeUrlSafelyAsync(string apiKey, NodeEntry node,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var url = await FetchNodeUrlAsync(apiKey, node.GetKey, cancellationToken);
+            return !string.IsNullOrWhiteSpace(url) && IsValidPeer(url) ? url : null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or IOException)
+        {
+            Logger.Warning($"获取联机节点 {node.DisplayName} 地址失败。{Environment.NewLine}{ex}");
+            return null;
+        }
     }
 
     public async Task<IReadOnlyList<string>?> TryReadCacheAsync(CancellationToken cancellationToken)
@@ -108,9 +104,6 @@ public sealed class GravityConeNodeClient
         return nodes;
     }
 
-    /// <summary>
-    ///     获取单个节点的连接地址。响应形如 "txt://tcp://..."，去掉前缀后返回。
-    /// </summary>
     private static async Task<string> FetchNodeUrlAsync(string apiKey, string getKey, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get,
@@ -121,25 +114,29 @@ public sealed class GravityConeNodeClient
 
         var body = await ReadLimitedAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken);
         var raw = body.Trim();
-        var url = raw.StartsWith("txt://", StringComparison.Ordinal) ? raw["txt://".Length..] : raw;
-        return url.StartsWith("tcp://", StringComparison.Ordinal) ||
-               url.StartsWith("udp://", StringComparison.Ordinal) ||
-               url.StartsWith("ws://", StringComparison.Ordinal) ||
-               url.StartsWith("wss://", StringComparison.Ordinal)
-            ? url
-            : raw;
+        if (raw.StartsWith("txt://", StringComparison.Ordinal))
+        {
+            var inner = raw["txt://".Length..];
+            if (inner.StartsWith("tcp://", StringComparison.Ordinal) ||
+                inner.StartsWith("udp://", StringComparison.Ordinal) ||
+                inner.StartsWith("ws://", StringComparison.Ordinal) ||
+                inner.StartsWith("wss://", StringComparison.Ordinal))
+                return inner;
+            return raw;
+        }
+
+        return raw;
     }
 
     private static void ApplyRequestHeaders(HttpRequestMessage request, string apiKey)
     {
-        // Uptime 接口要求固定的 Portal/* User-Agent，不随用户自定义 User-Agent 变化。
         request.Headers.TryAddWithoutValidation("User-Agent", $"Portal/{Data.Instance.Version.VersionTitle}");
         request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
     }
 
     private static bool IsValidPeer(string peer) =>
         Uri.TryCreate(peer, UriKind.Absolute, out var uri) &&
-        uri.Scheme is "http" or "https" or "tcp" or "udp" or "ws" or "wss" &&
+        uri.Scheme is "http" or "https" or "tcp" or "udp" or "ws" or "wss" or "txt" &&
         !string.IsNullOrWhiteSpace(uri.Host);
 
     private static string? GetString(JsonElement element, string property) =>
