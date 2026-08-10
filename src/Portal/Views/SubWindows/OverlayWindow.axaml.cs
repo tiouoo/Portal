@@ -9,6 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Module.Multiplayer;
 using Portal.Views.Pages;
 
 namespace Portal.Views.SubWindows;
@@ -51,11 +52,14 @@ public partial class OverlayWindow : Window
     private bool _isEmbedded;
     private bool _isOverlayVisible;
     private bool _isInstanceDetailVisible;
+    private Type? _currentPanelPageType;
     private bool _desiredState;
 
     // UWP特定变量
     private bool _isUWPApp;
     private IntPtr _myHandle = IntPtr.Zero;
+    private InstanceDetailPage? _detailPage;
+    private MultiplayerPage? _multiplayerPage;
     private int _originalHeight;
     private int _originalWidth;
     private int _originalX;
@@ -625,21 +629,46 @@ public partial class OverlayWindow : Window
 
     private void InputElement_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        ToggleInstanceDetail();
+        TogglePanelPage(typeof(InstanceDetailPage), () => _detailPage ??= new InstanceDetailPage(_instance));
     }
 
-    private void ToggleInstanceDetail()
+    private void Multiplayer_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (InstanceContentControl.Content == null)
+        var edition = _instance.IsBedrock ? MinecraftEdition.Bedrock : MinecraftEdition.Java;
+        TogglePanelPage(typeof(MultiplayerPage), () => _multiplayerPage ??= new MultiplayerPage(edition));
+    }
+
+    private void TogglePanelPage(Type pageType, Func<UserControl> pageFactory)
+    {
+        if (_isInstanceDetailVisible && _currentPanelPageType == pageType)
         {
-            var detailPage = new InstanceDetailPage(_instance);
-            InstanceContentControl.Content = detailPage;
+            HideInstanceDetail();
+            return;
         }
 
-        if (_isInstanceDetailVisible)
-            HideInstanceDetail();
-        else
+        ShowPanelPage(pageType, pageFactory);
+    }
+
+    private void ShowPanelPage(Type pageType, Func<UserControl> pageFactory)
+    {
+        if (_currentPanelPageType != pageType)
+        {
+            RefreshPanelContent(pageFactory());
+            _currentPanelPageType = pageType;
+        }
+        else if (InstanceContentControl.Content == null)
+        {
+            RefreshPanelContent(pageFactory());
+        }
+
+        if (!_isInstanceDetailVisible)
             ShowInstanceDetail();
+    }
+
+    private void RefreshPanelContent(object content)
+    {
+        InstanceContentControl.Content = null;
+        InstanceContentControl.Content = content;
     }
 
     private void ShowInstanceDetail()

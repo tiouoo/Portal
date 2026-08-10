@@ -25,7 +25,7 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.5-beta1" />
     <PackageVersion Include="SkiaSharp" Version="4.151.0" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.151.0" />
-    <PackageVersion Include="SmoothScroll.Avalonia" Version="12.0.0.13" />
+    <PackageVersion Include="SmoothScroll.Avalonia" Version="12.0.0.14" />
     <PackageVersion Include="SharpCompress" Version="0.39.0" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="Tomlyn" Version="2.10.1" />
