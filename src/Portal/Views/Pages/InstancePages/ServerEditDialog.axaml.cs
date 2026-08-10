@@ -13,18 +13,19 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class ServerEditDialog : UserControl
 {
-    public ServerEditDialog(string title, string name, string address)
+    public ServerEditDialog(string title, string name, string address, int defaultPort = 25565)
     {
         InitializeComponent();
-        DataContext = new ServerEditDialogViewModel(title, name, address);
+        DataContext = new ServerEditDialogViewModel(title, name, address, defaultPort);
     }
 }
 
 public static class ServerEditDialogHelper
 {
-    public static async Task<ServerEditResult?> ShowAsync(string title, string name, string address, string? hostId)
+    public static async Task<ServerEditResult?> ShowAsync(string title, string name, string address, string? hostId,
+        int defaultPort = 25565)
     {
-        var dialog = new ServerEditDialog(title, name, address);
+        var dialog = new ServerEditDialog(title, name, address, defaultPort);
         var options = new OverlayDialogOptions
         {
             Mode = DialogMode.None,
@@ -46,6 +47,7 @@ public sealed record ServerEditResult(string Name, string Address);
 
 public partial class ServerEditDialogViewModel : ObservableObject, IDialogContext, INotifyDataErrorInfo
 {
+    private readonly int _defaultPort;
     private readonly Dictionary<string, List<string>> _errors = [];
 
     [ObservableProperty]
@@ -57,14 +59,19 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
     [ObservableProperty]
     public partial string Address { get; set; }
 
+    public string AddressPlaceholder { get; }
+    public string PortHint { get; }
     public ICommand ConfirmCommand { get; }
     public ICommand CancelCommand { get; }
 
-    public ServerEditDialogViewModel(string title, string name, string address)
+    public ServerEditDialogViewModel(string title, string name, string address, int defaultPort)
     {
         Title = title;
         Name = name;
         Address = address;
+        _defaultPort = defaultPort;
+        AddressPlaceholder = $"例如：play.example.com 或 play.example.com:{defaultPort}";
+        PortHint = $"支持域名、IP 与 IPv6（[地址]:端口），未填写端口时默认使用 {defaultPort}。";
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
         CancelCommand = new RelayCommand(Cancel);
         Validate();
@@ -115,7 +122,9 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
             return;
         }
 
-        var (host, port) = JavaServerManager.ParseAddress(value);
+        var (host, port) = _defaultPort == BedrockServerManager.DefaultPort
+            ? BedrockServerManager.ParseAddress(value)
+            : JavaServerManager.ParseAddress(value);
         if (string.IsNullOrWhiteSpace(host) || port is < 1 or > 65535)
             _errors[nameof(Address)] = ["服务器地址格式无效"];
     }

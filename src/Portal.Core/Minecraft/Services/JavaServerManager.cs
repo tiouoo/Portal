@@ -23,9 +23,15 @@ public static class JavaServerManager
     /// 按原文件的压缩方式保存 servers.dat。
     /// Minecraft 26.x（以及部分较新版本）以未压缩 NBT 存储该文件，
     /// 若一律按 GZip 写入会导致游戏无法识别；保留原压缩方式以兼容。
+    /// 新建文件时 FileCompression 默认为 AutoDetect，无法用于保存，此时按未压缩写入。
     /// </summary>
-    private static void Save(NbtFile file, string path) =>
-        file.SaveToFile(path, file.FileCompression);
+    private static void Save(NbtFile file, string path)
+    {
+        var compression = file.FileCompression;
+        if (compression == NbtCompression.AutoDetect)
+            compression = NbtCompression.None;
+        file.SaveToFile(path, compression);
+    }
 
     /// <summary>
     /// 从 servers.dat 读取服务器列表。

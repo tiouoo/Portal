@@ -266,7 +266,7 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
             return;
 
         var result = await ServerEditDialogHelper.ShowAsync("添加服务器", string.Empty, string.Empty,
-            this.TryGetHostId());
+            this.TryGetHostId(), BedrockServerManager.DefaultPort);
         if (result == null)
             return;
 
@@ -287,7 +287,7 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
             return;
 
         var result = await ServerEditDialogHelper.ShowAsync("编辑服务器", item.Name, item.Entry.Address,
-            this.TryGetHostId());
+            this.TryGetHostId(), BedrockServerManager.DefaultPort);
         if (result == null)
             return;
 
@@ -367,9 +367,9 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
             return;
 
         if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
-            await clipboard.SetTextAsync(item.Entry.DisplayAddress);
+            await clipboard.SetTextAsync(item.Entry.CopyAddress);
 
-        Notify($"已复制地址 {item.Entry.DisplayAddress}", NotificationType.Success);
+        Notify($"已复制地址 {item.Entry.CopyAddress}", NotificationType.Success);
     }
 
     private void OpenFolder_OnClick(object? sender, RoutedEventArgs e)

@@ -8,11 +8,12 @@ namespace Portal.Core.Minecraft.Services;
 /// <summary>
 /// 基岩版服务器列表（external_servers.txt）管理服务。
 /// 文件按用户 ID 区分存储：&lt;com.mojang&gt;/minecraftpe/external_servers.txt。
-/// 与 BedrockBoot 的服务器列表保持一致，使用分号分隔记录：name;address;icon;hidden。
+/// 新版（Minecraft 1.21.120+ / 26.x）使用冒号分隔记录：index:name:host:port:lastPlayed；
+/// 旧版使用分号分隔记录：name;address;icon;hidden。读取时两种格式均兼容。
 /// </summary>
 public static class BedrockServerManager
 {
-    private const int DefaultPort = 19132;
+    public const int DefaultPort = 19132;
     private static readonly object FileLock = new();
 
     public static string GetExternalServersPath(BedrockInstanceConfig config, string userId = "Shared") =>
@@ -46,7 +47,7 @@ public static class BedrockServerManager
     }
 
     /// <summary>
-    /// 向指定用户 ID 的服务器列表添加服务器。
+    /// 向指定用户 ID 的服务器列表添加服务器（按新版冒号格式写入）。
     /// </summary>
     public static bool Add(BedrockInstanceConfig config, string userId, string name, string address)
     {
@@ -60,7 +61,9 @@ public static class BedrockServerManager
                 var path = GetExternalServersPath(config, userId);
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 var lines = File.Exists(path) ? File.ReadAllLines(path).ToList() : [];
-                lines.Add(BuildLine(name.Trim(), address.Trim(), string.Empty, false));
+                var (host, port) = ParseAddress(address.Trim());
+                lines.Add(BuildLine(GetNextIndex(lines), name.Trim(), host, port,
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds()));
                 WriteLines(path, lines);
                 return true;
             }
@@ -96,7 +99,10 @@ public static class BedrockServerManager
                 if (existing == null)
                     return false;
 
-                lines[lineIndex] = BuildLine(name.Trim(), address.Trim(), existing.IconText, existing.Hidden);
+                var (host, port) = ParseAddress(address.Trim());
+                lines[lineIndex] = existing.IsNewFormat
+                    ? BuildLine(existing.Index, name.Trim(), host, port, existing.Timestamp)
+                    : BuildLegacyLine(name.Trim(), address.Trim(), existing.IconText, existing.Hidden);
                 WriteLines(path, lines);
                 return true;
             }
@@ -170,6 +176,53 @@ public static class BedrockServerManager
         if (string.IsNullOrWhiteSpace(line))
             return null;
 
+        // 新版为冒号分隔，旧版地址（可能含 host:port）与图标字段均以分号分隔，故用分号区分两种格式
+        return line.Contains(';') ? ParseLegacyLine(line) : ParseColonLine(line);
+    }
+
+    /// <summary>
+    /// 解析新版冒号格式：index:name:host:port:lastPlayed。
+    /// </summary>
+    private static BedrockServerEntry? ParseColonLine(string line)
+    {
+        var parts = line.Split(':');
+        if (parts.Length < 4)
+            return null;
+
+        var index = int.TryParse(parts[0].Trim(), out var parsedIndex) ? parsedIndex : -1;
+        var name = parts[1].Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var (host, hostPort) = ParseAddress(parts[2].Trim());
+        if (string.IsNullOrWhiteSpace(host))
+            return null;
+
+        var port = int.TryParse(parts[3].Trim(), out var fieldPort) ? fieldPort : hostPort;
+        if (port is < 1 or > 65535)
+            port = hostPort;
+
+        var timestamp = parts.Length > 4 && long.TryParse(parts[4].Trim(), out var parsedTimestamp)
+            ? parsedTimestamp
+            : 0;
+
+        return new BedrockServerEntry
+        {
+            Index = index,
+            Name = name,
+            Address = port == DefaultPort ? host : $"{host}:{port}",
+            Host = host,
+            Port = port,
+            Timestamp = timestamp,
+            IsNewFormat = true
+        };
+    }
+
+    /// <summary>
+    /// 解析旧版分号格式：name;address;icon;hidden。
+    /// </summary>
+    private static BedrockServerEntry? ParseLegacyLine(string line)
+    {
         var parts = line.Split(';');
         if (parts.Length < 2)
             return null;
@@ -213,8 +266,30 @@ public static class BedrockServerManager
         }
     }
 
-    private static string BuildLine(string name, string address, string iconText, bool hidden) =>
+    private static string BuildLine(int index, string name, string host, int port, long timestamp) =>
+        $"{index}:{name}:{host}:{port}:{timestamp}";
+
+    private static string BuildLegacyLine(string name, string address, string iconText, bool hidden) =>
         $"{name};{address};{iconText};{(hidden ? 1 : 0)}";
+
+    /// <summary>
+    /// 计算下一序号：取现有新版格式记录中最大的序号 + 1，无记录时从 1 开始。
+    /// </summary>
+    private static int GetNextIndex(IReadOnlyList<string> lines)
+    {
+        var maxIndex = 0;
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line) || line.Contains(';'))
+                continue;
+
+            var first = line.Split(':')[0].Trim();
+            if (int.TryParse(first, out var index) && index > maxIndex)
+                maxIndex = index;
+        }
+
+        return maxIndex + 1;
+    }
 
     private static void WriteLines(string path, IReadOnlyList<string> lines) =>
         File.WriteAllLines(path, lines, new UTF8Encoding(false));
@@ -226,13 +301,39 @@ public static class BedrockServerManager
 public sealed class BedrockServerEntry
 {
     public int LineIndex { get; set; }
+
+    /// <summary>新版格式中的序号（index），旧版格式为 -1。</summary>
+    public int Index { get; init; } = -1;
+
     public required string Name { get; set; }
     public required string Address { get; set; }
     public string Host { get; init; } = string.Empty;
     public int Port { get; init; } = 19132;
+
+    /// <summary>添加服务器的时间戳（Unix 秒），旧版格式或无记录时为 0。</summary>
+    public long Timestamp { get; init; }
+
+    /// <summary>是否为新版冒号格式记录。</summary>
+    public bool IsNewFormat { get; init; }
+
     public string IconText { get; init; } = string.Empty;
     public byte[]? IconData { get; init; }
     public bool Hidden { get; init; }
 
-    public string DisplayAddress => Port == 19132 ? Host : $"{Host}:{Port}";
+    /// <summary>页面展示的地址：Host·时间戳，时间戳为 0 时退回 Host[:Port]。</summary>
+    public string DisplayAddress
+    {
+        get
+        {
+            var address = Port == 19132 ? Host : $"{Host}:{Port}";
+            if (Timestamp <= 0) return address;
+
+            var formattedTime = DateTimeOffset.FromUnixTimeSeconds(Timestamp)
+                .ToString("yyyy-MM-dd HH:mm:ss");
+
+            return $"{address}·{formattedTime}";
+        }
+    }
+    /// <summary>用于复制/检测的纯地址（不含时间戳）。</summary>
+    public string CopyAddress => Port == 19132 ? Host : $"{Host}:{Port}";
 }

@@ -36,13 +36,13 @@
                 <StackPanel Spacing="4">
                     <DataValidationErrors>
                         <TextBox
-                            PlaceholderText="例如：play.example.com 或 play.example.com:25565"
+                            PlaceholderText="{Binding AddressPlaceholder}"
                             Text="{Binding Address}" />
                     </DataValidationErrors>
                     <TextBlock
                         FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="支持域名、IP 与 IPv6（[地址]:端口），未填写端口时默认使用 25565。"
+                        Text="{Binding PortHint}"
                         TextWrapping="Wrap" />
                 </StackPanel>
             </tio:FormItem>
