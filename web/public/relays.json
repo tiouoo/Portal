@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "peers": [
+    "https://etnode.zkitefly.eu.org/node1",
+    "tcp://public.easytier.top:11010",
+    "tcp://public2.easytier.cn:54321",
+    "tcp://225284.xyz:11010",
+    "tcp://et1.fuis.top:11010",
+    "tcp://39.108.52.138:11010",
+    "tcp://38.147.105.178:11010",
+    "tcp://public.easytier.bmcbl.com:54321",
+    "https://etnode.zkitefly.eu.org/node1"
+  ]
+}
