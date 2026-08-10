@@ -7,11 +7,11 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
-using SmoothScroll.Avalonia.Controls;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 using Tio.Avalonia.Standard.Modules.Extensions;
-using Tio.Avalonia.Standard.Tab.Extensions; // 确保保留你原本的命名空间
+using Tio.Avalonia.Standard.Tab.Extensions;
+using TioUi.Controls; // 确保保留你原本的命名空间
 
 namespace Portal.Views.Pages;
 

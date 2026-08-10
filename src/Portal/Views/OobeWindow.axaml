@@ -17,7 +17,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:anim="clr-namespace:Portal.Module.Animations"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:javaClasses="clr-namespace:Portal.Core.Minecraft.Instance.Java;assembly=Portal.Core"

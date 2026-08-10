@@ -22,7 +22,7 @@
     xmlns:common="clr-namespace:Tio.Avalonia.Standard.Tab.Common;assembly=Tio.Avalonia.Standard.Tab"
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:const="clr-namespace:Portal.Const"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entries="clr-namespace:Tio.Avalonia.Standard.Tab.Entries;assembly=Tio.Avalonia.Standard.Tab"

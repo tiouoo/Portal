@@ -6,15 +6,24 @@
     x:DataType="downloadPages:BedrockInstallationViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:bedrock="clr-namespace:Portal.Bedrock.Standard.Interface;assembly=Portal.Bedrock.Standard"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12" VerticalAlignment="Top">
-            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" VerticalAlignment="Bottom">
-                <TextBlock FontSize="20" FontWeight="SemiBold" Text="基岩版游戏本体" />
+        <DockPanel
+            DockPanel.Dock="Top"
+            Margin="0,0,0,12"
+            VerticalAlignment="Top">
+            <StackPanel
+                HorizontalAlignment="Left"
+                Orientation="Horizontal"
+                VerticalAlignment="Bottom">
+                <TextBlock
+                    FontSize="20"
+                    FontWeight="SemiBold"
+                    Text="基岩版游戏本体" />
                 <TextBlock
                     FontSize="12"
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -38,7 +47,10 @@
                     <ComboBoxItem Content="UWP" />
                     <ComboBoxItem Content="GDK" />
                 </ComboBox>
-                <TextBox PlaceholderText="搜索版本名称" Text="{Binding SearchText}" Width="170" />
+                <TextBox
+                    PlaceholderText="搜索版本名称"
+                    Text="{Binding SearchText}"
+                    Width="170" />
             </StackPanel>
         </DockPanel>
 

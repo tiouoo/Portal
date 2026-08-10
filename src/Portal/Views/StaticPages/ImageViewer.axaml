@@ -5,13 +5,13 @@
     x:Class="Portal.Views.StaticPages.ImageViewer"
     x:DataType="staticPages:ImageViewer"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls1="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:staticPages="clr-namespace:Portal.Views.StaticPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid>
-        <controls:ScrollView
+        <controls1:ScrollView
             Classes="Flat"
             HorizontalContentAlignment="Stretch"
             HorizontalScrollBarVisibility="Hidden"
@@ -26,7 +26,7 @@
                 Source="{Binding Image}"
                 Stretch="Uniform"
                 VerticalAlignment="Center" />
-        </controls:ScrollView>
+        </controls1:ScrollView>
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"

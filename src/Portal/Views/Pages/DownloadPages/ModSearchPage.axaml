@@ -6,7 +6,7 @@
     x:DataType="local:ModSearchPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
@@ -155,7 +155,10 @@
                                     ZIndex="1">
                                     <Border.Transitions>
                                         <Transitions>
-                                            <DoubleTransition Duration="0:0:0.15" Easing="SineEaseOut" Property="Opacity" />
+                                            <DoubleTransition
+                                                Duration="0:0:0.15"
+                                                Easing="SineEaseOut"
+                                                Property="Opacity" />
                                         </Transitions>
                                     </Border.Transitions>
                                     <StackPanel Orientation="Horizontal" Spacing="5">

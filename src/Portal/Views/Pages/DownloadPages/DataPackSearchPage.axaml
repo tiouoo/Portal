@@ -6,7 +6,7 @@
     x:DataType="local:DataPackSearchPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -103,8 +103,12 @@
                             Padding="10"
                             PointerPressed="Result_OnPointerPressed">
                             <Border.Styles>
-                                <Style Selector="Border#ResourceCard Border#ResourceActions"><Setter Property="Opacity" Value="0" /></Style>
-                                <Style Selector="Border#ResourceCard:pointerover Border#ResourceActions"><Setter Property="Opacity" Value="1" /></Style>
+                                <Style Selector="Border#ResourceCard Border#ResourceActions">
+                                    <Setter Property="Opacity" Value="0" />
+                                </Style>
+                                <Style Selector="Border#ResourceCard:pointerover Border#ResourceActions">
+                                    <Setter Property="Opacity" Value="1" />
+                                </Style>
                             </Border.Styles>
                             <Grid>
                                 <Border
@@ -118,7 +122,14 @@
                                     Padding="5,2"
                                     VerticalAlignment="Bottom"
                                     ZIndex="1">
-                                    <Border.Transitions><Transitions><DoubleTransition Duration="0:0:0.15" Easing="SineEaseOut" Property="Opacity" /></Transitions></Border.Transitions>
+                                    <Border.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition
+                                                Duration="0:0:0.15"
+                                                Easing="SineEaseOut"
+                                                Property="Opacity" />
+                                        </Transitions>
+                                    </Border.Transitions>
                                     <StackPanel Orientation="Horizontal" Spacing="5">
                                         <Button
                                             Classes="Icon"
@@ -127,12 +138,16 @@
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.Tip="取消收藏">
                                             <Grid>
-                                            <PathIcon
-                                                Data="F1 M640,640z M0,0z M442.9,144C415.6,144,389.9,157.1,373.9,179.2L339.5,226.8C335,233 327.8,236.7 320.1,236.7 312.4,236.7 305.2,233 300.7,226.8L266.3,179.2C250.3,157.1 224.6,144 197.3,144 150.3,144 112.2,182.1 112.2,229.1 112.2,279 144.2,327.5 180.3,371.4 221.4,421.4 271.7,465.4 306.2,491.7 309.4,494.1 314.1,495.9 320.2,495.9 326.3,495.9 331,494.1 334.2,491.7 368.7,465.4 419,421.3 460.1,371.4 496.3,327.5 528.2,279 528.2,229.1 528.2,182.1 490.1,144 443.1,144z M335,151.1C360,116.5 400.2,96 442.9,96 516.4,96 576,155.6 576,229.1 576,297.7 533.1,358 496.9,401.9 452.8,455.5 399.6,502 363.1,529.8 350.8,539.2 335.6,543.9 320,543.9 304.4,543.9 289.2,539.2 276.9,529.8 240.4,502 187.2,455.5 143.1,402 106.9,358.1 64,297.7 64,229.1 64,155.6 123.6,96 197.1,96 239.8,96 280,116.5 305,151.1L320,171.8 335,151.1z"
-                                                Height="16"
-                                                IsVisible="{Binding !IsFavorite}"
-                                                Width="16" />
-                                            <PathIcon Data="F1 M640,640z M0,0z M305,151.1L320,171.8 335,151.1C360,116.5 400.2,96 442.9,96 516.4,96 576,155.6 576,229.1L576,231.7C576,343.9 436.1,474.2 363.1,529.9 350.7,539.3 335.5,544 320,544 304.5,544 289.2,539.4 276.9,529.9 203.9,474.2 64,343.9 64,231.7L64,229.1C64,155.6 123.6,96 197.1,96 239.8,96 280,116.5 305,151.1z" Height="16" IsVisible="{Binding IsFavorite}" Width="16" />
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M442.9,144C415.6,144,389.9,157.1,373.9,179.2L339.5,226.8C335,233 327.8,236.7 320.1,236.7 312.4,236.7 305.2,233 300.7,226.8L266.3,179.2C250.3,157.1 224.6,144 197.3,144 150.3,144 112.2,182.1 112.2,229.1 112.2,279 144.2,327.5 180.3,371.4 221.4,421.4 271.7,465.4 306.2,491.7 309.4,494.1 314.1,495.9 320.2,495.9 326.3,495.9 331,494.1 334.2,491.7 368.7,465.4 419,421.3 460.1,371.4 496.3,327.5 528.2,279 528.2,229.1 528.2,182.1 490.1,144 443.1,144z M335,151.1C360,116.5 400.2,96 442.9,96 516.4,96 576,155.6 576,229.1 576,297.7 533.1,358 496.9,401.9 452.8,455.5 399.6,502 363.1,529.8 350.8,539.2 335.6,543.9 320,543.9 304.4,543.9 289.2,539.2 276.9,529.8 240.4,502 187.2,455.5 143.1,402 106.9,358.1 64,297.7 64,229.1 64,155.6 123.6,96 197.1,96 239.8,96 280,116.5 305,151.1L320,171.8 335,151.1z"
+                                                    Height="16"
+                                                    IsVisible="{Binding !IsFavorite}"
+                                                    Width="16" />
+                                                <PathIcon
+                                                    Data="F1 M640,640z M0,0z M305,151.1L320,171.8 335,151.1C360,116.5 400.2,96 442.9,96 516.4,96 576,155.6 576,229.1L576,231.7C576,343.9 436.1,474.2 363.1,529.9 350.7,539.3 335.5,544 320,544 304.5,544 289.2,539.4 276.9,529.9 203.9,474.2 64,343.9 64,231.7L64,229.1C64,155.6 123.6,96 197.1,96 239.8,96 280,116.5 305,151.1z"
+                                                    Height="16"
+                                                    IsVisible="{Binding IsFavorite}"
+                                                    Width="16" />
                                             </Grid>
                                         </Button>
                                         <Button

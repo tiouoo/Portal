@@ -5,7 +5,7 @@
     x:Class="Portal.Views.Pages.InstancePages.ShaderPacks"
     x:DataType="local:ShaderPacks"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -208,8 +208,18 @@
                                 CornerRadius="10"
                                 Padding="14">
                                 <DockPanel>
-                                    <Border Background="#A8643030" CornerRadius="4" DockPanel.Dock="Bottom" HorizontalAlignment="Left" IsVisible="{Binding IsDisabled}" Margin="3,6,0,0" Padding="6,1">
-                                        <TextBlock Foreground="White" FontSize="11" Text="已禁用" />
+                                    <Border
+                                        Background="#A8643030"
+                                        CornerRadius="4"
+                                        DockPanel.Dock="Bottom"
+                                        HorizontalAlignment="Left"
+                                        IsVisible="{Binding IsDisabled}"
+                                        Margin="3,6,0,0"
+                                        Padding="6,1">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="White"
+                                            Text="已禁用" />
                                     </Border>
                                     <TextBlock
                                         FontSize="16"

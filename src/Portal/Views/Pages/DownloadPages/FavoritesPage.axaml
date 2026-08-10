@@ -6,7 +6,7 @@
     x:DataType="local:FavoritesPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -93,8 +93,12 @@
                             Padding="10"
                             PointerPressed="Item_OnPointerPressed">
                             <Border.Styles>
-                                <Style Selector="Border#FavoriteCard Border#ResourceActions"><Setter Property="Opacity" Value="0" /></Style>
-                                <Style Selector="Border#FavoriteCard:pointerover Border#ResourceActions"><Setter Property="Opacity" Value="1" /></Style>
+                                <Style Selector="Border#FavoriteCard Border#ResourceActions">
+                                    <Setter Property="Opacity" Value="0" />
+                                </Style>
+                                <Style Selector="Border#FavoriteCard:pointerover Border#ResourceActions">
+                                    <Setter Property="Opacity" Value="1" />
+                                </Style>
                             </Border.Styles>
                             <Panel>
                                 <DockPanel>
@@ -149,7 +153,14 @@
                                     Padding="5,2"
                                     VerticalAlignment="Bottom"
                                     ZIndex="1">
-                                    <Border.Transitions><Transitions><DoubleTransition Duration="0:0:0.15" Easing="SineEaseOut" Property="Opacity" /></Transitions></Border.Transitions>
+                                    <Border.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition
+                                                Duration="0:0:0.15"
+                                                Easing="SineEaseOut"
+                                                Property="Opacity" />
+                                        </Transitions>
+                                    </Border.Transitions>
                                     <StackPanel Orientation="Horizontal" Spacing="5">
                                         <Button
                                             Classes="Icon"

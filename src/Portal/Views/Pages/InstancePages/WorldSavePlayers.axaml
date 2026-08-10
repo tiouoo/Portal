@@ -2,7 +2,7 @@
     x:Class="Portal.Views.Pages.InstancePages.WorldSavePlayers"
     x:DataType="local:WorldSaveDetailsViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid RowDefinitions="Auto,*">
@@ -11,7 +11,10 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Text="玩家数据" />
-            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="修改离线玩家存档中的基础状态、位置、经验和飞行权限。" TextWrapping="Wrap" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="修改离线玩家存档中的基础状态、位置、经验和飞行权限。"
+                TextWrapping="Wrap" />
         </StackPanel>
         <controls:ScrollView Grid.Row="1" Margin="0,14,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="12">
@@ -20,37 +23,101 @@
                 <ItemsRepeater ItemsSource="{Binding Players}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="local:WorldPlayerDataSetting">
-                            <Border BorderBrush="{DynamicResource TranslucentBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                            <Border
+                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="12">
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel>
                                             <TextBlock FontWeight="SemiBold" Text="{Binding PlayerId}" />
                                             <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding DataVersionDisplay}" />
                                         </StackPanel>
-                                        <Button Command="{Binding $parent[UserControl].((local:WorldSaveDetailsViewModel)DataContext).SavePlayerCommand}" CommandParameter="{Binding}" Content="保存" Grid.Column="1" IsVisible="{Binding $parent[UserControl].((local:WorldSaveDetailsViewModel)DataContext).IsUnlocked}" />
+                                        <Button
+                                            Command="{Binding $parent[UserControl].((local:WorldSaveDetailsViewModel)DataContext).SavePlayerCommand}"
+                                            CommandParameter="{Binding}"
+                                            Content="保存"
+                                            Grid.Column="1"
+                                            IsVisible="{Binding $parent[UserControl].((local:WorldSaveDetailsViewModel)DataContext).IsUnlocked}" />
                                     </Grid>
-                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="8">
-                                        <StackPanel Spacing="4"><TextBlock Text="游戏模式 (0-3)" /><TextBox Text="{Binding GameMode}" /></StackPanel>
-                                        <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="生命值" /><TextBox Text="{Binding Health}" /></StackPanel>
-                                        <StackPanel Grid.Column="2" Spacing="4"><TextBlock Text="饥饿值 (0-20)" /><TextBox Text="{Binding FoodLevel}" /></StackPanel>
-                                        <StackPanel Grid.Row="1" Spacing="4"><TextBlock Text="饱和度 (0-20)" /><TextBox Text="{Binding Saturation}" /></StackPanel>
-                                        <StackPanel Grid.Column="1" Grid.Row="1" Spacing="4"><TextBlock Text="经验等级" /><TextBox Text="{Binding ExperienceLevel}" /></StackPanel>
-                                        <StackPanel Grid.Column="2" Grid.Row="1" Spacing="4"><TextBlock Text="经验总量" /><TextBox Text="{Binding ExperienceTotal}" /></StackPanel>
+                                    <Grid
+                                        ColumnDefinitions="*,*,*"
+                                        ColumnSpacing="8"
+                                        RowDefinitions="Auto,Auto"
+                                        RowSpacing="8">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="游戏模式 (0-3)" />
+                                            <TextBox Text="{Binding GameMode}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock Text="生命值" />
+                                            <TextBox Text="{Binding Health}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="饥饿值 (0-20)" />
+                                            <TextBox Text="{Binding FoodLevel}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1" Spacing="4">
+                                            <TextBlock Text="饱和度 (0-20)" />
+                                            <TextBox Text="{Binding Saturation}" />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Grid.Row="1"
+                                            Spacing="4">
+                                            <TextBlock Text="经验等级" />
+                                            <TextBox Text="{Binding ExperienceLevel}" />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="2"
+                                            Grid.Row="1"
+                                            Spacing="4">
+                                            <TextBlock Text="经验总量" />
+                                            <TextBox Text="{Binding ExperienceTotal}" />
+                                        </StackPanel>
                                     </Grid>
                                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                        <StackPanel Spacing="4"><TextBlock Text="经验进度 (0-1)" /><TextBox Text="{Binding ExperienceProgress}" /></StackPanel>
-                                        <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="所在维度" /><TextBox Text="{Binding Dimension}" /></StackPanel>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="经验进度 (0-1)" />
+                                            <TextBox Text="{Binding ExperienceProgress}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock Text="所在维度" />
+                                            <TextBox Text="{Binding Dimension}" />
+                                        </StackPanel>
                                     </Grid>
                                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                                        <StackPanel Spacing="4"><TextBlock Text="位置 X" /><TextBox Text="{Binding PositionX}" /></StackPanel>
-                                        <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="位置 Y" /><TextBox Text="{Binding PositionY}" /></StackPanel>
-                                        <StackPanel Grid.Column="2" Spacing="4"><TextBlock Text="位置 Z" /><TextBox Text="{Binding PositionZ}" /></StackPanel>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="位置 X" />
+                                            <TextBox Text="{Binding PositionX}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock Text="位置 Y" />
+                                            <TextBox Text="{Binding PositionY}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="位置 Z" />
+                                            <TextBox Text="{Binding PositionZ}" />
+                                        </StackPanel>
                                     </Grid>
                                     <StackPanel Orientation="Horizontal" Spacing="12">
-                                        <ToggleSwitch IsChecked="{Binding Invulnerable}" OffContent="非无敌" OnContent="无敌" />
-                                        <ToggleSwitch IsChecked="{Binding MayFly}" OffContent="禁止飞行" OnContent="允许飞行" />
-                                        <ToggleSwitch IsChecked="{Binding Flying}" OffContent="未飞行" OnContent="飞行中" />
-                                        <ToggleSwitch IsChecked="{Binding Instabuild}" OffContent="普通建造" OnContent="创造建造" />
+                                        <ToggleSwitch
+                                            IsChecked="{Binding Invulnerable}"
+                                            OffContent="非无敌"
+                                            OnContent="无敌" />
+                                        <ToggleSwitch
+                                            IsChecked="{Binding MayFly}"
+                                            OffContent="禁止飞行"
+                                            OnContent="允许飞行" />
+                                        <ToggleSwitch
+                                            IsChecked="{Binding Flying}"
+                                            OffContent="未飞行"
+                                            OnContent="飞行中" />
+                                        <ToggleSwitch
+                                            IsChecked="{Binding Instabuild}"
+                                            OffContent="普通建造"
+                                            OnContent="创造建造" />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

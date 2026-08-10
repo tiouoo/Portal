@@ -46,7 +46,6 @@
         <PackageReference Include="HotAvalonia" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="HtmlAgilityPack" />
         <PackageReference Include="Newtonsoft.Json" />
-        <PackageReference Include="SmoothScroll.Avalonia" />
         <PackageReference Include="Tomlyn" />
     </ItemGroup>
 

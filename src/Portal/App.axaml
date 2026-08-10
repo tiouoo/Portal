@@ -3,7 +3,6 @@
     RequestedThemeVariant="Default"
     x:Class="Portal.App"
     xmlns="https://github.com/avaloniaui"
-    xmlns:smoothScroll="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
@@ -23,7 +22,7 @@
         <StyleInclude Source="/Styles/Style.axaml" />
         <StyleInclude Source="/Styles/ScrollView.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
-        <smoothScroll:ScrollViewDefaultTheme />
+        <tio:ScrollViewDefaultTheme />
     </Application.Styles>
     <NativeMenu.Menu>
         <NativeMenu>

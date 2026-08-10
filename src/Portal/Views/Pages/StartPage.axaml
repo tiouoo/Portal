@@ -10,7 +10,6 @@
     xmlns:entries="clr-namespace:Portal.Classes.Entries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
-    xmlns:smoothScroll="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -102,7 +101,7 @@
             Fill="{DynamicResource TranslucentBorderBrush}"
             Height="1"
             Margin="0,0,0,12" />
-        <smoothScroll:ScrollView Classes="Flat" SizeChanged="StartPage_OnSizeChanged">
+        <tio:ScrollView Classes="Flat" SizeChanged="StartPage_OnSizeChanged">
             <StackPanel Margin="0,0,7,0">
                 <StackPanel IsVisible="{Binding HasRecentPlays}">
                     <StackPanel Margin="0,0,0,12" Spacing="8">
@@ -786,6 +785,6 @@
                     </Panel>
                 </StackPanel>
             </StackPanel>
-        </smoothScroll:ScrollView>
+        </tio:ScrollView>
     </DockPanel>
 </UserControl>

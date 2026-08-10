@@ -1,6 +1,6 @@
 <Styles
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="controls|ScrollView.Flat /template/ ScrollBar#PART_HorizontalScrollBar:horizontal /template/ RepeatButton">
         <Setter Property="IsVisible" Value="False" />

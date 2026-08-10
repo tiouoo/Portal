@@ -13,7 +13,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:portalConverters="clr-namespace:Portal.Module.Converter;assembly=Portal"
-    xmlns:smoothScroll="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -21,7 +20,7 @@
         <portalConverters:WidthToColumnsConverter x:Key="WidthToColumnsConv" />
         <portalConverters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
     </UserControl.Resources>
-    <smoothScroll:ScrollView
+    <tio:ScrollView
         Classes="Flat"
         Margin="12,2,5,10"
         SizeChanged="NewTabPage_OnSizeChanged">
@@ -382,7 +381,7 @@
                                 </StackPanel>
                             </Panel>
                             <Panel>
-                                <smoothScroll:ScrollView
+                                <tio:ScrollView
                                     Background="Transparent"
                                     Classes="Flat"
                                     DockPanel.Dock="Bottom"
@@ -644,7 +643,7 @@
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>
-                                </smoothScroll:ScrollView>
+                                </tio:ScrollView>
                                 <Panel
                                     HorizontalAlignment="Center"
                                     IsVisible="{Binding !HasFilteredInstances}"
@@ -989,5 +988,5 @@
                 </StackPanel>
             </Border>
         </StackPanel>
-    </smoothScroll:ScrollView>
+    </tio:ScrollView>
 </UserControl>

@@ -5,7 +5,7 @@
     x:Class="Portal.Views.Components.MultiplayerContentPage"
     x:DataType="pages:MultiplayerPageViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="clr-namespace:SmoothScroll.Avalonia.Controls;assembly=SmoothScroll.Avalonia.Controls"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Portal.Module.Multiplayer"
