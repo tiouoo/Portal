@@ -201,18 +201,46 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             NewTabViewModel.ToggleRecentPlayFavorite(item);
     }
 
-    private void RecentPlayTargetCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private async void RecentPlayTargetCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             return;
         if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() != null))
             return;
 
-        if (sender is Control { Tag: RecentPlayTarget target } &&
-            TopLevel.GetTopLevel(this) is { } topLevel)
+        if (sender is not Control { Tag: RecentPlayTarget target })
+            return;
+
+        if (target.CanQuickPlay)
+        {
+            if (TopLevel.GetTopLevel(this) is not { } topLevel)
+                return;
+
             _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
                 MinecraftLaunchOptionsFactory.Create(target.Instance,
                     logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            return;
+        }
+
+        if (target.Type != RecentPlayTargetType.World)
+            return;
+
+        var saveService = new WorldSaveService();
+        var worldInfo = await saveService.ReadAsync(target.Instance, target.Id);
+        if (worldInfo == null)
+            return;
+
+        await OverlayDialog.ShowCustomAsync<WorldSaveDetails, WorldSaveDetailsViewModel, object>(
+            new WorldSaveDetailsViewModel(worldInfo, target.Instance), this.TryGetHostId(),
+            new OverlayDialogOptions
+            {
+                Mode = DialogMode.None,
+                Buttons = DialogButton.None,
+                CanLightDismiss = false,
+                CanResize = false,
+                IsCloseButtonVisible = true,
+                CloseBtnMargin = new Thickness(0, 12, 12, 0)
+            });
     }
 
     private void ContinueTargetGame_Click(object? sender, RoutedEventArgs e)
@@ -497,6 +525,7 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
     public string Details => _target.Details;
     public DateTime LastPlayedTime => _target.LastPlayedTime;
     public string RelativeTime => GetRelativeTime(_target.LastPlayedTime);
+    public bool CanQuickPlay => _target.CanQuickPlay;
 
     public string? FolderName => _target.Type == RecentPlayTargetType.World
         ? _target.Id

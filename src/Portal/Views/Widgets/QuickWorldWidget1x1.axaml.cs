@@ -39,8 +39,12 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
     {
         var iconImage = this.FindControl<Image>("IconImage");
         var sourceText = this.FindControl<TextBlock>("SourceText");
+        var launchButton = this.FindControl<Button>("LaunchButton");
 
         var instance = Instance;
+        if (launchButton != null)
+            launchButton.IsVisible = instance is { MinecraftEntry: { } entry } && entry.ReleaseTime > new DateTime(2023, 4, 4);
+
         if (instance == null)
         {
             if (iconImage != null) iconImage.Source = null;

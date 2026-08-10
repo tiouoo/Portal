@@ -150,6 +150,7 @@
                                     Background="Transparent"
                                     IsVisible="{Binding HasRecentPlayTargetItem}"
                                     Margin="12,10"
+                                    PointerPressed="RecentPlayTargetCard_OnPointerPressed"
                                     Tag="{Binding RecentPlayTargetItem.Target}">
                                     <DockPanel DockPanel.Dock="Top">
                                         <Border
@@ -206,6 +207,7 @@
                                                 DockPanel.Dock="Right"
                                                 FontSize="13"
                                                 HorizontalAlignment="Right"
+                                                IsVisible="{Binding RecentPlayTargetItem.CanQuickPlay}"
                                                 Tag="{Binding RecentPlayTargetItem.Target}"
                                                 Theme="{StaticResource TransparentHyperlinkButton}" />
                                         </DockPanel>
@@ -867,6 +869,7 @@
                                                             BorderThickness="0"
                                                             Click="QuickPlay_Click"
                                                             HorizontalAlignment="Right"
+                                                            IsVisible="{Binding CanQuickPlay}"
                                                             Margin="0,0,2,2"
                                                             Padding="4,-2,2,0"
                                                             Tag="{Binding Target}"
