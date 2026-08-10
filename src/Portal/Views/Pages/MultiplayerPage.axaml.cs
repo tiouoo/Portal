@@ -17,6 +17,7 @@ using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.Module.Multiplayer;
 using Portal.Const;
+using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -61,6 +62,11 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     {
         Loaded -= OnLoaded;
         Logger.Info($"[Multiplayer] Page loaded for {ViewModel.Edition} edition.");
+        if (TopLevel.GetTopLevel(this) is OverlayWindow)
+        {
+            this.FindControl<ContentControl>("Frame")!.MaxWidth = double.PositiveInfinity;
+        }
+
         ViewModel.Activate();
         ShowEditionContent();
         Loaded += (s, e) =>
