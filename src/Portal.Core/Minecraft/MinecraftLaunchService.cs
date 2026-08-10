@@ -315,7 +315,7 @@ public static class MinecraftLaunchService
     {
         placeholders["{process_id}"] = process.Id.ToString();
 
-        if (options.EnableGameOverlay && options.ShowGameOverlay != null)
+        if (OperatingSystem.IsWindows() && options.EnableGameOverlay && options.ShowGameOverlay != null)
         {
             Dispatcher.UIThread.Post(() => options.ShowGameOverlay(process, instance));
         }
