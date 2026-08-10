@@ -23,7 +23,7 @@ public sealed class WorldSaveService
 
             var savesPath = instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder);
             var worldPath = Path.Combine(savesPath, folderName);
-            return ReadWorld(worldPath, cancellationToken);
+            return ReadWorld(worldPath, instance.VersionId, cancellationToken);
         }, cancellationToken);
     }
 
@@ -37,7 +37,7 @@ public sealed class WorldSaveService
             return [];
 
         return Directory.EnumerateDirectories(savesPath)
-            .Select(path => ReadWorld(path, cancellationToken))
+            .Select(path => ReadWorld(path, instance.VersionId, cancellationToken))
             .Where(info => info != null)
             .Cast<WorldSaveInfo>()
             .OrderByDescending(info => info.LastPlayedTime ?? info.LastWriteTime)
@@ -45,7 +45,8 @@ public sealed class WorldSaveService
             .ToArray();
     }
 
-    private static WorldSaveInfo? ReadWorld(string worldPath, CancellationToken cancellationToken)
+    private static WorldSaveInfo? ReadWorld(string worldPath, string? fallbackVersion,
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var levelDatPath = Path.Combine(worldPath, "level.dat");
@@ -78,6 +79,8 @@ public sealed class WorldSaveService
         {
             // A damaged or unsupported level.dat must not hide an otherwise valid world folder.
         }
+
+        version ??= string.IsNullOrWhiteSpace(fallbackVersion) ? null : fallbackVersion;
 
         var iconPath = Path.Combine(worldPath, "icon.png");
         return new WorldSaveInfo(

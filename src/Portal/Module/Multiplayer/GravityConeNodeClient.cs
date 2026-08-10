@@ -134,7 +134,7 @@ public sealed class GravityConeNodeClient
         request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
     }
 
-    private static bool IsValidPeer(string peer) =>
+    internal static bool IsValidPeer(string peer) =>
         Uri.TryCreate(peer, UriKind.Absolute, out var uri) &&
         uri.Scheme is "http" or "https" or "tcp" or "udp" or "ws" or "wss" or "txt" &&
         !string.IsNullOrWhiteSpace(uri.Host);

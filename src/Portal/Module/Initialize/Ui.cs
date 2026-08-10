@@ -9,6 +9,7 @@ using Portal.Core;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.SystemResources;
+using Portal.Module.Multiplayer;
 using Portal.Module.Update;
 using Portal.Services;
 using Portal.Views;
@@ -24,10 +25,6 @@ namespace Portal.Module.Initialize;
 
 public static partial class Initializer
 {
-    /// <summary>
-    /// 初始化窗口（OOBE）显示前的轻量初始化：仅应用主题相关配置，
-    /// 并提前设置 NotificationGateway.IsToastFunc，避免账户登录等流程中的通知调用抛出空引用
-    /// </summary>
     public static void Oobe()
     {
         ThemeHelper.SetThemeColor(Data.ConfigEntry.ThemeColor);
@@ -74,6 +71,9 @@ public static partial class Initializer
             Logger.Info("已启用自动更新检查，正在后台检查更新。");
             CheckUpdate().Forget("检查应用更新");
         }
+
+        Logger.Info("正在后台预取联机中继节点列表。");
+        GravityConeRelayClient.Instance.PrefetchAsync().Forget("预取联机中继节点列表");
 
         Logger.Info("正在初始化最近游玩、屏蔽列表和系统资源服务。");
         RecentPlayListService.Initialize();

@@ -107,21 +107,51 @@ public sealed class GravityConeClient : IAsyncDisposable
 
     private static async Task<IReadOnlyList<string>> GetPeersAsync(CancellationToken cancellationToken)
     {
-        if (!GravityConeNodeClient.IsUptimeConfigured)
-            throw new InvalidOperationException(
-                $"未配置 {ServiceCredentials.GravityConeUptimeApiKeyEnvironmentVariable}，无法获取联机节点列表。");
+        var peers = new List<string>();
 
         try
         {
-            return await GravityConeNodeClient.Instance.FetchPeerUrlsAsync(cancellationToken);
+            if (GravityConeNodeClient.IsUptimeConfigured)
+            {
+                peers.AddRange(await GravityConeNodeClient.Instance.FetchPeerUrlsAsync(cancellationToken));
+            }
+            else if (await GravityConeNodeClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedUptime)
+            {
+                peers.AddRange(cachedUptime);
+            }
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
                                    ex is HttpRequestException or JsonException or InvalidOperationException or IOException)
         {
-            Logger.Warning($"获取联机节点列表失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
-            return await GravityConeNodeClient.Instance.TryReadCacheAsync(cancellationToken) ??
-                   throw new InvalidOperationException("无法获取联机节点列表，请检查网络后重试。", ex);
+            Logger.Warning($"获取 1TMC 联机节点失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
+            if (await GravityConeNodeClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedUptime)
+                peers.AddRange(cachedUptime);
         }
+
+        try
+        {
+            if (await GravityConeRelayClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedRelays)
+            {
+                peers.AddRange(cachedRelays);
+            }
+            else
+            {
+                peers.AddRange(await GravityConeRelayClient.Instance.FetchRelaysAsync(cancellationToken));
+            }
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
+                                   ex is HttpRequestException or JsonException or InvalidOperationException or IOException)
+        {
+            Logger.Warning($"获取 Portal 中继节点失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
+            if (await GravityConeRelayClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedRelays)
+                peers.AddRange(cachedRelays);
+        }
+
+        var merged = peers.Distinct(StringComparer.Ordinal).ToList();
+        if (merged.Count == 0)
+            throw new InvalidOperationException("无法获取联机节点列表，请检查网络后重试。");
+
+        return merged;
     }
 
     public async Task<GravityConeResponse> RequestAsync(string method, object? parameters = null,
