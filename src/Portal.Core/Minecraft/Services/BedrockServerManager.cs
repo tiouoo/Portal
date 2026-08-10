@@ -328,7 +328,7 @@ public sealed class BedrockServerEntry
             var address = Port == 19132 ? Host : $"{Host}:{Port}";
             if (Timestamp <= 0) return address;
 
-            var formattedTime = DateTimeOffset.FromUnixTimeSeconds(Timestamp)
+            var formattedTime = DateTimeOffset.FromUnixTimeSeconds(Timestamp).UtcDateTime
                 .ToString("yyyy-MM-dd HH:mm:ss");
 
             return $"{address}·{formattedTime}";
