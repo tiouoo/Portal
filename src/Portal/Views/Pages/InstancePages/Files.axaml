@@ -14,7 +14,7 @@
         <DropDownButton
             Content="打开文件夹"
             HorizontalAlignment="Right"
-            Margin="0,3,12,0"
+            Margin="0,10,10,0"
             VerticalAlignment="Top">
             <DropDownButton.Flyout>
                 <MenuFlyout>

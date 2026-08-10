@@ -50,16 +50,16 @@ public partial class OverlayWindow : Window
     private volatile bool _isAnimating;
     private bool _isEmbedded;
     private bool _isOverlayVisible;
+    private bool _isInstanceDetailVisible;
+    private bool _desiredState;
 
     // UWP特定变量
     private bool _isUWPApp;
     private IntPtr _myHandle = IntPtr.Zero;
-    private bool _nextAction;
     private int _originalHeight;
     private int _originalWidth;
     private int _originalX;
     private int _originalY;
-    private volatile bool _pendingAction;
     private DispatcherTimer? _syncTimer;
     private IntPtr _targetHwnd = IntPtr.Zero;
 
@@ -337,39 +337,38 @@ public partial class OverlayWindow : Window
 
     private void SetOverlayState(bool visible)
     {
-        if (_isAnimating)
-        {
-            _pendingAction = true;
-            _nextAction = visible;
-            return;
-        }
-
+        _desiredState = visible;
+        if (_isAnimating) return;
         if (_isOverlayVisible == visible) return;
 
-        StartAnimation(visible);
+        RunOverlayAnimation();
     }
 
-    private async void StartAnimation(bool visible)
+    private async void RunOverlayAnimation()
     {
         _isAnimating = true;
-
-        if (visible)
+        try
         {
-            ShowOverlayImmediate();
-            await AnimateOpacity(0, 1, 100);
+            while (_isOverlayVisible != _desiredState)
+            {
+                if (_desiredState)
+                {
+                    if (ShowOverlayImmediate())
+                        await AnimateOpacity(0, 1, 100);
+                    else
+                        _desiredState = _isOverlayVisible = false;
+                }
+                else
+                {
+                    HideOverlayStart();
+                    await AnimateOpacity(1, 0, 150);
+                    HideOverlayComplete();
+                }
+            }
         }
-        else
+        finally
         {
-            await AnimateOpacity(1, 0, 150);
-            HideOverlayInternal();
-        }
-
-        _isAnimating = false;
-
-        if (_pendingAction)
-        {
-            _pendingAction = false;
-            SetOverlayState(_nextAction);
+            _isAnimating = false;
         }
     }
 
@@ -383,8 +382,6 @@ public partial class OverlayWindow : Window
 
         for (var i = 1; i <= steps; i++)
         {
-            if (!_isAnimating) break;
-
             var newOpacity = startOpacity + stepValue * i;
             if (newOpacity < 0) newOpacity = 0;
             if (newOpacity > 1) newOpacity = 1;
@@ -396,56 +393,58 @@ public partial class OverlayWindow : Window
         OverlayRoot.Opacity = endOpacity;
     }
 
-    private void ShowOverlayImmediate()
+    private bool ShowOverlayImmediate()
     {
+        if (_targetHwnd == IntPtr.Zero || _myHandle == IntPtr.Zero) return false;
+
         _isOverlayVisible = true;
 
         InstanceBorder.Opacity = 0;
+        InstanceBorder.IsHitTestVisible = false;
         _isInstanceDetailVisible = false;
 
-        if (_targetHwnd != IntPtr.Zero)
+        if (_isUWPApp)
         {
-            if (_isUWPApp)
-            {
-                ShowUWPOverlay();
-            }
-            else
-            {
-                SetParent(_myHandle, _targetHwnd);
-                _isEmbedded = true;
-
-                var clientRect = new RECT();
-                if (GetClientRect(_targetHwnd, ref clientRect))
-                {
-                    _originalWidth = clientRect.Right - clientRect.Left;
-                    _originalHeight = clientRect.Bottom - clientRect.Top;
-                    _originalX = clientRect.Left;
-                    _originalY = clientRect.Top;
-                }
-
-                var style = GetWindowLong(_myHandle, GWL_STYLE);
-                SetWindowLong(_myHandle, GWL_STYLE, style | WS_CHILD);
-
-                Width = _originalWidth;
-                Height = _originalHeight;
-                MoveWindow(_myHandle, _originalX, _originalY, _originalWidth, _originalHeight, true);
-
-                var exStyle = GetWindowLong(_myHandle, GWL_EXSTYLE);
-                exStyle &= ~WS_EX_TRANSPARENT;
-                exStyle &= ~WS_EX_NOACTIVATE;
-                exStyle |= WS_EX_LAYERED;
-                SetWindowLong(_myHandle, GWL_EXSTYLE, exStyle);
-
-                ShowWindow(_myHandle, SW_SHOW);
-                EnableWindow(_myHandle, true);
-
-                IsHitTestVisible = true;
-                OverlayRoot.IsHitTestVisible = true;
-
-                SetForegroundWindow(_myHandle);
-                SetFocus(_myHandle);
-            }
+            ShowUWPOverlay();
         }
+        else
+        {
+            SetParent(_myHandle, _targetHwnd);
+            _isEmbedded = true;
+
+            var clientRect = new RECT();
+            if (GetClientRect(_targetHwnd, ref clientRect))
+            {
+                _originalWidth = clientRect.Right - clientRect.Left;
+                _originalHeight = clientRect.Bottom - clientRect.Top;
+                _originalX = clientRect.Left;
+                _originalY = clientRect.Top;
+            }
+
+            var style = GetWindowLong(_myHandle, GWL_STYLE);
+            SetWindowLong(_myHandle, GWL_STYLE, style | WS_CHILD);
+
+            Width = _originalWidth;
+            Height = _originalHeight;
+            MoveWindow(_myHandle, _originalX, _originalY, _originalWidth, _originalHeight, true);
+
+            var exStyle = GetWindowLong(_myHandle, GWL_EXSTYLE);
+            exStyle &= ~WS_EX_TRANSPARENT;
+            exStyle &= ~WS_EX_NOACTIVATE;
+            exStyle |= WS_EX_LAYERED;
+            SetWindowLong(_myHandle, GWL_EXSTYLE, exStyle);
+
+            ShowWindow(_myHandle, SW_SHOW);
+            EnableWindow(_myHandle, true);
+
+            IsHitTestVisible = true;
+            OverlayRoot.IsHitTestVisible = true;
+
+            SetForegroundWindow(_myHandle);
+            SetFocus(_myHandle);
+        }
+
+        return true;
     }
 
     private void ShowUWPOverlay()
@@ -488,12 +487,16 @@ public partial class OverlayWindow : Window
         SetFocus(_myHandle);
     }
 
-    private void HideOverlayInternal()
+    private void HideOverlayStart()
     {
         _isOverlayVisible = false;
-
         IsHitTestVisible = false;
         OverlayRoot.IsHitTestVisible = false;
+        HideInstanceDetail();
+    }
+
+    private void HideOverlayComplete()
+    {
         OverlayRoot.Opacity = 0;
 
         var exStyle = GetWindowLong(_myHandle, GWL_EXSTYLE);
@@ -620,9 +623,6 @@ public partial class OverlayWindow : Window
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-    private bool _isInstanceDetailAnimating;
-    private bool _isInstanceDetailVisible;
-
     private void InputElement_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         ToggleInstanceDetail();
@@ -630,10 +630,6 @@ public partial class OverlayWindow : Window
 
     private void ToggleInstanceDetail()
     {
-        if (_isInstanceDetailAnimating) return;
-
-        _isInstanceDetailAnimating = true;
-
         if (InstanceContentControl.Content == null)
         {
             var detailPage = new InstanceDetailPage(_instance);
@@ -641,57 +637,27 @@ public partial class OverlayWindow : Window
         }
 
         if (_isInstanceDetailVisible)
-        {
-            HideInstanceDetailAsync();
-        }
+            HideInstanceDetail();
         else
-        {
-            ShowInstanceDetailAsync();
-        }
+            ShowInstanceDetail();
     }
 
-    private async void ShowInstanceDetailAsync()
+    private void ShowInstanceDetail()
     {
         InstanceBorder.IsHitTestVisible = true;
-        InstanceBorder.Opacity = 0;
-
-        var durationMs = 200;
-        const int steps = 10;
-        var stepDuration = durationMs / steps;
-        var stepValue = 1.0 / steps;
-
-        for (var i = 1; i <= steps; i++)
-        {
-            InstanceBorder.Opacity = stepValue * i;
-            await Task.Delay(stepDuration);
-        }
-
         InstanceBorder.Opacity = 1;
         _isInstanceDetailVisible = true;
-        _isInstanceDetailAnimating = false;
     }
 
-    private async void HideInstanceDetailAsync()
+    private void HideInstanceDetail()
     {
-        var durationMs = 150;
-        const int steps = 10;
-        var stepDuration = durationMs / steps;
-        var stepValue = 1.0 / steps;
-
-        for (var i = 1; i <= steps; i++)
-        {
-            InstanceBorder.Opacity = 1 - stepValue * i;
-            await Task.Delay(stepDuration);
-        }
-
         InstanceBorder.Opacity = 0;
         InstanceBorder.IsHitTestVisible = false;
         _isInstanceDetailVisible = false;
-        _isInstanceDetailAnimating = false;
     }
 
     private void CloseInstance(object? sender, RoutedEventArgs e)
     {
-        HideInstanceDetailAsync();
+        HideInstanceDetail();
     }
 }

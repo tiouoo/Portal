@@ -1,6 +1,8 @@
 <Window
     Background="Transparent"
     CanResize="False"
+    FontFamily="{DynamicResource TioFontFamily}"
+    FontSize="14"
     ShowInTaskbar="False"
     Title="Portal Overlay"
     TransparencyLevelHint="Transparent"
@@ -10,7 +12,6 @@
     x:Class="Portal.Views.SubWindows.OverlayWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Name="OverlayRoot" Opacity="0">
         <Grid Background="#66000000" Opacity="1" />
@@ -20,7 +21,6 @@
             Name="MainContent"
             RowDefinitions="Auto,*">
             <Button
-                Background="#66000000"
                 Classes="NoBorder"
                 Click="CloseBtn_OnClick"
                 Grid.Row="0"
@@ -54,27 +54,28 @@
             Orientation="Horizontal"
             Spacing="22"
             VerticalAlignment="Top">
-            <StackPanel
+            <Border
+                Background="Transparent"
                 Cursor="Hand"
-                Orientation="Horizontal"
-                PointerPressed="InputElement_OnPointerPressed"
-                Spacing="8">
-                <TextBlock
-                    FontSize="22"
-                    Foreground="#FFFFFF"
-                    Text="⬢"
-                    VerticalAlignment="Center" />
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock
-                        Foreground="#FFFFFF"
-                        Opacity="0.85"
-                        Text="Instance" />
-                    <TextBlock
-                        FontSize="18"
-                        Foreground="#FFFFFF"
-                        Text="实例详情" />
+                PointerPressed="InputElement_OnPointerPressed">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <PathIcon
+                        Data="F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z"
+                        Foreground="#fff"
+                        Height="24"
+                        Width="24" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock
+                            Foreground="#FFFFFF"
+                            Opacity="0.85"
+                            Text="Instance" />
+                        <TextBlock
+                            FontSize="18"
+                            Foreground="#FFFFFF"
+                            Text="实例详情" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Border>
         </StackPanel>
 
         <TextBlock
@@ -92,17 +93,22 @@
             BorderThickness="1"
             CornerRadius="10"
             IsHitTestVisible="False"
-            Margin="55"
+            Margin="25"
             Name="InstanceBorder"
             Opacity="0"
             Padding="0,5,0,0">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Duration="0:0:0.2" Property="Opacity" />
+                </Transitions>
+            </Border.Transitions>
             <Panel>
                 <ContentControl Name="InstanceContentControl" />
                 <Button
                     Background="Transparent"
                     Click="CloseInstance"
                     HorizontalAlignment="Right"
-                    Margin="0,10,20,0"
+                    Margin="0,0,5,0"
                     Theme="{StaticResource TransparentButton}"
                     VerticalAlignment="Top">
                     <PathIcon

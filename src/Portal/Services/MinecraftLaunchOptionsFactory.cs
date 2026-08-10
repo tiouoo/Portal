@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Const;
 using Portal.Core.Minecraft;
@@ -46,6 +47,9 @@ public static class MinecraftLaunchOptionsFactory
             try
             {
                 var overlay = new OverlayWindow(process, inst);
+                TextOptions.SetTextRenderingMode(overlay, TextRenderingMode.Antialias);
+                TextOptions.SetTextHintingMode(overlay, TextHintingMode.Light);
+                TextOptions.SetBaselinePixelAlignment(overlay, BaselinePixelAlignment.Aligned);
                 overlay.Show();
             }
             catch (Exception ex)

@@ -20,7 +20,8 @@
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="启动游戏时自动将游戏语言切换为简体中文" />
+                Margin="0,-3,0,0"
+                Text=" *启动游戏时自动将游戏语言切换为简体中文" />
         </StackPanel>
         <StackPanel IsVisible="{Binding IsOverlaySupported}" Spacing="5">
             <Label
@@ -28,6 +29,11 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableGameOverlay}" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Margin="0,-3,0,0"
+                Text=" *在游戏内按下 Shift+Tab 显示或隐藏覆盖层" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
