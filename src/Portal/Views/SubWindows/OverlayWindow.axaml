@@ -35,16 +35,46 @@
                     Width="18" />
             </Button>
 
-            <TextBlock
-                FontSize="120"
-                FontWeight="950"
-                Foreground="#FFFFFF"
+            <StackPanel
                 Grid.Row="1"
                 HorizontalAlignment="Left"
                 Margin="15,0,0,0"
-                Name="TimeBlock"
-                Opacity="0.3"
-                VerticalAlignment="Bottom" />
+                VerticalAlignment="Bottom">
+                <TextBlock
+                    FontSize="28"
+                    FontWeight="600"
+                    Foreground="#FFFFFF"
+                    IsVisible="False"
+                    Margin="0,0,0,-0"
+                    Name="LunarBlock"
+                    Opacity="0.3"
+                    Text="" />
+                <StackPanel
+                    Margin="0,0,0,-12"
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <TextBlock
+                        FontSize="36"
+                        FontWeight="600"
+                        Foreground="#FFFFFF"
+                        Name="DateBlock"
+                        Opacity="0.3"
+                        Text="" />
+                    <TextBlock
+                        FontSize="36"
+                        FontWeight="600"
+                        Foreground="#FFFFFF"
+                        Name="WeekBlock"
+                        Opacity="0.3"
+                        Text="" />
+                </StackPanel>
+                <TextBlock
+                    FontSize="120"
+                    FontWeight="950"
+                    Foreground="#FFFFFF"
+                    Name="TimeBlock"
+                    Opacity="0.3" />
+            </StackPanel>
         </Grid>
 
         <StackPanel
@@ -121,7 +151,7 @@
             Padding="0,5,0,0">
             <Border.Transitions>
                 <Transitions>
-                    <DoubleTransition Duration="0:0:0.2" Property="Opacity" />
+                    <DoubleTransition Duration="0:0:0.1" Property="Opacity" />
                 </Transitions>
             </Border.Transitions>
             <Panel>

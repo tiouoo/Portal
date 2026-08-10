@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,24 @@ public partial class OverlayWindow : Window
 {
     private readonly DispatcherTimer _clockTimer;
     private readonly TextBlock _timeBlock;
+    private readonly TextBlock _dateBlock;
+    private readonly TextBlock _lunarBlock;
+    private readonly TextBlock _weekBlock;
     private readonly MinecraftInstance _instance;
+
+    private static readonly ChineseLunisolarCalendar LunarCalendar = new();
+    private static readonly string[] LunarMonths =
+    {
+        "正月", "二月", "三月", "四月", "五月", "六月",
+        "七月", "八月", "九月", "十月", "冬月", "腊月"
+    };
+    private static readonly string[] LunarDays =
+    {
+        "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+        "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
+    };
+    private static readonly string[] WeekDays = { "周日", "周一", "周二", "周三", "周四", "周五", "周六" };
     // --- Win32 常量 ---
     private const int GWL_EXSTYLE = -20;
     private const int GWL_STYLE = -16;
@@ -75,13 +93,23 @@ public partial class OverlayWindow : Window
         _instance = instance;
 
         _timeBlock = TimeBlock;
+        _dateBlock = DateBlock;
+        _lunarBlock = LunarBlock;
+        _weekBlock = WeekBlock;
 
         VersionBox.Text = !string.IsNullOrEmpty(Data.Instance.Version.VersionTitle)
             ? $"Portal {Data.Instance.Version.VersionTitle}"
             : "Portal";
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _clockTimer.Tick += (_, _) => _timeBlock.Text = DateTime.Now.ToString("HH:mm:ss");
+        _clockTimer.Tick += (_, _) =>
+        {
+            var now = DateTime.Now;
+            _timeBlock.Text = now.ToString("HH:mm:ss");
+            _dateBlock.Text = $"{now.Month}月{now.Day}日";
+            _lunarBlock.Text = GetLunarDate(now);
+            _weekBlock.Text = WeekDays[(int)now.DayOfWeek];
+        };
         _clockTimer.Start();
 
         _proc = HookCallback;
@@ -616,6 +644,20 @@ public partial class OverlayWindow : Window
     private void CloseBtn_OnClick(object? sender, RoutedEventArgs e)
     {
         SetOverlayState(false);
+    }
+
+    private static string GetLunarDate(DateTime date)
+    {
+        var lunarYear = LunarCalendar.GetYear(date);
+        var lunarMonth = LunarCalendar.GetMonth(date);
+        var lunarDay = LunarCalendar.GetDayOfMonth(date);
+        var leapMonth = LunarCalendar.GetLeapMonth(lunarYear);
+
+        var monthName = lunarMonth == leapMonth
+            ? $"闰{LunarMonths[lunarMonth - 1]}"
+            : LunarMonths[lunarMonth - 1];
+
+        return $"{monthName}{LunarDays[lunarDay - 1]}";
     }
 
     [StructLayout(LayoutKind.Sequential)]
