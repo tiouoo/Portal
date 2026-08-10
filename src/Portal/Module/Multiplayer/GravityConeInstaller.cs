@@ -11,6 +11,18 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Multiplayer;
 
+public enum ComponentUpdateStatus
+{
+    /// <summary>已安装且已确认为最新版本，可以直接使用。</summary>
+    Current,
+
+    /// <summary>已安装但版本与最新版本不一致，必须更新后才能使用。</summary>
+    UpdateRequired,
+
+    /// <summary>无法确认已安装版本是否为最新版本（例如清单获取失败或缺少安装记录）。</summary>
+    Unknown
+}
+
 public static class GravityConeInstaller
 {
     public const string ManifestUrl = "https://portal.tiouo.cc/gc.json";
@@ -112,14 +124,15 @@ public static class GravityConeInstaller
         return state is { Rid: var stateRid } && stateRid == rid ? state.GravityConeVersion : null;
     }
 
-    public static async Task<bool> IsUpdateRequiredAsync(CancellationToken cancellationToken)
+    public static async Task<ComponentUpdateStatus> GetUpdateStatusAsync(CancellationToken cancellationToken)
     {
         var installedVersion = GetInstalledGravityConeVersion();
-        if (string.IsNullOrWhiteSpace(installedVersion)) return false;
-
         var latestVersion = await FetchLatestGravityConeVersionAsync(cancellationToken);
-        return !string.IsNullOrWhiteSpace(latestVersion) &&
-               CompareGravityConeVersions(installedVersion, latestVersion) < 0;
+        if (string.IsNullOrWhiteSpace(installedVersion) || string.IsNullOrWhiteSpace(latestVersion))
+            return ComponentUpdateStatus.Unknown;
+        return CompareGravityConeVersions(installedVersion, latestVersion) == 0
+            ? ComponentUpdateStatus.Current
+            : ComponentUpdateStatus.UpdateRequired;
     }
 
     private static async Task<string?> FetchLatestGravityConeVersionAsync(CancellationToken cancellationToken)

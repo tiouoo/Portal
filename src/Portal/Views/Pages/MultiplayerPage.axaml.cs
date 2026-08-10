@@ -157,12 +157,26 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     [NotifyPropertyChangedFor(nameof(CanOperate))]
     [NotifyPropertyChangedFor(nameof(CanCreateRoom))]
     [NotifyPropertyChangedFor(nameof(CanProbeNat))]
+    [NotifyPropertyChangedFor(nameof(IsComponentBannerVisible))]
+    [NotifyPropertyChangedFor(nameof(ComponentTitle))]
+    [NotifyPropertyChangedFor(nameof(InstallActionText))]
+    public partial bool IsComponentUnverifiable { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReady))]
+    [NotifyPropertyChangedFor(nameof(CanOperate))]
+    [NotifyPropertyChangedFor(nameof(CanCreateRoom))]
+    [NotifyPropertyChangedFor(nameof(CanProbeNat))]
     public partial bool IsBackendReady { get; set; }
 
-    public bool IsReady => !IsComponentMissing && !IsComponentOutdated && IsBackendReady;
-    public bool IsComponentBannerVisible => IsComponentMissing || IsComponentOutdated;
-    public string ComponentTitle => IsComponentOutdated ? "联机组件需要更新" : "需要安装联机组件";
-    public string InstallActionText => IsComponentOutdated ? "更新并安装" : "下载并安装";
+    public bool IsReady => !IsComponentMissing && !IsComponentOutdated && !IsComponentUnverifiable && IsBackendReady;
+    public bool IsComponentBannerVisible => IsComponentMissing || IsComponentOutdated || IsComponentUnverifiable;
+    public string ComponentTitle => IsComponentMissing
+        ? "需要安装联机组件"
+        : IsComponentUnverifiable
+            ? "无法确认联机组件版本，请更新"
+            : "联机组件需要更新";
+    public string InstallActionText => IsComponentOutdated || IsComponentUnverifiable ? "更新并安装" : "下载并安装";
     public bool HasStatusText => !string.IsNullOrWhiteSpace(StatusText);
 
     public string LanServerCountText => IsDiscoveringJavaServers ? "正在检测中" :
@@ -237,35 +251,63 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         Logger.Info($"[Multiplayer] Initializing {Edition} multiplayer service.");
         // FindInstalled() does synchronous file IO and JSON deserialization;
         // run it on a background thread to avoid blocking the UI on first open.
-        var installation = await Task.Run(GravityConeInstaller.FindInstalled);
-        IsComponentMissing = installation is null;
-        if (installation is null)
+        if (await Task.Run(GravityConeInstaller.FindInstalled) is not { } installation)
         {
+            IsComponentMissing = true;
             StatusText = "联机组件未安装";
             Logger.Warning($"[Multiplayer] {Edition} multiplayer component was not found after {stopwatch.Elapsed}.");
             return;
         }
 
-        if (await GravityConeInstaller.IsUpdateRequiredAsync(_lifetime.Token))
+        switch (await GravityConeInstaller.GetUpdateStatusAsync(_lifetime.Token))
         {
-            IsComponentOutdated = true;
-            StatusText = "联机组件需要更新";
-            Logger.Warning($"[Multiplayer] {Edition} multiplayer component requires an update after {stopwatch.Elapsed}.");
-            return;
-        }
+            case ComponentUpdateStatus.Current:
+                StatusText = string.Empty;
+                try
+                {
+                    await StartClientAsync(installation);
+                    Logger.Info($"[Multiplayer] {Edition} multiplayer service initialized in {stopwatch.Elapsed}.");
+                }
+                catch (Exception ex)
+                {
+                    IsBackendReady = false;
+                    Logger.Error(ex);
+                    Notify($"联机服务启动失败：{FriendlyError(ex)}", NotificationType.Error);
+                }
+                break;
 
-        StatusText = string.Empty;
+            case ComponentUpdateStatus.UpdateRequired:
+                IsComponentOutdated = true;
+                StatusText = "联机组件需要更新";
+                Logger.Warning($"[Multiplayer] {Edition} multiplayer component requires an update after {stopwatch.Elapsed}.");
+                await StopSharedClientIfOutdatedAsync();
+                break;
+
+            case ComponentUpdateStatus.Unknown:
+                IsComponentUnverifiable = true;
+                StatusText = "联机组件版本校验失败";
+                Logger.Warning($"[Multiplayer] {Edition} multiplayer component version could not be verified after {stopwatch.Elapsed}.");
+                break;
+        }
+    }
+
+    private async Task StopSharedClientIfOutdatedAsync()
+    {
+        if (SharedInstallation is null) return;
+        await SharedClientStartLock.WaitAsync(_lifetime.Token);
         try
         {
-            await StartClientAsync(installation);
-            Logger.Info($"[Multiplayer] {Edition} multiplayer service initialized in {stopwatch.Elapsed}.");
+            if (SharedClient.IsRunning)
+            {
+                Logger.Warning($"[Multiplayer] Detected outdated component; stopping shared client {SharedInstallation.CliPath}.");
+                await SharedClient.StopAsync();
+            }
         }
-        catch (Exception ex)
+        finally
         {
-            IsBackendReady = false;
-            Logger.Error(ex);
-            Notify($"联机服务启动失败：{FriendlyError(ex)}", NotificationType.Error);
+            SharedClientStartLock.Release();
         }
+        SharedInstallation = null;
     }
 
     public void Activate()
@@ -312,13 +354,14 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 context.SetDescription(item.Message);
             }));
             var installation = await GravityConeInstaller.EnsureInstalledAsync(progress, context.CancellationToken,
-                forceUpdate: IsComponentOutdated);
+                forceUpdate: IsComponentOutdated || IsComponentUnverifiable);
             context.ReportProgress(1);
             context.SetDescription("联机组件下载完成");
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsComponentMissing = false;
                 IsComponentOutdated = false;
+                IsComponentUnverifiable = false;
             });
             await StartClientAsync(installation);
         });
@@ -350,7 +393,9 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                     ? "联机组件未安装"
                     : IsComponentOutdated
                         ? "联机组件需要更新"
-                        : string.Empty;
+                        : IsComponentUnverifiable
+                            ? "联机组件版本校验失败"
+                            : string.Empty;
                 if (task.Status == ManagedTaskStatus.Completed)
                 {
                     Logger.Info($"[Multiplayer] Component installation completed in {stopwatch.Elapsed}.");
@@ -372,8 +417,19 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         await SharedClientStartLock.WaitAsync(_lifetime.Token);
         try
         {
-            SharedInstallation ??= installation;
-            await SharedClient.StartAsync(SharedInstallation, CancellationToken.None);
+            if (SharedInstallation is { } current &&
+                !string.Equals(current.CliPath, installation.CliPath, StringComparison.Ordinal))
+            {
+                Logger.Info($"[Multiplayer] Component version changed ({current.CliPath} -> {installation.CliPath}); " +
+                            $"restarting shared client.");
+                await SharedClient.RestartAsync(installation, _lifetime.Token);
+                SharedInstallation = installation;
+            }
+            else
+            {
+                SharedInstallation ??= installation;
+                await SharedClient.StartAsync(SharedInstallation, CancellationToken.None);
+            }
         }
         finally
         {

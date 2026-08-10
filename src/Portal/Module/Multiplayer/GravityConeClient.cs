@@ -21,6 +21,8 @@ public sealed class GravityConeClient : IAsyncDisposable
     public event EventHandler<GravityConeEvent>? EventReceived;
     public event EventHandler<string>? ProcessError;
 
+    public bool IsRunning => _process is { HasExited: false };
+
     public async Task StartAsync(GravityConeInstallation installation, CancellationToken cancellationToken)
     {
         if (_process is { HasExited: false }) return;
@@ -222,6 +224,27 @@ public sealed class GravityConeClient : IAsyncDisposable
         foreach (var request in _pending.Values)
             request.Completion.TrySetException(new InvalidOperationException(message));
         _pending.Clear();
+    }
+
+    public async Task StopAsync()
+    {
+        var process = _process;
+        if (process is null) return;
+        if (!process.HasExited)
+        {
+            try
+            {
+                await RequestAsync("system.shutdown", timeout: TimeSpan.FromSeconds(3));
+                await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(4));
+            }
+            catch
+            {
+                if (!process.HasExited) process.Kill(entireProcessTree: true);
+            }
+        }
+        _process = null;
+        process.Dispose();
+        FailAllPending("GravityCone CLI 已停止。");
     }
 
     private static void Trace(string message)
