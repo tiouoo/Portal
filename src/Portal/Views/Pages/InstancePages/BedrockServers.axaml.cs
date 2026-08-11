@@ -176,15 +176,16 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
                 RaiseListProperties();
             }
         }
+
+        await PingAllAsync();
     }
 
     /// <summary>
-    /// 修改服务器列表后静默重载（不额外发起全量检测）。
+    /// 修改服务器列表后静默重载（LoadAsync 结束后会自动发起全量检测）。
     /// </summary>
     private async Task ReloadAsyncSilently()
     {
         await LoadAsync();
-        await PingAllAsync();
     }
 
     private async void RefreshAll_OnClick(object? sender, RoutedEventArgs e)
@@ -234,6 +235,7 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
 
     private async Task PingOneAsync(BedrockServerItem item, CancellationToken cancellationToken)
     {
+        await Dispatcher.UIThread.InvokeAsync(() => item.ApplyPinging());
         await _pingSemaphore.WaitAsync(cancellationToken);
         try
         {
@@ -518,6 +520,13 @@ public sealed partial class BedrockServerItem : ObservableObject, IDisposable
     {
         Entry = entry;
         SetIcon(DecodeBitmap(entry.IconData));
+    }
+
+    public void ApplyPinging()
+    {
+        Status = BedrockServerItemStatus.Pinging;
+        StatusText = "检测中";
+        StatusBrush = PendingBrush;
     }
 
     public void ApplyStatus(BedrockServerStatus? status)

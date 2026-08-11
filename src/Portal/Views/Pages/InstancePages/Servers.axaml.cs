@@ -94,7 +94,7 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        _ = LoadAsync();
+        _ = RefreshOnAttachAsync();
         _autoRefreshTimer.Start();
     }
 
@@ -124,6 +124,20 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
 
         _hasLoaded = true;
         await ReloadAsync();
+    }
+
+    /// <summary>
+    /// 页面每次显示时立即发起状态检测：首次打开先读取服务器列表，之后直接刷新延迟。
+    /// </summary>
+    private async Task RefreshOnAttachAsync()
+    {
+        if (_instance == null)
+            return;
+
+        if (_hasLoaded)
+            await PingAllAsync();
+        else
+            await LoadAsync();
     }
 
     private async Task ReloadAsync()
@@ -201,6 +215,7 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
 
     private async Task PingOneAsync(ServerItem item, CancellationToken cancellationToken)
     {
+        await Dispatcher.UIThread.InvokeAsync(() => item.ApplyPinging());
         await _pingSemaphore.WaitAsync(cancellationToken);
         try
         {
@@ -520,6 +535,13 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
     {
         Entry = entry;
         SetIcon(DecodeBitmap(entry.IconData));
+    }
+
+    public void ApplyPinging()
+    {
+        Status = ServerItemStatus.Pinging;
+        StatusText = "检测中";
+        StatusBrush = PendingBrush;
     }
 
     public void ApplyStatus(MinecraftServerStatus? status)
