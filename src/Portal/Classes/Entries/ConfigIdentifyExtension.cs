@@ -24,6 +24,16 @@ public class ConfigIdentifyExtension
             entry.DefaultMinecraftFolder = installableFolders[0];
         }
     }
+    
+    public static void Window(ConfigEntry entry)
+    {
+        if(entry.TabWindowHeight < 379)
+            entry.TabWindowHeight = 710;
+        if(entry.TabWindowWidth < 709)
+            entry.TabWindowWidth = 1200;
+        if(entry.AppScale < 0.49)
+            entry.AppScale = 1;
+    }
 
     private static bool IsInstallableFolder(MinecraftFolderEntry folder)
     {

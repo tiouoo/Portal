@@ -60,7 +60,6 @@ public partial class Appearance : DataUserControl
         UpdateApplyButtonState();
     }
 
-    /// <summary>仅当滑动条数值与实际生效值不一致时，才允许“应用更改”。</summary>
     private void UpdateApplyButtonState()
     {
         var applied = Const.Data.ConfigEntry.AppScale;

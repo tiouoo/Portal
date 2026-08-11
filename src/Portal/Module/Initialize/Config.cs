@@ -72,8 +72,6 @@ public class Config
                     item.ErrorContext.Handled = true;
                 },
                 MissingMemberHandling = MissingMemberHandling.Ignore,
-                // 保留 WidgetLayoutData.Data 的运行时类型信息，
-                // 否则 object 属性反序列化后只会得到 JObject。
                 TypeNameHandling = TypeNameHandling.Auto
             };
 
@@ -87,7 +85,6 @@ public class Config
             FailedSettingKeys.Add($"Setting completely load failed: {ex.Message}");
             try
             {
-                // 解析失败时先备份损坏的配置文件，避免默认配置直接覆盖用户数据
                 var backupPath = ConfigPath.SettingDataPath + ".bak";
                 File.Copy(ConfigPath.SettingDataPath, backupPath, true);
                 Logger.Error($"配置文件解析失败，已备份到：{backupPath}");
@@ -110,7 +107,6 @@ public class Config
 
         if (FailedSettingKeys.Count > 0) Logger.Error($"Setting load with errors: {FailedSettingKeys.AsJson()}");
 
-        // 账户与认证服务器变更时使聚合搜索索引失效（实例集合的失效逻辑在 UiProperty 中）
         Data.ConfigEntry.MinecraftAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
         Data.ConfigEntry.BedrockAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
         Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
@@ -126,6 +122,8 @@ public class Config
         var result1 = reader1.ReadToEnd();
         Data.Instance.PackageType = string.IsNullOrWhiteSpace(result1) ? "portable" : result1.Trim().ToLowerInvariant();
         Logger.Info($"已识别安装包类型：{Data.Instance.PackageType}");
+        
+        ConfigIdentifyExtension.Window(Data.ConfigEntry);
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);
         Logger.Debug("已清理临时目录");

@@ -9,17 +9,31 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Margin="24" RowDefinitions="Auto, Auto, Auto" Width="320">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto, Auto, Auto"
+        Width="320">
         <TextBlock
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
             Text="自定义缩放" />
-        <StackPanel Grid.Row="1" Margin="0,18" Spacing="6">
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,18"
+            Spacing="6">
             <TextBox
                 Name="PercentTextBox"
-                PlaceholderText="例如 100"
-                Text="{Binding PercentText}" />
+                PlaceholderText="100"
+                Text="{Binding PercentText}">
+                <TextBox.InnerRightContent>
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,1,3,0"
+                        Text="%"
+                        VerticalAlignment="Center" />
+                </TextBox.InnerRightContent>
+            </TextBox>
             <TextBlock
                 FontSize="12"
                 Foreground="{DynamicResource InnerForegroundColor}"
