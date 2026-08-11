@@ -211,17 +211,6 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         if (sender is not Control { Tag: RecentPlayTarget target })
             return;
 
-        if (target.CanQuickPlay)
-        {
-            if (TopLevel.GetTopLevel(this) is not { } topLevel)
-                return;
-
-            _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
-                MinecraftLaunchOptionsFactory.Create(target.Instance,
-                    logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
-            return;
-        }
-
         if (target.Type != RecentPlayTargetType.World)
             return;
 

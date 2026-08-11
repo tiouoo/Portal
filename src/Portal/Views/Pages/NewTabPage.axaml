@@ -750,7 +750,6 @@
                                                 <MenuItem
                                                     Click="QuickPlay_Click"
                                                     Header="游玩"
-                                                    IsVisible="{Binding CanQuickPlay}"
                                                     Tag="{Binding Target}">
                                                     <MenuItem.Icon>
                                                         <PathIcon
@@ -870,7 +869,6 @@
                                                             BorderThickness="0"
                                                             Click="QuickPlay_Click"
                                                             HorizontalAlignment="Right"
-                                                            IsVisible="{Binding CanQuickPlay}"
                                                             Margin="0,0,2,2"
                                                             Padding="4,-2,2,0"
                                                             Tag="{Binding Target}"
