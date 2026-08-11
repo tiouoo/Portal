@@ -676,6 +676,7 @@ public class MinecraftInstance : ObservableObject
                 MinecraftSpecialFolder.ShaderPacksFolder => Path.Combine(GetJavaGameDirectory(), "shaderpacks"),
                 MinecraftSpecialFolder.ConfigFolder => Path.Combine(GetJavaGameDirectory(), "config"),
                 MinecraftSpecialFolder.LogsFolder => Path.Combine(GetJavaGameDirectory(), "logs"),
+                MinecraftSpecialFolder.CrashReportsFolder => Path.Combine(GetJavaGameDirectory(), "crash-reports"),
                 _ => GetJavaGameDirectory()
             };
 

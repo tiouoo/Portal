@@ -75,6 +75,9 @@ public partial class Files : UserControl
             case "logs":
                 OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.LogsFolder));
                 break;
+            case "crashreports":
+                OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.CrashReportsFolder));
+                break;
             case "config":
                 OpenPath(Instance.GetSpecialFolder(MinecraftSpecialFolder.ConfigFolder));
                 break;
@@ -107,6 +110,10 @@ public partial class Files : UserControl
         else if (tag == "logs")
         {
             _parent.NavigateTo(typeof(Logs));
+        }
+        else if (tag == "crashreports")
+        {
+            _parent.NavigateTo(typeof(CrashReports));
         }
         else if (tag == "config")
         {

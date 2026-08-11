@@ -61,6 +61,11 @@
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
+                        Header="崩溃报告文件夹"
+                        Tag="crashreports" />
+                    <MenuItem
+                        Classes="hide-icon"
+                        Click="MenuItem_OnClick"
                         Header="配置文件夹"
                         Tag="config" />
                 </MenuFlyout>
@@ -180,7 +185,7 @@
                         </Border>
                     </Grid>
                     <Grid
-                        ColumnDefinitions="*,*"
+                        ColumnDefinitions="*,*,*"
                         ColumnSpacing="12"
                         Margin="0,5,0,0">
                         <Border
@@ -237,7 +242,7 @@
                             ClipToBounds="True"
                             CornerRadius="16"
                             Cursor="Hand"
-                            Grid.Column="3"
+                            Grid.Column="1"
                             PointerPressed="JumpPage"
                             Tag="saves">
                             <StackPanel Margin="10">
@@ -278,11 +283,6 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
-                    </Grid>
-                    <Grid
-                        ColumnDefinitions="*,*,*"
-                        ColumnSpacing="12"
-                        Margin="0,6,0,0">
                         <Border
                             Background="{DynamicResource TranslucentBackgroundColor}"
                             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -290,7 +290,7 @@
                             ClipToBounds="True"
                             CornerRadius="16"
                             Cursor="Hand"
-                            Grid.Column="0"
+                            Grid.Column="2"
                             PointerPressed="JumpPage"
                             Tag="screenshot">
                             <StackPanel Margin="10">
@@ -331,6 +331,11 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
+                    </Grid>
+                    <Grid
+                        ColumnDefinitions="*,*,*"
+                        ColumnSpacing="12"
+                        Margin="0,6,0,0">
                         <Border
                             Background="{DynamicResource TranslucentBackgroundColor}"
                             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -338,7 +343,6 @@
                             ClipToBounds="True"
                             CornerRadius="16"
                             Cursor="Hand"
-                            Grid.Column="1"
                             PointerPressed="JumpPage"
                             Tag="logs">
                             <StackPanel Margin="10">
@@ -386,7 +390,7 @@
                             ClipToBounds="True"
                             CornerRadius="16"
                             Cursor="Hand"
-                            Grid.Column="2"
+                            Grid.Column="1"
                             PointerPressed="JumpPage"
                             Tag="config">
                             <StackPanel Margin="10">
@@ -421,6 +425,54 @@
                                         Text="mc" />
                                     <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="/versions" />
                                     <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="/config" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            Background="{DynamicResource TranslucentBackgroundColor}"
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            ClipToBounds="True"
+                            CornerRadius="16"
+                            Cursor="Hand"
+                            Grid.Column="2"
+                            PointerPressed="JumpPage"
+                            Tag="crashreports">
+                            <StackPanel Margin="10">
+                                <DockPanel>
+                                    <Label
+                                        Content="崩溃报告"
+                                        DockPanel.Dock="Left"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        HorizontalAlignment="Left"
+                                        Margin="4,0,0,0" />
+                                    <TextBlock
+                                        DockPanel.Dock="Right"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        HorizontalAlignment="Right"
+                                        Margin="4,0,0,0"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap">
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.CrashReportsDisplayText}" /></TextBlock>
+                                </DockPanel>
+                                <TextBlock
+                                    Margin="4,4,0,0"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap">
+                                    <Run FontSize="24" Text="{Binding Instance.StorageUsage.CrashReportsSizeText}" />
+                                </TextBlock>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="4,0,0,0"
+                                        Text="mc" />
+                                    <TextBlock
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        IsVisible="{Binding Instance.JavaConfig.EnableIndependentInstance}"
+                                        Text="/versions" />
+                                    <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="/crash-reports" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>

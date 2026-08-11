@@ -1,0 +1,93 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="1000"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstancePages.CrashReports"
+    x:DataType="instancePages:CrashReports"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="0" RowDefinitions="Auto,Auto,*">
+        <DockPanel Margin="10,10,10,8">
+            <TextBlock
+                Cursor="Hand"
+                FontSize="24"
+                PointerPressed="Title_OnPointerPressed"
+                Text="崩溃报告" />
+            <TextBlock
+                Cursor="Hand"
+                DockPanel.Dock="Right"
+                Foreground="{DynamicResource SystemAccentColor}"
+                IsVisible="False"
+                PointerPressed="Export_OnPointerPressed"
+                Text="导出"
+                VerticalAlignment="Center" />
+        </DockPanel>
+        <StackPanel
+            HorizontalAlignment="Right"
+            Margin="10,0,10,10"
+            Orientation="Horizontal"
+            Spacing="10">
+            <ComboBox
+                DisplayMemberBinding="{Binding Name}"
+                ItemsSource="{Binding LogFiles}"
+                MinWidth="220"
+                Name="LogFileSelector"
+                SelectionChanged="LogFileSelector_OnSelectionChanged"
+                ToolTip.Tip="选择崩溃报告"
+                VerticalAlignment="Center" />
+            <Button
+                Click="OpenFolder_OnClick"
+                Content="打开文件夹"
+                DockPanel.Dock="Right"
+                VerticalAlignment="Center" />
+        </StackPanel>
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Grid.Row="2"
+            Margin="0,0,0,10"
+            Padding="8">
+            <avaloniaEdit:TextEditor
+                Background="Transparent"
+                FontSize="13"
+                HorizontalScrollBarVisibility="Disabled"
+                IsReadOnly="True"
+                Name="LogEditor"
+                ShowLineNumbers="True"
+                VerticalScrollBarVisibility="Auto"
+                WordWrap="True">
+                <avaloniaEdit:TextEditor.Resources>
+                    <SolidColorBrush
+                        Color="{DynamicResource SystemAccentColor}"
+                        Opacity="0.2"
+                        x:Key="TextAreaSelectionBrush" />
+                </avaloniaEdit:TextEditor.Resources>
+                <avaloniaEdit:TextEditor.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="SelectAll_OnClick"
+                            Header="全选"
+                            InputGesture="ctrl+a" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="Copy_OnClick"
+                            Header="复制"
+                            InputGesture="ctrl+c" />
+                        <Separator />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="Export_OnClick"
+                            Header="导出" />
+                    </MenuFlyout>
+                </avaloniaEdit:TextEditor.ContextFlyout>
+            </avaloniaEdit:TextEditor>
+        </Border>
+    </Grid>
+</UserControl>

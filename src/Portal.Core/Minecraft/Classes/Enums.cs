@@ -10,6 +10,7 @@ public enum MinecraftSpecialFolder
     ScreenshotsFolder,
     ConfigFolder,
     LogsFolder,
+    CrashReportsFolder,
     BehaviorPacksFolder,
     SkinPacksFolder,
     WorldTemplatesFolder,
