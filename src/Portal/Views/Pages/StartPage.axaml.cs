@@ -489,7 +489,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     }
 
     public ObservableCollection<RecentPlayItem> RecentPlays { get; } = [];
-    public bool HasRecentPlays => RecentPlays.Count > 0;
+    public bool HasRecentPlays => _allRecentPlays.Count > 0;
     public bool CanExpandRecentPlays => GetVisibleRecentPlays().Count > _recentPlayCapacity;
 
     public string ToggleRecentPlaysText =>
@@ -554,6 +554,8 @@ public partial class StartPageViewModel : InstanceListViewModelBase
         OnPropertyChanged(nameof(HasRecentPlays));
         OnPropertyChanged(nameof(CanExpandRecentPlays));
         OnPropertyChanged(nameof(ToggleRecentPlaysText));
+        OnPropertyChanged(nameof(HasBlockedRecentPlaysOnly));
+        OnPropertyChanged(nameof(ToggleBlockedRecentPlaysText));
     }
 
     [RelayCommand]

@@ -385,6 +385,8 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         UpdateSummaryText(sortedResult);
         
         HasFilteredInstances = FilteredMinecraftInstances.Count > 0;
+        OnPropertyChanged(nameof(HasBlockedInstancesOnly));
+        OnPropertyChanged(nameof(ToggleBlockedInstancesText));
     }
 
     public virtual void Dispose()

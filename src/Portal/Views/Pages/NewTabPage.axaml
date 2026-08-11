@@ -966,7 +966,8 @@
                                                                     Foreground="{DynamicResource InnerForegroundColor}"
                                                                     MaxLines="1"
                                                                     Text="已屏蔽"
-                                                                    TextTrimming="CharacterEllipsis" />
+                                                                    TextTrimming="CharacterEllipsis"
+                                                                    VerticalAlignment="Center" />
                                                             </StackPanel>
                                                         </Button>
                                                     </StackPanel>
