@@ -950,6 +950,7 @@
                                                             Click="BlockRecentPlay_Click"
                                                             Cursor="Hand"
                                                             IsVisible="{Binding IsBlocked}"
+                                                            Margin="0,-4,0,0"
                                                             Padding="4,0,4,0"
                                                             Tag="{Binding Target}"
                                                             Theme="{StaticResource TransparentButton}"
