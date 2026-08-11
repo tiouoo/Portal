@@ -116,6 +116,7 @@
                                     <MenuItem
                                         Click="QuickEnter_OnClick"
                                         Header="快速进入"
+                                        IsVisible="{Binding CanQuickEnter}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

@@ -750,6 +750,7 @@
                                                 <MenuItem
                                                     Click="QuickPlay_Click"
                                                     Header="游玩"
+                                                    IsVisible="{Binding CanQuickPlay}"
                                                     Tag="{Binding Target}">
                                                     <MenuItem.Icon>
                                                         <PathIcon

@@ -122,7 +122,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             return;
         Items.Clear();
         foreach (var save in saves)
-            Items.Add(new SaveItem(save));
+            Items.Add(new SaveItem(save, _instance));
         ApplyFilter();
         IsLoading = false;
         RaiseListProperties();
@@ -426,7 +426,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         if (index < 0)
             return;
 
-        Items[index] = new SaveItem(info);
+        Items[index] = new SaveItem(info, _instance);
     }
 
     private void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e)
@@ -493,9 +493,10 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
     }
 }
 
-public sealed class SaveItem(WorldSaveInfo info)
+public sealed class SaveItem(WorldSaveInfo info, MinecraftInstance? instance = null)
 {
     public WorldSaveInfo Info { get; } = info;
+    public bool CanQuickEnter => instance?.MinecraftEntry is { } entry && entry.ReleaseTime > new DateTime(2023, 4, 4);
     public string FolderName => Info.FolderName;
     public string DisplayName => string.IsNullOrWhiteSpace(Info.LevelName) ? Info.FolderName : Info.LevelName;
     public string FolderNameSuffix => string.Equals(DisplayName, FolderName, StringComparison.Ordinal) ? string.Empty :

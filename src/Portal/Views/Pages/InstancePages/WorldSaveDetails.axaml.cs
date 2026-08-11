@@ -118,6 +118,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public string FileStatistics => $"{_info.PlayerDataCount} 个玩家数据，{_info.DataPackArchiveCount} 个数据包";
     public bool IsLocked => _info.IsLocked;
     public bool IsUnlocked => !IsLocked;
+    public bool CanQuickEnter => _instance.MinecraftEntry is { } entry && entry.ReleaseTime > new DateTime(2023, 4, 4);
 
     public WorldSaveDetailsViewModel(WorldSaveInfo info, MinecraftInstance instance)
     {
