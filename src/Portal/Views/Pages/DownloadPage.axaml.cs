@@ -3,6 +3,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -11,6 +12,7 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages;
 
+[AggregatedSearchPage("下载", "下载", "DownloadPage")]
 [DefaultPage("下载")]
 public partial class DownloadPage : UserControl, ITioTabPage
 {

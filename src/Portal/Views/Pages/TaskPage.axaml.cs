@@ -2,12 +2,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Tio.Avalonia.Standard.Modules.Extensions;
+using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
+[AggregatedSearchPage("任务", "任务", "Task")]
 public partial class TaskPage : DataUserControl, ITioTabPage
 {
     public TaskPage()
