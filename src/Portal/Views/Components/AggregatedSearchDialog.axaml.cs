@@ -45,6 +45,7 @@ public partial class AggregatedSearchDialog : UserControl
                         Data.UiProperty.AggregatedSelectedType.EnumFlag));
                 
                 SearchBox.Focus();
+                SearchBox.SelectAll();
             };
         };
     }

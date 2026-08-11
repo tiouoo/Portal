@@ -1,10 +1,13 @@
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Portal.Views.Components;
@@ -15,8 +18,12 @@ using TioUi.Controls;
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("界面外观", "设置/界面外观", "Appearance")]
-public partial class Appearance : DataUserControl
+public partial class Appearance : DataUserControl, INotifyPropertyChanged
 {
+    private TopLevel? _topLevel;
+    private DispatcherTimer? _monitorTimer;
+    private double _currentRenderScaling = 1.0;
+
     public Appearance()
     {
         InitializeComponent();
@@ -25,6 +32,11 @@ public partial class Appearance : DataUserControl
         {
             ListBox.SelectedIndex = (int)Const.Data.ConfigEntry.Theme;
             UpdateApplyButtonState();
+            SubscribeRenderScaling();
+        };
+        Unloaded += (_, _) =>
+        {
+            UnsubscribeRenderScaling();
         };
         ListBox.SelectionChanged += (_, _) =>
         {
@@ -33,10 +45,93 @@ public partial class Appearance : DataUserControl
         };
     }
 
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public double CurrentRenderScaling
+    {
+        get => _currentRenderScaling;
+        private set
+        {
+            if (Math.Abs(_currentRenderScaling - value) < 0.0001) return;
+            _currentRenderScaling = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(EffectiveScale));
+        }
+    }
+
+    public double EffectiveScale => CurrentRenderScaling * AppScaleSlider.Value;
+
     public object IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
+    private void SubscribeRenderScaling()
+    {
+        _topLevel = TopLevel.GetTopLevel(this);
+        if (_topLevel == null)
+        {
+            AttachedToVisualTree += OnAttachedToVisualTree;
+            return;
+        }
+
+        _topLevel.PropertyChanged += OnTopLevelPropertyChanged;
+        UpdateRenderScaling();
+
+        _monitorTimer = new DispatcherTimer(TimeSpan.FromSeconds(0.5), DispatcherPriority.Background, (_, _) =>
+        {
+            UpdateRenderScaling();
+        });
+        _monitorTimer.Start();
+    }
+
+    private void UnsubscribeRenderScaling()
+    {
+        if (_topLevel != null)
+        {
+            _topLevel.PropertyChanged -= OnTopLevelPropertyChanged;
+            _topLevel = null;
+        }
+
+        if (_monitorTimer != null)
+        {
+            _monitorTimer.Stop();
+            _monitorTimer = null;
+        }
+
+        AttachedToVisualTree -= OnAttachedToVisualTree;
+    }
+
+    private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        AttachedToVisualTree -= OnAttachedToVisualTree;
+        _topLevel = TopLevel.GetTopLevel(this);
+        if (_topLevel != null)
+        {
+            _topLevel.PropertyChanged += OnTopLevelPropertyChanged;
+            UpdateRenderScaling();
+
+            _monitorTimer = new DispatcherTimer(TimeSpan.FromSeconds(0.5), DispatcherPriority.Background, (_, _) =>
+            {
+                UpdateRenderScaling();
+            });
+            _monitorTimer.Start();
+        }
+    }
+
+    private void OnTopLevelPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        UpdateRenderScaling();
+    }
+
+    private void UpdateRenderScaling()
+    {
+        if (_topLevel == null) return;
+        CurrentRenderScaling = _topLevel.RenderScaling;
+    }
+
     private void AppScaleSlider_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
-        => UpdateApplyButtonState();
+    {
+        UpdateApplyButtonState();
+        OnPropertyChanged(nameof(EffectiveScale));
+    }
 
     private void ApplyScale_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -66,4 +161,7 @@ public partial class Appearance : DataUserControl
         var pending = AppScaleSlider.Value;
         ApplyScaleButton.IsEnabled = Math.Abs(pending - applied) > 0.0001;
     }
+
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
