@@ -201,11 +201,6 @@
                                             IsVisible="{Binding RecentPlayTargetItem.IsServer}"
                                             Orientation="Horizontal"
                                             Spacing="5">
-                                            <Ellipse
-                                                Fill="{Binding RecentPlayTargetItem.StatusBrush}"
-                                                Height="7"
-                                                VerticalAlignment="Center"
-                                                Width="7" />
                                             <TextBlock
                                                 FontSize="12"
                                                 Foreground="{Binding RecentPlayTargetItem.StatusBrush}"
@@ -894,11 +889,6 @@
                                                     IsVisible="{Binding IsServer}"
                                                     Orientation="Horizontal"
                                                     Spacing="5">
-                                                    <Ellipse
-                                                        Fill="{Binding StatusBrush}"
-                                                        Height="7"
-                                                        VerticalAlignment="Center"
-                                                        Width="7" />
                                                     <TextBlock
                                                         FontSize="12"
                                                         Foreground="{Binding StatusBrush}"

@@ -42,7 +42,7 @@ public partial class QuickServerWidget1x1 : InstanceBoundWidgetBase
         var address = data?.ServerAddress;
         var port = data?.ServerPort ?? 25565;
 
-        if (iconImage != null) iconImage.Source = instance?[46];
+        if (iconImage != null) iconImage.Source = instance?[40];
 
         ApplyStatus();
         if (pingText != null)

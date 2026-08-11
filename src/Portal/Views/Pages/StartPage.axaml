@@ -282,11 +282,6 @@
                                                     IsVisible="{Binding IsServer}"
                                                     Orientation="Horizontal"
                                                     Spacing="5">
-                                                    <Ellipse
-                                                        Fill="{Binding StatusBrush}"
-                                                        Height="7"
-                                                        VerticalAlignment="Center"
-                                                        Width="7" />
                                                     <TextBlock
                                                         FontSize="12"
                                                         Foreground="{Binding StatusBrush}"
