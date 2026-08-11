@@ -1,0 +1,43 @@
+<UserControl
+    d:DesignHeight="200"
+    d:DesignWidth="340"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Components.ScaleInputDialog"
+    x:DataType="components:ScaleInputDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:components="clr-namespace:Portal.Views.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24" RowDefinitions="Auto, Auto, Auto" Width="320">
+        <TextBlock
+            FontSize="16"
+            FontWeight="600"
+            Grid.Row="0"
+            Text="自定义缩放" />
+        <StackPanel Grid.Row="1" Margin="0,18" Spacing="6">
+            <TextBox
+                Name="PercentTextBox"
+                PlaceholderText="例如 100"
+                Text="{Binding PercentText}" />
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="请输入 50% ~ 500% 之间的整数百分比" />
+            <TextBlock
+                FontSize="12"
+                Foreground="#E5484D"
+                IsVisible="{Binding HasError}"
+                Text="{Binding ErrorText}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding ConfirmCommand}" Content="确定" />
+        </StackPanel>
+    </Grid>
+</UserControl>

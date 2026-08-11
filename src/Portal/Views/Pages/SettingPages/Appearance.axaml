@@ -97,6 +97,66 @@
             </tio:TioColorPicker>
         </StackPanel>
         <StackPanel Spacing="5">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Label
+                        Content="应用缩放"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Left" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="  (" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding AppScale, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                        VerticalAlignment="Center" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text=")" />
+                </StackPanel>
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Margin="8,0,0,0"
+                    Orientation="Horizontal"
+                    Spacing="12"
+                    VerticalAlignment="Center">
+                    <HyperlinkButton
+                        Click="ApplyScale_OnClick"
+                        Content="应用更改"
+                        FontSize="13"
+                        Name="ApplyScaleButton"
+                        Theme="{StaticResource TransparentHyperlinkButton}" />
+                    <HyperlinkButton
+                        Click="CustomScale_OnClick"
+                        Content="自定义缩放"
+                        FontSize="13"
+                        Theme="{StaticResource TransparentHyperlinkButton}" />
+                </StackPanel>
+            </DockPanel>
+            <Grid ColumnDefinitions="*,Auto">
+                <Slider
+                    Grid.Column="0"
+                    IsSnapToTickEnabled="True"
+                    Maximum="5.0"
+                    Minimum="0.5"
+                    Name="AppScaleSlider"
+                    TickFrequency="0.25"
+                    Value="{Binding AppScale, Source={x:Static const:Data.ConfigEntry}, Mode=OneWay}"
+                    ValueChanged="AppScaleSlider_OnValueChanged" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="6,0,0,0"
+                    Text="{Binding #AppScaleSlider.Value, StringFormat={}{0:P0}}"
+                    VerticalAlignment="Center"
+                    Width="40" />
+            </Grid>
+        </StackPanel>
+        <StackPanel Spacing="5">
             <Label
                 Content="背景风格"
                 FontSize="13"

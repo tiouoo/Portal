@@ -71,6 +71,14 @@ public partial class TabWindow : TioTabWindowBase
     {
         _hideDropTipDebouncer = new Debouncer(OnHideDropTipDebounce, 300);
         InitializeComponent();
+
+        // 恢复上一次用户调整过的窗口大小（仅作用于 TabWindow，其他窗口不受影响）。
+        if (Data.ConfigEntry.HasTabWindowSize)
+        {
+            Width = Math.Max(Data.ConfigEntry.TabWindowWidth, MinWidth);
+            Height = Math.Max(Data.ConfigEntry.TabWindowHeight, MinHeight);
+        }
+
         Notification = new TioNotificationManager(this);
         Toast = new TioToastManager(this);
         Window = this;
@@ -185,6 +193,7 @@ public partial class TabWindow : TioTabWindowBase
 
         NavScrollViewer.ScrollChanged += (_, _) => { IsTabMaskVisible = NavScrollViewer.Offset.X > 0; };
         SizeChanged += TabWindow_OnSizeChanged;
+        Resized += TabWindow_OnResized;
         return;
 
         void MacOsWindowHandler(IntPtr nsWindow)
@@ -237,6 +246,7 @@ public partial class TabWindow : TioTabWindowBase
         this.RemoveHandler(DragDrop.DropEvent, OnDropHandler);
 
         SizeChanged -= TabWindow_OnSizeChanged;
+        Resized -= TabWindow_OnResized;
         Closed -= TabWindow_OnClosed;
 
         ClearBackgroundLayers();
@@ -258,6 +268,25 @@ public partial class TabWindow : TioTabWindowBase
             ClearOriginalBackgroundCache();
             ApplyBackground();
         }
+    }
+
+    /// <summary>
+    ///     记录用户对 TabWindow 的调整大小结果，作为之后新建 TabWindow 的默认大小。
+    ///     只响应用户拖动缩放（<see cref="WindowResizeReason.User"/>），最大化/最小化/DPI 变化等不计入；
+    ///     存在多个 TabWindow 时，最后一次被调整的窗口大小即为新窗口的大小。
+    /// </summary>
+    private void TabWindow_OnResized(object? sender, WindowResizedEventArgs e)
+    {
+        if (WindowState == WindowState.Maximized || WindowState == WindowState.Minimized) return;
+        if (e.Reason != WindowResizeReason.User) return;
+
+        var size = e.ClientSize;
+        if (size.Width <= 0 || size.Height <= 0) return;
+
+        Data.ConfigEntry.TabWindowWidth = size.Width;
+        Data.ConfigEntry.TabWindowHeight = size.Height;
+        Data.ConfigEntry.HasTabWindowSize = true;
+        App.Method.SaveConfig();
     }
 
     private void OpenAggregatedSearchDialog()
@@ -590,12 +619,16 @@ public partial class TabWindow : TioTabWindowBase
     /// <summary>
     ///     将模板中的 DockPanel 包装进 Panel，并插入背景 Image 层与遮罩 Border 层。
     ///     背景图 Image 应用 BlurEffect（GPU 实时模糊），遮罩 Border 覆盖其上、内容之下。
+    ///     若根内容已被缩放服务包进 LayoutTransformControl，则在其内部完成包装。
     /// </summary>
     private void EnsureBackgroundLayers()
     {
         if (RootBorder == null) return;
         if (_backgroundImageLayer != null) return;
-        if (RootBorder.Child is not DockPanel dockPanel) return;
+
+        LayoutTransformControl? layoutTransformControl = RootBorder.Child as LayoutTransformControl;
+        var content = layoutTransformControl?.Child ?? RootBorder.Child;
+        if (content is not DockPanel dockPanel) return;
 
         _backgroundImageLayer = new Image
         {
@@ -611,10 +644,14 @@ public partial class TabWindow : TioTabWindowBase
         };
 
         var panel = new Panel();
-        RootBorder.Child = panel;
         panel.Children.Add(_backgroundImageLayer);
         panel.Children.Add(_backgroundMaskLayer);
         panel.Children.Add(dockPanel);
+
+        if (layoutTransformControl != null)
+            layoutTransformControl.Child = panel;
+        else
+            RootBorder.Child = panel;
     }
 
     private void ClearBackgroundLayers()

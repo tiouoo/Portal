@@ -13,6 +13,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Helpers;
@@ -117,6 +118,10 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Color ImageMaskColor { get; set; } = Color.Parse("#000000");
     [ObservableProperty] public partial double ImageMaskOpacity { get; set; } = 0.3;
     [ObservableProperty] public partial bool ShowWidgetBackground { get; set; } = true;
+    [ObservableProperty] public partial double AppScale { get; set; } = 1.0;
+    [ObservableProperty] public partial double TabWindowWidth { get; set; }
+    [ObservableProperty] public partial double TabWindowHeight { get; set; }
+    [ObservableProperty] public partial bool HasTabWindowSize { get; set; }
     [ObservableProperty] public partial List<WidgetLayoutData> WidgetLayout { get; set; } = [];
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
     [ObservableProperty] public partial BedrockAccount? UsingBedrockAccount { get; set; }
@@ -173,6 +178,9 @@ public partial class ConfigEntry : ObservableObject
             case nameof(ControlOpacity):
             case nameof(TranslucentControlOpacity):
                 SetResource();
+                break;
+            case nameof(AppScale):
+                AppScaling.ApplyScale(AppScale);
                 break;
             case nameof(BackgroundMode):
                 TabWindow.ApplyBackgroundToAllWindows();
