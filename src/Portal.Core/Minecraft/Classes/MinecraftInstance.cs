@@ -962,6 +962,16 @@ public partial class JavaInstanceConfig : MinecraftInstanceConfig
     [ObservableProperty] public partial GraphicsApi GraphicsBackend { get; set; } = GraphicsApi.Default;
     [ObservableProperty] public partial string? OpenGlRenderer { get; set; }
     [ObservableProperty] public partial string? VulkanRenderer { get; set; }
+    [ObservableProperty] public partial bool EnableOverrideAdvancedOptions { get; set; }
+    [ObservableProperty] public partial bool EnableFullscreen { get; set; }
+    [ObservableProperty] public partial bool AutoSetChineseLanguage { get; set; } = true;
+    [ObservableProperty] public partial bool EnableGameOverlay { get; set; } = true;
+    [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
+    [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
+    [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
+    [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
+    [ObservableProperty] public partial string? AfterLaunchCommand { get; set; }
+    [ObservableProperty] public partial string? PackagedCommand { get; set; }
 }
 
 public enum MinecraftInstanceType

@@ -557,6 +557,14 @@ public static class MinecraftLaunchService
         };
 
         ApplyGraphicsLaunchConfiguration(instance, config, placeholders);
+
+        if (options.IsFullscreen)
+        {
+            config.Width = 0;
+            config.Height = 0;
+            config.GameArguments = config.GameArguments.Append("--fullscreen");
+        }
+
         return config;
     }
     
@@ -864,6 +872,7 @@ public sealed class MinecraftLaunchOptions
     public JavaRuntimeEntry? DefaultJavaRuntime { get; init; }
     public int WindowWidth { get; init; }
     public int WindowHeight { get; init; }
+    public bool IsFullscreen { get; init; }
     public int MaxMemory { get; init; }
     public bool AutoSetJavaHighPerformanceGpu { get; init; }
     public bool AutoOptimizeMemoryBeforeGameLaunch { get; init; }

@@ -5,189 +5,321 @@
     x:Class="Portal.Views.Pages.InstancePages.Properties"
     x:DataType="instancePages:Properties"
     xmlns="https://github.com/avaloniaui"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:graphics="clr-namespace:Portal.Core.Minecraft.Graphics;assembly=Portal.Core"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:java="clr-namespace:Portal.Core.Minecraft.Instance.Java;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Margin="10" Spacing="5">
-        <TextBlock FontSize="24" Text="配置管理" />
-        <Border
-            Background="Transparent"
-            BorderBrush="{DynamicResource TranslucentBorderBrush}"
-            BorderThickness="0"
-            CornerRadius="12"
-            Padding="12">
-            <StackPanel Spacing="15">
-                <StackPanel Spacing="5">
-                    <Label
-                        Content="备注"
-                        FontSize="13"
-                        Foreground="{DynamicResource InnerForegroundColor}" />
-                    <TextBox PlaceholderText="请输入备注" Text="{Binding Instance.Config.Note}" />
-                </StackPanel>
-                <StackPanel IsVisible="{Binding IsUwpBedrock}" Spacing="5">
-                    <Label
-                        Content="鼠标锁"
-                        FontSize="13"
-                        Foreground="{DynamicResource InnerForegroundColor}" />
-                    <ToggleSwitch IsChecked="{Binding EnableMouseLock}" />
-                    <TextBlock
-                        FontSize="11"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="*在游戏中使用 ctrl+alt 切换鼠标锁定" />
-                </StackPanel>
-                <StackPanel IsVisible="{Binding IsGdkBedrock}" Spacing="12">
+    <DockPanel Margin="10,10,0,10">
+        <TextBlock
+            DockPanel.Dock="Top"
+            FontSize="24"
+            Margin="0,0,0,5"
+            Text="配置管理" />
+        <controls:ScrollView>
+            <Border
+                Background="Transparent"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="0"
+                CornerRadius="12"
+                Margin="0,0,10,0"
+                Padding="12">
+                <StackPanel Spacing="15">
                     <StackPanel Spacing="5">
                         <Label
-                            Content="独立数据"
+                            Content="备注"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.EnableIndependentBedrockVersion}" />
+                        <TextBox PlaceholderText="请输入备注" Text="{Binding Instance.Config.Note}" />
                     </StackPanel>
-                    <StackPanel Spacing="5">
+                    <StackPanel IsVisible="{Binding IsUwpBedrock}" Spacing="5">
                         <Label
-                            Content="启动器间共享数据"
+                            Content="鼠标锁"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.EnableLauncherSharedBedrockData}" />
-                    </StackPanel>
-                </StackPanel>
-                <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
-                    <TextBlock FontSize="18" Text="Java 版配置" />
-                    <StackPanel Spacing="5">
-                        <Label
-                            Content="独立实例"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableIndependentInstance}" IsEnabled="{Binding Instance.CanDisableIndependentInstance}" />
+                        <ToggleSwitch IsChecked="{Binding EnableMouseLock}" />
                         <TextBlock
                             FontSize="11"
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            IsVisible="{Binding Instance.RequiresIndependentInstance}"
-                            Text=" *此类型文件夹强制独立实例" />
+                            Text="*在游戏中使用 ctrl+alt 切换鼠标锁定" />
                     </StackPanel>
-                    <StackPanel Spacing="5">
-                        <Label
-                            Content="使用特定Java"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableSpecificJava}" />
+                    <StackPanel IsVisible="{Binding IsGdkBedrock}" Spacing="12">
+                        <StackPanel Spacing="5">
+                            <Label
+                                Content="独立数据"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ToggleSwitch IsChecked="{Binding Instance.EnableIndependentBedrockVersion}" />
+                        </StackPanel>
+                        <StackPanel Spacing="5">
+                            <Label
+                                Content="启动器间共享数据"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ToggleSwitch IsChecked="{Binding Instance.EnableLauncherSharedBedrockData}" />
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableSpecificJava}" Spacing="5">
-                        <Label
-                            Content="选择Java"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ComboBox
-                            Height="46"
-                            HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}"
-                            SelectedItem="{Binding Instance.JavaConfig.SpecificJavaEntry}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate DataType="java:JavaRuntimeEntry">
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                        <TextBlock
-                                            FontSize="12"
-                                            Foreground="{DynamicResource InnerForegroundColor}"
-                                            Text="{Binding JavaPath}"
-                                            TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Spacing="5">
-                        <Label
-                            Content="覆盖全局最大内存"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" />
-                    </StackPanel>
-                    <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" Spacing="5">
-                        <Label
-                            Content="最大内存"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Slider
-                                Grid.Column="0"
-                                IsSnapToTickEnabled="True"
-                                Maximum="65536"
-                                Minimum="512"
-                                TickFrequency="256"
-                                Value="{Binding Instance.JavaConfig.MinecraftMaxMemory}" />
-                            <Border
-                                Grid.Column="1"
-                                Margin="15,0,0,0"
-                                Width="75">
+                    <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
+                        <StackPanel Spacing="5">
+                            <Label
+                                Content="独立实例"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableIndependentInstance}" IsEnabled="{Binding Instance.CanDisableIndependentInstance}" />
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                IsVisible="{Binding Instance.RequiresIndependentInstance}"
+                                Text=" *此类型文件夹强制独立实例" />
+                        </StackPanel>
+                        <StackPanel Spacing="5">
+                            <Label
+                                Content="使用特定Java"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableSpecificJava}" />
+                        </StackPanel>
+                        <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableSpecificJava}" Spacing="5">
+                            <Label
+                                Content="选择Java"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ComboBox
+                                Height="46"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}"
+                                SelectedItem="{Binding Instance.JavaConfig.SpecificJavaEntry}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="java:JavaRuntimeEntry">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding DisplayName}" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="{Binding JavaPath}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="5">
+                            <Label
+                                Content="覆盖全局最大内存"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" />
+                        </StackPanel>
+                        <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" Spacing="5">
+                            <Label
+                                Content="最大内存"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Slider
+                                    Grid.Column="0"
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="65536"
+                                    Minimum="512"
+                                    TickFrequency="256"
+                                    Value="{Binding Instance.JavaConfig.MinecraftMaxMemory}" />
+                                <Border
+                                    Grid.Column="1"
+                                    Margin="15,0,0,0"
+                                    Width="75">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        Text="{Binding Instance.JavaConfig.MinecraftMaxMemory, StringFormat={}{0:0} MB}"
+                                        VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Spacing="12">
+                            <StackPanel IsVisible="{Binding CanChooseGraphicsBackend}" Spacing="5">
+                                <Label
+                                    Content="图形 API"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    ItemsSource="{Binding GraphicsApiOptions}"
+                                    SelectedItem="{Binding SelectedGraphicsApi}" />
+                            </StackPanel>
+                            <StackPanel IsVisible="{Binding IsOpenGlRendererVisible}" Spacing="5">
+                                <Label
+                                    Content="OpenGL 渲染器"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    ItemsSource="{Binding OpenGlRendererOptions}"
+                                    SelectedItem="{Binding SelectedOpenGlRenderer}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="graphics:Renderer">
+                                            <TextBlock Text="{Binding DisplayName}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel IsVisible="{Binding IsVulkanRendererVisible}" Spacing="5">
+                                <Label
+                                    Content="Vulkan 渲染器"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    ItemsSource="{Binding VulkanRendererOptions}"
+                                    SelectedItem="{Binding SelectedVulkanRenderer}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="graphics:Renderer">
+                                            <TextBlock Text="{Binding DisplayName}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel Spacing="12">
+                            <TextBlock
+                                FontSize="16"
+                                Margin="0,5,0,0"
+                                Text="高级选项" />
+                            <StackPanel Spacing="5">
+                                <Label
+                                    Content="使用本实例的高级选项"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource InnerForegroundColor}" />
+                                <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" />
                                 <TextBlock
-                                    HorizontalAlignment="Center"
-                                    Text="{Binding Instance.JavaConfig.MinecraftMaxMemory, StringFormat={}{0:0} MB}"
-                                    VerticalAlignment="Center" />
-                            </Border>
-                        </Grid>
-                    </StackPanel>
-                    <StackPanel Spacing="5">
-                        <Label
-                            Content="JVM虚拟机参数"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <TextBox
-                            AcceptsReturn="True"
-                            PlaceholderText="默认留空 留空时使用全局 JVM 参数"
-                            Text="{Binding Instance.JavaConfig.JvmArgs}"
-                            TextWrapping="Wrap"
-                            VerticalAlignment="Top" />
-                    </StackPanel>
-                    <StackPanel Spacing="12">
-                        <StackPanel IsVisible="{Binding CanChooseGraphicsBackend}" Spacing="5">
-                            <Label
-                                Content="图形 API"
-                                FontSize="13"
-                                Foreground="{DynamicResource InnerForegroundColor}" />
-                            <ComboBox
-                                HorizontalAlignment="Stretch"
-                                ItemsSource="{Binding GraphicsApiOptions}"
-                                SelectedItem="{Binding SelectedGraphicsApi}" />
-                        </StackPanel>
-                        <StackPanel IsVisible="{Binding IsOpenGlRendererVisible}" Spacing="5">
-                            <Label
-                                Content="OpenGL 渲染器"
-                                FontSize="13"
-                                Foreground="{DynamicResource InnerForegroundColor}" />
-                            <ComboBox
-                                HorizontalAlignment="Stretch"
-                                ItemsSource="{Binding OpenGlRendererOptions}"
-                                SelectedItem="{Binding SelectedOpenGlRenderer}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate DataType="graphics:Renderer">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-                        <StackPanel IsVisible="{Binding IsVulkanRendererVisible}" Spacing="5">
-                            <Label
-                                Content="Vulkan 渲染器"
-                                FontSize="13"
-                                Foreground="{DynamicResource InnerForegroundColor}" />
-                            <ComboBox
-                                HorizontalAlignment="Stretch"
-                                ItemsSource="{Binding VulkanRendererOptions}"
-                                SelectedItem="{Binding SelectedVulkanRenderer}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate DataType="graphics:Renderer">
-                                        <TextBlock Text="{Binding DisplayName}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
+                                    FontSize="11"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Margin="0,-3,0,0"
+                                    Text=" *开启后，本实例将优先使用下方的高级选项；关闭则使用全局高级选项" />
+                            </StackPanel>
+                            <StackPanel IsEnabled="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" Spacing="12">
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="自动设置中文"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.AutoSetChineseLanguage}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,-3,0,0"
+                                        Text=" *启动游戏时自动将游戏语言切换为简体中文" />
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsWindows}" Spacing="5">
+                                    <Label
+                                        Content="游戏内覆盖层"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableGameOverlay}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,-3,0,0"
+                                        Text=" *在游戏内按下 Shift+Tab 显示或隐藏覆盖层" />
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="游戏全屏"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableFullscreen}" />
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="Minecraft窗口标题"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <TextBox
+                                        AcceptsReturn="True"
+                                        PlaceholderText="留空默认"
+                                        Text="{Binding Instance.JavaConfig.OverrideMinecraftWindowTitle}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="Minecraft窗口大小"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <Grid
+                                        ColumnDefinitions="*,*"
+                                        IsEnabled="{Binding !Instance.JavaConfig.EnableFullscreen}"
+                                        VerticalAlignment="Top">
+                                        <TextBox
+                                            AcceptsReturn="True"
+                                            Grid.Column="0"
+                                            InnerLeftContent="宽度 "
+                                            Margin="0,0,10,0"
+                                            Text="{Binding Instance.JavaConfig.MinecraftWindowWidth}"
+                                            TextWrapping="Wrap"
+                                            VerticalAlignment="Top" />
+                                        <TextBox
+                                            AcceptsReturn="True"
+                                            Grid.Column="1"
+                                            InnerLeftContent="高度 "
+                                            Margin="10,0,0,0"
+                                            Text="{Binding Instance.JavaConfig.MinecraftWindowHeight}"
+                                            TextWrapping="Wrap"
+                                            VerticalAlignment="Top" />
+                                    </Grid>
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="JVM虚拟机参数"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <TextBox
+                                        AcceptsReturn="True"
+                                        PlaceholderText="默认留空 留空时使用全局 JVM 参数"
+                                        Text="{Binding Instance.JavaConfig.JvmArgs}"
+                                        TextWrapping="Wrap"
+                                        VerticalAlignment="Top" />
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="启动前执行命令"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <TextBox
+                                        AcceptsReturn="True"
+                                        PlaceholderText="默认留空 在游戏启动前执行并等待其完成"
+                                        Text="{Binding Instance.JavaConfig.BeforeLaunchCommand}"
+                                        TextWrapping="Wrap"
+                                        VerticalAlignment="Top" />
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="启动后执行命令"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <TextBox
+                                        AcceptsReturn="True"
+                                        PlaceholderText="默认留空 在游戏进程创建后于后台执行"
+                                        Text="{Binding Instance.JavaConfig.AfterLaunchCommand}"
+                                        TextWrapping="Wrap"
+                                        VerticalAlignment="Top" />
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <Label
+                                        Content="包装命令"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}" />
+                                    <TextBox
+                                        AcceptsReturn="True"
+                                        PlaceholderText="默认留空 例：cmd /c {command}"
+                                        Text="{Binding Instance.JavaConfig.PackagedCommand}"
+                                        TextWrapping="Wrap"
+                                        VerticalAlignment="Top" />
+                                </StackPanel>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
-            </StackPanel>
-        </Border>
-    </StackPanel>
+            </Border>
+        </controls:ScrollView>
+    </DockPanel>
 </UserControl>

@@ -37,6 +37,18 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
+                Content="游戏全屏"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableFullscreen}" />
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Margin="0,-3,0,0"
+                Text=" *启动游戏后默认以全屏模式打开游戏窗口，开启后不再传入窗口大小" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
                 Content="Minecraft窗口标题"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
@@ -51,7 +63,10 @@
                 Content="Minecraft窗口大小"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <Grid ColumnDefinitions="*,*" VerticalAlignment="Top">
+            <Grid
+                ColumnDefinitions="*,*"
+                IsEnabled="{Binding !Data.ConfigEntry.EnableFullscreen}"
+                VerticalAlignment="Top">
                 <TextBox
                     AcceptsReturn="True"
                     Grid.Column="0"
