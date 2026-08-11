@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using Portal.Classes.Entries;
 using Portal.Core.Minecraft;
@@ -11,43 +12,80 @@ namespace Portal.Views.Widgets;
 
 public partial class QuickServerWidget1x1 : InstanceBoundWidgetBase
 {
+    private readonly ServerPing _ping = new();
+    private string? _pingAddress;
+
     public QuickServerWidget1x1()
     {
         Size = new WidgetCellSize(1, 1);
         InitializeComponent();
+        _ping.Changed += OnPingChanged;
     }
 
     protected override void OnInstanceResolved() => RefreshDisplay();
 
     protected override void OnInstanceIconRefreshed() => RefreshDisplay();
 
+    private void OnPingChanged() => RefreshDisplay();
+
     private void RefreshDisplay()
     {
         var iconImage = this.FindControl<Image>("IconImage");
-        var titleText = this.FindControl<TextBlock>("TitleText");
-        var sourceText = this.FindControl<TextBlock>("SourceText");
+        var statusText = this.FindControl<TextBlock>("StatusText");
+        var statusDot = this.FindControl<Ellipse>("StatusDot");
+        var pingText = this.FindControl<TextBlock>("PingText");
+        var playersText = this.FindControl<TextBlock>("PlayersText");
+        var addressText = this.FindControl<TextBlock>("AddressText");
 
         var instance = Instance;
-        var address = GetData<QuickServerWidgetData>()?.ServerAddress;
+        var data = GetData<QuickServerWidgetData>();
+        var address = data?.ServerAddress;
+        var port = data?.ServerPort ?? 25565;
 
-        if (instance == null)
+        if (iconImage != null) iconImage.Source = instance?[46];
+
+        ApplyStatus();
+        if (pingText != null)
         {
-            if (iconImage != null) iconImage.Source = null;
-            if (sourceText != null) sourceText.Text = string.Empty;
+            pingText.Text = _ping.PingText;
+            pingText.Foreground = _ping.PingBrush;
+            pingText.IsVisible = _ping.HasPing;
         }
-        else
+        if (playersText != null)
         {
-            if (iconImage != null) iconImage.Source = instance[56];
-            if (sourceText != null) sourceText.Text = instance.InstanceName;
+            playersText.Text = _ping.PlayersText;
+            playersText.IsVisible = _ping.HasPlayers;
         }
 
         if (string.IsNullOrEmpty(address))
         {
-            if (titleText != null) titleText.Text = "未配置服务器";
+            if (addressText != null)
+                addressText.Text = string.IsNullOrEmpty(instance?.InstanceName)
+                    ? "未配置服务器"
+                    : instance.InstanceName!;
             return;
         }
 
-        if (titleText != null) titleText.Text = address;
+        var fullAddress = ServerPing.BuildAddress(address, port);
+        if (!string.Equals(_pingAddress, fullAddress, StringComparison.Ordinal))
+        {
+            _pingAddress = fullAddress;
+            _ping.Start(fullAddress);
+        }
+
+        if (addressText != null) addressText.Text = ServerPing.BuildDisplayAddress(address, port);
+    }
+
+    private void ApplyStatus()
+    {
+        var statusText = this.FindControl<TextBlock>("StatusText");
+        var statusDot = this.FindControl<Ellipse>("StatusDot");
+        if (statusText != null)
+        {
+            statusText.Text = _ping.StatusText;
+            statusText.Foreground = _ping.StatusBrush;
+        }
+        if (statusDot != null) statusDot.Fill = _ping.StatusBrush;
     }
 
     private void LaunchButton_OnClick(object? sender, RoutedEventArgs e)

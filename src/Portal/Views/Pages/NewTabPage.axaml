@@ -173,9 +173,9 @@
                                             <TextBlock
                                                 FontSize="12"
                                                 Foreground="{DynamicResource InnerForegroundColor}"
-                                                IsVisible="{Binding RecentPlayTargetItem.HasFolderName}"
+                                                IsVisible="{Binding RecentPlayTargetItem.HasSubtitle}"
                                                 MaxLines="1"
-                                                Text="{Binding RecentPlayTargetItem.FolderName}"
+                                                Text="{Binding RecentPlayTargetItem.SubtitleText}"
                                                 TextTrimming="CharacterEllipsis"
                                                 TextWrapping="NoWrap" />
                                         </StackPanel>
@@ -194,8 +194,42 @@
                                             FontSize="12"
                                             Foreground="{DynamicResource InnerForegroundColor}"
                                             MaxLines="1"
+                                            IsVisible="{Binding !RecentPlayTargetItem.IsServer}"
                                             Text="{Binding RecentPlayTargetItem.Details}"
                                             TextTrimming="CharacterEllipsis" />
+                                        <StackPanel
+                                            IsVisible="{Binding RecentPlayTargetItem.IsServer}"
+                                            Orientation="Horizontal"
+                                            Spacing="5">
+                                            <Ellipse
+                                                Fill="{Binding RecentPlayTargetItem.StatusBrush}"
+                                                Height="7"
+                                                VerticalAlignment="Center"
+                                                Width="7" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{Binding RecentPlayTargetItem.StatusBrush}"
+                                                MaxLines="1"
+                                                Text="{Binding RecentPlayTargetItem.StatusText}"
+                                                TextTrimming="CharacterEllipsis"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{Binding RecentPlayTargetItem.PingBrush}"
+                                                IsVisible="{Binding RecentPlayTargetItem.HasPing}"
+                                                MaxLines="1"
+                                                Text="{Binding RecentPlayTargetItem.PingText}"
+                                                TextTrimming="CharacterEllipsis"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                IsVisible="{Binding RecentPlayTargetItem.HasPlayers}"
+                                                MaxLines="1"
+                                                Text="{Binding RecentPlayTargetItem.PlayersText}"
+                                                TextTrimming="CharacterEllipsis"
+                                                VerticalAlignment="Center" />
+                                        </StackPanel>
                                         <DockPanel>
                                             <TextBlock
                                                 FontSize="12"
@@ -832,9 +866,9 @@
                                                     <TextBlock
                                                         FontSize="12"
                                                         Foreground="{DynamicResource InnerForegroundColor}"
-                                                        IsVisible="{Binding HasFolderName}"
+                                                        IsVisible="{Binding HasSubtitle}"
                                                         MaxLines="1"
-                                                        Text="{Binding FolderName}"
+                                                        Text="{Binding SubtitleText}"
                                                         TextTrimming="CharacterEllipsis"
                                                         TextWrapping="NoWrap" />
                                                 </StackPanel>
@@ -852,9 +886,43 @@
                                                 <TextBlock
                                                     FontSize="12"
                                                     Foreground="{DynamicResource InnerForegroundColor}"
+                                                    IsVisible="{Binding !IsServer}"
                                                     MaxLines="1"
                                                     Text="{Binding Details}"
                                                     TextTrimming="CharacterEllipsis" />
+                                                <StackPanel
+                                                    IsVisible="{Binding IsServer}"
+                                                    Orientation="Horizontal"
+                                                    Spacing="5">
+                                                    <Ellipse
+                                                        Fill="{Binding StatusBrush}"
+                                                        Height="7"
+                                                        VerticalAlignment="Center"
+                                                        Width="7" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{Binding StatusBrush}"
+                                                        MaxLines="1"
+                                                        Text="{Binding StatusText}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        VerticalAlignment="Center" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{Binding PingBrush}"
+                                                        IsVisible="{Binding HasPing}"
+                                                        MaxLines="1"
+                                                        Text="{Binding PingText}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        VerticalAlignment="Center" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                                        IsVisible="{Binding HasPlayers}"
+                                                        MaxLines="1"
+                                                        Text="{Binding PlayersText}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        VerticalAlignment="Center" />
+                                                </StackPanel>
                                                 <DockPanel>
                                                     <TextBlock
                                                         FontSize="12"

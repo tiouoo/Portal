@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Portal.Classes.Entries;
@@ -13,20 +14,29 @@ namespace Portal.Views.Widgets;
 
 public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
 {
+    private readonly ServerPing _ping = new();
+    private string? _pingAddress;
+
     public QuickServerWidget2x1()
     {
         Size = new WidgetCellSize(2, 1);
         InitializeComponent();
+        _ping.Changed += OnPingChanged;
     }
 
     protected override void OnInstanceResolved() => RefreshDisplay();
 
     protected override void OnInstanceIconRefreshed() => RefreshDisplay();
 
+    private void OnPingChanged() => RefreshDisplay();
+
     private void RefreshDisplay()
     {
         var iconImage = this.FindControl<Image>("IconImage");
-        var titleText = this.FindControl<TextBlock>("TitleText");
+        var statusText = this.FindControl<TextBlock>("StatusText");
+        var statusDot = this.FindControl<Ellipse>("StatusDot");
+        var pingText = this.FindControl<TextBlock>("PingText");
+        var playersText = this.FindControl<TextBlock>("PlayersText");
         var addressText = this.FindControl<TextBlock>("AddressText");
         var instanceText = this.FindControl<TextBlock>("InstanceText");
         var hintText = this.FindControl<TextBlock>("HintText");
@@ -34,30 +44,47 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
         var instance = Instance;
         var data = GetData<QuickServerWidgetData>();
         var address = data?.ServerAddress;
-        var port = data?.ServerPort;
+        var port = data?.ServerPort ?? 25565;
 
-        if (instance == null)
+        if (iconImage != null) iconImage.Source = instance?[40];
+        if (instanceText != null) instanceText.Text = instance?.ShortDisplay ?? string.Empty;
+
+        if (statusText != null)
         {
-            if (iconImage != null) iconImage.Source = null;
-            if (instanceText != null) instanceText.Text = string.Empty;
+            statusText.Text = _ping.StatusText;
+            statusText.Foreground = _ping.StatusBrush;
         }
-        else
+        if (statusDot != null) statusDot.Fill = _ping.StatusBrush;
+        if (pingText != null)
         {
-            if (iconImage != null) iconImage.Source = instance[40];
-            if (instanceText != null) instanceText.Text = instance.ShortDisplay;
+            pingText.Text = _ping.PingText;
+            pingText.Foreground = _ping.PingBrush;
+            pingText.IsVisible = _ping.HasPing;
+        }
+        if (playersText != null)
+        {
+            playersText.Text = _ping.PlayersText;
+            playersText.IsVisible = _ping.HasPlayers;
         }
 
         if (string.IsNullOrEmpty(address))
         {
-            if (titleText != null) titleText.Text = "未配置服务器";
-            if (addressText != null) addressText.Text = string.Empty;
+            if (addressText != null)
+                addressText.Text = string.IsNullOrEmpty(instance?.InstanceName)
+                    ? "未配置服务器"
+                    : instance.InstanceName!;
             if (hintText != null) hintText.Text = string.Empty;
             return;
         }
 
-        if (titleText != null) titleText.Text = address;
-        if (addressText != null)
-            addressText.Text = port is { } p ? $"{address}:{p}" : address;
+        var fullAddress = ServerPing.BuildAddress(address, port);
+        if (!string.Equals(_pingAddress, fullAddress, StringComparison.Ordinal))
+        {
+            _pingAddress = fullAddress;
+            _ping.Start(fullAddress);
+        }
+
+        if (addressText != null) addressText.Text = ServerPing.BuildDisplayAddress(address, port);
         if (hintText != null) hintText.Text = "点击右侧按钮快速进入";
     }
 

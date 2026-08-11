@@ -26,6 +26,7 @@ using Portal.ViewModels;
 using Portal.Views.Components;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.InstancePages;
+using Portal.Views.Widgets;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -503,10 +504,22 @@ public partial class NewTabViewModel : InstanceListViewModelBase
 public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
 {
     private readonly RecentPlayTarget _target;
+    private readonly ServerPing _ping = new();
     private Bitmap? _ownedIcon;
     private bool _iconLoaded;
 
-    public RecentPlayItem(RecentPlayTarget target) => _target = target;
+    public RecentPlayItem(RecentPlayTarget target)
+    {
+        _target = target;
+        if (target.Type == RecentPlayTargetType.Server)
+        {
+            _ping.Changed += OnPingChanged;
+            var address = target.ServerAddress ?? string.Empty;
+            _ping.Start(string.IsNullOrWhiteSpace(address)
+                ? string.Empty
+                : ServerPing.BuildAddress(address, target.ServerPort ?? 25565));
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -523,6 +536,31 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
         : null;
 
     public bool HasFolderName => FolderName is not null;
+
+    public bool IsServer => _target.Type == RecentPlayTargetType.Server;
+
+    /// <summary>第二行辅助文本：存档显示存档文件夹名，服务器显示服务器地址。</summary>
+    public string? SubtitleText => _target.Type == RecentPlayTargetType.World ? FolderName : ServerDisplayAddress;
+
+    public bool HasSubtitle => SubtitleText is not null;
+
+    /// <summary>与实例详情一致的服务器状态：状态文本（检测中 / 在线 / 无法连接）。</summary>
+    public string StatusText => _ping.StatusText;
+
+    /// <summary>状态小圆点与状态文本颜色。</summary>
+    public IBrush StatusBrush => _ping.StatusBrush;
+
+    /// <summary>服务器延迟文本（在线时显示 XX ms）。</summary>
+    public string PingText => _ping.PingText;
+
+    public bool HasPing => _ping.HasPing;
+
+    public IBrush PingBrush => _ping.PingBrush;
+
+    /// <summary>在线人数文本（在线时显示 N / M 人）。</summary>
+    public string PlayersText => _ping.PlayersText;
+
+    public bool HasPlayers => _ping.HasPlayers;
 
     public bool IsFavorite =>
         _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;
@@ -567,6 +605,29 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(BlockHeaderText));
     }
 
+    private void OnPingChanged()
+    {
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(StatusBrush));
+        OnPropertyChanged(nameof(PingText));
+        OnPropertyChanged(nameof(HasPing));
+        OnPropertyChanged(nameof(PingBrush));
+        OnPropertyChanged(nameof(PlayersText));
+        OnPropertyChanged(nameof(HasPlayers));
+    }
+
+    private string? ServerDisplayAddress
+    {
+        get
+        {
+            var address = _target.ServerAddress;
+            if (string.IsNullOrWhiteSpace(address))
+                return null;
+
+            return ServerPing.BuildDisplayAddress(address, _target.ServerPort ?? 25565);
+        }
+    }
+
     private void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
@@ -598,6 +659,8 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
 
     public void Dispose()
     {
+        _ping.Changed -= OnPingChanged;
+        _ping.Cancel();
         var icon = _ownedIcon;
         _ownedIcon = null;
         if (icon != null)
