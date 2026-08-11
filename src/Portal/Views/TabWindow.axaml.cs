@@ -56,6 +56,22 @@ public partial class TabWindow : TioTabWindowBase
         set => SetField(ref field, value);
     }
 
+    /// <summary>
+    ///     点击标题栏关闭按钮时触发：若当前仅剩一个 TabWindow，则直接退出程序；
+    ///     否则只关闭当前窗口。
+    /// </summary>
+    public override bool OnClose()
+    {
+        if (AllWindows.Count == 1)
+        {
+            App.Method.FlushConfig();
+            Environment.Exit(0);
+            return true;
+        }
+
+        return false;
+    }
+
     public bool IsUiLoading
     {
         get;
@@ -542,6 +558,7 @@ public partial class TabWindow : TioTabWindowBase
                     ClearValue(TransparencyBackgroundFallbackProperty);
                     TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
                 }
+
                 break;
 
             case BackgroundMode.Color:
