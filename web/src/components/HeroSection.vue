@@ -339,6 +339,26 @@ h1 em {
   position: relative;
   height: 580px;
 }
+.hero-product {
+  position: relative;
+  margin-top: 52px;
+  filter: drop-shadow(0 60px 100px rgba(42, 112, 245, 0.12));
+}
+
+.hero-product::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  pointer-events: none;
+  z-index: 1;
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 50%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 50%, black 100%);
+}
+
 .hero-shot {
   display: block;
   box-sizing: border-box;
@@ -352,10 +372,36 @@ h1 em {
   box-shadow:
     0 40px 80px rgba(49, 62, 93, 0.18),
     0 10px 25px rgba(49, 62, 93, 0.08);
-}
-.hero-product {
   position: relative;
-  margin-top: 52px;
+  mask-image: linear-gradient(to bottom, 
+    black 0%, 
+    black 20%, 
+    rgba(0, 0, 0, 0.7) 45%, 
+    rgba(0, 0, 0, 0.3) 70%, 
+    transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, 
+    black 0%, 
+    black 20%, 
+    rgba(0, 0, 0, 0.7) 45%, 
+    rgba(0, 0, 0, 0.3) 70%, 
+    transparent 100%);
+}
+
+.hero-shot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 60%;
+  background: inherit;
+  filter: blur(12px);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 0 0 10px 10px;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 100%);
 }
 .hero-visual::before {
   content: "";
