@@ -360,23 +360,29 @@ jobs:
             ./Portal.Release/*.deb
             ./Portal.Release/*.rpm
 
-      # - name: Sync to CNB
-      #   env:
-      #     CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
-      #     CNB_REPO: tiouo/portal
-      #     CNB_TAG: ${{ needs.prepare.outputs.tag }}
-      #     CNB_COMMIT: ${{ needs.prepare.outputs.commit }}
-      #     CNB_NAME: "Portal v${{ needs.prepare.outputs.version }}"
-      #     CNB_PRERELEASE: "false"
-      #     CNB_MAKE_LATEST: "true"
-      #     CNB_BODY_FILE: RELEASE_BODY.md
-      #     CNB_FILES: |
-      #       ./Portal.Release/*.AppImage
-      #       ./Portal.Release/*.deb
-      #       ./Portal.Release/*.rpm
-      #       ./Portal.Release/*.zip
-      #       ./Portal.Release/*.dmg
-      #   run: bash .github/scripts/publish-cnb.sh
+      - name: Package All Builds
+        run: |
+          cd ./Portal.Release
+          zip -qr ../Portal.v${{ needs.prepare.outputs.version }}.all-builds.zip .
+          ls -lh ../Portal.v${{ needs.prepare.outputs.version }}.all-builds.zip
+
+      - name: Upload All Builds Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Portal.v${{ needs.prepare.outputs.version }}.all-builds
+          path: ./Portal.v${{ needs.prepare.outputs.version }}.all-builds.zip
+
+      - name: Sync to CNB (Release/Tag Only)
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          CNB_REPO: tiouo/portal
+          CNB_TAG: ${{ needs.prepare.outputs.tag }}
+          CNB_COMMIT: ${{ needs.prepare.outputs.commit }}
+          CNB_NAME: "Portal v${{ needs.prepare.outputs.version }}"
+          CNB_PRERELEASE: "false"
+          CNB_MAKE_LATEST: "true"
+          CNB_BODY_FILE: RELEASE_BODY.md
+        run: bash .github/scripts/publish-cnb.sh
 
   # aur:
   #   needs: [prepare, publish]

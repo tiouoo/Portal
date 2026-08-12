@@ -12,9 +12,9 @@ if [ -z "${CNB_TOKEN:-}" ]; then
   echo "[cnb] CNB_TOKEN 未配置，跳过 CNB 同步。"
   exit 0
 fi
+# CNB_FILES 为空时仅创建 Release/Tag，不上传附件（附件可后续手动上传）
 if [ -z "${CNB_FILES:-}" ]; then
-  echo "[cnb] CNB_FILES 未配置，跳过 CNB 同步。"
-  exit 0
+  echo "[cnb] CNB_FILES 未配置，仅创建 Release/Tag，跳过附件上传。"
 fi
 
 CNB_NAME="${CNB_NAME:-$CNB_TAG}"
@@ -194,10 +194,15 @@ main() {
   fi
   release_id="$(make_release)"
   cleanup_assets "${release_id}"
-  shopt -s nullglob
-  for file in ${CNB_FILES}; do
-    upload_asset "${file}" "${release_id}"
-  done
+  # CNB_FILES 未配置时仅创建 Release/Tag，不影响手动上传附件
+  if [ -n "${CNB_FILES:-}" ]; then
+    shopt -s nullglob
+    for file in ${CNB_FILES}; do
+      upload_asset "${file}" "${release_id}"
+    done
+  else
+    echo "[cnb] 已跳过附件上传，可在 CNB Release 页面手动上传。"
+  fi
   echo "[cnb] CNB 同步完成：${CNB_TAG}"
 }
 
