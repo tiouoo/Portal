@@ -6,7 +6,8 @@ import logoUrl from "../assets/portal-logo.svg";
   <section class="hero container">
     <div class="hero-copy">
       <div class="eyebrow"><span></span> 开源 · 跨平台 · 为 Minecraft 而生</div>
-      <h1>你的 Minecraft，<br /><em>从这里出发</em></h1>
+      <p class="brand-title">Portal Launcher</p>
+      <h1>你的 Minecraft，<br class="hero-break" /><em>从这里出发</em></h1>
       <p>
         Portal 把启动、实例、资源与记录收进一个工作区。<br />少一点配置，多一点游戏。
       </p>
@@ -195,23 +196,27 @@ import logoUrl from "../assets/portal-logo.svg";
         <div><small>游戏时长</small><b>+ 2.4 小时</b></div>
       </div>
     </div>
-    <img class="hero-shot" src="../assets/pic.png" alt="Portal 应用界面" />
+    <div class="hero-product">
+      <img
+        class="hero-shot"
+        src="../assets/pic.png"
+        alt="Portal 应用界面"
+      />
+    </div>
   </section>
 </template>
 
 <style scoped>
 .hero {
-  min-height: 780px;
-  padding-top: 150px;
-  display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  align-items: center;
-  gap: 52px;
+  padding-top: 160px;
+  padding-bottom: 52px;
+  text-align: center;
 }
 .hero-copy {
   position: relative;
   z-index: 2;
-  padding-bottom: 55px;
+  max-width: 780px;
+  margin: 0 auto;
 }
 .eyebrow {
   color: var(--blue);
@@ -220,6 +225,7 @@ import logoUrl from "../assets/portal-logo.svg";
   font-weight: 700;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 9px;
   margin-bottom: 24px;
 }
@@ -229,9 +235,21 @@ import logoUrl from "../assets/portal-logo.svg";
   height: 2px;
   background: var(--blue);
 }
+.hero-copy > p.brand-title {
+  margin: 0 0 4px;
+  max-width: none;
+  font-size: clamp(56px, 5.6vw, 84px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: #303b53;
+}
+.hero-break {
+  display: none;
+}
 h1 {
   margin: 0;
-  font-size: clamp(52px, 5.2vw, 76px);
+  font-size: clamp(34px, 5.2vw, 76px);
   line-height: 1.08;
   letter-spacing: -0.055em;
   color: #182033;
@@ -239,16 +257,18 @@ h1 {
 h1 em {
   color: var(--blue);
   font-style: normal;
+  white-space: nowrap;
 }
 .hero-copy > p {
-  max-width: 500px;
-  margin: 26px 0 32px;
+  max-width: 640px;
+  margin: 24px auto 34px;
   color: var(--muted);
   font-size: 18px;
   line-height: 1.85;
 }
 .hero-actions {
   display: flex;
+  justify-content: center;
   gap: 12px;
 }
 .button {
@@ -290,6 +310,7 @@ h1 em {
 }
 .hero-meta {
   display: flex;
+  justify-content: center;
   gap: 25px;
   margin-top: 30px;
   color: #8a92a1;
@@ -312,18 +333,22 @@ h1 em {
   height: 580px;
 }
 .hero-shot {
-  position: relative;
-  z-index: 2;
   display: block;
   box-sizing: border-box;
   width: 100%;
+  max-width: 1280px;
   height: auto;
+  margin: 0 auto;
   border: 1px solid rgba(215, 220, 231, 0.9);
   border-radius: 10px;
   background: #fff;
   box-shadow:
     0 40px 80px rgba(49, 62, 93, 0.18),
     0 10px 25px rgba(49, 62, 93, 0.08);
+}
+.hero-product {
+  position: relative;
+  margin-top: 52px;
 }
 .hero-visual::before {
   content: "";
@@ -733,51 +758,25 @@ h1 em {
   margin-top: 2px;
 }
 
+@media (min-width: 820px) {
+  .hero-copy {
+    max-width: none;
+  }
+  h1 {
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 1100px) {
   .hero {
-    grid-template-columns: 1fr;
-    padding-top: 140px;
-    padding-bottom: 50px;
-    text-align: center;
-  }
-  .hero-copy {
-    padding-bottom: 0;
-  }
-  .eyebrow,
-  .hero-actions,
-  .hero-meta {
-    justify-content: center;
-  }
-  .hero-copy > p {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .hero-visual {
-    width: min(720px, 100%);
-    margin: 0 auto;
-  }
-  .hero-shot {
-    width: min(720px, 100%);
-    margin: 0 auto;
-  }
-  .app-window {
-    left: 50%;
-    transform: translateX(-50%);
+    padding-top: 146px;
+    padding-bottom: 42px;
   }
 }
 
 @media (max-width: 820px) {
   .hero {
-    min-height: auto;
-    padding-top: 125px;
-  }
-  .hero-visual {
-    height: 440px;
-  }
-  .app-window {
-    width: 600px;
-    transform: translateX(-50%) scale(0.78);
-    transform-origin: top center;
+    padding-top: 136px;
   }
   .floating-pill {
     display: none;
@@ -785,15 +784,6 @@ h1 em {
 }
 
 @media (max-width: 520px) {
-  .hero {
-    text-align: left;
-    gap: 15px;
-  }
-  .eyebrow,
-  .hero-actions,
-  .hero-meta {
-    justify-content: flex-start;
-  }
   .eyebrow {
     font-size: 10px;
   }
@@ -810,12 +800,8 @@ h1 em {
     flex-wrap: wrap;
     gap: 10px 20px;
   }
-  .hero-visual {
-    height: 355px;
-    margin-top: 18px;
-  }
-  .app-window {
-    transform: translateX(-50%) scale(0.61);
+  .hero-product {
+    margin-top: 36px;
   }
 }
 
@@ -823,8 +809,20 @@ h1 em {
   .hero-visual {
     display: none;
   }
-  .hero-shot {
-    width: 100%;
+}
+
+@media (max-width: 485px) {
+  .hero-copy > p.brand-title {
+    font-size: clamp(30px, 8.5vw, 40px);
+    text-align: left;
+    padding-left: 8px;
+  }
+  h1 {
+    text-align: left;
+    padding-left: 8px;
+  }
+  .hero-break {
+    display: inline;
   }
 }
 </style>
