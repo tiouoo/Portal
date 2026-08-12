@@ -35,9 +35,9 @@ const channelHint = computed(() => {
 </script>
 
 <template>
-  <section id="download" class="download-section section">
+  <section class="download-section section">
     <div class="container">
-      <div class="download-heading">
+      <div id="download" class="download-heading">
         <span class="section-kicker">现在开始</span>
         <h2>选择你的平台</h2>
         <p>{{ channelHint }}</p>
@@ -132,6 +132,9 @@ const channelHint = computed(() => {
 .section {
   padding-top: 100px;
   padding-bottom: 100px;
+}
+#download {
+  scroll-margin-top: 80px;
 }
 .section-kicker {
   color: var(--blue);

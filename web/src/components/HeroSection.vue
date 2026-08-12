@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { RouterLink } from 'vue-router';
 import logoUrl from '../assets/portal-logo.svg';
 import { cnbBase } from '../data/downloads.js';
 
@@ -86,12 +87,12 @@ onMounted(() => {
           </svg>
           下载 Portal
         </a>
-        <a class="button secondary" href="#download">
+        <RouterLink class="button secondary" :to="{ path: '/', hash: '#download' }">
           更多下载
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" />
           </svg>
-        </a>
+        </RouterLink>
         <a
           class="button secondary"
           href="https://github.com/tiouoo/Portal"

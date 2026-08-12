@@ -4,11 +4,11 @@ import qrCodeUrl from "../assets/qr.png";
 </script>
 
 <template>
-  <section id="open-source" class="open-source container section">
+  <section class="open-source container section">
     <div class="oss-mark">
       <img :src="logoUrl" alt="" width="42" height="42" />
     </div>
-    <div class="oss-copy">
+    <div id="open-source" class="oss-copy">
       <span class="section-kicker">自由且透明</span>
       <h2>由社区共同塑造</h2>
       <p>
@@ -90,6 +90,9 @@ import qrCodeUrl from "../assets/qr.png";
 .section {
   padding-top: 100px;
   padding-bottom: 100px;
+}
+#open-source {
+  scroll-margin-top: 80px;
 }
 .open-source {
   display: grid;
