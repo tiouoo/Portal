@@ -19,6 +19,14 @@ sealed class Program
 {
     private static int _isLoggingFirstChanceException;
 
+    private const string SingleInstanceMutexName = "cc.tiouo.Portal.Singleton";
+
+    /// <summary>主实例持有的单例互斥锁；进程存活期间必须保持引用，防止被 GC 提前释放。</summary>
+    private static Mutex? _singleInstanceMutex;
+
+    /// <summary>单例模式下，已运行实例监听的命名管道可能尚未就绪；重复尝试发送，避免启动竞态。</summary>
+    private const int PortalForwardAttempts = 4;
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -60,6 +68,12 @@ sealed class Program
         }
 
         DebugConsole.ShowIfEnabled();
+
+        if (!TryAcquireSingleInstance())
+        {
+            HandleSecondaryLaunch(args);
+            return;
+        }
         PortalCommandQueue.Initialize();
         ProtocolRegistration.TryRegisterLinuxOnStartupAsync().GetAwaiter().GetResult();
 
@@ -135,6 +149,102 @@ sealed class Program
             Logger.Fatal(ex);
             throw;
         }
+    }
+
+    /// <summary>
+    /// 获取单例互斥锁。返回 true 表示本进程是唯一实例，应继续正常启动；
+    /// 返回 false 表示已有实例在运行，应只转发参数/请求显示窗口后退出。
+    /// </summary>
+    private static bool TryAcquireSingleInstance()
+    {
+        // initiallyOwned: true —— 创建成功时本进程（创建线程）即拥有互斥锁，持有到进程退出。
+        _singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out var createdNew);
+        if (createdNew)
+        {
+            Logger.Info("已获取单例互斥锁，本进程为唯一实例。");
+            return true;
+        }
+
+        try
+        {
+            // 互斥锁已存在：尝试立刻获取。若上一个实例已崩溃退出（abandoned），则接管成为主实例。
+            if (_singleInstanceMutex.WaitOne(0))
+            {
+                Logger.Warning("检测到已停用（abandoned）的单例互斥锁，本进程接管为唯一实例。");
+                return true;
+            }
+        }
+        catch (AbandonedMutexException)
+        {
+            Logger.Warning("检测到已停用（abandoned）的单例互斥锁，本进程接管为唯一实例。");
+            return true;
+        }
+
+        Logger.Info("检测到 Portal 正在运行，本进程将只转发外部命令或请求显示窗口后退出。");
+        return false;
+    }
+
+    /// <summary>
+    /// 已有 Portal 实例在运行时的本进程行为：
+    /// 把命令行参数（安装/启动命令、整合包路径、Jump List 等）转发给主实例，
+    /// 普通启动则让主实例显示并激活窗口，然后退出本进程，保证只运行一个实例。
+    /// </summary>
+    private static void HandleSecondaryLaunch(string[] args)
+    {
+        if (TryGetBedrockPackagePath(args, out var bedrockPath))
+        {
+            ForwardSecondaryCommand(new PortalCommand { Kind = PortalCommandKind.DownloadModpack, Source = bedrockPath });
+            return;
+        }
+
+        if (TryGetJavaPackagePath(args, out var javaPath))
+        {
+            ForwardSecondaryCommand(new PortalCommand { Kind = PortalCommandKind.DownloadModpack, Source = javaPath });
+            return;
+        }
+
+#if WINDOWS
+        if (WindowsJumpListService.TryForwardToRunningInstance(args))
+            return;
+#endif
+
+        switch (PortalCommandParser.Parse(args, out var command, out var error))
+        {
+            case PortalCliParseStatus.Help:
+                PortalCommandService.WriteConsole(PortalCommandParser.GetUsageText());
+                return;
+            case PortalCliParseStatus.Error:
+                PortalCommandService.WriteConsole($"参数错误：{error}{Environment.NewLine}{Environment.NewLine}{PortalCommandParser.GetUsageText()}");
+                return;
+            case PortalCliParseStatus.Command when command is not null:
+                ForwardSecondaryCommand(command);
+                return;
+            default:
+                NotifySecondaryShowMainWindow();
+                return;
+        }
+    }
+
+    private static void ForwardSecondaryCommand(PortalCommand command)
+    {
+        if (PortalCommandService.TryForwardToRunningInstance(command, PortalForwardAttempts))
+        {
+            PortalCommandService.WriteConsole("已将命令转发给正在运行的 Portal 实例。");
+            Logger.Info($"已将命令转发给正在运行的 Portal 实例：{command.Kind}");
+        }
+        else
+        {
+            Logger.Warning("检测到 Portal 已在运行，但命令转发失败，本进程退出。");
+        }
+    }
+
+    private static void NotifySecondaryShowMainWindow()
+    {
+        var showCommand = new PortalCommand { Kind = PortalCommandKind.ShowMainWindow };
+        if (PortalCommandService.TryForwardToRunningInstance(showCommand, PortalForwardAttempts))
+            Logger.Info("已通知正在运行的 Portal 实例显示主窗口。");
+        else
+            Logger.Warning("检测到 Portal 已在运行，但无法通知其显示主窗口。");
     }
 
     private static bool TryGetBedrockPackagePath(string[] args, out string? packagePath)

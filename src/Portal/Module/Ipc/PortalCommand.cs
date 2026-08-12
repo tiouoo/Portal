@@ -5,7 +5,8 @@ public enum PortalCommandKind
     DownloadVanilla,
     DownloadLoader,
     DownloadModpack,
-    Launch
+    Launch,
+    ShowMainWindow
 }
 
 /// <summary>

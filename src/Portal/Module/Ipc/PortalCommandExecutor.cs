@@ -35,13 +35,14 @@ public static class PortalCommandExecutor
         var window = App.MainWindow;
         if (window == null) return;
 
-        window.Show();
-        window.Activate();
+        FocusMainWindow(window);
         try
         {
             Logger.Info($"执行外部命令：{command.Kind}");
             switch (command.Kind)
             {
+                case PortalCommandKind.ShowMainWindow:
+                    break;
                 case PortalCommandKind.DownloadVanilla:
                 case PortalCommandKind.DownloadLoader:
                     await StartMinecraftInstallAsync(window, command);
@@ -59,6 +60,14 @@ public static class PortalCommandExecutor
             Logger.Error($"外部命令执行失败：{exception}");
             window.Notice($"命令执行失败：{exception.Message}", NotificationType.Error);
         }
+    }
+
+    private static void FocusMainWindow(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+            window.WindowState = WindowState.Normal;
+        window.Show();
+        window.Activate();
     }
 
     private static async Task StartMinecraftInstallAsync(TopLevel window, PortalCommand command)

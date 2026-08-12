@@ -2,6 +2,7 @@ using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using Portal.Module.Ipc;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -53,7 +54,23 @@ internal static class PortalCommandService
         Task.Run(ListenForCommandsAsync).Forget("命令行命名管道服务");
     }
 
-    internal static bool TryForwardToRunningInstance(PortalCommand command)
+    /// <summary>
+    /// 把命令通过命名管道转发给已运行的 Portal 实例。
+    /// 单例模式下重复启动时应使用多几次尝试（attempts &gt; 1）：正在启动的主实例可能还没开始监听。
+    /// </summary>
+    internal static bool TryForwardToRunningInstance(PortalCommand command, int attempts = 1)
+    {
+        for (var attempt = 0; attempt < attempts; attempt++)
+        {
+            if (TryForwardOnce(command))
+                return true;
+            if (attempt + 1 < attempts)
+                Thread.Sleep(250);
+        }
+        return false;
+    }
+
+    private static bool TryForwardOnce(PortalCommand command)
     {
         try
         {
@@ -65,12 +82,12 @@ internal static class PortalCommandService
         }
         catch (TimeoutException exception)
         {
-            Logger.Debug($"连接已有 Portal 命令服务超时，将启动新实例。{Environment.NewLine}{exception}");
+            Logger.Debug($"连接已有 Portal 命令服务超时。{Environment.NewLine}{exception}");
             return false;
         }
         catch (IOException exception)
         {
-            Logger.Debug($"无法连接已有 Portal 命令服务，将启动新实例。{Environment.NewLine}{exception}");
+            Logger.Debug($"无法连接已有 Portal 命令服务。{Environment.NewLine}{exception}");
             return false;
         }
     }
@@ -115,7 +132,7 @@ internal static class PortalCommandService
     /// <summary>
     /// Portal.Desktop 在 Windows 上是 WinExe（无控制台）；从终端调用时挂到父进程控制台再输出。
     /// </summary>
-    private static void WriteConsole(string message)
+    internal static void WriteConsole(string message)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
