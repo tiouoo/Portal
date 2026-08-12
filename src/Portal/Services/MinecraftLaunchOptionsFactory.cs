@@ -51,8 +51,27 @@ public static class MinecraftLaunchOptionsFactory
             AccountRefreshed = UpdateMicrosoftAccount,
             BedrockAccountRefreshed = UpdateBedrockAccount,
             OpenLog = openLog,
-            InstallMissingJava = (version, progress, token) => JavaAutoInstallCoordinator.EnsureAsync(version, progress, token)
+            InstallMissingJava = (version, progress, token) => JavaAutoInstallCoordinator.EnsureAsync(version, progress, token),
+            ResourceSourceRoots = ResolveResourceSourceRoots(instance)
         };
+    }
+
+    private static IReadOnlyList<string> ResolveResourceSourceRoots(MinecraftInstance instance)
+    {
+        var currentFolder = instance.FolderPath;
+        try
+        {
+            return Data.ConfigEntry.MinecraftFolders
+                .Where(folder => !string.Equals(folder.FolderPath, currentFolder, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(MinecraftResourceRoots.Resolve)
+                .Where(path => Directory.Exists(path))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     private static void ShowOverlay(Process process, MinecraftInstance inst)

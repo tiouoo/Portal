@@ -190,7 +190,7 @@ public static class MinecraftLaunchService
             await buildArguments.Completion;
             ThrowIfFailed(buildArguments);
 
-            completeResources!.Start(context => CompleteResourcesAsync(context, instance.MinecraftEntry!));
+            completeResources!.Start(context => CompleteResourcesAsync(context, instance.MinecraftEntry!, options));
             await completeResources.Completion;
             ThrowIfFailed(completeResources);
 
@@ -331,10 +331,14 @@ public static class MinecraftLaunchService
             Dispatcher.UIThread.Post(options.GameStarted);
     }
 
-    private static async Task CompleteResourcesAsync(TaskExecutionContext context, MinecraftEntry entry)
+    private static async Task CompleteResourcesAsync(TaskExecutionContext context, MinecraftEntry entry,
+        MinecraftLaunchOptions options)
     {
         context.SetRunning("正在检查游戏资源");
-        var downloader = new MinecraftResourceDownloader(entry);
+        var downloader = new MinecraftResourceDownloader(entry)
+        {
+            SourceRootDirectories = options.ResourceSourceRoots
+        };
         ResourceDownloadProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
         downloader.ProgressChanged += (_, progress) =>
@@ -889,4 +893,5 @@ public sealed class MinecraftLaunchOptions
     public Action<MinecraftLogSession>? OpenLog { get; init; }
     public Func<int, JavaInstallProgressHandler, CancellationToken, Task<JavaRuntimeEntry?>>? InstallMissingJava { get; init; }
     public Func<BedrockInstanceConfig, IBedrockLaunch>? BedrockLauncherFactory { get; init; }
+    public IReadOnlyList<string> ResourceSourceRoots { get; init; } = [];
 }
