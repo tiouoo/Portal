@@ -8,13 +8,14 @@
 </p>
 
 <p align="start">
-  <a href="https://github.com/tiouoo/Portal/actions/workflows/publish-commit.yml"><img src="https://img.shields.io/github/actions/workflow/status/tiouoo/Portal/publish-commit.yml?branch=main&label=%E6%9E%84%E5%BB%BA&logo=github&style=flat-square" alt="构建状态"></a>
-  <a href="https://github.com/tiouoo/Portal/releases"><img src="https://img.shields.io/github/v/release/tiouoo/Portal?display_name=tag&label=%E5%8F%91%E5%B8%83&logo=github&logoColor=white&color=ff007f&style=flat-square" alt="最新发布"></a>
-  <a href="https://github.com/tiouoo/Portal/releases"><img src="https://img.shields.io/github/v/release/tiouoo/Portal?include_prereleases&display_name=tag&label=%E9%A2%84%E5%8F%91%E5%B8%83&logo=github&logoColor=white&color=9c27b0&style=flat-square" alt="预发布"></a>  
-  <a href="https://github.com/tiouoo/Portal/stargazers"><img src="https://img.shields.io/github/stars/tiouoo/Portal?label=Stars&logo=github&logoColor=white&color=eac54f&style=flat-square" alt="GitHub Stars"></a>
-  <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-9d4edd?logoColor=white&style=flat-square" alt="GPL-3.0-or-later">
-  <a href="https://portal.tiouo.cc"><img src="https://img.shields.io/static/v1?label=%E5%AE%98%E7%BD%91&message=portal.tiouo.cc&color=38ce8f&logo=globe&logoColor=white&style=flat-square" alt="官网"></a>
-  <a href="https://ifdian.net/a/tiouo"><img src="https://img.shields.io/static/v1?label=%E7%88%B1%E5%8F%91%E7%94%B5&message=ifdian.net/a/tiouo&color=f89aba&logo=afdian&logoColor=white&style=flat-square" alt="爱发电"></a>
+  <a href="https://github.com/tiouoo/Portal/actions/workflows/publish-commit.yml"><img src="https://img.shields.io/github/actions/workflow/status/tiouoo/Portal/publish-commit.yml?branch=main&label=%E6%9E%84%E5%BB%BA&logo=github&style=for-the-badge" alt="构建状态"></a>
+  <a href="https://github.com/tiouoo/Portal/releases"><img src="https://img.shields.io/github/v/release/tiouoo/Portal?display_name=tag&label=%E5%8F%91%E5%B8%83&logo=github&logoColor=white&color=ff007f&style=for-the-badge" alt="最新发布"></a>
+  <a href="https://github.com/tiouoo/Portal/releases"><img src="https://img.shields.io/github/v/release/tiouoo/Portal?include_prereleases&display_name=tag&label=%E9%A2%84%E5%8F%91%E5%B8%83&logo=github&logoColor=white&color=9c27b0&style=for-the-badge" alt="预发布"></a>  
+  <a href="https://github.com/tiouoo/Portal/stargazers"><img src="https://img.shields.io/github/stars/tiouoo/Portal?label=%E6%98%9F%E6%A0%87&logo=github&logoColor=white&color=eac54f&style=for-the-badge" alt="星标"></a>
+  <a href="https://github.com/tiouoo/Portal/releases"><img src="https://img.shields.io/github/downloads/tiouoo/Portal/total?label=%E4%B8%8B%E8%BD%BD%E9%87%8F&logo=github&logoColor=white&color=388bfd&style=for-the-badge" alt="下载量"></a>
+  <img src="https://img.shields.io/badge/%E8%AE%B8%E5%8F%AF%E8%AF%81-GPL--3.0--or--later-9d4edd?logoColor=white&style=for-the-badge" alt="许可证">
+  <a href="https://portal.tiouo.cc"><img src="https://img.shields.io/static/v1?label=%E5%AE%98%E7%BD%91&message=portal.tiouo.cc&color=38ce8f&logo=globe&logoColor=white&style=for-the-badge" alt="官网"></a>
+  <a href="https://ifdian.net/a/tiouo"><img src="https://img.shields.io/static/v1?label=%E7%88%B1%E5%8F%91%E7%94%B5&message=ifdian.net/a/tiouo&color=f89aba&logo=afdian&logoColor=white&style=for-the-badge" alt="爱发电"></a>
 </p>
 
 ---
