@@ -4,7 +4,14 @@ const bases = {
   commit: "https://github.com/tiouoo/Portal/releases/download/publish-commit"
 }
 
+const cnbBases = {
+  release: "https://cnb.cool/tiouo/portal/-/releases/latest/download",
+  nightly: "https://cnb.cool/tiouo/portal/-/releases/download/publish-nightly",
+  commit: "https://cnb.cool/tiouo/portal/-/releases/download/publish-commit"
+}
+
 export const channelBase = (channel) => bases[channel] || bases.nightly
+export const cnbBase = (channel) => cnbBases[channel] || cnbBases.nightly
 
 export const platforms = [
   {
