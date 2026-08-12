@@ -25,6 +25,8 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        
         AppDomain.CurrentDomain.FirstChanceException += (_, eventArgs) =>
         {
             // Logger itself can encounter I/O exceptions; avoid recursively logging those exceptions.
@@ -109,7 +111,7 @@ sealed class Program
         Logger.Info(" | |_) |  / _ \\  | '__| | __|  / _` | | |   | |\\/| | | |    ");
         Logger.Info(" |  __/  | (_) | | |    | |_  | (_| | | |   | |  | | | |___ ");
         Logger.Info(" |_|      \\___/  |_|     \\__|  \\__,_| |_|   |_|  |_|  \\____|");
-        Logger.Info(">");
+        Logger.Info("");
         Logger.Info("应用程序启动 Main()");
 
 #if WINDOWS || LINUX
@@ -117,11 +119,11 @@ sealed class Program
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            Logger.Info("Running on Windows");
+            Logger.Info("操作系统：Windows");
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Logger.Info("Running on Linux");
+            Logger.Info("操作系统：Linux");
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            Logger.Info("Running on macOS");
+            Logger.Info("操作系统：macOS");
 
         try
         {
