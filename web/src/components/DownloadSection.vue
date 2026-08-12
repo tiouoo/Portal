@@ -118,7 +118,7 @@ const channelHint = computed(() => {
       </div>
     </div>
     <p class="download-note">
-      基岩版 UWP 与 DLL 注入仅支持 Windows x64；Linux x64 支持 GDK-Proton。macOS
+      基岩版 UWP (版本 ≤ 1.12.11401) 与版本隔离仅支持 Windows x64。macOS
       如遇安全提示或文件损坏，请参考<RouterLink
         to="/macos-install"
         style="white-space: nowrap; margin: 0 5px">

@@ -1,5 +1,58 @@
 <script setup>
-import logoUrl from "../assets/portal-logo.svg";
+import { ref, computed, onMounted } from 'vue';
+import logoUrl from '../assets/portal-logo.svg';
+import { cnbBase } from '../data/downloads.js';
+
+const detectedOS = ref('windows');
+const detectedArch = ref('x64');
+
+// 检测操作系统和芯片架构
+function detectPlatform() {
+  const ua = navigator.userAgent.toLowerCase();
+  const platform = navigator.platform.toLowerCase();
+
+  // 检测操作系统
+  if (ua.includes('mac') || platform.includes('mac')) {
+    detectedOS.value = 'macos';
+    // 检测 macOS 芯片架构：Apple Silicon (ARM) vs Intel (x64)
+    if (ua.includes('arm') || navigator.maxTouchPoints > 1) {
+      detectedArch.value = 'arm64';
+    } else {
+      detectedArch.value = 'x64';
+    }
+  } else if (ua.includes('linux') || platform.includes('linux')) {
+    detectedOS.value = 'linux';
+    detectedArch.value = 'x64'; // Linux 只有 64 位
+  } else {
+    detectedOS.value = 'windows';
+    detectedArch.value = 'x64'; // Windows 只有 64 位
+  }
+}
+
+// 获取下载文件名
+const downloadFileName = computed(() => {
+  if (detectedOS.value === 'windows') {
+    return 'Portal.win.x64.installer.zip';
+  } else if (detectedOS.value === 'macos') {
+    if (detectedArch.value === 'arm64') {
+      return 'Portal.osx.mac.arm64.dmg';
+    } else {
+      return 'Portal.osx.mac.x64.dmg';
+    }
+  } else if (detectedOS.value === 'linux') {
+    return 'Portal.linux.x64.AppImage';
+  }
+  return 'Portal.win.x64.installer.zip';
+});
+
+// 获取下载链接（默认使用 CNB 源，最新版）
+const downloadUrl = computed(() => {
+  return `${cnbBase('release')}/${downloadFileName.value}`;
+});
+
+onMounted(() => {
+  detectPlatform();
+});
 </script>
 
 <template>
@@ -9,13 +62,31 @@ import logoUrl from "../assets/portal-logo.svg";
       <p class="brand-title">Portal Launcher</p>
       <h1>你的 Minecraft，<br class="hero-break" /><em>从这里出发</em></h1>
       <p>
-        <span class="desc-desktop">Portal 启动实例资源与记录收进一个工作区 —— 少一点配置，多一点游戏。</span>
-        <span class="desc-mobile">Portal 把启动、实例、资源与记录收进一个工作区。<br />少一点配置，多一点游戏。</span>
+        <span class="desc-desktop"
+          >Portal 启动实例资源与记录收进一个工作区 —— 少一点配置，多一点游戏。</span
+        >
+        <span class="desc-mobile"
+          >Portal 把启动、实例、资源与记录收进一个工作区。<br />少一点配置，多一点游戏。</span
+        >
       </p>
       <div class="hero-actions">
-        <a class="button primary" href="#download">
-          立即下载
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+        <a class="button primary" :href="downloadUrl">
+          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              v-if="detectedOS === 'windows'"
+              d="M3 5.2 10.5 4v7.2H3V5.2Zm8.5-1.4L21 2.5v8.7h-9.5V3.8ZM3 12.3h7.5v7.2L3 18.4v-6.1Zm8.5 0H21V21l-9.5-1.3v-7.4Z" />
+            <path
+              v-else-if="detectedOS === 'macos'"
+              d="M16.7 12.7c0-2.4 2-3.6 2.1-3.7a4.6 4.6 0 0 0-3.6-2c-1.5-.2-3 1-3.8 1s-2-1-3.3-1C6.4 7 4.8 8 3.9 9.5c-1.9 3.3-.5 8.1 1.3 10.7.9 1.3 2 2.7 3.4 2.6 1.3-.1 1.8-.9 3.5-.9 1.6 0 2.1.9 3.5.9s2.4-1.3 3.3-2.6c1-1.5 1.5-3 1.5-3.1-.1 0-3.7-1.4-3.7-4.4ZM14.2 5.4A4.4 4.4 0 0 0 15.3 2a4.7 4.7 0 0 0-3.1 1.6A4.1 4.1 0 0 0 11 6.8c1.2.1 2.4-.5 3.2-1.4Z" />
+            <path
+              v-else
+              d="M12 2c-2.4 0-4.2 2.3-4.2 5.3v2.2c-1.4 1-2.4 2.8-2.8 4.8l-1.8 3.2c-.5.9.2 2 1.2 2H8c1 1.6 2.3 2.5 4 2.5s3-.9 4-2.5h3.6c1 0 1.7-1.1 1.2-2L19 14.3c-.4-2-1.4-3.8-2.8-4.8V7.3C16.2 4.3 14.4 2 12 2Zm-1.7 5.2c-.5 0-.8-.5-.8-1s.3-1 .8-1 .8.5.8 1-.3 1-.8 1Zm3.4 0c-.5 0-.8-.5-.8-1s.3-1 .8-1 .8.5.8 1-.3 1-.8 1Z" />
+          </svg>
+          下载 Portal
+        </a>
+        <a class="button secondary" href="#download">
+          更多下载
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" />
           </svg>
         </a>
@@ -23,19 +94,10 @@ import logoUrl from "../assets/portal-logo.svg";
           class="button secondary"
           href="https://github.com/tiouoo/Portal"
           target="_blank"
-          rel="noreferrer"
-        >
+          rel="noreferrer">
           查看源代码
-
-          <svg
-            color="#182033"
-            fill="#182033"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 640 640"
-          >
-            <path
-              d="M566.6 342.6C579.1 330.1 579.1 309.8 566.6 297.3L406.6 137.3C394.1 124.8 373.8 124.8 361.3 137.3C348.8 149.8 348.8 170.1 361.3 182.6L466.7 288L96 288C78.3 288 64 302.3 64 320C64 337.7 78.3 352 96 352L466.7 352L361.3 457.4C348.8 469.9 348.8 490.2 361.3 502.7C373.8 515.2 394.1 515.2 406.6 502.7L566.6 342.7z"
-            />
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14m0 0l-6-6m6 6l-6 6" />
           </svg>
         </a>
       </div>
@@ -57,8 +119,7 @@ import logoUrl from "../assets/portal-logo.svg";
           <div class="window-tab">
             <svg class="tab-icon" viewBox="0 0 640 640" aria-hidden="true">
               <path
-                d="M560.3 301.2C570.7 313 588.6 315.6 602.1 306.7C616.8 296.9 620.8 277 611 262.3L563 190.3C560.2 186.1 556.4 182.6 551.9 180.1L351.4 68.7C332.1 58 308.6 58 289.2 68.7L88.8 180C83.4 183 79.1 187.4 76.2 192.8L27.7 282.7C15.1 306.1 23.9 335.2 47.3 347.8L80.3 365.5L80.3 418.8C80.3 441.8 92.7 463.1 112.7 474.5L288.7 574.2C308.3 585.3 332.2 585.3 351.8 574.2L527.8 474.5C547.9 463.1 560.2 441.9 560.2 418.8L560.2 301.3zM320.3 291.4L170.2 208L320.3 124.6L470.4 208L320.3 291.4zM278.8 341.6L257.5 387.8L91.7 299L117.1 251.8L278.8 341.6z"
-              />
+                d="M560.3 301.2C570.7 313 588.6 315.6 602.1 306.7C616.8 296.9 620.8 277 611 262.3L563 190.3C560.2 186.1 556.4 182.6 551.9 180.1L351.4 68.7C332.1 58 308.6 58 289.2 68.7L88.8 180C83.4 183 79.1 187.4 76.2 192.8L27.7 282.7C15.1 306.1 23.9 335.2 47.3 347.8L80.3 365.5L80.3 418.8C80.3 441.8 92.7 463.1 112.7 474.5L288.7 574.2C308.3 585.3 332.2 585.3 351.8 574.2L527.8 474.5C547.9 463.1 560.2 441.9 560.2 418.8L560.2 301.3zM320.3 291.4L170.2 208L320.3 124.6L470.4 208L320.3 291.4zM278.8 341.6L257.5 387.8L91.7 299L117.1 251.8L278.8 341.6z" />
             </svg>
             机械动力
           </div>
@@ -81,14 +142,8 @@ import logoUrl from "../assets/portal-logo.svg";
                         align-items: center;
                         justify-content: center;
                         overflow: hidden;
-                      "
-                    >
-                      <img
-                        width="40"
-                        height="40"
-                        src="../assets/fabrici.png"
-                        alt="Fabric"
-                      />
+                      ">
+                      <img width="40" height="40" src="../assets/fabrici.png" alt="Fabric" />
                     </div>
                   </div>
                   <div>
@@ -101,19 +156,16 @@ import logoUrl from "../assets/portal-logo.svg";
                   width="36px"
                   fill="#2a70f5"
                   xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 640 640"
-                >
+                  viewBox="0 0 640 640">
                   <path
-                    d="M64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM252.3 211.1C244.7 215.3 240 223.4 240 232L240 408C240 416.7 244.7 424.7 252.3 428.9C259.9 433.1 269.1 433 276.6 428.4L420.6 340.4C427.7 336 432.1 328.3 432.1 319.9C432.1 311.5 427.7 303.8 420.6 299.4L276.6 211.4C269.2 206.9 259.9 206.7 252.3 210.9z"
-                  />
+                    d="M64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM252.3 211.1C244.7 215.3 240 223.4 240 232L240 408C240 416.7 244.7 424.7 252.3 428.9C259.9 433.1 269.1 433 276.6 428.4L420.6 340.4C427.7 336 432.1 328.3 432.1 319.9C432.1 311.5 427.7 303.8 420.6 299.4L276.6 211.4C269.2 206.9 259.9 206.7 252.3 210.9z" />
                 </svg>
               </div>
               <div class="stat-card">
-                <small>本周游戏时长</small
-                ><strong style="margin-top: 2px">12.6 <i>小时</i></strong>
+                <small>本周游戏时长</small><strong style="margin-top: 2px">12.6 <i>小时</i></strong>
                 <div class="chart">
-                  <span></span><span></span><span></span><span></span
-                  ><span></span><span></span><span></span>
+                  <span></span><span></span><span></span><span></span><span></span><span></span
+                  ><span></span>
                 </div>
               </div>
               <div class="library-card">
@@ -128,18 +180,10 @@ import logoUrl from "../assets/portal-logo.svg";
                         justify-content: center;
                         overflow: hidden;
                       "
-                      class="instance-icon"
-                    >
-                      <img
-                        width="36"
-                        height="36"
-                        src="../assets/fabrici.png"
-                        alt="Fabric"
-                      />
+                      class="instance-icon">
+                      <img width="36" height="36" src="../assets/fabrici.png" alt="Fabric" />
                     </div>
-                    <div>
-                      <strong>生电整合包</strong><span>Fabric · 1.21.1</span>
-                    </div>
+                    <div><strong>生电整合包</strong><span>Fabric · 1.21.1</span></div>
                   </div>
                   <div class="instance-card">
                     <div
@@ -150,18 +194,10 @@ import logoUrl from "../assets/portal-logo.svg";
                         justify-content: center;
                         overflow: hidden;
                       "
-                      class="instance-icon"
-                    >
-                      <img
-                        width="36"
-                        height="36"
-                        src="../assets/grass.png"
-                        alt="grass"
-                      />
+                      class="instance-icon">
+                      <img width="36" height="36" src="../assets/grass.png" alt="grass" />
                     </div>
-                    <div>
-                      <strong>原版生存</strong><span>原版 · 1.20.1</span>
-                    </div>
+                    <div><strong>原版生存</strong><span>原版 · 1.20.1</span></div>
                   </div>
                   <div class="instance-card">
                     <div
@@ -172,18 +208,10 @@ import logoUrl from "../assets/portal-logo.svg";
                         justify-content: center;
                         overflow: hidden;
                       "
-                      class="instance-icon"
-                    >
-                      <img
-                        width="36"
-                        height="36"
-                        src="../assets/create.jpg"
-                        alt="create"
-                      />
+                      class="instance-icon">
+                      <img width="36" height="36" src="../assets/create.jpg" alt="create" />
                     </div>
-                    <div>
-                      <strong>机械动力</strong><span>Forge · 1.19.2</span>
-                    </div>
+                    <div><strong>机械动力</strong><span>Forge · 1.19.2</span></div>
                   </div>
                 </div>
               </div>
@@ -198,11 +226,7 @@ import logoUrl from "../assets/portal-logo.svg";
       </div>
     </div>
     <div class="hero-product">
-      <img
-        class="hero-shot"
-        src="../assets/pic.png"
-        alt="Portal 应用界面"
-      />
+      <img class="hero-shot" src="../assets/pic.png" alt="Portal 应用界面" />
     </div>
   </section>
 </template>
@@ -276,6 +300,7 @@ h1 em {
 .hero-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 12px;
 }
 .button {
@@ -292,6 +317,16 @@ h1 em {
     background 0.2s,
     border-color 0.2s,
     box-shadow 0.2s;
+}
+.button-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  stroke: none;
+}
+.button svg {
+  width: 19px;
+  height: 19px;
 }
 .button svg {
   width: 19px;
@@ -346,7 +381,7 @@ h1 em {
 }
 
 .hero-product::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 0;
@@ -373,22 +408,26 @@ h1 em {
     0 40px 80px rgba(49, 62, 93, 0.18),
     0 10px 25px rgba(49, 62, 93, 0.08);
   position: relative;
-  mask-image: linear-gradient(to bottom, 
-    black 0%, 
-    black 20%, 
-    rgba(0, 0, 0, 0.7) 45%, 
-    rgba(0, 0, 0, 0.3) 70%, 
-    transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, 
-    black 0%, 
-    black 20%, 
-    rgba(0, 0, 0, 0.7) 45%, 
-    rgba(0, 0, 0, 0.3) 70%, 
-    transparent 100%);
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 20%,
+    rgba(0, 0, 0, 0.7) 45%,
+    rgba(0, 0, 0, 0.3) 70%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 20%,
+    rgba(0, 0, 0, 0.7) 45%,
+    rgba(0, 0, 0, 0.3) 70%,
+    transparent 100%
+  );
 }
 
 .hero-shot::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   bottom: 0;
@@ -404,7 +443,7 @@ h1 em {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 100%);
 }
 .hero-visual::before {
-  content: "";
+  content: '';
   position: absolute;
   width: 520px;
   height: 520px;
@@ -540,8 +579,8 @@ h1 em {
   grid-template-columns: 1.25fr 0.75fr;
   grid-template-rows: repeat(2, minmax(0, 1fr));
   grid-template-areas:
-    "library continue"
-    "library stat";
+    'library continue'
+    'library stat';
   height: 186px;
   gap: 12px;
 }

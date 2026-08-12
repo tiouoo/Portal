@@ -23,10 +23,10 @@
 
       <div class="install-grid">
         <article style="border-radius: 16px" class="install-card">
-          <p class="card-label">DMG 安装包</p>
+          <p class="card-label">dmg 安装包</p>
           <h3>打开并拖入应用程序</h3>
           <ol>
-            <li>双击打开下载的 DMG 镜像文件。</li>
+            <li>双击打开下载的 dmg 镜像文件。</li>
             <li>将 Portal 图标拖动到右侧的“应用程序”文件夹。</li>
             <li>
               打开“终端”：应用程序 - 实用工具 - 终端，或按 Command +
@@ -60,7 +60,7 @@
             开机密码；输入时屏幕不会显示字符或星号，输入完成后直接按回车即可。
           </p>
         </div>
-        <code style="user-select: text"
+        <code style="user-select: text;border-radius: 16px;"
           >sudo xattr -rd com.apple.quarantine /Applications/Portal.app</code
         >
       </section>
@@ -92,7 +92,7 @@
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
 }
 .macos-hero h1 {
   margin: 0 0 16px;
@@ -118,7 +118,7 @@
 .architecture-note {
   padding: 22px 24px;
   border: 1px solid #d7e1f3;
-  border-left: 4px solid var(--blue);
+  /* border-left: 4px solid var(--blue); */
   border-radius: 6px;
   background: #f3f7ff;
 }
