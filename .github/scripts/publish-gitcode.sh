@@ -44,18 +44,22 @@ gitcode_git_push() {
   }
 }
 
-# 标签是 Release 的载体：推不上 GitCode，就没有版本号可用，必须致命终止。
+# 标签是 Release 的载体：镜像仓库禁止推新标签。
+# commit/nightly 使用固定 tag，远端已存在，跳过推送、只更新 Release 内容。
 ensure_gitcode_tag() {
   local commit push_out
   commit="${GITCODE_COMMIT:-$(git rev-parse HEAD)}"
   if [ -n "$commit" ]; then
     git tag -f "${GITCODE_TAG}" "${commit}" >/dev/null 2>&1 || true
   fi
+  if [ "${GITCODE_SKIP_TAG_PUSH:-false}" = "true" ]; then
+    echo "[gitcode] GITCODE_SKIP_TAG_PUSH=true：跳过标签推送（标签应已存在于远端）。"
+    return 0
+  fi
   push_out="$(gitcode_git_push)" || {
     push_out="$(printf '%s' "${push_out}" | sed "s#${GITCODE_TOKEN}#***#g")"
-    printf '[gitcode] 标签推送失败：\n%s\n' "${push_out}" >&2
-    echo "[gitcode] 终止：标签 ${GITCODE_TAG} 未同步到 ${GITCODE_REPO}，无法创建 Release。" >&2
-    return 1
+    echo "[gitcode] 标签推送失败（已忽略，继续同步 Release）：" >&2
+    printf '%s\n' "${push_out}" >&2
   }
   echo "[gitcode] 标签已推送：${GITCODE_TAG} -> ${commit}"
 }
@@ -74,7 +78,7 @@ create_release() {
   if [ -n "${GITCODE_BODY_FILE:-}" ] && [ -f "${GITCODE_BODY_FILE}" ]; then
     args+=(--data-urlencode "body@${GITCODE_BODY_FILE}")
   fi
-  if [ -n "${GITCODE_COMMIT:-}" ]; then
+  if [ -n "${GITCODE_COMMIT:-}" ] && [ "${GITCODE_SKIP_TAG_PUSH:-false}" != "true" ]; then
     args+=(--data-urlencode "target_commitish=${GITCODE_COMMIT}")
   fi
   response="$(curl "${args[@]}" "$(gitcode_releases)")"

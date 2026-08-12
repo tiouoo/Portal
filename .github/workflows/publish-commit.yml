@@ -330,6 +330,7 @@ jobs:
           GITCODE_REPO: tiouo/Portal
           GITCODE_TAG: publish-commit
           GITCODE_COMMIT: ${{ needs.prepare.outputs.commit }}
+          GITCODE_SKIP_TAG_PUSH: "true"
           GITCODE_NAME: "build-commit-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
           GITCODE_PRERELEASE: "true"
           GITCODE_BODY_FILE: RELEASE_SYNC_BODY.md
