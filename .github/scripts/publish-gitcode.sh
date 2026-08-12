@@ -28,16 +28,36 @@ release_exists() {
   jq -e --arg t "${GITCODE_TAG}" '.tag_name == $t' >/dev/null 2>&1 <<<"${json}"
 }
 
+gitcode_git_auth() {
+  printf '%s:%s' "${GITCODE_GIT_USER:-oauth2}" "${GITCODE_TOKEN}" | base64 | tr -d '\n'
+}
+
+# 部分节点/重定向会丢弃 http.extraHeader，此时改推带凭据的 URL 重试。
+gitcode_git_push() {
+  local host
+  host="$(printf '%s' "${GITCODE_GIT_URL}" | sed -E 's#^[a-z]+://([^/]+)/.*#\1#')"
+  GIT_TERMINAL_PROMPT=0 git -c "http.extraHeader=Authorization: Basic $(gitcode_git_auth)" \
+    push --force "${GITCODE_GIT_URL}" "refs/tags/${GITCODE_TAG}" 2>&1 || {
+    GIT_TERMINAL_PROMPT=0 git \
+      push --force "https://${GITCODE_GIT_USER:-oauth2}:${GITCODE_TOKEN}@${host}/${GITCODE_REPO}.git" \
+      "refs/tags/${GITCODE_TAG}" 2>&1
+  }
+}
+
+# 标签是 Release 的载体：推不上 GitCode，就没有版本号可用，必须致命终止。
 ensure_gitcode_tag() {
-  local commit auth
+  local commit push_out
   commit="${GITCODE_COMMIT:-$(git rev-parse HEAD)}"
   if [ -n "$commit" ]; then
     git tag -f "${GITCODE_TAG}" "${commit}" >/dev/null 2>&1 || true
   fi
-  auth="$(printf '%s:%s' "${GITCODE_GIT_USER:-oauth2}" "${GITCODE_TOKEN}" | base64 | tr -d '\n')"
-  git -c "http.extraHeader=Authorization: Basic ${auth}" \
-    push --force "${GITCODE_GIT_URL}" "refs/tags/${GITCODE_TAG}" >/dev/null 2>&1 || \
-    echo "[gitcode] 标签推送失败（非致命，忽略）。"
+  push_out="$(gitcode_git_push)" || {
+    push_out="$(printf '%s' "${push_out}" | sed "s#${GITCODE_TOKEN}#***#g")"
+    printf '[gitcode] 标签推送失败：\n%s\n' "${push_out}" >&2
+    echo "[gitcode] 终止：标签 ${GITCODE_TAG} 未同步到 ${GITCODE_REPO}，无法创建 Release。" >&2
+    return 1
+  }
+  echo "[gitcode] 标签已推送：${GITCODE_TAG} -> ${commit}"
 }
 
 create_release() {

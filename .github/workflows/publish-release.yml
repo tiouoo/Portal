@@ -376,17 +376,6 @@ jobs:
           name: Portal.v${{ needs.prepare.outputs.version }}.all-builds
           path: ./Portal.v${{ needs.prepare.outputs.version }}.all-builds.zip
 
-      - name: Sync to GitCode (Release/Tag Only)
-        env:
-          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
-          GITCODE_REPO: tiouo/Portal
-          GITCODE_TAG: ${{ needs.prepare.outputs.tag }}
-          GITCODE_COMMIT: ${{ needs.prepare.outputs.commit }}
-          GITCODE_NAME: "Portal v${{ needs.prepare.outputs.version }}"
-          GITCODE_PRERELEASE: "false"
-          GITCODE_BODY_FILE: RELEASE_BODY.md
-        run: bash .github/scripts/publish-gitcode.sh
-
       - name: Sync to CNB (Release/Tag Only)
         env:
           CNB_TOKEN: ${{ secrets.CNB_TOKEN }}

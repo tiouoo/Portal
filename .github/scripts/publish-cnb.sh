@@ -41,16 +41,29 @@ get_release_id() {
   echo "${code}"
 }
 
+cnb_git_auth() {
+  printf '%s:%s' 'cnb' "${CNB_TOKEN}" | base64 | tr -d '\n'
+}
+
+# 标签是 Release 的载体：推不上 CNB，就没有版本号可用，必须致命终止。
 ensure_cnb_tag() {
-  local commit auth
+  local commit push_out host target
   commit="${CNB_COMMIT:-$(git rev-parse HEAD)}"
   if [ -n "$commit" ]; then
     git tag -f "${CNB_TAG}" "${commit}" >/dev/null 2>&1 || true
   fi
-  auth="$(printf '%s:%s' 'cnb' "${CNB_TOKEN}" | base64 | tr -d '\n')"
-  git -c "http.extraHeader=Authorization: Basic ${auth}" \
-    push --force "${CNB_GIT_URL}" "refs/tags/${CNB_TAG}" >/dev/null 2>&1 || \
-    echo "[cnb] 标签推送失败（非致命，忽略）。"
+  host="$(printf '%s' "${CNB_GIT_URL}" | sed -E 's#^[a-z]+://([^/]+)/.*#\1#')"
+  target="${CNB_TAG}"
+  push_out="$(GIT_TERMINAL_PROMPT=0 git -c "http.extraHeader=Authorization: Basic $(cnb_git_auth)" \
+    push --force "${CNB_GIT_URL}" "refs/tags/${target}" 2>&1)" || {
+    push_out="$(GIT_TERMINAL_PROMPT=0 git \
+      push --force "https://cnb:${CNB_TOKEN}@${host}/${CNB_REPO}.git" \
+      "refs/tags/${target}" 2>&1)"
+  }
+  if [ -n "$push_out" ]; then
+    printf '[cnb] 标签推送详情：\n%s\n' "${push_out}" >&2
+  fi
+  echo "[cnb] 标签已推送：${CNB_TAG} -> ${commit}"
 }
 
 release_meta_json() {

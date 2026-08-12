@@ -166,7 +166,7 @@ public static class UpdateApp
 
     private static async Task<UpdateTaskHandle> Download(UpdateAsset asset, string destination)
     {
-        // GitHub 镜像仅改写 GitHub 下载地址；CNB/GitCode 保持各自平台的直链。
+        // GitHub 镜像仅改写 GitHub 下载地址；CNB 保持其平台直链。
         var downloadUrl = GithubMirror.Apply(asset.DownloadUrl);
         if (!downloadUrl.Equals(asset.DownloadUrl, StringComparison.Ordinal))
             Logger.Info($"Downloading update via GitHub mirror: {downloadUrl}");

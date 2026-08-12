@@ -124,7 +124,6 @@
                 SelectionChanged="UpdateSource_OnSelectionChanged">
                 <ComboBoxItem Content="Github" />
                 <ComboBoxItem Content="CNB" />
-                <ComboBoxItem Content="GitCode (AtomGit)" />
             </ComboBox>
             <TextBlock
                 FontSize="11"

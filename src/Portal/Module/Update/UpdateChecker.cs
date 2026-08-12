@@ -28,7 +28,6 @@ public static class UpdateChecker
 {
     private const string GithubReleasesUrl = "https://api.github.com/repos/tiouoo/Portal/releases?per_page=100";
     private const string CnbReleasesUrl = "https://api.cnb.cool/tiouo/portal/-/releases?page=1&page_size=100";
-    private const string GitCodeReleasesUrl = "https://gitcode.com/api/v5/repos/tiouo/Portal/releases?per_page=100";
     private static readonly Regex StableTagPattern = new(@"^v?(\d+)\.(\d+)\.(\d+)$", RegexOptions.Compiled);
 
     public static async Task<string?> Check(TopLevel? sender, bool noreply = false)
@@ -57,7 +56,6 @@ public static class UpdateChecker
     {
         UpdateSource.Github => GetGithubRelease(),
         UpdateSource.Cnb => GetCnbRelease(),
-        UpdateSource.GitCode => GetGitCodeRelease(),
         _ => throw new NotSupportedException($"不支持更新源“{Data.ConfigEntry.UpdateSource}”。")
     };
 
@@ -65,7 +63,7 @@ public static class UpdateChecker
     {
         if (asset.Size > 0) return asset;
 
-        // GitCode 的 release API 不返回附件 size；GET 会跟随其签名 CDN 重定向，
+        // 部分更新源的 release API 不返回附件 size；GET 会跟随其签名 CDN 重定向，
         // ResponseHeadersRead 不会下载响应正文。
         using var response = await HttpUtil.Client.GetAsync(asset.DownloadUrl,
             HttpCompletionOption.ResponseHeadersRead);
@@ -131,20 +129,6 @@ public static class UpdateChecker
                 asset["browser_download_url"]?.ToString() ?? string.Empty,
                 asset["size"]?.Value<long>() ?? 0,
                 ParseSha256(asset["hash_algo"]?.ToString(), asset["hash_value"]?.ToString())));
-    }
-
-    private static async Task<UpdateRelease> GetGitCodeRelease()
-    {
-        Logger.Info($"Checking update from GitCode: {GitCodeReleasesUrl}");
-        var text = await HttpUtil.Request(GitCodeReleasesUrl).GetStringAsync();
-        var release = LatestStableRelease(JArray.Parse(text));
-        return CreateRelease(release,
-            asset => asset["type"]?.ToString() == "attach" && IsHttpsUrl(asset["browser_download_url"]?.ToString()),
-            asset => new UpdateAsset(
-                asset["name"]?.ToString() ?? string.Empty,
-                asset["browser_download_url"]?.ToString() ?? string.Empty,
-                0,
-                null));
     }
 
     private static UpdateRelease CreateRelease(JToken release, Func<JToken, bool> assetFilter,

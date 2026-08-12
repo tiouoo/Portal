@@ -99,6 +99,13 @@ public class Config
 
         Logger.MinimumLevel = Data.ConfigEntry.MinimumLogLevel;
 
+        // 兼容旧配置：GitCode 更新源已下线，若仍保存其枚举值则回退到 CNB。
+        if (!Enum.IsDefined(typeof(UpdateSource), Data.ConfigEntry.UpdateSource))
+        {
+            Logger.Info($"旧配置中的更新源 {Data.ConfigEntry.UpdateSource} 已失效，回退为 CNB。");
+            Data.ConfigEntry.UpdateSource = UpdateSource.Cnb;
+        }
+
         if (Data.ConfigEntry.UsingBedrockAccount is { } selectedBedrockAccount)
             Data.ConfigEntry.UsingBedrockAccount = Data.ConfigEntry.BedrockAccounts
                 .FirstOrDefault(account => account.Id == selectedBedrockAccount.Id || account.Xuid == selectedBedrockAccount.Xuid);
