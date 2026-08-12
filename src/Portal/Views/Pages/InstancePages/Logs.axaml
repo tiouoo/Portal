@@ -17,14 +17,6 @@
                 FontSize="24"
                 PointerPressed="Title_OnPointerPressed"
                 Text="日志" />
-            <TextBlock
-                Cursor="Hand"
-                DockPanel.Dock="Right"
-                Foreground="{DynamicResource SystemAccentColor}"
-                IsVisible="False"
-                PointerPressed="Export_OnPointerPressed"
-                Text="导出"
-                VerticalAlignment="Center" />
         </DockPanel>
         <StackPanel
             HorizontalAlignment="Right"
@@ -38,6 +30,19 @@
                 Name="LogFileSelector"
                 SelectionChanged="LogFileSelector_OnSelectionChanged"
                 ToolTip.Tip="选择日志文件"
+                VerticalAlignment="Center" />
+            <Button
+                Click="AnalyseAi_OnClick"
+                Content="AI 分析"
+                IsVisible="False"
+                VerticalAlignment="Center" />
+            <Button
+                Click="Share_OnClick"
+                Content="分享"
+                VerticalAlignment="Center" />
+            <Button
+                Click="Export_OnClick"
+                Content="导出"
                 VerticalAlignment="Center" />
             <Button
                 Click="OpenFolder_OnClick"
@@ -80,6 +85,15 @@
                             Click="Copy_OnClick"
                             Header="复制"
                             InputGesture="ctrl+c" />
+                        <Separator />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="Share_OnClick"
+                            Header="分享" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="AnalyseAi_OnClick"
+                            Header="AI 分析" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"

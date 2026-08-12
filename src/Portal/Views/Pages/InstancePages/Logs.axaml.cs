@@ -133,9 +133,11 @@ public partial class Logs : UserControl
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e) => _ = RefreshLogFilesAsync();
 
-    private void Export_OnPointerPressed(object? sender, PointerPressedEventArgs e) => _ = ExportLogAsync();
-
     private void Export_OnClick(object? sender, RoutedEventArgs e) => _ = ExportLogAsync();
+
+    private void Share_OnClick(object? sender, RoutedEventArgs e) => _ = LogSharingInteraction.ShareAsync(this, LogEditor.Document, "日志");
+
+    private void AnalyseAi_OnClick(object? sender, RoutedEventArgs e) => _ = LogSharingInteraction.AnalyseAiAsync(this, LogEditor.Document, "日志");
 
     private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => LogEditor.SelectAll();
 
