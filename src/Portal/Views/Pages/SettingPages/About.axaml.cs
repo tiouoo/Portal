@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.Update;
@@ -29,6 +30,9 @@ public partial class About : DataUserControl
         InitializeComponent();
         AboutViewModel = new AboutViewModel();
         DataContext = AboutViewModel;
+        if (Data.ConfigEntry.UpdateSource != UpdateSource.Github)
+            Data.UiProperty.OverrideUpdateChannel = "release";
+        UpdateChannel.IsEnabled = Data.ConfigEntry.UpdateSource == UpdateSource.Github;
     }
 
     private async void Button_OnClick(object? sender, RoutedEventArgs e)
@@ -73,6 +77,14 @@ public partial class About : DataUserControl
     {
         if (e.RemovedItems.Count > 0 && Data.Version.Type != "dev")
             _ = Check(sender!);
+    }
+
+    private void UpdateSource_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        var supportsPreviewChannels = Data.ConfigEntry.UpdateSource == UpdateSource.Github;
+        if (!supportsPreviewChannels) Data.UiProperty.OverrideUpdateChannel = "release";
+        UpdateChannel.IsEnabled = supportsPreviewChannels;
+        if (e.RemovedItems.Count > 0 && Data.Version.Type != "dev") _ = Check(sender!);
     }
 
     private async void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)

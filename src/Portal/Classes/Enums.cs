@@ -37,6 +37,13 @@ public enum GithubMirrorMode
     Direct
 }
 
+public enum UpdateSource
+{
+    Github,
+    Cnb,
+    GitCode
+}
+
 public enum NewTabContent
 {
     NewTabPage,

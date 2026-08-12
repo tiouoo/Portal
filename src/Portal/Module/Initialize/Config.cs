@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using Newtonsoft.Json;
 using Portal.Classes.Entries;
+using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
@@ -113,7 +114,9 @@ public class Config
 
         Data.Instance.Version = LoadVersionInfo();
         Logger.Info($"已加载版本信息：{Data.Instance.Version.VersionTitle} ({Data.Instance.Version.Type})");
-        Data.UiProperty.OverrideUpdateChannel = Data.Instance.Version.Type;
+        Data.UiProperty.OverrideUpdateChannel = Data.ConfigEntry.UpdateSource == UpdateSource.Github
+            ? Data.Instance.Version.Type
+            : "release";
 
         const string RESOURCE_NAME1 = "Portal.package-type.txt";
         var assembly1 = Assembly.GetExecutingAssembly();

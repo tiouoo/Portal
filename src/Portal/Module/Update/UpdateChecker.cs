@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Flurl.Http;
-using Newtonsoft.Json.Linq;
-using Portal.Const;
 using MinecraftLaunch.Utilities;
+using Newtonsoft.Json.Linq;
+using Portal.Classes.Enums;
+using Portal.Const;
+using Portal.Core;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
@@ -22,6 +26,11 @@ public sealed record UpdateRelease(string Title, long Sequence, IReadOnlyList<Up
 
 public static class UpdateChecker
 {
+    private const string GithubReleasesUrl = "https://api.github.com/repos/tiouoo/Portal/releases?per_page=100";
+    private const string CnbReleasesUrl = "https://api.cnb.cool/tiouo/portal/-/releases?page=1&page_size=100";
+    private const string GitCodeReleasesUrl = "https://gitcode.com/api/v5/repos/tiouo/Portal/releases?per_page=100";
+    private static readonly Regex StableTagPattern = new(@"^v?(\d+)\.(\d+)\.(\d+)$", RegexOptions.Compiled);
+
     public static async Task<string?> Check(TopLevel? sender, bool noreply = false)
     {
         try
@@ -44,46 +53,27 @@ public static class UpdateChecker
         return null;
     }
 
-    public static async Task<UpdateRelease> GetRelease()
+    public static Task<UpdateRelease> GetRelease() => Data.ConfigEntry.UpdateSource switch
     {
-        var channel = NormalizeChannel(Data.UiProperty.OverrideUpdateChannel);
-        var apiUrl = channel == "release"
-            ? "https://api.github.com/repos/tiouoo/Portal/releases?per_page=100"
-            : $"https://api.github.com/repos/tiouoo/Portal/releases/tags/publish-{channel}";
-        Logger.Info($"Checking update for {Data.Instance.Version.VersionTitle} from {apiUrl}");
+        UpdateSource.Github => GetGithubRelease(),
+        UpdateSource.Cnb => GetCnbRelease(),
+        UpdateSource.GitCode => GetGitCodeRelease(),
+        _ => throw new NotSupportedException($"不支持更新源“{Data.ConfigEntry.UpdateSource}”。")
+    };
 
-        var text = await HttpUtil.Request(apiUrl).GetStringAsync();
-        JToken json;
-        if (channel == "release")
-        {
-            var releases = JArray.Parse(text);
-            json = releases
-                .Where(r => r["draft"]?.Value<bool>() != true)
-                .Where(r => Regex.IsMatch(r["tag_name"]?.ToString() ?? string.Empty, @"^(v?\d+)\.\d+\.\d+$"))
-                .FirstOrDefault() ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
-        }
-        else
-        {
-            json = JObject.Parse(text);
-        }
+    public static async Task<UpdateAsset> ResolveDownloadMetadata(UpdateAsset asset)
+    {
+        if (asset.Size > 0) return asset;
 
-        var title = json["name"]?.ToString().Trim();
-        if (string.IsNullOrEmpty(title)) throw new InvalidOperationException("更新发布缺少版本名称。");
-
-        var assets = json["assets"]?.Children()
-            .Select(item => new UpdateAsset(
-                item["name"]?.ToString() ?? string.Empty,
-                item["browser_download_url"]?.ToString() ?? string.Empty,
-                item["size"]?.Value<long>() ?? 0,
-                ParseSha256(item["digest"]?.ToString())))
-            .Where(asset => !string.IsNullOrWhiteSpace(asset.Name)
-                            && Uri.TryCreate(asset.DownloadUrl, UriKind.Absolute, out var uri)
-                            && uri.Scheme == Uri.UriSchemeHttps
-                            && (uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
-                                || uri.Host.EndsWith(".github.com", StringComparison.OrdinalIgnoreCase)))
-            .ToArray() ?? [];
-
-        return new UpdateRelease(title, ParseSequence(title), assets);
+        // GitCode 的 release API 不返回附件 size；GET 会跟随其签名 CDN 重定向，
+        // ResponseHeadersRead 不会下载响应正文。
+        using var response = await HttpUtil.Client.GetAsync(asset.DownloadUrl,
+            HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+        var size = response.Content.Headers.ContentLength;
+        if (size is not > 0)
+            throw new InvalidDataException($"无法获取更新包大小：{asset.Name}");
+        return asset with { Size = size.Value };
     }
 
     public static bool IsNewer(UpdateRelease release)
@@ -92,6 +82,113 @@ public static class UpdateChecker
         if (!long.TryParse(Data.Instance.Version.Action, NumberStyles.None, CultureInfo.InvariantCulture, out var current))
             return true;
         return release.Sequence == 0 || release.Sequence > current;
+    }
+
+    private static async Task<UpdateRelease> GetGithubRelease()
+    {
+        var channel = NormalizeChannel(Data.UiProperty.OverrideUpdateChannel);
+        var apiUrl = channel == "release"
+            ? GithubReleasesUrl
+            : $"https://api.github.com/repos/tiouoo/Portal/releases/tags/publish-{channel}";
+        Logger.Info($"Checking update from GitHub: {apiUrl}");
+
+        var text = await HttpUtil.Request(apiUrl).GetStringAsync();
+        JToken release;
+        if (channel == "release")
+        {
+            release = LatestStableRelease(JArray.Parse(text));
+        }
+        else
+        {
+            release = JObject.Parse(text);
+        }
+
+        return CreateRelease(release, asset => IsHttpsUrl(asset["browser_download_url"]?.ToString())
+                                              && IsGithubUrl(asset["browser_download_url"]!.ToString()),
+            asset => new UpdateAsset(
+                asset["name"]?.ToString() ?? string.Empty,
+                asset["browser_download_url"]?.ToString() ?? string.Empty,
+                asset["size"]?.Value<long>() ?? 0,
+                ParseSha256(asset["digest"]?.ToString())));
+    }
+
+    private static async Task<UpdateRelease> GetCnbRelease()
+    {
+        var token = ServiceCredentials.CnbUpdateToken;
+        if (string.IsNullOrWhiteSpace(token))
+            throw new InvalidOperationException(
+                $"CNB 更新源未配置 {ServiceCredentials.CnbUpdateTokenEnvironmentVariable}。请使用包含该变量的正式构建。");
+
+        Logger.Info($"Checking update from CNB: {CnbReleasesUrl}");
+        var text = await HttpUtil.Request(CnbReleasesUrl)
+            .WithHeader("Authorization", $"Bearer {token}")
+            .WithHeader("Accept", "application/vnd.cnb.api+json")
+            .GetStringAsync();
+        var release = LatestStableRelease(JArray.Parse(text));
+        return CreateRelease(release, asset => IsHttpsUrl(asset["browser_download_url"]?.ToString()),
+            asset => new UpdateAsset(
+                asset["name"]?.ToString() ?? string.Empty,
+                asset["browser_download_url"]?.ToString() ?? string.Empty,
+                asset["size"]?.Value<long>() ?? 0,
+                ParseSha256(asset["hash_algo"]?.ToString(), asset["hash_value"]?.ToString())));
+    }
+
+    private static async Task<UpdateRelease> GetGitCodeRelease()
+    {
+        Logger.Info($"Checking update from GitCode: {GitCodeReleasesUrl}");
+        var text = await HttpUtil.Request(GitCodeReleasesUrl).GetStringAsync();
+        var release = LatestStableRelease(JArray.Parse(text));
+        return CreateRelease(release,
+            asset => asset["type"]?.ToString() == "attach" && IsHttpsUrl(asset["browser_download_url"]?.ToString()),
+            asset => new UpdateAsset(
+                asset["name"]?.ToString() ?? string.Empty,
+                asset["browser_download_url"]?.ToString() ?? string.Empty,
+                0,
+                null));
+    }
+
+    private static UpdateRelease CreateRelease(JToken release, Func<JToken, bool> assetFilter,
+        Func<JToken, UpdateAsset> toAsset)
+    {
+        var title = release["name"]?.ToString().Trim();
+        if (string.IsNullOrEmpty(title)) throw new InvalidOperationException("更新发布缺少版本名称。");
+
+        var assets = release["assets"]?.Children()
+            .Where(assetFilter)
+            .Select(toAsset)
+            .Where(asset => !string.IsNullOrWhiteSpace(asset.Name))
+            .ToArray() ?? [];
+        return new UpdateRelease(title, ParseSequence(title), assets);
+    }
+
+    private static JToken LatestStableRelease(IEnumerable<JToken> releases) => releases
+        .Where(release => release["draft"]?.Value<bool>() != true)
+        .Where(release => release["prerelease"]?.Value<bool>() != true)
+        .Select(release => new { Release = release, Version = ParseStableTag(release["tag_name"]?.ToString()) })
+        .Where(item => item.Version is not null)
+        .OrderByDescending(item => item.Version!.Value.Major)
+        .ThenByDescending(item => item.Version!.Value.Minor)
+        .ThenByDescending(item => item.Version!.Value.Patch)
+        .Select(item => item.Release)
+        .FirstOrDefault() ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+
+    private static (long Major, long Minor, long Patch)? ParseStableTag(string? tag)
+    {
+        var match = StableTagPattern.Match(tag ?? string.Empty);
+        if (!match.Success) return null;
+        return (long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture),
+            long.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture),
+            long.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture));
+    }
+
+    private static bool IsHttpsUrl(string? value) => Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                                                      && uri.Scheme == Uri.UriSchemeHttps;
+
+    private static bool IsGithubUrl(string value)
+    {
+        var host = new Uri(value).Host;
+        return host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+               || host.EndsWith(".github.com", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeChannel(string channel) => channel.Trim().ToLowerInvariant() switch
@@ -113,8 +210,17 @@ public static class UpdateChecker
     private static string? ParseSha256(string? digest)
     {
         const string prefix = "sha256:";
-        if (digest is null || !digest.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return null;
-        var hash = digest[prefix.Length..];
-        return hash.Length == 64 && hash.All(Uri.IsHexDigit) ? hash.ToUpperInvariant() : null;
+        return digest is not null && digest.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? ParseSha256("sha256", digest[prefix.Length..])
+            : null;
+    }
+
+    private static string? ParseSha256(string? algorithm, string? hash)
+    {
+        return algorithm?.Equals("sha256", StringComparison.OrdinalIgnoreCase) == true
+               && hash?.Length == 64
+               && hash.All(Uri.IsHexDigit)
+            ? hash.ToUpperInvariant()
+            : null;
     }
 }

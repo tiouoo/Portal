@@ -54,6 +54,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool IsInitialized { get; set; } = true; // 仅在配置文件首次创建时由 Config.Initialize 置为 false
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
+    [ObservableProperty] public partial UpdateSource UpdateSource { get; set; } = UpdateSource.Cnb;
     [ObservableProperty] public partial DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial DownloadSourceMode MinecraftFileSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial DownloadSourceMode ModrinthSource { get; set; } = DownloadSourceMode.Auto;
@@ -232,6 +233,11 @@ public partial class ConfigEntry : ObservableObject
         }
 
         App.Method.SaveConfig();
+    }
+
+    partial void OnUpdateSourceChanged(UpdateSource value)
+    {
+        if (value != UpdateSource.Github) Data.UiProperty.OverrideUpdateChannel = "release";
     }
 
     partial void OnUsingMinecraftMinecraftAccountChanged(MinecraftAccount? value) =>

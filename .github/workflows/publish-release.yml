@@ -94,6 +94,7 @@ jobs:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
+      CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
     strategy:
       matrix:
         include:
@@ -145,6 +146,7 @@ jobs:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
+      CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -187,6 +189,7 @@ jobs:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
+      CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -233,6 +236,7 @@ jobs:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
+      CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
     strategy:
       matrix:
         rid: [osx-x64, osx-arm64]

@@ -12,6 +12,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <converter:UpdateChannelToIndexConverter x:Key="UpdateChannelToIndexConverter" />
+        <converter:UpdateSourceToIndexConverter x:Key="UpdateSourceToIndexConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="关于应用" />
@@ -116,8 +117,14 @@
                 Content="更新源"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="0">
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                Name="UpdateSourceComboBox"
+                SelectedIndex="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceToIndexConverter}, Mode=TwoWay}"
+                SelectionChanged="UpdateSource_OnSelectionChanged">
                 <ComboBoxItem Content="Github" />
+                <ComboBoxItem Content="CNB" />
+                <ComboBoxItem Content="GitCode (AtomGit)" />
             </ComboBox>
             <TextBlock
                 FontSize="11"

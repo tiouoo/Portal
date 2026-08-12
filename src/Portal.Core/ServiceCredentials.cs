@@ -5,9 +5,11 @@ public static class ServiceCredentials
     public const string CurseForgeApiKeyEnvironmentVariable = "CURSEFORGE_API_KEY";
     public const string MicrosoftClientIdEnvironmentVariable = "MICROSOFT_CLIENT_ID";
     public const string GravityConeUptimeApiKeyEnvironmentVariable = "GRAVITYCONE_UPTIME_API_KEY";
+    public const string CnbUpdateTokenEnvironmentVariable = "CNB_UPDATE_TOKEN";
     private const string CurseForgeApiKeyMetadataKey = "Portal.CurseForgeApiKey";
     private const string MicrosoftClientIdMetadataKey = "Portal.MicrosoftClientId";
     private const string GravityConeUptimeApiKeyMetadataKey = "Portal.GravityConeUptimeApiKey";
+    private const string CnbUpdateTokenMetadataKey = "Portal.CnbUpdateToken";
 
     public static string? CurseForgeApiKey => Get(CurseForgeApiKeyMetadataKey, CurseForgeApiKeyEnvironmentVariable);
 
@@ -17,6 +19,8 @@ public static class ServiceCredentials
     public static string MicrosoftClientId => Get(MicrosoftClientIdMetadataKey, MicrosoftClientIdEnvironmentVariable)
         ?? throw new InvalidOperationException(
             $"Microsoft login requires {MicrosoftClientIdEnvironmentVariable} to be set when building or running Portal.");
+
+    public static string? CnbUpdateToken => Get(CnbUpdateTokenMetadataKey, CnbUpdateTokenEnvironmentVariable);
 
     private static string? Get(string metadataKey, string environmentVariable)
     {

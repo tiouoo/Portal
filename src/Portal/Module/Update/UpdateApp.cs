@@ -48,6 +48,7 @@ public static class UpdateApp
 
             var packageType = Data.Instance.PackageType.Trim().ToLowerInvariant();
             var asset = SelectAsset(release, packageType);
+            asset = await UpdateChecker.ResolveDownloadMetadata(asset);
             var updateDirectory = Path.Combine(ConfigPath.UpdateFolderPath, release.Sequence > 0
                 ? release.Sequence.ToString()
                 : DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString());
@@ -165,7 +166,7 @@ public static class UpdateApp
 
     private static async Task<UpdateTaskHandle> Download(UpdateAsset asset, string destination)
     {
-        // 镜像仅改写下载地址，大小与 SHA-256 校验仍基于 GitHub API 返回的元数据
+        // GitHub 镜像仅改写 GitHub 下载地址；CNB/GitCode 保持各自平台的直链。
         var downloadUrl = GithubMirror.Apply(asset.DownloadUrl);
         if (!downloadUrl.Equals(asset.DownloadUrl, StringComparison.Ordinal))
             Logger.Info($"Downloading update via GitHub mirror: {downloadUrl}");
