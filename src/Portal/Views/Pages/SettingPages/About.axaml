@@ -123,7 +123,7 @@
                 SelectedIndex="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceToIndexConverter}, Mode=TwoWay}"
                 SelectionChanged="UpdateSource_OnSelectionChanged">
                 <ComboBoxItem Content="Github" />
-                <ComboBoxItem Content="CNB" />
+                <ComboBoxItem Content="Cnb" />
             </ComboBox>
             <TextBlock
                 FontSize="11"

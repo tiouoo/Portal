@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,9 +13,9 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
-using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Network;
+using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Components.Downloader;
+using MinecraftLaunch.Utilities;
 using Portal.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
@@ -171,7 +174,6 @@ public static class UpdateApp
         if (!downloadUrl.Equals(asset.DownloadUrl, StringComparison.Ordinal))
             Logger.Info($"Downloading update via GitHub mirror: {downloadUrl}");
         var temporary = destination + ".download";
-        if (File.Exists(temporary)) File.Delete(temporary);
         UpdateTaskHandle? handle = null;
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
@@ -211,9 +213,8 @@ public static class UpdateApp
         }, async context =>
         {
             context.SetRunning($"正在下载：{asset.Name}");
-            var request = new DownloadRequest(downloadUrl, temporary, asset.Size)
-            {
-                ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
+            await ResumableDownloadAsync(downloadUrl, temporary, asset.Size,
+                progress => Dispatcher.UIThread.Post(() =>
                 {
                     if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
                     var fraction = progress.TotalBytes > 0
@@ -222,38 +223,17 @@ public static class UpdateApp
                     var speed = DefaultDownloader.FormatSize(progress.Speed, true);
                     context.SetDescription($"下载速度：{speed}");
                     context.ReportProgress(fraction);
-                })
-            };
-
-            var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
-            switch (result.Type)
-            {
-                case DownloadResultType.Successful:
-                    context.SetDescription("下载完成，正在校验");
-                    context.ReportProgress(1);
-                    break;
-                case DownloadResultType.Cancelled:
-                    context.Task.RequestCancellation();
-                    throw new OperationCanceledException(context.CancellationToken);
-                case DownloadResultType.Failed:
-                    throw result.Exception ?? new IOException("更新包下载失败。");
-                default:
-                    throw new InvalidOperationException($"未知下载结果：{result.Type}");
-            }
+                }), context.CancellationToken);
+            context.SetDescription("下载完成，正在校验");
+            context.ReportProgress(1);
         });
         handle = new UpdateTaskHandle { Task = task };
         task.Start();
         await task.Completion;
         if (task.Status == ManagedTaskStatus.Cancelled)
-        {
-            if (File.Exists(temporary)) File.Delete(temporary);
             throw new OperationCanceledException("更新下载已取消。");
-        }
         if (task.Status == ManagedTaskStatus.Faulted)
-        {
-            if (File.Exists(temporary)) File.Delete(temporary);
             throw task.Exception ?? new IOException("更新包下载失败。");
-        }
 
         var actualSize = new FileInfo(temporary).Length;
         if (asset.Size <= 0 || actualSize != asset.Size)
@@ -273,6 +253,141 @@ public static class UpdateApp
         }
         File.Move(temporary, destination, true);
         return handle;
+    }
+
+    private const int DownloadBufferSize = 81920;
+    private const double DownloadRetryBackoffSeconds = 1.5;
+
+    // 更新包专用下载器：永不启用分片，支持断点续传。
+    // - 每次失败保留已下载的临时文件，重试时通过 Range 从头偏移继续，而不是整包重下。
+    // - 服务器不支持 Range（返回 200 而非 206）或已有文件损坏超出总长时，回退为整包重下。
+    private static async Task ResumableDownloadAsync(string url, string path, long expectedSize,
+        Action<ResourceDownloadProgressChangedEventArgs> progress, CancellationToken cancellationToken)
+    {
+        var maxRetries = Math.Max(1, Data.ConfigEntry.DownloadMaxRetryCount);
+        Exception? lastError = null;
+        for (var attempt = 0; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                long resumeFrom = File.Exists(path) ? new FileInfo(path).Length : 0;
+                await ResumableDownloadAttemptAsync(url, path, expectedSize, resumeFrom, progress, cancellationToken);
+                return;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (HttpRequestException exception)
+            {
+                lastError = exception;
+                // 429 是限流，重试不会立刻恢复，退避时间拉长
+                if (exception.StatusCode == HttpStatusCode.TooManyRequests && attempt < maxRetries)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(DownloadRetryBackoffSeconds * (attempt + 1) * 5),
+                        cancellationToken);
+                    continue;
+                }
+                if (attempt < maxRetries)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(DownloadRetryBackoffSeconds * (attempt + 1)),
+                        cancellationToken);
+                    continue;
+                }
+            }
+            catch (Exception exception)
+            {
+                lastError = exception;
+                if (attempt < maxRetries)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(DownloadRetryBackoffSeconds * (attempt + 1)),
+                        cancellationToken);
+                    continue;
+                }
+            }
+            throw lastError ?? new IOException("更新包下载失败。");
+        }
+    }
+
+    private static async Task ResumableDownloadAttemptAsync(string url, string path, long expectedSize, long initialOffset,
+        Action<ResourceDownloadProgressChangedEventArgs> progress, CancellationToken cancellationToken)
+    {
+        long resumeFrom = initialOffset;
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        // 服务器与本地已有字节一致时，从断点请求剩余部分
+        if (expectedSize > 0 && resumeFrom >= expectedSize)
+            resumeFrom = 0; // 已有文件已完整或损坏，整包重下
+        if (resumeFrom > 0)
+            request.Headers.Range = new RangeHeaderValue(resumeFrom, null);
+
+        using var response = await HttpUtil.Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var supportsResume = response.StatusCode == HttpStatusCode.PartialContent
+                             && response.Content.Headers.ContentRange?.From == resumeFrom;
+        var total = response.Content.Headers.ContentRange?.Length ?? response.Content.Headers.ContentLength
+            ?? (expectedSize > 0 ? expectedSize : 0);
+
+        await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
+        // 续传时追加写入；整包重下（含 Range 被忽略、文件已完整）时重新创建
+        var fileMode = supportsResume ? FileMode.Append : FileMode.Create;
+        await using var output = new FileStream(path, fileMode, FileAccess.Write, FileShare.ReadWrite, DownloadBufferSize,
+            FileOptions.Asynchronous);
+
+        var buffer = new byte[DownloadBufferSize];
+        long downloaded = supportsResume ? resumeFrom : 0;
+        var stopwatch = Stopwatch.StartNew();
+        long lastReportBytes = downloaded;
+        var lastReportTime = stopwatch.Elapsed;
+        int read;
+        while ((read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            downloaded += read;
+            if (downloaded > total && total > 0)
+                throw new IOException($"服务器返回数据超过预期长度（预期 {total}）。");
+
+            var now = stopwatch.Elapsed;
+            if (now - lastReportTime >= TimeSpan.FromMilliseconds(250))
+            {
+                ReportDownloadProgress(progress, downloaded, total, lastReportBytes, lastReportTime, now);
+                lastReportBytes = downloaded;
+                lastReportTime = now;
+            }
+        }
+        await output.FlushAsync(cancellationToken);
+
+        if (total > 0 && downloaded != total)
+            throw new IOException($"下载不完整（预期 {total}，已下载 {downloaded}）。");
+
+        progress(new ResourceDownloadProgressChangedEventArgs
+        {
+            Speed = 0,
+            TotalBytes = total,
+            EstimatedRemaining = TimeSpan.Zero,
+            DownloadedBytes = downloaded,
+            TotalCount = 1,
+            CompletedCount = 1
+        });
+    }
+
+    private static void ReportDownloadProgress(Action<ResourceDownloadProgressChangedEventArgs> progress,
+        long downloaded, long total, long lastBytes, TimeSpan lastTime, TimeSpan now)
+    {
+        var deltaBytes = downloaded - lastBytes;
+        var deltaTime = now - lastTime;
+        var speed = deltaTime.TotalSeconds > 0 ? (long)(deltaBytes / deltaTime.TotalSeconds) : 0;
+        var remainingSeconds = speed > 0 && total > downloaded ? (total - downloaded) / (double)speed : 0;
+        progress(new ResourceDownloadProgressChangedEventArgs
+        {
+            Speed = speed,
+            TotalBytes = total,
+            EstimatedRemaining = TimeSpan.FromSeconds(remainingSeconds),
+            DownloadedBytes = downloaded,
+            TotalCount = 1,
+            CompletedCount = 0
+        });
     }
 
     private static void CompletePreparation(UpdateTaskHandle handle, PreparedUpdate update)
