@@ -43,7 +43,7 @@ import logoUrl from "../assets/portal-logo.svg";
       </div>
     </div>
 
-    <div class="hero-visual" aria-label="Portal 应用界面示意">
+    <div class="hero-visual" aria-label="Portal 应用界面示意" v-if="false">
       <div class="visual-orbit orbit-one"></div>
       <div class="visual-orbit orbit-two"></div>
       <div class="app-window">
@@ -195,6 +195,7 @@ import logoUrl from "../assets/portal-logo.svg";
         <div><small>游戏时长</small><b>+ 2.4 小时</b></div>
       </div>
     </div>
+    <img class="hero-shot" src="../assets/pic.png" alt="Portal 应用界面" />
   </section>
 </template>
 
@@ -203,7 +204,7 @@ import logoUrl from "../assets/portal-logo.svg";
   min-height: 780px;
   padding-top: 150px;
   display: grid;
-  grid-template-columns: 0.88fr 1.12fr;
+  grid-template-columns: 0.8fr 1.2fr;
   align-items: center;
   gap: 52px;
 }
@@ -309,6 +310,20 @@ h1 em {
 .hero-visual {
   position: relative;
   height: 580px;
+}
+.hero-shot {
+  position: relative;
+  z-index: 2;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(215, 220, 231, 0.9);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 40px 80px rgba(49, 62, 93, 0.18),
+    0 10px 25px rgba(49, 62, 93, 0.08);
 }
 .hero-visual::before {
   content: "";
@@ -741,6 +756,10 @@ h1 em {
     width: min(720px, 100%);
     margin: 0 auto;
   }
+  .hero-shot {
+    width: min(720px, 100%);
+    margin: 0 auto;
+  }
   .app-window {
     left: 50%;
     transform: translateX(-50%);
@@ -803,6 +822,9 @@ h1 em {
 @media (max-width: 520px) {
   .hero-visual {
     display: none;
+  }
+  .hero-shot {
+    width: 100%;
   }
 }
 </style>
