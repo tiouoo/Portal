@@ -35,6 +35,28 @@
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
+            <ComboBox
+                DockPanel.Dock="Right"
+                ItemsSource="{Binding SortOptions}"
+                Margin="0,0,8,0"
+                Name="SortComboBox"
+                SelectionChanged="SortComboBox_OnSelectionChanged"
+                VerticalAlignment="Top"
+                Width="108" />
+            <ComboBox
+                DockPanel.Dock="Right"
+                ItemsSource="{Binding FilterOptions}"
+                Margin="0,0,8,0"
+                Name="FilterComboBox"
+                SelectionChanged="FilterComboBox_OnSelectionChanged"
+                VerticalAlignment="Top"
+                Width="132">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:ResourceFilterOption">
+                        <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
@@ -207,7 +229,7 @@
                                                 Margin="0,2,0,0"
                                                 MaxLines="1"
                                                 Text="{Binding SecondaryText}"
-                                                TextTrimming="LeadingCharacterEllipsis" />
+                                                TextTrimming="CharacterEllipsis" />
                                             <TextBlock
                                                 FontSize="13"
                                                 Foreground="{DynamicResource InnerForegroundColor}"

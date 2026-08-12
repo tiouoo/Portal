@@ -23,9 +23,14 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     private bool _hasLoaded;
     private bool _isLoading;
     private string _filter = string.Empty;
+    private ResourceSortMode _sortMode = ResourceSortMode.FileName;
+    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
 
     public ObservableCollection<ShaderPackItem> Items { get; } = [];
     public ObservableCollection<ShaderPackItem> FilteredItems { get; } = [];
+    public string[] SortOptions => ResourceListUi.SortOptions;
+    public ObservableCollection<ResourceFilterOption> FilterOptions { get; } = [];
+
     public IRelayCommand SelectAllCommand { get; }
     public IRelayCommand ClearSelectionCommand { get; }
     public IRelayCommand InvertSelectionCommand { get; }
@@ -57,6 +62,9 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
         InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
         DataContext = this;
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
         // 文本框聚焦时不拦截 Ctrl+A，保留全选文本的默认行为
         KeyBindings.Add(new KeyBinding
         {
@@ -72,7 +80,44 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        EnsureDefaultSelections();
         _ = LoadAsync();
+    }
+
+    private void EnsureDefaultSelections()
+    {
+        if (FilterComboBox.SelectedIndex < 0)
+            FilterComboBox.SelectedIndex = 0;
+        if (SortComboBox.SelectedIndex < 0)
+            SortComboBox.SelectedIndex = 0;
+    }
+
+    private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _sortMode = combo.SelectedIndex switch
+        {
+            1 => ResourceSortMode.Name,
+            2 => ResourceSortMode.LastWriteTime,
+            3 => ResourceSortMode.FileSize,
+            _ => ResourceSortMode.FileName
+        };
+        ApplyFilter();
+    }
+
+    private void FilterComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _filterMode = combo.SelectedIndex switch
+        {
+            1 => ResourceFilterMode.Enabled,
+            2 => ResourceFilterMode.Disabled,
+            3 => ResourceFilterMode.Duplicates,
+            _ => ResourceFilterMode.All
+        };
+        ApplyFilter();
     }
 
     private async Task LoadAsync()
@@ -97,13 +142,36 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
 
     private void ApplyFilter()
     {
-        var filtered = string.IsNullOrWhiteSpace(_filter)
+        var query = string.IsNullOrWhiteSpace(_filter)
             ? Items
             : Items.Where(item => item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
-        foreach (var item in filtered)
+        foreach (var item in SortItems(query).Where(MatchesStateFilter))
             FilteredItems.Add(item);
+        RefreshFilterOptions();
         RaiseListProperties();
+    }
+
+    private bool MatchesStateFilter(ShaderPackItem item) => _filterMode switch
+    {
+        ResourceFilterMode.Enabled => item.IsEnabled,
+        ResourceFilterMode.Disabled => item.IsDisabled,
+        _ => true
+    };
+
+    private IEnumerable<ShaderPackItem> SortItems(IEnumerable<ShaderPackItem> source) => _sortMode switch
+    {
+        ResourceSortMode.Name => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase),
+        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.LastWriteTime),
+        ResourceSortMode.FileSize => source.OrderByDescending(item => item.FileSize),
+        _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
+    };
+
+    private void RefreshFilterOptions()
+    {
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("启用", Items.Count(item => item.IsEnabled));
+        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel("禁用", Items.Count(item => item.IsDisabled));
     }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -294,8 +362,23 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
     private bool _isSelected;
     public string FilePath { get; } = filePath;
     public string FileName { get; } = Path.GetFileName(filePath);
+    public long FileSize { get; } = ReadFileSize(filePath);
+    public DateTime LastWriteTime { get; } = ReadLastWriteTime(filePath);
+    public string SizeAndNameText => $"{ResourceListUi.FormatSize(FileSize)}·{FileName}";
     public bool IsDisabled => FilePath.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase);
     public bool IsEnabled => !IsDisabled;
+
+    private static long ReadFileSize(string path)
+    {
+        try { return new FileInfo(path).Length; }
+        catch { return 0; }
+    }
+
+    private static DateTime ReadLastWriteTime(string path)
+    {
+        try { return new FileInfo(path).LastWriteTime; }
+        catch { return DateTime.MinValue; }
+    }
 
     public bool IsSelected
     {

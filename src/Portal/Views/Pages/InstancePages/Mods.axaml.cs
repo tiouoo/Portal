@@ -41,10 +41,17 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private bool _isDisposed;
     private int _loadVersion; // 加载序号，防止并发刷新时旧的扫描结果覆盖新结果
     private string _filter = string.Empty;
+    private ResourceSortMode _sortMode = ResourceSortMode.FileName;
+    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
+    private readonly HashSet<string> _duplicateProjectIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _duplicateHashes = new(StringComparer.OrdinalIgnoreCase);
     private readonly CancellationTokenSource _disposeCancellation = new();
 
     public ObservableCollection<ModItem> Items { get; } = [];
     public ObservableCollection<ModItem> FilteredItems { get; } = [];
+
+    public string[] SortOptions => ResourceListUi.SortOptions;
+    public ObservableCollection<ResourceFilterOption> FilterOptions { get; } = [];
 
     public bool IsLoading
     {
@@ -86,6 +93,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
         InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
         DataContext = this;
+        InitializeFilterOptions();
         KeyBindings.Add(new KeyBinding()
         {
             // 文本框聚焦时不拦截 Ctrl+A，保留全选文本的默认行为
@@ -109,8 +117,45 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        EnsureDefaultSelections();
         Logger.Info($"[Mods] Page attached for instance {_instance?.InstanceName} at {_instance?.FolderPath}.");
         _ = LoadAsync();
+    }
+
+    private void EnsureDefaultSelections()
+    {
+        if (FilterComboBox.SelectedIndex < 0)
+            FilterComboBox.SelectedIndex = 0;
+        if (SortComboBox.SelectedIndex < 0)
+            SortComboBox.SelectedIndex = 0;
+    }
+
+    private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _sortMode = combo.SelectedIndex switch
+        {
+            1 => ResourceSortMode.Name,
+            2 => ResourceSortMode.LastWriteTime,
+            3 => ResourceSortMode.FileSize,
+            _ => ResourceSortMode.FileName
+        };
+        ApplyFilter();
+    }
+
+    private void FilterComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _filterMode = combo.SelectedIndex switch
+        {
+            1 => ResourceFilterMode.Enabled,
+            2 => ResourceFilterMode.Disabled,
+            3 => ResourceFilterMode.Duplicates,
+            _ => ResourceFilterMode.All
+        };
+        ApplyFilter();
     }
 
     private async Task LoadAsync()
@@ -133,15 +178,12 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         foreach (var batch in mods.Chunk(25))
         {
             foreach (var mod in batch)
-            {
-                var item = new ModItem(mod);
-                Items.Add(item);
-                if (MatchesFilter(item)) FilteredItems.Add(item);
-            }
+                Items.Add(new ModItem(mod));
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { },
                 Avalonia.Threading.DispatcherPriority.Background);
             if (_isDisposed || version != _loadVersion) return;
         }
+        ApplyFilter();
         IsLoading = false;
         RaiseListProperties();
         Logger.Info($"[Mods] Scanned {Items.Count} mod(s) for {_instance.InstanceName} in {stopwatch.Elapsed}.");
@@ -164,7 +206,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                 updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (!_isDisposed)
-                        Items.FirstOrDefault(item => item.Info.FilePath == updated.FilePath)?.Update(updated);
+                        Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath)?.Update(updated);
                 }, Avalonia.Threading.DispatcherPriority.Background), cancellationToken);
         }
         catch (OperationCanceledException exception) { Logger.Debug($"[Mods] Friendly-name caching cancelled: {exception}"); }
@@ -175,12 +217,12 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     {
         try
         {
-            await _modService.RefreshMetadataAsync(mods, WikiEntries.FindChineseName, updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            await _modService.RefreshMetadataAsync(mods, WikiEntries.FindChineseName,
+                updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (_isDisposed)
                         return;
-                    var item = Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath);
-                    item?.Update(updated);
+                    Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath)?.Update(updated);
                 }, Avalonia.Threading.DispatcherPriority.Background), isLoading => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (!_isDisposed)
@@ -199,19 +241,85 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         }
     }
 
+    private void InitializeFilterOptions()
+    {
+        FilterOptions.Clear();
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("重复", 0)));
+    }
+
     private void ApplyFilter()
     {
+        BuildDuplicateSets();
+        var query = Items.Where(MatchesSearchFilter).Where(MatchesStateFilter);
         FilteredItems.Clear();
-        foreach (var item in Items.Where(MatchesFilter))
+        foreach (var item in SortItems(query))
+        {
+            item.IsDuplicate = IsDuplicate(item);
             FilteredItems.Add(item);
+        }
+        RefreshFilterOptions();
         RaiseListProperties();
     }
 
-    private bool MatchesFilter(ModItem item) => string.IsNullOrWhiteSpace(_filter) ||
+    private bool MatchesSearchFilter(ModItem item) => string.IsNullOrWhiteSpace(_filter) ||
         item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
         item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
         item.FriendlyName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
         item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase);
+
+    private bool MatchesStateFilter(ModItem item) => _filterMode switch
+    {
+        ResourceFilterMode.All => true,
+        ResourceFilterMode.Enabled => item.IsEnabled,
+        ResourceFilterMode.Disabled => item.IsDisabled,
+        ResourceFilterMode.Duplicates => IsDuplicate(item),
+        _ => true
+    };
+
+    private IEnumerable<ModItem> SortItems(IEnumerable<ModItem> source) => _sortMode switch
+    {
+        ResourceSortMode.Name => source.OrderBy(item => item.FriendlyName, StringComparer.OrdinalIgnoreCase),
+        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.Info.LastWriteTime),
+        ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
+        _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
+    };
+
+    private void BuildDuplicateSets()
+    {
+        _duplicateProjectIds.Clear();
+        _duplicateHashes.Clear();
+        foreach (var group in Items.Where(item => DuplicateProjectKey(item) != null)
+                     .GroupBy(DuplicateProjectKey).Where(group => group.Count() > 1))
+            _duplicateProjectIds.Add(group.Key!);
+        foreach (var group in Items.Where(item => item.Info.Sha1 is { Length: > 0 })
+                     .GroupBy(item => item.Info.Sha1!).Where(group => group.Count() > 1))
+            _duplicateHashes.Add(group.Key);
+    }
+
+    private static string? DuplicateProjectKey(ModItem item)
+    {
+        // 通过 API 元数据识别同一项目：来源 + 项目 ID 相同即为同一个模组（可能是不同版本的文件）
+        if (string.IsNullOrWhiteSpace(item.Info.Source) || string.IsNullOrWhiteSpace(item.Info.ProjectId))
+            return null;
+        return $"{item.Info.Source}|{item.Info.ProjectId}".ToLowerInvariant();
+    }
+
+    private bool IsDuplicate(ModItem item) =>
+        (DuplicateProjectKey(item) is { } key && _duplicateProjectIds.Contains(key)) ||
+        (item.Info.Sha1 is { Length: > 0 } sha1 && _duplicateHashes.Contains(sha1));
+
+    private void RefreshFilterOptions()
+    {
+        if (FilterOptions.Count == 0)
+            InitializeFilterOptions();
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("启用", Items.Count(item => item.IsEnabled));
+        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel("禁用", Items.Count(item => item.IsDisabled));
+        FilterOptions[3].Label = ResourceListUi.BuildFilterLabel("重复", Items.Count(IsDuplicate));
+    }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -528,17 +636,30 @@ public static class WikiEntries
 public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
 {
     private bool _isSelected;
+    private bool _isDuplicate;
     private ModInfo _info = info;
     public ModInfo Info => _info;
     public string DisplayName => _info.DisplayName;
     public string FriendlyName => _info.FriendlyName ?? _info.DisplayName;
     public string FileName => _info.FileName + ".jar";
+    public string SizeAndNameText => $"{ResourceListUi.FormatSize(_info.FileSize)}·{FileName}";
     public string DescriptionText => _info.Description ?? "没有可用的模组描述";
     public string? IconUrl => _info.IconUrl;
     public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
     public bool IsDisabled => _info.IsDisabled;
     public bool IsEnabled => !IsDisabled;
+
+    public bool IsDuplicate
+    {
+        get => _isDuplicate;
+        set
+        {
+            if (_isDuplicate == value) return;
+            _isDuplicate = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDuplicate)));
+        }
+    }
 
     public bool IsSelected
     {
@@ -554,7 +675,7 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
     public void Update(ModInfo info)
     {
         _info = info;
-        foreach (var propertyName in new[] { nameof(DisplayName), nameof(FriendlyName), nameof(FileName), nameof(DescriptionText),
+        foreach (var propertyName in new[] { nameof(DisplayName), nameof(FriendlyName), nameof(FileName), nameof(SizeAndNameText), nameof(DescriptionText),
                      nameof(IconUrl), nameof(HasIcon), nameof(IsDisabled), nameof(IsEnabled) })
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

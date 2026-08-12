@@ -22,9 +22,13 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     private readonly MinecraftInstance? _instance;
     private bool _hasLoaded, _isLoading;
     private string _filter = string.Empty;
+    private ResourceSortMode _sortMode = ResourceSortMode.FileName;
+    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
 
     public ObservableCollection<BedrockModItem> Items { get; } = [];
     public ObservableCollection<BedrockModItem> FilteredItems { get; } = [];
+    public string[] SortOptions => ResourceListUi.SortOptions;
+    public ObservableCollection<ResourceFilterOption> FilterOptions { get; } = [];
 
     public bool IsLoading
     {
@@ -49,6 +53,9 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
@@ -59,7 +66,44 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        EnsureDefaultSelections();
         _ = LoadAsync();
+    }
+
+    private void EnsureDefaultSelections()
+    {
+        if (FilterComboBox.SelectedIndex < 0)
+            FilterComboBox.SelectedIndex = 0;
+        if (SortComboBox.SelectedIndex < 0)
+            SortComboBox.SelectedIndex = 0;
+    }
+
+    private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _sortMode = combo.SelectedIndex switch
+        {
+            1 => ResourceSortMode.Name,
+            2 => ResourceSortMode.LastWriteTime,
+            3 => ResourceSortMode.FileSize,
+            _ => ResourceSortMode.FileName
+        };
+        ApplyFilter();
+    }
+
+    private void FilterComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _filterMode = combo.SelectedIndex switch
+        {
+            1 => ResourceFilterMode.Enabled,
+            2 => ResourceFilterMode.Disabled,
+            3 => ResourceFilterMode.Duplicates,
+            _ => ResourceFilterMode.All
+        };
+        ApplyFilter();
     }
 
     private BedrockInstanceConfig? Config => _instance?.BedrockConfig;
@@ -98,12 +142,36 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
 
     private void ApplyFilter()
     {
-        var filtered = string.IsNullOrWhiteSpace(_filter)
+        var query = string.IsNullOrWhiteSpace(_filter)
             ? Items
             : Items.Where(item => item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
-        foreach (var item in filtered) FilteredItems.Add(item);
+        foreach (var item in SortItems(query).Where(MatchesStateFilter))
+            FilteredItems.Add(item);
+        RefreshFilterOptions();
         RaiseList();
+    }
+
+    private bool MatchesStateFilter(BedrockModItem item) => _filterMode switch
+    {
+        ResourceFilterMode.Enabled => item.IsEnabled,
+        ResourceFilterMode.Disabled => item.IsDisabled,
+        _ => true
+    };
+
+    private IEnumerable<BedrockModItem> SortItems(IEnumerable<BedrockModItem> source) => _sortMode switch
+    {
+        ResourceSortMode.Name => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase),
+        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.LastWriteTime),
+        ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
+        _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
+    };
+
+    private void RefreshFilterOptions()
+    {
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("启用", Items.Count(item => item.IsEnabled));
+        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel("禁用", Items.Count(item => item.IsDisabled));
     }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -308,12 +376,21 @@ public sealed class BedrockModItem(BedrockModInfo info) : INotifyPropertyChanged
     private bool _isSelected;
     public BedrockModInfo Info { get; } = info;
     public string FileName => Info.FileName;
-    public string FileSizeText => FormatSize(Info.FileSize);
+    public string FileSizeText => ResourceListUi.FormatSize(Info.FileSize);
+    public string SizeAndNameText => $"{FileSizeText}·{FileName}";
+    public DateTime LastWriteTime => ReadLastWriteTime(Info.FilePath);
+    public string LastWriteTimeText => $"加入于 {LastWriteTime:yyyy-MM-dd HH:mm}";
     public bool IsEnabled => Info.Config.Enabled;
     public bool IsDisabled => !IsEnabled;
     public bool IsPreload => Info.Config.Preload;
     public bool IsDelayed => IsEnabled && !IsPreload;
     public string DelayText => $"{Info.Config.DelayMs} ms";
+
+    private static DateTime ReadLastWriteTime(string path)
+    {
+        try { return new FileInfo(path).LastWriteTime; }
+        catch { return DateTime.MinValue; }
+    }
 
     public bool IsSelected
     {
@@ -327,9 +404,6 @@ public sealed class BedrockModItem(BedrockModInfo info) : INotifyPropertyChanged
             }
         }
     }
-
-    private static string FormatSize(long size) => size < 1024 ? $"{size} B" :
-        size < 1024 * 1024 ? $"{size / 1024d:F1} KB" : $"{size / 1024d / 1024d:F1} MB";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 }

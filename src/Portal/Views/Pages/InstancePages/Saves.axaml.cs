@@ -42,11 +42,15 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
     private bool _isRefreshingLockStates;
     private bool _isAttached;
     private string _filter = string.Empty;
+    private ResourceSortMode _sortMode = ResourceSortMode.FileName;
+    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _isDisposed;
 
     public ObservableCollection<SaveItem> Items { get; } = [];
     public ObservableCollection<SaveItem> FilteredItems { get; } = [];
+    public string[] SortOptions => ResourceListUi.SortOptions;
+    public ObservableCollection<ResourceFilterOption> FilterOptions { get; } = [];
 
     public bool IsLoading
     {
@@ -69,6 +73,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
         _lockRefreshTimer.Tick += LockRefreshTimer_OnTick;
     }
 
@@ -81,9 +86,46 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        EnsureDefaultSelections();
         _isAttached = true;
         _ = LoadAsync();
         UpdateLockRefreshTimer();
+    }
+
+    private void EnsureDefaultSelections()
+    {
+        if (FilterComboBox.SelectedIndex < 0)
+            FilterComboBox.SelectedIndex = 0;
+        if (SortComboBox.SelectedIndex < 0)
+            SortComboBox.SelectedIndex = 0;
+    }
+
+    private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _sortMode = combo.SelectedIndex switch
+        {
+            1 => ResourceSortMode.Name,
+            2 => ResourceSortMode.LastWriteTime,
+            3 => ResourceSortMode.FileSize,
+            _ => ResourceSortMode.FileName
+        };
+        ApplyFilter();
+    }
+
+    private void FilterComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _filterMode = combo.SelectedIndex switch
+        {
+            1 => ResourceFilterMode.Enabled,
+            2 => ResourceFilterMode.Disabled,
+            3 => ResourceFilterMode.Duplicates,
+            _ => ResourceFilterMode.All
+        };
+        ApplyFilter();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -131,15 +173,26 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
 
     private void ApplyFilter()
     {
-        var filtered = string.IsNullOrWhiteSpace(_filter)
+        var query = string.IsNullOrWhiteSpace(_filter)
             ? Items
             : Items.Where(item => item.FolderName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
                                   item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
-        foreach (var item in filtered)
+        foreach (var item in SortItems(query))
             FilteredItems.Add(item);
+        if (FilterOptions.Count == 0)
+            FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
         RaiseListProperties();
     }
+
+    private IEnumerable<SaveItem> SortItems(IEnumerable<SaveItem> source) => _sortMode switch
+    {
+        ResourceSortMode.Name => source.OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase),
+        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.Info.LastWriteTime),
+        ResourceSortMode.FileSize => source.OrderByDescending(item => item.FolderSize),
+        _ => source.OrderBy(item => item.FolderName, StringComparer.OrdinalIgnoreCase)
+    };
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -495,12 +548,15 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
 
 public sealed class SaveItem(WorldSaveInfo info, MinecraftInstance? instance = null)
 {
+    private long? _folderSize;
     public WorldSaveInfo Info { get; } = info;
     public bool CanQuickEnter => instance?.MinecraftEntry is { } entry && entry.ReleaseTime > new DateTime(2023, 4, 4);
     public string FolderName => Info.FolderName;
     public string DisplayName => string.IsNullOrWhiteSpace(Info.LevelName) ? Info.FolderName : Info.LevelName;
     public string FolderNameSuffix => string.Equals(DisplayName, FolderName, StringComparison.Ordinal) ? string.Empty :
         $"{FolderName}";
+    public long FolderSize => _folderSize ??= ResourceListUi.GetFolderSize(Info.FolderPath);
+    public string SizeAndFolderText => $"{ResourceListUi.FormatSize(FolderSize)}·{FolderName}";
     public string? IconPath => Info.IconPath;
     public bool HasIcon => IconPath != null;
     public IAsyncImageLoader ImageLoader { get; } = new LocalImageLoader(112);

@@ -31,9 +31,14 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     private bool _isLoading;
     private bool _isDisposed;
     private string _filter = string.Empty;
+    private ResourceSortMode _sortMode = ResourceSortMode.FileName;
+    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
 
     public ObservableCollection<ResourcePackItem> Items { get; } = [];
     public ObservableCollection<ResourcePackItem> FilteredItems { get; } = [];
+    public string[] SortOptions => ResourceListUi.SortOptions;
+    public ObservableCollection<ResourceFilterOption> FilterOptions { get; } = [];
+
     public bool IsLoading { get => _isLoading; private set { if (_isLoading != value) { _isLoading = value; RaisePropertyChanged(nameof(IsLoading)); } } }
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
     public string ResourcePackCountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
@@ -53,6 +58,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
     }
 
     public ResourcePacks(MinecraftInstance instance) : this(instance, MinecraftSpecialFolder.ResourcePacksFolder, "资源包") { }
@@ -78,6 +84,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     private async Task LoadAsync()
     {
         if (_hasLoaded || _instance == null) return;
+        EnsureDefaultSelections();
         _hasLoaded = true;
         IsLoading = true;
         RaiseListProperties();
@@ -147,14 +154,64 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
 
     private void ApplyFilter()
     {
-        var filtered = string.IsNullOrWhiteSpace(_filter) ? Items : Items.Where(item =>
-            item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-            item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-            item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+        var query = string.IsNullOrWhiteSpace(_filter)
+            ? Items
+            : Items.Where(item =>
+                item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+                item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+                item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
-        foreach (var item in filtered) FilteredItems.Add(item);
+        foreach (var item in SortItems(query))
+            FilteredItems.Add(item);
+        if (FilterOptions.Count == 0)
+            FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
         RaiseListProperties();
     }
+
+    private void EnsureDefaultSelections()
+    {
+        if (FilterComboBox.SelectedIndex < 0)
+            FilterComboBox.SelectedIndex = 0;
+        if (SortComboBox.SelectedIndex < 0)
+            SortComboBox.SelectedIndex = 0;
+    }
+
+    private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _sortMode = combo.SelectedIndex switch
+        {
+            1 => ResourceSortMode.Name,
+            2 => ResourceSortMode.LastWriteTime,
+            3 => ResourceSortMode.FileSize,
+            _ => ResourceSortMode.FileName
+        };
+        ApplyFilter();
+    }
+
+    private void FilterComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
+            return;
+        _filterMode = combo.SelectedIndex switch
+        {
+            1 => ResourceFilterMode.Enabled,
+            2 => ResourceFilterMode.Disabled,
+            3 => ResourceFilterMode.Duplicates,
+            _ => ResourceFilterMode.All
+        };
+        ApplyFilter();
+    }
+
+    private IEnumerable<ResourcePackItem> SortItems(IEnumerable<ResourcePackItem> source) => _sortMode switch
+    {
+        ResourceSortMode.Name => source.OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase),
+        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.Info.LastWriteTime),
+        ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
+        _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
+    };
 
     private void ResourcePackCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -251,10 +308,12 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
     public ResourcePackInfo Info { get; } = info;
     public string DisplayName => Info.DisplayName;
     public string FileName => Info.FileName;
+    public string SizeAndNameText => $"{ResourceListUi.FormatSize(Info.FileSize)}·{FileName}";
     public bool IsCompactLayout { get; } = isCompactLayout;
     public string SecondaryText => IsCompactLayout
-        ? Info.SkinCount is int count ? $"包含 {count} 个皮肤" : "皮肤数量未知"
-        : Info.IsBedrock ? $"最低支持版本：{Info.MinEngineVersion ?? "未知"}" : FileName;
+        ? $"{ResourceListUi.FormatSize(Info.FileSize)}·{(Info.SkinCount is int count ? $"包含 {count} 个皮肤" : "皮肤数量未知")}"
+        : Info.IsBedrock ? $"{ResourceListUi.FormatSize(Info.FileSize)}·最低支持版本：{Info.MinEngineVersion ?? "未知"}"
+        : SizeAndNameText;
     public string DescriptionText => string.IsNullOrWhiteSpace(Info.Description) ? "没有可用的资源包描述" : Info.Description;
     public string SupportedFormatsText => Info.SupportedFormats ?? "未知";
     public string VersionLabel => Info.IsBedrock ? "版本:" : "支持格式:";

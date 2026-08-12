@@ -25,6 +25,28 @@
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
+            <ComboBox
+                DockPanel.Dock="Right"
+                ItemsSource="{Binding SortOptions}"
+                Margin="0,0,8,0"
+                Name="SortComboBox"
+                SelectionChanged="SortComboBox_OnSelectionChanged"
+                VerticalAlignment="Top"
+                Width="108" />
+            <ComboBox
+                DockPanel.Dock="Right"
+                ItemsSource="{Binding FilterOptions}"
+                Margin="0,0,8,0"
+                Name="FilterComboBox"
+                SelectionChanged="FilterComboBox_OnSelectionChanged"
+                VerticalAlignment="Top"
+                Width="132">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="instancePages:ResourceFilterOption">
+                        <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
@@ -63,7 +85,7 @@
                     <UniformGridLayout
                         ItemsStretch="Fill"
                         MinColumnSpacing="16"
-                        MinItemHeight="83"
+                        MinItemHeight="100"
                         MinItemWidth="284"
                         MinRowSpacing="16"
                         Orientation="Horizontal" />
@@ -182,10 +204,17 @@
                                             Foreground="{DynamicResource InnerForegroundColor}"
                                             Margin="5,0,0,1"
                                             Text="{Binding FolderNameSuffix}"
-                                            TextTrimming="LeadingCharacterEllipsis"
+                                            TextTrimming="CharacterEllipsis"
                                             TextWrapping="NoWrap"
                                             VerticalAlignment="Bottom" />
                                     </DockPanel>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        Margin="0,1,0,0"
+                                        Text="{Binding SizeAndFolderText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
                                     <TextBlock
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
