@@ -1,7 +1,7 @@
 import { createRouter as createVueRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import InstallView from './views/InstallView.vue'
-import MacOSInstallView from './views/MacOSInstallView.vue'
+import MacOsInstallView from './views/MacOsInstallView.vue'
 
 export function createRouter() {
   return createVueRouter({
@@ -27,7 +27,7 @@ export function createRouter() {
       },
       {
         path: '/install/macos',
-        component: MacOSInstallView,
+        component: MacOsInstallView,
         meta: {
           title: 'Portal macOS 安装说明 - 解除"已损坏"限制',
           description:
