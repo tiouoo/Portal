@@ -130,13 +130,8 @@ const channelHint = computed(() => {
 
 <style scoped>
 .section {
-  padding-top: 112px;
-  padding-bottom: 112px;
-}
-.download-section {
-  background: #eef3fc;
-  border-top: 1px solid #e1e8f4;
-  border-bottom: 1px solid #e1e8f4;
+  padding-top: 60px;
+  padding-bottom: 60px;
 }
 .section-kicker {
   color: var(--blue);
@@ -186,7 +181,7 @@ const channelHint = computed(() => {
   width: 100%;
   padding: 0 32px 0 12px;
   border: 1px solid #d5deeb;
-  border-radius: 7px;
+  border-radius: 12px;
   background: #fff;
   color: #20283a;
   font: inherit;
@@ -330,8 +325,8 @@ const channelHint = computed(() => {
 
 @media (max-width: 820px) {
   .section {
-    padding-top: 80px;
-    padding-bottom: 80px;
+    padding-top: 40px;
+    padding-bottom: 40px;
   }
   .platform-grid {
     grid-template-columns: 1fr;

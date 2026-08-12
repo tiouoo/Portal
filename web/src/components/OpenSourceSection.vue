@@ -67,8 +67,8 @@ import logoUrl from "../assets/portal-logo.svg";
 
 <style scoped>
 .section {
-  padding-top: 112px;
-  padding-bottom: 112px;
+  padding-top: 60px;
+  padding-bottom: 60px;
 }
 .open-source {
   display: grid;

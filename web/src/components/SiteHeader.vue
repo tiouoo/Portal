@@ -66,8 +66,8 @@ function closeMenu() {
   position: fixed;
   z-index: 50;
   inset: 0 0 auto;
-  border-bottom: 1px solid rgba(223, 227, 235, 0.75);
-  background: rgba(248, 249, 252, 0.88);
+  border-bottom: 1px solid rgba(223, 227, 235, 0.5);
+  background: rgba(248, 249, 252, 0.7);
   backdrop-filter: blur(18px);
 }
 .nav {

@@ -38,8 +38,6 @@ import { RouterLink } from "vue-router";
 <style scoped>
 footer {
   padding: 32px 0 22px;
-  border-top: 1px solid #e2e5ec;
-  background: #f3f5f8;
 }
 .footer-inner {
   display: flex;

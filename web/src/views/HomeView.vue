@@ -11,8 +11,8 @@ import QqGroupSection from '../components/QqGroupSection.vue'
   <main id="top">
     <HeroSection />
     <FeatureSection />
-    <QqGroupSection />
     <DownloadSection />
+    <QqGroupSection />
     <ProtocolSection />
     <OpenSourceSection />
   </main>

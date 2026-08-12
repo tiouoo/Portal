@@ -28,14 +28,8 @@ import qrCodeUrl from "../assets/qr.png";
 
 <style scoped>
 .section {
-  padding-top: 112px;
-  padding-bottom: 112px;
-}
-
-.qq-group {
-  background: #fff;
-  border-top: 1px solid #edf0f4;
-  border-bottom: 1px solid #edf0f4;
+  padding-top: 60px;
+  padding-bottom: 60px;
 }
 
 .qq-card {

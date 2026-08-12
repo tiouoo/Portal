@@ -16,7 +16,6 @@ import { features } from "../data/features.js";
         class="feature-card"
         :class="feature.tone"
       >
-        <div class="feature-index">{{ feature.index }}</div>
         <div class="feature-graphic" aria-hidden="true">
           <template v-if="feature.index === '01'">
             <div class="mini-stack"><i></i><i></i><i></i></div>
@@ -74,8 +73,8 @@ import { features } from "../data/features.js";
 
 <style scoped>
 .section {
-  padding-top: 112px;
-  padding-bottom: 112px;
+  padding-top: 60px;
+  padding-bottom: 60px;
 }
 .section-heading {
   text-align: center;
@@ -150,7 +149,7 @@ import { features } from "../data/features.js";
 }
 .mini-stack {
   position: absolute;
-  left: 45px;
+  left: 70px;
   top: 52px;
 }
 .mini-stack i {
@@ -173,7 +172,7 @@ import { features } from "../data/features.js";
 }
 .mini-window {
   position: absolute;
-  left: 70px;
+  left: 95px;
   top: 68px;
   width: 155px;
   height: 106px;
@@ -354,8 +353,8 @@ import { features } from "../data/features.js";
 
 @media (max-width: 820px) {
   .section {
-    padding-top: 80px;
-    padding-bottom: 80px;
+    padding-top: 40px;
+    padding-bottom: 40px;
   }
   .feature-grid {
     grid-template-columns: 1fr;
@@ -394,7 +393,7 @@ import { features } from "../data/features.js";
     height: 215px;
   }
   .mini-window {
-    left: 57px;
+    left: 80px;
   }
   .resource-cube.cube-a {
     left: 35px;

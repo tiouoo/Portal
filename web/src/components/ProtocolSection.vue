@@ -193,12 +193,8 @@ function invoke() {
 
 <style scoped>
 .section {
-  padding-top: 112px;
-  padding-bottom: 112px;
-}
-.protocol-section {
-  background: white;
-  border-bottom: 1px solid #e1e8f4;
+  padding-top: 60px;
+  padding-bottom: 60px;
 }
 .section-heading {
   text-align: center;
@@ -220,84 +216,97 @@ function invoke() {
 }
 .section-heading p {
   color: var(--muted);
-  font-size: 16px;
-  margin: 17px 0 0;
+  font-size: 14px;
+  margin: 12px 0 0;
+  line-height: 1.6;
 }
 .protocol-card {
   max-width: 860px;
   margin: 0 auto;
-  padding: 30px;
+  padding: 26px;
   border: 1px solid #e2e6ee;
-  border-radius: 18px;
+  border-radius: 16px;
   background: white;
-  box-shadow: 0 16px 35px rgba(60, 75, 105, 0.06);
+  box-shadow: 0 12px 28px rgba(60, 75, 105, 0.05);
 }
 .protocol-tabs {
   display: inline-flex;
-  padding: 4px;
-  gap: 4px;
+  padding: 3px;
+  gap: 3px;
   border: 1px solid #e2e6ee;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #f2f5fa;
 }
 .protocol-tabs button {
-  height: 40px;
-  padding: 0 18px;
+  height: 36px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 11px;
+  border-radius: 10px;
   background: transparent;
   color: #5a6478;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 .protocol-tabs button.active {
   background: white;
   color: var(--ink);
-  box-shadow: 0 6px 16px rgba(60, 75, 105, 0.1);
+  box-shadow: 0 4px 12px rgba(60, 75, 105, 0.08);
 }
 .protocol-form {
-  margin-top: 22px;
+  margin-top: 18px;
 }
 .protocol-controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 280px));
-  gap: 14px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 .protocol-controls label {
   display: block;
   color: #5a6478;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
 }
 .protocol-controls select,
 .protocol-controls input {
   width: 100%;
-  height: 44px;
-  margin-top: 6px;
-  padding: 0 14px;
-  border: 1px solid #dfe3eb;
+  height: 38px;
+  margin-top: 5px;
+  padding: 0 12px;
+  border: 1px solid #d5deeb;
   border-radius: 12px;
   background: white;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
+  font-weight: 600;
+}
+.protocol-controls select {
+  padding-right: 32px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%238090a9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px auto;
 }
 .protocol-input-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 .protocol-input-row input {
   flex: 1;
   min-width: 0;
-  height: 50px;
-  padding: 0 18px;
-  border: 1px solid #dfe3eb;
-  border-radius: 14px;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid #d5deeb;
+  border-radius: 12px;
   background: white;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13px;
   font-family: inherit;
 }
 .protocol-card input {
@@ -309,17 +318,16 @@ function invoke() {
 .protocol-card input:focus,
 .protocol-card select:focus {
   outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(42, 112, 245, 0.12);
+  border-color: rgba(42, 112, 245, 0.55);
 }
 .protocol-submit {
-  height: 50px;
-  padding: 0 32px;
+  height: 46px;
+  padding: 0 28px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--blue);
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 12px 28px rgba(42, 112, 245, 0.23);
@@ -334,14 +342,14 @@ function invoke() {
   cursor: not-allowed;
 }
 .protocol-preview {
-  margin-top: 16px;
-  padding: 13px 16px;
+  margin-top: 14px;
+  padding: 11px 14px;
   border: 1px dashed #d5ddeb;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #f2f5fa;
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 11px;
+  line-height: 1.5;
   word-break: break-all;
   user-select: text;
 }
@@ -356,10 +364,10 @@ function invoke() {
   color: #9aa3b5;
 }
 .protocol-note {
-  margin: 20px 0 0;
+  margin: 16px 0 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.8;
+  font-size: 12px;
+  line-height: 1.7;
 }
 .protocol-note a {
   color: var(--blue);
