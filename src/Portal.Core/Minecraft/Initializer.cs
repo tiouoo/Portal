@@ -6,8 +6,11 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 public static class MinecraftCoreInitializer
 {
+    public static string AppVersion { get; private set; } = string.Empty;
+
     public static void Initialize(MinecraftCoreInitializeOptions options)
     {
+        AppVersion = options.AppVersion ?? string.Empty;
         Logger.Info(
             $"初始化 Minecraft 核心：线程数 {options.MaxThread}，分片数 {options.MaxFragment}，重试次数 {options.MaxRetryCount}，分片下载 {(options.IsEnableFragment ? "已启用" : "未启用")}");
         InitializeHelper.Initialize(settings =>

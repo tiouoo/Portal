@@ -250,6 +250,7 @@ public static class MinecraftLaunchService
             var entry = instance.MinecraftEntry;
             GameOptionsService.SetChineseLanguage(entry.ToWorkingPath(config.IsEnableIndependency), entry.ReleaseTime);
         }
+        WriteStartupLog(logSession, instance, config);
         var mcProcess = await Task.Run(async () =>
         {
             var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
@@ -602,6 +603,62 @@ public static class MinecraftLaunchService
 
         if (launch.NeedsMesaAgent)
             config.JvmArguments = config.JvmArguments.Concat(launch.JvmArguments);
+    }
+    
+    private static void WriteStartupLog(MinecraftLogSession logSession, MinecraftInstance instance, LaunchConfig config)
+    {
+        var jvmArguments = string.Join(" ", config.JvmArguments);
+        var gameArguments = string.Join(" ", config.GameArguments);
+        List<string> lines =
+        [
+            "==================== Portal 启动前置信息 ====================",
+            $"Portal 版本：{MinecraftCoreInitializer.AppVersion}",
+            $"启动时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+            $"操作系统：{RuntimeInformation.OSDescription}（{RuntimeInformation.OSArchitecture}）",
+            $".NET 运行时：{RuntimeInformation.FrameworkDescription}",
+            $"进程架构：{RuntimeInformation.ProcessArchitecture}",
+            string.Empty,
+            "---------------------- 实例信息 ----------------------",
+            $"实例名称：{instance.InstanceName}",
+            $"游戏版本：{instance.VersionId}",
+            $"版本类型：{instance.VersionType}",
+            $"加载器：{instance.LoaderDescription}",
+            $"游戏目录：{instance.MinecraftPath}",
+            $"独立版本：{(config.IsEnableIndependency ? "是" : "否")}",
+            string.Empty,
+            "---------------------- 账户信息 ----------------------",
+            $"账户类型：{config.Account.Type}",
+            $"玩家名：{config.Account.Name}",
+            string.Empty,
+            "---------------------- Java 运行时 ----------------------",
+            $"Java 版本：{config.JavaPath.JavaVersion}",
+            $"Java 类型：{config.JavaPath.JavaType}",
+            $"Java 主版本：{config.JavaPath.MajorVersion}",
+            $"Java 架构：{(config.JavaPath.Is64bit ? "64 位" : "32 位")}",
+            $"Java 可执行文件：{config.JavaPath.JavaPath}",
+            string.Empty,
+            "---------------------- 内存与窗口 ----------------------",
+            $"最小内存：{config.MinMemorySize} MB",
+            $"最大内存：{config.MaxMemorySize} MB",
+            $"窗口大小：{(config.IsFullscreen ? "全屏" : $"{config.Width} × {config.Height}")}",
+            $"全屏模式：{(config.IsFullscreen ? "是" : "否")}",
+            string.Empty,
+            "---------------------- JVM 参数 ----------------------",
+            string.IsNullOrEmpty(jvmArguments) ? "（无）" : jvmArguments,
+            "---------------------- 游戏参数 ----------------------",
+            string.IsNullOrEmpty(gameArguments) ? "（无）" : gameArguments,
+            "---------------------- 环境变量 ----------------------",
+            config.EnvironmentVariables.Count > 0
+                ? string.Join(" ", config.EnvironmentVariables.Select(pair => $"{pair.Key}={pair.Value}"))
+                : "（无）",
+            string.IsNullOrEmpty(config.WrapperCommand)
+                ? string.Empty
+                : "---------------------- 包装命令 ----------------------",
+            string.IsNullOrEmpty(config.WrapperCommand) ? string.Empty : config.WrapperCommand,
+            "==========================================================="
+        ];
+        foreach (var line in lines.Where(line => line.Length > 0))
+            logSession.Add(new MinecraftLogEntry(line, MinecraftLogLevel.Information));
     }
 
     private static void ObserveProcess(MinecraftInstance instance, TopLevel? topLevel, MinecraftProcess process,
