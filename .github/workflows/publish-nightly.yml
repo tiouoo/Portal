@@ -309,6 +309,15 @@ jobs:
             ./Portal.Release/*.deb
             ./Portal.Release/*.rpm
 
+      - name: Prepare Sync Body (CNB/GitCode)
+        run: |
+          {
+            echo "> 本发布页由 CI 自动同步，不含可下载文件，请前往 [GitHub Release](https://github.com/tiouoo/Portal/releases/tag/publish-nightly) 下载各平台安装包。"
+            echo ""
+            cat RELEASE_CHANGELOG.md
+          } > RELEASE_SYNC_BODY.md
+          cat RELEASE_SYNC_BODY.md
+
       - name: Sync to CNB
         env:
           CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
@@ -318,7 +327,7 @@ jobs:
           CNB_NAME: "build-nightly-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
           CNB_PRERELEASE: "true"
           CNB_MAKE_LATEST: "false"
-          CNB_BODY_FILE: RELEASE_CHANGELOG.md
+          CNB_BODY_FILE: RELEASE_SYNC_BODY.md
         run: bash .github/scripts/publish-cnb.sh
 
       - name: Sync to GitCode
@@ -329,7 +338,7 @@ jobs:
           GITCODE_COMMIT: ${{ needs.prepare.outputs.commit }}
           GITCODE_NAME: "build-nightly-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
           GITCODE_PRERELEASE: "true"
-          GITCODE_BODY_FILE: RELEASE_CHANGELOG.md
+          GITCODE_BODY_FILE: RELEASE_SYNC_BODY.md
         run: bash .github/scripts/publish-gitcode.sh
 
   # AUR publishing is currently disabled.

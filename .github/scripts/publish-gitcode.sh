@@ -19,6 +19,15 @@ gitcode_releases() {
   echo "${GITCODE_API}/repos/${GITCODE_REPO}/releases"
 }
 
+# GitCode Release API 按 tag 操作，返回对象不含 id，
+# 因此创建/更新/存在性判断统一以响应中的 tag_name 为准。
+release_exists() {
+  local json
+  json="$(curl -g -sS -X GET -H "Authorization: Bearer ${GITCODE_TOKEN}" \
+    "$(gitcode_releases)/tags/${GITCODE_TAG}" 2>/dev/null || true)"
+  jq -e --arg t "${GITCODE_TAG}" '.tag_name == $t' >/dev/null 2>&1 <<<"${json}"
+}
+
 ensure_gitcode_tag() {
   local commit auth
   commit="${GITCODE_COMMIT:-$(git rev-parse HEAD)}"
@@ -31,16 +40,8 @@ ensure_gitcode_tag() {
     echo "[gitcode] 标签推送失败（非致命，忽略）。"
 }
 
-get_release_id() {
-  local json id
-  json="$(curl -g -sS -X GET -H "Authorization: Bearer ${GITCODE_TOKEN}" \
-    "$(gitcode_releases)/tags/${GITCODE_TAG}" 2>/dev/null || true)"
-  id="$(jq -r '.id // empty' <<<"${json}" 2>/dev/null || true)"
-  echo "${id}"
-}
-
-make_release() {
-  local response id
+create_release() {
+  local response
   local -a args=(
     -g -sS -X POST
     -H "Authorization: Bearer ${GITCODE_TOKEN}"
@@ -57,31 +58,45 @@ make_release() {
     args+=(--data-urlencode "target_commitish=${GITCODE_COMMIT}")
   fi
   response="$(curl "${args[@]}" "$(gitcode_releases)")"
-  id="$(jq -r '.id // empty' <<<"${response}" 2>/dev/null || true)"
-  if [ -z "${id}" ]; then
+  if jq -e --arg t "${GITCODE_TAG}" '.tag_name == $t' >/dev/null 2>&1 <<<"${response}"; then
+    echo "[gitcode] 已创建 Release：${GITCODE_TAG}"
+  else
     echo "[gitcode] 创建 Release 失败：${response}" >&2
     return 1
   fi
-  echo "${id}"
 }
 
-remove_release() {
-  local id="$1"
-  curl -g -sS -X DELETE -H "Authorization: Bearer ${GITCODE_TOKEN}" \
-    --data-urlencode "access_token=${GITCODE_TOKEN}" \
-    "$(gitcode_releases)/${id}" >/dev/null 2>&1 || true
-  echo "[gitcode] 已删除旧 Release：${id}"
+update_release() {
+  local response
+  local -a args=(
+    -g -sS -X PATCH
+    -H "Authorization: Bearer ${GITCODE_TOKEN}"
+    -H "Content-Type: application/x-www-form-urlencoded"
+    --data-urlencode "access_token=${GITCODE_TOKEN}"
+    --data-urlencode "tag_name=${GITCODE_TAG}"
+    --data-urlencode "name=${GITCODE_NAME}"
+    --data-urlencode "prerelease=${GITCODE_PRERELEASE}"
+  )
+  if [ -n "${GITCODE_BODY_FILE:-}" ] && [ -f "${GITCODE_BODY_FILE}" ]; then
+    args+=(--data-urlencode "body@${GITCODE_BODY_FILE}")
+  fi
+  response="$(curl "${args[@]}" "$(gitcode_releases)/${GITCODE_TAG}")"
+  if jq -e --arg t "${GITCODE_TAG}" '.tag_name == $t' >/dev/null 2>&1 <<<"${response}"; then
+    echo "[gitcode] 已更新 Release：${GITCODE_TAG}"
+  else
+    echo "[gitcode] 更新 Release 失败：${response}" >&2
+    return 1
+  fi
 }
 
 main() {
-  local release_id
   echo "[gitcode] 同步 Release ${GITCODE_TAG} -> ${GITCODE_REPO}"
   ensure_gitcode_tag
-  release_id="$(get_release_id)"
-  if [ -n "${release_id}" ]; then
-    remove_release "${release_id}"
+  if release_exists; then
+    update_release
+  else
+    create_release
   fi
-  release_id="$(make_release)"
   echo "[gitcode] GitCode 同步完成：${GITCODE_TAG}"
 }
 
