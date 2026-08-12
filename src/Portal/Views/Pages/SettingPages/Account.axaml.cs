@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Portal.Const;
@@ -153,6 +154,29 @@ public partial class Account : DataUserControl
             return;
 
         _ = RenameAccountAsync(account, this);
+    }
+
+    private async void CopyUuid_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: MinecraftAccount account })
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        if (account.Uuid is not { } uuid)
+        {
+            topLevel.Notice("此账户没有 uuid", NotificationType.Warning);
+            return;
+        }
+
+        var uuidText = uuid.ToString().ToLowerInvariant();
+        if (topLevel.Clipboard is not { } clipboard)
+            return;
+
+        await clipboard.SetTextAsync(uuidText);
+        topLevel.Notice($"复制成功：{uuidText}", NotificationType.Success);
     }
 
     private async Task RenameAccountAsync(MinecraftAccount account, Control target)

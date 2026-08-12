@@ -118,7 +118,7 @@ public sealed class WorldTemplateItem(WorldTemplateInfo info) : INotifyPropertyC
     public string DescriptionText => string.IsNullOrWhiteSpace(Info.Description) ? "没有可用的世界模板描述" : Info.Description;
     public string BaseGameVersionText => Info.BaseGameVersion ?? "未知";
     public string PackSummary => $"资源包 {Info.ResourcePacks.Count} 个，行为包 {Info.BehaviorPacks.Count} 个";
-    public string DetailsText => $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid ?? "未知"}\n版本：{Info.Version ?? "未知"}\n基础游戏版本：{BaseGameVersionText}\n模块 UUID：{(Info.ModuleUuids.Count == 0 ? "未知" : string.Join("、", Info.ModuleUuids))}\n\n默认资源包：\n{FormatPacks(Info.ResourcePacks)}\n\n默认行为包：\n{FormatPacks(Info.BehaviorPacks)}\n\n{DescriptionText}";
+    public string DetailsText => $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{Info.Version ?? "未知"}\n基础游戏版本：{BaseGameVersionText}\n模块 UUID：{(Info.ModuleUuids.Count == 0 ? "未知" : string.Join("、", Info.ModuleUuids.Select(uuid => uuid.ToLowerInvariant())))}\n\n默认资源包：\n{FormatPacks(Info.ResourcePacks)}\n\n默认行为包：\n{FormatPacks(Info.BehaviorPacks)}\n\n{DescriptionText}";
     public Bitmap? Icon { get; } = CreateIcon(info.IconData);
     public bool HasIcon => Icon != null;
     public bool IsSelected { get => _isSelected; set { if (_isSelected != value) { _isSelected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected))); } } }

@@ -98,7 +98,8 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
 
     partial void OnUuidChanged(string? value)
     {
-        ValidateUuid(value);
+        Uuid = value?.Trim().ToLowerInvariant();
+        ValidateUuid(Uuid);
         (ConfirmCommand as RelayCommand)?.NotifyCanExecuteChanged();
     }
 
@@ -157,7 +158,7 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
             _errors.Remove(propertyName);
         }
 
-        if (SyncUuid && !string.IsNullOrWhiteSpace(value) && !IsValidUuid(value))
+        if (!string.IsNullOrWhiteSpace(value) && !IsValidUuid(value))
         {
             _errors[propertyName] = new List<string> { "UUID 格式不正确" };
         }
@@ -181,9 +182,6 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
         if (string.IsNullOrWhiteSpace(RoleName))
             return false;
 
-        if (SyncUuid && string.IsNullOrWhiteSpace(Uuid))
-            return false;
-
         return true;
     }
 
@@ -192,15 +190,9 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
         if (!CanConfirm())
             return;
 
-        Guid uuid;
-        if (SyncUuid && Guid.TryParse(Uuid, out var parsedUuid))
-        {
-            uuid = parsedUuid;
-        }
-        else
-        {
-            uuid = _originalAccount.Uuid ?? MinecraftAccount.GetMinecraftOfflineUuid(RoleName!);
-        }
+        var uuid = Guid.TryParse(Uuid, out var parsedUuid)
+            ? parsedUuid
+            : _originalAccount.Uuid ?? MinecraftAccount.GetMinecraftOfflineUuid(RoleName!);
 
         var newAccount = new MinecraftAccount(AccountType.Offline)
         {

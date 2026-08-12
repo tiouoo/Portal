@@ -58,7 +58,8 @@ public partial class OfflineAccountViewModel : ObservableObject, IDialogContext,
 
     partial void OnUuidChanged(string? value)
     {
-        ValidateUuid(value);
+        Uuid = value?.Trim().ToLowerInvariant();
+        ValidateUuid(Uuid);
         (NextCommand as RelayCommand)?.NotifyCanExecuteChanged();
     }
 

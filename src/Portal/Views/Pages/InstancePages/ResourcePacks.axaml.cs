@@ -318,9 +318,9 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
     public string SupportedFormatsText => Info.SupportedFormats ?? "未知";
     public string VersionLabel => Info.IsBedrock ? "版本:" : "支持格式:";
     public string DetailsText => IsCompactLayout
-        ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid ?? "未知"}\n版本：{SupportedFormatsText}\n皮肤：{DescriptionText}"
+        ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{SupportedFormatsText}\n皮肤：{DescriptionText}"
         : Info.IsBedrock
-        ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid ?? "未知"}\n版本：{SupportedFormatsText}\n最低引擎版本：{Info.MinEngineVersion ?? "未知"}\n作者：{(Info.Authors.Count == 0 ? "未知" : string.Join("、", Info.Authors))}\n模块：{(Info.Modules.Count == 0 ? "无" : string.Join("、", Info.Modules))}\n依赖：{(Info.Dependencies.Count == 0 ? "无" : string.Join("、", Info.Dependencies))}\n子包：{(Info.Subpacks.Count == 0 ? "无" : string.Join("、", Info.Subpacks))}\n能力：{(Info.Capabilities.Count == 0 ? "无" : string.Join("、", Info.Capabilities))}\n\n{DescriptionText}"
+        ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{SupportedFormatsText}\n最低引擎版本：{Info.MinEngineVersion ?? "未知"}\n作者：{(Info.Authors.Count == 0 ? "未知" : string.Join("、", Info.Authors))}\n模块：{(Info.Modules.Count == 0 ? "无" : string.Join("、", Info.Modules))}\n依赖：{(Info.Dependencies.Count == 0 ? "无" : string.Join("、", Info.Dependencies))}\n子包：{(Info.Subpacks.Count == 0 ? "无" : string.Join("、", Info.Subpacks))}\n能力：{(Info.Capabilities.Count == 0 ? "无" : string.Join("、", Info.Capabilities))}\n\n{DescriptionText}"
         : $"名称：{DisplayName}\n文件：{FileName}\n支持格式：{SupportedFormatsText}\n\n{DescriptionText}";
     public Bitmap? Icon { get; } = CreateIcon(info.IconData);
     public bool HasIcon => Icon != null;
