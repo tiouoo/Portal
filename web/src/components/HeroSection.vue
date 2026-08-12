@@ -9,7 +9,8 @@ import logoUrl from "../assets/portal-logo.svg";
       <p class="brand-title">Portal Launcher</p>
       <h1>你的 Minecraft，<br class="hero-break" /><em>从这里出发</em></h1>
       <p>
-        Portal 把启动、实例、资源与记录收进一个工作区。<br />少一点配置，多一点游戏。
+        <span class="desc-desktop">Portal 启动实例资源与记录收进一个工作区 —— 少一点配置，多一点游戏。</span>
+        <span class="desc-mobile">Portal 把启动、实例、资源与记录收进一个工作区。<br />少一点配置，多一点游戏。</span>
       </p>
       <div class="hero-actions">
         <a class="button primary" href="#download">
@@ -40,7 +41,7 @@ import logoUrl from "../assets/portal-logo.svg";
       </div>
       <div class="hero-meta">
         <span><i class="status-dot"></i> 持续更新</span>
-        <span>Windows · macOS · Linux</span>
+        <span>windows · macOs · linux</span>
       </div>
     </div>
 
@@ -266,6 +267,12 @@ h1 em {
   font-size: 18px;
   line-height: 1.85;
 }
+.desc-mobile {
+  display: none;
+}
+.desc-desktop {
+  display: inline;
+}
 .hero-actions {
   display: flex;
   justify-content: center;
@@ -336,7 +343,7 @@ h1 em {
   display: block;
   box-sizing: border-box;
   width: 100%;
-  max-width: 1280px;
+  max-width: 1175px;
   height: auto;
   margin: 0 auto;
   border: 1px solid rgba(215, 220, 231, 0.9);
@@ -780,6 +787,15 @@ h1 em {
   }
   .floating-pill {
     display: none;
+  }
+}
+
+@media (max-width: 718px) {
+  .desc-desktop {
+    display: none;
+  }
+  .desc-mobile {
+    display: inline;
   }
 }
 
