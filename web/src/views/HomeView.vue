@@ -11,7 +11,7 @@ import ProtocolSection from '../components/ProtocolSection.vue'
     <HeroSection />
     <FeatureSection />
     <DownloadSection />
-    <ProtocolSection />
+    <ProtocolSection v-if="false" />
     <OpenSourceSection />
   </main>
 </template>

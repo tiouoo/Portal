@@ -193,8 +193,8 @@ function invoke() {
 
 <style scoped>
 .section {
-  padding-top: 60px;
-  padding-bottom: 60px;
+  padding-top: 100px;
+  padding-bottom: 100px;
 }
 .section-heading {
   text-align: center;

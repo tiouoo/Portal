@@ -118,9 +118,9 @@ const channelHint = computed(() => {
       </div>
     </div>
     <p class="download-note">
-      基岩版 UWP (版本 ≤ 1.12.11401) 与版本隔离仅支持 Windows x64。macOS
-      如遇安全提示或文件损坏，请参考<RouterLink
-        to="/macos-install"
+      基岩版 UWP (版本 ≤ 1.12.11401) 与版本隔离仅支持 Windows x64。
+      如遇无法打开、安全提示或文件损坏，请参考<RouterLink
+        to="/install"
         style="white-space: nowrap; margin: 0 5px">
         安装说明 </RouterLink
       >。
@@ -130,8 +130,8 @@ const channelHint = computed(() => {
 
 <style scoped>
 .section {
-  padding-top: 60px;
-  padding-bottom: 60px;
+  padding-top: 100px;
+  padding-bottom: 100px;
 }
 .section-kicker {
   color: var(--blue);

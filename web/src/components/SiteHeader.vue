@@ -37,6 +37,9 @@ function closeMenu() {
         </svg>
       </button>
       <div class="nav-links" :class="{ open: menuOpen }">
+        <RouterLink to="/install" @click="closeMenu"
+          >安装说明</RouterLink
+        >
         <RouterLink :to="{ path: '/', hash: '#open-source' }" @click="closeMenu"
           >官方 QQ 群</RouterLink
         >

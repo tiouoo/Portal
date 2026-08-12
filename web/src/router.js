@@ -1,5 +1,6 @@
 import { createRouter as createVueRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
+import InstallView from './views/InstallView.vue'
 import MacOSInstallView from './views/MacOSInstallView.vue'
 
 export function createRouter() {
@@ -16,12 +17,21 @@ export function createRouter() {
         }
       },
       {
-        path: '/macos-install',
+        path: '/install',
+        component: InstallView,
+        meta: {
+          title: 'Portal 安装说明 - macOS 和 Linux 安装指南',
+          description:
+            'Portal 启动器多平台安装指南。macOS 解除"已损坏"限制，Linux AppImage、RPM、DEB 安装教程及依赖配置说明。'
+        }
+      },
+      {
+        path: '/install/macos',
         component: MacOSInstallView,
         meta: {
-          title: 'Portal macOS 安装说明 - 解除“已损坏”限制',
+          title: 'Portal macOS 安装说明 - 解除"已损坏"限制',
           description:
-            'macOS 安装 Portal 启动器时遇到“已损坏，无法打开”或文件损坏？按此说明选择正确的安装包并解除系统限制。'
+            'macOS 安装 Portal 启动器时遇到"已损坏，无法打开"或文件损坏？按此说明选择正确的安装包并解除系统限制。'
         }
       }
     ],

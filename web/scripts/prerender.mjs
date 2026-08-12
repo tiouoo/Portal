@@ -9,7 +9,7 @@ const distDir = path.join(root, 'dist');
 
 const routes = [
   { path: '/', output: 'index.html' },
-  { path: '/macos-install', output: 'macos-install/index.html' },
+  { path: '/install', output: 'install/index.html' },
 ];
 
 async function prerender() {
