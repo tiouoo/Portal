@@ -1,9 +1,10 @@
 <script setup>
 import logoUrl from "../assets/portal-logo.svg";
+import qrCodeUrl from "../assets/qr.png";
 </script>
 
 <template>
-  <section class="open-source container section">
+  <section id="open-source" class="open-source container section">
     <div class="oss-mark">
       <img :src="logoUrl" alt="" width="42" height="42" />
     </div>
@@ -11,7 +12,7 @@ import logoUrl from "../assets/portal-logo.svg";
       <span class="section-kicker">自由且透明</span>
       <h2>由社区共同塑造</h2>
       <p>
-        Portal 以 GPL-3.0-or-later
+        Portal 以 AGPL-3.0-or-later
         许可开源。你可以检查每一行代码、提交问题，或让自己的想法成为下一次更新的一部分。
       </p>
       <div class="oss-actions">
@@ -51,15 +52,35 @@ import logoUrl from "../assets/portal-logo.svg";
         </a>
       </div>
     </div>
-    <div class="repo-card">
-      <div class="repo-title">
-        <img :src="logoUrl" alt="" width="36" height="36" /><span
-          ><small>github.com/tiouoo</small><b>Portal</b></span
-        >
+    <div class="cards-stack">
+      <div class="qq-card-small">
+        <div class="qq-card-header">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor">
+            <path d="M433.754 420.445c-11.526 1.393-44.86-52.741-44.86-52.741c0 31.345-16.136 72.247-51.051 101.786c16.842 5.192 54.843 19.167 45.803 34.421c-7.316 12.343-125.51 7.881-159.632 4.037c-34.122 3.844-152.316 8.306-159.632-4.037c-9.045-15.25 28.918-29.214 45.783-34.415c-34.92-29.539-51.059-70.445-51.059-101.792c0 0-33.334 54.134-44.859 52.741c-5.37-.65-12.424-29.644 9.347-99.704c10.261-33.024 21.995-60.478 40.144-105.779C60.683 98.063 108.982.006 224 0c113.737.006 163.156 96.133 160.264 214.963c18.118 45.223 29.912 72.85 40.144 105.778c21.768 70.06 14.716 99.053 9.346 99.704"/>
+          </svg>
+          <span>官方 QQ 群</span>
+        </div>
+        <div class="qq-card-number">475032328</div>
+        <div class="qq-card-footer">
+          <span>扫码或搜索群号加入</span>
+          <img :src="logoUrl" alt="" width="20" height="20" />
+        </div>
+        <div class="qq-qr">
+          <img :src="qrCodeUrl" alt="QQ群二维码" />
+        </div>
       </div>
-      <div class="code-lines"><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="repo-footer">
-        <span><i></i> C#</span><b>GPL-3.0</b>
+      <div class="repo-card">
+        <div class="repo-title">
+          <img :src="logoUrl" alt="" width="36" height="36" /><span
+            ><small>github.com/tiouoo</small><b>Portal</b></span
+          >
+        </div>
+        <div class="code-lines"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="repo-footer">
+          <span>github.com/tiouoo/Portal</span>
+          <span><i></i> C#</span>
+          <b>AGPL-3.0</b>
+        </div>
       </div>
     </div>
   </section>
@@ -74,7 +95,7 @@ import logoUrl from "../assets/portal-logo.svg";
   display: grid;
   grid-template-columns: 90px 1fr 400px;
   gap: 48px;
-  align-items: center;
+  align-items: start;
 }
 .section-kicker {
   color: var(--blue);
@@ -84,7 +105,6 @@ import logoUrl from "../assets/portal-logo.svg";
   text-transform: uppercase;
 }
 .oss-mark {
-  align-self: start;
   width: 74px;
   height: 74px;
   display: grid;
@@ -154,12 +174,89 @@ import logoUrl from "../assets/portal-logo.svg";
 .text-link span {
   color: var(--blue);
 }
+.cards-stack {
+  position: relative;
+  width: 400px;
+  height: 270px;
+}
+.qq-card-small {
+  position: absolute;
+  top: 0;
+  right: -15px;
+  width: calc(100% - 20px);
+  z-index: 2;
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid #e2e6ee;
+  color: var(--ink);
+  box-shadow: 0 20px 45px rgba(60, 75, 105, 0.15);
+  transform: rotate(-1.5deg) translateY(15px);
+  pointer-events: none;
+}
+.qq-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5f6879;
+}
+.qq-card-header svg {
+  width: 18px;
+  height: 18px;
+  color: #20283a;
+}
+.qq-card-number {
+  margin: 18px 0 12px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #20283a;
+}
+.qq-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #e8ecf3;
+  font-size: 10px;
+  color: #8f96a4;
+}
+.qq-card-footer img {
+  opacity: 0.4;
+}
+.qq-qr {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 84px;
+    height: 84px;
+    padding: 2px;
+    border-radius: 10px;
+    background: white;
+    border: 1px solid #e8ecf3;
+    margin: 2px;
+}
+.qq-qr img {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  display: block;
+}
 .repo-card {
+  position: absolute;
+  bottom: 0;
+  left: -15px;
+  width: calc(100% - 20px);
+  z-index: 1;
   padding: 25px;
+  padding-top: 28px;
   border-radius: 16px;
   background: #20283a;
   color: white;
   box-shadow: 0 25px 50px rgba(29, 38, 57, 0.2);
+  transform: rotate(1.5deg);
 }
 .repo-title {
   display: flex;
@@ -184,7 +281,7 @@ import logoUrl from "../assets/portal-logo.svg";
   margin-top: 2px;
 }
 .code-lines {
-  margin: 28px 0;
+  margin: 22px 0;
 }
 .code-lines i {
   display: block;
@@ -213,15 +310,31 @@ import logoUrl from "../assets/portal-logo.svg";
 .repo-footer {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   color: #a4adbd;
   font-size: 10px;
+  gap: 12px;
 }
-.repo-footer span {
+.repo-footer > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.repo-footer > span:nth-child(2) {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
-.repo-footer span i {
+.repo-footer > span:nth-child(2) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.repo-footer > span:nth-child(2) i {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -232,7 +345,7 @@ import logoUrl from "../assets/portal-logo.svg";
   .open-source {
     grid-template-columns: 70px 1fr;
   }
-  .repo-card {
+  .cards-stack {
     grid-column: 2;
     width: 100%;
     max-width: 450px;
@@ -251,7 +364,7 @@ import logoUrl from "../assets/portal-logo.svg";
   .oss-mark {
     align-self: auto;
   }
-  .repo-card {
+  .cards-stack {
     grid-column: auto;
   }
 }

@@ -1,6 +1,6 @@
 <script setup>
-import logoUrl from "../assets/portal-logo.svg";
-import { RouterLink } from "vue-router";
+import logoUrl from '../assets/portal-logo.svg';
+import { RouterLink } from 'vue-router';
 </script>
 
 <template>
@@ -8,29 +8,22 @@ import { RouterLink } from "vue-router";
     <div class="container footer-inner">
       <RouterLink class="brand" to="/"
         ><img :src="logoUrl" alt="" width="23" height="23" /><span
+          style="line-height: 1; margin-top: 4px"
           >Portal</span
         ></RouterLink
       >
-      <p>Copyright © Portal 2026. 基于 GPL-3.0-or-later 开源许可发布。</p>
+      <p>Copyright © Portal 2026. 基于 AGPL-3.0-or-later 开源许可发布。</p>
       <div class="footer-links">
-        <a
-          href="https://github.com/tiouoo/Portal"
-          target="_blank"
-          rel="noreferrer"
-          >GitHub</a
-        >
-        <a
-          href="https://github.com/tiouoo/Portal/releases"
-          target="_blank"
-          rel="noreferrer"
+        <a href="https://github.com/tiouoo/Portal" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://github.com/tiouoo/Portal/releases" target="_blank" rel="noreferrer"
           >发行版本</a
         >
         <a href="mailto:tiouo@qq.com">联系</a>
       </div>
     </div>
     <p class="disclaimer container">
-      Portal 是独立开源项目，与 Mojang Studios 或 Microsoft
-      没有从属关系。Minecraft 是 Microsoft 旗下商标。
+      Portal 是独立开源项目，与 Mojang Studios 或 Microsoft 没有从属关系。Minecraft 是 Microsoft
+      旗下商标。
     </p>
   </footer>
 </template>
@@ -60,13 +53,13 @@ footer {
 }
 .footer-inner p {
   color: #8b92a0;
-  font-size: 11px;
+  font-size: 12px;
 }
 .footer-links {
   display: flex;
   gap: 24px;
   color: #70798a;
-  font-size: 11px;
+  font-size: 12px;
 }
 .footer-links a:hover {
   color: var(--blue);
@@ -76,7 +69,7 @@ footer {
   padding-top: 18px;
   border-top: 1px solid #e0e4ea;
   color: #a0a6b1;
-  font-size: 9px;
+  font-size: 11px;
   text-align: center;
 }
 

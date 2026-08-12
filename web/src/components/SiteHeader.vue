@@ -37,7 +37,7 @@ function closeMenu() {
         </svg>
       </button>
       <div class="nav-links" :class="{ open: menuOpen }">
-        <RouterLink :to="{ path: '/', hash: '#qq-group' }" @click="closeMenu"
+        <RouterLink :to="{ path: '/', hash: '#open-source' }" @click="closeMenu"
           >官方 QQ 群</RouterLink
         >
         <RouterLink :to="{ path: '/', hash: '#download' }" @click="closeMenu"
