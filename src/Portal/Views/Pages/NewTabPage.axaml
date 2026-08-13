@@ -20,10 +20,7 @@
         <portalConverters:WidthToColumnsConverter x:Key="WidthToColumnsConv" />
         <portalConverters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
     </UserControl.Resources>
-    <tio:ScrollView
-        Classes="Flat"
-        Margin="12,2,5,10"
-        SizeChanged="NewTabPage_OnSizeChanged">
+    <tio:ScrollView Classes="Flat" Margin="12,2,5,10">
         <StackPanel Margin="0,0,7,0" Spacing="0">
             <DockPanel VerticalAlignment="Top">
                 <StackPanel
@@ -755,7 +752,10 @@
                                 <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Binding ToggleBlockedRecentPlaysText}" />
                             </Button>
                         </DockPanel>
-                        <ItemsRepeater HorizontalAlignment="Stretch" ItemsSource="{Binding RecentPlays}">
+                        <ItemsRepeater
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding RecentPlays}"
+                            SizeChanged="NewTabPage_OnSizeChanged">
                             <ItemsRepeater.Layout>
                                 <UniformGridLayout
                                     ItemsStretch="Fill"

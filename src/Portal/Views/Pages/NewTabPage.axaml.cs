@@ -428,7 +428,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
 
     public void SetRecentPlayWidth(double width)
     {
-        var capacity = Math.Max(1, (int)((width + 12) / 282));
+        var capacity = Math.Max(1, (int)(width / 282));
         if (_recentPlayCapacity == capacity)
             return;
 

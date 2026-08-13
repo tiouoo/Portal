@@ -101,7 +101,7 @@
             Fill="{DynamicResource TranslucentBorderBrush}"
             Height="1"
             Margin="0,0,0,12" />
-        <tio:ScrollView Classes="Flat" SizeChanged="StartPage_OnSizeChanged">
+        <tio:ScrollView Classes="Flat">
             <StackPanel Margin="0,0,7,0">
                 <StackPanel IsVisible="{Binding HasRecentPlays}">
                     <StackPanel Margin="0,0,0,12" Spacing="8">
@@ -146,7 +146,10 @@
                                 <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Binding ToggleBlockedRecentPlaysText}" />
                             </Button>
                         </DockPanel>
-                        <ItemsRepeater HorizontalAlignment="Stretch" ItemsSource="{Binding RecentPlays}">
+                        <ItemsRepeater
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding RecentPlays}"
+                            SizeChanged="StartPage_OnSizeChanged">
                             <ItemsRepeater.Layout>
                                 <UniformGridLayout
                                     ItemsStretch="Fill"
