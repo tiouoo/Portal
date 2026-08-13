@@ -11,16 +11,15 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Text="玩家数据" />
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="修改离线玩家存档中的基础状态、位置、经验和飞行权限。"
-                TextWrapping="Wrap" />
         </StackPanel>
-        <controls:ScrollView Grid.Row="1" Margin="0,14,0,0">
+        <controls:ScrollView Grid.Row="1" Margin="0,7,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="12">
                 <TextBlock IsVisible="{Binding IsLoading}" Text="正在读取玩家数据..." />
                 <TextBlock IsVisible="{Binding !HasPlayers}" Text="此世界未找到可编辑的玩家数据文件。" />
                 <ItemsRepeater ItemsSource="{Binding Players}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="12" />
+                    </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="local:WorldPlayerDataSetting">
                             <Border

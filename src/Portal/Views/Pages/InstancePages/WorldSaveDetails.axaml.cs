@@ -84,8 +84,10 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     private readonly WorldScoreboardService _scoreboardService = new();
     private readonly WorldPlayerDataService _playerDataService = new();
     private readonly WorldSaveService _worldSaveService = new();
+    private readonly WorldLevelDataService _levelDataService = new();
     private readonly Dictionary<WorldSaveDetailsPage, UserControl> _pages;
     private WorldGameRules? _rules;
+    private WorldLevelData? _levelData;
 
     [ObservableProperty] private WorldSaveDetailsPage _selectedPage;
     [ObservableProperty] private UserControl? _currentPage;
@@ -100,6 +102,11 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     [ObservableProperty] private string _rainTime = "0";
     [ObservableProperty] private string _thunderTime = "0";
     [ObservableProperty] private string _clearWeatherTime = "0";
+    [ObservableProperty] private int _selectedGameMode = -1;
+    [ObservableProperty] private int _selectedDifficulty = -1;
+    [ObservableProperty] private bool _allowCheats;
+    [ObservableProperty] private string _worldSeed = string.Empty;
+    [ObservableProperty] private bool _hasLevelSettings;
 
     public ObservableCollection<WorldBooleanSetting> BooleanRules { get; } = [];
     public ObservableCollection<WorldNumberSetting> IntegerRules { get; } = [];
@@ -107,14 +114,13 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public ObservableCollection<WorldScoreboardObjectiveSetting> ScoreboardObjectives { get; } = [];
     public ObservableCollection<WorldScoreboardScoreSetting> ScoreboardScores { get; } = [];
     public ObservableCollection<WorldPlayerDataSetting> Players { get; } = [];
+    public IReadOnlyList<WorldGameModeOption> GameModeOptions { get; } = [new(0, "生存"), new(1, "创造"), new(2, "冒险"), new(3, "旁观")];
+    public IReadOnlyList<WorldDifficultyOption> DifficultyOptions { get; } = [new(0, "和平"), new(1, "简单"), new(2, "普通"), new(3, "困难")];
     public string DisplayName => string.IsNullOrWhiteSpace(_info.LevelName) ? _info.FolderName : _info.LevelName;
     public string FolderName => _info.FolderName;
     public string CreationTime => _info.CreationTime.ToString("yyyy-MM-dd HH:mm");
     public string LastPlayedTime => _info.LastPlayedTime?.ToString("yyyy-MM-dd HH:mm") ?? "未知";
     public string Version => _info.Version ?? "未知";
-    public string Seed => _info.Seed?.ToString() ?? "未知";
-    public string GameMode => _info.GameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知" };
-    public string AllowCommands => _info.AllowCommands is null ? "未知" : _info.AllowCommands.Value ? "是" : "否";
     public string FileStatistics => $"{_info.PlayerDataCount} 个玩家数据，{_info.DataPackArchiveCount} 个数据包";
     public bool IsLocked => _info.IsLocked;
     public bool IsUnlocked => !IsLocked;
@@ -188,6 +194,17 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
             foreach (var player in await _playerDataService.LoadAsync(_info.FolderPath))
                 Players.Add(new WorldPlayerDataSetting(player));
             HasPlayers = Players.Count > 0;
+
+            var levelData = await _levelDataService.LoadAsync(_info.FolderPath);
+            if (levelData != null)
+            {
+                _levelData = levelData;
+                SelectedGameMode = levelData.GameMode is >= 0 and <= 3 ? levelData.GameMode : -1;
+                SelectedDifficulty = levelData.Difficulty is >= 0 and <= 3 ? levelData.Difficulty : -1;
+                AllowCheats = levelData.AllowCommands;
+                WorldSeed = levelData.Seed.ToString();
+                HasLevelSettings = true;
+            }
         }
         catch (Exception ex)
         {
@@ -295,6 +312,28 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         await SaveAsync(() => _playerDataService.SaveAsync(data));
     }
 
+    [RelayCommand]
+    private async Task SaveLevelSettings()
+    {
+        if (!HasLevelSettings || _levelData == null || !await CanSaveAsync()) return;
+        if (SelectedGameMode is < 0 or > 3)
+        {
+            ShowNotice("请选择有效的游戏模式", NotificationType.Warning);
+            return;
+        }
+        if (SelectedDifficulty is < 0 or > 3)
+        {
+            ShowNotice("请选择有效的难度", NotificationType.Warning);
+            return;
+        }
+        if (!long.TryParse(WorldSeed, out var seed))
+        {
+            ShowNotice("世界种子必须是有效的 64 位整数", NotificationType.Warning);
+            return;
+        }
+        await SaveAsync(() => _levelDataService.SaveAsync(_info.FolderPath, new WorldLevelData(SelectedGameMode, SelectedDifficulty, AllowCheats, seed)));
+    }
+
     private async Task<bool> CanSaveAsync()
     {
         if (await _worldSaveService.IsWorldLockedAsync(_info.FolderPath))
@@ -389,6 +428,9 @@ public partial class WorldBooleanSetting(string key, string label, bool value) :
     public string Label { get; } = label;
     [ObservableProperty] private bool _value = value;
 }
+
+public record WorldGameModeOption(int Value, string Display);
+public record WorldDifficultyOption(int Value, string Display);
 
 public partial class WorldNumberSetting(string key, string label, long value) : ObservableObject
 {

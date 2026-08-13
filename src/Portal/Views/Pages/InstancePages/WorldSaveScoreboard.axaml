@@ -11,12 +11,8 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Text="积分榜管理" />
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="管理 scoreboard.dat 中的目标及其玩家分数。"
-                TextWrapping="Wrap" />
         </StackPanel>
-        <controls:ScrollView Grid.Row="1" Margin="0,14,0,0">
+        <controls:ScrollView Grid.Row="1" Margin="0,7,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="12">
                 <TextBlock IsVisible="{Binding IsLoading}" Text="正在读取积分榜..." />
                 <TextBlock IsVisible="{Binding !HasScoreboard}" Text="此世界未找到积分榜数据文件。" />

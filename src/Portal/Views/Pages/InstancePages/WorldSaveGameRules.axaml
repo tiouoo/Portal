@@ -11,12 +11,8 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Text="游戏规则" />
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="显示 game_rules.dat 中全部可编辑的布尔和整数规则。"
-                TextWrapping="Wrap" />
         </StackPanel>
-        <controls:ScrollView Grid.Row="1" Margin="0,14,0,0">
+        <controls:ScrollView Grid.Row="1" Margin="0,2,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="8">
                 <TextBlock IsVisible="{Binding IsLoading}" Text="正在读取设置..." />
                 <TextBlock IsVisible="{Binding !HasGameRules}" Text="此世界未找到可编辑的游戏规则文件。" />

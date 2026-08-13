@@ -10,12 +10,8 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Text="天气" />
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="直接修改 weather.dat。时间单位为游戏刻，20 刻约为 1 秒。"
-                TextWrapping="Wrap" />
         </StackPanel>
-        <ScrollViewer Grid.Row="1" Margin="0,14,0,0">
+        <ScrollViewer Grid.Row="1" Margin="0,10,0,0">
             <StackPanel Spacing="8">
                 <StackPanel IsVisible="{Binding HasWeather}" Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
