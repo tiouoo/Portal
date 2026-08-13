@@ -218,7 +218,7 @@ import qrCodeUrl from "../assets/qr.png";
   color: #20283a;
 }
 .qq-card-footer {
-  display: flex;
+  display: flex; 
   align-items: center;
   justify-content: space-between;
   padding-top: 12px;

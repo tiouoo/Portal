@@ -26,7 +26,9 @@ function inlineCss() {
 export default defineConfig({
   plugins: [vue(), inlineCss()],
   server: {
+    host: '0.0.0.0',
     port: 5174,
-    strictPort: true
-  }
+    strictPort: false,
+    cors: true,
+  },
 })
