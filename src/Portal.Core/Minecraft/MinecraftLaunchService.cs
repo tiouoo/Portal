@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.Win32;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -158,6 +157,7 @@ public static class MinecraftLaunchService
             JavaEntry? java = null;
             LaunchConfig? config = null;
             Dictionary<string, string>? placeholders = null;
+            IReadOnlyDictionary<string, string>? highPerformanceGpuEnvironment = null;
 
             verifyAccount!.Start(async context =>
             {
@@ -173,7 +173,18 @@ public static class MinecraftLaunchService
                 context.SetRunning("正在检查可用 Java 运行时");
                 java = await SelectJavaAsync(instance, options, context, context.CancellationToken);
                 if (options.AutoSetJavaHighPerformanceGpu)
-                    TrySetHighPerformanceGpuPreference(java.JavaPath);
+                {
+                    if (OperatingSystem.IsWindows())
+                    {
+                        HighPerformanceGpuService.TrySetWindowsHighPerformanceGpuPreference(java.JavaPath);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        context.SetDescription("正在解析高性能显卡环境");
+                        highPerformanceGpuEnvironment =
+                            await HighPerformanceGpuService.ResolveLinuxHighPerformanceGpuEnvironmentAsync();
+                    }
+                }
                 context.ReportProgress(1);
             });
             await selectJava.Completion;
@@ -184,6 +195,13 @@ public static class MinecraftLaunchService
                 context.SetRunning("正在应用实例与全局游戏设置");
                 placeholders = LaunchCustomization.BuildPlaceholders(instance, account, java, options);
                 config = CreateLaunchConfig(instance, account!, java!, options, target, placeholders);
+                if (highPerformanceGpuEnvironment is { Count: > 0 } gpuEnvironment)
+                {
+                    var merged = new Dictionary<string, string>(gpuEnvironment);
+                    foreach (var (key, value) in config.EnvironmentVariables)
+                        merged[key] = value;
+                    config.EnvironmentVariables = merged;
+                }
                 context.ReportProgress(1);
                 return Task.CompletedTask;
             });
@@ -606,24 +624,6 @@ public static class MinecraftLaunchService
         JavaPath = java.JavaPath, JavaType = java.JavaType, JavaVersion = java.JavaVersion,
         MajorVersion = java.MajorVersion, Is64bit = java.Is64Bit
     };
-
-    private static void TrySetHighPerformanceGpuPreference(string executablePath)
-    {
-        if (!OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(executablePath))
-            return;
-
-        try
-        {
-            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\DirectX\UserGpuPreferences");
-            const string preference = "GpuPreference=2;";
-            if (!string.Equals(key.GetValue(executablePath) as string, preference, StringComparison.Ordinal))
-                key.SetValue(executablePath, preference, RegistryValueKind.String);
-        }
-        catch (Exception exception)
-        {
-            Logger.Warning($"设置 Java 高性能显卡首选项失败。{Environment.NewLine}{exception}");
-        }
-    }
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
         MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders)

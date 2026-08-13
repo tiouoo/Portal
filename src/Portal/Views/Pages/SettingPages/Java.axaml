@@ -99,7 +99,7 @@
                 IsChecked="{Binding Data.ConfigEntry.AutoOptimizeMemoryBeforeGameLaunch}"
                 VerticalAlignment="Center" />
         </Grid>
-        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsWindows}">
+        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsWindowsOrLinux}">
             <StackPanel Spacing="2">
                 <Label
                     Content="自动为 Java 使用高性能显卡"
@@ -109,7 +109,7 @@
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="启动游戏时，自动在 Windows 图形设置中将 Java 设为使用高性能显卡" />
+                    Text="启动游戏时，自动为 Java 选择高性能独立显卡" />
             </StackPanel>
             <ToggleSwitch
                 Grid.Column="1"

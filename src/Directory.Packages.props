@@ -28,6 +28,7 @@
     <PackageVersion Include="SharpCompress" Version="0.39.0" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="Tomlyn" Version="2.10.1" />
+    <PackageVersion Include="Tmds.DBus" Version="0.94.2" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
     <PackageVersion Include="BedrockLauncher.Core" Version="2.0.4.7" />
     <PackageVersion Include="BedrockLauncher.Core.Linux" Version="1.0.0.3" />
