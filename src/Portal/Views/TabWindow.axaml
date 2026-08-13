@@ -41,11 +41,9 @@
                 <NativeMenu>
                     <NativeMenuItem
                         Click="NM_NewTab"
-                        Gesture="Ctrl+T"
                         Header="新建标签页" />
                     <NativeMenuItem
                         Click="NM_CloseTab"
-                        Gesture="Ctrl+W"
                         Header="关闭当前标签页"
                         IsEnabled="{Binding SelectedTab.IsCloseable}" />
                     <NativeMenuItem

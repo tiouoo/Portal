@@ -12,17 +12,19 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using CommunityToolkit.Mvvm.Input;
 #if DEBUG
 using HotAvalonia;
 #endif
 using Portal.Classes.Entries;
 using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Core.Minecraft.Classes;
+using Portal.Core.Operations.OpenFile;
 using Portal.Module.DefaultPage;
 using Portal.Module.DragDrop;
 using Portal.Views.Components;
 using Portal.Views.Pages;
+using Portal.Views.Pages.DownloadPages;
 using SkiaSharp;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Helper;
@@ -305,8 +307,13 @@ public partial class TabWindow : TioTabWindowBase
         App.Method.SaveConfig();
     }
 
-    private void OpenAggregatedSearchDialog()
+    public void OpenAggregatedSearchDialog()
     {
+        // 文本框聚焦时不触发聚合搜索，避免劫持正常的大写字母输入
+        if (FocusManager?.GetFocusedElement() is TextBox or Avalonia.Controls.AutoCompleteBox
+            or TioUi.Controls.AutoCompleteBox)
+            return;
+
         var options = new DialogOptions
         {
             Mode = DialogMode.None,
@@ -329,37 +336,73 @@ public partial class TabWindow : TioTabWindowBase
 
     private void Keys()
     {
-        KeyBindings.Add(new KeyBinding
+        // TioTabWindowBase 内置的 Ctrl+T / Ctrl+W / Ctrl+Shift+W 由快捷键管理器统一接管，
+        // 以便用户能在设置中修改或禁用这些默认快捷键。
+        RemoveDefaultWindowKeyBindings();
+        ShortcutManager.Apply(this);
+    }
+
+    /// <summary>移除基类 TioTabWindowBase 构造时注册的默认快捷键，改为按配置注册。</summary>
+    private void RemoveDefaultWindowKeyBindings()
+    {
+        var toRemove = KeyBindings
+            .Where(binding => binding.Gesture is KeyGesture gesture && IsDefaultWindowGesture(gesture))
+            .ToArray();
+        foreach (var binding in toRemove)
+            KeyBindings.Remove(binding);
+    }
+
+    private static bool IsDefaultWindowGesture(KeyGesture gesture) =>
+        (gesture.Key == Key.T && gesture.KeyModifiers == KeyModifiers.Control) ||
+        (gesture.Key == Key.W && gesture.KeyModifiers == KeyModifiers.Control) ||
+        (gesture.Key == Key.W && gesture.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift));
+
+    /// <summary>在当前窗口打开一个新标签页。</summary>
+    public void OpenPage(ITioTabPage page)
+    {
+        var tab = new TabEntry(this, page);
+        CreateTab(tab);
+        SelectTab(tab);
+    }
+
+    public void OpenDebugPage() => OpenPage(new DebugPage());
+
+    public void OpenCreateInstanceDialog()
+    {
+        var options = new OverlayDialogOptions
         {
-            Gesture = KeyGesture.Parse("Ctrl+Shift+Q"),
-            Command = new RelayCommand(() => Data.ConfigEntry.Theme = Data.ConfigEntry.Theme switch
-            {
-                TioUi.Shared.Theme.Light => TioUi.Shared.Theme.Dark,
-                TioUi.Shared.Theme.Dark => TioUi.Shared.Theme.Mirage,
-                _ => TioUi.Shared.Theme.Light
-            })
-        });
-#if DEBUG
-        KeyBindings.Add(new KeyBinding
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            CanResize = false,
+            IsCloseButtonVisible = false
+        };
+        _ = OverlayDialog.ShowCustomAsync<CreateInstanceDialog, CreateInstanceDialogViewModel, bool>(
+            new CreateInstanceDialogViewModel(), this.TryGetHostId(), options);
+    }
+
+    /// <summary>打开“添加 Minecraft 游戏文件夹”对话框，选择并添加游戏目录。</summary>
+    public async void OpenAddMinecraftFolderDialog()
+    {
+        var options = new OverlayDialogOptions
         {
-            Gesture = KeyGesture.Parse("Shift+F12"),
-            Command = new RelayCommand(() =>
-            {
-                var tioTabWindowBase = this.GetTopLevel() as TioTabWindowBase;
-                var tabEntry = new TabEntry(tioTabWindowBase!, new DebugPage());
-                tioTabWindowBase.CreateTab(tabEntry);
-                tioTabWindowBase.SelectTab(tabEntry);
-            })
-        });
-#endif
-        KeyBindings.Add(new KeyBinding
-        {
-            Gesture = KeyGesture.Parse("Shift+S"),
-            // 文本框聚焦时不触发聚合搜索，避免劫持正常的大写字母输入
-            Command = new RelayCommand(OpenAggregatedSearchDialog,
-                () => FocusManager?.GetFocusedElement() is not (TextBox or Avalonia.Controls.AutoCompleteBox
-                    or TioUi.Controls.AutoCompleteBox))
-        });
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
+        };
+
+        var result = await OverlayDialog
+            .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
+                new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders
+                    .Select(folder => folder.FolderPath).ToList()), hostId: this.TryGetHostId(), options: options);
+
+        if (result == null) return;
+        Data.ConfigEntry.MinecraftFolders.Add(result);
     }
 
     private void Button_OnClick(object? sender, RoutedEventArgs e)

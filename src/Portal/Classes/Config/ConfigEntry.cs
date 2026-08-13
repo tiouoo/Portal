@@ -1,26 +1,29 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch;
-using MinecraftLaunch.Base.Enums;
-using Portal.Views;
-using Portal.Views.Pages;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Services;
+using Portal.Views;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Helpers;
 using TioUi.Shared;
 
 namespace Portal.Classes.Entries;
 
+/// <summary>
+/// 全局应用配置。配置项见 <c>ConfigEntry.ConfigItems.cs</c>，快捷键配置见 <see cref="ShortcutConfig"/>。
+/// </summary>
 public partial class ConfigEntry : ObservableObject
 {
     private bool _isMinecraftFolderRecoveryScheduled;
@@ -51,86 +54,6 @@ public partial class ConfigEntry : ObservableObject
         JavaRuntimes.CollectionChanged += (_, _) => App.Method.SaveConfig();
     }
 
-    [ObservableProperty] public partial bool IsInitialized { get; set; } = true; // 仅在配置文件首次创建时由 Config.Initialize 置为 false
-    [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
-    [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
-    [ObservableProperty] public partial UpdateSource UpdateSource { get; set; } = UpdateSource.Cnb;
-    [ObservableProperty] public partial DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
-    [ObservableProperty] public partial DownloadSourceMode MinecraftFileSource { get; set; } = DownloadSourceMode.Auto;
-    [ObservableProperty] public partial DownloadSourceMode ModrinthSource { get; set; } = DownloadSourceMode.Auto;
-    [ObservableProperty] public partial DownloadSourceMode CurseForgeSource { get; set; } = DownloadSourceMode.Auto;
-    [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
-    [ObservableProperty] public partial bool EnableGameOverlay { get; set; } = true;
-    [ObservableProperty] public partial bool EnableFullscreen { get; set; }
-    [ObservableProperty] public partial bool AutoSetChineseLanguage { get; set; } = true;
-    [ObservableProperty] public partial bool EnableManagedWindowDecorationsOnWindows { get; set; }
-    [ObservableProperty] public partial bool EnableManagedWindowBorderOnWindows { get; set; } = true;
-    [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
-    [ObservableProperty] public partial bool EnableProxyServer { get; set; }
-    [ObservableProperty] public partial bool DisableSystemProxy { get; set; }
-    [ObservableProperty] public partial bool EnableGithubMirror { get; set; }
-    [ObservableProperty] public partial bool EnableDebugConsole { get; set; }
-    [ObservableProperty] public partial Logger.LogLevel MinimumLogLevel { get; set; } = Logger.LogLevel.Info;
-    [ObservableProperty] public partial bool AutoSetJavaHighPerformanceGpu { get; set; } = true;
-    [ObservableProperty] public partial bool AutoOptimizeMemoryBeforeGameLaunch { get; set; }
-    [ObservableProperty] public partial bool EnableBedrockAccountInjection { get; set; }
-    [ObservableProperty] public partial bool ShowDragDropTip { get; set; } = true;
-    [ObservableProperty] public partial bool ShowUpdateTip { get; set; } = true;
-    [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
-    [ObservableProperty] public partial bool ShowMinecraftNews { get; set; } = false;
-    [ObservableProperty] public partial bool ShowRecentPlays { get; set; } = true;
-    [ObservableProperty] public partial bool NewTabRecentPlaysExpanded { get; set; } = true;
-    [ObservableProperty] public partial bool StartPageRecentPlaysExpanded { get; set; }
-    [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
-    [ObservableProperty] public partial string? CustomUserAgent { get; set; }
-    [ObservableProperty] public partial string? ProxyServer { get; set; }
-    [ObservableProperty] public partial string? GithubMirrorUrl { get; set; }
-    [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
-    [ObservableProperty] public partial string? OnlinePlayerName { get; set; }
-    [ObservableProperty] public partial string DefaultPage { get; set; } = typeof(NewTabPage).AssemblyQualifiedName!;
-    [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
-    [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
-    [ObservableProperty] public partial string? AfterLaunchCommand { get; set; }
-    [ObservableProperty] public partial string? JvmArgs { get; set; }
-    [ObservableProperty] public partial string? PackagedCommand { get; set; }
-    [ObservableProperty] public partial Color BackgroundSolidColor { get; set; } = Color.Parse("#2d2d2d");
-    [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
-    [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
-    [ObservableProperty] public partial Color CustomWindowBorderColor { get; set; } = Color.Parse("#6a6c70");
-    [ObservableProperty] public partial NewTabContent NewTabContent { get; set; } = NewTabContent.NewTabPage;    
-    [ObservableProperty] public partial GithubMirrorMode GithubMirrorMode { get; set; } = GithubMirrorMode.Prefix;
-    [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
-    [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
-    [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
-    [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
-    [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
-    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
-    [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 64;
-    [ObservableProperty] public partial int DownloadMaxRetryCount { get; set; } = 4;
-    [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 32;
-    [ObservableProperty] public partial int CustomDownloadMaxFragmentCount { get; set; } = 8;
-    [ObservableProperty] public partial int MinecraftWindowWidth { get; set; } = 854;
-    [ObservableProperty] public partial int MinecraftWindowHeight { get; set; } = 480;
-    [ObservableProperty] public partial int MinecraftMaxMemory { get; set; } = 4096;
-    [ObservableProperty] public partial double ControlOpacity { get; set; } = 1;
-    [ObservableProperty] public partial double TranslucentControlOpacity { get; set; } = 1;
-    [ObservableProperty] public partial double AcrylicOpacity { get; set; } = 0.2;
-    [ObservableProperty] public partial double ImageBlurRadius { get; set; } = 0.0;
-    [ObservableProperty] public partial double MicaOpacity { get; set; } = 0.8;
-    [ObservableProperty] public partial double BlurOpacity { get; set; } = 0.5;
-    [ObservableProperty] public partial bool EnableImageMask { get; set; }
-    [ObservableProperty] public partial Color ImageMaskColor { get; set; } = Color.Parse("#000000");
-    [ObservableProperty] public partial double ImageMaskOpacity { get; set; } = 0.3;
-    [ObservableProperty] public partial bool ShowWidgetBackground { get; set; } = true;
-    [ObservableProperty] public partial double AppScale { get; set; } = 1.0;
-    [ObservableProperty] public partial double TabWindowWidth { get; set; }
-    [ObservableProperty] public partial double TabWindowHeight { get; set; }
-    [ObservableProperty] public partial bool HasTabWindowSize { get; set; }
-    [ObservableProperty] public partial List<WidgetLayoutData> WidgetLayout { get; set; } = [];
-    [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
-    [ObservableProperty] public partial BedrockAccount? UsingBedrockAccount { get; set; }
-    [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
-    [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
     public ObservableCollection<BedrockAccount> BedrockAccounts { get; } = [];
     public bool HasJavaAccounts => MinecraftAccounts.Count > 0;

@@ -98,6 +98,8 @@ public class Config
         }
 
         Logger.MinimumLevel = Data.ConfigEntry.MinimumLogLevel;
+        Data.ConfigEntry.Shortcuts ??= new ShortcutConfig();
+        ShortcutManager.Initialize();
 
         // 兼容旧配置：GitCode 更新源已下线，若仍保存其枚举值则回退到 CNB。
         if (!Enum.IsDefined(typeof(UpdateSource), Data.ConfigEntry.UpdateSource))
