@@ -12,6 +12,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Portal.Classes;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Provider;
@@ -135,7 +136,8 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         if (result.Destination == ModDownloadDestination.Install && result.Instance is not null)
         {
             var modsFolder = result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
-            foreach (var dependency in result.Dependencies)
+            foreach (var dependency in await ModDependencyFilter.FilterInstalledAsync(result.Instance,
+                         result.Dependencies))
                 StartDownload(topLevel, dependency, Path.Combine(modsFolder, dependency.FileName));
         }
     }
@@ -197,7 +199,8 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         if (result.Destination == ModDownloadDestination.Install && result.Instance is not null)
         {
             var modsFolder = result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
-            foreach (var dependency in result.Dependencies)
+            foreach (var dependency in await ModDependencyFilter.FilterInstalledAsync(result.Instance,
+                         result.Dependencies))
                 StartDownload(topLevel, dependency, Path.Combine(modsFolder, dependency.FileName));
         }
     }

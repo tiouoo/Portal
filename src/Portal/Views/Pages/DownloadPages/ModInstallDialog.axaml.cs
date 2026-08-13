@@ -1,13 +1,11 @@
 using System.Collections.ObjectModel;
-using System.IO.Compression;
-using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Provider;
-using MinecraftLaunch.Utilities;
+using Portal.Classes;
 using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Views.Pages.InstancePages;
@@ -62,7 +60,10 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     private readonly IReadOnlyList<ModVersionFileItem> _files;
     private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseforge = new();
+    private static readonly TimeSpan DependencyLoadTimeout = TimeSpan.FromSeconds(90);
     private int _dependencyLoadGeneration;
+    private int _dependencyFilterGeneration;
+    private ModInstallDependencyItem[] _allDependencies = [];
 
     public ModInstallDialogViewModel(ModVersionFileItem file, IEnumerable<MinecraftInstance> instances) : this([file], instances)
     {
@@ -109,12 +110,25 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     public bool CanInstall => SelectedInstance is not null && HasCompatibleFile;
     public bool CanInstallWithDependencies => CanInstall && !IsLoadingDependencies && !HasDependencyLoadError;
     public bool HasDependencies => Dependencies.Count > 0;
-    public bool ShowDependencyActions => IsLoadingDependencies || Dependencies.Count > 0 || HasDependencyLoadError;
+    public bool HasSkippedDependencies => SkippedDependenciesCount > 0;
+    public string SkippedDependenciesText => HasSkippedDependencies
+        ? $"已检测到 {SkippedDependenciesCount} 个依赖已存在于目标实例，将自动跳过下载"
+        : string.Empty;
+    public bool ShowDependencyActions =>
+        IsLoadingDependencies || Dependencies.Count > 0 || HasDependencyLoadError || HasSkippedDependencies;
     [ObservableProperty] public partial bool ShowAllInstances { get; set; }
     [ObservableProperty] public partial ModInstallInstanceItem? SelectedInstance { get; set; }
     [ObservableProperty] public partial bool HasCompatibleFile { get; set; } = true;
     [ObservableProperty] public partial bool IsLoadingDependencies { get; set; } = true;
     [ObservableProperty] public partial bool HasDependencyLoadError { get; set; }
+    [ObservableProperty] public partial int SkippedDependenciesCount { get; set; }
+
+    partial void OnSkippedDependenciesCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(HasSkippedDependencies));
+        OnPropertyChanged(nameof(SkippedDependenciesText));
+        OnPropertyChanged(nameof(ShowDependencyActions));
+    }
 
     partial void OnSelectedInstanceChanged(ModInstallInstanceItem? value)
     {
@@ -123,6 +137,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         if (compatibleFile is not null) File = compatibleFile;
         OnPropertyChanged(nameof(CanInstall));
         OnPropertyChanged(nameof(CanInstallWithDependencies));
+        _ = RefreshDependencyVisibilityAsync();
     }
 
     partial void OnHasCompatibleFileChanged(bool value)
@@ -192,22 +207,38 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         var generation = Interlocked.Increment(ref _dependencyLoadGeneration);
         var file = File;
         Dependencies.Clear();
+        _allDependencies = [];
+        SkippedDependenciesCount = 0;
         OnPropertyChanged(nameof(HasDependencies));
         IsLoadingDependencies = true;
         HasDependencyLoadError = false;
         try
         {
-            IReadOnlyList<ModVersionFileItem> dependencies = file.Source switch
+            // 依赖解析（含 NeoForge 压缩包下载与解析、平台查询、SQLite 缓存）全程放到后台线程，
+            // 避免下载大 jar 或解析压缩包时阻塞 UI 线程。
+            var loadTask = Task.Run(async () =>
             {
-                ModDetailsSource.Modrinth => await LoadModrinthDependenciesAsync(file),
-                ModDetailsSource.CurseForge => await LoadCurseForgeDependenciesAsync(file),
-                _ => []
-            };
-            var items = await Task.WhenAll(dependencies.Select(async dependency => new ModInstallDependencyItem(dependency,
-                CreateDetailsTarget(file, dependency), await GetDependencyNameAsync(dependency))));
+                IReadOnlyList<ModVersionFileItem> dependencies = file.Source switch
+                {
+                    ModDetailsSource.Modrinth => await LoadModrinthDependenciesAsync(file),
+                    ModDetailsSource.CurseForge => await LoadCurseForgeDependenciesAsync(file),
+                    _ => []
+                };
+                return await Task.WhenAll(dependencies.Select(async dependency => new ModInstallDependencyItem(dependency,
+                    CreateDetailsTarget(file, dependency), await GetDependencyNameAsync(dependency))));
+            });
+
+            // 超时兜底：网络缓慢或镜像重试时避免对话框一直卡在“正在加载依赖项”。
+            if (await Task.WhenAny(loadTask, Task.Delay(DependencyLoadTimeout)) != loadTask)
+            {
+                if (generation == _dependencyLoadGeneration) HasDependencyLoadError = true;
+                return;
+            }
+
+            var items = await loadTask;
             if (generation != _dependencyLoadGeneration) return;
-            foreach (var item in items) Dependencies.Add(item);
-            OnPropertyChanged(nameof(HasDependencies));
+            _allDependencies = items;
+            await RefreshDependencyVisibilityAsync();
         }
         catch (Exception exception)
         {
@@ -224,48 +255,41 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         }
     }
 
+    /// <summary>
+    /// 根据当前选中的实例动态过滤依赖：已存在于该实例 mods 目录中的依赖不再显示、也不会被下载。
+    /// 切换实例、依赖加载完成时都会重新执行。
+    /// </summary>
+    private async Task RefreshDependencyVisibilityAsync()
+    {
+        var filterGeneration = Interlocked.Increment(ref _dependencyFilterGeneration);
+        var instance = SelectedInstance?.Instance;
+        var items = (IReadOnlyList<ModInstallDependencyItem>)_allDependencies;
+        var skipped = 0;
+        if (instance is not null && items.Count > 0)
+        {
+            var dependencyFiles = items.Select(item => item.File).ToArray();
+            var remaining = await Task.Run(() => ModDependencyFilter.FilterInstalledAsync(instance, dependencyFiles));
+            if (filterGeneration != _dependencyFilterGeneration) return;
+
+            var remainingIds = remaining.Select(file => file.Id).ToHashSet(StringComparer.Ordinal);
+            var filtered = items.Where(item => remainingIds.Contains(item.File.Id)).ToArray();
+            skipped = items.Count - filtered.Length;
+            items = filtered;
+        }
+
+        if (filterGeneration != _dependencyFilterGeneration) return;
+
+        Dependencies.Clear();
+        foreach (var item in items) Dependencies.Add(item);
+        SkippedDependenciesCount = skipped;
+        OnPropertyChanged(nameof(HasDependencies));
+    }
+
     private async Task<IReadOnlyList<ModVersionFileItem>> LoadModrinthDependenciesAsync(ModVersionFileItem file)
     {
         var dependencies = file.Dependencies.ToList();
-        try
-        {
-            var declaredProjects = dependencies.Select(dependency => dependency.ProjectId).ToHashSet();
-            var modIds = await ReadNeoForgeRequiredModIdsAsync(file);
-            foreach (var modId in modIds)
-            {
-                var project = (await _modrinth.SearchAsync(modId)).FirstOrDefault(candidate =>
-                    string.Equals(candidate.Slug, modId, StringComparison.OrdinalIgnoreCase));
-                if (project is not null && declaredProjects.Add(project.ProjectId))
-                    dependencies.Add(new ModFileDependency(project.ProjectId, project.Name));
-            }
-        }
-        catch (Exception exception)
-        {
-            Logger.Warning($"[ModInstall] Failed to inspect NeoForge requirements for {file.FileName}: {exception}");
-            // Platform metadata remains the primary source when the archive cannot be inspected.
-        }
-
         var files = await Task.WhenAll(dependencies.Select(dependency => LoadModrinthDependencyAsync(file, dependency)));
         return files.OfType<ModVersionFileItem>().DistinctBy(file => file.Id).ToArray();
-    }
-
-    private async Task<IReadOnlyList<string>> ReadNeoForgeRequiredModIdsAsync(ModVersionFileItem file)
-    {
-        if (!file.GroupKeys.Any(key => key.Loader == "NeoForge")) return [];
-
-        await using var stream = await HttpUtil.Client.GetStreamAsync(file.DownloadUrl);
-        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
-        var entry = archive.GetEntry("META-INF/neoforge.mods.toml") ?? archive.GetEntry("META-INF/mods.toml");
-        if (entry is null) return [];
-
-        using var reader = new StreamReader(entry.Open());
-        var metadata = await reader.ReadToEndAsync();
-        return Regex.Matches(metadata, @"(?ms)^\s*\[\[dependencies\.[^\]]+\]\](?<body>.*?)(?=^\s*\[\[|\z)")
-            .Select(match => match.Groups["body"].Value)
-            .Where(body => Regex.IsMatch(body, "(?m)^\\s*(?:type\\s*=\\s*\\\"required\\\"|mandatory\\s*=\\s*true)"))
-            .Select(body => Regex.Match(body, "(?m)^\\s*modId\\s*=\\s*\\\"(?<id>[^\\\"]+)\\\"").Groups["id"].Value)
-            .Where(id => !string.IsNullOrWhiteSpace(id) && id is not "minecraft" and not "neoforge" and not "forge")
-            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     private async Task<ModVersionFileItem?> LoadModrinthDependencyAsync(ModVersionFileItem file, ModFileDependency dependency)

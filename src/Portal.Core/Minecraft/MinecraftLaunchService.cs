@@ -340,6 +340,86 @@ public static class MinecraftLaunchService
         {
             SourceRootDirectories = options.ResourceSourceRoots
         };
+
+        // 阶段 1：检查资源文件
+        await RunStepAsync(context, "检查资源文件", "正在验证本地资源文件完整性", async step =>
+        {
+            await Task.Factory.StartNew(
+                    () => downloader.VerifyDependenciesAsync(fileVerificationParallelism: 2,
+                        cancellationToken: step.CancellationToken),
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default)
+                .Unwrap();
+
+            var copyCount = downloader.CopyItems.Count;
+            var downloadCount = downloader.DependenciesToDownload.Count;
+            step.SetDescription(copyCount + downloadCount == 0
+                ? "所有资源文件均已就绪，无需下载或复制"
+                : $"发现 {copyCount} 个文件可复制、{downloadCount} 个文件需下载");
+            step.ReportProgress(1);
+        });
+
+        // 阶段 2：复制本地资源文件
+        if (downloader.CopyItems.Count > 0)
+        {
+            await RunStepAsync(context, "复制本地资源文件", "正在复制本地资源文件", step =>
+            {
+                AttachCopyProgressReporter(step, downloader);
+                return Task.Run(() => downloader.CopyDependencies(fileVerificationParallelism: 4,
+                    step.CancellationToken), step.CancellationToken);
+            });
+        }
+
+        // 阶段 3：下载剩余资源文件
+        if (downloader.DependenciesToDownload.Count > 0)
+        {
+            await RunStepAsync(context, "下载资源文件", "正在下载资源文件", async step =>
+            {
+                AttachDownloadProgressReporter(step, downloader);
+                var result = await Task.Factory.StartNew(
+                        () => downloader.DownloadDependenciesAsync(step.CancellationToken),
+                        CancellationToken.None,
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default)
+                    .Unwrap();
+                if (result.Failed.Any())
+                    throw new IOException($"资源补全失败：{result.Failed.Count()} 个文件下载失败。");
+                step.ReportProgress(1);
+            });
+        }
+
+        context.ReportProgress(1);
+        context.SetDescription("资源补全完成");
+    }
+
+    private static void AttachCopyProgressReporter(TaskExecutionContext context, MinecraftResourceDownloader downloader)
+    {
+        ResourceCopyProgressChangedEventArgs? latestProgress = null;
+        var dispatchQueued = 0;
+        downloader.CopyProgressChanged += (_, progress) =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+
+            Volatile.Write(ref latestProgress, progress);
+            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                Interlocked.Exchange(ref dispatchQueued, 0);
+                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                if (Volatile.Read(ref latestProgress) is not { } current) return;
+
+                var completion = current.TotalBytes > 0
+                    ? Math.Clamp((double)current.CopiedBytes / current.TotalBytes, 0, 1)
+                    : (double?)null;
+                context.ReportProgress(completion);
+                context.SetDescription(FormatCopyProgress(current));
+            }, DispatcherPriority.Background);
+        };
+    }
+
+    private static void AttachDownloadProgressReporter(TaskExecutionContext context, MinecraftResourceDownloader downloader)
+    {
         ResourceDownloadProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
         downloader.ProgressChanged += (_, progress) =>
@@ -362,20 +442,29 @@ public static class MinecraftLaunchService
                     current.DownloadedBytes, current.TotalBytes, current.Speed, current.EstimatedRemaining));
             }, DispatcherPriority.Background);
         };
+    }
 
-        // ML verifies files synchronously before its first await. Isolate it from the UI and
-        // limit hashing concurrency so cancellation does not starve rendering or disk access.
-        var result = await Task.Factory.StartNew(
-                () => downloader.VerifyAndDownloadDependenciesAsync(fileVerificationParallelism: 2,
-                    cancellationToken: context.CancellationToken),
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default)
-            .Unwrap();
-        if (result.Failed.Any())
-            throw new IOException($"资源补全失败：{result.Failed.Count()} 个文件下载失败。");
-        context.ReportProgress(1);
-        context.SetDescription("资源补全完成");
+    private static string FormatCopyProgress(ResourceCopyProgressChangedEventArgs progress)
+    {
+        var files = progress.TotalCount > 0 ? $"{progress.CompletedCount}/{progress.TotalCount} 个文件" : "正在准备复制";
+        var transferred = progress.TotalBytes > 0
+            ? $"，{DefaultDownloader.FormatSize(progress.CopiedBytes)} / {DefaultDownloader.FormatSize(progress.TotalBytes)}"
+            : string.Empty;
+        var currentFile = !string.IsNullOrWhiteSpace(progress.CurrentFile)
+            ? $"，{Path.GetFileName(progress.CurrentFile)}"
+            : string.Empty;
+        return $"正在复制本地资源：{files}{transferred}{currentFile}";
+    }
+
+    private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
+        Func<TaskExecutionContext, Task> operation)
+    {
+        context.CancellationToken.ThrowIfCancellationRequested();
+        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 }, operation);
+        step.Start();
+        await step.Completion;
+        if (step.Exception is not null) throw new InvalidOperationException(step.Exception.Message, step.Exception);
+        context.CancellationToken.ThrowIfCancellationRequested();
     }
 
     private static string FormatResourceProgress(int completedCount, int totalCount, long downloadedBytes, long totalBytes,

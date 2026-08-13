@@ -80,6 +80,7 @@ public static class VersionModifyService
         var usesTempBase = !isPortalMc && hasLoaders &&
                            string.Equals(instanceId, vanilla.Id, StringComparison.OrdinalIgnoreCase);
         var tempBaseId = $".portal-{instanceId}-base";
+        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, instance.FolderPath);
 
         try
         {
@@ -103,11 +104,11 @@ public static class VersionModifyService
             if (hasLoaders)
             {
                 if (isPortalMc)
-                    await EnsureVanillaBaseAsync(context, metadataRoot, vanilla);
+                    await EnsureVanillaBaseAsync(context, metadataRoot, vanilla, sourceRoots);
                 else if (usesTempBase)
-                    await EnsureTempBaseAsync(context, folderPath, vanilla, instanceId, tempBaseId);
+                    await EnsureTempBaseAsync(context, folderPath, vanilla, instanceId, tempBaseId, sourceRoots);
                 else
-                    await EnsureVanillaBaseAsync(context, folderPath, vanilla);
+                    await EnsureVanillaBaseAsync(context, folderPath, vanilla, sourceRoots);
             }
 
             await BackupAsync(context, instanceDirectory, instanceId);
@@ -116,17 +117,17 @@ public static class VersionModifyService
             {
                 if (isPortalMc)
                     await InstallLoadersPortalMcAsync(context, metadataRoot, instanceDirectory, instanceId, vanilla,
-                        selectedEntries, javaPath);
+                        selectedEntries, javaPath, sourceRoots);
                 else
                     await InstallLoadersAsync(context, folderPath, instanceDirectory, instanceId, vanilla,
-                        selectedEntries, javaPath, usesTempBase, tempBaseId);
+                        selectedEntries, javaPath, usesTempBase, tempBaseId, sourceRoots);
             }
             else
             {
                 if (isPortalMc)
-                    await InstallPureVanillaPortalMcAsync(context, metadataRoot, instanceDirectory, instanceId, vanilla);
+                    await InstallPureVanillaPortalMcAsync(context, metadataRoot, instanceDirectory, instanceId, vanilla, sourceRoots);
                 else
-                    await InstallPureVanillaAsync(context, folderPath, instanceDirectory, instanceId, vanilla);
+                    await InstallPureVanillaAsync(context, folderPath, instanceDirectory, instanceId, vanilla, sourceRoots);
             }
 
             if (usesTempBase)
@@ -181,7 +182,7 @@ public static class VersionModifyService
     }
 
     private static async Task<MinecraftEntry> EnsureVanillaBaseAsync(TaskExecutionContext context, string folderPath,
-        VersionManifestEntry vanilla)
+        VersionManifestEntry vanilla, IEnumerable<string> sourceRoots)
     {
         var existing = TryParseVanilla(folderPath, vanilla.Id);
         if (existing is not null)
@@ -198,11 +199,11 @@ public static class VersionModifyService
                 return existing;
         }
 
-        return await InstallVanillaBaseAsync(context, folderPath, vanilla, vanilla.Id);
+        return await InstallVanillaBaseAsync(context, folderPath, vanilla, vanilla.Id, sourceRoots);
     }
 
     private static async Task EnsureTempBaseAsync(TaskExecutionContext context, string folderPath,
-        VersionManifestEntry vanilla, string instanceId, string tempBaseId)
+        VersionManifestEntry vanilla, string instanceId, string tempBaseId, IEnumerable<string> sourceRoots)
     {
         var existing = TryParseVanilla(folderPath, vanilla.Id);
         if (existing is not null && existing.ClientJarPath is not null && File.Exists(existing.ClientJarPath))
@@ -220,7 +221,7 @@ public static class VersionModifyService
             return;
         }
 
-        await InstallVanillaBaseAsync(context, folderPath, vanilla, tempBaseId);
+        await InstallVanillaBaseAsync(context, folderPath, vanilla, tempBaseId, sourceRoots);
     }
 
     private static VanillaMinecraftEntry? TryParseVanilla(string folderPath, string id)
@@ -239,10 +240,11 @@ public static class VersionModifyService
     }
 
     private static async Task<MinecraftEntry> InstallVanillaBaseAsync(TaskExecutionContext context, string folderPath,
-        VersionManifestEntry vanilla, string baseId) =>
+        VersionManifestEntry vanilla, string baseId, IEnumerable<string> sourceRoots) =>
         await MinecraftInstallationViewModel.RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", async step =>
         {
             var installer = VanillaInstaller.Create(folderPath, vanilla, baseId);
+            installer.SourceRootDirectories = sourceRoots;
             MinecraftInstallationViewModel.AttachProgressReporter(installer, step);
             return await MinecraftInstallationViewModel.RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
         });
@@ -311,7 +313,8 @@ public static class VersionModifyService
 
     private static async Task InstallLoadersAsync(TaskExecutionContext context, string folderPath,
         string instanceDirectory, string instanceId, VersionManifestEntry vanilla,
-        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath, bool flatten, string tempBaseId)
+        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath, bool flatten, string tempBaseId,
+        IEnumerable<string> sourceRoots)
     {
         await Task.Run(() =>
         {
@@ -323,7 +326,7 @@ public static class VersionModifyService
         var primaryEntry = primary.Value;
         var primaryInstaller = primaryEntry is null
             ? null
-            : CreatePrimaryInstaller(primary.Key, primaryEntry, folderPath, instanceId, javaPath);
+            : CreatePrimaryInstaller(primary.Key, primaryEntry, folderPath, instanceId, javaPath, sourceRoots);
         var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
             ? CreatePreloadOptifineInstaller(folderPath, (OptifineInstallEntry)optifineEntry, javaPath)
             : null;
@@ -372,7 +375,7 @@ public static class VersionModifyService
     }
 
     private static async Task InstallPureVanillaAsync(TaskExecutionContext context, string folderPath,
-        string instanceDirectory, string instanceId, VersionManifestEntry vanilla)
+        string instanceDirectory, string instanceId, VersionManifestEntry vanilla, IEnumerable<string> sourceRoots)
     {
         await Task.Run(() =>
         {
@@ -380,12 +383,13 @@ public static class VersionModifyService
             TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.jar"));
         });
 
-        await RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}",
-            VanillaInstaller.Create(folderPath, vanilla, instanceId));
+        var installer = VanillaInstaller.Create(folderPath, vanilla, instanceId);
+        installer.SourceRootDirectories = sourceRoots;
+        await RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", installer);
     }
 
     private static async Task InstallPureVanillaPortalMcAsync(TaskExecutionContext context, string metadataRoot,
-        string instanceDirectory, string instanceId, VersionManifestEntry vanilla)
+        string instanceDirectory, string instanceId, VersionManifestEntry vanilla, IEnumerable<string> sourceRoots)
     {
         await Task.Run(() =>
         {
@@ -393,7 +397,7 @@ public static class VersionModifyService
             TryDeleteFile(Path.Combine(instanceDirectory, $"{instanceId}.jar"));
         });
 
-        await EnsureVanillaBaseAsync(context, metadataRoot, vanilla);
+        await EnsureVanillaBaseAsync(context, metadataRoot, vanilla, sourceRoots);
         await MinecraftInstallationViewModel.RunStepAsync(context, "写入实例配置", "正在生成原版实例配置", step =>
         {
             MinecraftInstallationViewModel.WritePortalMcMinimalInstanceJson(instanceDirectory, instanceId, vanilla.Id);
@@ -404,7 +408,7 @@ public static class VersionModifyService
     
     private static async Task InstallLoadersPortalMcAsync(TaskExecutionContext context, string metadataRoot,
         string instanceDirectory, string instanceId, VersionManifestEntry vanilla,
-        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
+        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath, IEnumerable<string> sourceRoots)
     {
         var tempLoaderId = $"{instanceId}.portal-tmp";
         var loaderDirectory = Path.Combine(metadataRoot, "versions", tempLoaderId);
@@ -420,7 +424,7 @@ public static class VersionModifyService
         var primaryEntry = primary.Value;
         var primaryInstaller = primaryEntry is null
             ? null
-            : CreatePrimaryInstaller(primary.Key, primaryEntry, metadataRoot, tempLoaderId, javaPath);
+            : CreatePrimaryInstaller(primary.Key, primaryEntry, metadataRoot, tempLoaderId, javaPath, sourceRoots);
         var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
             ? CreatePreloadOptifineInstaller(metadataRoot, (OptifineInstallEntry)optifineEntry, javaPath)
             : null;
@@ -599,8 +603,9 @@ public static class VersionModifyService
     }
 
     private static InstallerBase CreatePrimaryInstaller(LoaderKind kind, IInstallEntry entry, string folder,
-        string versionId, string? javaPath) =>
-        kind switch
+        string versionId, string? javaPath, IEnumerable<string> sourceRoots)
+    {
+        InstallerBase installer = kind switch
         {
             LoaderKind.Forge or LoaderKind.NeoForge =>
                 ForgeInstaller.Create(folder, javaPath!, (ForgeInstallEntry)entry, versionId),
@@ -608,6 +613,9 @@ public static class VersionModifyService
             LoaderKind.Quilt => QuiltInstaller.Create(folder, (QuiltInstallEntry)entry, versionId),
             _ => throw new InvalidOperationException($"暂不支持在当前实例上安装 {kind}")
         };
+        installer.SourceRootDirectories = sourceRoots;
+        return installer;
+    }
 
     private static OptifineInstaller CreatePreloadOptifineInstaller(string folder, OptifineInstallEntry entry,
         string? javaPath) => OptifineInstaller.Create(folder, javaPath!, entry);

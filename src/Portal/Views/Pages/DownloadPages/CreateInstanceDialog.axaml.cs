@@ -151,20 +151,17 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     private List<BedrockVersion> _bedrockVersions = [];
     private readonly List<VersionOption> _categoryVersions = [];
     private int _versionLoadGeneration;
-    private int _loaderLoadGeneration;
     private bool _isCreating;
     private string _lastRecommendedInstanceId = string.Empty;
     private IconPickerResult? _pendingIcon;
     private byte[]? _pendingIconData;
-    private LoaderKind? _currentLoaderKind;
-    private string? _currentMcVersion;
-    private IReadOnlyList<LoaderVersionOption>? _currentLoaderOptions;
-    private IInstallEntry? _latestLoaderEntry;
-    private IInstallEntry? _stableLoaderEntry;
-    private bool _hasStableLoader;
+    private string _currentMcVersion = string.Empty;
+    private LoaderSelectionState _primaryState = new();
+    private readonly LoaderSelectionState _optifineState = new();
 
     public ObservableCollection<VersionOption> Versions { get; } = [];
     public ObservableCollection<LoaderVersionOption> CustomLoaderVersions { get; } = [];
+    public ObservableCollection<LoaderVersionOption> CustomOptiFineVersions { get; } = [];
 
     public IReadOnlyList<PlatformOption> Platforms { get; } =
     [
@@ -193,8 +190,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         new("Fabric", LoaderKind.Fabric),
         new("NeoForge", LoaderKind.NeoForge),
         new("Forge", LoaderKind.Forge),
-        new("Quilt", LoaderKind.Quilt),
-        new("OptiFine", LoaderKind.OptiFine)
+        new("Quilt", LoaderKind.Quilt)
     ];
     public IReadOnlyList<LoaderVersionFilterOption> LoaderVersionFilters { get; } =
     [
@@ -224,6 +220,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     [ObservableProperty] public partial bool IsCustomLoaderVersionsLoading { get; set; }
     [ObservableProperty] public partial string CustomLoaderVersionsPlaceholder { get; set; } = "加载中...";
     [ObservableProperty] public partial string LoaderStatus { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool IsOptiFineSelected { get; set; }
+    [ObservableProperty] public partial LoaderVersionFilterOption? SelectedOptiFineVersionFilter { get; set; }
+    [ObservableProperty] public partial LoaderVersionOption? SelectedCustomOptiFineVersion { get; set; }
+    [ObservableProperty] public partial bool IsOptiFineLoaderVersionAreaVisible { get; set; }
+    [ObservableProperty] public partial bool IsCustomOptiFineVersionsLoading { get; set; }
+    [ObservableProperty] public partial string CustomOptiFineVersionsPlaceholder { get; set; } = "加载中...";
+    [ObservableProperty] public partial string OptiFineStatus { get; set; } = string.Empty;
     [ObservableProperty] public partial string ErrorText { get; set; } = string.Empty;
     [ObservableProperty] public partial Bitmap? IconPreview { get; set; }
 
@@ -233,30 +236,65 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     /// <summary>仅当选中了某个加载器且版本筛选为“其他”时，才显示自定义加载器版本下拉框。</summary>
     public bool IsCustomLoaderVersionVisible =>
         SelectedLoader?.Kind is not null && SelectedLoaderVersionFilter?.Kind == LoaderVersionFilterKind.Other;
+    public bool IsCustomOptiFineVersionVisible =>
+        IsOptiFineSelected && SelectedOptiFineVersionFilter?.Kind == LoaderVersionFilterKind.Other;
+    public bool IsCustomOptiFineVersionComboEnabled => !IsCustomOptiFineVersionsLoading && CustomOptiFineVersions.Count > 0;
+    /// <summary>OptiFine 复选框只在“不安装”或选择 Forge 时显示：勾选即表示与 Forge 一起安装。</summary>
+    public bool IsOptiFineToggleVisible => SelectedLoader?.Kind is null or LoaderKind.Forge;
     public bool HasLoaderStatus => !string.IsNullOrEmpty(LoaderStatus);
+    public bool HasOptiFineStatus => !string.IsNullOrEmpty(OptiFineStatus);
     public bool HasErrorText => !string.IsNullOrEmpty(ErrorText);
     public bool CanCreate => !_isCreating && SelectedVersion is not null && !IsVersionsLoading &&
-                             (SelectedLoader?.Kind is null ||
-                              (!IsCustomLoaderVersionsLoading && EffectiveLoaderEntry is not null)) &&
+                             SelectedLoadersReady() &&
                              string.IsNullOrEmpty(ErrorText);
 
     private bool IsBedrockFilter => SelectedPlatform?.Platform == InstancePlatform.Bedrock;
 
-    private IInstallEntry? EffectiveLoaderEntry
+    /// <summary>所有已选中加载器（主加载器 + 可选的 OptiFine）是否都已解析出可安装的版本条目。</summary>
+    private bool SelectedLoadersReady()
     {
-        get
+        if (_primaryState.Kind is not null)
         {
-            if (_currentLoaderKind is null) return null;
-            return SelectedLoaderVersionFilter?.Kind switch
-            {
-                LoaderVersionFilterKind.Stable => _stableLoaderEntry,
-                LoaderVersionFilterKind.Latest => _latestLoaderEntry,
-                LoaderVersionFilterKind.Other => SelectedCustomLoaderVersion?.Entry,
-                _ => null
-            };
+            if (IsCustomLoaderVersionsLoading) return false;
+            if (ResolveEffectiveEntry(_primaryState, SelectedLoaderVersionFilter?.Kind) is null) return false;
         }
+
+        if (IsOptiFineSelected && _optifineState.Kind is not null)
+        {
+            if (IsCustomOptiFineVersionsLoading) return false;
+            if (ResolveEffectiveEntry(_optifineState, SelectedOptiFineVersionFilter?.Kind) is null) return false;
+        }
+
+        return true;
     }
 
+    /// <summary>把当前选中的加载器（含可选的 OptiFine）解析成可交给安装任务的条目字典。</summary>
+    private Dictionary<LoaderKind, IInstallEntry> EffectiveLoaderEntries()
+    {
+        var result = new Dictionary<LoaderKind, IInstallEntry>();
+        if (_primaryState.Kind is { } primaryKind)
+        {
+            var entry = ResolveEffectiveEntry(_primaryState, SelectedLoaderVersionFilter?.Kind);
+            if (entry is not null) result[primaryKind] = entry;
+        }
+
+        if (IsOptiFineSelected && _optifineState.Kind is { } optifineKind)
+        {
+            var entry = ResolveEffectiveEntry(_optifineState, SelectedOptiFineVersionFilter?.Kind);
+            if (entry is not null) result[optifineKind] = entry;
+        }
+
+        return result;
+    }
+
+    private static IInstallEntry? ResolveEffectiveEntry(LoaderSelectionState state, LoaderVersionFilterKind? filter) =>
+        filter switch
+        {
+            LoaderVersionFilterKind.Stable => state.StableEntry,
+            LoaderVersionFilterKind.Latest => state.LatestEntry,
+            LoaderVersionFilterKind.Other => state.CustomVersion?.Entry,
+            _ => null
+        };
     public CreateInstanceDialogViewModel()
     {
         MinecraftFolders = Data.ConfigEntry.InstallableMinecraftFolders.ToList();
@@ -267,6 +305,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         SelectedPlatform = Platforms[0];
         SelectedLoader = LoaderOptions[0];
         SelectedLoaderVersionFilter = LoaderVersionFilters[0];
+        SelectedOptiFineVersionFilter = LoaderVersionFilters[0];
         UpdateLoaderIcon();
     }
 
@@ -279,7 +318,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         if (IsLoaderVisible)
         {
             // 切回 Java 时恢复加载器区域状态（可能仍保留之前选的加载器）。
-            SyncLoaderState();
+            SyncPrimaryLoaderState();
         }
         else
         {
@@ -358,8 +397,14 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             }
         }
 
-        if (value?.Value is VersionManifestEntry vanilla && SelectedLoader?.Kind is { } kind)
-            _ = EnsureLoaderVersionsAsync(kind, vanilla.Id);
+        if (value?.Value is VersionManifestEntry vanilla)
+        {
+            _currentMcVersion = vanilla.Id;
+            if (_primaryState.Kind is { } kind)
+                _ = EnsurePrimaryLoaderVersionsAsync(kind, vanilla.Id);
+            if (IsOptiFineSelected)
+                _ = EnsureOptifineLoaderVersionsAsync(LoaderKind.OptiFine, vanilla.Id);
+        }
         UpdateLoaderIcon();
         UpdateRecommendedInstanceId();
         UpdateVersionState();
@@ -367,19 +412,32 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     partial void OnSelectedLoaderChanged(LoaderOption? value)
     {
-        SyncLoaderState();
+        SyncPrimaryLoaderState();
         UpdateLoaderIcon();
     }
 
-    /// <summary>根据当前加载器选择同步加载器区域的可见性与版本加载。</summary>
-    private void SyncLoaderState()
+    /// <summary>根据当前主加载器选择同步加载器区域的可见性与版本加载，并处理切换/互斥。</summary>
+    private void SyncPrimaryLoaderState()
     {
-        ResetLoaderState();
-        if (SelectedLoader?.Kind is { } kind)
+        var kind = SelectedLoader?.Kind;
+        if (kind != _primaryState.Kind)
         {
-            IsLoaderVersionAreaVisible = true;
+            var incompatibleOptiFine = IsOptiFineSelected && kind is not null && kind != LoaderKind.Forge;
+            _primaryState = new LoaderSelectionState { Kind = kind, McVersion = _currentMcVersion };
+            // OptiFine 只允许单独安装或与 Forge 组合，切换主加载器时自动取消。
+            if (incompatibleOptiFine)
+                IsOptiFineSelected = false;
+            SelectedCustomLoaderVersion = null;
+            CustomLoaderVersions.Clear();
+            IsCustomLoaderVersionsLoading = false;
+            LoaderStatus = string.Empty;
+        }
+
+        IsLoaderVersionAreaVisible = kind is not null;
+        if (kind is { } loaderKind)
+        {
             if (SelectedVersion?.Value is VersionManifestEntry vanilla)
-                _ = EnsureLoaderVersionsAsync(kind, vanilla.Id);
+                _ = EnsurePrimaryLoaderVersionsAsync(loaderKind, vanilla.Id);
             else
                 LoaderStatus = "请先选择游戏版本";
         }
@@ -390,16 +448,67 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     partial void OnSelectedLoaderVersionFilterChanged(LoaderVersionFilterOption? value)
     {
-        if (SelectedLoaderVersionFilter?.Kind == LoaderVersionFilterKind.Other &&
-            _currentLoaderKind is { } kind && _currentMcVersion is { } version)
-            _ = EnsureLoaderVersionsAsync(kind, version);
+        if (value?.Kind == LoaderVersionFilterKind.Other && _primaryState.Kind is { } kind &&
+            _primaryState.McVersion is { Length: > 0 } version)
+            _ = EnsurePrimaryLoaderVersionsAsync(kind, version);
         UpdateLoaderVersionStatus();
+        UpdateRecommendedInstanceId();
+        UpdateVersionState();
+    }
+
+    partial void OnSelectedOptiFineVersionFilterChanged(LoaderVersionFilterOption? value)
+    {
+        if (value?.Kind == LoaderVersionFilterKind.Other && _optifineState.Kind is { } kind &&
+            _optifineState.McVersion is { Length: > 0 } version)
+            _ = EnsureOptifineLoaderVersionsAsync(kind, version);
+        UpdateOptiFineVersionStatus();
         UpdateRecommendedInstanceId();
         UpdateVersionState();
     }
 
     partial void OnSelectedCustomLoaderVersionChanged(LoaderVersionOption? value)
     {
+        _primaryState.CustomVersion = value;
+        UpdateRecommendedInstanceId();
+        UpdateVersionState();
+    }
+
+    partial void OnSelectedCustomOptiFineVersionChanged(LoaderVersionOption? value)
+    {
+        _optifineState.CustomVersion = value;
+        UpdateRecommendedInstanceId();
+        UpdateVersionState();
+    }
+
+    partial void OnIsOptiFineSelectedChanged(bool value)
+    {
+        if (value)
+        {
+            _optifineState.Kind = LoaderKind.OptiFine;
+            IsOptiFineLoaderVersionAreaVisible = true;
+            if (SelectedVersion?.Value is VersionManifestEntry vanilla)
+                _ = EnsureOptifineLoaderVersionsAsync(LoaderKind.OptiFine, vanilla.Id);
+            else
+                OptiFineStatus = "请先选择游戏版本";
+        }
+        else
+        {
+            // 取消失效在途请求，避免旧结果回流。
+            _optifineState.LoadGeneration++;
+            _optifineState.Kind = null;
+            _optifineState.Options = [];
+            _optifineState.LatestEntry = null;
+            _optifineState.StableEntry = null;
+            _optifineState.HasStable = false;
+            _optifineState.CustomVersion = null;
+            IsOptiFineLoaderVersionAreaVisible = false;
+            IsCustomOptiFineVersionsLoading = false;
+            SelectedCustomOptiFineVersion = null;
+            CustomOptiFineVersions.Clear();
+            OptiFineStatus = string.Empty;
+        }
+
+        UpdateLoaderIcon();
         UpdateRecommendedInstanceId();
         UpdateVersionState();
     }
@@ -409,8 +518,11 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     partial void OnIsVersionsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsVersionComboEnabled));
     partial void OnIsCustomLoaderVersionsLoadingChanged(bool value) =>
         OnPropertyChanged(nameof(IsCustomLoaderVersionComboEnabled));
+    partial void OnIsCustomOptiFineVersionsLoadingChanged(bool value) =>
+        OnPropertyChanged(nameof(IsCustomOptiFineVersionComboEnabled));
     partial void OnErrorTextChanged(string value) => OnPropertyChanged(nameof(HasErrorText));
     partial void OnLoaderStatusChanged(string value) => OnPropertyChanged(nameof(HasLoaderStatus));
+    partial void OnOptiFineStatusChanged(string value) => OnPropertyChanged(nameof(HasOptiFineStatus));
 
     public async Task SetPendingIconAsync(IconPickerResult result)
     {
@@ -456,11 +568,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                 LoaderKind.Fabric => "Portal.Core.Assets.McIcons.05_FabricIcon.png",
                 LoaderKind.Forge => "Portal.Core.Assets.McIcons.06_ForgeIcon.png",
                 LoaderKind.NeoForge => "Portal.Core.Assets.McIcons.07_NeoForgeIcon.png",
-                LoaderKind.OptiFine => "Portal.Core.Assets.McIcons.08_OptiFineIcon.png",
                 LoaderKind.Quilt => "Portal.Core.Assets.McIcons.09_QuiltIcon.png",
                 _ => DefaultIconResource
             };
         }
+
+        if (IsOptiFineSelected)
+            return "Portal.Core.Assets.McIcons.08_OptiFineIcon.png";
 
         if (SelectedVersion?.Value is VersionManifestEntry vanilla &&
             string.Equals(vanilla.Type, "snapshot", StringComparison.OrdinalIgnoreCase))
@@ -711,15 +825,21 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         UpdateVersionState();
     }
 
-    private async Task EnsureLoaderVersionsAsync(LoaderKind kind, string mcVersion)
+    private async Task EnsurePrimaryLoaderVersionsAsync(LoaderKind kind, string mcVersion)
     {
-        var generation = ++_loaderLoadGeneration;
+        var generation = ++_primaryState.LoadGeneration;
+        _primaryState.Kind = kind;
+        _primaryState.McVersion = mcVersion;
+
         if (_loaderOptionsCache.TryGetValue((mcVersion, kind), out var cached))
         {
-            ApplyLoaderOptions(kind, mcVersion, cached);
+            _primaryState.Options = cached;
+            ApplyPrimaryLoaderOptions();
             return;
         }
 
+        // 版本或加载器变化后先清空旧条目，避免加载期间或失败后残留旧版本数据。
+        ClearPrimaryLoaderState();
         IsCustomLoaderVersionsLoading = true;
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion}.");
@@ -730,8 +850,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             var entries = await FetchLoaderVersionsAsync(kind, mcVersion);
             var options = entries.Select(entry => new LoaderVersionOption(GetLoaderVersion(kind, entry), entry)).ToList();
             _loaderOptionsCache[(mcVersion, kind)] = options;
-            if (generation != _loaderLoadGeneration || _disposed) return;
-            ApplyLoaderOptions(kind, mcVersion, options);
+            if (generation != _primaryState.LoadGeneration || _disposed) return;
+            _primaryState.Options = options;
+            ApplyPrimaryLoaderOptions();
             Logger.Info($"[CreateInstance] Loaded {options.Count} {kind} version(s) for Minecraft {mcVersion} in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
@@ -741,14 +862,63 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         catch (Exception exception)
         {
             Logger.Error(exception);
-            if (generation != _loaderLoadGeneration || _disposed) return;
+            if (generation != _primaryState.LoadGeneration || _disposed) return;
             LoaderStatus = "获取加载器版本失败，请重试";
         }
         finally
         {
-            if (generation == _loaderLoadGeneration)
+            if (generation == _primaryState.LoadGeneration)
             {
                 IsCustomLoaderVersionsLoading = false;
+                UpdateVersionState();
+            }
+        }
+    }
+
+    private async Task EnsureOptifineLoaderVersionsAsync(LoaderKind kind, string mcVersion)
+    {
+        var generation = ++_optifineState.LoadGeneration;
+        _optifineState.Kind = kind;
+        _optifineState.McVersion = mcVersion;
+
+        if (_loaderOptionsCache.TryGetValue((mcVersion, kind), out var cached))
+        {
+            _optifineState.Options = cached;
+            ApplyOptiFineOptions();
+            return;
+        }
+
+        ClearOptiFineState();
+        IsCustomOptiFineVersionsLoading = true;
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion}.");
+        CustomOptiFineVersionsPlaceholder = "加载中...";
+        UpdateVersionState();
+        try
+        {
+            var entries = await FetchLoaderVersionsAsync(kind, mcVersion);
+            var options = entries.Select(entry => new LoaderVersionOption(GetLoaderVersion(kind, entry), entry)).ToList();
+            _loaderOptionsCache[(mcVersion, kind)] = options;
+            if (generation != _optifineState.LoadGeneration || _disposed) return;
+            _optifineState.Options = options;
+            ApplyOptiFineOptions();
+            Logger.Info($"[CreateInstance] Loaded {options.Count} {kind} version(s) for Minecraft {mcVersion} in {stopwatch.Elapsed}.");
+        }
+        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+        {
+            Logger.Debug($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion} was cancelled after {stopwatch.Elapsed}.");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+            if (generation != _optifineState.LoadGeneration || _disposed) return;
+            OptiFineStatus = "获取 OptiFine 版本失败，请重试";
+        }
+        finally
+        {
+            if (generation == _optifineState.LoadGeneration)
+            {
+                IsCustomOptiFineVersionsLoading = false;
                 UpdateVersionState();
             }
         }
@@ -765,24 +935,72 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             _ => []
         };
 
-    private void ApplyLoaderOptions(LoaderKind kind, string mcVersion, IReadOnlyList<LoaderVersionOption> options)
+    private void ApplyPrimaryLoaderOptions()
     {
-        _currentLoaderKind = kind;
-        _currentMcVersion = mcVersion;
-        _currentLoaderOptions = options;
-        _latestLoaderEntry = options.FirstOrDefault()?.Entry;
-        _hasStableLoader = options.Any(option => IsStableLoader(kind, option.Entry));
+        var state = _primaryState;
+        state.LatestEntry = state.Options.FirstOrDefault()?.Entry;
+        state.HasStable = state.Kind is { } kind && state.Options.Any(option => IsStableLoader(kind, option.Entry));
         // 没有稳定版时回退到最新版，保证“稳定版”也能安装，同时给出提示。
-        _stableLoaderEntry = _hasStableLoader
-            ? options.First(option => IsStableLoader(kind, option.Entry)).Entry
-            : _latestLoaderEntry;
+        state.StableEntry = state.HasStable
+            ? state.Options.First(option => IsStableLoader(state.Kind!.Value, option.Entry)).Entry
+            : state.LatestEntry;
         CustomLoaderVersions.Clear();
-        foreach (var option in options) CustomLoaderVersions.Add(option);
-        SelectedCustomLoaderVersion = options.FirstOrDefault();
-        LoaderStatus = options.Count == 0 ? "当前游戏版本没有可用的加载器版本" : string.Empty;
+        foreach (var option in state.Options) CustomLoaderVersions.Add(option);
+        // 尽量保留用户已选的自定义版本，避免筛选切换时把选择重置回第一项。
+        if (state.CustomVersion is { } custom && state.Options.Contains(custom))
+            SelectedCustomLoaderVersion = custom;
+        else
+            SelectedCustomLoaderVersion = state.Options.FirstOrDefault();
+        state.CustomVersion = SelectedCustomLoaderVersion;
+        LoaderStatus = state.Options.Count == 0 ? "当前游戏版本没有可用的加载器版本" : string.Empty;
         UpdateLoaderVersionStatus();
         UpdateRecommendedInstanceId();
         UpdateVersionState();
+    }
+
+    private void ApplyOptiFineOptions()
+    {
+        var state = _optifineState;
+        state.LatestEntry = state.Options.FirstOrDefault()?.Entry;
+        state.HasStable = state.Kind is { } kind && state.Options.Any(option => IsStableLoader(kind, option.Entry));
+        // 没有稳定版时回退到最新版，保证“稳定版”也能安装，同时给出提示。
+        state.StableEntry = state.HasStable
+            ? state.Options.First(option => IsStableLoader(state.Kind!.Value, option.Entry)).Entry
+            : state.LatestEntry;
+        CustomOptiFineVersions.Clear();
+        foreach (var option in state.Options) CustomOptiFineVersions.Add(option);
+        // 尽量保留用户已选的自定义版本，避免筛选切换时把选择重置回第一项。
+        if (state.CustomVersion is { } custom && state.Options.Contains(custom))
+            SelectedCustomOptiFineVersion = custom;
+        else
+            SelectedCustomOptiFineVersion = state.Options.FirstOrDefault();
+        state.CustomVersion = SelectedCustomOptiFineVersion;
+        OptiFineStatus = state.Options.Count == 0 ? "当前游戏版本没有可用的 OptiFine 版本" : string.Empty;
+        UpdateOptiFineVersionStatus();
+        UpdateRecommendedInstanceId();
+        UpdateVersionState();
+    }
+
+    private void ClearPrimaryLoaderState()
+    {
+        _primaryState.Options = [];
+        _primaryState.LatestEntry = null;
+        _primaryState.StableEntry = null;
+        _primaryState.HasStable = false;
+        _primaryState.CustomVersion = null;
+        SelectedCustomLoaderVersion = null;
+        CustomLoaderVersions.Clear();
+    }
+
+    private void ClearOptiFineState()
+    {
+        _optifineState.Options = [];
+        _optifineState.LatestEntry = null;
+        _optifineState.StableEntry = null;
+        _optifineState.HasStable = false;
+        _optifineState.CustomVersion = null;
+        SelectedCustomOptiFineVersion = null;
+        CustomOptiFineVersions.Clear();
     }
 
     private const string StableFallbackNotice = "该加载器当前没有稳定版，已选用最新版。";
@@ -791,7 +1009,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     private void UpdateLoaderVersionStatus()
     {
         var showFallback = SelectedLoaderVersionFilter?.Kind == LoaderVersionFilterKind.Stable &&
-                           _currentLoaderOptions is { Count: > 0 } && !_hasStableLoader;
+                           _primaryState.Options.Count > 0 && !_primaryState.HasStable;
         if (showFallback)
         {
             if (LoaderStatus != StableFallbackNotice)
@@ -803,18 +1021,38 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
     }
 
+    /// <summary>OptiFine 稳定版筛选中如果全是预览版，给出明确提示。</summary>
+    private void UpdateOptiFineVersionStatus()
+    {
+        var showFallback = SelectedOptiFineVersionFilter?.Kind == LoaderVersionFilterKind.Stable &&
+                           _optifineState.Options.Count > 0 && !_optifineState.HasStable;
+        if (showFallback)
+        {
+            if (OptiFineStatus != StableFallbackNotice)
+                OptiFineStatus = StableFallbackNotice;
+        }
+        else if (OptiFineStatus == StableFallbackNotice)
+        {
+            OptiFineStatus = string.Empty;
+        }
+    }
+
     private void ResetLoaderState()
     {
-        _currentLoaderKind = null;
-        _currentMcVersion = null;
-        _currentLoaderOptions = null;
-        _latestLoaderEntry = null;
-        _stableLoaderEntry = null;
-        CustomLoaderVersions.Clear();
-        SelectedCustomLoaderVersion = null;
-        LoaderStatus = string.Empty;
+        _primaryState = new LoaderSelectionState();
+        // 使在途的 OptiFine 请求失效，避免旧结果回流。
+        _optifineState.LoadGeneration++;
+        IsOptiFineSelected = false;
         IsLoaderVersionAreaVisible = false;
+        IsOptiFineLoaderVersionAreaVisible = false;
+        SelectedCustomLoaderVersion = null;
+        CustomLoaderVersions.Clear();
         IsCustomLoaderVersionsLoading = false;
+        IsCustomOptiFineVersionsLoading = false;
+        SelectedCustomOptiFineVersion = null;
+        CustomOptiFineVersions.Clear();
+        LoaderStatus = string.Empty;
+        OptiFineStatus = string.Empty;
     }
 
     private static bool IsStableLoader(LoaderKind kind, IInstallEntry entry) => kind switch
@@ -847,9 +1085,10 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     private string CreateRecommendedInstanceId()
     {
         if (SelectedVersion?.Value is not VersionManifestEntry vanilla) return string.Empty;
-        if (_currentLoaderKind is not { } kind || EffectiveLoaderEntry is not { } entry)
-            return vanilla.Id;
-        return $"{vanilla.Id} {kind}-{GetLoaderVersion(kind, entry)}";
+        var entries = EffectiveLoaderEntries();
+        if (entries.Count == 0) return vanilla.Id;
+        var names = entries.Select(pair => $"{pair.Key}-{GetLoaderVersion(pair.Key, pair.Value)}");
+        return $"{vanilla.Id} {string.Join(" + ", names)}";
     }
 
     private void UpdateVersionState()
@@ -859,6 +1098,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         OnPropertyChanged(nameof(IsVersionComboEnabled));
         OnPropertyChanged(nameof(IsCustomLoaderVersionComboEnabled));
         OnPropertyChanged(nameof(IsCustomLoaderVersionVisible));
+        OnPropertyChanged(nameof(IsCustomOptiFineVersionComboEnabled));
+        OnPropertyChanged(nameof(IsCustomOptiFineVersionVisible));
+        OnPropertyChanged(nameof(IsOptiFineToggleVisible));
     }
 
     private string? Validate()
@@ -886,9 +1128,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
         var versionId = InstanceId.Trim();
         if (string.IsNullOrWhiteSpace(versionId)) versionId = vanilla.Id;
-        var entries = new Dictionary<LoaderKind, IInstallEntry>();
-        if (_currentLoaderKind is { } kind && EffectiveLoaderEntry is { } entry)
-            entries[kind] = entry;
+        var entries = EffectiveLoaderEntries();
         var javaPath = MinecraftInstallationViewModel.GetJavaPath();
         Logger.Info($"[CreateInstance] Queuing Java installation {versionId} in {folder.FolderPath} with {entries.Count} loader(s).");
         var task = MinecraftInstallationViewModel.CreateInstallationTask(vanilla, folder, versionId, entries, javaPath);
@@ -971,5 +1211,18 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         {
             Logger.Warning($"[CreateInstance] Failed to apply icon to {instance.InstanceName}: {exception}");
         }
+    }
+
+    /// <summary>单个加载器的版本选择状态（主加载器与 OptiFine 各自独立维护）。</summary>
+    private sealed class LoaderSelectionState
+    {
+        public LoaderKind? Kind;
+        public string McVersion = string.Empty;
+        public IReadOnlyList<LoaderVersionOption> Options = [];
+        public IInstallEntry? LatestEntry;
+        public IInstallEntry? StableEntry;
+        public bool HasStable;
+        public LoaderVersionOption? CustomVersion;
+        public int LoadGeneration;
     }
 }

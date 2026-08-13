@@ -311,6 +311,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         var metaRoot = Path.Combine(folder.FolderPath, "meta");
         var instancesRoot = Path.Combine(folder.FolderPath, "instances");
         var hasLoaders = selectedEntries.Count > 0;
+        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder.FolderPath);
 
         await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
         {
@@ -344,7 +345,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             var primaryEntry = primary.Value;
             var primaryInstaller = primaryEntry is null
                 ? null
-                : CreatePrimaryInstaller(primary.Key, primaryEntry, metaRoot, effectiveLoaderId, javaPath);
+                : CreatePrimaryInstaller(primary.Key, primaryEntry, metaRoot, effectiveLoaderId, javaPath, sourceRoots);
             var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
                 ? CreatePreloadOptifineInstaller(metaRoot, (OptifineInstallEntry)optifineEntry, javaPath)
                 : null;
@@ -352,6 +353,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             var vanillaTask = RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", async step =>
             {
                 var installer = VanillaInstaller.Create(metaRoot, vanilla, vanillaId);
+                installer.SourceRootDirectories = sourceRoots;
                 AttachProgressReporter(installer, step);
                 return await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
             });
@@ -492,13 +494,14 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         var vanillaId = selectedEntries.Count > 0 ? vanilla.Id : versionId;
         var vanillaDirectory = Path.Combine(folder.FolderPath, "versions", vanillaId);
         var vanillaDirectoryExisted = Directory.Exists(vanillaDirectory);
+        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder.FolderPath);
         try
         {
             var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
             var primaryEntry = primary.Value;
             var primaryInstaller = primaryEntry is null
                 ? null
-                : CreatePrimaryInstaller(primary.Key, primaryEntry, folder.FolderPath, versionId, javaPath);
+                : CreatePrimaryInstaller(primary.Key, primaryEntry, folder.FolderPath, versionId, javaPath, sourceRoots);
             var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
                 ? CreatePreloadOptifineInstaller(folder.FolderPath, (OptifineInstallEntry)optifineEntry, javaPath)
                 : null;
@@ -506,6 +509,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             var vanillaTask = RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", async step =>
             {
                 var installer = VanillaInstaller.Create(folder.FolderPath, vanilla, vanillaId);
+                installer.SourceRootDirectories = sourceRoots;
                 AttachProgressReporter(installer, step);
                 return await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
             });
@@ -583,8 +587,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     });
 
     private static InstallerBase CreatePrimaryInstaller(LoaderKind kind, IInstallEntry entry, string folder, string versionId,
-        string? javaPath) =>
-        kind switch
+        string? javaPath, IEnumerable<string> sourceRoots)
+    {
+        InstallerBase installer = kind switch
         {
             LoaderKind.Forge or LoaderKind.NeoForge =>
                 ForgeInstaller.Create(folder, javaPath!, (ForgeInstallEntry)entry, versionId),
@@ -592,6 +597,9 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             LoaderKind.Quilt => QuiltInstaller.Create(folder, (QuiltInstallEntry)entry, versionId),
             _ => throw new InvalidOperationException($"不支持的加载器：{kind}")
         };
+        installer.SourceRootDirectories = sourceRoots;
+        return installer;
+    }
 
     private static OptifineInstaller CreatePreloadOptifineInstaller(string folder, OptifineInstallEntry entry, string? javaPath) =>
         OptifineInstaller.Create(folder, javaPath!, entry);
@@ -701,6 +709,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         InstallStep.ParseMinecraft => "正在解析 Minecraft 版本信息",
         InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
         InstallStep.DownloadLibraries => "正在下载游戏依赖文件",
+        InstallStep.CopyLibraries => "正在复制本地资源文件",
         InstallStep.DownloadPackage => "正在下载加载器安装包",
         InstallStep.ParsePackage => "正在解析加载器安装包",
         InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入版本与依赖配置",

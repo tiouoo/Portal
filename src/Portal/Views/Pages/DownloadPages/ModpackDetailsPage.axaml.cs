@@ -414,6 +414,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var loader = await loaderTask;
         var vanilla = await vanillaTask;
         var hasLoader = loader is not null;
+        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder);
         if (loader is not null)
             javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
         var effectiveLoaderId = instancesRoot is not null && id.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
@@ -425,8 +426,10 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 var stale = Path.Combine(folder, "versions", effectiveLoaderId);
                 if (Directory.Exists(stale)) Directory.Delete(stale, true);
             });
+        var vanillaInstaller = VanillaInstaller.Create(folder, vanilla, hasLoader ? null : id);
+        vanillaInstaller.SourceRootDirectories = sourceRoots;
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
-            VanillaInstaller.Create(folder, vanilla, hasLoader ? null : id));
+            vanillaInstaller);
         var modpackWorkingPath = hasLoader
             ? Path.Combine(folder, "versions", effectiveLoaderId)
             : instancesRoot is not null
@@ -441,7 +444,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var minecraft = await vanillaInstallation;
         if (loader is not null)
             minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
-                CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft));
+                CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft, sourceRoots));
         await filesInstallation;
         if (instancesRoot is not null)
         {
@@ -496,6 +499,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         await Task.WhenAll(loadersTask, vanillaTask);
         var loaders = await loadersTask;
         var vanilla = await vanillaTask;
+        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder);
         foreach (var loader in loaders)
             javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
         // Portal MC 同 id 安装需用临时 id 安装加载器，避免命中 meta 中原版 json，完成后整体移入 instances。
@@ -508,8 +512,10 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 var stale = Path.Combine(folder, "versions", effectiveLoaderId);
                 if (Directory.Exists(stale)) Directory.Delete(stale, true);
             });
+        var vanillaInstaller = VanillaInstaller.Create(folder, vanilla, loaders.Count > 0 ? null : id);
+        vanillaInstaller.SourceRootDirectories = sourceRoots;
         var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
-            VanillaInstaller.Create(folder, vanilla, loaders.Count > 0 ? null : id));
+            vanillaInstaller);
         var modpackWorkingPath = loaders.Count > 0
             ? Path.Combine(folder, "versions", effectiveLoaderId)
             : instancesRoot is not null
@@ -525,7 +531,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var hasLoader = loaders.Count > 0;
         foreach (var loader in loaders)
             minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
-                CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft));
+                CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft, sourceRoots));
         await filesInstallation;
         if (instancesRoot is not null)
         {
@@ -654,22 +660,27 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         });
 
     private static InstallerBase CreateModLoaderInstaller(IInstallEntry entry, string folder, string id, string? javaPath,
-        MinecraftEntry inheritedMinecraft) => entry switch
+        MinecraftEntry inheritedMinecraft, IEnumerable<string> sourceRoots)
     {
-        ForgeInstallEntry forge => new ForgeInstaller
+        InstallerBase installer = entry switch
         {
-            MinecraftFolder = folder, JavaPath = javaPath!, Entry = forge, CustomId = id, InheritedMinecraft = inheritedMinecraft
-        },
-        FabricInstallEntry fabric => new FabricInstaller
-        {
-            MinecraftFolder = folder, Entry = fabric, CustomId = id, InheritedMinecraft = inheritedMinecraft
-        },
-        QuiltInstallEntry quilt => new QuiltInstaller
-        {
-            MinecraftFolder = folder, Entry = quilt, CustomId = id, InheritedMinecraft = inheritedMinecraft
-        },
-        _ => throw new NotSupportedException($"不支持整合包加载器：{entry.GetType().Name}")
-    };
+            ForgeInstallEntry forge => new ForgeInstaller
+            {
+                MinecraftFolder = folder, JavaPath = javaPath!, Entry = forge, CustomId = id, InheritedMinecraft = inheritedMinecraft
+            },
+            FabricInstallEntry fabric => new FabricInstaller
+            {
+                MinecraftFolder = folder, Entry = fabric, CustomId = id, InheritedMinecraft = inheritedMinecraft
+            },
+            QuiltInstallEntry quilt => new QuiltInstaller
+            {
+                MinecraftFolder = folder, Entry = quilt, CustomId = id, InheritedMinecraft = inheritedMinecraft
+            },
+            _ => throw new NotSupportedException($"不支持整合包加载器：{entry.GetType().Name}")
+        };
+        installer.SourceRootDirectories = sourceRoots;
+        return installer;
+    }
 
     private static string GetLoaderName(IInstallEntry entry) => entry switch
     {
@@ -808,6 +819,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         InstallStep.ParseMinecraft => "正在解析 Minecraft 版本",
         InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
         InstallStep.DownloadLibraries => "正在下载游戏依赖",
+        InstallStep.CopyLibraries => "正在复制本地资源",
         InstallStep.DownloadPackage => "正在下载加载器安装包",
         InstallStep.ParsePackage => "正在解析加载器安装包",
         InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入加载器配置",

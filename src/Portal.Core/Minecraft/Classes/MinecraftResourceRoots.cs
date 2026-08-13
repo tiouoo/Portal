@@ -35,4 +35,28 @@ public static class MinecraftResourceRoots
                 break;
         }
     }
+
+    /// <summary>
+    /// 解析安装/修改实例时可复用的资源根目录：排除目标目录自身，其余目录去重后返回。
+    /// </summary>
+    public static IReadOnlyList<string> ResolveForInstall(IEnumerable<MinecraftFolderEntry> folders, string? targetFolderPath)
+    {
+        if (folders is null)
+            return [];
+
+        try
+        {
+            return folders
+                .Where(folder => !string.IsNullOrWhiteSpace(folder?.FolderPath))
+                .Where(folder => string.IsNullOrWhiteSpace(targetFolderPath)
+                    || !string.Equals(folder.FolderPath, targetFolderPath, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(Resolve)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+        catch
+        {
+            return [];
+        }
+    }
 }

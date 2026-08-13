@@ -174,16 +174,56 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </StackPanel>
+                    <CheckBox
+                        Content="同时安装 OptiFine"
+                        FontSize="13"
+                        IsChecked="{Binding IsOptiFineSelected}"
+                        IsVisible="{Binding IsOptiFineToggleVisible}" />
+                    <StackPanel IsVisible="{Binding IsOptiFineLoaderVersionAreaVisible}" Spacing="8">
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="OptiFine 版本" />
+                        <ListBox
+                            ItemsSource="{Binding LoaderVersionFilters}"
+                            SelectedItem="{Binding SelectedOptiFineVersionFilter}"
+                            Theme="{DynamicResource BorderListBox}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="downloadPages:LoaderVersionFilterOption">
+                                    <TextBlock Text="{Binding DisplayText}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <ComboBox
+                            HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding IsCustomOptiFineVersionComboEnabled}"
+                            IsVisible="{Binding IsCustomOptiFineVersionVisible}"
+                            ItemsSource="{Binding CustomOptiFineVersions}"
+                            PlaceholderText="{Binding CustomOptiFineVersionsPlaceholder}"
+                            SelectedItem="{Binding SelectedCustomOptiFineVersion}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="downloadPages:LoaderVersionOption">
+                                    <TextBlock Text="{Binding DisplayText}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="2" Margin="0,16,0,0">
+        <StackPanel Grid.Row="2" Margin="0,8,0,0">
             <TextBlock
                 FontSize="12"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasLoaderStatus}"
                 Text="{Binding LoaderStatus}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasOptiFineStatus}"
+                Text="{Binding OptiFineStatus}"
                 TextWrapping="Wrap" />
             <TextBlock
                 FontSize="12"

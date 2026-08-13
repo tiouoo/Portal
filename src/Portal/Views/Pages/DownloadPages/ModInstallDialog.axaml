@@ -76,6 +76,10 @@
                 IsVisible="{Binding HasDependencyLoadError}"
                 Text="依赖项加载失败。你可以跳过依赖项，仅下载当前模组。" />
             <TextBlock IsVisible="{Binding HasDependencies}" Text="将同时下载以下依赖项" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasSkippedDependencies}"
+                Text="{Binding SkippedDependenciesText}" />
             <ItemsControl IsVisible="{Binding HasDependencies}" ItemsSource="{Binding Dependencies}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="local:ModInstallDependencyItem">
