@@ -79,6 +79,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowUsingAccountTip { get; set; } = true;
     [ObservableProperty] public partial bool ShowMinecraftNews { get; set; } = false;
     [ObservableProperty] public partial bool ShowRecentPlays { get; set; } = true;
+    [ObservableProperty] public partial bool NewTabRecentPlaysExpanded { get; set; } = true;
+    [ObservableProperty] public partial bool StartPageRecentPlaysExpanded { get; set; }
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
     [ObservableProperty] public partial string? ProxyServer { get; set; }

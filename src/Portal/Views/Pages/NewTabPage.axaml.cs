@@ -371,7 +371,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     public bool CanExpandRecentPlays => GetVisibleRecentPlays().Count > _recentPlayCapacity;
 
     public string ToggleRecentPlaysText =>
-        BlockListService.Instance.AreRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
+        Data.ConfigEntry.NewTabRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
 
     private RecentPlayItem? _recentPlayTargetItem;
 
@@ -439,7 +439,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     private void ApplyRecentPlayCapacity()
     {
         var visiblePlays = GetVisibleRecentPlays();
-        var take = BlockListService.Instance.AreRecentPlaysExpanded ? visiblePlays.Count : _recentPlayCapacity;
+        var take = Data.ConfigEntry.NewTabRecentPlaysExpanded ? visiblePlays.Count : _recentPlayCapacity;
         RecentPlays.Clear();
         foreach (var item in visiblePlays.Take(take))
             RecentPlays.Add(item);
@@ -453,7 +453,7 @@ public partial class NewTabViewModel : InstanceListViewModelBase
     [RelayCommand]
     private void ToggleRecentPlays()
     {
-        BlockListService.Instance.AreRecentPlaysExpanded = !BlockListService.Instance.AreRecentPlaysExpanded;
+        Data.ConfigEntry.NewTabRecentPlaysExpanded = !Data.ConfigEntry.NewTabRecentPlaysExpanded;
         ApplyRecentPlayCapacity();
     }
 

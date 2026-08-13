@@ -493,7 +493,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     public bool CanExpandRecentPlays => GetVisibleRecentPlays().Count > _recentPlayCapacity;
 
     public string ToggleRecentPlaysText =>
-        BlockListService.Instance.AreRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
+        Data.ConfigEntry.StartPageRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
 
     public StartPageViewModel()
     {
@@ -547,7 +547,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     private void ApplyRecentPlayCapacity()
     {
         var visiblePlays = GetVisibleRecentPlays();
-        var take = BlockListService.Instance.AreRecentPlaysExpanded ? visiblePlays.Count : _recentPlayCapacity;
+        var take = Data.ConfigEntry.StartPageRecentPlaysExpanded ? visiblePlays.Count : _recentPlayCapacity;
         RecentPlays.Clear();
         foreach (var item in visiblePlays.Take(take))
             RecentPlays.Add(item);
@@ -561,7 +561,7 @@ public partial class StartPageViewModel : InstanceListViewModelBase
     [RelayCommand]
     private void ToggleRecentPlays()
     {
-        BlockListService.Instance.AreRecentPlaysExpanded = !BlockListService.Instance.AreRecentPlaysExpanded;
+        Data.ConfigEntry.StartPageRecentPlaysExpanded = !Data.ConfigEntry.StartPageRecentPlaysExpanded;
         ApplyRecentPlayCapacity();
     }
 
