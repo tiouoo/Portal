@@ -34,10 +34,17 @@ sealed class Program
     public static void Main(string[] args)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
-        
+
+        Logger.Info("Portal MC");
+        Logger.Info("  ____                   _             _     __  __    ____ ");
+        Logger.Info(" |  _ \\    ___    _ __  | |_    __ _  | |   |  \\/  |  / ___|");
+        Logger.Info(" | |_) |  / _ \\  | '__| | __|  / _` | | |   | |\\/| | | |    ");
+        Logger.Info(" |  __/  | (_) | | |    | |_  | (_| | | |   | |  | | | |___ ");
+        Logger.Info(" |_|      \\___/  |_|     \\__|  \\__,_| |_|   |_|  |_|  \\____|");
+        Logger.Info("");
+
         AppDomain.CurrentDomain.FirstChanceException += (_, eventArgs) =>
         {
-            // Logger itself can encounter I/O exceptions; avoid recursively logging those exceptions.
             if (Interlocked.Exchange(ref _isLoggingFirstChanceException, 1) != 0) return;
             try
             {
@@ -119,13 +126,6 @@ sealed class Program
         WindowsBedrockFileAssociationService.Register();
         WindowsJavaFileAssociationService.Register();
 #endif
-        Logger.Info("Portal MC");
-        Logger.Info("  ____                   _             _     __  __    ____ ");
-        Logger.Info(" |  _ \\    ___    _ __  | |_    __ _  | |   |  \\/  |  / ___|");
-        Logger.Info(" | |_) |  / _ \\  | '__| | __|  / _` | | |   | |\\/| | | |    ");
-        Logger.Info(" |  __/  | (_) | | |    | |_  | (_| | | |   | |  | | | |___ ");
-        Logger.Info(" |_|      \\___/  |_|     \\__|  \\__,_| |_|   |_|  |_|  \\____|");
-        Logger.Info("");
         Logger.Info("应用程序启动 Main()");
 
 #if WINDOWS || LINUX
@@ -308,7 +308,6 @@ sealed class Program
     }
 #endif
 
-    // Avalonia configuration, don't remove; also used by visual designer.
     private static AppBuilder BuildAvaloniaApp(string[] args)
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
@@ -317,7 +316,6 @@ sealed class Program
 #endif
 #if DEBUG
             .UseHotReload()
-            // .WithDeveloperTools()
 #endif
             .WithManagedSystemDialogs()
             .WithInterFont()
