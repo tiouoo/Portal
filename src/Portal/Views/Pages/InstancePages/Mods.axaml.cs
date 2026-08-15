@@ -594,7 +594,7 @@ public static class WikiEntries
     private static Dictionary<string, string> Load()
     {
         var entries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Portal.WikiEntries.txt");
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Portal.Assets.WikiEntries.txt");
         if (stream == null)
             return entries;
 

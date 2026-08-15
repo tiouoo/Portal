@@ -5,31 +5,31 @@
         <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/tiouoo/Portal</RepositoryUrl>
         <Description>Portal</Description>
-        <PackageIcon>Icon-Pattern-Shadow.png</PackageIcon>
+        <PackageIcon>..\..\assets\Icon-Pattern-Shadow.png</PackageIcon>
         <PackageProjectUrl>portal.tiouo.cc</PackageProjectUrl>
         <PackageTags>Portal</PackageTags>
         <PackageVersion>0.0.0</PackageVersion>
         <Copyright>https://github.com/tiouoo/Portal</Copyright>
         <Authors>github.com/tiouoo/Portal</Authors>
-        <ApplicationIcon>Icon-Pattern.ico</ApplicationIcon>
+        <ApplicationIcon>..\..\assets\Icon-Pattern.ico</ApplicationIcon>
         <Title>Portal</Title>
     </PropertyGroup>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
-        <EmbeddedResource Include="..\version-ci.txt">
-            <Link>version-ci.txt</Link>
+        <EmbeddedResource Include="..\..\assets\conf\version-ci.txt">
+            <Link>Assets\version-ci.txt</Link>
         </EmbeddedResource>
-        <EmbeddedResource Include="..\package-type.txt">
-            <Link>package-type.txt</Link>
+        <EmbeddedResource Include="..\..\assets\conf\package-type.txt">
+            <Link>Assets\package-type.txt</Link>
         </EmbeddedResource>
-        <EmbeddedResource Include="..\..\assets\WikiEntries.txt">
-            <Link>WikiEntries.txt</Link>
+        <EmbeddedResource Include="..\..\assets\conf\WikiEntries.txt">
+            <Link>Assets\WikiEntries.txt</Link>
         </EmbeddedResource>
-        <AvaloniaResource Include="Icon-Pattern.ico" />
-        <AvaloniaResource Include="Icon-Pattern.png" />
-        <AvaloniaResource Include="Icon-Pattern-Shadow.png" />
-        <AvaloniaResource Include="Icon-Pattern.svg" />
+        <AvaloniaResource Include="..\..\assets\Icon-Pattern.ico" Link="Assets\Icon-Pattern.ico" />
+        <AvaloniaResource Include="..\..\assets\Icon-Pattern.png" Link="Assets\Icon-Pattern.png" />
+        <AvaloniaResource Include="..\..\assets\Icon-Pattern-Shadow.png" Link="Assets\Icon-Pattern-Shadow.png" />
+        <AvaloniaResource Include="..\..\assets\Icon-Pattern.svg" Link="Assets\Icon-Pattern.svg" />
     </ItemGroup>
 
     <ItemGroup>

@@ -22,13 +22,13 @@ jobs:
 
       - name: Update when upstream changed
         run: |
-          if cmp --silent /tmp/WikiEntries.txt assets/WikiEntries.txt; then
+          if cmp --silent /tmp/WikiEntries.txt assets/conf/WikiEntries.txt; then
             echo "WikiEntries.txt is already current."
             exit 0
           fi
 
-          mv /tmp/WikiEntries.txt assets/WikiEntries.txt
-          git add assets/WikiEntries.txt
+          mv /tmp/WikiEntries.txt assets/conf/WikiEntries.txt
+          git add assets/conf/WikiEntries.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore: update wiki-entries"

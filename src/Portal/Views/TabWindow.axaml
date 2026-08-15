@@ -1,6 +1,6 @@
 <tio:TioWindow
     Height="710"
-    Icon="/Icon-Pattern.ico"
+    Icon="/Assets/Icon-Pattern.ico"
     IsCloseBtnShow="{OnPlatform Default=True,
                                 macOS=False}"
     IsMaxBtnShow="{OnPlatform Default=True,

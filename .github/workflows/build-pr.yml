@@ -29,7 +29,7 @@ jobs:
       - name: Generate Meta and JSON
         id: meta
         run: |
-          BASE_VERSION=$(cat ./src/version.txt | tr -d '[:space:]')
+          BASE_VERSION=$(cat ./assets/conf/version.txt | tr -d '[:space:]')
           Y_FULL=$(TZ='Asia/Shanghai' date +'%Y')
           MD=$(TZ='Asia/Shanghai' date +'%m%d')
           HM=$(TZ='Asia/Shanghai' date +'%H%M')
@@ -65,8 +65,8 @@ jobs:
 
       - name: Write CI Config
         run: |
-          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo 'pr' > ./src/package-type.txt
+          echo '${{ needs.prepare.outputs.version_json }}' > ./assets/conf/version-ci.txt
+          echo 'pr' > ./assets/conf/package-type.txt
 
       - name: Build & Package (Windows x64)
         shell: pwsh

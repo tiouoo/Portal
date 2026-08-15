@@ -22,7 +22,7 @@ public class Config
     public static CiVersionInfo LoadVersionInfo()
     {
         Logger.Info("正在加载应用版本信息。");
-        const string RESOURCE_NAME = "Portal.version-ci.txt";
+        const string RESOURCE_NAME = "Portal.Assets.version-ci.txt";
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream(RESOURCE_NAME);
         if (stream is null)
@@ -127,7 +127,7 @@ public class Config
             ? Data.Instance.Version.Type
             : "release";
 
-        const string RESOURCE_NAME1 = "Portal.package-type.txt";
+        const string RESOURCE_NAME1 = "Portal.Assets.package-type.txt";
         var assembly1 = Assembly.GetExecutingAssembly();
         var stream1 = assembly1.GetManifestResourceStream(RESOURCE_NAME1);
         using var reader1 = new StreamReader(stream1!);

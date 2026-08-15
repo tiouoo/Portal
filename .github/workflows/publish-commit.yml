@@ -19,7 +19,7 @@ jobs:
       - name: Generate Meta and JSON
         id: meta
         run: |
-          BASE_VERSION=$(cat ./src/version.txt | tr -d '[:space:]')
+          BASE_VERSION=$(cat ./assets/conf/version.txt | tr -d '[:space:]')
           Y_FULL=$(TZ='Asia/Shanghai' date +'%Y')
           MD=$(TZ='Asia/Shanghai' date +'%m%d')
           HM=$(TZ='Asia/Shanghai' date +'%H%M')
@@ -71,8 +71,8 @@ jobs:
 
       - name: Write CI Config
         run: |
-          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo '${{ matrix.package_type }}' > ./src/package-type.txt
+          echo '${{ needs.prepare.outputs.version_json }}' > ./assets/conf/version-ci.txt
+          echo '${{ matrix.package_type }}' > ./assets/conf/package-type.txt
 
       - name: Dependency
         run: |
@@ -81,14 +81,14 @@ jobs:
 
       - name: Build ${{ matrix.kind }} Package
         run: |
-          cd ./src/Portal.Desktop
+          cd ./assets/conf
           pupnet --runtime linux-x64 --kind ${{ matrix.kind }} -o ${{ matrix.output }} -y --app-version ${{ needs.prepare.outputs.app_version }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
           name: linux-${{ matrix.kind }}-artifacts
-          path: src/Portal.Desktop/Deploy/OUT/${{ matrix.output }}
+          path: assets/conf/Deploy/OUT/${{ matrix.output }}
 
   win-exe:
     runs-on: windows-latest
@@ -112,8 +112,8 @@ jobs:
 
       - name: Write CI Config
         run: |
-          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo 'portable' > ./src/package-type.txt
+          echo '${{ needs.prepare.outputs.version_json }}' > ./assets/conf/version-ci.txt
+          echo 'portable' > ./assets/conf/package-type.txt
         shell: bash
 
       - name: Build & Package
@@ -159,18 +159,18 @@ jobs:
           dotnet tool install -g KuiperZone.PupNet --version 1.8.0
 
       - name: Chinesize-InnoSetup
-        run: Copy-Item "./assets/ChineseSimplified.isl" "C:\Program Files (x86)\Inno Setup 6\Default.isl" -Force
+        run: Copy-Item "./assets/conf/ChineseSimplified.isl" "C:\Program Files (x86)\Inno Setup 6\Default.isl" -Force
 
       - name: Write CI Config
         run: |
-          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo 'installer' > ./src/package-type.txt
+          echo '${{ needs.prepare.outputs.version_json }}' > ./assets/conf/version-ci.txt
+          echo 'installer' > ./assets/conf/package-type.txt
         shell: bash
 
       - name: Build & Package
         shell: pwsh
         run: |
-          cd ./src/Portal.Desktop
+          cd ./assets/conf
           pupnet -r win-x64 -k setup -y -o Portal.win.x64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
           Compress-Archive -Path "Deploy/OUT/Portal.win.x64.installer.exe" -DestinationPath "Deploy/OUT/Portal.win.x64.installer.zip" -Force
 
@@ -178,7 +178,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: win-installer-win.x64-artifacts
-          path: src/Portal.Desktop/Deploy/OUT/Portal.win.*.installer.zip
+          path: assets/conf/Deploy/OUT/Portal.win.*.installer.zip
 
   mac-dmg:
     runs-on: macos-latest
@@ -209,8 +209,8 @@ jobs:
 
       - name: Write CI Config
         run: |
-          echo '${{ needs.prepare.outputs.version_json }}' > ./src/version-ci.txt
-          echo 'app' > ./src/package-type.txt
+          echo '${{ needs.prepare.outputs.version_json }}' > ./assets/conf/version-ci.txt
+          echo 'app' > ./assets/conf/package-type.txt
 
       - name: Build macOS App
         run: |
