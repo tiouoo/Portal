@@ -13,6 +13,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Module.Initialize;
 using Portal.Services;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -39,7 +40,7 @@ public partial class ConfigEntry : ObservableObject
             OnPropertyChanged(nameof(HasBothAccountEditions));
             OnPropertyChanged(nameof(HasAnyAccounts));
             OnPropertyChanged(nameof(CurrentAccountDisplay));
-            App.Method.SaveConfig();
+            ConfigSaver.SaveConfig();
         };
         BedrockAccounts.CollectionChanged += (_, _) =>
         {
@@ -47,11 +48,11 @@ public partial class ConfigEntry : ObservableObject
             OnPropertyChanged(nameof(HasBothAccountEditions));
             OnPropertyChanged(nameof(HasAnyAccounts));
             OnPropertyChanged(nameof(CurrentAccountDisplay));
-            App.Method.SaveConfig();
+            ConfigSaver.SaveConfig();
         };
-        AuthServers.CollectionChanged += (_, _) => App.Method.SaveConfig();
+        AuthServers.CollectionChanged += (_, _) => ConfigSaver.SaveConfig();
         MinecraftFolders.CollectionChanged += OnMinecraftFoldersChanged;
-        JavaRuntimes.CollectionChanged += (_, _) => App.Method.SaveConfig();
+        JavaRuntimes.CollectionChanged += (_, _) => ConfigSaver.SaveConfig();
     }
 
     public ObservableCollection<MinecraftAccount> MinecraftAccounts { get; } = [];
@@ -157,7 +158,7 @@ public partial class ConfigEntry : ObservableObject
             ScheduleMinecraftFolderRecovery();
         }
 
-        App.Method.SaveConfig();
+        ConfigSaver.SaveConfig();
     }
 
     partial void OnUpdateSourceChanged(UpdateSource value)
@@ -193,7 +194,7 @@ public partial class ConfigEntry : ObservableObject
         }
 
         OnPropertyChanged(nameof(InstallableMinecraftFolders));
-        App.Method.SaveConfig();
+        ConfigSaver.SaveConfig();
         ScheduleMinecraftFolderRecovery();
         ScheduleMinecraftFolderRefresh();
     }

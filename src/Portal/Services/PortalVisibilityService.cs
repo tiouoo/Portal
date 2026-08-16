@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Module.Initialize;
 
 namespace Portal.Services;
 
@@ -131,7 +132,7 @@ public static class PortalVisibilityService
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // 退出前立即落盘配置，避免防抖中的保存丢失
-            App.Method.FlushConfig();
+            ConfigSaver.FlushConfig();
             desktop.Shutdown();
         }
     }

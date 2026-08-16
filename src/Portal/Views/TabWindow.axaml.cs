@@ -22,6 +22,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.DefaultPage;
 using Portal.Module.DragDrop;
+using Portal.Module.Initialize;
 using Portal.Views.Components;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
@@ -66,7 +67,7 @@ public partial class TabWindow : TioTabWindowBase
     {
         if (AllWindows.Count == 1)
         {
-            App.Method.FlushConfig();
+            ConfigSaver.FlushConfig();
             Environment.Exit(0);
             return true;
         }
@@ -304,7 +305,7 @@ public partial class TabWindow : TioTabWindowBase
         Data.ConfigEntry.TabWindowWidth = size.Width;
         Data.ConfigEntry.TabWindowHeight = size.Height;
         Data.ConfigEntry.HasTabWindowSize = true;
-        App.Method.SaveConfig();
+        ConfigSaver.SaveConfig();
     }
 
     public void OpenAggregatedSearchDialog()

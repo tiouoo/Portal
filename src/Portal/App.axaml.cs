@@ -1,9 +1,5 @@
-using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
-using Avalonia.Data.Core.Plugins;
-using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -12,11 +8,8 @@ using Avalonia.Threading;
 using Portal.Const;
 using Portal.Module.Initialize;
 using Portal.Module.Ipc;
-using Portal.ViewModels;
 using Portal.Views;
-using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Tab.Entries;
 
 namespace Portal;
 
@@ -67,8 +60,6 @@ public partial class App : Application
             }
             else if (Data.ConfigEntry.IsInitialized)
             {
-                // App.axaml loads the default theme after the configuration is read.
-                // Restore the persisted appearance before the main window is constructed.
                 Initializer.Oobe();
                 ShowMainWindow(desktop);
             }
@@ -82,7 +73,7 @@ public partial class App : Application
                 {
                     Logger.Info("初始化完成，进入主窗口");
                     Data.ConfigEntry.IsInitialized = true;
-                    Method.FlushConfig();
+                    ConfigSaver.FlushConfig();
                     ShowMainWindow(desktop);
                     _win.Show();
                     oobe.Close();
@@ -91,8 +82,7 @@ public partial class App : Application
 
             Logger.Info("UI配置完成");
         }
-
-        // macOS 上 portal:// 链接经 Apple Event（协议激活）送达，而非命令行参数。
+        
         if (BedrockPackagePath == null)
             PortalCommandQueue.Initialize();
         if (BedrockPackagePath == null && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
@@ -182,14 +172,5 @@ public partial class App : Application
         {
             e.Handled = true;
         }
-    }
-
-    private void OpenSetting_OnClick(object? sender, EventArgs e)
-    {
-        if (UiProperty.TabWindow is not { } window) return;
-        var tabEntry = new TabEntry(window, new SettingPage());
-        window.CreateTab(tabEntry);
-        window.SelectTab(tabEntry);
-        window.Activate();
     }
 }

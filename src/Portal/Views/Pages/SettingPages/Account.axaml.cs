@@ -9,6 +9,7 @@ using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
 using Portal.Module.AggregatedSearch;
+using Portal.Module.Initialize;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -305,7 +306,7 @@ public partial class Account : DataUserControl
             return;
 
         account.UseSimpleAvatar = !account.UseSimpleAvatar;
-        App.Method.SaveConfig();
+        ConfigSaver.SaveConfig();
     }
 
     private async void ChangeSkin_Click(object? sender, RoutedEventArgs e)

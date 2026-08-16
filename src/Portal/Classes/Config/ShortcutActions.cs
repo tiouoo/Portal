@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Portal.Const;
 using Portal.Module.Multiplayer;
+using Portal.Services;
 using Portal.Views;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
@@ -138,8 +139,8 @@ public static class ShortcutActions
 #if DEBUG
             Define(ShortcutAction.OpenDebugPage, "应用", "打开调试页面", "Shift+F12", window => window.OpenDebugPage()),
 #endif
-            Define(ShortcutAction.RestartApp, "应用", "重启应用", null, _ => App.Method.RestartApp()),
-            Define(ShortcutAction.ExitApp, "应用", "退出应用", null, _ => App.Method.TryExitApp()),
+            Define(ShortcutAction.RestartApp, "应用", "重启应用", null, _ => AppLifecycle.RestartApp()),
+            Define(ShortcutAction.ExitApp, "应用", "退出应用", null, _ => AppLifecycle.TryExitApp()),
             Define(ShortcutAction.MinimizeWindow, "应用", "最小化窗口", null,
                 window => window.WindowState = WindowState.Minimized)
         };

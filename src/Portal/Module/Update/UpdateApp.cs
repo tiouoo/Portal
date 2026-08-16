@@ -17,6 +17,7 @@ using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Utilities;
 using Portal.Const;
+using Portal.Module.Initialize;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -109,7 +110,7 @@ public static class UpdateApp
     public static async Task Apply(PreparedUpdate update)
     {
         if (!await ApplicationEvents.RaiseAppExiting()) return;
-        App.Method.FlushConfig();
+        ConfigSaver.FlushConfig();
         using var process = Process.Start(update.StartInfo)
                             ?? throw new InvalidOperationException("无法启动更新安装程序。");
         if (update.WaitForStart)

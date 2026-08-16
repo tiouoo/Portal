@@ -12,6 +12,7 @@ using Portal.Const;
 using Portal.Core.App.Helpers;
 using Portal.Core.Helpers;
 using Portal.Module.AggregatedSearch;
+using Portal.Module.Initialize;
 using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
@@ -33,7 +34,7 @@ public partial class Shortcuts : DataUserControl
     {
         if (sender is not Button { Tag: ShortcutItemViewModel item }) return;
         Data.ConfigEntry.Shortcuts.ResetAction(item.Action);
-        App.Method.SaveConfig();
+        ConfigSaver.SaveConfig();
     }
 }
 
@@ -113,7 +114,7 @@ public partial class ShortcutItemViewModel : ObservableObject
         if (_suppressWriteBack) return;
         Data.ConfigEntry.Shortcuts.SetGesture(Action,
             value is null ? null : ShortcutActions.GestureToString(value));
-        App.Method.SaveConfig();
+        ConfigSaver.SaveConfig();
     }
 
     /// <summary>按操作名称、当前快捷键或其拼音/首字母模糊匹配搜索。</summary>

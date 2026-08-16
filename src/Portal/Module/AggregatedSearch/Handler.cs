@@ -8,6 +8,7 @@ using Portal.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
+using Portal.Module.Initialize;
 using Portal.Services;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -125,7 +126,7 @@ public class Handler
             }
             else
             {
-                App.Method.SaveConfig();
+                ConfigSaver.SaveConfig();
                 NotificationGateway.Notice(sender, "验证服务器已更新", NotificationType.Success);
             }
         }

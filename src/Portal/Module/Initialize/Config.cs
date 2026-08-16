@@ -116,7 +116,7 @@ public class Config
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);
         Logger.Debug("已清理临时目录");
-        App.Method.SaveConfig();
+        ConfigSaver.SaveConfig();
 
         Data.UiProperty.ConfigLoaded = true;
         ConfigIdentifyExtension.MinecraftFolder(Data.ConfigEntry);

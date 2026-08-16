@@ -12,6 +12,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
 using Portal.Core.Operations.OpenFile;
 using Portal.Core.Minecraft.Services;
+using Portal.Module.Initialize;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -342,7 +343,7 @@ public class Handler
         if (result != null)
         {
             Data.ConfigEntry.AuthServers.Add(result);
-            App.Method.SaveConfig();
+            ConfigSaver.SaveConfig();
             NotificationGateway.Notice(window.GetTopLevel(), "验证服务器已添加", NotificationType.Success);
         }
     }

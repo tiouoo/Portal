@@ -55,7 +55,7 @@ public static partial class Initializer
         Functions.CreateNewTabWindowFunc = _ => new TabWindow(false);
         NotificationGateway.IsToastFunc = () => Data.ConfigEntry.NoticeWay == NoticeWay.Toast;
 
-        Events.CoreSaveSettings += Portal.App.Method.SaveConfig;
+        Events.CoreSaveSettings += ConfigSaver.SaveConfig;
 
         if (Data.ConfigEntry.BackgroundMode == BackgroundMode.Default)
         {
