@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes.Entries;
 using Portal.Const;
+using Portal.Core.App.Helpers;
 using Portal.Core.Helpers;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;

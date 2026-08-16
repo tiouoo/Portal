@@ -6,9 +6,11 @@ using Portal.Classes.Entries;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core;
+using Portal.Core.App.Events;
+using Portal.Core.App.Service;
+using Portal.Core.App.Service.SystemResources;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.SystemResources;
 using Portal.Module.Multiplayer;
 using Portal.Module.Update;
 using Portal.Services;
@@ -66,7 +68,7 @@ public static partial class Initializer
             Application.Current.Resources["TranslucentBackGroundOpacity"] = Data.ConfigEntry.TranslucentControlOpacity;
         }
 
-        if (Data.ConfigEntry.EnableCheckAutoUpdate && Data.Instance.Version.Type != "dev")
+        if (Data.ConfigEntry.EnableCheckAutoUpdate && AppVersionService.Instance.Version.Type != "dev")
         {
             Logger.Info("已启用自动更新检查，正在后台检查更新。");
             CheckUpdate().Forget("检查应用更新");

@@ -6,6 +6,7 @@ using Flurl.Http;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Utilities;
+using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -263,7 +264,7 @@ public sealed class ModpackExportService
             }
         }
 
-        if (!modrinthOnly && ServiceCredentials.CurseForgeApiKey is { } apiKey)
+        if (!modrinthOnly && CredentialsService.CurseForgeApiKey is { } apiKey)
         {
             var fingerprints = hostedFiles.Where(f => f.Fingerprint is not null).Select(f => f.Fingerprint!.Value).ToArray();
             if (fingerprints.Length > 0)

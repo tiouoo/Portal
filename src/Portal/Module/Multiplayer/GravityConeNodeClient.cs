@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Portal.Const;
 using Portal.Core;
+using Portal.Core.App.Service;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Multiplayer;
@@ -22,14 +23,14 @@ public sealed class GravityConeNodeClient
     public static readonly GravityConeNodeClient Instance = new();
 
     public static bool IsUptimeConfigured =>
-        !string.IsNullOrWhiteSpace(ServiceCredentials.GravityConeUptimeApiKey);
+        !string.IsNullOrWhiteSpace(CredentialsService.GravityConeUptimeApiKey);
     
     public async Task<IReadOnlyList<string>> FetchPeerUrlsAsync(CancellationToken cancellationToken)
     {
-        var apiKey = ServiceCredentials.GravityConeUptimeApiKey;
+        var apiKey = CredentialsService.GravityConeUptimeApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException(
-                $"未配置 {ServiceCredentials.GravityConeUptimeApiKeyEnvironmentVariable}，无法获取联机节点列表。");
+                $"未配置 {CredentialsService.GravityConeUptimeApiKeyEnvironmentVariable}，无法获取联机节点列表。");
 
         var p2pNodes = await FetchP2PNodeListAsync(apiKey, cancellationToken);
         if (p2pNodes.Count == 0)
@@ -130,7 +131,7 @@ public sealed class GravityConeNodeClient
 
     private static void ApplyRequestHeaders(HttpRequestMessage request, string apiKey)
     {
-        request.Headers.TryAddWithoutValidation("User-Agent", $"Portal/{Data.Instance.Version.VersionTitle}");
+        request.Headers.TryAddWithoutValidation("User-Agent", $"Portal/{AppVersionService.Instance.Version.VersionTitle}");
         request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
     }
 

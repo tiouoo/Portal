@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Portal.Core.App.Service;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 
@@ -15,5 +16,5 @@ public partial class Agent : DataUserControl
         DataContext = this;
     }
 
-    public object DefaultAgent => $"Portal/{Data.Version.VersionTitle}";
+    public object DefaultAgent => $"Portal/{AppVersionService.Instance.Version.VersionTitle}";
 }

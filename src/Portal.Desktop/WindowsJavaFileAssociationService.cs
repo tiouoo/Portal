@@ -1,11 +1,10 @@
 #if WINDOWS
 using Microsoft.Win32;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Portal.Desktop;
 
-internal static class WindowsJavaFileAssociationService
+internal static partial class WindowsJavaFileAssociationService
 {
     private const uint AssociationChanged = 0x08000000;
     private const uint IdList = 0x0000;
@@ -66,7 +65,7 @@ internal static class WindowsJavaFileAssociationService
         }
     }
 
-    [DllImport("shell32.dll")]
-    private static extern void SHChangeNotify(uint eventId, uint flags, IntPtr item1, IntPtr item2);
+    [LibraryImport("shell32.dll")]
+    private static partial void SHChangeNotify(uint eventId, uint flags, IntPtr item1, IntPtr item2);
 }
 #endif

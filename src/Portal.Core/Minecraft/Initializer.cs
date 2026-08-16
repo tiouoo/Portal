@@ -1,4 +1,6 @@
-﻿namespace Portal.Core.Minecraft;
+﻿using Portal.Core.App.Service;
+
+namespace Portal.Core.Minecraft;
 
 using MinecraftLaunch;
 using MinecraftLaunch.Base.Enums;
@@ -23,7 +25,7 @@ public static class MinecraftCoreInitializer
             settings.ModrinthSource = options.ModrinthSource;
             settings.CurseForgeSource = options.CurseForgeSource;
             settings.IsEnableFragment = options.IsEnableFragment;
-            settings.CurseForgeApiKey = ServiceCredentials.CurseForgeApiKey;
+            settings.CurseForgeApiKey = CredentialsService.CurseForgeApiKey;
             settings.UserAgent = $"Portal/{options.AppVersion}";
             settings.DisableSystemProxy = options.DisableSystemProxy;
             settings.ProxyServer = options.ProxyServer;

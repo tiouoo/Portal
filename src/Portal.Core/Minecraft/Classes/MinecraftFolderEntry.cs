@@ -2,6 +2,7 @@
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Components.Parser;
+using Portal.Core.App.Events;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
 
@@ -78,7 +79,7 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                     OnPropertyChanged(nameof(FolderTypeDescription));
                     OnPropertyChanged(nameof(SupportsInstallation));
                 }
-                Events.RaiseCoreSaveSettings(); 
+                Events.RaiseSaveSettings(); 
             }
         };
     }

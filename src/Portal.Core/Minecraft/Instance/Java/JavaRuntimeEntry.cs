@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Core.App.Events;
 
 namespace Portal.Core.Minecraft.Instance.Java;
 
@@ -14,7 +15,7 @@ public partial class JavaRuntimeEntry : ObservableObject, IEquatable<JavaRuntime
 
     public JavaRuntimeEntry()
     {
-        PropertyChanged += (_, _) => Events.RaiseCoreSaveSettings();
+        PropertyChanged += (_, _) => Events.RaiseSaveSettings();
     }
 
     public bool Equals(JavaRuntimeEntry? other)

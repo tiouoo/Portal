@@ -1,7 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Entries;
 
 public partial class CiVersionInfo : ObservableObject
 {

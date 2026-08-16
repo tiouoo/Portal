@@ -7,6 +7,7 @@ using Flurl.Http;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using MinecraftLaunch.Utilities;
+using Portal.Core.App.Service;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -206,7 +207,7 @@ public sealed class ModService
         var entries = await FetchModrinthMetadataBatchAsync(batch.Select(item => item.Sha1), cancellationToken);
         var missing = batch.Where(item => !entries.ContainsKey(item.Sha1) && item.Fingerprint.HasValue)
             .Select(item => item.Fingerprint!.Value).ToArray();
-        var curseForgeEntries = missing.Length == 0 || ServiceCredentials.CurseForgeApiKey is null
+        var curseForgeEntries = missing.Length == 0 || CredentialsService.CurseForgeApiKey is null
             ? [] : await FetchMetadataBatchAsync(missing, cancellationToken);
 
         await TranslateEntriesAsync(entries.Values.Concat(curseForgeEntries.Values).OfType<ModCacheEntry>(),
@@ -345,7 +346,7 @@ public sealed class ModService
         {
             response = await HttpUtil.Request(CurseForgeFingerprintEndpoint)
                 .WithHeader("Accept", "application/json")
-                .WithHeader("x-api-key", ServiceCredentials.CurseForgeApiKey!)
+                .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
                 .PostJsonAsync(new { fingerprints = requested }, cancellationToken: cancellationToken)
                 .ReceiveJson<CurseForgeFingerprintResponse>();
         }
@@ -432,7 +433,7 @@ public sealed class ModService
     {
         var mod = await $"{CurseForgeModsEndpoint}/{file.ModId}"
             .WithHeader("Accept", "application/json")
-            .WithHeader("x-api-key", ServiceCredentials.CurseForgeApiKey!)
+            .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
             .GetJsonAsync<CurseForgeModResponse>(cancellationToken: cancellationToken);
         return new ModCacheEntry
         {

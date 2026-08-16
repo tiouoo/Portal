@@ -1,4 +1,4 @@
-using Portal.Core.SystemResources;
+using Portal.Core.App.Service.SystemResources;
 using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;

@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Portal.Classes.Entries;
 using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -18,30 +19,6 @@ namespace Portal.Module.Initialize;
 public class Config
 {
     public static List<object> FailedSettingKeys { get; } = [];
-
-    public static CiVersionInfo LoadVersionInfo()
-    {
-        Logger.Info("正在加载应用版本信息。");
-        const string RESOURCE_NAME = "Portal.Assets.version-ci.txt";
-        var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream(RESOURCE_NAME);
-        if (stream is null)
-        {
-            Logger.Warning("未找到内嵌版本信息，使用本地开发版本信息。");
-            return CreateLocalVersionInfo();
-        }
-
-        using var reader = new StreamReader(stream);
-        var versionInfo = JsonConvert.DeserializeObject<CiVersionInfo>(reader.ReadToEnd()) ?? CreateLocalVersionInfo();
-        Logger.Info($"应用版本信息加载完成：{versionInfo.VersionTitle} ({versionInfo.Type})。");
-        return versionInfo;
-    }
-
-    private static CiVersionInfo CreateLocalVersionInfo() => new()
-    {
-        Type = "dev",
-        VersionTitle = "local-build"
-    };
 
     public static void Initialize()
     {
@@ -121,10 +98,10 @@ public class Config
         Data.ConfigEntry.BedrockAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
         Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
 
-        Data.Instance.Version = LoadVersionInfo();
-        Logger.Info($"已加载版本信息：{Data.Instance.Version.VersionTitle} ({Data.Instance.Version.Type})");
+        var version = AppVersionService.Instance.Version;
+        Logger.Info($"已加载版本信息：{version.VersionTitle} ({version.Type})");
         Data.UiProperty.OverrideUpdateChannel = Data.ConfigEntry.UpdateSource == UpdateSource.Github
-            ? Data.Instance.Version.Type
+            ? version.Type
             : "release";
 
         const string RESOURCE_NAME1 = "Portal.Assets.package-type.txt";

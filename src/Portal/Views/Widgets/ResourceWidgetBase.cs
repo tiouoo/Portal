@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Portal.Classes.Entries;
-using Portal.Core.SystemResources;
+using Portal.Core.App.Service.SystemResources;
 using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;

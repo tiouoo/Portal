@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Components.Provider;
+using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -76,7 +77,7 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
     {
         try
         {
-            var authenticator = new MicrosoftAuthenticator(ServiceCredentials.MicrosoftClientId);
+            var authenticator = new MicrosoftAuthenticator(CredentialsService.MicrosoftClientId);
             var oAuth2Token = await authenticator.DeviceFlowAuthAsync(deviceCode =>
             {
                 IsReady = true;

@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core;
+using Portal.Core.App.Service;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
@@ -35,7 +36,7 @@ public static class UpdateChecker
         try
         {
             var release = await GetRelease();
-            Logger.Info($"Version {Data.Instance.Version.VersionTitle} Remote title: {release.Title}");
+            Logger.Info($"Version {AppVersionService.Instance.Version.VersionTitle} Remote title: {release.Title}");
             return IsNewer(release) ? release.Title : "latest";
         }
         catch (FlurlHttpException e)
@@ -76,8 +77,8 @@ public static class UpdateChecker
 
     public static bool IsNewer(UpdateRelease release)
     {
-        if (release.Title.Equals(Data.Instance.Version.VersionTitle.Trim(), StringComparison.Ordinal)) return false;
-        if (!long.TryParse(Data.Instance.Version.Action, NumberStyles.None, CultureInfo.InvariantCulture, out var current))
+        if (release.Title.Equals(AppVersionService.Instance.Version.VersionTitle.Trim(), StringComparison.Ordinal)) return false;
+        if (!long.TryParse(AppVersionService.Instance.Version.Action, NumberStyles.None, CultureInfo.InvariantCulture, out var current))
             return true;
         return release.Sequence == 0 || release.Sequence > current;
     }
@@ -112,10 +113,10 @@ public static class UpdateChecker
 
     private static async Task<UpdateRelease> GetCnbRelease()
     {
-        var token = ServiceCredentials.CnbUpdateToken;
+        var token = CredentialsService.CnbUpdateToken;
         if (string.IsNullOrWhiteSpace(token))
             throw new InvalidOperationException(
-                $"CNB 更新源未配置 {ServiceCredentials.CnbUpdateTokenEnvironmentVariable}。请使用包含该变量的正式构建。");
+                $"CNB 更新源未配置 {CredentialsService.CnbUpdateTokenEnvironmentVariable}。请使用包含该变量的正式构建。");
 
         Logger.Info($"Checking update from CNB: {CnbReleasesUrl}");
         var text = await HttpUtil.Request(CnbReleasesUrl)

@@ -1,6 +1,7 @@
 #if WINDOWS
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Text.Json;
 using Avalonia.Threading;
@@ -9,21 +10,20 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Portal.Services;
-using Portal.Views;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
 
 namespace Portal.Desktop;
 
-internal static class WindowsJumpListService
+internal static partial class WindowsJumpListService
 {
     private const string AppUserModelId = "cc.tiouo.Portal";
     private const string PipeName = "cc.tiouo.Portal.JumpList";
     private const string CommandArgument = "--jump-list-command";
     private static readonly RecentPlayService RecentPlayService = new();
     private static readonly Queue<JumpListCommand> PendingCommands = [];
-    private static readonly object CommandLock = new();
+    private static readonly Lock CommandLock = new();
     private static bool _isReady;
     private static bool _isDrainingCommands;
 
@@ -38,7 +38,8 @@ internal static class WindowsJumpListService
         {
             using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly);
             pipe.Connect(250);
-            using var writer = new StreamWriter(pipe, Encoding.UTF8, leaveOpen: true) { AutoFlush = true };
+            using var writer = new StreamWriter(pipe, Encoding.UTF8, leaveOpen: true);
+            writer.AutoFlush = true;
             writer.Write(JsonSerializer.Serialize(command));
             return true;
         }
@@ -75,7 +76,7 @@ internal static class WindowsJumpListService
         {
             try
             {
-                using var pipe = new NamedPipeServerStream(PipeName, PipeDirection.In, 1,
+                await using var pipe = new NamedPipeServerStream(PipeName, PipeDirection.In, 1,
                     PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
                 await pipe.WaitForConnectionAsync();
                 using var reader = new StreamReader(pipe, Encoding.UTF8, detectEncodingFromByteOrderMarks: false,
@@ -88,19 +89,17 @@ internal static class WindowsJumpListService
             }
             catch (JsonException)
             {
-                // 客户端提前断开或发送了截断的负载；丢弃本次连接，继续监听。
             }
             catch (IOException)
             {
-                // 管道被另一个实例占用，或客户端提前断开；稍后重试，避免空转。
                 await Task.Delay(1000);
             }
             catch (Exception)
             {
-                // 监听循环不能因意外异常终止，否则后续命令会启动重复实例。
                 await Task.Delay(1000);
             }
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 
     private static void QueueCommand(JumpListCommand command)
@@ -155,7 +154,7 @@ internal static class WindowsJumpListService
         }
         finally
         {
-            var restart = false;
+            bool restart;
             lock (CommandLock)
             {
                 _isDrainingCommands = false;
@@ -230,6 +229,7 @@ internal static class WindowsJumpListService
                 new JumpListCommand(JumpListCommandKind.Settings, null)));
 
             var recentPlay = (await RecentPlayService.ScanAsync(InstanceManager.Instance.Instances)).FirstOrDefault();
+
             if (recentPlay != null)
             {
                 items.Add(("继续游戏", recentPlay.Name, $"{recentPlay.Instance.InstanceName}·{recentPlay.Details}",
@@ -241,7 +241,6 @@ internal static class WindowsJumpListService
         }
         catch (Exception exception)
         {
-            // Jump Lists are an optional Windows shell integration and must not affect launching Portal.
             Logger.Error($"更新 Windows 任务栏 Jump List 失败：{exception}");
         }
     }
@@ -249,7 +248,7 @@ internal static class WindowsJumpListService
     private static void BuildJumpList(IEnumerable<(string Category, string Title, string Description, JumpListCommand Command)> items)
     {
         var destinationList = (ICustomDestinationList)new CDestinationList();
-        destinationList.SetAppID(AppUserModelId);
+        destinationList.SetAppId(AppUserModelId);
         var objectArrayGuid = typeof(IObjectArray).GUID;
         destinationList.BeginList(out _, ref objectArrayGuid, out _);
         foreach (var category in items.GroupBy(item => item.Category))
@@ -257,7 +256,7 @@ internal static class WindowsJumpListService
             var collection = new ObjectCollection();
             foreach (var item in category)
                 collection.AddObject(CreateShellLink(item.Title, item.Description, item.Command));
-            destinationList.AppendCategory(category.Key, (IObjectArray)collection);
+            destinationList.AppendCategory(category.Key, collection);
         }
         destinationList.CommitList();
     }
@@ -304,16 +303,16 @@ internal static class WindowsJumpListService
     private sealed record JumpListCommand(JumpListCommandKind Kind, string? InstanceFolderPath,
         RecentPlayTargetType? TargetType = null, string? TargetId = null);
 
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-    private static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
+    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial void SetCurrentProcessExplicitAppUserModelID(string appId);
 
-    [DllImport("ole32.dll")]
-    private static extern int PropVariantClear(ref PropVariant variant);
+    [LibraryImport("ole32.dll")]
+    private static partial void PropVariantClear(ref PropVariant variant);
 
-    [ComImport, Guid("6332DEBF-87B5-4670-90C0-5E57B408A49E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface ICustomDestinationList
+    [GeneratedComInterface, Guid("6332DEBF-87B5-4670-90C0-5E57B408A49E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public partial interface ICustomDestinationList
     {
-        void SetAppID([MarshalAs(UnmanagedType.LPWStr)] string appId);
+        void SetAppId([MarshalAs(UnmanagedType.LPWStr)] string appId);
         void BeginList(out uint maxSlots, ref Guid riid, [MarshalAs(UnmanagedType.Interface)] out object removedItems);
         void AppendCategory([MarshalAs(UnmanagedType.LPWStr)] string category, IObjectArray objects);
         void AppendKnownCategory(int category);
@@ -324,26 +323,24 @@ internal static class WindowsJumpListService
         void AbortList();
     }
 
-    [ComVisible(true), Guid("5632B1A4-E38A-400A-928A-D4CD63230295"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IObjectCollection : IObjectArray
+    [GeneratedComInterface, Guid("5632B1A4-E38A-400A-928A-D4CD63230295"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public partial interface IObjectCollection : IObjectArray
     {
-        new void GetCount(out uint count);
-        new void GetAt(uint index, ref Guid riid, [MarshalAs(UnmanagedType.Interface)] out object item);
         void AddObject([MarshalAs(UnmanagedType.Interface)] object item);
         void AddFromArray(IObjectArray source);
         void RemoveObjectAt(uint index);
         void Clear();
     }
 
-    [ComVisible(true), Guid("92CA9DCD-5622-4BBA-A805-5E9F541BD8C9"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IObjectArray
+    [GeneratedComInterface, Guid("92CA9DCD-5622-4BBA-A805-5E9F541BD8C9"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public partial interface IObjectArray
     {
         void GetCount(out uint count);
         void GetAt(uint index, ref Guid riid, [MarshalAs(UnmanagedType.Interface)] out object item);
     }
 
-    [ComVisible(true), ClassInterface(ClassInterfaceType.None)]
-    private sealed class ObjectCollection : IObjectCollection
+    [GeneratedComClass]
+    public sealed partial class ObjectCollection : IObjectCollection
     {
         private readonly List<object> _items = [];
 
@@ -370,7 +367,7 @@ internal static class WindowsJumpListService
     }
 
     [ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IShellLinkW
+    public interface IShellLinkW
     {
         void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int capacity, out IntPtr findData, uint flags);
         void GetIDList(out IntPtr itemIdList);

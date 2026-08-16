@@ -6,7 +6,7 @@ using Portal.Const;
 
 namespace Portal.Desktop;
 
-internal static class DebugConsole
+internal static partial class DebugConsole
 {
     public static void ShowIfEnabled()
     {
@@ -55,8 +55,8 @@ internal static class DebugConsole
         var command = $"echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log"))}; exec bash";
         foreach (var (fileName, arguments) in new[]
                  {
-                     ("gnome-terminal", new[] { "--", "bash", "-c", command }),
-                     ("konsole", new[] { "-e", "bash", "-c", command }),
+                     ("gnome-terminal", ["--", "bash", "-c", command]),
+                     ("konsole", ["-e", "bash", "-c", command]),
                      ("xterm", new[] { "-e", "bash", "-c", command })
                  })
         {
@@ -93,6 +93,7 @@ internal static class DebugConsole
 
     private static string QuoteForAppleScript(string value) => $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool AllocConsole();
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool AllocConsole();
 }

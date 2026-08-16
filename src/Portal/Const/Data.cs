@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Utilities;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Classes.Entries;
+using Portal.Core.App.Service;
+using Portal.Core.Classes.Entries;
 using Tio.Avalonia.Standard.Modules.Platform;
 
 namespace Portal.Const;
@@ -41,7 +43,7 @@ public partial class Data : ObservableObject
     }
     public static DesktopType DesktopType => DesktopTypeDetector.CurrentPlatform; 
     public static UiProperty UiProperty { get; } = UiProperty.Instance;
-    [ObservableProperty] public partial CiVersionInfo Version { get; set; }
+    public CiVersionInfo Version => AppVersionService.Instance.Version;
     [ObservableProperty] public partial string PackageType { get; set; }
     public string UserAgent => ConfigEntry.EnableCustomUserAgent && !string.IsNullOrEmpty(ConfigEntry.CustomUserAgent) ? ConfigEntry.CustomUserAgent : $"Portal/{Version.VersionTitle}";
 

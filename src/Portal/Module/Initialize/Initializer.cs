@@ -6,6 +6,7 @@ using Portal.Classes.Entries;
 using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core;
+using Portal.Core.App.Service;
 using Portal.Core.Minecraft;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Views;
@@ -40,7 +41,7 @@ public static partial class Initializer
             Data.ConfigEntry.DownloadMaxRetryCount);
         MinecraftCoreInitializer.Initialize(new MinecraftCoreInitializeOptions()
         {
-            AppVersion = Data.Instance.Version.VersionTitle,
+            AppVersion = AppVersionService.Instance.Version.VersionTitle,
             EnableCustomUserAgent = Data.ConfigEntry.EnableCustomUserAgent,
             CustomUserAgent = Data.ConfigEntry.CustomUserAgent,
             DisableSystemProxy = Data.ConfigEntry.DisableSystemProxy,

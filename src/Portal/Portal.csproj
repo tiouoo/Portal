@@ -17,9 +17,6 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
-        <EmbeddedResource Include="..\..\assets\conf\version-ci.txt">
-            <Link>Assets\version-ci.txt</Link>
-        </EmbeddedResource>
         <EmbeddedResource Include="..\..\assets\conf\package-type.txt">
             <Link>Assets\package-type.txt</Link>
         </EmbeddedResource>

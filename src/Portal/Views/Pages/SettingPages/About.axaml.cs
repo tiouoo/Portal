@@ -8,6 +8,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Core.App.Service;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.Update;
 using Portal.ViewModels;
@@ -75,7 +76,7 @@ public partial class About : DataUserControl
 
     private void UpdateChannel_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (e.RemovedItems.Count > 0 && Data.Version.Type != "dev")
+        if (e.RemovedItems.Count > 0 && AppVersionService.Instance.Version.Type != "dev")
             _ = Check(sender!);
     }
 
@@ -84,7 +85,7 @@ public partial class About : DataUserControl
         var supportsPreviewChannels = Data.ConfigEntry.UpdateSource == UpdateSource.Github;
         if (!supportsPreviewChannels) Data.UiProperty.OverrideUpdateChannel = "release";
         UpdateChannel.IsEnabled = supportsPreviewChannels;
-        if (e.RemovedItems.Count > 0 && Data.Version.Type != "dev") _ = Check(sender!);
+        if (e.RemovedItems.Count > 0 && AppVersionService.Instance.Version.Type != "dev") _ = Check(sender!);
     }
 
     private async void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
@@ -139,7 +140,7 @@ public partial class About : DataUserControl
 public partial class AboutViewModel : ObservableObject
 {
     public Data Data => Data.Instance;
-    public string Info => $"{Data.Version.Type}.{Data.PackageType}";
+    public string Info => $"{AppVersionService.Instance.Version.Type}.{Data.PackageType}";
 
     public IReadOnlyList<OpenSourceProject> OpenSourceProjects { get; } =
     [

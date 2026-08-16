@@ -14,6 +14,7 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
 using Portal.Const;
+using Portal.Core.App.Helpers;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;

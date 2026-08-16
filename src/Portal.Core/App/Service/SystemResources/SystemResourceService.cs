@@ -1,17 +1,14 @@
 using Hardware.Info;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.SystemResources;
+namespace Portal.Core.App.Service.SystemResources;
 
-/// <summary>
-/// 跨平台系统资源采集服务（单例）。
-/// 在后台线程定期采集 CPU、内存、磁盘、网络、GPU 数据，并通过 <see cref="Updated"/> 事件发布快照。
-/// </summary>
-public sealed class SystemResourceService
+public sealed class SystemResourceService : IDisposable
 {
     private readonly IHardwareInfo _hardware = new HardwareInfo();
     private readonly Timer _fastTimer;
     private readonly Timer _slowTimer;
+    private bool _disposed;
 
     private ulong _lastNetBytesReceived;
     private ulong _lastNetBytesSent;
@@ -25,12 +22,9 @@ public sealed class SystemResourceService
 
     private SystemResourceService()
     {
-        // 预热：先刷新显卡列表，避免首次采样拿不到 GPU 名称
         try { _hardware.RefreshVideoControllerList(refreshMonitorList: false); }
         catch (Exception exception) { Logger.Error("预热 GPU 信息采集失败。", exception); }
-        // CPU 使用率由 CpuUsageProvider 负责采集（需两次采样取差值），这里先触发一次预热
         _ = CpuUsageProvider.GetUsage();
-        // GPU 使用率同样需要两次采样取差值，预热一次
         _ = GpuUsageProvider.GetUsage();
 
         _fastTimer = new Timer(_ => SampleFast(), null, 1000, 1000);
@@ -39,7 +33,6 @@ public sealed class SystemResourceService
 
     public static void Initialize() => _ = Instance;
 
-    /// <summary>快速采样：CPU、内存、磁盘容量、网络速率（开销极小）。</summary>
     private void SampleFast()
     {
         try
@@ -53,12 +46,10 @@ public sealed class SystemResourceService
 
         var memStatus = _hardware.MemoryStatus;
 
-        // CPU 使用率：原生 API 计算差值，与任务管理器一致（1 秒粒度）
         var cpuUsage = CpuUsageProvider.GetUsage();
         ulong totalMem = memStatus.TotalPhysical;
         ulong usedMem = totalMem - memStatus.AvailablePhysical;
 
-        // 系统盘容量（跨平台用 DriveInfo）
         ulong totalDisk = 0, usedDisk = 0;
         float diskUsage = 0;
         try
@@ -78,7 +69,6 @@ public sealed class SystemResourceService
             Logger.Debug($"采集磁盘资源信息失败。{Environment.NewLine}{exception}");
         }
 
-        // 网络速率：用 NetworkInterface 统计两次采样差值（跨平台）
         ulong downBytes = 0, upBytes = 0;
         try
         {
@@ -128,16 +118,12 @@ public sealed class SystemResourceService
         Updated?.Invoke(this, snapshot);
     }
 
-    /// <summary>慢速采样：GPU 信息与使用率（型号不常变，低频刷新即可）。</summary>
     private void SampleSlow()
     {
-        float? gpuUsage = null;
         string? gpuName = null;
 
-        // GPU 使用率：Windows 用 PDH API 读取 GPU Engine 性能计数器
-        gpuUsage = GpuUsageProvider.GetUsage();
+        var gpuUsage = GpuUsageProvider.GetUsage();
 
-        // GPU 型号：Hardware.Info 通过 WMI 获取
         try
         {
             _hardware.RefreshVideoControllerList(refreshMonitorList: false);
@@ -159,60 +145,61 @@ public sealed class SystemResourceService
         Updated?.Invoke(this, snapshot);
     }
 
-    /// <summary>
-    /// 从显卡列表中挑选真实的物理 GPU，跳过远程控制软件创建的虚拟显卡。
-    /// 策略：先过滤掉名称含虚拟关键词的，再优先选择显存最大的；若全部被过滤则回退到第一个。
-    /// </summary>
-    private static Hardware.Info.VideoController? PickRealGpu(IEnumerable<Hardware.Info.VideoController> list)
+    private static VideoController? PickRealGpu(IEnumerable<VideoController> list)
     {
-        var all = list as IList<Hardware.Info.VideoController> ?? list.ToList();
+        var all = list as IList<VideoController> ?? list.ToList();
         if (all.Count == 0)
             return null;
 
-        // 名称含真实 GPU 厂商关键词的优先选择
         var real = all.Where(v => !IsVirtualGpu(v.Name)).ToList();
         if (real.Count == 0)
             return all.FirstOrDefault();
 
-        // 优先选择显存最大的（AdapterRAM 可能不准确，但作为排序依据足够）
         return real
             .OrderByDescending(v => v.AdapterRAM)
             .FirstOrDefault();
     }
 
-    /// <summary>判断显卡名称是否属于虚拟/远程显示适配器。</summary>
     private static bool IsVirtualGpu(string? name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return true;
         var lower = name.ToLowerInvariant();
-        return VirtualGpuKeywords.Any(k => lower.Contains(k));
+        return VirtualGpuKeywords.Any(lower.Contains);
     }
 
     private static readonly string[] VirtualGpuKeywords =
     [
-        "microsoft basic render",     // Microsoft Basic Render Driver
-        "remote display",             // Microsoft Remote Display Adapter
-        "mirror",                     // Mirror Driver
-        "virtual",                    // Virtual Display
-        "indirect",                   // Indirect Display
-        "software",                   // Software Adapter
-        "rdp",                        // RDP
-        "parsec",                     // Parsec Virtual Display
-        "anydesk",                    // AnyDesk
-        "todesk",                     // ToDesk
-        "teamviewer",                 // TeamViewer
-        "splashtop",                  // Splashtop
-        "spacedesk",                  // SpaceDesk
-        "duet",                       // Duet Display
-        "displaylink",                // DisplayLink
-        "iddcx",                      // Indirect Display Driver Class
-        "ammyy",                      // Ammyy Admin
-        "supremo",                    // SupRemo
-        "no machine",                 // NoMachine NX
-        "meshconsole",                // MeshConsole
-        "lite manager",               // LiteManager
-        "usb video",                  // USB Video Device
-        "microsoft hyper-v"           // Hyper-V Video
+        "microsoft basic render",
+        "remote display",
+        "mirror",
+        "virtual",
+        "indirect",
+        "software",
+        "rdp",
+        "parsec",
+        "anydesk",
+        "todesk",
+        "teamviewer",
+        "splashtop",
+        "spacedesk",
+        "duet",
+        "displaylink",
+        "iddcx",
+        "ammyy",
+        "supremo",
+        "no machine",
+        "meshconsole",
+        "lite manager",
+        "usb video",
+        "microsoft hyper-v"
     ];
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _fastTimer.Dispose();
+        _slowTimer.Dispose();
+        _disposed = true;
+    }
 }

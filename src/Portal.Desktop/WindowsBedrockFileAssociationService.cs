@@ -5,7 +5,7 @@ using Portal.Core.Minecraft.Services;
 
 namespace Portal.Desktop;
 
-internal static class WindowsBedrockFileAssociationService
+internal static partial class WindowsBedrockFileAssociationService
 {
     private const uint AssociationChanged = 0x08000000;
     private const uint IdList = 0x0000;
@@ -69,7 +69,7 @@ internal static class WindowsBedrockFileAssociationService
         }
     }
 
-    [DllImport("shell32.dll")]
-    private static extern void SHChangeNotify(uint eventId, uint flags, IntPtr item1, IntPtr item2);
+    [LibraryImport("shell32.dll")]
+    private static partial void SHChangeNotify(uint eventId, uint flags, IntPtr item1, IntPtr item2);
 }
 #endif

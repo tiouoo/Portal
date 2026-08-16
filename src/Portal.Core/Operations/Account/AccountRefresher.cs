@@ -1,6 +1,7 @@
 using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Components.Provider;
+using Portal.Core.App.Service;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -19,7 +20,7 @@ public static class AccountRefresher
         {
             Logger.Info($"开始刷新微软账户：{account.Name}");
             
-            var authenticator = new MicrosoftAuthenticator(ServiceCredentials.MicrosoftClientId);
+            var authenticator = new MicrosoftAuthenticator(CredentialsService.MicrosoftClientId);
             var authResult = await authenticator.RefreshAsync(new MicrosoftAccount(account.Name, (Guid)account.Uuid!,
                 account.AccessToken, account.RefreshToken, account.LastLoginTime));
 

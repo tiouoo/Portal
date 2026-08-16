@@ -3,13 +3,13 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.SystemResources;
+namespace Portal.Core.App.Service.SystemResources;
 
 public readonly record struct MemoryOptimizationResult(long ReclaimedBytes);
 
 public static class MemoryOptimizationService
 {
-    private static readonly object WorkingSetTrimLock = new();
+    private static readonly Lock WorkingSetTrimLock = new();
     private static Timer? _workingSetTrimTimer;
     private static int _workingSetTrimInProgress;
 
@@ -25,10 +25,9 @@ public static class MemoryOptimizationService
         }
     }
 
-    public static bool TrimCurrentProcessWorkingSet()
+    private static bool TrimCurrentProcessWorkingSet()
     {
-        if (!OperatingSystem.IsWindows()) return false;
-        return K32EmptyWorkingSet(GetCurrentProcess());
+        return OperatingSystem.IsWindows() && K32EmptyWorkingSet(GetCurrentProcess());
     }
 
     public static async Task<MemoryOptimizationResult> OptimizeAsync(CancellationToken cancellationToken = default)

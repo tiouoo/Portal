@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Portal.Const;
+using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
 using Portal.Module.Multiplayer;
 using Portal.Views.Pages;
@@ -97,8 +98,8 @@ public partial class OverlayWindow : Window
         _lunarBlock = LunarBlock;
         _weekBlock = WeekBlock;
 
-        VersionBox.Text = !string.IsNullOrEmpty(Data.Instance.Version.VersionTitle)
-            ? $"Portal {Data.Instance.Version.VersionTitle}"
+        VersionBox.Text = !string.IsNullOrEmpty(AppVersionService.Instance.Version.VersionTitle)
+            ? $"Portal {AppVersionService.Instance.Version.VersionTitle}"
             : "Portal";
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
