@@ -49,20 +49,5 @@
         <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <AdditionalFiles Include="Views\Operations\Account\AuthServer.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\AuthServerDetected.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\BedrockMicrosoft.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\ChangeSkin.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\EditAccountNote.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\EditAuthServer.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\Microsoft.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\Offline.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\RenameOfflineAccount.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\SelectAccountType.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\ViewResult.axaml"/>
-        <AdditionalFiles Include="Views\Operations\Account\Yggdrasil.axaml"/>
-        <AdditionalFiles Include="Views\Operations\OpenFile\NewMinecraftFolder.axaml"/>
-    </ItemGroup>
 
 </Project>

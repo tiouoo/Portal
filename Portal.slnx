@@ -22,7 +22,6 @@
   <Folder Name="/Module/TioUi/">
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/Demo/TioUi.Demo.Desktop/TioUi.Demo.Desktop.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/Demo/TioUi.Demo/TioUi.Demo.csproj" />
-    <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi.SmoothScroll/TioUi.SmoothScroll.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi/TioUi.csproj" />
   </Folder>
   <Folder Name="/Solution Item/">
