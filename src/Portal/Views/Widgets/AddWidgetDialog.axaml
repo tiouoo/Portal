@@ -12,7 +12,7 @@
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:module="clr-namespace:Portal.Module.Widgets"
+    xmlns:module="clr-namespace:Portal.Module"
     xmlns:modulecore1="clr-namespace:Portal.Core.Module.Widgets;assembly=Portal.Core"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"

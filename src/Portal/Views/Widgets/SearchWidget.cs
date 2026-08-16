@@ -10,7 +10,7 @@ using Avalonia.VisualTree;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Widgets;
-using Portal.Module.AggregatedSearch;
+using Portal.Module;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -173,7 +173,7 @@ public sealed class SearchWidget : IWidgetContent
             _searchBox.SelectedItem = null;
             _searchBox.Text = null;
             _searchBox.IsDropDownOpen = false;
-            Handler.HandleAsync(entry, topLevel);
+            AggregatedSearchHandler.HandleAsync(entry, topLevel);
         };
         _searchBox.AddHandler(KeyDownEvent, OnSearchKeyDown, RoutingStrategies.Bubble, true);
 

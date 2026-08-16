@@ -8,7 +8,7 @@ using Avalonia.VisualTree;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Module.Widgets;
-using Portal.Module.Widgets;
+using Portal.Module;
 using Portal.ViewModels;
 
 namespace Portal.Views.Widgets;

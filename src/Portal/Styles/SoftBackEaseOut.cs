@@ -1,6 +1,6 @@
 using Avalonia.Animation.Easings;
 
-namespace Portal.Module.Animations;
+namespace Portal.Styles;
 
 public class SoftBackEaseOut : Easing
 {

@@ -1,7 +1,7 @@
 using Portal.Core.Module.Widgets;
 using Portal.Views.Widgets;
 
-namespace Portal.Module.Widgets;
+namespace Portal.Module;
 
 public sealed class WidgetDefinition
 {

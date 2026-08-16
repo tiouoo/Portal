@@ -22,7 +22,7 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
-namespace Portal.Module.Ipc;
+namespace Portal.Module;
 
 public static class PortalCommandExecutor
 {

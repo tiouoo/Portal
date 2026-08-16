@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Module.AggregatedSearch;
+using Portal.Module;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -58,7 +58,7 @@ public partial class AggregatedSearchDialog : UserControl
         var a = (s! as Control)!.GetTopLevel() as CustomDialogWindow;
         a?.Close();
 
-        Handler.HandleAsync(entry, window);
+        AggregatedSearchHandler.HandleAsync(entry, window);
     }
 }
 

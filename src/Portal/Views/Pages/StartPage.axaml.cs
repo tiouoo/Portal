@@ -18,6 +18,7 @@ using Portal.Core.Module;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Operations.OpenFile;
 using Portal.Core.Services;
+using Portal.Module;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;
@@ -29,7 +30,6 @@ using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 using AutoCompleteBox = TioUi.Controls.AutoCompleteBox;
-using Handler = Portal.Module.AggregatedSearch.Handler;
 
 namespace Portal.Views.Pages;
 
@@ -201,7 +201,7 @@ public partial class StartPage : DataUserControl, ITioTabPage
             box.IsDropDownOpen = false;
         }
 
-        Handler.HandleAsync(entry, topLevel);
+        AggregatedSearchHandler.HandleAsync(entry, topLevel);
     }
 
     private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)

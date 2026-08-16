@@ -9,8 +9,8 @@ using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Module.Ipc;
+using Portal.Module;
 using Portal.Module.Initialize;
-using Portal.Module.Ipc;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 

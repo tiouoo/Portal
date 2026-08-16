@@ -15,13 +15,13 @@
     x:Class="Portal.Views.OobeWindow"
     x:DataType="views:OobeWindow"
     xmlns="https://github.com/avaloniaui"
-    xmlns:anim="clr-namespace:Portal.Module.Animations"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:javaClasses="clr-namespace:Portal.Core.Minecraft.Instance.Java;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:styles="clr-namespace:Portal.Styles"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -111,7 +111,7 @@
             <Carousel.PageTransition>
                 <PageSlide Duration="0:0:0.25" Orientation="Horizontal">
                     <PageSlide.SlideInEasing>
-                        <anim:SoftBackEaseOut Amplitude="0.6" />
+                        <styles:SoftBackEaseOut Amplitude="0.6" />
                     </PageSlide.SlideInEasing>
                     <PageSlide.SlideOutEasing>
                         <CubicEaseOut />

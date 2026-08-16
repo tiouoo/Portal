@@ -17,8 +17,8 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Operations.OpenFile;
+using Portal.Module;
 using Portal.Module.DefaultPage;
-using Portal.Module.DragDrop;
 using Portal.Views.Components;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
@@ -455,7 +455,7 @@ public partial class TabWindow : TioTabWindowBase
     {
         _hideDropTipScheduled = false;
 
-        var msg = Handler.GetMsg(e);
+        var msg = DragDropHandler.GetMsg(e);
 
 
         if (string.IsNullOrEmpty(msg) || msg == _lastDragMessage) return;
@@ -488,8 +488,8 @@ public partial class TabWindow : TioTabWindowBase
         _hideDropTipScheduled = false;
         BarComponent.DropMsg = null;
         _lastDragMessage = null;
-        Handler.ResetDragIdentification();
-        Handler.Handle(e, this);
+        DragDropHandler.ResetDragIdentification();
+        DragDropHandler.Handle(e, this);
     }
 
     public static void ApplyBackgroundToAllWindows()

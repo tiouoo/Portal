@@ -17,9 +17,9 @@ using AuthServer = Portal.Core.Minecraft.Classes.AuthServer;
 using TopLevel = Avalonia.Controls.TopLevel;
 
 
-namespace Portal.Module.AggregatedSearch;
+namespace Portal.Module;
 
-public class Handler
+public class AggregatedSearchHandler
 {
     public static void HandleAsync(AggregatedSearchEntry entry, TopLevel sender)
     {

@@ -21,9 +21,9 @@ using TioUi.Common.Extensions;
 using TioUi.Controls;
 using AuthServer = Portal.Core.Operations.Account.AuthServer;
 
-namespace Portal.Module.DragDrop;
+namespace Portal.Module;
 
-public class Handler
+public class DragDropHandler
 {
     private static readonly object IdentifyLock = new();
 

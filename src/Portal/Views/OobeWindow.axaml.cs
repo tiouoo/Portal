@@ -6,7 +6,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
 using Portal.Core.Operations.Java;
 using Portal.Core.Operations.OpenFile;
-using Portal.Module.Animations;
+using Portal.Styles;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;

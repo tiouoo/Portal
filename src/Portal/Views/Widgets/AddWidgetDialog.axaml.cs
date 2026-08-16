@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
-using Portal.Module.Widgets;
+using Portal.Module;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Interfaces;
