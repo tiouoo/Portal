@@ -13,7 +13,7 @@ public sealed class BlockListDocument
 
 public sealed class BlockListService
 {
-    private const string FileName = "BlockList.portal.json";
+    private const string FileName = "BlockList.portal";
     private readonly string _path = Path.Combine(ConfigPath.UserDataRootPath, FileName);
 
     public static BlockListService Instance { get; } = new();
