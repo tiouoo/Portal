@@ -4,11 +4,6 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
 
-/// <summary>
-/// Java 实例服务器列表（servers.dat）管理服务。
-/// 与 PCLCE 的 PageInstanceServer 一致，直接读写实例 .minecraft 下的 servers.dat 文件，
-/// 而不是通过解析游戏日志获取服务器。
-/// </summary>
 public static class JavaServerManager
 {
     private static readonly object FileLock = new();
@@ -19,13 +14,7 @@ public static class JavaServerManager
     public static bool IsSupported(MinecraftInstance instance) =>
         instance.IsJava && instance.MinecraftEntry != null;
 
-    /// <summary>
-    /// 按原文件的压缩方式保存 servers.dat。
-    /// Minecraft 26.x（以及部分较新版本）以未压缩 NBT 存储该文件，
-    /// 若一律按 GZip 写入会导致游戏无法识别；保留原压缩方式以兼容。
-    /// 新建文件时 FileCompression 默认为 AutoDetect，无法用于保存，此时按未压缩写入。
-    /// </summary>
-    private static void Save(NbtFile file, string path)
+        private static void Save(NbtFile file, string path)
     {
         var compression = file.FileCompression;
         if (compression == NbtCompression.AutoDetect)
@@ -33,10 +22,7 @@ public static class JavaServerManager
         file.SaveToFile(path, compression);
     }
 
-    /// <summary>
-    /// 从 servers.dat 读取服务器列表。
-    /// </summary>
-    public static IReadOnlyList<MinecraftServerEntry> Read(MinecraftInstance instance)
+        public static IReadOnlyList<MinecraftServerEntry> Read(MinecraftInstance instance)
     {
         if (!IsSupported(instance))
             return [];
@@ -65,10 +51,7 @@ public static class JavaServerManager
         }
     }
 
-    /// <summary>
-    /// 添加服务器到 servers.dat。
-    /// </summary>
-    public static bool Add(MinecraftInstance instance, string name, string address)
+        public static bool Add(MinecraftInstance instance, string name, string address)
     {
         if (!IsSupported(instance))
             return false;
@@ -109,10 +92,7 @@ public static class JavaServerManager
         }
     }
 
-    /// <summary>
-    /// 编辑 servers.dat 中指定序号的服务器（保留图标等其余字段）。
-    /// </summary>
-    public static bool Update(MinecraftInstance instance, int index, string name, string address)
+        public static bool Update(MinecraftInstance instance, int index, string name, string address)
     {
         if (!IsSupported(instance))
             return false;
@@ -145,10 +125,7 @@ public static class JavaServerManager
         }
     }
 
-    /// <summary>
-    /// 从 servers.dat 删除指定序号的服务器。
-    /// </summary>
-    public static bool Remove(MinecraftInstance instance, int index)
+        public static bool Remove(MinecraftInstance instance, int index)
     {
         if (!IsSupported(instance))
             return false;
@@ -212,12 +189,9 @@ public static class JavaServerManager
         };
     }
 
-    /// <summary>
-    /// 解析服务器地址，支持 [addr]:port 形式的 IPv6、host:port 与默认端口。
-    /// </summary>
-    public static (string Host, int Port) ParseAddress(string address)
+        public static (string Host, int Port) ParseAddress(string address)
     {
-        // [addr]:port 形式的 IPv6 地址
+        
         if (address.StartsWith('['))
         {
             var end = address.IndexOf(']');
@@ -231,7 +205,7 @@ public static class JavaServerManager
             }
         }
 
-        // 含多个 ':' 的裸 IPv6 地址整体视为主机
+        
         var separator = address.LastIndexOf(':');
         return separator > 0 && address.IndexOf(':') == separator &&
                int.TryParse(address[(separator + 1)..], out var port)
@@ -240,9 +214,6 @@ public static class JavaServerManager
     }
 }
 
-/// <summary>
-/// servers.dat 中的一条服务器记录。
-/// </summary>
 public sealed class MinecraftServerEntry
 {
     public required string Name { get; set; }

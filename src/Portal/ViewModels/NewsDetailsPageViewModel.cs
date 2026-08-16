@@ -66,7 +66,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
                 return;
             }
 
-            // 用详情接口返回的字段更新一遍（防止列表缓存里的字段过期）。
+            
             Title = detail.Title;
             Version = detail.Version;
             Type = detail.Type;
@@ -130,11 +130,11 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         var doc = await Task.Run(() => NewsHtmlRenderer.Parse(html));
         if (_disposed) return;
 
-        // 先挂一个空集合，让 ItemsRepeater 立即绑定到新集合，后续分批 Add 触发增量渲染。
+        
         BodyControls = new ObservableCollection<Control>();
 
-        // 分批创建并添加控件，每批之间让出 UI 线程，避免一次性创建大量控件导致界面卡顿。
-        // 配合 ItemsRepeater 虚拟化，未进入视口的块不会触发 measure/arrange。
+        
+        
         const int batchSize = 8;
         var batch = new List<Control>(batchSize);
         foreach (var control in NewsHtmlRenderer.RenderEnumerable(doc))
@@ -159,11 +159,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         BodyControls.Clear();
     }
 
-    /// <summary>
-    /// 后台翻译刷新成功时的回调。当取回的已翻译版本与当前新闻同 ID 时，
-    /// 在 UI 线程上动态替换标题、版本、正文等字段并重新渲染正文。
-    /// </summary>
-    private void OnNewsDetailUpdated(NewsDetail detail)
+        private void OnNewsDetailUpdated(NewsDetail detail)
     {
         if (_disposed || detail.Id != _entry.Id) return;
         Dispatcher.UIThread.Post(async () =>

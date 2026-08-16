@@ -290,11 +290,11 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             }
             catch (IOException)
             {
-                // The temporary file can only remain when another process locked it.
+                
             }
             catch (UnauthorizedAccessException)
             {
-                // The temporary file can only remain when another process locked it.
+                
             }
         }
     }
@@ -572,4 +572,4 @@ public sealed class SaveItem(WorldSaveInfo info, MinecraftInstance? instance = n
         gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
 }
 
-// SaveImageLoader 已由 Portal.Module.Imaging.LocalImageLoader 取代。
+

@@ -78,25 +78,25 @@ public sealed record MinecraftFolderLayout(
             return new(MinecraftFolderKind.Unknown, string.Empty, string.Empty, "未识别的 Minecraft 文件夹");
         var selected = Path.GetFullPath(path.Trim());
 
-        // MultiMC / Prism Launcher / BakaXL 根目录（共享结构）
+        
         if (Directory.Exists(Path.Combine(selected, "instances")) &&
             Directory.Exists(Path.Combine(selected, "libraries")) &&
             Directory.Exists(Path.Combine(selected, "assets")) &&
             Directory.Exists(Path.Combine(selected, "meta", "net.minecraft")))
             return new(MinecraftFolderKind.MultiMc, selected, selected, GetMultiMcBrand(selected));
 
-        // MultiMC / BakaXL 实例目录
+        
         if (File.Exists(Path.Combine(selected, "package.info")) &&
             TryFindMultiMcRoot(selected, out var multiMcRoot))
             return new(MinecraftFolderKind.MultiMcInstance, selected, multiMcRoot, GetMultiMcInstanceBrand(selected));
 
-        // Portal MC 布局
+        
         if (IsPortalMcRoot(selected))
             return new(MinecraftFolderKind.PortalMc, selected, selected, "Portal MC");
         if (TryFindPortalMcRoot(selected, out var portalMcRoot))
             return new(MinecraftFolderKind.PortalMc, portalMcRoot, portalMcRoot, "Portal MC");
 
-        // CurseForge App 根目录
+        
         if (Directory.Exists(Path.Combine(selected, "Install", "versions")) &&
             Directory.Exists(Path.Combine(selected, "Instances")))
             return new(MinecraftFolderKind.CurseForge, selected, selected, "CurseForge");
@@ -108,42 +108,42 @@ public sealed record MinecraftFolderLayout(
             return new(MinecraftFolderKind.CurseForge, selected, root, "CurseForge");
         }
 
-        // CurseForge 实例目录
+        
         if (File.Exists(Path.Combine(selected, "minecraftinstance.json")) &&
             TryFindParentDirectory(selected, "Install", "Instances", out var curseForgeRoot))
             return new(MinecraftFolderKind.CurseForgeInstance, selected, curseForgeRoot, "CurseForge 实例");
 
-        // 全新安装的 CurseForge App
+        
         if (Directory.Exists(Path.Combine(selected, "Install")) &&
             Path.GetFileName(selected).Equals("minecraft", StringComparison.OrdinalIgnoreCase) &&
             Path.GetFileName(Directory.GetParent(selected)?.FullName ?? string.Empty)
                 .Equals("curseforge", StringComparison.OrdinalIgnoreCase))
             return new(MinecraftFolderKind.CurseForge, selected, selected, "CurseForge");
 
-        // Modrinth 外部游戏数据目录（profiles/meta/caches，无 app.db）
+        
         if (Directory.Exists(Path.Combine(selected, "profiles")) &&
             Directory.Exists(Path.Combine(selected, "meta")) &&
             Directory.Exists(Path.Combine(selected, "caches")))
             return new(MinecraftFolderKind.Modrinth, selected, selected, "Modrinth");
 
-        // Modrinth 标准目录（含 app.db）
+        
         if (File.Exists(Path.Combine(selected, "app.db")) &&
             Directory.Exists(Path.Combine(selected, "profiles")) &&
             Directory.Exists(Path.Combine(selected, "meta")))
             return new(MinecraftFolderKind.Modrinth, selected, selected, "Modrinth");
 
-        // Modrinth 子目录 profile
+        
         if (TryFindModrinthRoot(selected, out var modrinthRoot) &&
             IsUnder(selected, Path.Combine(modrinthRoot, "profiles")))
             return new(MinecraftFolderKind.ModrinthInstance, selected, modrinthRoot, "Modrinth 实例");
 
-        // MultiMC 根目录（宽松检测）
+        
         if (Directory.Exists(Path.Combine(selected, "instances")) &&
             Directory.Exists(Path.Combine(selected, "libraries")) &&
             Directory.Exists(Path.Combine(selected, "assets")))
             return new(MinecraftFolderKind.MultiMc, selected, selected, GetMultiMcBrand(selected));
 
-        // MultiMC 实例目录（mmc-pack.json）
+        
         if (File.Exists(Path.Combine(selected, "instance.cfg")) && File.Exists(Path.Combine(selected, "mmc-pack.json")))
             return new(MinecraftFolderKind.MultiMcInstance, selected,
                 Directory.GetParent(Directory.GetParent(selected)?.FullName ?? selected)?.FullName ?? selected,
@@ -158,7 +158,7 @@ public sealed record MinecraftFolderLayout(
                 GetMultiMcInstanceBrand(instanceRoot));
         }
 
-        // 传统 .minecraft
+        
         if (Directory.Exists(Path.Combine(selected, "versions")) ||
             Directory.Exists(Path.Combine(selected, "bedrock_versions")) ||
             Path.GetFileName(selected).Equals(".minecraft", StringComparison.OrdinalIgnoreCase))

@@ -24,10 +24,7 @@ public partial class OobeWindow : TioWindow
     private IntPtr _macOsWindowHandle;
     private int _dotsAnimationToken;
 
-    /// <summary>
-    /// 用户在最后一步点击「进入 Portal」后触发，由 App 负责切换到主窗口
-    /// </summary>
-    public event Action? Completed;
+        public event Action? Completed;
 
     public Data Data => Data.Instance;
 
@@ -64,7 +61,7 @@ public partial class OobeWindow : TioWindow
 
     private void ConfigEntry_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // 切换主题会重建标题栏，需要重新调整红绿灯位置
+        
         if (e.PropertyName != nameof(Data.ConfigEntry.Theme) || _macOsWindowHandle == IntPtr.Zero)
             return;
         RefreshMacOsTitleBarButtons(_macOsWindowHandle);
@@ -74,8 +71,8 @@ public partial class OobeWindow : TioWindow
     {
         try
         {
-            // 初始化窗口为固定大小，隐藏缩放（最大化）按钮，位置与崩溃窗口保持一致
-            // TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(nsWindow);
+            
+            
             TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 14, y: 2,
                 spacing: 20);
         }
@@ -103,12 +100,7 @@ public partial class OobeWindow : TioWindow
         UpdateStepDots(step);
     }
 
-    /// <summary>
-    /// 用同一个时钟同时驱动所有小圆点的宽度与透明度。
-    /// 若改用两个独立的样式 Transition（一个收一个放），二者的启动时机与逐帧取值无法严格互补，
-    /// 动画期间总宽度会多出约 1px，把右侧的点顶偏，结束时再弹回来
-    /// </summary>
-    private void UpdateStepDots(int step)
+        private void UpdateStepDots(int step)
     {
         var dots = StepDots.Children;
         var count = dots.Count;

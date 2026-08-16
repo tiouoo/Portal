@@ -287,8 +287,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
     }
 
-    /// <summary>清理 Portal MC 同 id 安装失败时残留的临时加载器目录（meta/versions 下）。</summary>
-    private static Task DeletePortalMcTemporaryLoaderAsync(string? instancesRoot, string installFolder, string instanceId)
+        private static Task DeletePortalMcTemporaryLoaderAsync(string? instancesRoot, string installFolder, string instanceId)
     {
         if (instancesRoot is null) return Task.CompletedTask;
         return DeleteDirectoryAsync(Path.Combine(installFolder, "versions", $"{instanceId}.portal-tmp"));
@@ -352,7 +351,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         {
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }
-        // Preserve the original installation error if an antivirus or another process holds a partial file.
+        
         catch (Exception exception) { Logger.Warning($"[Modpack] Failed to clean up {directory}: {exception}"); }
     });
 
@@ -391,7 +390,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             Logger.Debug($"[Modpack] Optional project icon download was cancelled: {exception}");
             throw;
         }
-        // A project cover is optional and must never invalidate a completed installation.
+        
         catch (Exception exception) { Logger.Warning($"[Modpack] Failed to save optional project icon to {instancePath}: {exception}"); }
     }
 
@@ -502,7 +501,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder);
         foreach (var loader in loaders)
             javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
-        // Portal MC 同 id 安装需用临时 id 安装加载器，避免命中 meta 中原版 json，完成后整体移入 instances。
+        
         var effectiveLoaderId = instancesRoot is not null && id.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
             ? $"{id}.portal-tmp"
             : id;
@@ -774,7 +773,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             Dispatcher.UIThread.Post(() =>
             {
                 Interlocked.Exchange(ref dispatchQueued, 0);
-                // Installer events can arrive after the child has completed or been cancelled.
+                
                 if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
                 if (Volatile.Read(ref latestProgress) is { } current)
                     ReportInstallerProgress(context, current);

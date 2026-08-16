@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using PeNet.FileParser;
 using PeNet.Header.Pe;
@@ -43,7 +43,7 @@ internal class DataDirectoryParsers
         _sectionHeaders = sectionHeaders.ToArray();
         _is32Bit = is32Bit;
 
-        // Init all parsers
+        
         _imageExportDirectoriesParser = InitImageExportDirectoryParser();
         _runtimeFunctionsParser = InitRuntimeFunctionsParser();
         _imageImportDescriptorsParser = InitImageImportDescriptorsParser();
@@ -201,8 +201,8 @@ internal class DataDirectoryParsers
 
     private WinCertificateParser? InitWinCertificateParser()
     {
-        // The security directory is the only one where the DATA_DIRECTORY VirtualAddress
-        // is not an RVA but an raw offset.
+        
+        
         var rawAddress = _dataDirectories[(int)DataDirectoryType.Security].VirtualAddress;
         return rawAddress == 0 ? null : new WinCertificateParser(_peFile, rawAddress);
     }

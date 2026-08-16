@@ -9,10 +9,6 @@ using Portal.Core.Minecraft;
 
 namespace Portal.Views.Controls;
 
-/// <summary>
-/// 支持 Minecraft 格式码的 TextBlock:§ 颜色码、§k/l/m/n/o/r 格式、§x/#RRGGBB 十六进制颜色。
-/// 参考 PCL-CE 的 MotdRenderer / SetColorfulTextLab 实现。
-/// </summary>
 public class MinecraftTextBlock : TextBlock
 {
     private const double ObfuscatedTickIntervalMs = 20;

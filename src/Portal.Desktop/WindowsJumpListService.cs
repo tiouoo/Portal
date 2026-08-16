@@ -99,7 +99,6 @@ internal static partial class WindowsJumpListService
                 await Task.Delay(1000);
             }
         }
-        // ReSharper disable once FunctionNeverReturns
     }
 
     private static void QueueCommand(JumpListCommand command)
@@ -278,7 +277,6 @@ internal static partial class WindowsJumpListService
         }
         finally
         {
-            // 释放 PropVariant 持有的 CoTaskMem 字符串，避免每次刷新 Jump List 都泄漏。
             PropVariantClear(ref titleValue);
         }
         return link;

@@ -102,7 +102,7 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
             }
             catch
             {
-                // 使用默认皮肤
+                
             }
 
             RequestClose.Invoke(this, new MinecraftAccount(AccountType.Microsoft)

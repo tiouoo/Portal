@@ -13,10 +13,6 @@ public enum ServerPingState
     Offline
 }
 
-/// <summary>
-/// 服务器状态模型。显示方式与「我的 Minecraft 实例详情」的服务器列表完全一致：
-/// 状态小圆点 + 状态文本（检测中 / 在线 / 无法连接）+ 延迟（XX ms）+ 在线人数（N / M 人）。
-/// </summary>
 public sealed class ServerPing
 {
     private static readonly SemaphoreSlim PingGate = new(5);
@@ -38,8 +34,7 @@ public sealed class ServerPing
 
     public ServerPingState State => _state;
 
-    /// <summary>状态文本：未检测 / 检测中 / 在线 / 无法连接。</summary>
-    public string StatusText => _state switch
+        public string StatusText => _state switch
     {
         ServerPingState.Pinging => "检测中",
         ServerPingState.Online => "在线",
@@ -47,21 +42,18 @@ public sealed class ServerPing
         _ => "未检测"
     };
 
-    /// <summary>状态小圆点与状态文本的颜色：灰 / 绿 / 红。</summary>
-    public IBrush StatusBrush => _state switch
+        public IBrush StatusBrush => _state switch
     {
         ServerPingState.Online => OnlineBrush,
         ServerPingState.Offline => OfflineBrush,
         _ => PendingBrush
     };
 
-    /// <summary>延迟文本（仅在线时显示）。</summary>
-    public string PingText => _state == ServerPingState.Online ? $"{_latency} ms" : string.Empty;
+        public string PingText => _state == ServerPingState.Online ? $"{_latency} ms" : string.Empty;
 
     public bool HasPing => _state == ServerPingState.Online;
 
-    /// <summary>延迟颜色：&lt;100ms 绿，&lt;300ms 黄，其余红。</summary>
-    public IBrush PingBrush => _state switch
+        public IBrush PingBrush => _state switch
     {
         ServerPingState.Online when _latency < 100 => PingGoodBrush,
         ServerPingState.Online when _latency < 300 => PingFairBrush,
@@ -69,21 +61,17 @@ public sealed class ServerPing
         _ => PingGoodBrush
     };
 
-    /// <summary>在线人数文本（如 34 / 100 人），仅在在线且有上报人数时显示。</summary>
-    public string PlayersText => HasPlayers ? $"{_onlinePlayers} / {_maxPlayers} 人" : string.Empty;
+        public string PlayersText => HasPlayers ? $"{_onlinePlayers} / {_maxPlayers} 人" : string.Empty;
 
     public bool HasPlayers { get; private set; }
 
-    /// <summary>拼接「主机[:端口]」地址，IPv6 地址自动加方括号。</summary>
-    public static string BuildAddress(string host, int port) =>
+        public static string BuildAddress(string host, int port) =>
         host.Contains(':') ? $"[{host}]:{port}" : $"{host}:{port}";
 
-    /// <summary>显示用地址，默认端口（25565）省略端口号。</summary>
-    public static string BuildDisplayAddress(string host, int port) =>
+        public static string BuildDisplayAddress(string host, int port) =>
         port == 25565 ? host : BuildAddress(host, port);
 
-    /// <summary>启动探测。address 需为「主机[:端口]」形式的可解析地址。</summary>
-    public void Start(string address)
+        public void Start(string address)
     {
         Cancel();
 

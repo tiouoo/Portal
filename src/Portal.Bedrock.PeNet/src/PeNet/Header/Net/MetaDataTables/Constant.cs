@@ -1,4 +1,4 @@
-﻿using PeNet.FileParser;
+using PeNet.FileParser;
 
 namespace PeNet.Header.Net.MetaDataTables;
 
@@ -8,7 +8,7 @@ public class Constant : AbstractTable
         : base(peFile, offset, heapSizes, indexSizes)
     {
         Type = (byte)ReadSize(1);
-        CurrentOffset += 1; // Padding after "Type"
+        CurrentOffset += 1; 
         Parent = ReadSize(IndexSizes[Index.HasConstant]);
         Value = ReadSize(HeapSizes.Blob);
     }

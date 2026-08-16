@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using PeNet.FileParser;
 using PeNet.Header.Pe;
 
@@ -18,7 +18,7 @@ internal class ImageSectionHeadersParser : SafeParser<ImageSectionHeader[]>
 
     protected override ImageSectionHeader[] ParseTarget()
     {
-        // Permanence and memory optimization for sorting the section headers
+        
         static int Comparison(ImageSectionHeader x, ImageSectionHeader y)
         {
             if (x.VirtualAddress > y.VirtualAddress)
@@ -30,7 +30,7 @@ internal class ImageSectionHeadersParser : SafeParser<ImageSectionHeader[]>
         }
 
         var sh = new ImageSectionHeader[_numOfSections];
-        const uint secSize = 0x28; // Every section header is 40 bytes in size.
+        const uint secSize = 0x28; 
         for (uint i = 0; i < _numOfSections; i++)
             sh[i] = new ImageSectionHeader(PeFile, Offset + i * secSize, _imageBaseAddress);
 

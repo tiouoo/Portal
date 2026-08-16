@@ -77,11 +77,7 @@ public static class JavaRuntimeOperations
         return new JavaRuntimeScanResult(addedCount, duplicateCount);
     }
 
-    /// <summary>
-    /// 创建一个 Managed Task 来执行强力扫描 Java。取消时会返回已经扫描到的结果。
-    /// 返回结果通过 out 参数提供：(新增数，重复数)。
-    /// </summary>
-    public static (ManagedTask Task, Task<(int Added, int Duplicate)> Result) CreateDeepScanTask(
+        public static (ManagedTask Task, Task<(int Added, int Duplicate)> Result) CreateDeepScanTask(
         ICollection<JavaRuntimeEntry> javaRuntimes)
     {
         var resultSource = new TaskCompletionSource<(int Added, int Duplicate)>(
@@ -105,7 +101,7 @@ public static class JavaRuntimeOperations
 
                     var progress = new Progress<DeepScanProgress>(p =>
                     {
-                        // 取消后 ManagedTask 已进入终态，ReportProgress/SetDescription 会抛异常
+                        
                         if (ctx.CancellationToken.IsCancellationRequested) return;
                         try
                         {
@@ -118,7 +114,7 @@ public static class JavaRuntimeOperations
                         }
                         catch (InvalidOperationException)
                         {
-                            // 任务已被取消或完成，忽略进度更新
+                            
                         }
                     });
 
@@ -129,13 +125,13 @@ public static class JavaRuntimeOperations
                     }
                     catch (OperationCanceledException)
                     {
-                        // 取消时不抛，DeepScanAsync 会返回已找到的；但这里是防护性的
+                        
                         found = Array.Empty<JavaRuntimeEntry>();
                     }
 
                     foreach (var java in found)
                     {
-                        // 即使取消了，也要把已找到的添加进去
+                        
                         if (javaRuntimes.Contains(java))
                         {
                             duplicateCount++;
@@ -152,7 +148,7 @@ public static class JavaRuntimeOperations
                         ? $"已取消，已找到的新增 {addedCount} 个 Java，重复 {duplicateCount} 个"
                         : $"扫描完成：新增 {addedCount} 个 Java，重复 {duplicateCount} 个";
 
-                    // 取消时 ManagedTask 已进入终态，不能再更新状态
+                    
                     if (!cancelled)
                     {
                         ctx.SetDescription(finishText);

@@ -4,9 +4,6 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Services;
 
-/// <summary>
-/// Coordinates destructive instance operations across windows and tabs.
-/// </summary>
 public static class InstanceDeletionCoordinator
 {
     private static readonly HashSet<string> DeletingPaths = new(StringComparer.OrdinalIgnoreCase);
@@ -36,7 +33,7 @@ public static class InstanceDeletionCoordinator
                      .Where(tab => IsRelatedPage(tab.Content, instance))
                      .ToArray())
         {
-            // A destructive operation must not be blocked by unsaved edits in a page being removed.
+            
             tab.CloseImmediately();
         }
     }

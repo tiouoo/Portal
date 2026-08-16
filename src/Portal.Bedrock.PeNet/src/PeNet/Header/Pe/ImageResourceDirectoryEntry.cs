@@ -1,28 +1,17 @@
-﻿using System;
+using System;
 using PeNet.FileParser;
 
 namespace PeNet.Header.Pe;
 
-/// <summary>
-///     The resource directory entry represents one entry (e.g. icon)
-///     in a resource directory.
-/// </summary>
 public class ImageResourceDirectoryEntry : AbstractStructure
 {
-    /// <summary>
-    ///     Create a new instance of the ImageResourceDirectoryEntry.
-    /// </summary>
-    /// <param name="peFile">A PE file.</param>
-    /// <param name="parent">ImageResourceDirectoryEntry in which this entry resides.</param>
-    /// <param name="offset">Raw offset to the entry.</param>
-    /// <param name="resourceDirOffset">Raw offset to the resource directory.</param>
-    public ImageResourceDirectoryEntry(IRawFile peFile, ImageResourceDirectory parent, long offset,
+        public ImageResourceDirectoryEntry(IRawFile peFile, ImageResourceDirectory parent, long offset,
         long resourceDirOffset)
         : base(peFile, offset)
     {
         Parent = parent;
 
-        // Resolve the Name
+        
         try
         {
             if (IsIdEntry)
@@ -42,65 +31,35 @@ public class ImageResourceDirectoryEntry : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     ImageResourceDirectoryEntry in which this entry resides.
-    /// </summary>
-    public ImageResourceDirectory Parent { get; }
+        public ImageResourceDirectory Parent { get; }
 
-    /// <summary>
-    ///     Get the Resource Directory which the Directory Entry points
-    ///     to if the Directory Entry has DataIsDirectory set.
-    /// </summary>
-    public ImageResourceDirectory? ResourceDirectory { get; internal set; }
+        public ImageResourceDirectory? ResourceDirectory { get; internal set; }
 
-    /// <summary>
-    ///     Get the Resource Data Entry if the entry is no directory.
-    /// </summary>
-    public ImageResourceDataEntry? ResourceDataEntry { get; internal set; }
+        public ImageResourceDataEntry? ResourceDataEntry { get; internal set; }
 
-    /// <summary>
-    ///     Address of the name if its a named resource.
-    /// </summary>
-    public uint Name
+        public uint Name
     {
         get => PeFile.ReadUInt(Offset);
         set => PeFile.WriteUInt(Offset, value);
     }
 
-    /// <summary>
-    ///     The resolved name as a string if it's a named resource
-    ///     or a known resource ID.
-    /// </summary>
-    public string? NameResolved { get; }
+        public string? NameResolved { get; }
 
-    /// <summary>
-    ///     The ID if its a ID resource.
-    ///     You can resolve the ID to a string with Utility.ResolveResourceId(id)
-    /// </summary>
-    public uint ID
+        public uint ID
     {
         get => Name & 0xFFFF;
         set => Name = value & 0xFFFF;
     }
 
-    /// <summary>
-    ///     Offset to the data.
-    /// </summary>
-    public uint OffsetToData
+        public uint OffsetToData
     {
         get => PeFile.ReadUInt(Offset + 0x4);
         set => PeFile.WriteUInt(Offset + 0x4, value);
     }
 
-    /// <summary>
-    ///     Offset to the next directory.
-    /// </summary>
-    public uint OffsetToDirectory => OffsetToData & 0x7FFFFFFF;
+        public uint OffsetToDirectory => OffsetToData & 0x7FFFFFFF;
 
-    /// <summary>
-    ///     True if the entry data is a directory
-    /// </summary>
-    public bool DataIsDirectory
+        public bool DataIsDirectory
     {
         get
         {
@@ -110,10 +69,7 @@ public class ImageResourceDirectoryEntry : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     True if the entry is a resource with a name.
-    /// </summary>
-    public bool IsNamedEntry
+        public bool IsNamedEntry
     {
         get
         {
@@ -123,18 +79,9 @@ public class ImageResourceDirectoryEntry : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     True if the entry is a resource with an ID instead of a name.
-    /// </summary>
-    public bool IsIdEntry => !IsNamedEntry;
+        public bool IsIdEntry => !IsNamedEntry;
 
-    /// <summary>
-    ///     Resolve the resource identifier of resource entries
-    ///     to a human readable string with a meaning.
-    /// </summary>
-    /// <param name="id">Resource identifier.</param>
-    /// <returns>String representation of the ID.</returns>
-    public static string ResolveResourceId(uint id)
+        public static string ResolveResourceId(uint id)
     {
         return id switch
         {
@@ -164,114 +111,47 @@ public class ImageResourceDirectoryEntry : AbstractStructure
     }
 }
 
-/// <summary>
-///     Mapping from Resources Group ID to a meaningful
-///     string. Used for ID resources (opposite to named resource).
-/// </summary>
 public enum ResourceGroupIdType : uint
 {
-    /// <summary>
-    ///     Cursor resource.
-    /// </summary>
-    Cursor = 1,
+        Cursor = 1,
 
-    /// <summary>
-    ///     Bitmap resource.
-    /// </summary>
-    Bitmap = 2,
+        Bitmap = 2,
 
-    /// <summary>
-    ///     Icon resource.
-    /// </summary>
-    Icon = 3,
+        Icon = 3,
 
-    /// <summary>
-    ///     Menu resource.
-    /// </summary>
-    Menu = 4,
+        Menu = 4,
 
-    /// <summary>
-    ///     Dialog resource.
-    /// </summary>
-    Dialog = 5,
+        Dialog = 5,
 
-    /// <summary>
-    ///     String resource.
-    /// </summary>
-    String = 6,
+        String = 6,
 
-    /// <summary>
-    ///     Font Directory resource.
-    /// </summary>
-    FontDirectory = 7,
+        FontDirectory = 7,
 
-    /// <summary>
-    ///     Font resource.
-    /// </summary>
-    Font = 8,
+        Font = 8,
 
-    /// <summary>
-    ///     Accelerator resource.
-    /// </summary>
-    Accelerator = 9,
+        Accelerator = 9,
 
-    /// <summary>
-    ///     RC Data resource.
-    /// </summary>
-    RcData = 10,
+        RcData = 10,
 
-    /// <summary>
-    ///     Message Table resource.
-    /// </summary>
-    MessageTable = 11,
+        MessageTable = 11,
 
-    /// <summary>
-    ///     Group Cursor resource.
-    /// </summary>
-    GroupCursor = 12,
+        GroupCursor = 12,
 
-    /// <summary>
-    ///     Group Icon resource.
-    /// </summary>
-    GroupIcon = 14,
+        GroupIcon = 14,
 
-    /// <summary>
-    ///     Version resource.
-    /// </summary>
-    Version = 16,
+        Version = 16,
 
-    /// <summary>
-    ///     Dlg Include resource.
-    /// </summary>
-    DlgInclude = 17,
+        DlgInclude = 17,
 
-    /// <summary>
-    ///     Plug and Play resource.
-    /// </summary>
-    PlugAndPlay = 19,
+        PlugAndPlay = 19,
 
-    /// <summary>
-    ///     VXD resource.
-    /// </summary>
-    VXD = 20,
+        VXD = 20,
 
-    /// <summary>
-    ///     Animated Cursor resource.
-    /// </summary>
-    AnimatedCursor = 21,
+        AnimatedCursor = 21,
 
-    /// <summary>
-    ///     Animated Icon resource.
-    /// </summary>
-    AnimatedIcon = 22,
+        AnimatedIcon = 22,
 
-    /// <summary>
-    ///     HTML resource.
-    /// </summary>
-    HTML = 23,
+        HTML = 23,
 
-    /// <summary>
-    ///     Manifest resource.
-    /// </summary>
-    Manifest = 24
+        Manifest = 24
 }

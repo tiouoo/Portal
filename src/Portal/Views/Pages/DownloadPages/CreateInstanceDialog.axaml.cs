@@ -31,8 +31,8 @@ public partial class CreateInstanceDialog : UserControl
     public CreateInstanceDialog()
     {
         InitializeComponent();
-        // 可编辑 ComboBox 不会在输入时自动弹出下拉列表，这里在文本变化时打开，
-        // 让用户输入关键字即可看到过滤后的版本。空引用时安全跳过，避免对话框无法打开。
+        
+        
         if (VersionCombo is { } combo)
             combo.PropertyChanged += (_, e) =>
             {
@@ -45,7 +45,7 @@ public partial class CreateInstanceDialog : UserControl
 
     private void VersionCombo_OnTextInput(object? sender, TextInputEventArgs e)
     {
-        // 键盘输入视为“正在筛选”，由 ViewModel 区分“点开展示全部”与“输入后过滤”。
+        
         if (DataContext is CreateInstanceDialogViewModel viewModel)
             viewModel.NotifyVersionTextInput();
     }
@@ -112,9 +112,9 @@ public enum VersionFilterKind
 
 public sealed record VersionOption(string DisplayText, object Value)
 {
-    // 记录类型的默认 ToString 会打印 Value（VersionManifestEntry/BedrockVersion），
-    // 而 VersionManifestEntry.ToString() 会触发未实现的 Description 访问器导致崩溃。
-    // ComboBox 在选择变化时会对条目调用 ToString()，这里仅返回展示文本。
+    
+    
+    
     public override string ToString() => DisplayText;
 }
 
@@ -131,7 +131,7 @@ public enum LoaderVersionFilterKind
 
 public sealed record LoaderVersionOption(string DisplayText, IInstallEntry Entry)
 {
-    // 与 VersionOption 同理，避免 ComboBox 对条目调用 ToString 时打印底层安装条目。
+    
     public override string ToString() => DisplayText;
 }
 
@@ -169,7 +169,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         new("基岩", InstancePlatform.Bedrock)
     ];
 
-    // Java 与基岩的类型筛选彼此独立，按所选平台切换。
+    
     private static readonly IReadOnlyList<VersionFilterOption> JavaVersionFilters =
     [
         new("正式版", VersionFilterKind.JavaRelease),
@@ -233,14 +233,12 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     public bool IsVersionComboEnabled => !IsVersionsLoading;
     public bool IsCustomLoaderVersionComboEnabled => !IsCustomLoaderVersionsLoading && CustomLoaderVersions.Count > 0;
 
-    /// <summary>仅当选中了某个加载器且版本筛选为“其他”时，才显示自定义加载器版本下拉框。</summary>
-    public bool IsCustomLoaderVersionVisible =>
+        public bool IsCustomLoaderVersionVisible =>
         SelectedLoader?.Kind is not null && SelectedLoaderVersionFilter?.Kind == LoaderVersionFilterKind.Other;
     public bool IsCustomOptiFineVersionVisible =>
         IsOptiFineSelected && SelectedOptiFineVersionFilter?.Kind == LoaderVersionFilterKind.Other;
     public bool IsCustomOptiFineVersionComboEnabled => !IsCustomOptiFineVersionsLoading && CustomOptiFineVersions.Count > 0;
-    /// <summary>OptiFine 复选框只在“不安装”或选择 Forge 时显示：勾选即表示与 Forge 一起安装。</summary>
-    public bool IsOptiFineToggleVisible => SelectedLoader?.Kind is null or LoaderKind.Forge;
+        public bool IsOptiFineToggleVisible => SelectedLoader?.Kind is null or LoaderKind.Forge;
     public bool HasLoaderStatus => !string.IsNullOrEmpty(LoaderStatus);
     public bool HasOptiFineStatus => !string.IsNullOrEmpty(OptiFineStatus);
     public bool HasErrorText => !string.IsNullOrEmpty(ErrorText);
@@ -250,8 +248,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     private bool IsBedrockFilter => SelectedPlatform?.Platform == InstancePlatform.Bedrock;
 
-    /// <summary>所有已选中加载器（主加载器 + 可选的 OptiFine）是否都已解析出可安装的版本条目。</summary>
-    private bool SelectedLoadersReady()
+        private bool SelectedLoadersReady()
     {
         if (_primaryState.Kind is not null)
         {
@@ -268,8 +265,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         return true;
     }
 
-    /// <summary>把当前选中的加载器（含可选的 OptiFine）解析成可交给安装任务的条目字典。</summary>
-    private Dictionary<LoaderKind, IInstallEntry> EffectiveLoaderEntries()
+        private Dictionary<LoaderKind, IInstallEntry> EffectiveLoaderEntries()
     {
         var result = new Dictionary<LoaderKind, IInstallEntry>();
         if (_primaryState.Kind is { } primaryKind)
@@ -311,13 +307,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     partial void OnSelectedPlatformChanged(PlatformOption? value)
     {
-        // 平台筛选独立于类型筛选：切换平台时刷新类型列表并重置到默认项。
+        
         OnPropertyChanged(nameof(VersionFilters));
         IsLoaderVisible = value?.Platform == InstancePlatform.Java;
         CanCustomizeInstanceId = value?.Platform == InstancePlatform.Java;
         if (IsLoaderVisible)
         {
-            // 切回 Java 时恢复加载器区域状态（可能仍保留之前选的加载器）。
+            
             SyncPrimaryLoaderState();
         }
         else
@@ -345,9 +341,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     partial void OnVersionSearchTextChanged(string value)
     {
-        // 可编辑 ComboBox 在输入时会在其内部 TextChanged 中自行处理选中项；
-        // 若在此时同步重建 ItemsSource，会与它的选择逻辑互相干扰，
-        // 导致 ItemsSourceView 索引越界崩溃。这里延迟到输入事件处理完之后再刷新。
+        
+        
+        
         if (IsVersionDropDownOpen && !_isSyncingVersionText)
             _userTyping = true;
         QueueVersionRefresh();
@@ -357,15 +353,14 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     partial void OnIsVersionDropDownOpenChanged(bool value)
     {
-        // 下拉关闭时结束“正在输入”状态，下次点开默认展示全部。
+        
         if (!value)
             _userTyping = false;
         QueueVersionRefresh();
         UpdateVersionState();
     }
 
-    /// <summary>用户通过键盘输入内容（由 ComboBox 的 TextInput 事件触发）。</summary>
-    public void NotifyVersionTextInput() => _userTyping = true;
+        public void NotifyVersionTextInput() => _userTyping = true;
 
     private bool _versionRefreshQueued;
 
@@ -385,7 +380,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     {
         if (value is not null)
         {
-            // 程序化同步文本不算用户输入，避免把“点选”误判为“正在筛选”。
+            
             _isSyncingVersionText = true;
             try
             {
@@ -416,15 +411,14 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         UpdateLoaderIcon();
     }
 
-    /// <summary>根据当前主加载器选择同步加载器区域的可见性与版本加载，并处理切换/互斥。</summary>
-    private void SyncPrimaryLoaderState()
+        private void SyncPrimaryLoaderState()
     {
         var kind = SelectedLoader?.Kind;
         if (kind != _primaryState.Kind)
         {
             var incompatibleOptiFine = IsOptiFineSelected && kind is not null && kind != LoaderKind.Forge;
             _primaryState = new LoaderSelectionState { Kind = kind, McVersion = _currentMcVersion };
-            // OptiFine 只允许单独安装或与 Forge 组合，切换主加载器时自动取消。
+            
             if (incompatibleOptiFine)
                 IsOptiFineSelected = false;
             SelectedCustomLoaderVersion = null;
@@ -493,7 +487,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
         else
         {
-            // 取消失效在途请求，避免旧结果回流。
+            
             _optifineState.LoadGeneration++;
             _optifineState.Kind = null;
             _optifineState.Options = [];
@@ -533,8 +527,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                 ? await result.CustomImageFile.OpenReadAsync()
                 : typeof(MinecraftInstance).Assembly.GetManifestResourceStream(result.BuiltInResourceName!);
             if (stream is null) return;
-            // 缓存图标字节：安装完成后用它们给新实例设置图标，
-            // 避免依赖对话框关闭后可能失效的 IStorageFile。
+            
+            
             using var memory = new MemoryStream();
             await stream.CopyToAsync(memory);
             _pendingIconData = memory.ToArray();
@@ -555,8 +549,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         UpdateLoaderIcon();
     }
 
-    /// <summary>根据当前版本类型与所选加载器给出推荐的实例图标资源。</summary>
-    private string GetSuggestedIconResource()
+        private string GetSuggestedIconResource()
     {
         if (IsBedrockFilter)
             return DefaultIconResource;
@@ -583,8 +576,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         return DefaultIconResource;
     }
 
-    /// <summary>切换版本/加载器时自动更新图标预览；用户手动选过图标则不覆盖。</summary>
-    private void UpdateLoaderIcon()
+        private void UpdateLoaderIcon()
     {
         if (_pendingIconData is not null) return;
         IconPreview?.Dispose();
@@ -769,13 +761,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         var query = VersionSearchText.Trim();
         var selected = SelectedVersion;
 
-        // 点开下拉但尚未输入 → 展示该分类下的全部版本；
-        // 用户输入（键盘/粘贴）后才按关键字过滤。
+        
+        
         var isFiltering = IsVersionDropDownOpen && _userTyping && query.Length > 0;
 
-        // 重建下拉列表，但绝不能把当前选中项从列表中移除：一旦选中项被移除，
-        // ComboBox 会清空输入框文本（UpdateInputTextFromSelection(null) 会把 Text 置空），
-        // 从而打断用户正在输入的关键字。
+        
+        
+        
         var keep = new HashSet<VersionOption>(_categoryVersions.Where(version =>
             !isFiltering || version.DisplayText.Contains(query, StringComparison.OrdinalIgnoreCase)));
         if (selected is not null) keep.Add(selected);
@@ -838,7 +830,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             return;
         }
 
-        // 版本或加载器变化后先清空旧条目，避免加载期间或失败后残留旧版本数据。
+        
         ClearPrimaryLoaderState();
         IsCustomLoaderVersionsLoading = true;
         var stopwatch = Stopwatch.StartNew();
@@ -940,13 +932,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         var state = _primaryState;
         state.LatestEntry = state.Options.FirstOrDefault()?.Entry;
         state.HasStable = state.Kind is { } kind && state.Options.Any(option => IsStableLoader(kind, option.Entry));
-        // 没有稳定版时回退到最新版，保证“稳定版”也能安装，同时给出提示。
+        
         state.StableEntry = state.HasStable
             ? state.Options.First(option => IsStableLoader(state.Kind!.Value, option.Entry)).Entry
             : state.LatestEntry;
         CustomLoaderVersions.Clear();
         foreach (var option in state.Options) CustomLoaderVersions.Add(option);
-        // 尽量保留用户已选的自定义版本，避免筛选切换时把选择重置回第一项。
+        
         if (state.CustomVersion is { } custom && state.Options.Contains(custom))
             SelectedCustomLoaderVersion = custom;
         else
@@ -963,13 +955,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         var state = _optifineState;
         state.LatestEntry = state.Options.FirstOrDefault()?.Entry;
         state.HasStable = state.Kind is { } kind && state.Options.Any(option => IsStableLoader(kind, option.Entry));
-        // 没有稳定版时回退到最新版，保证“稳定版”也能安装，同时给出提示。
+        
         state.StableEntry = state.HasStable
             ? state.Options.First(option => IsStableLoader(state.Kind!.Value, option.Entry)).Entry
             : state.LatestEntry;
         CustomOptiFineVersions.Clear();
         foreach (var option in state.Options) CustomOptiFineVersions.Add(option);
-        // 尽量保留用户已选的自定义版本，避免筛选切换时把选择重置回第一项。
+        
         if (state.CustomVersion is { } custom && state.Options.Contains(custom))
             SelectedCustomOptiFineVersion = custom;
         else
@@ -1005,8 +997,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     private const string StableFallbackNotice = "该加载器当前没有稳定版，已选用最新版。";
 
-    /// <summary>稳定版筛选中如果该加载器全是预览/测试版，给出明确提示。</summary>
-    private void UpdateLoaderVersionStatus()
+        private void UpdateLoaderVersionStatus()
     {
         var showFallback = SelectedLoaderVersionFilter?.Kind == LoaderVersionFilterKind.Stable &&
                            _primaryState.Options.Count > 0 && !_primaryState.HasStable;
@@ -1021,8 +1012,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
     }
 
-    /// <summary>OptiFine 稳定版筛选中如果全是预览版，给出明确提示。</summary>
-    private void UpdateOptiFineVersionStatus()
+        private void UpdateOptiFineVersionStatus()
     {
         var showFallback = SelectedOptiFineVersionFilter?.Kind == LoaderVersionFilterKind.Stable &&
                            _optifineState.Options.Count > 0 && !_optifineState.HasStable;
@@ -1040,7 +1030,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     private void ResetLoaderState()
     {
         _primaryState = new LoaderSelectionState();
-        // 使在途的 OptiFine 请求失效，避免旧结果回流。
+        
         _optifineState.LoadGeneration++;
         IsOptiFineSelected = false;
         IsLoaderVersionAreaVisible = false;
@@ -1074,7 +1064,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     {
         Title = $"{(IsBedrockFilter ? "基岩" : "Java")} {SelectedVersion?.DisplayText}";
         if (IsBedrockFilter) return;
-        // 未选中有效的游戏版本时不要改动实例 ID（用户可能正在输入版本关键字）。
+        
         if (SelectedVersion?.Value is not VersionManifestEntry) return;
         var recommended = CreateRecommendedInstanceId();
         if (string.IsNullOrEmpty(InstanceId) || InstanceId == _lastRecommendedInstanceId)
@@ -1213,8 +1203,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
     }
 
-    /// <summary>单个加载器的版本选择状态（主加载器与 OptiFine 各自独立维护）。</summary>
-    private sealed class LoaderSelectionState
+        private sealed class LoaderSelectionState
     {
         public LoaderKind? Kind;
         public string McVersion = string.Empty;

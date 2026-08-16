@@ -101,13 +101,13 @@ public class BedrockHelper
         try
         {
             using var document = JsonDocument.Parse(File.ReadAllText(preloadConfigFile));
-            // Only move Portal instance metadata; config.json now belongs to PreloadCpp.
+            
             if (document.RootElement.TryGetProperty("name", out _))
                 File.Move(preloadConfigFile, instanceConfigFile);
         }
         catch (JsonException)
         {
-            // Invalid legacy data is handled by ConfigEntity when a new instance config is created.
+            
         }
     }
 

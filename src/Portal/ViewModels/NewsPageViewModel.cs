@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft;
@@ -10,7 +10,7 @@ namespace Portal.ViewModels;
 
 public partial class NewsPageViewModel : ObservableObject
 {
-    // 1. 声明全局唯一的单例实例
+    
     public static NewsPageViewModel Instance { get; } = new();
 
     private List<NewsEntry> _javaNews = [];
@@ -30,7 +30,7 @@ public partial class NewsPageViewModel : ObservableObject
     [ObservableProperty] public partial NewsFilterOption? SelectedFilter { get; set; }
     [ObservableProperty] public partial DateTime? SelectedStartDate { get; set; } = DateTime.Now.AddMonths(-1);
 
-    // 2. 将构造函数私有化，确保只能通过 Instance 访问
+    
     private NewsPageViewModel()
     {
         SelectedFilter = FilterOptions[0];
@@ -44,7 +44,7 @@ public partial class NewsPageViewModel : ObservableObject
 
     private void OnNewsUpdated(object? sender, EventArgs e)
     {
-        // NewsUpdated 在后台线程触发，FilteredNews 与 IsVisible 绑定到 UI，必须切回 UI 线程处理
+        
         Dispatcher.UIThread.Post(HandleNewsUpdate);
     }
 
@@ -67,8 +67,8 @@ public partial class NewsPageViewModel : ObservableObject
 
     private async Task RefreshImagesAfterInitialLoadAsync(int refreshVersion)
     {
-        // 新闻缓存与控件树会在应用启动阶段并发初始化。延后重建卡片，
-        // 让每个封面控件在数据和加载器都已就绪后重新发起缓存读取。
+        
+        
         await Task.Delay(TimeSpan.FromMilliseconds(1500));
         Dispatcher.UIThread.Post(() =>
         {
@@ -79,8 +79,8 @@ public partial class NewsPageViewModel : ObservableObject
 
     private void ApplyFilter()
     {
-        // 由于所有页面共用这个 Collection，这里的 Clear 和 AddRange 
-        // 会让所有绑定了此数据的 UI 视图同步刷新，且计算只做一次
+        
+        
         FilteredNews.Clear();
         var filter = SelectedFilter?.Type ?? NewsFilterType.All;
         IEnumerable<NewsEntry> list = filter switch
@@ -100,7 +100,7 @@ public partial class NewsPageViewModel : ObservableObject
         FilteredNews.AddRange(list);
     }
 
-    // 3. 移除了旧的 Dispose 方法，因为单例不需要在页面关闭时注销
+    
 }
 
 public class NewsFilterOption

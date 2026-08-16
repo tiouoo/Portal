@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,23 +8,13 @@ namespace PeNet;
 
 public partial class PeFile
 {
-    /// <summary>
-    ///     Add a new import to the PE file.
-    ///     If you intend to add multiple imports, use "AddImports" instead.
-    /// </summary>
-    /// <param name="module"></param>
-    /// <param name="function"></param>
-    public void AddImport(string module, string function)
+        public void AddImport(string module, string function)
     {
         var ai = new AdditionalImport(module, new List<string> { function });
         AddImports(new List<AdditionalImport> { ai });
     }
 
-    /// <summary>
-    ///     Add imports to the PE file.
-    /// </summary>
-    /// <param name="additionalImports">List with additional imports.</param>
-    public void AddImports(List<AdditionalImport> additionalImports)
+        public void AddImports(List<AdditionalImport> additionalImports)
     {
         if (ImageNtHeaders is null || ImageSectionHeaders is null || _dataDirectoryParsers is null)
             throw new Exception("NT Headers, Section Headers and Data Directory must not be null.");
@@ -48,15 +38,15 @@ public partial class PeFile
         var impSection = GetImportSection();
         var newUnalignedRawSecSize = EstimateAdditionalNeededSpace();
 
-        // First copy the current import descriptor array to the start of the new section to have enough space to
-        // add additional import descriptors.
+        
+        
         AddSection(".addImp", (int)(impSection!.SizeOfRawData + newUnalignedRawSecSize),
             (ScnCharacteristicsType)0xC0000000);
         var newImpSec = ImageSectionHeaders.First(sh => sh.Name == ".addImp");
         var oldImpDescBytes = RawFile.AsSpan(importRva.RvaToOffset(ImageSectionHeaders), importSize);
         RawFile.WriteBytes(newImpSec.PointerToRawData, oldImpDescBytes);
 
-        // Set the import data directory to the new import section and adjust the size
+        
         ImageNtHeaders.OptionalHeader.DataDirectory[(int)DataDirectoryType.Import].VirtualAddress =
             newImpSec.VirtualAddress;
         ImageNtHeaders.OptionalHeader.DataDirectory[(int)DataDirectoryType.Import].Size =
@@ -66,8 +56,8 @@ public partial class PeFile
 
         var paAdditionalSpace = newImpSec.PointerToRawData + newImportSize;
 
-        // Update import descriptors and imported functions to reflect the new 
-        // position in the new section.
+        
+        
         _dataDirectoryParsers.ReparseImportDescriptors(ImageSectionHeaders);
         _dataDirectoryParsers.ReparseImportedFunctions();
 
@@ -100,7 +90,7 @@ public partial class PeFile
                 offset += (uint)ibn.Name.Length + 2;
             }
 
-            // Add zero DWORD to end array
+            
             RawFile.WriteUInt(offset + 1, 0);
             offset += 5;
 
@@ -121,7 +111,7 @@ public partial class PeFile
                 offset += (uint)sizeOfThunkData;
             }
 
-            // End array with empty thunk data
+            
             _ = new ImageThunkData(RawFile, offset, Is64Bit)
             {
                 AddressOfData = 0
@@ -152,10 +142,10 @@ public partial class PeFile
         var paIdesc = newImportRva.RvaToOffset(ImageSectionHeaders) + ImageImportDescriptors!.Length * sizeOfImpDesc;
         var tmpOffset = paAdditionalSpace;
 
-        // Add new imports
+        
         foreach (var ai in additionalImports) AddImportWithNewImpDesc(ref tmpOffset, ref paIdesc, ai);
 
-        // End with zero filled idesc
+        
         _ = new ImageImportDescriptor(RawFile, paIdesc)
         {
             Name = 0,
@@ -166,7 +156,7 @@ public partial class PeFile
         };
 
 
-        // Reparse imports
+        
         _dataDirectoryParsers.ReparseImportDescriptors(ImageSectionHeaders);
         _dataDirectoryParsers.ReparseImportedFunctions();
     }

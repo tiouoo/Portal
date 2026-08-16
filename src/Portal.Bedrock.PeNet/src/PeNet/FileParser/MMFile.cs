@@ -1,14 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Text;
 
 namespace PeNet.FileParser;
 
-/// <summary>
-///     Parse the PE file as a memory mapped file.
-///     This is useful for large files.
-/// </summary>
 public unsafe class MMFile : IRawFile, IDisposable
 {
     private const int DefaultBufferSize = 65536;

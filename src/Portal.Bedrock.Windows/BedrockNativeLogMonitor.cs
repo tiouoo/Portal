@@ -12,7 +12,7 @@ internal static class BedrockNativeLogMonitor
     {
         if (log == null)
             return;
-        _ = Task.Run(() => FollowAsync(logPath, processProvider, log)); // FollowAsync records every terminal failure.
+        _ = Task.Run(() => FollowAsync(logPath, processProvider, log)); 
     }
 
     private static async Task FollowAsync(string logPath, Func<Process?> processProvider,

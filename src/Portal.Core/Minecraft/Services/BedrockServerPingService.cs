@@ -6,9 +6,6 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
 
-/// <summary>
-/// 基岩版服务器状态查询结果。
-/// </summary>
 public sealed record BedrockServerStatus(
     string Edition,
     string Motd,
@@ -17,20 +14,14 @@ public sealed record BedrockServerStatus(
     int MaxPlayers,
     long Latency);
 
-/// <summary>
-/// 基岩版服务器状态查询服务，通过 RakNet Unconnected Ping 探测在线状态、延迟与人数。
-/// </summary>
 public sealed class BedrockServerPingService
 {
     private const int DefaultTimeoutMs = 4000;
 
-    // RakNet OfflineMessageData magic
+    
     private static readonly byte[] Magic = [0x00, 0xff, 0xff, 0x00, 0xfe, 0xfe, 0xfe, 0xfe, 0xfd, 0xfd, 0xfd, 0xfd, 0x12, 0x34, 0x56, 0x78];
 
-    /// <summary>
-    /// 查询服务器状态，失败或超时返回 null。
-    /// </summary>
-    public async Task<BedrockServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
+        public async Task<BedrockServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(address))
             return null;
@@ -113,10 +104,10 @@ public sealed class BedrockServerPingService
     private static byte[] BuildUnconnectedPing(long timestamp)
     {
         var buffer = new byte[33];
-        buffer[0] = 0x01; // ID_UNCONNECTED_PING
+        buffer[0] = 0x01; 
         BinaryPrimitives.WriteInt64BigEndian(buffer.AsSpan(1, 8), timestamp);
         Magic.CopyTo(buffer.AsSpan(9));
-        // 客户端 GUID，全 0 即可
+        
         BinaryPrimitives.WriteInt64BigEndian(buffer.AsSpan(25, 8), 0);
         return buffer;
     }

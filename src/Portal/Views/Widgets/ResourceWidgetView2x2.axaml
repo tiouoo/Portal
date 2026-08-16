@@ -10,7 +10,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:Portal.Views.Widgets">
     <DockPanel Margin="16,12,16,12">
-        <!-- 顶部：图标 + 标题 -->
+        
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6">
             <PathIcon
                 Data="{Binding IconGeometry}"
@@ -22,7 +22,7 @@
                 Text="{Binding Title}"
                 VerticalAlignment="Center" />
         </StackPanel>
-        <!-- 底部副文本 -->
+        
         <TextBlock
             DockPanel.Dock="Bottom"
             FontSize="12"
@@ -33,7 +33,7 @@
             Text="{Binding SecondaryText}"
             TextTrimming="CharacterEllipsis"
             IsVisible="{Binding HasSecondaryText}" />
-        <!-- 环形进度条 + 中心文字 -->
+        
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
             <ProgressBar
                 BorderThickness="10"

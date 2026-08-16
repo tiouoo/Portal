@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Text;
 
 namespace PeNet.Crypto;
 
-// For reference see: https://github.com/bcgit/bc-csharp/blob/master/crypto/src/crypto/digests/GeneralDigest.cs
+
 public abstract class Hash
 {
     private readonly byte[] _xBuf = new byte[4];

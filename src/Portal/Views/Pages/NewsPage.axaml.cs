@@ -11,7 +11,7 @@ using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Extensions;
-using TioUi.Controls; // 确保保留你原本的命名空间
+using TioUi.Controls; 
 
 namespace Portal.Views.Pages;
 
@@ -49,7 +49,7 @@ public partial class NewsPage : DataUserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; }
 
-    // NewsPageViewModel 是全局单例，这里只切断视图对它的引用即可。
+    
     public void OnClose()
     {
         DataContext = null;
@@ -65,14 +65,10 @@ public partial class NewsPage : DataUserControl, ITioTabPage
         window.SelectTab(tab);
     }
 
-    /// <summary>
-    /// 点击新闻卡片：在新标签页打开对应新闻详情页。
-    /// 由 NewsPage.axaml 中卡片 Border 的 PointerReleased 事件挂钩。
-    /// </summary>
-    private void NewsCard_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+        private void NewsCard_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (sender is not Control { DataContext: NewsEntry entry } control) return;
-        // 仅响应左键释放，避免右键菜单等触发跳转。
+        
         if (e.InitialPressMouseButton != MouseButton.Left) return;
         NewsDetailsPage.Open(control.AsTopLevel(), entry);
     }

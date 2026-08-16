@@ -359,7 +359,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         catch (Exception exception)
         {
             Logger.Warning($"[BedrockInstall] Failed to clean up {directory}: {exception}");
-            // Preserve the original installation or cancellation error.
+            
         }
     });
 

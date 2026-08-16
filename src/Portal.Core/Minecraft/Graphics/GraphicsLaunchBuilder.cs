@@ -65,7 +65,7 @@ public static class GraphicsLaunchArgumentsBuilder
                 {
                     env["__GLX_VENDOR_LIBRARY_NAME"] = "mesa";
                     env["MESA_LOADER_DRIVER_OVERRIDE"] = "zink";
-                    // Linux amdgpu DDX 对 modifiers 支持不佳，禁用 DRI3 以规避 zink 启动失败。
+                    
                     env["LIBGL_KOPPER_DRI2"] = "1";
                 }
             }

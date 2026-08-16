@@ -113,7 +113,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         if (_initialized) return;
         _initialized = true;
         _ = LoadVersionsAsync();
-        // Do not await this request: a later keyword search must not cancel a popular-results refresh.
+        
         _ = SearchAsync(isDefaultSearch: true);
         await Task.CompletedTask;
     }
@@ -204,7 +204,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         try
         {
             var page = await FetchAsync(request, _disposeCancellation.Token);
-            // All empty-keyword searches, including filtered popular lists, are persisted.
+            
             if (isDefaultSearch) ModSearchCache.Set(request, CachedSearchPage.From(page));
             if (IsCurrent(request)) Apply(page, preserveExistingItems: renderedCache);
         }
@@ -257,8 +257,8 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     private void Apply(SearchPageData page, bool preserveExistingItems = false)
     {
-        // The initial popular request refreshes cached cards in place. Replacing the collection
-        // recreates AdvancedImage controls and makes already loaded icons visibly flicker.
+        
+        
         if (preserveExistingItems)
         {
             var sharedCount = Math.Min(Results.Count, page.Items.Count);
@@ -295,7 +295,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         try
         {
             var entries = Data.UiProperty.MinecraftVersionManifestEntries;
-            // 上次加载失败（如离线）的任务不再复用，置空以便本次重试
+            
             if (_versionLoadTask is { IsCompleted: true, IsCompletedSuccessfully: false })
                 _versionLoadTask = null;
             if (_versionLoadTask is null)
@@ -355,7 +355,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
             @"^(?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?(?<suffix>.*)$");
         if (!match.Success) return new MinecraftVersionSortKey(-1, -1, -1, -1);
         var suffix = match.Groups["suffix"].Value;
-        // A release sorts ahead of release candidates, pre-releases and snapshots of the same version.
+        
         var stage = string.IsNullOrEmpty(suffix) ? 3 : suffix.Contains("rc", StringComparison.OrdinalIgnoreCase) ? 2 :
             suffix.Contains("pre", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         return new MinecraftVersionSortKey(int.Parse(match.Groups["major"].Value), int.Parse(match.Groups["minor"].Value),
@@ -459,7 +459,7 @@ public sealed record SearchRequest(SearchSource Source, string Query, string Gam
     SearchSort Sort, int Page);
 public sealed record SearchPageData(IReadOnlyList<ModSearchResultItem> Items, int TotalCount);
 
-// Search data is only reused while Portal is running. It is never persisted to disk.
+
 internal static class ModSearchCache
 {
     private static readonly BoundedCache<SearchRequest, CachedSearchPage> Entries = new(32);

@@ -359,7 +359,7 @@ public static class MinecraftLaunchService
             SourceRootDirectories = options.ResourceSourceRoots
         };
 
-        // 阶段 1：检查资源文件
+        
         await RunStepAsync(context, "检查资源文件", "正在验证本地资源文件完整性", async step =>
         {
             await Task.Factory.StartNew(
@@ -378,7 +378,7 @@ public static class MinecraftLaunchService
             step.ReportProgress(1);
         });
 
-        // 阶段 2：复制本地资源文件
+        
         if (downloader.CopyItems.Count > 0)
         {
             await RunStepAsync(context, "复制本地资源文件", "正在复制本地资源文件", step =>
@@ -389,7 +389,7 @@ public static class MinecraftLaunchService
             });
         }
 
-        // 阶段 3：下载剩余资源文件
+        
         if (downloader.DependenciesToDownload.Count > 0)
         {
             await RunStepAsync(context, "下载资源文件", "正在下载资源文件", async step =>
@@ -493,7 +493,7 @@ public static class MinecraftLaunchService
             ? $"，{DefaultDownloader.FormatSize(downloadedBytes)} / {DefaultDownloader.FormatSize(totalBytes)}"
             : string.Empty;
         var speedText = speed > 0 ? $"，{DefaultDownloader.FormatSize(speed, true)}" : string.Empty;
-        // var remaining = estimatedRemaining > TimeSpan.Zero ? $"，剩余约 {estimatedRemaining:mm\\:ss}" : string.Empty;
+        
         return $"正在补全资源：{files}{transferred}{speedText}";
     }
 
@@ -555,7 +555,7 @@ public static class MinecraftLaunchService
             }
         }
 
-        // 用户拒绝自动安装后，回退到磁盘扫描（保留原有行为）。
+        
         if (candidates.Count == 0)
             candidates = (await JavaRuntimeManager.ScanAsync(cancellationToken)).ToList();
         selected = await SelectViableJavaAsync(instance, preferred, candidates, cancellationToken);
@@ -614,7 +614,7 @@ public static class MinecraftLaunchService
             }
             catch (InvalidOperationException)
             {
-                // 任务已进入终态，忽略进度更新
+                
             }
         });
     }

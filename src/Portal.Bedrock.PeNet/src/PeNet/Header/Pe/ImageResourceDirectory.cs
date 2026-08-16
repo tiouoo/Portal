@@ -1,13 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using PeNet.FileParser;
 
 namespace PeNet.Header.Pe;
 
-/// <summary>
-///     The resource directory contains icons, mouse pointer, string
-///     language files etc. which are used by the application.
-/// </summary>
 public class ImageResourceDirectory : AbstractStructure
 {
     private readonly long _resourceDirLength;
@@ -15,15 +11,7 @@ public class ImageResourceDirectory : AbstractStructure
     private List<ImageResourceDirectoryEntry?>? _directoryEntries;
     private bool _entriesParsed;
 
-    /// <summary>
-    ///     Create a new ImageResourceDirectory object.
-    /// </summary>
-    /// <param name="peFile">A PE file.</param>
-    /// <param name="parent">Higher level directory entry which wraps this directory.</param>
-    /// <param name="offset">Raw offset to the resource directory.</param>
-    /// <param name="resourceDirOffset">Raw offset to the resource directory entries.</param>
-    /// <param name="resourceDirLength">Length of the resource directory entries.</param>
-    public ImageResourceDirectory(IRawFile peFile, ImageResourceDirectoryEntry? parent, long offset,
+        public ImageResourceDirectory(IRawFile peFile, ImageResourceDirectoryEntry? parent, long offset,
         long resourceDirOffset, long resourceDirLength)
         : base(peFile, offset)
     {
@@ -32,10 +20,7 @@ public class ImageResourceDirectory : AbstractStructure
         _resourceDirLength = resourceDirLength;
     }
 
-    /// <summary>
-    ///     Array with the different directory entries.
-    /// </summary>
-    public List<ImageResourceDirectoryEntry?>? DirectoryEntries
+        public List<ImageResourceDirectoryEntry?>? DirectoryEntries
     {
         get
         {
@@ -48,61 +33,39 @@ public class ImageResourceDirectory : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     Backwards connection to the parent.
-    ///     Higher level directory entry which wraps this directory.
-    /// </summary>
-    public ImageResourceDirectoryEntry? Parent { get; }
+        public ImageResourceDirectoryEntry? Parent { get; }
 
-    /// <summary>
-    ///     Characteristics.
-    /// </summary>
-    public uint Characteristics
+        public uint Characteristics
     {
         get => PeFile.ReadUInt(Offset);
         set => PeFile.WriteUInt(Offset, value);
     }
 
-    /// <summary>
-    ///     Time and date stamp.
-    /// </summary>
-    public uint TimeDateStamp
+        public uint TimeDateStamp
     {
         get => PeFile.ReadUInt(Offset + 0x4);
         set => PeFile.WriteUInt(Offset + 0x4, value);
     }
 
-    /// <summary>
-    ///     Major version.
-    /// </summary>
-    public ushort MajorVersion
+        public ushort MajorVersion
     {
         get => PeFile.ReadUShort(Offset + 0x8);
         set => PeFile.WriteUShort(Offset + 0x8, value);
     }
 
-    /// <summary>
-    ///     Minor version.
-    /// </summary>
-    public ushort MinorVersion
+        public ushort MinorVersion
     {
         get => PeFile.ReadUShort(Offset + 0xa);
         set => PeFile.WriteUShort(Offset + 0xa, value);
     }
 
-    /// <summary>
-    ///     Number of named entries.
-    /// </summary>
-    public ushort NumberOfNameEntries
+        public ushort NumberOfNameEntries
     {
         get => PeFile.ReadUShort(Offset + 0xc);
         set => PeFile.WriteUShort(Offset + 0xc, value);
     }
 
-    /// <summary>
-    ///     Number of ID entries.
-    /// </summary>
-    public ushort NumberOfIdEntries
+        public ushort NumberOfIdEntries
     {
         get => PeFile.ReadUShort(Offset + 0xe);
         set => PeFile.WriteUShort(Offset + 0xe, value);

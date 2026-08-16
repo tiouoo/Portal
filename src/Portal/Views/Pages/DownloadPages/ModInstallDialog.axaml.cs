@@ -214,8 +214,8 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         HasDependencyLoadError = false;
         try
         {
-            // 依赖解析（含 NeoForge 压缩包下载与解析、平台查询、SQLite 缓存）全程放到后台线程，
-            // 避免下载大 jar 或解析压缩包时阻塞 UI 线程。
+            
+            
             var loadTask = Task.Run(async () =>
             {
                 IReadOnlyList<ModVersionFileItem> dependencies = file.Source switch
@@ -228,7 +228,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
                     CreateDetailsTarget(file, dependency), await GetDependencyNameAsync(dependency))));
             });
 
-            // 超时兜底：网络缓慢或镜像重试时避免对话框一直卡在“正在加载依赖项”。
+            
             if (await Task.WhenAny(loadTask, Task.Delay(DependencyLoadTimeout)) != loadTask)
             {
                 if (generation == _dependencyLoadGeneration) HasDependencyLoadError = true;
@@ -255,11 +255,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         }
     }
 
-    /// <summary>
-    /// 根据当前选中的实例动态过滤依赖：已存在于该实例 mods 目录中的依赖不再显示、也不会被下载。
-    /// 切换实例、依赖加载完成时都会重新执行。
-    /// </summary>
-    private async Task RefreshDependencyVisibilityAsync()
+        private async Task RefreshDependencyVisibilityAsync()
     {
         var filterGeneration = Interlocked.Increment(ref _dependencyFilterGeneration);
         var instance = SelectedInstance?.Instance;

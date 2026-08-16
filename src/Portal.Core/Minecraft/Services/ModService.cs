@@ -39,7 +39,7 @@ public sealed class ModService
         foreach (var candidate in candidates)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            // 扫描期间文件可能被删除或占用，跳过该文件而不是让整个扫描失败
+            
             try
             {
                 ModInfo mod;
@@ -54,7 +54,7 @@ public sealed class ModService
                         WriteCache(missingFingerprint, CreateLocalCacheEntry(mod));
                 }
 
-                // 把扫描时算好的哈希带在 ModInfo 上，后续刷新元数据、缓存中文名时无需再读一遍文件
+                
                 results[candidate.Path] = mod with { Sha1 = candidate.Sha1, Fingerprint = candidate.Fingerprint };
             }
             catch (IOException)
@@ -466,7 +466,7 @@ public sealed class ModService
     private static async Task<(string Path, string? Sha1, uint? Fingerprint)[]> ComputeHashesAsync(
         IReadOnlyList<string> paths, CancellationToken cancellationToken)
     {
-        // 限制同时哈希的文件数：模组目录动辄上百个文件，全部并发会同时打开大量文件句柄并推高内存峰值
+        
         using var semaphore = new SemaphoreSlim(MaximumConcurrentHashes);
         return await Task.WhenAll(paths.Select(async path =>
         {
@@ -534,11 +534,7 @@ public sealed class ModService
         return (Convert.ToHexString(sha1.GetHashAndReset()).ToLowerInvariant(), fingerprint.Complete());
     }
 
-    /// <summary>
-    /// MurmurHash2 的增量实现，结果与一次性对整段过滤字节计算完全一致。
-    /// 种子是过滤后的总长度，所以必须先数完长度再开始喂数据。
-    /// </summary>
-    private struct CurseForgeFingerprint(uint filteredLength)
+        private struct CurseForgeFingerprint(uint filteredLength)
     {
         private uint _hash = 1u ^ filteredLength;
         private uint _tail;

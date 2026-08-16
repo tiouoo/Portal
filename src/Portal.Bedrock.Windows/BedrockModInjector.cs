@@ -59,7 +59,7 @@ internal static class BedrockModInjector
         {
             log?.Invoke($"已安排模组注入：{mod.FileName}，延迟 {mod.Config.DelayMs} ms",
                 BedrockLogLevel.Information);
-            _ = Task.Run(() => Inject(process, mod, log)); // Inject records every terminal failure.
+            _ = Task.Run(() => Inject(process, mod, log)); 
         }
     }
 

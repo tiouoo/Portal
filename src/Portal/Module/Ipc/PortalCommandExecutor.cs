@@ -24,9 +24,6 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Module.Ipc;
 
-/// <summary>
-/// 在已运行的 Portal 实例内执行命令行 / portal:// 命令。必须在 UI 线程、且 UiLoaded 之后调用。
-/// </summary>
 public static class PortalCommandExecutor
 {
 
@@ -128,7 +125,7 @@ public static class PortalCommandExecutor
             result[kind] = entry;
         }
 
-        // 与安装页的互斥规则一致：主加载器只能选一个，OptiFine 仅可与 Forge 组合。
+        
         var primaries = result.Keys.Where(kind => kind != LoaderKind.OptiFine).ToList();
         if (primaries.Count > 1)
             throw new InvalidOperationException($"加载器 {string.Join("、", primaries)} 不能同时安装。");
@@ -285,11 +282,7 @@ public static class PortalCommandExecutor
         throw new InvalidOperationException("无法识别的整合包：仅支持 Modrinth（.mrpack）与 CurseForge（.zip）整合包。");
     }
 
-    /// <summary>
-    /// 把 Modrinth / CurseForge 的项目标识（名称、slug、项目 ID）解析成可下载的整合包文件。
-    /// 未指定平台时按标识形态猜测优先级（纯数字先查 CurseForge），失败后尝试另一个平台。
-    /// </summary>
-    private static async Task<ResolvedPackFile> ResolveProjectFileAsync(TaskExecutionContext context, string query,
+        private static async Task<ResolvedPackFile> ResolveProjectFileAsync(TaskExecutionContext context, string query,
         string? provider, string? packVersion)
     {
         var providers = provider switch
@@ -339,7 +332,7 @@ public static class PortalCommandExecutor
         }
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {
-            // 不是有效的项目 ID / slug，按名称搜索。
+            
         }
 
         project ??= (await provider.SearchAsync(query, projectType: "modpack", cancellationToken: cancellationToken))
@@ -414,7 +407,7 @@ public static class PortalCommandExecutor
     {
         if (!string.IsNullOrWhiteSpace(file.DownloadUrl)) return file.DownloadUrl;
 
-        // 部分 CurseForge 文件不返回 downloadUrl，按 forgecdn 的固定规则拼接并验证。
+        
         var idText = file.Id.ToString();
         if (idText.Length <= 4)
             throw new InvalidOperationException($"无法获取 CurseForge 文件“{file.FileName}”的下载地址。");
@@ -440,10 +433,7 @@ public static class PortalCommandExecutor
         throw new InvalidOperationException($"无法获取 CurseForge 文件“{file.FileName}”的下载地址。");
     }
 
-    /// <summary>
-    /// Modrinth CDN 直链（cdn.modrinth.com/data/{projectId}/...）可以反查项目图标；其他直链没有图标来源。
-    /// </summary>
-    private static async Task<string?> TryGetIconUrlFromModrinthCdnAsync(string url, CancellationToken cancellationToken)
+        private static async Task<string?> TryGetIconUrlFromModrinthCdnAsync(string url, CancellationToken cancellationToken)
     {
         try
         {
@@ -518,16 +508,12 @@ public static class PortalCommandExecutor
                            : $"文件夹“{command.Folder}”中未找到实例“{id}”。");
 
         var target = BuildLaunchTarget(instance, command);
-        // window.Notice($"正在启动 {instance.InstanceName}（{instance.FolderName}）");
+        
         _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(instance, logSession =>
             MinecraftLogPage.Open(logSession, window)), target);
     }
 
-    /// <summary>
-    /// 根据命令行/URI 参数构造直接进入世界或服务器的启动目标；
-    /// 未指定世界或服务器时返回 null（普通启动）。
-    /// </summary>
-    private static RecentPlayTarget? BuildLaunchTarget(MinecraftInstance instance, PortalCommand command)
+        private static RecentPlayTarget? BuildLaunchTarget(MinecraftInstance instance, PortalCommand command)
     {
         if (!string.IsNullOrWhiteSpace(command.WorldFolder))
         {
@@ -557,8 +543,7 @@ public static class PortalCommandExecutor
             StringComparison.OrdinalIgnoreCase) ||
         string.Equals(instance.InstanceName, id, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>按名称或路径解析已配置的 Minecraft 文件夹；不传则用默认（第一个）可安装文件夹。</summary>
-    private static MinecraftFolderEntry ResolveInstallFolder(string? specification)
+        private static MinecraftFolderEntry ResolveInstallFolder(string? specification)
     {
         var folders = Data.ConfigEntry.MinecraftFolders
             .Where(folder => folder.SupportsInstallation).ToList();
@@ -580,7 +565,7 @@ public static class PortalCommandExecutor
                 string.Equals(NormalizePath(folder.FolderPath), fullPath, PathComparison));
             if (byPath is not null) return byPath;
 
-            // 未配置过但确实存在的目录：直接作为安装目标，不写入启动器配置。
+            
             if (Directory.Exists(fullPath))
             {
                 var entry = new MinecraftFolderEntry
@@ -620,20 +605,19 @@ public static class PortalCommandExecutor
         }
     }
 
-    /// <summary>Linux 文件系统区分大小写，路径比较必须用 Ordinal；Windows/macOS 则忽略大小写。</summary>
-    private static StringComparison PathComparison =>
+        private static StringComparison PathComparison =>
         OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
     private static string NormalizePath(string path)
     {
-        // Path.GetFullPath 统一分隔符（如 Windows 上的正斜杠），避免同一路径的不同写法比较失败
+        
         try
         {
             path = Path.GetFullPath(path);
         }
         catch (Exception)
         {
-            // 非法路径保持原样，仅做末尾分隔符裁剪
+            
         }
         return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }

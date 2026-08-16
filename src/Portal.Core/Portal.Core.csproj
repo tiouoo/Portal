@@ -29,6 +29,7 @@
 
     <ItemGroup>
         <PackageReference Include="Hardware.Info" />
+        <PackageReference Include="HtmlAgilityPack" />
         <PackageReference Include="Microsoft.Data.Sqlite.Core" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
         <PackageReference Include="fNbt" />
@@ -45,6 +46,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <EmbeddedResource Include="..\..\assets\conf\package-type.txt">
+        <Link>Assets\package-type.txt</Link>
+      </EmbeddedResource>
       <EmbeddedResource Include="..\..\assets\conf\version-ci.txt">
         <Link>Assets\version-ci.txt</Link>
       </EmbeddedResource>
@@ -72,7 +76,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <!-- All icons in this folder are discovered by the icon picker at runtime. -->
+      
       <None Remove="Assets\McIcons\**\*" />
       <EmbeddedResource Include="Assets\McIcons\**\*" />
     </ItemGroup>

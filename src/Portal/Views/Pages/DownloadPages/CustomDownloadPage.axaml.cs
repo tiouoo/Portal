@@ -65,7 +65,7 @@ public partial class CustomDownloadPage : UserControl
         string destination;
         try
         {
-            // 同名文件已存在时自动追加 (1)、(2)……
+            
             fileName = CustomDownloadPageViewModel.DeduplicateFileName(folder, fileName);
             destination = Path.GetFullPath(Path.Combine(folder, fileName));
         }
@@ -117,7 +117,7 @@ public partial class CustomDownloadPage : UserControl
                     context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(progress.Speed, true)}");
                 })
             };
-            // 独立配置仅作用于本次下载器实例，不改动 DownloadManager 全局配置
+            
             var downloader = new DefaultDownloader
             {
                 MaxFragment = Math.Max(1, Data.ConfigEntry.CustomDownloadMaxFragmentCount),
@@ -175,10 +175,7 @@ public partial class CustomDownloadPageViewModel : ObservableObject
 
     partial void OnFolderPathChanged(string value) => AutoFillFileName();
 
-    /// <summary>
-    /// 根据下载链接自动补充文件名；用户手动改过之后不再覆盖。
-    /// </summary>
-    private void AutoFillFileName()
+        private void AutoFillFileName()
     {
         if (!string.IsNullOrEmpty(FileName) && FileName != _lastAutoFileName)
             return;
@@ -213,10 +210,7 @@ public partial class CustomDownloadPageViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// 目标文件夹里已有同名文件时，按 Windows 习惯追加 " (1)"、" (2)"……
-    /// </summary>
-    public static string DeduplicateFileName(string? folder, string name)
+        public static string DeduplicateFileName(string? folder, string name)
     {
         folder = folder?.Trim().Trim('"');
         if (string.IsNullOrWhiteSpace(folder))

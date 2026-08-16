@@ -61,10 +61,7 @@ public class MinecraftInstance : ObservableObject
         MinecraftFolderKind.PortalMc;
     public bool CanDisableIndependentInstance => !RequiresIndependentInstance;
 
-    /// <summary>
-    /// 是否支持“修改游戏版本 / 加载器”功能：仅 Portal MC（自创）格式实例支持。
-    /// </summary>
-    public bool CanModifyVersion =>
+        public bool CanModifyVersion =>
         Type == MinecraftInstanceType.Java && MinecraftEntry is not null &&
         Layout?.Kind == MinecraftFolderKind.PortalMc;
 
@@ -374,7 +371,7 @@ public class MinecraftInstance : ObservableObject
             }
             catch (Exception e)
             {
-                // 配置文件损坏时先备份再回退到默认配置，避免异常中断实例扫描、覆盖丢失用户数据
+                
                 Logger.Error($"读取实例配置失败，已回退默认配置：{configPath}", e);
                 try
                 {
@@ -421,11 +418,7 @@ public class MinecraftInstance : ObservableObject
         return GetExternalConfigPath(Layout.Kind, Layout.InstanceRoot);
     }
 
-    /// <summary>
-    /// 外部实例（第三方布局）的配置路径：按“布局类型|实例根目录”哈希定位。
-    /// 实例重命名会改变实例根目录，需按新路径迁移原配置、自定义图标等数据。
-    /// </summary>
-    public static string GetExternalConfigPath(MinecraftFolderKind kind, string instanceRoot)
+        public static string GetExternalConfigPath(MinecraftFolderKind kind, string instanceRoot)
     {
         var identity = $"{kind}|{Path.GetFullPath(instanceRoot)}";
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
@@ -433,13 +426,7 @@ public class MinecraftInstance : ObservableObject
             "cc.tiouo.Portal", "Instances", $"{hash}.json");
     }
 
-    /// <summary>
-    /// 获取删除实例时需一并移除的全部路径。不同文件夹格式的实例目录结构不同：
-    /// 传统 .minecraft 实例仅需删除版本目录；Portal MC 实例还散落在共享 meta 目录下的
-    /// 实例专属 native 目录；外部实例的配置、游玩统计与自定义图标存放于
-    /// %AppData%\cc.tiouo.Portal\Instances\&lt;hash&gt;，也一并清理。
-    /// </summary>
-    public IReadOnlyList<string> GetDeletionPaths()
+        public IReadOnlyList<string> GetDeletionPaths()
     {
         var paths = new List<string> { InstanceFolderPath };
 
@@ -639,11 +626,7 @@ public class MinecraftInstance : ObservableObject
         public Bitmap this[int width] => instance.GetInstanceIcon(width);
     }
 
-    /// <summary>
-    /// Java 实例的游戏根目录（独立实例时为实例目录，否则为 .minecraft 目录），
-    /// 不包含创建目录的副作用，用于定位 servers.dat 等游戏根目录文件。
-    /// </summary>
-    public string GetJavaGameDirectory()
+        public string GetJavaGameDirectory()
     {
         if (Type != MinecraftInstanceType.Java || MinecraftEntry == null)
             return InstanceFolderPath;
@@ -941,7 +924,7 @@ public partial class MinecraftInstanceConfig : ObservableObject
     public bool ShouldSerializeRecentPlayFavorites() => RecentPlayFavorites?.Count > 0;
 
     [ObservableProperty]
-    public partial Dictionary<string, long> PlayTimeByDate { get; set; } = []; //string : Data (yyyy-MM-dd)
+    public partial Dictionary<string, long> PlayTimeByDate { get; set; } = []; 
 
     public bool ShouldSerializePlayTimeByDate() => PlayTimeByDate?.Count > 0;
     public long ArchivedPlayTimeSeconds { get; set; }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
@@ -8,7 +8,7 @@ public class IntCompareConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        // 空值直接返回false
+        
         if (value is not int source || parameter is not string param)
             return false;
 

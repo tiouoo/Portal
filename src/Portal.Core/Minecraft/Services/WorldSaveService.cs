@@ -77,7 +77,7 @@ public sealed class WorldSaveService
         }
         catch (Exception)
         {
-            // A damaged or unsupported level.dat must not hide an otherwise valid world folder.
+            
         }
 
         version ??= string.IsNullOrWhiteSpace(fallbackVersion) ? null : fallbackVersion;
@@ -115,8 +115,8 @@ public sealed class WorldSaveService
         }
         catch (PlatformNotSupportedException)
         {
-            // macOS has no byte-range locks; fall back to an exclusive open,
-            // whose flock conflicts with the fcntl lock held by a running game.
+            
+            
             return IsLockFileHeld(lockPath);
         }
         catch (FileNotFoundException)

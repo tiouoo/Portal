@@ -14,7 +14,7 @@ namespace Portal.Bedrock;
 
 internal static class BedrockDataIsolation
 {
-    private const string PreloadDllName = "PreloadCpp.dll"; //PreloadCpp.dll
+    private const string PreloadDllName = "PreloadCpp.dll"; 
     private const string PreloadResourceName = "PreloadCpp.dll";
     private const string FallbackPreloadDllPrefix = "P";
 
@@ -37,7 +37,7 @@ internal static class BedrockDataIsolation
         }
         catch
         {
-            // The fallback was never referenced if the PE import update failed.
+            
             CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
             throw;
         }
@@ -123,7 +123,7 @@ internal static class BedrockDataIsolation
             config = new
             {
                 isConsole = false,
-                // Native Windows sharing must bypass the file hooks entirely.
+                
                 isVersionIsolated = config.BuildType == BedrockBuildType.GDK && !config.EnableLauncherSharedData,
                 isDetailedLog = false,
                 folderPolicyString = GetFolderPolicy(config),
@@ -215,8 +215,8 @@ internal static class BedrockDataIsolation
         foreach (var path in Directory.EnumerateFiles(instancePath, $"{FallbackPreloadDllPrefix}????????.dll"))
         {
             var fileName = Path.GetFileName(path);
-            // EnumerateFiles 的 ? 通配符可匹配零个字符（如 P.dll、PhysX.dll），
-            // 必须用 IsPreloadDllName 再次确认是本组件的备用 DLL，避免误删无关文件。
+            
+            
             if (!IsPreloadDllName(fileName) ||
                 string.Equals(fileName, activeDllName, StringComparison.OrdinalIgnoreCase))
                 continue;
@@ -227,12 +227,12 @@ internal static class BedrockDataIsolation
             }
             catch (IOException exception)
             {
-                // A running game still has this DLL loaded; remove it on a later launch.
+                
                 Trace.TraceError($"删除过期基岩版数据隔离组件失败：{path}{Environment.NewLine}{exception}");
             }
             catch (UnauthorizedAccessException exception)
             {
-                // Leave files protected by the operating system untouched.
+                
                 Trace.TraceError($"删除过期基岩版数据隔离组件被拒绝：{path}{Environment.NewLine}{exception}");
             }
         }

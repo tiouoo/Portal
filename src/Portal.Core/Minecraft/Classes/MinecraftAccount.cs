@@ -127,8 +127,8 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
 
     partial void OnSkinChanged(string value)
     {
-        // These images can still be referenced by controls in other windows while bindings update.
-        // Dropping the cache lets GC release them without racing Avalonia's render thread.
+        
+        
         _head = null;
         _body = null;
         _cover = null;
@@ -229,8 +229,8 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
 
     public override int GetHashCode()
     {
-        // Equals 在任一方缺少 Uuid 时会回退到按名称比较，因此 Uuid 和 Name 都不能参与哈希，
-        // 否则相等的账户可能得到不同哈希值，破坏哈希去重
+        
+        
         var hash = new HashCode();
         hash.Add(AccountType);
 

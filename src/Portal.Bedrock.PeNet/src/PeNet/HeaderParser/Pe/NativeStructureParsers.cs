@@ -1,4 +1,4 @@
-﻿using PeNet.FileParser;
+using PeNet.FileParser;
 using PeNet.Header.Pe;
 
 namespace PeNet.HeaderParser.Pe;
@@ -14,7 +14,7 @@ internal class NativeStructureParsers
     {
         _peFile = peFile;
 
-        // Init all parsers
+        
         _imageDosHeaderParser = InitImageDosHeaderParser();
         _imageNtHeadersParser = InitNtHeadersParser();
         _imageSectionHeadersParser = InitImageSectionHeadersParser();

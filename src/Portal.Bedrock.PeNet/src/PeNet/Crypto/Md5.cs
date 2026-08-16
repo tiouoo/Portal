@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace PeNet.Crypto;
 
-// For reference see: https://github.com/bcgit/bc-csharp/blob/master/crypto/src/crypto/digests/MD5Digest.cs
+
 internal sealed class Md5 : Hash
 {
     private const int S11 = 7;

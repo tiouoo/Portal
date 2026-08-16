@@ -4,11 +4,6 @@ using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
-/// <summary>
-/// 内存占用小组件。支持右键切换显示模式：
-/// - 百分比模式：主显示百分比，副文本显示已用/总量
-/// - 数值模式：主显示已用内存，副文本显示百分比
-/// </summary>
 public sealed class MemoryResourceWidget : ResourceWidgetBase
 {
     private bool _showPercentage = true;
@@ -22,8 +17,7 @@ public sealed class MemoryResourceWidget : ResourceWidgetBase
 
     public override ResourceKind ResourceKind => ResourceKind.Memory;
 
-    /// <summary>切换显示模式（百分比 ↔ 数值），并持久化到布局数据。</summary>
-    public void ToggleDisplayMode()
+        public void ToggleDisplayMode()
     {
         _showPercentage = !_showPercentage;
         if (_data != null)
@@ -34,7 +28,7 @@ public sealed class MemoryResourceWidget : ResourceWidgetBase
     public override void Initialize(WidgetLayoutData layout)
     {
         _data = layout.Data as MemoryWidgetData;
-        // 兼容旧配置：若 Data 缺失则补建一个，避免切换模式时无处持久化。
+        
         if (_data == null)
         {
             _data = new MemoryWidgetData();

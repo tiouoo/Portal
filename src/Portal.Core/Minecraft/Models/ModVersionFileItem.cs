@@ -1,0 +1,119 @@
+using System.Text.RegularExpressions;
+using MinecraftLaunch.Base.Enums;
+using MinecraftLaunch.Base.Models.Network;
+
+namespace Portal.Views.Pages.DownloadPages;
+
+public sealed record ModVersionGroupKey(string Loader, string MinecraftVersion);
+
+public sealed record ModVersionFileItem(
+    string Id,
+    string DisplayName,
+    string Details,
+    string ReleaseTypeText,
+    string FileName,
+    string DownloadUrl,
+    long FileSize,
+    DateTime Published,
+    IReadOnlyList<string> MinecraftVersions,
+    IReadOnlyList<ModVersionGroupKey> GroupKeys,
+    ModDetailsSource Source,
+    string ProjectId,
+    IReadOnlyList<ModFileDependency> Dependencies)
+{
+    public static ModVersionFileItem From(ModrinthResourceFile file) => new(file.VersionId,
+        string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
+        FormatDetails(string.Join(",", file.ModLoaders.Select(LoaderName).Distinct()), file.FileName, file.Published,
+            file.ReleaseType),
+        ReleaseType(file.ReleaseType), file.FileName, file.DownloadUrl, file.FileSize, file.Published,
+        file.MinecraftVersions.ToList(),
+        file.ModLoaders.SelectMany(loader =>
+            file.MinecraftVersions.Select(version => new ModVersionGroupKey(LoaderName(loader), version))).ToList(),
+        ModDetailsSource.Modrinth,
+        file.ProjectId,
+            file.Dependencies.Where(dependency => dependency.Type == DependencyType.Required &&
+                (!string.IsNullOrWhiteSpace(dependency.ProjectId) || !string.IsNullOrWhiteSpace(dependency.VersionId)))
+            .Select(dependency => new ModFileDependency(dependency.ProjectId, dependency.FileName ?? string.Empty,
+                dependency.VersionId)).Distinct().ToArray());
+
+    public static ModVersionFileItem From(CurseforgeResourceFile file)
+    {
+        var versions = file.GameVersions.Where(IsMinecraftVersion).ToList();
+        var loaders = file.GameVersions.Select(LoaderName).OfType<string>().DefaultIfEmpty("通用");
+        var enumerable = loaders as string[] ?? loaders.ToArray();
+        return new(file.Id.ToString(), string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
+            FormatDetails(string.Join(",", enumerable), file.FileName, file.Published, file.ReleaseType),
+            ReleaseType(file.ReleaseType), file.FileName,
+            file.DownloadUrl, file.FileLength, file.Published, versions,
+            enumerable.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
+                .ToList(),
+            ModDetailsSource.CurseForge,
+            file.ModId.ToString(),
+            file.Dependencies.Where(dependency => dependency.Value == DependencyType.Required)
+                .Select(dependency => new ModFileDependency(dependency.Key.ToString(), string.Empty)).Distinct().ToArray());
+    }
+
+    public ModVersionFileItem ForCompatibility(ModVersionGroupKey compatibility) => this with
+    {
+        Details = $"{compatibility.Loader}·{Details[(Details.IndexOf('·') + 1)..]}",
+        MinecraftVersions = [compatibility.MinecraftVersion],
+        GroupKeys = [compatibility]
+    };
+
+    private static string LoaderName(ModLoaderType loader) => loader switch
+    {
+        ModLoaderType.NeoForge => "NeoForge", ModLoaderType.Forge => "Forge", ModLoaderType.Fabric => "Fabric",
+        ModLoaderType.Quilt => "Quilt", _ => "通用"
+    };
+
+    private static string? LoaderName(string loader) => loader.Trim().ToLowerInvariant() switch
+    {
+        "neoforge" => "NeoForge", "forge" => "Forge", "fabric" => "Fabric", "quilt" => "Quilt", _ => null
+    };
+
+    private static bool IsMinecraftVersion(string version) => Regex.IsMatch(version,
+        @"^\d+\.\d+(?:\.\d+)?(?:-(?:snapshot|pre-release|pre\d+|rc\d+))?$", RegexOptions.IgnoreCase);
+
+    private static string FormatDetails(string loader, string fileName, DateTime published, FileReleaseType releaseType) =>
+        $"{loader}·{fileName}·{FormatRelativeTime(published)}·{ReleaseType(releaseType)}";
+
+    private static string ReleaseType(FileReleaseType type) => type switch
+    {
+        FileReleaseType.Release => "正式版", FileReleaseType.Beta => "测试B版", FileReleaseType.Alpha => "测试A版",
+        _ => "测试版"
+    };
+
+    private static string FormatRelativeTime(DateTime timestamp)
+    {
+        var localTime = timestamp.Kind == DateTimeKind.Utc ? timestamp.ToLocalTime() : timestamp;
+        var elapsed = DateTime.Now - localTime;
+        if (elapsed < TimeSpan.FromMinutes(1)) return "刚刚";
+        if (elapsed < TimeSpan.FromHours(1)) return $"{Math.Max(1, (int)elapsed.TotalMinutes)} 分钟前";
+        if (elapsed < TimeSpan.FromDays(1)) return $"{Math.Max(1, (int)elapsed.TotalHours)} 小时前";
+        if (elapsed < TimeSpan.FromDays(2)) return "1 天前";
+        if (elapsed < TimeSpan.FromDays(7)) return $"{(int)elapsed.TotalDays} 天前";
+        if (elapsed < TimeSpan.FromDays(14)) return "1 周前";
+        if (elapsed < TimeSpan.FromDays(30)) return $"{Math.Max(2, (int)(elapsed.TotalDays / 7))} 周前";
+        if (elapsed < TimeSpan.FromDays(365)) return $"{Math.Max(1, (int)(elapsed.TotalDays / 30))} 个月前";
+        return $"{Math.Max(1, (int)(elapsed.TotalDays / 365))} 年前";
+    }
+}
+
+public sealed record ModFileDependency(string ProjectId, string Name, string? VersionId = null);
+
+public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patch) : IComparable<MinecraftVersionKey>
+{
+    public static MinecraftVersionKey Parse(string version)
+    {
+        var match = Regex.Match(version, @"^(\d+)\.(\d+)(?:\.(\d+))?");
+        return match.Success
+            ? new MinecraftVersionKey(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value),
+                match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0)
+            : new MinecraftVersionKey(-1, -1, -1);
+    }
+
+    public int CompareTo(MinecraftVersionKey other) =>
+        Major != other.Major ? Major.CompareTo(other.Major) :
+        Minor != other.Minor ? Minor.CompareTo(other.Minor) :
+        Patch.CompareTo(other.Patch);
+}

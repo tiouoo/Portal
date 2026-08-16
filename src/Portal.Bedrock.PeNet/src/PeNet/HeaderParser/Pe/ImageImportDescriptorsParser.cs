@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using PeNet.FileParser;
 using PeNet.Header.Pe;
 
@@ -17,14 +17,14 @@ internal class ImageImportDescriptorsParser : SafeParser<ImageImportDescriptor[]
             return null;
 
         var idescs = new List<ImageImportDescriptor>();
-        uint idescSize = 20; // Size of ImageImportDescriptor (5 * 4 Byte)
+        uint idescSize = 20; 
         uint round = 0;
 
         while (true)
         {
             var idesc = new ImageImportDescriptor(PeFile, Offset + idescSize * round);
 
-            // Found the last ImageImportDescriptor which is completely null (except TimeDateStamp).
+            
             if (idesc.OriginalFirstThunk == 0
                 && idesc.ForwarderChain == 0
                 && idesc.Name == 0

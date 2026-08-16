@@ -54,7 +54,7 @@
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.FilePicker}">
                 <ComboBoxItem Content="系统对话框" />
                 <ComboBoxItem Content="接管对话框" />
-                <!-- <ComboBoxItem Content="输入路径" /> -->
+                
             </ComboBox>
             <TextBlock
                 FontSize="11"

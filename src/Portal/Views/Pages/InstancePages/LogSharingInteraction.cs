@@ -10,13 +10,9 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.InstancePages;
 
-/// <summary>
-/// 日志页面共用的分享 / AI 分析交互流程。
-/// </summary>
 internal static class LogSharingInteraction
 {
-    /// <summary>将日志分享到 LogShare.CN 与 mclo.gs，并展示结果对话框。</summary>
-    public static async Task ShareAsync(Control view, TextDocument document, string displayName)
+        public static async Task ShareAsync(Control view, TextDocument document, string displayName)
     {
         var topLevel = TopLevel.GetTopLevel(view);
         if (topLevel is null)
@@ -64,8 +60,7 @@ internal static class LogSharingInteraction
             });
     }
 
-    /// <summary>使用 LogShare.CN 的免费大模型流式分析日志。</summary>
-    public static async Task AnalyseAiAsync(Control view, TextDocument document, string displayName)
+        public static async Task AnalyseAiAsync(Control view, TextDocument document, string displayName)
     {
         var topLevel = TopLevel.GetTopLevel(view);
         if (topLevel is null)

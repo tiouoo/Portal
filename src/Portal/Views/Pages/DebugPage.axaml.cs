@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Interactivity;
@@ -30,7 +30,7 @@ public partial class DebugPage : DataUserControl, ITioTabPage
     private void Click1(object? sender, RoutedEventArgs e)
     {
         var a = 0;
-        // ReSharper disable once IntDivisionByZero
+        
         _ = 1 / a;
     }
 
@@ -205,7 +205,7 @@ public partial class DebugPage : DataUserControl, ITioTabPage
                     ExecuteAsync = async (managedTask, cancellationToken) =>
                     {
                         await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-                        // 操作日志可在任务导出的格式化日志中确认。
+                        
                     }
                 }
             ]

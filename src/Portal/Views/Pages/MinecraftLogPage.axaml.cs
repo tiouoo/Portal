@@ -63,7 +63,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
         if (_logSession != null)
             _logSession.LogReceived -= OnLogReceived;
 
-        // 日志文本可能有几十 MB，关闭标签页时必须主动释放，别等 GC。
+        
         _entries.Clear();
         LogEditor.SyntaxHighlighting = null;
         LogEditor.Document = new TextDocument();
@@ -125,10 +125,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
             _entries.Where(entry => IsLogLevelEnabled(entry.Level)).Select(entry => entry.Text));
     }
 
-    /// <summary>
-    /// 缓冲的日志条数有上限，但编辑器文档以前只增不减，长时间运行的游戏会让它一直变大。
-    /// </summary>
-    private void TrimDocument()
+        private void TrimDocument()
     {
         var document = LogEditor.Document;
         while (document.LineCount > MaximumVisibleLogLines + 1)

@@ -3,13 +3,9 @@ using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
-/// <summary>
-/// 网络占用小组件。主显示传输速率（MB/s），副文本显示上下行拆分及 MBPS 单位。
-/// 进度条以 1 Gbps（≈125 MB/s）为参考最大值。
-/// </summary>
 public sealed class NetworkResourceWidget : ResourceWidgetBase
 {
-    private const double MaxReferenceMBps = 125; // 1 Gbps ≈ 125 MB/s
+    private const double MaxReferenceMBps = 125; 
 
     public NetworkResourceWidget(WidgetCellSize size) : base(size)
     {

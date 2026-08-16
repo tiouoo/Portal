@@ -11,18 +11,13 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Classes.Entries;
 
-/// <summary>
-/// 根据 <see cref="Data.ConfigEntry.Shortcuts"/> 配置，为所有 <see cref="TioTabWindowBase"/> 窗口注册快捷键。
-/// 配置变化时自动重新应用。
-/// </summary>
 public static class ShortcutManager
 {
     private static readonly Dictionary<TioTabWindowBase, List<KeyBinding>> Managed = new();
     private static readonly HashSet<TioTabWindowBase> ClosedSubscribed = new();
     private static bool _initialized;
 
-    /// <summary>订阅配置变化。需在配置加载完成后调用一次。</summary>
-    public static void Initialize()
+        public static void Initialize()
     {
         if (_initialized) return;
         _initialized = true;
@@ -30,8 +25,7 @@ public static class ShortcutManager
         ApplyToAll();
     }
 
-    /// <summary>按当前配置重新应用窗口上的快捷键（先清除上一次管理的绑定）。</summary>
-    public static void Apply(TioTabWindowBase window)
+        public static void Apply(TioTabWindowBase window)
     {
         if (ClosedSubscribed.Add(window))
             window.Closed += OnWindowClosed;

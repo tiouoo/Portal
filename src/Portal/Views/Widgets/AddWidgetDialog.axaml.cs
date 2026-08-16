@@ -25,8 +25,7 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
     private readonly string? _hostId;
 
     [ObservableProperty] private string _searchText = string.Empty;
-    /// <summary>当前选中的分类，默认游戏。搜索时跨分类匹配。</summary>
-    public WidgetCategory SelectedCategory { get; set; } = WidgetCategory.Game;
+        public WidgetCategory SelectedCategory { get; set; } = WidgetCategory.Game;
 
     public ObservableCollection<WidgetDefinition> Items { get; } = [];
 
@@ -39,8 +38,7 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
-    /// <summary>切换左侧分类导航。</summary>
-    [RelayCommand]
+        [RelayCommand]
     private void SelectCategory(WidgetCategory category)
     {
         SelectedCategory = category;
@@ -186,8 +184,7 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
         return result as ServerConnectResult;
     }
 
-    /// <summary>弹出系统文件选择器，让用户选择一张本地图片。</summary>
-    private async Task<string?> PickImageAsync()
+        private async Task<string?> PickImageAsync()
     {
         var topLevel = TopLevel.GetTopLevel(_workspace);
         if (topLevel == null)

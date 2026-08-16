@@ -7,15 +7,11 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-/// <summary>
-/// 新闻详情页。接收一个 <see cref="NewsEntry"/>，按需拉取正文并缓存。
-/// 通过 <see cref="Open"/> 在新标签页打开。
-/// </summary>
 public partial class NewsDetailsPage : UserControl, ITioTabPage
 {
     public NewsDetailsPageViewModel ViewModel { get; }
 
-    // 无参构造供 XAML 预览使用。
+    
     public NewsDetailsPage() : this(new NewsEntry
     {
         Title = "新闻详情",
@@ -47,10 +43,7 @@ public partial class NewsDetailsPage : UserControl, ITioTabPage
         DataContext = null;
     }
 
-    /// <summary>
-    /// 在指定顶级窗口内打开新闻详情页（新标签页）。点击新闻卡片 / 小组件时调用。
-    /// </summary>
-    public static void Open(TopLevel sender, NewsEntry entry)
+        public static void Open(TopLevel sender, NewsEntry entry)
     {
         if (sender is not TioTabWindowBase window) return;
         if (entry == null || string.IsNullOrEmpty(entry.Id)) return;

@@ -3,7 +3,6 @@ using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
-/// <summary>CPU 占用小组件。纯百分比显示，无副文本，字号放大占满空间。</summary>
 public sealed class CpuResourceWidget : ResourceWidgetBase
 {
     public CpuResourceWidget(WidgetCellSize size) : base(size)

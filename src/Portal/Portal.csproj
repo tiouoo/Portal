@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <!-- TargetFramework / DefineConstants come from ../Directory.Build.props -->
+    
     <PropertyGroup>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
@@ -17,9 +17,6 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
-        <EmbeddedResource Include="..\..\assets\conf\package-type.txt">
-            <Link>Assets\package-type.txt</Link>
-        </EmbeddedResource>
         <EmbeddedResource Include="..\..\assets\conf\WikiEntries.txt">
             <Link>Assets\WikiEntries.txt</Link>
         </EmbeddedResource>
@@ -41,7 +38,6 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
         <PackageReference Include="HotAvalonia" Condition="'$(Configuration)' == 'Debug'" />
-        <PackageReference Include="HtmlAgilityPack" />
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="Tomlyn" />
     </ItemGroup>

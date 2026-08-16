@@ -35,11 +35,7 @@ public static class JavaRuntimeManager
         return java == null ? null : Convert(java);
     }
 
-    /// <summary>
-    /// 快速扫描：使用 fastMode（有限深度 5 层递归），跳过深层搜索。
-    /// 速度快，可能遗漏深层嵌套的 Java。
-    /// </summary>
-    public static async Task<IReadOnlyList<JavaRuntimeEntry>> ScanAsync(CancellationToken cancellationToken = default)
+        public static async Task<IReadOnlyList<JavaRuntimeEntry>> ScanAsync(CancellationToken cancellationToken = default)
     {
         return await Task.Run(async () =>
         {
@@ -54,11 +50,7 @@ public static class JavaRuntimeManager
         }, cancellationToken);
     }
 
-    /// <summary>
-    /// 强力扫描：先执行全量自动扫描（无限深度），再 BFS 深度遍历所有磁盘。
-    /// BFS 中每个目录都会检查 Java（关键词只控制是否继续递归，不影响检查）。
-    /// </summary>
-    public static async Task<IReadOnlyList<JavaRuntimeEntry>> DeepScanAsync(
+        public static async Task<IReadOnlyList<JavaRuntimeEntry>> DeepScanAsync(
         IProgress<DeepScanProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
@@ -67,7 +59,7 @@ public static class JavaRuntimeManager
         long totalDirsScanned = 0;
         long totalDirsToScan = 0;
 
-        // 阶段一：全量自动扫描（registry + where + 无限深度 FindAll）
+        
         progress?.Report(new DeepScanProgress(0, 0, 0, "阶段 1/2：执行自动扫描（registry + where + 常见路径）…"));
         try
         {
@@ -84,10 +76,10 @@ public static class JavaRuntimeManager
         }
         catch (OperationCanceledException)
         {
-            // 取消时保留已找到的
+            
         }
 
-        // 阶段二：BFS 深度扫描所有磁盘
+        
         var roots = GetBfsSearchRoots().ToList();
         totalDirsToScan = roots.Count;
         progress?.Report(new DeepScanProgress(
@@ -191,7 +183,7 @@ public static class JavaRuntimeManager
             }
             catch
             {
-                // 忽略无法访问的驱动器
+                
             }
         }
         else if (OperatingSystem.IsMacOS())
@@ -221,7 +213,7 @@ public static class JavaRuntimeManager
             }
             catch
             {
-                // 忽略无法访问的驱动器
+                
             }
             foreach (var common in new[] { "/mnt", "/media", "/run/media" })
             {
@@ -235,7 +227,7 @@ public static class JavaRuntimeManager
                 }
                 catch
                 {
-                    // 忽略无法访问的目录
+                    
                 }
             }
         }
@@ -252,10 +244,7 @@ public static class JavaRuntimeManager
         if (Directory.Exists(path)) roots.Add(path);
     }
 
-    /// <summary>
-    /// BFS 扫描：每个目录都会检查 Java，关键词只决定是否继续递归。
-    /// </summary>
-    private static HashSet<string> BfsKeywordScan(
+        private static HashSet<string> BfsKeywordScan(
         string root,
         HashSet<string> foundPaths,
         ref long totalDirsScanned,
@@ -318,7 +307,7 @@ public static class JavaRuntimeManager
                         $"正在扫描: {entryPath}"));
                 }
 
-                // 关键修复：每个目录都检查 Java，不跳过
+                
                 try
                 {
                     var binDir = Path.Combine(entryPath, "bin");
@@ -339,11 +328,11 @@ public static class JavaRuntimeManager
                 }
                 catch
                 {
-                    // 忽略权限或路径异常
+                    
                 }
 
-                // 关键修复：关键词只控制是否递归，不控制是否检查 Java
-                // 前 FullExploreDepth 层无条件递归，之后只递归关键词匹配的目录
+                
+                
                 if (depth + 1 < BfsMaxDepth &&
                     (depth + 1 < FullExploreDepth || DirNameMatchesKeywords(name)))
                 {

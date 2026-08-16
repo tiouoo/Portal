@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace PeNet.Crypto;
 
-// For reference see: https://github.com/bcgit/bc-csharp/blob/master/crypto/src/crypto/digests/Sha256Digest.cs
+
 internal class Sha256 : Hash
 {
     private static readonly uint[] K =

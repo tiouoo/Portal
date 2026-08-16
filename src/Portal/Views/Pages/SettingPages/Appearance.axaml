@@ -5,7 +5,7 @@
     x:Class="Portal.Views.Pages.SettingPages.Appearance"
     x:DataType="settingPages:Appearance"
     xmlns="https://github.com/avaloniaui"
-    xmlns:const="clr-namespace:Portal.Const"
+    xmlns:const="clr-namespace:Portal.Const;assembly=Portal.Core"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -177,7 +177,7 @@
                 <ComboBoxItem>图片</ComboBoxItem>
                 <ComboBoxItem>纯色</ComboBoxItem>
                 <ComboBoxItem>亚克力</ComboBoxItem>
-                <!-- <ComboBoxItem>模糊</ComboBoxItem> -->
+                
                 <ComboBoxItem>云母</ComboBoxItem>
                 <ComboBoxItem>透明</ComboBoxItem>
             </ComboBox>

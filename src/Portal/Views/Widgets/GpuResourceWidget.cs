@@ -3,10 +3,6 @@ using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
-/// <summary>
-/// GPU 占用小组件。由于 Hardware.Info 跨平台只能获取 GPU 名称无法获取使用率，
-/// 使用率不可用时显示 N/A，并将 GPU 名称作为副文本展示。
-/// </summary>
 public sealed class GpuResourceWidget : ResourceWidgetBase
 {
     public GpuResourceWidget(WidgetCellSize size) : base(size)

@@ -1,30 +1,18 @@
-﻿using PeNet.FileParser;
+using PeNet.FileParser;
 
 namespace PeNet.Header.Pe;
 
-/// <summary>
-///     Thread Local Storage Directory.
-/// </summary>
 public class ImageTlsDirectory : AbstractStructure
 {
     private readonly bool _is64Bit;
 
-    /// <summary>
-    ///     Create new TLS directory structure.
-    /// </summary>
-    /// <param name="peFile">A PE file.</param>
-    /// <param name="offset">Offset to TLS structure in buffer.</param>
-    /// <param name="is64Bit">Flag if the PE file is 64 Bit.</param>
-    public ImageTlsDirectory(IRawFile peFile, long offset, bool is64Bit)
+        public ImageTlsDirectory(IRawFile peFile, long offset, bool is64Bit)
         : base(peFile, offset)
     {
         _is64Bit = is64Bit;
     }
 
-    /// <summary>
-    ///     Start address of the raw data.
-    /// </summary>
-    public ulong StartAddressOfRawData
+        public ulong StartAddressOfRawData
     {
         get => _is64Bit ? PeFile.ReadULong(Offset + 0) : PeFile.ReadUInt(Offset + 0);
         set
@@ -36,10 +24,7 @@ public class ImageTlsDirectory : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     End address of the raw data.
-    /// </summary>
-    public ulong EndAddressOfRawData
+        public ulong EndAddressOfRawData
     {
         get => _is64Bit ? PeFile.ReadULong(Offset + 8) : PeFile.ReadUInt(Offset + 4);
         set
@@ -51,10 +36,7 @@ public class ImageTlsDirectory : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     Address of index (pointer to TLS index).
-    /// </summary>
-    public ulong AddressOfIndex
+        public ulong AddressOfIndex
     {
         get => _is64Bit ? PeFile.ReadULong(Offset + 0x10) : PeFile.ReadUInt(Offset + 8);
         set
@@ -66,10 +48,7 @@ public class ImageTlsDirectory : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     Address of the callbacks.
-    /// </summary>
-    public ulong AddressOfCallBacks
+        public ulong AddressOfCallBacks
     {
         get => _is64Bit ? PeFile.ReadULong(Offset + 0x18) : PeFile.ReadUInt(Offset + 0x0c);
         set
@@ -81,10 +60,7 @@ public class ImageTlsDirectory : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     Size of zero fill.
-    /// </summary>
-    public uint SizeOfZeroFill
+        public uint SizeOfZeroFill
     {
         get => _is64Bit ? PeFile.ReadUInt(Offset + 0x20) : PeFile.ReadUInt(Offset + 0x10);
         set
@@ -96,10 +72,7 @@ public class ImageTlsDirectory : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     Characteristics.
-    /// </summary>
-    public uint Characteristics
+        public uint Characteristics
     {
         get => _is64Bit ? PeFile.ReadUInt(Offset + 0x24) : PeFile.ReadUInt(Offset + 0x14);
         set
@@ -111,8 +84,5 @@ public class ImageTlsDirectory : AbstractStructure
         }
     }
 
-    /// <summary>
-    ///     List with parsed TLS callback structures.
-    /// </summary>
-    public ImageTlsCallback[]? TlsCallbacks { get; set; }
+        public ImageTlsCallback[]? TlsCallbacks { get; set; }
 }

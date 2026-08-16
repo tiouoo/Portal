@@ -9,16 +9,9 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;
 
-/// <summary>
-/// 启动流程的自定义支持：占位符解析、启动前后命令执行、
-/// 自定义 JVM 参数拆分与 Minecraft 窗口标题覆盖。
-/// </summary>
 public static class LaunchCustomization
 {
-    /// <summary>
-    /// 构建本次启动可用的占位符集合。值可能为空字符串（例如基岩版没有 Java 相关信息）。
-    /// </summary>
-    public static Dictionary<string, string> BuildPlaceholders(MinecraftInstance instance, Account? account,
+        public static Dictionary<string, string> BuildPlaceholders(MinecraftInstance instance, Account? account,
         JavaEntry? java, MinecraftLaunchOptions options)
     {
         var entry = instance.MinecraftEntry;
@@ -63,10 +56,7 @@ public static class LaunchCustomization
         return placeholders;
     }
 
-    /// <summary>
-    /// 将模板中的占位符替换为实际值。未识别的占位符原样保留。
-    /// </summary>
-    public static string? Apply(string? template, IReadOnlyDictionary<string, string> placeholders)
+        public static string? Apply(string? template, IReadOnlyDictionary<string, string> placeholders)
     {
         if (string.IsNullOrWhiteSpace(template))
             return null;
@@ -77,10 +67,7 @@ public static class LaunchCustomization
         return builder.ToString();
     }
 
-    /// <summary>
-    /// 按空白字符拆分一段命令行为参数列表，支持双引号包裹含空格的参数。
-    /// </summary>
-    public static IReadOnlyList<string> SplitArguments(string? commandLine)
+        public static IReadOnlyList<string> SplitArguments(string? commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine))
             return [];
@@ -121,10 +108,7 @@ public static class LaunchCustomization
         return arguments;
     }
 
-    /// <summary>
-    /// 通过系统 Shell 执行一条命令并等待其结束，返回退出代码。
-    /// </summary>
-    public static async Task<int> RunShellCommandAsync(string command, string? workingDirectory,
+        public static async Task<int> RunShellCommandAsync(string command, string? workingDirectory,
         CancellationToken cancellationToken)
     {
         Logger.Info($"执行启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
@@ -160,10 +144,7 @@ public static class LaunchCustomization
         return process.ExitCode;
     }
 
-    /// <summary>
-    /// 在后台执行一条命令，不等待其结束。
-    /// </summary>
-    public static void RunShellCommandDetached(string command, string? workingDirectory)
+        public static void RunShellCommandDetached(string command, string? workingDirectory)
     {
         Logger.Info($"已安排后台启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
         Task.Run(async () =>
@@ -174,7 +155,7 @@ public static class LaunchCustomization
             }
             catch (Exception exception)
             {
-                // 后台命令失败不影响游戏进程
+                
                 Logger.Warning($"后台启动自定义命令失败。{Environment.NewLine}{exception}");
             }
         }).ContinueWith(completedTask => Logger.Error($"后台启动自定义命令异常结束：{command}", completedTask.Exception!),
@@ -182,11 +163,7 @@ public static class LaunchCustomization
             TaskScheduler.Default);
     }
 
-    /// <summary>
-    /// 持续监视游戏进程主窗口，将标题覆盖为指定文本（仅 Windows）。
-    /// Minecraft 加载完成后会重设自身标题，因此需要轮询保持覆盖。
-    /// </summary>
-    public static void WatchWindowTitle(Process process, string title)
+        public static void WatchWindowTitle(Process process, string title)
     {
         if (!OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(title))
             return;
@@ -213,7 +190,7 @@ public static class LaunchCustomization
             }
             catch (Exception exception)
             {
-                // 进程已退出或句柄失效
+                
                 Logger.Debug($"停止监视游戏窗口标题，进程：{process.Id}。{Environment.NewLine}{exception}");
             }
         }).ContinueWith(completedTask => Logger.Error($"游戏窗口标题监视异常结束，进程：{process.Id}", completedTask.Exception!),

@@ -126,10 +126,7 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         await ReloadAsync();
     }
 
-    /// <summary>
-    /// 页面每次显示时立即发起状态检测：首次打开先读取服务器列表，之后直接刷新延迟。
-    /// </summary>
-    private async Task RefreshOnAttachAsync()
+        private async Task RefreshOnAttachAsync()
     {
         if (_instance == null)
             return;
@@ -158,17 +155,14 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
 
     private async void AutoRefreshTimer_OnTick(object? sender, EventArgs e)
     {
-        // 页面不可见或已有刷新任务进行中时跳过
+        
         if (!IsVisible || _isRefreshing != 0)
             return;
 
         await PingAllAsync();
     }
 
-    /// <summary>
-    /// 重新读取 servers.dat 并检测全部服务器状态。
-    /// </summary>
-    private async Task RefreshAllAsync()
+        private async Task RefreshAllAsync()
     {
         await ReloadAsync();
         Notify(_instance == null ? "刷新失败" : "服务器状态已刷新", NotificationType.Success);

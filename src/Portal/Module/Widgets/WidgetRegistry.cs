@@ -9,8 +9,7 @@ public sealed class WidgetDefinition
     public string Name { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public WidgetCellSize DefaultSize { get; init; } = new(1, 1);
-    /// <summary>组件所属分类，用于添加组件对话框左侧导航分组。</summary>
-    public WidgetCategory Category { get; init; } = WidgetCategory.Utility;
+        public WidgetCategory Category { get; init; } = WidgetCategory.Utility;
 
     private readonly List<(WidgetCellSize Size, Func<IWidgetContent> Factory)> _pages = [];
 
@@ -111,7 +110,7 @@ public static class WidgetRegistry
             .AddPage<Clock1x1>(new WidgetCellSize(1, 1))
             .AddPage<Clock2x1>(new WidgetCellSize(2, 1)));
 
-        // 图片组件：支持 4×4 及其以内的所有尺寸（共 16 种）。
+        
         var imageDef = new WidgetDefinition
         {
             Kind = WidgetKind.Image,
@@ -176,7 +175,7 @@ public static class WidgetRegistry
             .AddPage<QuickServerWidget1x1>(new WidgetCellSize(1, 1))
             .AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
 
-        // 新闻：高度为 1（2×1~6×1）采用横排布局，其余尺寸（2×2~6×6）沿用竖排布局
+        
         var newsDef = new WidgetDefinition
         {
             Kind = WidgetKind.News,
@@ -195,7 +194,7 @@ public static class WidgetRegistry
         }
         Register(newsDef);
 
-        // 系统资源
+        
         RegisterResourceWidget(WidgetKind.CpuResource, "CPU 占用", "处理器使用率",
             size => new CpuResourceWidget(size));
         RegisterResourceWidget(WidgetKind.MemoryResource, "内存占用", "物理内存使用情况",

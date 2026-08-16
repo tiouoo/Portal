@@ -25,7 +25,7 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
     private readonly BedrockWorldService _worldService = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _isLoading, _isDisposed;
-    private int _loadSequence; // 加载序号，防止快速切换用户时旧的扫描结果覆盖新结果
+    private int _loadSequence; 
     private string _filter = string.Empty;
 
     public ObservableCollection<string> WorldUserIds { get; } = [];

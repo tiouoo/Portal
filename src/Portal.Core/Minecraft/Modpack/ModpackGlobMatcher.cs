@@ -3,10 +3,6 @@ using System.Text.RegularExpressions;
 
 namespace Portal.Core.Minecraft.Modpack;
 
-/// <summary>
-/// 与 PCL-CE 导出整合包一致的 Like 通配匹配（DotNet.Globbing 语义子集）：
-/// 大小写不敏感；将 <c>#</c> 视为 <c>[0-9]</c>；支持 <c>*</c>、<c>?</c>、<c>**</c> 与字符集。
-/// </summary>
 internal static class ModpackGlobMatcher
 {
     private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(1);
@@ -48,10 +44,10 @@ internal static class ModpackGlobMatcher
                 var doubleStar = index + 1 < pattern.Length && pattern[index + 1] == '*';
                 if (doubleStar)
                 {
-                    // ** 匹配零或多个路径段（可跨目录）
+                    
                     sb.Append(".*");
                     index += 2;
-                    // **/ 后的斜杠视为可选
+                    
                     if (index < pattern.Length && pattern[index] == '/')
                     {
                         sb.Append("/?");
@@ -106,7 +102,7 @@ internal static class ModpackGlobMatcher
                 break;
             }
 
-            if (c == '\\') index++; // 转义，保持原义
+            if (c == '\\') index++; 
             if (index < pattern.Length)
                 content.Append(pattern[index]);
             index++;

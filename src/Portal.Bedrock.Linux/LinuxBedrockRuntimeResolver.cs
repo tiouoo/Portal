@@ -649,9 +649,9 @@ public sealed class LinuxBedrockRuntimeResolver
         var installed = candidates.FirstOrDefault(Directory.Exists);
         if (installed is not null) return installed;
 
-        // GDK 构建不依赖 Steam client，Proton 仅在初始化前缀时要求
-        // STEAM_COMPAT_CLIENT_INSTALL_PATH 指向一个存在的目录。未安装 Steam 时，
-        // 使用 Portal 自管理的兼容目录作为替代，不再要求用户预装 Steam。
+        
+        
+        
         var managed = Path.Combine(GetDataHome(), "Portal", "Bedrock", "steam-client");
         Directory.CreateDirectory(managed);
         return managed;

@@ -67,7 +67,7 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
             if (entries.Count == 0)
             {
                 var loaded = await VanillaInstaller.EnumerableMinecraftAsync(_disposeCancellation.Token);
-                // 等待期间搜索页可能已填充共享列表，重新检查避免重复追加版本条目
+                
                 if (entries.Count == 0)
                 {
                     entries.AddRange(loaded);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -28,20 +28,20 @@ namespace Portal.Module.DragDrop;
 
 public class Handler
 {
-    // DragOver 在拖动的每一帧都会触发，同一内容会被反复询问：
-    // 已识别过的内容直接复用缓存结果；未识别的内容只发起一次后台识别（用 in-flight 签名去重），
-    // 识别完成后由后续的帧一次性切换到新文案，避免提示框逐帧反复闪烁。
+    
+    
+    
     private static readonly object IdentifyLock = new();
 
-    private static string? _activeSignature;      // 最近一次已识别内容的签名
-    private static string? _activeMessage;        // 其对应的提示文案
+    private static string? _activeSignature;      
+    private static string? _activeMessage;        
     private static DragDropEffects _activeEffects = DragDropEffects.None;
 
-    private static string? _inFlightSignature;    // 正在后台识别（解析压缩包等）的内容签名
+    private static string? _inFlightSignature;    
 
     public static async void Handle(DragEventArgs e, TioTabWindowBase window)
     {
-        // async void：异常会直接抛给 Dispatcher 导致崩溃，必须在此兜底
+        
         try
         {
             var data = e.DataTransfer;
@@ -93,13 +93,13 @@ public class Handler
         var data = e.DataTransfer;
         if (!data.Contains(DataFormat.Text) && !data.Contains(DataFormat.Bitmap) &&
             !data.Contains(DataFormat.File))
-            return null; // 数据未就绪的帧：返回 null，由调用方沿用上一次文案。
+            return null; 
 
         e.Handled = true;
 
         var hasFiles = data.Contains(DataFormat.File);
-        // 拖放可同时携带多种数据，文件优先，忽略文本：
-        // 避免路径/文本在某些帧可用、某些帧不可用而导致的签名来回抖动。
+        
+        
         var text = hasFiles ? null : SafeGetText(data);
         var paths = hasFiles ? SafeGetFilePaths(data) : null;
 
@@ -108,14 +108,14 @@ public class Handler
 
         lock (IdentifyLock)
         {
-            // 内容已经识别：返回缓存结果，同一内容移动期间一直保持该值。
+            
             if (signature == _activeSignature)
             {
                 e.DragEffects = _activeEffects;
                 return _activeMessage;
             }
 
-            // 无需解析压缩包的简单内容（文件夹、文本链接）即时识别，无延迟。
+            
             if (TryFastClassify(text, paths, out var fastMessage, out var fastEffects))
             {
                 _activeSignature = signature;
@@ -125,7 +125,7 @@ public class Handler
                 return fastMessage;
             }
 
-            // 需要解析压缩包：只发起一次后台识别，避免每一帧都重复解析。
+            
             if (_inFlightSignature != signature)
             {
                 _inFlightSignature = signature;
@@ -134,14 +134,13 @@ public class Handler
                 _ = Task.Run(() => IdentifyInBackground(signature, capturedText, capturedPaths));
             }
 
-            // 识别尚未完成：沿用上一次文案，不产生中间态，识别完成后由后续帧一次性切换。
+            
             e.DragEffects = hasFiles ? DragDropEffects.Copy : _activeEffects;
             return null;
         }
     }
 
-    /// <summary>拖放结束/落下时清除识别缓存与在途识别，避免下一次拖入沿用上一次内容的结果。</summary>
-    public static void ResetDragIdentification()
+        public static void ResetDragIdentification()
     {
         lock (IdentifyLock)
         {
@@ -152,8 +151,7 @@ public class Handler
         }
     }
 
-    /// <summary>归一化后的内容签名：路径统一小写与分隔符，避免同一路径在不同帧以不同形态出现导致签名抖动。</summary>
-    private static string? BuildDragSignature(string? text, string[]? paths)
+        private static string? BuildDragSignature(string? text, string[]? paths)
     {
         if (paths is { Length: > 0 })
         {
@@ -170,8 +168,7 @@ public class Handler
     private static string NormalizePath(string path) =>
         path.Trim().Replace('\\', '/').TrimEnd('/').ToLowerInvariant();
 
-    /// <summary>免解析压缩包的即时识别：命中即缓存并返回，保证提示即时出现。</summary>
-    private static bool TryFastClassify(string? text, string[]? paths,
+        private static bool TryFastClassify(string? text, string[]? paths,
         out string? message, out DragDropEffects effects)
     {
         if (paths is [var folderPath] && Directory.Exists(folderPath))
@@ -200,7 +197,7 @@ public class Handler
             DetectSource(text, paths, out var message, out var effects);
             lock (IdentifyLock)
             {
-                // 识别期间内容已经变化：丢弃过期结果，避免旧内容文案覆盖新内容。
+                
                 if (_inFlightSignature != signature) return;
                 _inFlightSignature = null;
                 _activeSignature = signature;
@@ -212,7 +209,7 @@ public class Handler
         {
             lock (IdentifyLock)
             {
-                // 识别期间内容已经变化：丢弃过期结果，不覆盖当前状态。
+                
                 if (_inFlightSignature != signature) return;
                 _inFlightSignature = null;
                 _activeSignature = signature;
@@ -380,7 +377,7 @@ public class Handler
             VerticalOffset = 110
         };
 
-        // 复用“添加 Minecraft 文件夹”对话框，预填路径并应用路径跳转（ResolveGameFolder）。
+        
         var viewModel = new NewMinecraftFolderViewModel(
             Data.ConfigEntry.MinecraftFolders.Select(x => x.FolderPath).ToList())
         {

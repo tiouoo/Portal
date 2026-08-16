@@ -430,10 +430,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         TotalPlaySessions = totalSessions;
     }
 
-    /// <summary>
-    /// 公开方法，用于更新统计数据（支持外部调用）
-    /// </summary>
-    public void UpdateStatistics()
+        public void UpdateStatistics()
     {
         if (_isDisposed)
             return;
@@ -442,10 +439,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         UpdateRecentInstance();
     }
 
-    /// <summary>
-    /// 获取游玩时长单位
-    /// </summary>
-    private static string GetPlayTimeUnit(long seconds)
+        private static string GetPlayTimeUnit(long seconds)
     {
         if (seconds < 60)
             return "s";
@@ -454,11 +448,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         return "h";
     }
 
-    /// <summary>
-    /// 格式化游玩时长，自动判断单位（秒/分钟/小时）
-    /// 小于1000保留一位小数，大于等于1000只保留整数
-    /// </summary>
-    private static string FormatPlayTime(long seconds)
+        private static string FormatPlayTime(long seconds)
     {
         double value;
 
@@ -478,10 +468,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         return FormatNumber(value);
     }
 
-    /// <summary>
-    /// 格式化数字：小于1000保留一位小数，大于等于1000只保留整数
-    /// </summary>
-    private static string FormatNumber(double value)
+        private static string FormatNumber(double value)
     {
         if (value < 1000)
         {

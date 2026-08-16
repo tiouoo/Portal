@@ -14,20 +14,20 @@ public static class MinecraftResourceRoots
 
         switch (layout.Kind)
         {
-            // Portal MC 与 Modrinth 的共享资源统一放在 meta 目录下
+            
             case MinecraftFolderKind.PortalMc:
             case MinecraftFolderKind.Modrinth:
             case MinecraftFolderKind.ModrinthInstance:
                 yield return Path.Combine(root, "meta");
                 break;
 
-            // CurseForge 的共享资源放在 Install 目录下（还有 Install/versions）
+            
             case MinecraftFolderKind.CurseForge:
             case MinecraftFolderKind.CurseForgeInstance:
                 yield return Path.Combine(root, "Install");
                 break;
 
-            // 传统 .minecraft 与 MultiMC / Prism / BakaXL 的 libraries、assets 直接位于根目录
+            
             case MinecraftFolderKind.MultiMc:
             case MinecraftFolderKind.MultiMcInstance:
             case MinecraftFolderKind.Standard:
@@ -36,10 +36,7 @@ public static class MinecraftResourceRoots
         }
     }
 
-    /// <summary>
-    /// 解析安装/修改实例时可复用的资源根目录：排除目标目录自身，其余目录去重后返回。
-    /// </summary>
-    public static IReadOnlyList<string> ResolveForInstall(IEnumerable<MinecraftFolderEntry> folders, string? targetFolderPath)
+        public static IReadOnlyList<string> ResolveForInstall(IEnumerable<MinecraftFolderEntry> folders, string? targetFolderPath)
     {
         if (folders is null)
             return [];

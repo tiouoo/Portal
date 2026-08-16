@@ -52,7 +52,7 @@ internal static class ExternalMinecraftScanner
                 continue;
             try
             {
-                // 实例 json 为极简继承格式，必须声明继承的原版版本 id。
+                
                 string? vanillaId;
                 bool isReferenceVanilla;
                 using (var document = JsonDocument.Parse(File.ReadAllText(instanceJsonPath)))
@@ -61,8 +61,8 @@ internal static class ExternalMinecraftScanner
                     vanillaId = rootElement.TryGetProperty("inheritsFrom", out var inheritsFromNode)
                         ? inheritsFromNode.GetString()
                         : null;
-                    // id 与原版 id 相同时区分“引用原版”（极简 json，libraries 为空）与
-                    // 同 id 加载器实例（安装时用临时 id，移动后 json 内层 id 与原版不同）。
+                    
+                    
                     isReferenceVanilla = !string.IsNullOrEmpty(vanillaId) &&
                                          instanceId.Equals(vanillaId, StringComparison.OrdinalIgnoreCase) &&
                                          rootElement.TryGetProperty("libraries", out var librariesNode) &&
@@ -76,8 +76,8 @@ internal static class ExternalMinecraftScanner
                 if (!File.Exists(vanillaJsonPath))
                     continue;
 
-                // 原版 json 与实例 json 不在同一根目录，解析前先按实例缓存到临时目录；
-                // 实例 id 与原版 id 相同时缓存中仅保留原版 json，即“引用原版”的原版实例。
+                
+                
                 var cacheRoot = NormalizePortalMcMetadata(folderLayout.RootPath, instanceId, vanillaId,
                     instanceJsonPath, vanillaJsonPath, isReferenceVanilla);
                 var parsed = new MinecraftParser(cacheRoot).GetMinecraft(instanceId);
@@ -85,7 +85,7 @@ internal static class ExternalMinecraftScanner
                 var entry = WithLayout(parsed, instanceId, instanceRoot, metadataRoot,
                     Path.Combine(metadataRoot, "versions", vanillaId), "vanilla", null,
                     Path.Combine(metadataRoot, "versions", vanillaId, $"{vanillaId}.jar"), nativesDirectory);
-                // 继承链上的原版入口需一并重映射到 meta，否则其库与资源索引会指向缓存目录。
+                
                 entry = WithPortalMcDependencyPaths(entry, metadataRoot, instanceRoot, nativesDirectory);
                 var iconPath = ResolveIcon(instanceRoot, "icon.png") ?? ResolveIcon(instanceRoot, "Icon.png")
                     ?? ResolveIcon(instanceRoot, "Portal.Icon.png");
@@ -125,10 +125,7 @@ internal static class ExternalMinecraftScanner
         return result;
     }
 
-    /// <summary>
-    /// 将实例 json 与原版 json 复制到临时目录，使 MinecraftParser 能以统一根目录解析继承链。
-    /// </summary>
-    private static string NormalizePortalMcMetadata(string root, string instanceId, string vanillaId,
+        private static string NormalizePortalMcMetadata(string root, string instanceId, string vanillaId,
         string instanceJsonPath, string vanillaJsonPath, bool isReferenceVanilla)
     {
         var cacheRoot = Path.Combine(Path.GetTempPath(), "Portal", "PortalMcMetadata", GetStablePathName(root));
@@ -138,9 +135,9 @@ internal static class ExternalMinecraftScanner
 
         if (instanceId.Equals(vanillaId, StringComparison.OrdinalIgnoreCase))
         {
-            // id 与原版 id 相同时，实例 json 与原版 json 无法在缓存中同名共存。
-            // “引用原版”的原版实例直接用缓存中的原版 json；同 id 加载器实例则把缓存副本
-            // 的继承目标改写为别名（&lt;instanceId&gt;.vanilla），并以别名目录存放原版 json 供继承解析。
+            
+            
+            
             if (isReferenceVanilla)
                 return cacheRoot;
 
@@ -161,8 +158,7 @@ internal static class ExternalMinecraftScanner
         return cacheRoot;
     }
 
-    /// <summary>重写缓存副本中的继承目标，用于同 id 加载器实例的继承解析。</summary>
-    private static string RewriteInheritsFrom(string instanceJsonPath, string newInheritsFrom)
+        private static string RewriteInheritsFrom(string instanceJsonPath, string newInheritsFrom)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(instanceJsonPath));
         using var stream = new MemoryStream();
@@ -182,10 +178,7 @@ internal static class ExternalMinecraftScanner
         return System.Text.Encoding.UTF8.GetString(stream.ToArray());
     }
 
-    /// <summary>
-    /// 将继承链上的原版入口重映射到 meta 目录，使库、资源索引与运行目录均指向共享的 meta。
-    /// </summary>
-    private static MinecraftEntry WithPortalMcDependencyPaths(MinecraftEntry entry, string metadataRoot,
+        private static MinecraftEntry WithPortalMcDependencyPaths(MinecraftEntry entry, string metadataRoot,
         string gameDirectory, string nativesDirectory)
     {
         if (entry is not ModifiedMinecraftEntry { HasInheritance: true } modified)
@@ -202,7 +195,7 @@ internal static class ExternalMinecraftScanner
             AssetIndexJsonPath = Path.Combine(metadataRoot, "assets", "indexes",
                 Path.GetFileName(inherited.AssetIndexJsonPath)),
             MinecraftFolderPath = metadataRoot,
-            // 同 id 加载器实例的缓存副本中继承目录名是别名，真实基座目录须按版本 id 定位。
+            
             VersionDirectoryPath = Path.Combine(metadataRoot, "versions", inherited.Version.VersionId),
             GameDirectoryPath = gameDirectory,
             AssetsDirectoryPath = Path.Combine(metadataRoot, "assets"),
@@ -566,7 +559,7 @@ internal static class ExternalMinecraftScanner
     {
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (!File.Exists(path)) return values;
-        // 重复键取最后一次出现的值，避免 ToDictionary 因重复键抛出异常
+        
         foreach (var parts in File.ReadLines(path).Select(line => line.Split('=', 2))
                      .Where(parts => parts.Length == 2))
             values[parts[0]] = parts[1];

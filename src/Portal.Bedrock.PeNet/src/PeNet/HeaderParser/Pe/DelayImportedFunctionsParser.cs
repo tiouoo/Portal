@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using PeNet.FileParser;
 using PeNet.Header.Pe;
 
@@ -31,7 +31,7 @@ internal class DelayImportedFunctionsParser : SafeParser<ImportFunction[]>
             return null;
 
         var impFuncs = new List<ImportFunction>();
-        var sizeOfThunk = (uint)(_is64Bit ? 0x8 : 0x4); // Size of ImageThunkData
+        var sizeOfThunk = (uint)(_is64Bit ? 0x8 : 0x4); 
         var ordinalBit = _is64Bit ? 0x8000000000000000 : 0x80000000;
         var ordinalMask = (ulong)(_is64Bit ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF);
         var iat = _dataDirectories[(int)DataDirectoryType.DelayImport];
@@ -57,16 +57,16 @@ internal class DelayImportedFunctionsParser : SafeParser<ImportFunction[]>
                 if (t.AddressOfData == 0)
                     break;
 
-                // Check if import by name or by ordinal.
-                // If it is an import by ordinal, the most significant bit of "Ordinal" is "1" and the ordinal can
-                // be extracted from the least significant bits.
-                // Else it is an import by name and the link to the ImageImportByName has to be followed
+                
+                
+                
+                
 
-                if ((t.Ordinal & ordinalBit) == ordinalBit) // Import by ordinal
+                if ((t.Ordinal & ordinalBit) == ordinalBit) 
                 {
                     impFuncs.Add(new ImportFunction(null, dll, (ushort)(t.Ordinal & ordinalMask), iatOffset));
                 }
-                else // Import by name
+                else 
                 {
                     var ibn = new ImageImportByName(PeFile,
                         ((uint)t.AddressOfData).RvaToOffset(_sectionHeaders));

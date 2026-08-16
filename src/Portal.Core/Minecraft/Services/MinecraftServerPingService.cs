@@ -8,9 +8,6 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
 
-/// <summary>
-/// 服务器状态查询结果。
-/// </summary>
 public sealed record MinecraftServerStatus(
     string Description,
     string Version,
@@ -19,18 +16,11 @@ public sealed record MinecraftServerStatus(
     long Latency,
     string? Favicon);
 
-/// <summary>
-/// Minecraft 服务器状态查询服务，支持现代（1.7+）与旧版（1.6-）探测协议。
-/// 实现思路参考 PCLCE 的 McPingService / LegacyMcPingService。
-/// </summary>
 public sealed class MinecraftServerPingService
 {
     private const int DefaultTimeoutMs = 8000;
 
-    /// <summary>
-    /// 查询服务器状态，失败或超时返回 null。
-    /// </summary>
-    public async Task<MinecraftServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
+        public async Task<MinecraftServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(address))
             return null;
@@ -137,7 +127,7 @@ public sealed class MinecraftServerPingService
                 return null;
 
             var text = Encoding.BigEndianUnicode.GetString(data, 1, data.Length - 1);
-            // 旧版格式：§1\0{protocol}\0{motd}\0{online}\0{max}，可能带 3 个尾部 0x07
+            
             var parts = text.Split('\0', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 4)
                 return null;
@@ -216,11 +206,7 @@ public sealed class MinecraftServerPingService
         }
     }
 
-    /// <summary>
-    /// 将聊天组件（字符串 / 对象 / 数组）转换为带 § 格式码的 MOTD 文本，
-    /// 参考 PCL-CE 的 MinecraftFormatter.ConvertToMinecraftFormat 实现。
-    /// </summary>
-    private static string ToFormattedText(JsonNode? node)
+        private static string ToFormattedText(JsonNode? node)
     {
         if (node == null)
             return string.Empty;
@@ -305,7 +291,7 @@ public sealed class MinecraftServerPingService
         }
     }
 
-    // ===== 现代协议数据包构建 =====
+    
 
     private static byte[] BuildHandshakePacket(string host, int port)
     {
@@ -345,7 +331,7 @@ public sealed class MinecraftServerPingService
         return buffer;
     }
 
-    // ===== VarInt =====
+    
 
     private static byte[] EncodeVarInt(int value)
     {

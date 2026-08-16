@@ -65,8 +65,8 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         DataContext = this;
         Loaded += (_, _) =>
         {
-            // 页面被 InstanceDetailPage 缓存复用，Unloaded 时会退订事件，
-            // 因此在 Loaded 中重新订阅（先退订以避免重复订阅）
+            
+            
             InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
             InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
             InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
@@ -75,7 +75,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             Instance.StorageUsage.Refresh();
             Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
 
-            // 如果嵌入在 OverlayWindow 中，隐藏编辑和启动按钮
+            
             if (TopLevel.GetTopLevel(this) is OverlayWindow)
             {
                 EditButton.IsVisible = false;
@@ -184,10 +184,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         }
     }
 
-    /// <summary>
-    /// 判断 IOException 是否为文件/目录被其他进程占用（共享冲突或锁定冲突）。
-    /// </summary>
-    private static bool IsFileInUse(IOException exception)
+        private static bool IsFileInUse(IOException exception)
     {
         if (exception.HResult is unchecked((int)0x80070020) or unchecked((int)0x80070021))
             return true;
@@ -409,7 +406,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (result is null) return;
 
         var viewModel = (VersionModifyDialogViewModel)dialog.DataContext!;
-        // 修改任务在后台继续执行，直接关闭当前实例详情页；任务状态可在任务面板查看
+        
         _parent.HostTab.Close();
         _ = NotifyModifyOutcomeAsync(viewModel.StartedTask, topLevel);
     }
@@ -424,7 +421,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (string.IsNullOrWhiteSpace(newId))
             return;
 
-        // 重命名任务在后台继续执行，直接关闭当前实例详情页；任务状态可在任务面板查看
+        
         var task = InstanceRenameService.CreateRenameTask(Instance, newId);
         task.Start();
         _parent.HostTab.Close();

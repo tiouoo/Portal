@@ -2,21 +2,11 @@ using System.Buffers.Binary;
 
 namespace Portal.Bedrock.Linux;
 
-/// <summary>
-/// 对 Portal 管理的 GDK-Proton 运行时应用兼容性补丁。
-/// Wine 的 combase.dll 将 RoOriginateErrorW 导出为未实现的桩函数，游戏（GDK 构建）
-/// 调用它报告 WinRT 错误时 Wine 会直接 abort 进程。补丁把该导出改写为无害的
-/// xor eax, eax; ret; nop，让调用直接返回成功，避免进程被终止。
-/// </summary>
 internal static class GdkRuntimePatcher
 {
     private static readonly byte[] NoOp = [0x31, 0xC0, 0xC3, 0x90];
 
-    /// <summary>
-    /// 若目标运行时中 RoOriginateErrorW 尚未被修补，则将其改写为 no-op。
-    /// 幂等：已修补或找不到导出时返回 false。
-    /// </summary>
-    public static bool PatchCombaseRoOriginateErrorW(string protonRoot)
+        public static bool PatchCombaseRoOriginateErrorW(string protonRoot)
     {
         var combasePath = Path.Combine(protonRoot, "files", "lib", "wine", "x86_64-windows", "combase.dll");
         if (!File.Exists(combasePath)) return false;

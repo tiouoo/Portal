@@ -13,7 +13,7 @@ public class ContentInfo
     public ContentInfo(Asn1Node asn1)
     {
         var nodes = asn1.Nodes;
-        // SEQUENCE with 1 or 2 elements
+        
         if (asn1.NodeType != Asn1UniversalNodeType.Sequence || (nodes.Count < 1 && nodes.Count > 2))
             throw new ArgumentException("Invalid ASN1");
         if (!(nodes[0] is Asn1ObjectIdentifier))

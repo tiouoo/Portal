@@ -134,7 +134,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
         var layout = MinecraftFolderLayout.Detect(folderPath);
 
-        // 空文件夹自动识别为 Portal MC 布局
+        
         if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
         {
             layout = MinecraftFolderLayout.FromFolderKind(MinecraftFolderKind.PortalMc, folderPath);
@@ -146,7 +146,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
         Contain = _paths.Contains(folderPath, StringComparer.OrdinalIgnoreCase);
 
-        // 只有非空且非 Minecraft 结构的文件夹才显示警告
+        
         Warning = layout.Kind == MinecraftFolderKind.Standard &&
                   !IsDirectoryEmpty(folderPath) &&
                   !MinecraftFolderLayout.LooksLikeMinecraftRoot(folderPath);
@@ -201,7 +201,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         var folderPath = FolderPath!.Trim();
         var layout = MinecraftFolderLayout.Detect(folderPath);
 
-        // 空文件夹自动初始化为 Portal MC 布局
+        
         if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
         {
             Directory.CreateDirectory(Path.Combine(folderPath, "meta"));
@@ -299,7 +299,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
             path = Path.GetFullPath(path);
 
 
-            // 已经导入过的不显示
+            
             if (existing.Contains(path))
                 continue;
 

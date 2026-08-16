@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -53,7 +53,7 @@ public class BedrockLaunch : IBedrockLaunch
                 Console.WriteLine($@"registerProcess_percent: {progress.percentage} - {progress.state}");
                 Log(BedrockLogLevel.Debug, $"注册游戏包：{progress.state}，进度 {progress.percentage}%");
 
-                // 使用回调更新进度，而不是直接操作 UI
+                
                 UpdateProgress?.Invoke($"步骤：{progress.state}", progress.percentage);
             }),
             Progress = new Progress<LaunchState>(state =>
@@ -62,7 +62,7 @@ public class BedrockLaunch : IBedrockLaunch
                 Log(BedrockLogLevel.Information, $"游戏启动状态：{state}");
                 UpdateProgress?.Invoke($"状态：{state}", 0);
 
-                // 当游戏启动状态变化时，更新进度文本
+                
                 if (state == LaunchState.Launched)
                 {
                     UpdateProgress?.Invoke("状态：游戏启动完成，开始计时", 100);
@@ -71,8 +71,8 @@ public class BedrockLaunch : IBedrockLaunch
             LaunchArgs = BuildLaunchArguments()
         };
 
-        // Package registration can perform synchronous work before its task is returned.
-        // Keep it off Avalonia's UI thread so the task drawer remains responsive.
+        
+        
         var existingProcessIds = Process.GetProcessesByName("Minecraft.Windows").Select(process => process.Id).ToHashSet();
         var launchStarted = DateTime.Now;
         Log(BedrockLogLevel.Information, $"启动 Minecraft.Windows，实例目录：{_instanceConfig.InstancePath}");

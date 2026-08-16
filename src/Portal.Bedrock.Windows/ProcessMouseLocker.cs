@@ -78,7 +78,7 @@ internal sealed class ProcessMouseLocker : IDisposable
         }
         catch (Exception exception)
         {
-            // A failed monitor must never leave a process-wide cursor clip behind.
+            
             Trace.TraceError($"基岩版鼠标锁定监视失败：进程 {_processId}。{Environment.NewLine}{exception}");
         }
         finally

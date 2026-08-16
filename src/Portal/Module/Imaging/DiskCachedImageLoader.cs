@@ -13,17 +13,9 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Imaging;
 
-/// <summary>
-/// 把远程图片缓存到磁盘、并按需解码成指定宽度的位图。
-/// </summary>
-/// <remarks>
-/// 与 AsyncImageLoader 自带的 <c>RamCachedWebImageLoader</c> 不同，这里不做任何内存缓存：
-/// 每次调用都返回一张独立的位图，其生命周期完全由 <see cref="Portal.Views.Components.OwnedAdvancedImage"/> 负责。
-/// 页面关闭或列表项被回收时位图会立即释放，不会像全局内存缓存那样无限累积。
-/// </remarks>
 public class DiskCachedImageLoader : IAsyncImageLoader
 {
-    // 同一个 URL 只下载一次；下载完成后立刻移除信号量，避免字典无限增长。
+    
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> DownloadLocks = new();
 
     private readonly int _decodeWidth;
@@ -62,7 +54,7 @@ public class DiskCachedImageLoader : IAsyncImageLoader
                 await using var stream = await response.Content.ReadAsStreamAsync();
                 using var bitmap = Bitmap.DecodeToWidth(stream, _decodeWidth);
                 Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
-                // 临时文件名带随机后缀，避免同一 URL 的并发写入互相冲突。
+                
                 var temporaryPath = $"{cachePath}.{Guid.NewGuid():N}.tmp";
                 using (var output = File.Create(temporaryPath))
                     bitmap.Save(output, PngBitmapEncoderOptions.Default);
@@ -72,7 +64,7 @@ public class DiskCachedImageLoader : IAsyncImageLoader
             finally
             {
                 downloadLock.Release();
-                // 只摘除条目、不释放信号量：可能还有等待者持有它，交给 GC 回收即可。
+                
                 DownloadLocks.TryRemove(cachePath, out _);
             }
         }

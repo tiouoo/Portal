@@ -35,7 +35,7 @@ public sealed class WorldPlayerDataService
                 }
                 catch (Exception)
                 {
-                    // A damaged player file must not prevent the rest of the world from being managed.
+                    
                 }
             }
         }

@@ -1,14 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PeNet.Header.ImpHash;
 
-/// <summary>
-///     This class is used by the ImportHash implementation to lookup
-///     some names for functions where only an ordinal is given.
-///     This is the case in the original ImportHash implementation so we
-///     do the same here.
-/// </summary>
 internal static class OrdinalSymbolMapping
 {
     public enum Module

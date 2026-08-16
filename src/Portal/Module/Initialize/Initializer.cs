@@ -26,6 +26,7 @@ public static partial class Initializer
     {
         Logger.Info("开始初始化基岩版包导入服务");
         Config.Initialize();
+        ShortcutManager.Initialize();
         Logger.Info("基岩版包导入服务初始化完成");
     }
 
@@ -33,6 +34,7 @@ public static partial class Initializer
     {
         Logger.Info("开始初始化应用服务");
         Config.Initialize();
+        ShortcutManager.Initialize();
         BedrockNetworkConfiguration.Configure(Data.ConfigEntry.DisableSystemProxy,
             Data.ConfigEntry.EnableProxyServer ? Data.ConfigEntry.ProxyServer : null, Data.Instance.UserAgent,
             Data.ConfigEntry.EnableGithubMirror, Data.ConfigEntry.GithubMirrorUrl,

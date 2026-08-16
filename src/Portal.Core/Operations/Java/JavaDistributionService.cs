@@ -24,9 +24,6 @@ public sealed record JavaInstallProgress(string Stage, double? Fraction, long Do
 
 public delegate void JavaInstallProgressHandler(JavaInstallProgress progress);
 
-/// <summary>
-/// JetBrains JDK feed client. The feed is the same multi-vendor catalog used by Axolotl.
-/// </summary>
 public static class JavaDistributionService
 {
     private const string FeedUrl = "https://download.jetbrains.com/jdk/feed/v1/jdks.json.xz";

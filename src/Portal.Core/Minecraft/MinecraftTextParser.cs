@@ -3,9 +3,6 @@ using System.Text;
 
 namespace Portal.Core.Minecraft;
 
-/// <summary>
-/// Minecraft 富文本的一段:文本内容与格式。
-/// </summary>
 public sealed class MinecraftTextSegment
 {
     public required string Text { get; init; }
@@ -17,11 +14,6 @@ public sealed class MinecraftTextSegment
     public bool Obfuscated { get; init; }
 }
 
-/// <summary>
-/// 解析 Minecraft 文本格式码:<c>§0-9a-f</c> 传统颜色、<c>§k/l/m/n/o/r</c> 格式、
-/// <c>§x§R§R§G§G§B§B</c> 与 <c>#RRGGBB</c> 十六进制颜色。
-/// 参考 PCL-CE 的 MotdRenderer 与 SetColorfulTextLab 实现。
-/// </summary>
 public static class MinecraftTextParser
 {
     private static readonly string[] LegacyColors =
@@ -102,7 +94,7 @@ public static class MinecraftTextParser
                         bold = italic = underline = strikethrough = obfuscated = false;
                         break;
                     case 'x':
-                        // §x§R§R§G§G§B§B,共 12 个字符
+                        
                         if (i + 12 < text.Length && TryReadRgbCode(text, i + 1, out var hex))
                         {
                             color = $"#{hex}";

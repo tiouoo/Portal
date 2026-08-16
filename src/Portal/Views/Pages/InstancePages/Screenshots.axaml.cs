@@ -213,7 +213,7 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged, IDisposa
         }
         catch (IOException)
         {
-            // A file held by another process should remain visible rather than desynchronizing the gallery.
+            
         }
         catch (UnauthorizedAccessException)
         {
@@ -250,7 +250,7 @@ public sealed class ScreenshotItem(string filePath, string fileName)
     public string FilePath { get; } = filePath;
     public string FileName { get; } = fileName;
 
-    // The loader runs off the UI thread and decodes only enough pixels for the gallery tile.
+    
     public IAsyncImageLoader ImageLoader { get; } = new LocalImageLoader(480);
 
     public static bool IsSupported(string path) => Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".webp" or ".bmp";

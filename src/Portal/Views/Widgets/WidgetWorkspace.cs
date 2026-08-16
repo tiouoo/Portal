@@ -42,7 +42,7 @@ public class WidgetWorkspace : UserControl
     {
         _canvas = new Canvas
         {
-            // Margin = new Thickness(WidgetGeometry.Spacing),
+            
             Background = new SolidColorBrush(Colors.Transparent)
         };
         Content = _canvas;
@@ -126,7 +126,7 @@ public class WidgetWorkspace : UserControl
         };
         _widgetContextMenu.Items.Add(memoryModeItem);
 
-        // 新闻过滤：全部 / 仅 Java 版 / 仅基岩版
+        
         var newsFilterMenu = new MenuItem
         {
             Header = "新闻过滤",
@@ -281,8 +281,7 @@ public class WidgetWorkspace : UserControl
         SaveLayout();
     }
 
-    /// <summary>为当前图片小组件弹出文件选择器更换图片。</summary>
-    private async Task ChangeImageAsync()
+        private async Task ChangeImageAsync()
     {
         if (_contextMenuWidget?.WidgetContent is not ImageViewWidget img)
             return;
@@ -341,14 +340,12 @@ public class WidgetWorkspace : UserControl
         UpdateCanvasSize();
     }
 
-    /// <summary>添加组件，自动放到最近的空闲位置。</summary>
-    public WidgetHost? AddWidget(WidgetKind kind)
+        public WidgetHost? AddWidget(WidgetKind kind)
     {
         return AddWidget(kind, null);
     }
 
-    /// <summary>添加组件并应用模板布局数据中的配置字段（实例、世界、服务器等），自动放到最近的空闲位置。</summary>
-    public WidgetHost? AddWidget(WidgetKind kind, WidgetLayoutData? template)
+        public WidgetHost? AddWidget(WidgetKind kind, WidgetLayoutData? template)
     {
         if (_canvas == null)
             return null;
@@ -433,7 +430,7 @@ public class WidgetWorkspace : UserControl
         if (source == null)
             return;
 
-        // 按钮与缩放手柄自行处理交互，不参与拖拽
+        
         if (source.FindAncestorOfType<Button>() != null)
             return;
         if (source.FindAncestorOfType<WidgetHost>()?.IsResizeHandleArea(source) == true)
@@ -505,7 +502,7 @@ public class WidgetWorkspace : UserControl
             return;
         }
 
-        // 未发生拖动时视为点击，交给组件内容自行处理（例如打开详情页）。
+        
         if (_pendingDragHost is { } clickedHost)
         {
             _pendingDragHost = null;

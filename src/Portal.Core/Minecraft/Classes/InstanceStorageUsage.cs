@@ -3,9 +3,6 @@ using Portal.Core.Minecraft.Instance.Bedrock;
 
 namespace Portal.Core.Minecraft.Classes;
 
-/// <summary>
-/// Lazily calculated storage usage for one Minecraft instance.
-/// </summary>
 public partial class InstanceStorageUsage : ObservableObject
 {
     private readonly MinecraftInstance _instance;
@@ -240,11 +237,11 @@ public partial class InstanceStorageUsage : ObservableObject
                 }
                 catch (IOException)
                 {
-                    // Ignore files changed or removed while scanning.
+                    
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    // Ignore files the current user cannot inspect.
+                    
                 }
             }
         }

@@ -11,8 +11,8 @@ internal static class CacheDatabase
 {
     private static readonly object InitializationLock = new();
 
-    // 内存里只保留最近使用的一部分条目：SQLite 才是数据源，缓存未命中只是多查一次数据库，
-    // 而无上限的字典会随着扫描过的模组数量一直增长。
+    
+    
     private const int ModCacheCapacity = 4096;
     private static readonly LruCache<uint, ModCacheEntry?> ModCache = new(ModCacheCapacity);
 
@@ -169,8 +169,8 @@ internal static class CacheDatabase
             using var transaction = connection.BeginTransaction();
             using var command = connection.CreateCommand();
             command.Transaction = transaction;
-            // fingerprint and sha1 have independent unique constraints. Remove any stale rows
-            // matched by either key before creating their single canonical cache entry.
+            
+            
             command.CommandText = "DELETE FROM mod_cache WHERE fingerprint = $fingerprint OR sha1 = $sha1;";
             command.Parameters.AddWithValue("$fingerprint", (long)fingerprint);
             command.Parameters.AddWithValue("$sha1", sha1);
@@ -297,10 +297,7 @@ internal static class CacheDatabase
         }
     }
 
-    /// <summary>
-    /// 读取单条新闻详情正文缓存。仅在用户实际打开新闻详情时调用。
-    /// </summary>
-    public static NewsDetail? ReadNewsDetail(string id)
+        public static NewsDetail? ReadNewsDetail(string id)
     {
         try
         {
@@ -338,8 +335,7 @@ internal static class CacheDatabase
         }
     }
 
-    /// <summary>写入/更新一条新闻详情正文缓存。</summary>
-    public static void WriteNewsDetail(NewsDetail detail)
+        public static void WriteNewsDetail(NewsDetail detail)
     {
         try
         {

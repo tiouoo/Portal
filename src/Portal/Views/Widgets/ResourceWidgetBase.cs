@@ -7,11 +7,6 @@ using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
-/// <summary>
-/// 系统资源占用小组件的基类。负责订阅 <see cref="SystemResourceService"/> 数据更新，
-/// 并将数据转换为 UI 可绑定的属性（标题、主显示文本、副文本、百分比、进度值等）。
-/// 子类只需重写 <see cref="OnUpdate"/> 填充数据即可复用所有尺寸的页面。
-/// </summary>
 public abstract partial class ResourceWidgetBase : IWidgetContent
 {
     public static readonly DirectProperty<ResourceWidgetBase, string> TitleProperty =
@@ -59,8 +54,7 @@ public abstract partial class ResourceWidgetBase : IWidgetContent
     private bool _isLoading = true;
     public bool IsLoading { get => _isLoading; set => SetAndRaise(IsLoadingProperty, ref _isLoading, value); }
 
-    /// <summary>资源类型标识，用于右键菜单等场景区分组件类型。</summary>
-    public abstract ResourceKind ResourceKind { get; }
+        public abstract ResourceKind ResourceKind { get; }
 
     protected ResourceWidgetBase(WidgetCellSize size)
     {
@@ -73,7 +67,7 @@ public abstract partial class ResourceWidgetBase : IWidgetContent
         SystemResourceService.Instance.Updated += OnServiceUpdated;
         Unloaded += (_, _) => SystemResourceService.Instance.Updated -= OnServiceUpdated;
 
-        // 立即用已有快照刷新一次
+        
         OnServiceUpdated(SystemResourceService.Instance, SystemResourceService.Instance.Latest);
     }
 
@@ -86,11 +80,9 @@ public abstract partial class ResourceWidgetBase : IWidgetContent
         });
     }
 
-    /// <summary>子类重写：从数据快照更新 UI 绑定属性。</summary>
-    protected abstract void OnUpdate(ResourceSnapshot snapshot);
+        protected abstract void OnUpdate(ResourceSnapshot snapshot);
 
-    /// <summary>根据尺寸创建对应的视图控件，DataContext 设为 this。</summary>
-    private UserControl CreateView(WidgetCellSize size)
+        private UserControl CreateView(WidgetCellSize size)
     {
         UserControl view = size switch
         {
@@ -104,7 +96,6 @@ public abstract partial class ResourceWidgetBase : IWidgetContent
     }
 }
 
-/// <summary>资源组件类型枚举。</summary>
 public enum ResourceKind
 {
     Cpu,

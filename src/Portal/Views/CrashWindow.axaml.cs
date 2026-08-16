@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -39,7 +39,7 @@ public partial class CrashWindow : TioWindow
     {
         try
         {
-            // 崩溃窗口保留缩放（最大化）按钮，因此不调用 HideZoomButton
+            
             TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 14, y: 2,
                 spacing: 20);
         }

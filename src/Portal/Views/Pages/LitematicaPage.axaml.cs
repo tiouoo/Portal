@@ -27,8 +27,8 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-// [AggregatedSearchPage("投影文件解析", "投影文件解析", "Litematica")]
-// [DefaultPage("投影文件解析")]
+
+
 public partial class LitematicaPage : UserControl, ITioTabPage
 {
     private readonly LitematicaPageViewModel _vm;
@@ -51,7 +51,7 @@ public partial class LitematicaPage : UserControl, ITioTabPage
 
     public void OnClose()
     {
-        // 分析结果可能包含数十万条方块数据，关闭标签页时立刻释放。
+        
         _vm.Release();
         DataContext = null;
     }
@@ -94,10 +94,7 @@ public partial class LitematicaPageViewModel : ObservableObject
     private AnalysisResult? _analysisResult;
     private string? _projectName;
 
-    /// <summary>
-    /// 释放解析结果与方块列表。
-    /// </summary>
-    public void Release()
+        public void Release()
     {
         _analysisResult = null;
         _projectName = null;

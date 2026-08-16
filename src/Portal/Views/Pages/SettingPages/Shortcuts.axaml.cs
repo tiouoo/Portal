@@ -24,7 +24,7 @@ public partial class Shortcuts : DataUserControl
     {
         InitializeComponent();
         DataContext = new ShortcutsViewModel();
-        // 页面可能被设置页缓存后复用，重新可见时刷新展示的快捷键
+        
         Loaded += (_, _) => ViewModel.RefreshAllFromConfig();
     }
 
@@ -49,15 +49,13 @@ public partial class ShortcutsViewModel : ObservableObject
 
     public Data Data => Data.Instance;
 
-    /// <summary>按当前搜索条件过滤后的分组。</summary>
-    public ObservableCollection<ShortcutCategoryViewModel> Categories { get; } = [];
+        public ObservableCollection<ShortcutCategoryViewModel> Categories { get; } = [];
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
-    /// <summary>快捷键配置变化（录制、恢复默认、清除等）后同步到页面。</summary>
-    public void RefreshAllFromConfig()
+        public void RefreshAllFromConfig()
     {
         foreach (var category in Categories)
         {
@@ -105,11 +103,9 @@ public partial class ShortcutItemViewModel : ObservableObject
     public partial KeyGesture? Gesture { get; set; }
     [ObservableProperty] public partial bool IsNotDefault { get; set; }
 
-    /// <summary>当前没有设置快捷键时显示“（无）”占位。</summary>
-    public bool IsEmpty => Gesture is null;
+        public bool IsEmpty => Gesture is null;
 
-    /// <summary>输入框录制到新组合键时，写回配置。</summary>
-    partial void OnGestureChanged(KeyGesture? value)
+        partial void OnGestureChanged(KeyGesture? value)
     {
         if (_suppressWriteBack) return;
         Data.ConfigEntry.Shortcuts.SetGesture(Action,
@@ -117,14 +113,13 @@ public partial class ShortcutItemViewModel : ObservableObject
         ConfigSaver.SaveConfig();
     }
 
-    /// <summary>按操作名称、当前快捷键或其拼音/首字母模糊匹配搜索。</summary>
-    public bool Matches(string query)
+        public bool Matches(string query)
     {
         if (string.IsNullOrWhiteSpace(query)) return true;
         var gestureText = Gesture?.ToString("g", null) ?? "未设置";
         var text = $"{DisplayName} {gestureText}";
         if (MatchesToken(query, text)) return true;
-        // 空格分隔的多个关键词，命中任意一个即算匹配，例如“打开 下载”
+        
         return query.Split(' ', System.StringSplitOptions.RemoveEmptyEntries)
             .Any(token => MatchesToken(token, text));
     }

@@ -1,37 +1,18 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text;
 using PeNet.Crypto;
 using PeNet.Header.Pe;
 
 namespace PeNet.Header.ImpHash;
 
-/// <summary>
-///     Mandiant’s imphash convention requires the following:
-///     Resolving ordinals to function names when they appear.
-///     Converting both DLL names and function names to all lowercase.
-///     Removing the file extensions from imported module names.
-///     Building and storing the lowercased strings in an ordered list.
-///     Generating the MD5 hash of the ordered list.
-///     oleaut32, ws2_32 and wsock32 can resolve ordinals to functions names.
-///     The implementation is equal to the python module "pefile" 1.2.10-139
-///     https://code.google.com/p/pefile/
-/// </summary>
 public class ImportHash
 {
-    /// <summary>
-    ///     Create an import hash object from the imported functions of a
-    ///     PE file.
-    /// </summary>
-    /// <param name="importedFunctions"></param>
-    public ImportHash(ICollection<ImportFunction>? importedFunctions)
+        public ImportHash(ICollection<ImportFunction>? importedFunctions)
     {
         ImpHash = importedFunctions is null ? null : ComputeImpHash(importedFunctions);
     }
 
-    /// <summary>
-    ///     The import hash of the PE file as a string.
-    /// </summary>
-    public string? ImpHash { get; }
+        public string? ImpHash { get; }
 
 
     private static string? ComputeImpHash(ICollection<ImportFunction> importedFunctions)
@@ -48,10 +29,10 @@ public class ImportHash
             list.Add(tmp);
         }
 
-        // Concatenate all imports to one string separated by ','.
+        
         var imports = string.Join(",", list);
 
-        //var md5 = MD5.Create();
+        
         var inputBytes = Encoding.ASCII.GetBytes(imports);
         return Hash.ComputeHash(inputBytes, Algorithm.Md5);
     }
@@ -85,7 +66,7 @@ public class ImportHash
     private static string FormatFunctionName(ImportFunction impFunc)
     {
         var tmp = "";
-        if (impFunc.Name == null) // Import by ordinal
+        if (impFunc.Name == null) 
         {
             if (impFunc.DLL.ToLower() == "oleaut32.dll")
             {
@@ -99,13 +80,13 @@ public class ImportHash
             {
                 tmp += OrdinalSymbolMapping.Lookup(OrdinalSymbolMapping.Module.Wsock32, impFunc.Hint);
             }
-            else // cannot resolve ordinal to a function name
+            else 
             {
                 tmp += "ord";
                 tmp += impFunc.Hint.ToString();
             }
         }
-        else // Import by name
+        else 
         {
             tmp += impFunc.Name;
         }

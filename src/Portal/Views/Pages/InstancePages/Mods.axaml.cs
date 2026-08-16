@@ -39,7 +39,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private bool _isLoading;
     private bool _isLoadingMetadata;
     private bool _isDisposed;
-    private int _loadVersion; // 加载序号，防止并发刷新时旧的扫描结果覆盖新结果
+    private int _loadVersion; 
     private string _filter = string.Empty;
     private ResourceSortMode _sortMode = ResourceSortMode.FileName;
     private ResourceFilterMode _filterMode = ResourceFilterMode.All;
@@ -96,7 +96,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         InitializeFilterOptions();
         KeyBindings.Add(new KeyBinding()
         {
-            // 文本框聚焦时不拦截 Ctrl+A，保留全选文本的默认行为
+            
             Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),
             Gesture = KeyGesture.Parse("ctrl+A")
         });
@@ -301,7 +301,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
     private static string? DuplicateProjectKey(ModItem item)
     {
-        // 通过 API 元数据识别同一项目：来源 + 项目 ID 相同即为同一个模组（可能是不同版本的文件）
+        
         if (string.IsNullOrWhiteSpace(item.Info.Source) || string.IsNullOrWhiteSpace(item.Info.ProjectId))
             return null;
         return $"{item.Info.Source}|{item.Info.ProjectId}".ToLowerInvariant();
@@ -415,8 +415,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             return;
         }
 
-        // Source and project ID were restored from the installed file's metadata cache.
-        // ModDetailsPage fetches the current project record from that provider.
+        
+        
         ModDetailsPage.Open(topLevel, new ModDetailsTarget(detailSource.Value, projectId), item.FriendlyName);
     }
 
@@ -685,4 +685,4 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
     public void Dispose() => ImageLoader.Dispose();
 }
 
-// ModImageLoader 已移至 Portal.Module.Imaging，改用统一的磁盘缓存加载器。
+

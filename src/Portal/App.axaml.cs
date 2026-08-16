@@ -84,7 +84,10 @@ public partial class App : Application
         }
         
         if (BedrockPackagePath == null)
+        {
+            PortalCommandQueue.ExecutionHandler = PortalCommandExecutor.ExecuteAsync;
             PortalCommandQueue.Initialize();
+        }
         if (BedrockPackagePath == null && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
             activatableLifetime.Activated += OnActivated;
 
@@ -109,9 +112,9 @@ public partial class App : Application
         TextOptions.SetTextHintingMode(_win, TextHintingMode.Light);
         TextOptions.SetBaselinePixelAlignment(_win, BaselinePixelAlignment.Aligned);
         
-        // TextOptions.SetTextRenderingMode(this, TextRenderingMode.Unspecified);
-        // TextOptions.SetTextHintingMode(this, TextHintingMode.Unspecified);
-        // TextOptions.SetBaselinePixelAlignment(this, BaselinePixelAlignment.Unspecified);
+        
+        
+        
         
         desktop.MainWindow = _win;
         _win.Loaded += Function;
@@ -135,6 +138,7 @@ public partial class App : Application
         finally
         {
             _win.IsUiLoading = false;
+            PortalCommandQueue.MarkUiLoaded();
             UiLoaded?.Invoke(_win);
         }
     }

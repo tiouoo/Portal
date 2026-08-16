@@ -36,7 +36,7 @@ public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
             }
             catch (ArgumentException)
             {
-                // Unsupported or corrupt images remain openable from the gallery's context menu.
+                
             }
         }
 

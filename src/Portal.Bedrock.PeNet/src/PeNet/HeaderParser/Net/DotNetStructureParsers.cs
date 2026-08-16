@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using PeNet.FileParser;
 using PeNet.Header.Net;
 using PeNet.Header.Pe;
@@ -26,7 +26,7 @@ internal class DotNetStructureParsers
         _sectionHeaders = sectionHeaders;
         _imageCor20Header = imageCor20Header;
 
-        // Init all parsers
+        
         _metaDataHdrParser = InitMetaDataParser();
         _metaDataStreamStringParser = InitMetaDataStreamStringParser();
         _metaDataStreamUSParser = InitMetaDataStreamUSParser();

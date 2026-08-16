@@ -1,22 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace PeNet.Header.Authenticode;
 
-/// <summary>
-///     This class parses the Certificate Revocation Lists
-///     of a signing certificate. It provides access to all
-///     CRL URLs in the certificate.
-/// </summary>
 public class CrlUrlList
 {
-    /// <summary>
-    ///     Create a new CrlUrlList object.
-    /// </summary>
-    /// <param name="rawData">A byte array containing a X509 certificate</param>
-    public CrlUrlList(byte[] rawData)
+        public CrlUrlList(byte[] rawData)
     {
         Urls = new List<string>();
 
@@ -26,11 +17,7 @@ public class CrlUrlList
         ParseCrls(rawData);
     }
 
-    /// <summary>
-    ///     Create a new CrlUrlList object.
-    /// </summary>
-    /// <param name="cert">A X509 certificate object.</param>
-    public CrlUrlList(X509Certificate2 cert)
+        public CrlUrlList(X509Certificate2 cert)
     {
         Urls = new List<string>();
 
@@ -39,16 +26,13 @@ public class CrlUrlList
                 ParseCrls(ext.RawData);
     }
 
-    /// <summary>
-    ///     List with all CRL URLs.
-    /// </summary>
-    public List<string> Urls { get; }
+        public List<string> Urls { get; }
 
     private void ParseCrls(byte[] rawData)
     {
         var rawLength = rawData.Length;
         for (var i = 0; i < rawLength - 5; i++)
-            // Find a HTTP(s) string.
+            
             if ((rawData[i] == 'h'
                  && rawData[i + 1] == 't'
                  && rawData[i + 2] == 't'
@@ -107,12 +91,7 @@ public class CrlUrlList
     }
 
 
-    /// <summary>
-    ///     Create a string representation of all CRL in
-    ///     the list.
-    /// </summary>
-    /// <returns>CRL URLs.</returns>
-    public override string ToString()
+        public override string ToString()
     {
         var sb = new StringBuilder();
         sb.AppendLine("CRL URLs:");

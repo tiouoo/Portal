@@ -162,7 +162,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         IProgress<BedrockInstallProgress>? progress, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
-        // 与 FindBuildAsync 使用相同的筛选条件（含 MetaData），确保 MD5 与下载地址来自同一个变体。
+        
         var expectedMd5 = build.Variations
             .First(variation => variation.Arch == Architecture.X64 && variation.MetaData.Count > 0).MD5;
         if (string.IsNullOrWhiteSpace(expectedMd5))
@@ -195,7 +195,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
             }
             catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
-                // GDK may try another Xbox CDN host; UWP has only its original package URL.
+                
                 if (File.Exists(packagePath)) File.Delete(packagePath);
             }
         }
@@ -284,8 +284,8 @@ public sealed class BedrockInstaller : IBedrockInstaller
         }
         catch (Exception)
         {
-            // 单个镜像探测失败（超时、连接被重置、读取中断等）只应淘汰该镜像，
-            // 不能让异常穿透 Task.WhenAll 中断整个安装流程。
+            
+            
             return (url, 0);
         }
     }

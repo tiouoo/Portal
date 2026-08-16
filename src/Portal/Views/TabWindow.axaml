@@ -136,7 +136,7 @@
         </DockPanel>
     </tio:TioWindow.TitleBarRightContent>
     <Grid Background="Transparent">
-        <!--  ContentOrientation="Horizontal"  -->
+        
         <ScrollViewer
             Background="Transparent"
             Classes="Flat"
@@ -254,25 +254,25 @@
             <TransitioningContentControl.PageTransition>
                 <CompositePageTransition>
                     <CrossFade Duration="0:0:0.2" />
-                    <!-- <PageSlide Duration="0:0:0.3" Orientation="Vertical" /> -->
+                    
                 </CompositePageTransition>
             </TransitioningContentControl.PageTransition>
         </TransitioningContentControl>
-        <!--  <Border  -->
-        <!--  Background="{DynamicResource TranslucentBackgroundColor}"  -->
-        <!--  BorderBrush="{DynamicResource TranslucentBorderBrush}"  -->
-        <!--  BorderThickness="1"  -->
-        <!--  CornerRadius="10"  -->
-        <!--  HorizontalAlignment="Right"  -->
-        <!--  IsHitTestVisible="False"  -->
-        <!--  IsVisible="{Binding IsUiLoading}"  -->
-        <!--  Margin="0,10,18,0"  -->
-        <!--  Padding="12,7"  -->
-        <!--  VerticalAlignment="Top">  -->
-        <!--     <StackPanel Orientation="Horizontal" Spacing="8"> -->
-        <!--         <ProgressBar Height="14" IsIndeterminate="True" Width="50" /> -->
-        <!--         <TextBlock Text="正在加载本地数据" VerticalAlignment="Center" /> -->
-        <!--     </StackPanel> -->
-        <!-- </Border> -->
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </Grid>
 </tio:TioWindow>

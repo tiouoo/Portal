@@ -83,9 +83,9 @@ public partial class WidgetHost : UserControl
         if (definition?.SupportedSizes.Count is not > 0)
             return;
 
-        // 宽高独立取最小/最大值，支持「横向很长」与「纵向很长」并存的尺寸集合
-        // （例如 NewsWidget 同时有 6×1 与 2×6）。若用单一最大面积尺寸，
-        // MaxWidth 会被 2×6 的宽度卡住，导致无法拖拽到 6×1。
+        
+        
+        
         double minWidth = double.MaxValue, minHeight = double.MaxValue;
         double maxWidth = 0, maxHeight = 0;
         foreach (var size in definition.SupportedSizes)

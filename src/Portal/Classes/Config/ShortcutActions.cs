@@ -15,7 +15,6 @@ using TioUi.Shared;
 
 namespace Portal.Classes.Entries;
 
-/// <summary>一条可配置的快捷键操作定义。</summary>
 public sealed record ShortcutActionDefinition(
     ShortcutAction Action,
     string Category,
@@ -24,16 +23,11 @@ public sealed record ShortcutActionDefinition(
     Action<TabWindow> Execute,
     Func<bool>? Available = null)
 {
-    /// <summary>当前平台是否支持该操作（例如基岩版联机仅限 Windows）。</summary>
-    public bool IsAvailable => Available?.Invoke() ?? true;
+        public bool IsAvailable => Available?.Invoke() ?? true;
 }
 
-/// <summary>设置页中的分组。</summary>
 public sealed record ShortcutCategory(string Name, IReadOnlyList<ShortcutActionDefinition> Items);
 
-/// <summary>
-/// 快捷键操作目录：集中描述所有可绑定的操作、默认键位与执行逻辑。
-/// </summary>
 public static class ShortcutActions
 {
     public static IReadOnlyList<ShortcutActionDefinition> All { get; } = Build();
@@ -62,12 +56,10 @@ public static class ShortcutActions
     public static string? GetDefaultGesture(ShortcutAction action) =>
         All.First(definition => definition.Action == action).DefaultGesture;
 
-    /// <summary>从配置中读取某个操作当前保存的快捷键字符串。</summary>
-    public static string? GetStoredGesture(ShortcutAction action) =>
+        public static string? GetStoredGesture(ShortcutAction action) =>
         Data.ConfigEntry.Shortcuts.GetGesture(action);
 
-    /// <summary>把配置中的快捷键字符串解析为 <see cref="KeyGesture"/>；空或无效时返回 null。</summary>
-    public static KeyGesture? ParseGesture(string? gestureText)
+        public static KeyGesture? ParseGesture(string? gestureText)
     {
         if (string.IsNullOrWhiteSpace(gestureText)) return null;
         try
@@ -80,8 +72,7 @@ public static class ShortcutActions
         }
     }
 
-    /// <summary>把 <see cref="KeyGesture"/> 转换为可持久化的字符串。</summary>
-    public static string GestureToString(KeyGesture gesture) => gesture.ToString("g", null);
+        public static string GestureToString(KeyGesture gesture) => gesture.ToString("g", null);
 
     private static List<ShortcutActionDefinition> Build()
     {
@@ -145,7 +136,7 @@ public static class ShortcutActions
                 window => window.WindowState = WindowState.Minimized)
         };
 
-        // 切换到第 1~9 个标签页
+        
         ShortcutAction[] selectTabActions =
         [
             ShortcutAction.SelectTab1, ShortcutAction.SelectTab2, ShortcutAction.SelectTab3,

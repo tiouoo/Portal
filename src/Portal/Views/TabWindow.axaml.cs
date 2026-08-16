@@ -48,8 +48,8 @@ public partial class TabWindow : TioTabWindowBase
     private string? _cachedBackgroundPath;
     private string? _lastDragMessage;
 
-    // DragLeave 后不立即隐藏提示：快速拖出又拖回时会产生一次闪烁。
-    // 登记延时隐藏，若期间仍有 DragOver（拖放仍在窗口内）则取消，真正拖出后才消失。
+    
+    
     private bool _hideDropTipScheduled;
     private Debouncer _hideDropTipDebouncer;
 
@@ -59,11 +59,7 @@ public partial class TabWindow : TioTabWindowBase
         set => SetField(ref field, value);
     }
 
-    /// <summary>
-    ///     点击标题栏关闭按钮时触发：若当前仅剩一个 TabWindow，则直接退出程序；
-    ///     否则只关闭当前窗口。
-    /// </summary>
-    public override bool OnClose()
+        public override bool OnClose()
     {
         if (AllWindows.Count == 1)
         {
@@ -91,7 +87,7 @@ public partial class TabWindow : TioTabWindowBase
         _hideDropTipDebouncer = new Debouncer(OnHideDropTipDebounce, 300);
         InitializeComponent();
 
-        // 恢复上一次用户调整过的窗口大小（仅作用于 TabWindow，其他窗口不受影响）。
+        
         if (Data.ConfigEntry.HasTabWindowSize)
         {
             Width = Math.Max(Data.ConfigEntry.TabWindowWidth, MinWidth);
@@ -221,7 +217,7 @@ public partial class TabWindow : TioTabWindowBase
             {
                 TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 16, y: -3,
                     spacing: 23);
-                // TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(nsWindow);
+                
             }
             catch (Exception exception)
             {
@@ -239,7 +235,7 @@ public partial class TabWindow : TioTabWindowBase
         {
             TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, x: 16, y: -3,
                 spacing: 23);
-            // TioUi.Common.Helpers.MacOsWindowHandler.HideZoomButton(_macOsWindowHandle);
+            
         }
         catch (Exception exception)
         {
@@ -257,7 +253,7 @@ public partial class TabWindow : TioTabWindowBase
 
         _macOsWindowHandle = IntPtr.Zero;
 
-        // 拖拽行为持有窗口与标签页容器，必须显式分离，否则整个窗口无法被回收。
+        
         TabSelectionList.DisableTabDragDrop();
 
         this.RemoveHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
@@ -289,12 +285,7 @@ public partial class TabWindow : TioTabWindowBase
         }
     }
 
-    /// <summary>
-    ///     记录用户对 TabWindow 的调整大小结果，作为之后新建 TabWindow 的默认大小。
-    ///     只响应用户拖动缩放（<see cref="WindowResizeReason.User"/>），最大化/最小化/DPI 变化等不计入；
-    ///     存在多个 TabWindow 时，最后一次被调整的窗口大小即为新窗口的大小。
-    /// </summary>
-    private void TabWindow_OnResized(object? sender, WindowResizedEventArgs e)
+        private void TabWindow_OnResized(object? sender, WindowResizedEventArgs e)
     {
         if (WindowState == WindowState.Maximized || WindowState == WindowState.Minimized) return;
         if (e.Reason != WindowResizeReason.User) return;
@@ -310,7 +301,7 @@ public partial class TabWindow : TioTabWindowBase
 
     public void OpenAggregatedSearchDialog()
     {
-        // 文本框聚焦时不触发聚合搜索，避免劫持正常的大写字母输入
+        
         if (FocusManager?.GetFocusedElement() is TextBox or Avalonia.Controls.AutoCompleteBox
             or TioUi.Controls.AutoCompleteBox)
             return;
@@ -337,14 +328,13 @@ public partial class TabWindow : TioTabWindowBase
 
     private void Keys()
     {
-        // TioTabWindowBase 内置的 Ctrl+T / Ctrl+W / Ctrl+Shift+W 由快捷键管理器统一接管，
-        // 以便用户能在设置中修改或禁用这些默认快捷键。
+        
+        
         RemoveDefaultWindowKeyBindings();
         ShortcutManager.Apply(this);
     }
 
-    /// <summary>移除基类 TioTabWindowBase 构造时注册的默认快捷键，改为按配置注册。</summary>
-    private void RemoveDefaultWindowKeyBindings()
+        private void RemoveDefaultWindowKeyBindings()
     {
         var toRemove = KeyBindings
             .Where(binding => binding.Gesture is KeyGesture gesture && IsDefaultWindowGesture(gesture))
@@ -358,8 +348,7 @@ public partial class TabWindow : TioTabWindowBase
         (gesture.Key == Key.W && gesture.KeyModifiers == KeyModifiers.Control) ||
         (gesture.Key == Key.W && gesture.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift));
 
-    /// <summary>在当前窗口打开一个新标签页。</summary>
-    public void OpenPage(ITioTabPage page)
+        public void OpenPage(ITioTabPage page)
     {
         var tab = new TabEntry(this, page);
         CreateTab(tab);
@@ -382,8 +371,7 @@ public partial class TabWindow : TioTabWindowBase
             new CreateInstanceDialogViewModel(), this.TryGetHostId(), options);
     }
 
-    /// <summary>打开“添加 Minecraft 游戏文件夹”对话框，选择并添加游戏目录。</summary>
-    public async void OpenAddMinecraftFolderDialog()
+        public async void OpenAddMinecraftFolderDialog()
     {
         var options = new OverlayDialogOptions
         {
@@ -464,7 +452,7 @@ public partial class TabWindow : TioTabWindowBase
     {
         DragDrop.SetAllowDrop(this, true);
 
-        // this.AddHandler(DragDrop.DragEnterEvent, OnDragHandler);
+        
         this.AddHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
         this.AddHandler(DragDrop.DragOverEvent, OnDragHandler);
         this.AddHandler(DragDrop.DropEvent, OnDropHandler);
@@ -472,12 +460,12 @@ public partial class TabWindow : TioTabWindowBase
 
     private void OnDragHandler(object? sender, DragEventArgs e)
     {
-        // 拖放仍在窗口内：取消 DragLeave 登记的延时隐藏，提示不闪。
+        
         _hideDropTipScheduled = false;
 
         var msg = Handler.GetMsg(e);
-        // DragOver 在鼠标移动的每一帧都会触发，且个别事件里数据可能尚未就绪（msg 为 null）。
-        // 只有提示文案真正变化时才更新标题栏，避免提示标签反复闪烁。
+        
+        
         if (string.IsNullOrEmpty(msg) || msg == _lastDragMessage) return;
         _lastDragMessage = msg;
         BarComponent.DropMsg = msg;
@@ -486,16 +474,15 @@ public partial class TabWindow : TioTabWindowBase
     private void OnLeaveHandler(object? sender, DragEventArgs e)
     {
         e.DragEffects = DragDropEffects.None;
-        // 不立即隐藏（快速拖出又拖回会闪）：登记延时隐藏，真正拖出窗口后才消失。
-        // 不重置识别缓存：同一内容拖回可立即复用上一次识别结果，不会长时间空白。
+        
+        
         _hideDropTipScheduled = true;
         _hideDropTipDebouncer.Invoke();
     }
 
-    /// <summary>真正离开窗口后（约 300ms 无 DragOver）才隐藏提示；期间收到 DragOver 则取消。</summary>
-    private void OnHideDropTipDebounce()
+        private void OnHideDropTipDebounce()
     {
-        // System.Timers.Timer 在后台线程回调，必须切回 UI 线程再改界面属性。
+        
         Dispatcher.UIThread.Post(() =>
         {
             if (!_hideDropTipScheduled) return;
@@ -628,19 +615,19 @@ public partial class TabWindow : TioTabWindowBase
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
                 break;
 
-            // case BackgroundMode.Blur:
-            //     ClearOriginalBackgroundCache();
-            //     ClearBackgroundLayers();
-            //     var blurColor = entry.BackgroundSolidColor;
-            //     var blurAlpha = (byte)(entry.BlurOpacity * 255);
-            //     var blurBrush = new SolidColorBrush(Color.FromArgb(blurAlpha, blurColor.R, blurColor.G, blurColor.B));
-            //     Background = Brushes.Transparent;
-            //     if (RootBorder != null)
-            //         RootBorder.Background = blurBrush;
-            //     TransparencyBackgroundFallback =
-            //         new SolidColorBrush(Color.FromArgb(255, blurColor.R, blurColor.G, blurColor.B));
-            //     TransparencyLevelHint = new[] { WindowTransparencyLevel.Blur };
-            //     break;
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
             case BackgroundMode.Mica:
                 ClearOriginalBackgroundCache();
@@ -677,12 +664,7 @@ public partial class TabWindow : TioTabWindowBase
         }
     }
 
-    /// <summary>
-    ///     将模板中的 DockPanel 包装进 Panel，并插入背景 Image 层与遮罩 Border 层。
-    ///     背景图 Image 应用 BlurEffect（GPU 实时模糊），遮罩 Border 覆盖其上、内容之下。
-    ///     若根内容已被缩放服务包进 LayoutTransformControl，则在其内部完成包装。
-    /// </summary>
-    private void EnsureBackgroundLayers()
+        private void EnsureBackgroundLayers()
     {
         if (RootBorder == null) return;
         if (_backgroundImageLayer != null) return;

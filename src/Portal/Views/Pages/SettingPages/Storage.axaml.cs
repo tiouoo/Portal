@@ -144,7 +144,7 @@ public partial class StorageViewModel : ObservableObject
                 }
 
                 var gameBytes = totalGameBytes;
-                // 后台线程只负责计算，绑定属性的赋值必须切回 UI 线程
+                
                 Dispatcher.UIThread.Post(() =>
                 {
                     PortalBytesRaw = portalBytes;

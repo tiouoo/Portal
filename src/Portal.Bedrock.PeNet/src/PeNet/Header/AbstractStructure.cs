@@ -1,30 +1,14 @@
-﻿using PeNet.FileParser;
+using PeNet.FileParser;
 
 namespace PeNet.Header;
 
-/// <summary>
-///     Abstract class for a Windows structure.
-/// </summary>
 public abstract class AbstractStructure
 {
-    /// <summary>
-    ///     The offset to the structure in the buffer.
-    /// </summary>
-    internal readonly long Offset;
+        internal readonly long Offset;
 
-    /// <summary>
-    ///     A PE file.
-    /// </summary>
-    internal readonly IRawFile PeFile;
-
-
-    /// <summary>
-    ///     Creates a new AbstractStructure which holds fields
-    ///     that all structures have in common.
-    /// </summary>
-    /// <param name="peFile">A PE file.</param>
-    /// <param name="offset">The offset to the structure in the buffer.</param>
-    protected AbstractStructure(IRawFile peFile, long offset)
+        internal readonly IRawFile PeFile;
+        
+        protected AbstractStructure(IRawFile peFile, long offset)
     {
         PeFile = peFile;
         Offset = offset;

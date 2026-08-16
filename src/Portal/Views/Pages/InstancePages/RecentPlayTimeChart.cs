@@ -104,7 +104,7 @@ public sealed class RecentPlayTimeChart : Control
         base.Render(context);
 
         var bounds = Bounds;
-        // A transparent fill makes the full chart surface available for pointer input.
+        
         context.DrawRectangle(Brushes.Transparent, null, bounds);
         var graphWidth = bounds.Width - LeftPadding - RightPadding;
         var graphHeight = bounds.Height - TopPadding - BottomPadding;

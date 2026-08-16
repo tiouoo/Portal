@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using PeNet.Header.Pe;
 
@@ -6,13 +6,7 @@ namespace PeNet;
 
 public partial class PeFile
 {
-    /// <summary>
-    ///     Add a new section to the PE file.
-    /// </summary>
-    /// <param name="name">Name of the section to add. At max. 8 characters.</param>
-    /// <param name="unalignedSize">Size in bytes of the new section.</param>
-    /// <param name="characteristics">Section characteristics.</param>
-    public void AddSection(string name, byte[] unalignedSize, ScnCharacteristicsType characteristics)
+        public void AddSection(string name, byte[] unalignedSize, ScnCharacteristicsType characteristics)
     {
         if (ImageNtHeaders is null)
             throw new Exception("IMAGE_NT_HEADERS must not be null.");
@@ -48,17 +42,17 @@ public partial class PeFile
             return (uint)(Math.Ceiling(factor) * ImageNtHeaders!.OptionalHeader.FileAlignment);
         }
 
-        // New raw section size, aligned to FileAlignment
+        
         var newRawSectionSize = GetNewRawSecSize();
 
 
-        // Append new section to end of file
+        
         RawFile.AppendBytes(unalignedSize);
-        // IMAGE_SECTION_HEADER SizeOfRawData必须是 OptionalHeader  FileAlighment整数倍
+        
         RawFile.AppendBytes(new byte[newRawSectionSize - unalignedSize.Length]);
         var paNewSec = ImageSectionHeaders!.Last().PointerToRawData + ImageSectionHeaders!.Last().SizeOfRawData;
 
-        // Add new entry in section table
+        
         var newSection =
             new ImageSectionHeader(RawFile, GetNewSecHeaderOffset(), ImageNtHeaders.OptionalHeader.ImageBase)
             {
@@ -74,13 +68,13 @@ public partial class PeFile
                 Characteristics = characteristics
             };
 
-        // Increase number of sections
+        
         ImageNtHeaders.FileHeader.NumberOfSections = (ushort)(ImageNtHeaders.FileHeader.NumberOfSections + 1);
 
-        // Adjust image size by image alignment
+        
         ImageNtHeaders.OptionalHeader.SizeOfImage = GetNewSizeOfImage();
 
-        // Reparse section headers
+        
         _nativeStructureParsers.ReparseSectionHeaders();
     }
 
@@ -90,47 +84,42 @@ public partial class PeFile
         AddSection(name, new byte[unalignedSize], characteristics);
     }
 
-    /// <summary>
-    ///     Remove a section from the PE file.
-    /// </summary>
-    /// <param name="name">Name of the section to remove.</param>
-    /// <param name="removeContent">Flag if the content should be removed or only the section header entry.</param>
-    public void RemoveSection(string name, bool removeContent = true)
+        public void RemoveSection(string name, bool removeContent = true)
     {
         var sectionToRemove =
             (ImageSectionHeaders ?? throw new InvalidOperationException("ImageSectionHeaders must not be null."))
             .First(s => s.Name == name);
 
-        // Remove section from list of sections
+        
         var newSections = ImageSectionHeaders.Where(s => s.Name != name).ToArray();
 
-        // Change number of sections in the file header
+        
         ImageNtHeaders!.FileHeader.NumberOfSections--;
 
         if (removeContent)
         {
-            // Reloc the physical address of all sections
+            
             foreach (var s in newSections)
                 if (s.PointerToRawData > sectionToRemove.PointerToRawData)
                     s.PointerToRawData -= sectionToRemove.SizeOfRawData;
 
-            // Remove section content
+            
             RawFile.RemoveRange(sectionToRemove.PointerToRawData, sectionToRemove.SizeOfRawData);
         }
 
-        // Fix virtual size
+        
         for (var i = 1; i < newSections.Length; i++)
             if (newSections[i - 1].VirtualAddress < sectionToRemove.VirtualAddress)
                 newSections[i - 1].VirtualSize = newSections[i].VirtualAddress - newSections[i - 1].VirtualAddress;
 
-        // Replace old section headers with new section headers
+        
         var sectionHeaderOffset = ImageDosHeader!.E_lfanew + ImageNtHeaders!.FileHeader.SizeOfOptionalHeader + 0x18;
         var sizeOfSection = 0x28;
         var newRawSections = new byte[newSections.Length * sizeOfSection];
         for (var i = 0; i < newSections.Length; i++)
             Array.Copy(newSections[i].ToArray(), 0, newRawSections, i * sizeOfSection, sizeOfSection);
 
-        // Null the data directory entry if any available
+        
         var de = ImageNtHeaders
             .OptionalHeader
             .DataDirectory
@@ -143,13 +132,13 @@ public partial class PeFile
             de.VirtualAddress = 0;
         }
 
-        // Null the old section headers
+        
         RawFile.WriteBytes(sectionHeaderOffset, new byte[ImageSectionHeaders.Length * sizeOfSection]);
 
-        // Write the new sections headers
+        
         RawFile.WriteBytes(sectionHeaderOffset, newRawSections);
 
-        // Reparse section header
+        
         _nativeStructureParsers.ReparseSectionHeaders();
     }
 }

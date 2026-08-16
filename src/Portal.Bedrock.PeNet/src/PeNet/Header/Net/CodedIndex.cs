@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using static PeNet.Header.Net.MetaDataTablesHdr;
 
@@ -92,7 +92,7 @@ public class IndexSize
     {
         _index = new Dictionary<Index, IMetaDataIndex>
         {
-            // Single Indices
+            
             { Index.MethodDef, new SingleIndex(MetadataToken.MethodDef, tables) },
             { Index.Field, new SingleIndex(MetadataToken.Field, tables) },
             { Index.Param, new SingleIndex(MetadataToken.Parameter, tables) },
@@ -103,7 +103,7 @@ public class IndexSize
             { Index.AssemblyRef, new SingleIndex(MetadataToken.AssemblyReference, tables) },
             { Index.GenericParam, new SingleIndex(MetadataToken.GenericParameter, tables) },
 
-            // Coded Indices
+            
             {
                 Index.TypeDefOrRef,
                 new CodedIndex(tables, (byte)MetadataToken.TypeDef, (byte)MetadataToken.TypeReference,

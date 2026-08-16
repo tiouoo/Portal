@@ -3,24 +3,13 @@ using PeNet.FileParser;
 
 namespace PeNet.Header.Resource;
 
-/// <summary>
-///     Information about Icons.
-/// </summary>
 public class Icon : AbstractStructure
 {
     private const uint IcoHeaderSize = 6;
     private const uint IcoDirectorySize = 16;
     private static readonly byte[] PNGHeader = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
-    /// <summary>
-    ///     Creates a new Icon instance and sets Size and ID.
-    /// </summary>
-    /// <param name="peFile">A PE file.</param>
-    /// <param name="offset">Offset of the Icon image in the PE file.</param>
-    /// <param name="size">Size of the Icon image in the PE file.</param>
-    /// <param name="id">ID of the Icon.</param>
-    /// <param name="parent">Resources parent of the Icon</param>
-    public Icon(IRawFile peFile, long offset, uint size, uint id, Resources parent)
+        public Icon(IRawFile peFile, long offset, uint size, uint id, Resources parent)
         : base(peFile, offset)
     {
         Size = size;
@@ -36,24 +25,16 @@ public class Icon : AbstractStructure
     private bool IsPng => AsRawSpan().Length >= 8 && AsRawSpan().Slice(0, 8).SequenceEqual(PNGHeader);
     private bool IsTooShort => AsRawSpan().IsEmpty || AsRawSpan().Length <= 32;
 
-    /// <summary>
-    ///     Byte span of the icon image.
-    /// </summary>
-    public Span<byte> AsRawSpan()
+        public Span<byte> AsRawSpan()
     {
         return PeFile.AsSpan(Offset, Size);
     }
 
-    /// <summary>
-    ///     Adding .ICO-Header to the bytes of the icon image.
-    ///     Reference: https://docs.fileformat.com/image/ico/
-    /// </summary>
-    /// <returns>Bytes of the icon image as .ICO file.</returns>
-    public byte[]? AsIco()
+        public byte[]? AsIco()
     {
         var raw = AsRawSpan();
 
-        if (IsPng) return raw.ToArray(); // No additional header is needed for .PNG.
+        if (IsPng) return raw.ToArray(); 
         if (IsTooShort) return null;
 
         var header = GenerateIcoHeader();
@@ -78,23 +59,23 @@ public class Icon : AbstractStructure
     private byte[] GenerateIcoDirectory()
     {
         var directory = new byte[IcoDirectorySize];
-        directory[0] = AsRawSpan()[4]; //Width
+        directory[0] = AsRawSpan()[4]; 
         directory[1] =
             AsRawSpan()
-                [4]; //Height (Icons are always square)// We can't take the height value of the BITMAPINFOHEADER, as this also takes the opacity mask of the image into account.
+                [4]; 
 
-        directory[2] = AsRawSpan()[32]; //Number of Colors in color palette
-        directory[3] = 0x00; //Res
+        directory[2] = AsRawSpan()[32]; 
+        directory[3] = 0x00; 
 
-        directory[4] = AsRawSpan()[12]; //Color planes (=1 for .BMP as done by CFF) (Can be set to =0 without problem)
+        directory[4] = AsRawSpan()[12]; 
         directory[5] = 0x00;
 
-        directory[6] = AsRawSpan()[14]; //Bit per Pixel  
+        directory[6] = AsRawSpan()[14]; 
         directory[7] = 0x00;
 
-        directory.WriteBytes(8, ((uint)AsRawSpan().Length).LittleEndianBytes()); //Size
+        directory.WriteBytes(8, ((uint)AsRawSpan().Length).LittleEndianBytes()); 
 
-        directory.WriteBytes(12, (IcoHeaderSize + IcoDirectorySize).LittleEndianBytes()); //Offset
+        directory.WriteBytes(12, (IcoHeaderSize + IcoDirectorySize).LittleEndianBytes()); 
         return directory;
     }
 }

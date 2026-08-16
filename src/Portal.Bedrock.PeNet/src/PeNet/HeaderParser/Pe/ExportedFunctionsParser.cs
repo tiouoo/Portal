@@ -1,4 +1,4 @@
-﻿using PeNet.FileParser;
+using PeNet.FileParser;
 using PeNet.Header.Pe;
 
 namespace PeNet.HeaderParser.Pe;
@@ -37,7 +37,7 @@ internal class ExportedFunctionsParser : SafeParser<ExportFunction[]>
             ? 0
             : _exportDirectory.AddressOfNames.RvaToOffset(_sectionHeaders);
 
-        //Get addresses
+        
         for (uint i = 0; i < expFuncs.Length; i++)
         {
             var ordinal = i + _exportDirectory.Base;
@@ -45,7 +45,7 @@ internal class ExportedFunctionsParser : SafeParser<ExportFunction[]>
             expFuncs[i] = new ExportFunction(null, address, (ushort)ordinal);
         }
 
-        //Associate names
+        
         for (uint i = 0; i < _exportDirectory.NumberOfNames; i++)
         {
             var namePtr = PeFile.ReadUInt(nameOffsetPointer + sizeof(uint) * i);
@@ -76,9 +76,9 @@ internal class ExportedFunctionsParser : SafeParser<ExportFunction[]>
         return expFuncs;
     }
 
-    // Some exported functions are not directly provided by the DLL but forwarded to
-    // another DLL, where the code resides. This functions test, if an export
-    // is a forwarded one.
+    
+    
+    
     private bool IsForwardedExport(uint address)
     {
         return _exportDataDir.VirtualAddress <= address

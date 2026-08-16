@@ -65,7 +65,7 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
-        // 文本框聚焦时不拦截 Ctrl+A，保留全选文本的默认行为
+        
         KeyBindings.Add(new KeyBinding
         {
             Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),

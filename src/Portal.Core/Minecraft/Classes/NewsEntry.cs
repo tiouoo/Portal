@@ -62,9 +62,6 @@ public class PatchNoteImage
     public string Url { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// 新闻详情正文缓存条目。仅当用户实际打开某条新闻时才会拉取并缓存。
-/// </summary>
 public class NewsDetail
 {
     public string Id { get; set; } = string.Empty;
@@ -73,14 +70,11 @@ public class NewsDetail
     public string Type { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
     public DateTime Date { get; set; }
-    /// <summary>返回的 HTML 正文（已原样缓存）。</summary>
-    public string Body { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
     public DateTime FetchedAt { get; set; }
-    /// <summary>是否需要翻译。为 true 时会在后台尝试拉取已翻译版本并动态替换。</summary>
-    public bool? NeedsTranslation { get; set; }
+        public bool? NeedsTranslation { get; set; }
 }
 
-/// <summary>内容接口返回的 JSON 结构。</summary>
 public class NewsContentResponse
 {
     public string Title { get; set; } = string.Empty;

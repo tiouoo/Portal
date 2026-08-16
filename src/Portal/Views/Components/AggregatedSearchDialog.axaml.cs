@@ -78,9 +78,3 @@ public partial class AggregatedSearchDialogViewModel : ObservableObject
         Window = window;
     }
 }
-
-public class AggregatedSearchType
-{
-    public string DisplayText { get; set; }
-    public AggregatedSearchEntryType EnumFlag { get; set; }
-}

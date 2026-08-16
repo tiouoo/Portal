@@ -47,7 +47,7 @@ public sealed record BuiltInIcon(string ResourceName, string FileName)
 {
     public string ResourceUri => $"resm:{ResourceName}?assembly=Portal.Core";
 
-    // 按需解码、由 OwnedAdvancedImage 负责释放；不能走 AdvancedImage 默认的全局内存缓存
+    
     public AsyncImageLoader.IAsyncImageLoader ImageLoader { get; } = new Portal.Module.Imaging.ResourceImageLoader(104);
 }
 

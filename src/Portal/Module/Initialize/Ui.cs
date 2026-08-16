@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Media;
 using Portal.Classes.Entries;
 using Portal.Classes.Enums;
 using Portal.Const;
@@ -15,6 +16,7 @@ using Portal.Module.Multiplayer;
 using Portal.Module.Update;
 using Portal.Services;
 using Portal.Views;
+using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Platform;
@@ -54,6 +56,17 @@ public static partial class Initializer
 
         Functions.CreateNewTabWindowFunc = _ => new TabWindow(false);
         NotificationGateway.IsToastFunc = () => Data.ConfigEntry.NoticeWay == NoticeWay.Toast;
+        UiEvents.BackgroundAppearanceChanged += TabWindow.ApplyBackgroundToAllWindows;
+        UiEvents.ImageMaskChanged += TabWindow.ApplyImageMaskToAllWindows;
+        UiEvents.AppScaleChanged += AppScaling.ApplyScale;
+        UiEvents.ShowGameOverlay = (process, instance) =>
+        {
+            var overlay = new OverlayWindow(process, instance);
+            TextOptions.SetTextRenderingMode(overlay, TextRenderingMode.Antialias);
+            TextOptions.SetTextHintingMode(overlay, TextHintingMode.Light);
+            TextOptions.SetBaselinePixelAlignment(overlay, BaselinePixelAlignment.Aligned);
+            overlay.Show();
+        };
 
         Events.CoreSaveSettings += ConfigSaver.SaveConfig;
 

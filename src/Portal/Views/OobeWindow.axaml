@@ -120,7 +120,7 @@
                 </PageSlide>
             </Carousel.PageTransition>
 
-            <!--  第一步：主题样式  -->
+            
             <StackPanel Margin="25,5,25,10" Spacing="15">
                 <StackPanel Spacing="6">
                     <TextBlock FontSize="26" Text="欢迎使用" />
@@ -210,7 +210,7 @@
                 </StackPanel>
             </StackPanel>
 
-            <!--  第二步：Minecraft 文件夹  -->
+            
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
@@ -287,7 +287,7 @@
                 </controls:ScrollView>
             </DockPanel>
 
-            <!--  第三步：账户  -->
+            
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
@@ -365,7 +365,7 @@
                 </controls:ScrollView>
             </DockPanel>
 
-            <!--  第四步：Java  -->
+            
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="4">

@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Dialogs;
 using Portal.Classes.Enums;
 using Portal.Const;
@@ -17,7 +17,7 @@ public static class AppExtensions
         }
         catch
         {
-            // ignored
+            
         }
         return builder;
     }

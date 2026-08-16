@@ -114,7 +114,7 @@ internal static partial class PortalCommandService
                 await Task.Delay(1000);
             } 
         }
-        // ReSharper disable once FunctionNeverReturns
+        
     }
     
     internal static void WriteConsole(string message)

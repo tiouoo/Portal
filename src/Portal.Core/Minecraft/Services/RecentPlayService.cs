@@ -8,7 +8,7 @@ namespace Portal.Core.Minecraft.Services;
 public sealed class RecentPlayService
 {
     private const string HistoryFileName = "Portal.recent-play.json";
-    // 记录回调可能来自游戏进程输出线程，需要串行化历史文件的读改写
+    
     private static readonly object HistoryLock = new();
     private readonly WorldSaveService _worldSaveService = new();
 
@@ -44,9 +44,9 @@ public sealed class RecentPlayService
                     recorded.LastPlayedTime, ServerIconData: server.IconData, ServerAddress: server.Host, ServerPort: server.Port));
             }
 
-            // Direct connections are not guaranteed to appear in servers.dat. LAN addresses are deliberately
-            // excluded so recent play contains only saved worlds and external servers.
-            // Entries recorded as saved are intentionally omitted when their server was later removed.
+            
+            
+            
             foreach (var recorded in history.Where(item => !item.WasSaved && !IsLanAddress(item.Address) &&
                           !servers.Any(server => IsSameServer(item, server.Host, server.Port))))
             {
@@ -76,7 +76,7 @@ public sealed class RecentPlayService
         }
         catch (Exception e)
         {
-            // 该方法在进程输出事件线程上执行，异常不能外抛，否则会导致进程崩溃
+            
             Logger.Error("记录服务器游玩历史失败。", e);
         }
     }
@@ -114,7 +114,7 @@ public sealed class RecentPlayService
         address.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
         address.Equals("127.0.0.1", StringComparison.Ordinal);
 
-    // 172.16.0.0/12 私有网段覆盖 172.16.* 至 172.31.*
+    
     private static bool Is172PrivateAddress(string address)
     {
         if (!address.StartsWith("172.", StringComparison.Ordinal))
@@ -153,7 +153,7 @@ public sealed class RecentPlayService
             return null;
 
         var addressAndPort = key[prefix.Length..];
-        // 旧键以 address:port 拼接，裸 IPv6 必须从最后一个分隔符拆分端口。
+        
         var separator = addressAndPort.LastIndexOf(':');
         var (address, port) = separator > 0 && int.TryParse(addressAndPort[(separator + 1)..], out var legacyPort)
             ? (addressAndPort[..separator], legacyPort)

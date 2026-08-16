@@ -322,7 +322,7 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
-        // 防止重复点击
+        
         DeepScanButton.IsEnabled = false;
         try
         {
@@ -337,7 +337,7 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
             }
             catch (OperationCanceledException)
             {
-                // 取消时也可能抛出，此时任务描述里已经有结果
+                
                 result = (0, 0);
             }
 

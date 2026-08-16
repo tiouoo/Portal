@@ -66,7 +66,7 @@ internal static partial class DebugConsole
             }
             catch (System.ComponentModel.Win32Exception)
             {
-                // Try the next commonly available terminal emulator.
+                
             }
         }
     }
@@ -83,7 +83,7 @@ internal static partial class DebugConsole
         }
         catch (System.ComponentModel.Win32Exception)
         {
-            // Terminal.app is unavailable; file logging remains available at the normal log path.
+            
         }
     }
 

@@ -149,14 +149,14 @@
                                     </MenuFlyout>
                                 </DropDownButton.Flyout>
                             </DropDownButton>
-                            <!--  <Button  -->
-                            <!--  Click="DeleteInstance_Click"  -->
-                            <!--  Content="删除此实例"  -->
-                            <!--  Margin="0,0,10,0" />  -->
-                            <!--  <Button  -->
-                            <!--  Click="OpenInstanceFolder_Click"  -->
-                            <!--  Content="打开实例文件夹"  -->
-                            <!--  Margin="0,0,10,0" />  -->
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
                             <Button
                                 Click="LaunchInstance_Click"
                                 Content="启动此实例"

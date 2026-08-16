@@ -59,8 +59,8 @@
                                     Margin="12,10"
                                     PointerPressed="RecentInstanceCard_OnPointerPressed"
                                     Tag="{Binding RecentInstance}">
-                                    <!--  ToolTip.ShowDelay="3000"  -->
-                                    <!--  ToolTip.Tip="{Binding RecentInstance.FullInfo}"  -->
+                                    
+                                    
                                     <StackPanel
                                         DockPanel.Dock="Top"
                                         Orientation="Horizontal"

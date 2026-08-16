@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using PeNet.FileParser;
 using PeNet.Header.Pe;
 
@@ -17,14 +17,14 @@ internal class ImageDelayImportDescriptorParser : SafeParser<ImageDelayImportDes
             return null;
 
         var idescs = new List<ImageDelayImportDescriptor>();
-        uint idescSize = 32; // Size of ImageDelayImportDescriptor (8 * 4 Byte)
+        uint idescSize = 32; 
         var round = 0;
 
         while (true)
         {
             var idesc = new ImageDelayImportDescriptor(PeFile, Offset + idescSize * round);
 
-            // Find the last ImageDelayImportDescriptor which is completely null (except for TimeDateStamp member).
+            
             if (idesc.GrAttrs == 0
                 && idesc.SzName == 0
                 && idesc.Phmod == 0

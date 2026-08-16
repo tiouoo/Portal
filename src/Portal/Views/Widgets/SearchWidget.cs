@@ -22,11 +22,6 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Widgets;
 
-/// <summary>
-/// 聚合搜索小组件。复用起始页的搜索模式与聚合搜索索引，
-/// 支持本地搜索与下载站点搜索（Enter 跳转对应搜索页）。
-/// 支持 1×1 到 1×16 共 16 种尺寸，高度越大可显示内容越多。
-/// </summary>
 public sealed class SearchWidget : IWidgetContent
 {
     private readonly TioUi.Controls.AutoCompleteBox _searchBox;
@@ -46,7 +41,7 @@ public sealed class SearchWidget : IWidgetContent
         _searchModes = StartPageViewModel.DefaultSearchModes;
         _selectedMode = _searchModes.FirstOrDefault();
 
-        // 搜索模式 ComboBox：浮在搜索框左侧（与起始页一致，由 InnerLeftContent 占位避让）
+        
         _modeComboBox = new ComboBox
         {
             Theme = (ControlTheme)Application.Current!.FindResource("BareComboBox")!,
@@ -81,7 +76,7 @@ public sealed class SearchWidget : IWidgetContent
         };
         _modeComboBox.SelectedIndex = 0;
 
-        // 搜索框（复用起始页的 AutoCompleteBox 行为）
+        
         _searchBox = new TioUi.Controls.AutoCompleteBox
         {
             FilterMode = AutoCompleteFilterMode.None,
@@ -90,7 +85,7 @@ public sealed class SearchWidget : IWidgetContent
             MaxDropDownHeight = 336
         };
 
-        // InnerLeftContent 占位：宽度跟随 ComboBox 的实际宽度，避免文字被遮住
+        
         _innerLeftPlaceholder = new Panel { Width = 0 };
         _modeComboBox.SizeChanged += (_, e) =>
             _innerLeftPlaceholder.Width = e.NewSize.Width;
@@ -108,7 +103,7 @@ public sealed class SearchWidget : IWidgetContent
         );
         _searchBox.InnerRightContent = searchIcon;
 
-        // 搜索结果项模板（与起始页一致：Title + TypeDescription + Description）
+        
         _searchBox.ItemTemplate = new FuncDataTemplate<AggregatedSearchEntry>((entry, _) =>
         {
             var typeText = new TextBlock
@@ -153,7 +148,7 @@ public sealed class SearchWidget : IWidgetContent
 
         _searchBox.Populating += (_, e) =>
         {
-            // 下载站点模式不走聚合搜索
+            
             if (_selectedMode?.PageType is not null)
             {
                 e.Cancel = true;
@@ -183,7 +178,7 @@ public sealed class SearchWidget : IWidgetContent
         };
         _searchBox.AddHandler(InputElement.KeyDownEvent, OnSearchKeyDown, RoutingStrategies.Bubble, true);
 
-        // Grid 叠加：ComboBox 与 SearchBox 同一格，ComboBox 浮于左侧
+        
         _root = new Grid();
         _root.Children.Add(_searchBox);
         _root.Children.Add(_modeComboBox);

@@ -226,7 +226,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     {
         if (_disposed) return;
         _disposed = true;
-        // 阻止置空筛选项时触发 ApplyVersionFilter 重建版本分组，确保内存能够释放
+        
         _buildingFilters = true;
         _filterCancellation = null;
         CancelInBackground(_disposeCancellation);

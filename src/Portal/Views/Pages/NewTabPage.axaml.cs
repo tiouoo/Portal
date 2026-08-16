@@ -539,26 +539,21 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
 
     public bool IsServer => _target.Type == RecentPlayTargetType.Server;
 
-    /// <summary>第二行辅助文本：存档显示存档文件夹名，服务器显示服务器地址。</summary>
-    public string? SubtitleText => _target.Type == RecentPlayTargetType.World ? FolderName : ServerDisplayAddress;
+        public string? SubtitleText => _target.Type == RecentPlayTargetType.World ? FolderName : ServerDisplayAddress;
 
     public bool HasSubtitle => SubtitleText is not null;
 
-    /// <summary>与实例详情一致的服务器状态：状态文本（检测中 / 在线 / 无法连接）。</summary>
-    public string StatusText => _ping.StatusText;
+        public string StatusText => _ping.StatusText;
 
-    /// <summary>状态小圆点与状态文本颜色。</summary>
-    public IBrush StatusBrush => _ping.StatusBrush;
+        public IBrush StatusBrush => _ping.StatusBrush;
 
-    /// <summary>服务器延迟文本（在线时显示 XX ms）。</summary>
-    public string PingText => _ping.PingText;
+        public string PingText => _ping.PingText;
 
     public bool HasPing => _ping.HasPing;
 
     public IBrush PingBrush => _ping.PingBrush;
 
-    /// <summary>在线人数文本（在线时显示 N / M 人）。</summary>
-    public string PlayersText => _ping.PlayersText;
+        public string PlayersText => _ping.PlayersText;
 
     public bool HasPlayers => _ping.HasPlayers;
 

@@ -255,8 +255,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[Multiplayer] Initializing {Edition} multiplayer service.");
-        // FindInstalled() does synchronous file IO and JSON deserialization;
-        // run it on a background thread to avoid blocking the UI on first open.
+        
+        
         if (await Task.Run(GravityConeInstaller.FindInstalled) is not { } installation)
         {
             IsComponentMissing = true;

@@ -1,109 +1,64 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using PeNet.FileParser;
 
 namespace PeNet.Header.Pe;
 
-/// <summary>
-///     The File header contains information about the structure
-///     and properties of the PE file.
-/// </summary>
 public class ImageFileHeader : AbstractStructure
 {
-    /// <summary>
-    ///     Create a new ImageFileHeader object.
-    /// </summary>
-    /// <param name="peFile">A PE file.</param>
-    /// <param name="offset">Raw offset to the file header.</param>
-    public ImageFileHeader(IRawFile peFile, long offset)
+        public ImageFileHeader(IRawFile peFile, long offset)
         : base(peFile, offset)
     {
     }
 
-    /// <summary>
-    ///     The machine (CPU type) the PE file is intended for.
-    ///     For a string use MachineResolved
-    /// </summary>
-    public MachineType Machine
+        public MachineType Machine
     {
         get => (MachineType)PeFile.ReadUShort(Offset);
         set => PeFile.WriteUShort(Offset, (ushort)value);
     }
 
-    /// <summary>
-    ///     String representation of the Machine flag.
-    /// </summary>
-    public string MachineResolved => ResolveMachine(Machine);
+        public string MachineResolved => ResolveMachine(Machine);
 
-    /// <summary>
-    ///     The number of sections in the PE file.
-    /// </summary>
-    public ushort NumberOfSections
+        public ushort NumberOfSections
     {
         get => PeFile.ReadUShort(Offset + 0x2);
         set => PeFile.WriteUShort(Offset + 0x2, value);
     }
 
-    /// <summary>
-    ///     Time and date stamp.
-    /// </summary>
-    public uint TimeDateStamp
+        public uint TimeDateStamp
     {
         get => PeFile.ReadUInt(Offset + 0x4);
         set => PeFile.WriteUInt(Offset + 0x4, value);
     }
 
-    /// <summary>
-    ///     Pointer to COFF symbols table. They are rare in PE files,
-    ///     but often in obj files.
-    /// </summary>
-    public uint PointerToSymbolTable
+        public uint PointerToSymbolTable
     {
         get => PeFile.ReadUInt(Offset + 0x8);
         set => PeFile.WriteUInt(Offset + 0x8, value);
     }
 
-    /// <summary>
-    ///     The number of COFF symbols.
-    /// </summary>
-    public uint NumberOfSymbols
+        public uint NumberOfSymbols
     {
         get => PeFile.ReadUInt(Offset + 0xC);
         set => PeFile.WriteUInt(Offset + 0xC, value);
     }
 
-    /// <summary>
-    ///     The size of the optional header which follow the file header.
-    /// </summary>
-    public ushort SizeOfOptionalHeader
+        public ushort SizeOfOptionalHeader
     {
         get => PeFile.ReadUShort(Offset + 0x10);
         set => PeFile.WriteUShort(Offset + 0x10, value);
     }
 
-    /// <summary>
-    ///     Set of flags which describe the PE file in detail.
-    /// </summary>
-    public FileCharacteristicsType Characteristics
+        public FileCharacteristicsType Characteristics
     {
         get => (FileCharacteristicsType)PeFile.ReadUShort(Offset + 0x12);
         set => PeFile.WriteUShort(Offset + 0x12, (ushort)value);
     }
 
-    /// <summary>
-    ///     Set of flags which describe the PE file in detail resolved
-    ///     to a readable list of strings.
-    /// </summary>
-    public List<string> CharacteristicsResolved
+        public List<string> CharacteristicsResolved
         => ResolveFileCharacteristics(Characteristics);
 
-    /// <summary>
-    ///     Resolves the characteristics attribute from the COFF header to an
-    ///     object which holds all the characteristics a boolean properties.
-    /// </summary>
-    /// <param name="characteristics">File header characteristics.</param>
-    /// <returns>List with set flags.</returns>
-    public static List<string> ResolveFileCharacteristics(FileCharacteristicsType characteristics)
+        public static List<string> ResolveFileCharacteristics(FileCharacteristicsType characteristics)
     {
         var st = new List<string>();
 #if NET5_0_OR_GREATER
@@ -118,13 +73,7 @@ public class ImageFileHeader : AbstractStructure
         return st;
     }
 
-    /// <summary>
-    ///     Resolves the target machine number to a string containing
-    ///     the name of the target machine.
-    /// </summary>
-    /// <param name="targetMachine">Target machine value from the COFF header.</param>
-    /// <returns>Name of the target machine as string.</returns>
-    public static string ResolveMachine(MachineType targetMachine)
+        public static string ResolveMachine(MachineType targetMachine)
     {
         return targetMachine switch
         {
@@ -180,354 +129,140 @@ public class ImageFileHeader : AbstractStructure
     }
 }
 
-/// <summary>
-///     File characteristics from the file header.
-/// </summary>
 [Flags]
 public enum FileCharacteristicsType : ushort
 {
-    /// <summary>
-    ///     Relocation stripped.
-    /// </summary>
-    RelocsStripped = 0x01,
+        RelocsStripped = 0x01,
 
-    /// <summary>
-    ///     Executable image.
-    /// </summary>
-    ExecutableImage = 0x02,
+        ExecutableImage = 0x02,
 
-    /// <summary>
-    ///     Line numbers stripped.
-    /// </summary>
-    LineNumsStripped = 0x04,
+        LineNumsStripped = 0x04,
 
-    /// <summary>
-    ///     Local symbols stripped.
-    /// </summary>
-    LocalSymsStripped = 0x08,
+        LocalSymsStripped = 0x08,
 
-    /// <summary>
-    ///     (OBSOLTETE) Aggressively trim the working set.
-    /// </summary>
-    AggresiveWsTrim = 0x10,
+        AggresiveWsTrim = 0x10,
 
-    /// <summary>
-    ///     Application can handle addresses larger than 2 GB.
-    /// </summary>
-    LargeAddressAware = 0x20,
+        LargeAddressAware = 0x20,
 
-    /// <summary>
-    ///     (OBSOLTETE) Bytes of word are reversed.
-    /// </summary>
-    BytesReversedLo = 0x80,
+        BytesReversedLo = 0x80,
 
-    /// <summary>
-    ///     Supports 32 Bit words.
-    /// </summary>
-    BitMachine32 = 0x100,
+        BitMachine32 = 0x100,
 
-    /// <summary>
-    ///     Debug stripped and stored in a separate file.
-    /// </summary>
-    DebugStripped = 0x200,
+        DebugStripped = 0x200,
 
-    /// <summary>
-    ///     If the image is on a removable media, copy and run it from the swap file.
-    /// </summary>
-    RemovableRunFromSwap = 0x400,
+        RemovableRunFromSwap = 0x400,
 
-    /// <summary>
-    ///     If the image is on the network, copy and run it from the swap file.
-    /// </summary>
-    NetRunFromSwap = 0x800,
+        NetRunFromSwap = 0x800,
 
-    /// <summary>
-    ///     The image is a system file.
-    /// </summary>
-    System = 0x1000,
+        System = 0x1000,
 
-    /// <summary>
-    ///     Is a dynamic loaded library and executable but cannot
-    ///     be run on its own.
-    /// </summary>
-    Dll = 0x2000,
+        Dll = 0x2000,
 
-    /// <summary>
-    ///     Image should be run only on uniprocessor.
-    /// </summary>
-    UpSystemOnly = 0x4000,
+        UpSystemOnly = 0x4000,
 
-    /// <summary>
-    ///     (OBSOLETE) Reserved.
-    /// </summary>
-    BytesReversedHi = 0x8000
+        BytesReversedHi = 0x8000
 }
 
-/// <summary>
-///     ImageFileHeader machine constants which define
-///     for which CPU type the PE file is.
-/// </summary>
 [Flags]
 public enum MachineType : ushort
 {
-    /// <summary>
-    ///     File header -> machine (CPU): unknown
-    /// </summary>
-    Unknown = 0x0,
+        Unknown = 0x0,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Intel 386
-    /// </summary>
-    I386 = 0x14c,
+        I386 = 0x14c,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Intel i860
-    /// </summary>
-    I860 = 0x14d,
+        I860 = 0x14d,
 
-    /// <summary>
-    ///     File header -> machine (CPU): MIPS R3000
-    /// </summary>
-    R3000 = 0x162,
+        R3000 = 0x162,
 
-    /// <summary>
-    ///     File header -> machine (CPU): MIPS little endian (R4000)
-    /// </summary>
-    R4000 = 0x166,
+        R4000 = 0x166,
 
-    /// <summary>
-    ///     File header -> machine (CPU): MIPS R10000
-    /// </summary>
-    R10000 = 0x168,
+        R10000 = 0x168,
 
-    /// <summary>
-    ///     File header -> machine (CPU): MIPS little endian WCI v2
-    /// </summary>
-    Wcemipsv2 = 0x169,
+        Wcemipsv2 = 0x169,
 
-    /// <summary>
-    ///     File header -> machine (CPU): old Alpha AXP
-    /// </summary>
-    OldAlpha = 0x183,
+        OldAlpha = 0x183,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Alpha AXP
-    /// </summary>
-    Alpha = 0x184,
+        Alpha = 0x184,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Hitachi SH3
-    /// </summary>
-    Sh3 = 0x1a2,
+        Sh3 = 0x1a2,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Hitachi SH3 DSP
-    /// </summary>
-    Sh3Dsp = 0x1a3,
+        Sh3Dsp = 0x1a3,
 
-    /// <summary>
-    ///     File header -> machine (CPU): unknown
-    /// </summary>
-    Sh3E = 0x1a4,
+        Sh3E = 0x1a4,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Hitachi SH4
-    /// </summary>
-    Sh4 = 0x1a6,
+        Sh4 = 0x1a6,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Hitachi SH5
-    /// </summary>
-    Sh5 = 0x1a8,
+        Sh5 = 0x1a8,
 
-    /// <summary>
-    ///     File header -> machine (CPU): ARM little endian
-    /// </summary>
-    Arm = 0x1c0,
+        Arm = 0x1c0,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Thumb
-    /// </summary>
-    Thumb = 0x1c2,
+        Thumb = 0x1c2,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Matsushita AM33
-    /// </summary>
-    Am33 = 0x1d3,
+        Am33 = 0x1d3,
 
-    /// <summary>
-    ///     File header -> machine (CPU): PowerPC little endian
-    /// </summary>
-    PowerPc = 0x1f0,
+        PowerPc = 0x1f0,
 
-    /// <summary>
-    ///     File header -> machine (CPU): PowerPC with floating point support
-    /// </summary>
-    PowerPcFp = 0x1f1,
+        PowerPcFp = 0x1f1,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Intel IA64
-    /// </summary>
-    Ia64 = 0x200,
+        Ia64 = 0x200,
 
-    /// <summary>
-    ///     File header -> machine (CPU): MIPS16
-    /// </summary>
-    Mips16 = 0x266,
+        Mips16 = 0x266,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Motorola 68000 series
-    /// </summary>
-    M68K = 0x268,
+        M68K = 0x268,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Alpha AXP 64-bit
-    /// </summary>
-    Alpha64 = 0x284,
+        Alpha64 = 0x284,
 
-    /// <summary>
-    ///     File header -> machine (CPU): MIPS with FPU
-    /// </summary>
-    MipsFpu = 0x366,
+        MipsFpu = 0x366,
 
-    /// <summary>
-    ///     File header -> machine (CPU): MIPS16 with FPU
-    /// </summary>
-    MipsFpu16 = 0x466,
+        MipsFpu16 = 0x466,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Alpha AXP 64-bit
-    /// </summary>
-    Axp64 = Alpha64,
+        Axp64 = Alpha64,
 
-    /// <summary>
-    ///     File header -> machine (CPU): unknown
-    /// </summary>
-    TriCore = 0x520,
+        TriCore = 0x520,
 
-    /// <summary>
-    ///     File header -> machine (CPU): unknown
-    /// </summary>
-    Cef = 0xcef,
+        Cef = 0xcef,
 
-    /// <summary>
-    ///     File header -> machine (CPU): EFI Byte Code
-    /// </summary>
-    Ebc = 0xebc,
+        Ebc = 0xebc,
 
-    /// <summary>
-    ///     File header -> machine (CPU): AMD AMD64 (Used for Intel x64, too)
-    /// </summary>
-    Amd64 = 0x8664,
+        Amd64 = 0x8664,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Mitsubishi M32R little endian
-    /// </summary>
-    M32R = 0x9041,
+        M32R = 0x9041,
 
-    /// <summary>
-    ///     File header -> machine (CPU): clr pure MSIL (.Net)
-    /// </summary>
-    Cee = 0xc0ee,
+        Cee = 0xc0ee,
 
-    /// <summary>
-    ///     File header -> machine (CPU): ARM65 Little-Endian
-    /// </summary>
-    Arm64 = 0xAA64,
+        Arm64 = 0xAA64,
 
-    /// <summary>
-    ///     File header -> machine (CPU): ARM Thumb-2 Little-Endian
-    /// </summary>
-    ArmNt = 0x01C4,
+        ArmNt = 0x01C4,
 
-    /// <summary>
-    ///     File header -> machine (CPU): Interacts with the host and not
-    ///     a WOW64 guest
-    /// </summary>
-    TargetHost = 0x0001,
+        TargetHost = 0x0001,
 
-    /// <summary>
-    ///     RISC-V 32-bit address space
-    /// </summary>
-    RiscV32 = 0x5032,
+        RiscV32 = 0x5032,
 
-    /// <summary>
-    ///     RISC-V 64-bit address space
-    /// </summary>
-    RiscV64 = 0x5064,
+        RiscV64 = 0x5064,
 
-    /// <summary>
-    ///     RISC-V 128-bit address space
-    /// </summary>
-    RiscV128 = 0x5128,
+        RiscV128 = 0x5128,
 
-    /// <summary>
-    ///     LoongArch 32-bit processor family
-    /// </summary>
-    LoongArch32 = 0x6232,
+        LoongArch32 = 0x6232,
 
-    /// <summary>
-    ///     LoongArch 64-bit processor family
-    /// </summary>
-    LoongArch64 = 0x6264,
+        LoongArch64 = 0x6264,
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    LinuxDotnet64 = Amd64 ^ 0x4644, //0xFD1D
+        LinuxDotnet64 = Amd64 ^ 0x4644, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    OsXDotnet64 = Amd64 ^ 0x7B79, //0xC020
+        OsXDotnet64 = Amd64 ^ 0x7B79, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    FreeBSDDotnet64 = Amd64 ^ 0xADC4, //0x2BA0
+        FreeBSDDotnet64 = Amd64 ^ 0xADC4, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    NetBSDDotnet64 = Amd64 ^ 0x1993, //0x9FF7
+        NetBSDDotnet64 = Amd64 ^ 0x1993, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    SunDotnet64 = Amd64 ^ 0x1992, //0x9FF6
+        SunDotnet64 = Amd64 ^ 0x1992, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    LinuxDotnet32 = I386 ^ 0x4644, //0x4708
+        LinuxDotnet32 = I386 ^ 0x4644, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    OsXDotnet32 = I386 ^ 0x7B79, //0x7A35
+        OsXDotnet32 = I386 ^ 0x7B79, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    FreeBSDDotnet32 = I386 ^ 0xADC4, //0xAC88
+        FreeBSDDotnet32 = I386 ^ 0xADC4, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    NetBSDDotnet32 = I386 ^ 0x1993, //0x18DF
+        NetBSDDotnet32 = I386 ^ 0x1993, 
 
-    /// <summary>
-    ///     Defined by .NET
-    ///     https://github.com/dotnet/runtime/blob/61c658183231100a5836e833c86446ff51a4654b/src/coreclr/src/inc/pedecoder.h#L90-L104
-    /// </summary>
-    SunDotnet32 = I386 ^ 0x1992 //0x18DE
+        SunDotnet32 = I386 ^ 0x1992 
 }

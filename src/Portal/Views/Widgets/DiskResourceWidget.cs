@@ -3,7 +3,6 @@ using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
-/// <summary>磁盘占用小组件。主显示百分比，副文本显示已用/总量。</summary>
 public sealed class DiskResourceWidget : ResourceWidgetBase
 {
     public DiskResourceWidget(WidgetCellSize size) : base(size)

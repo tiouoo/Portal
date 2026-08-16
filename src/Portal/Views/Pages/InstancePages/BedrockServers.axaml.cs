@@ -23,9 +23,6 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.InstancePages;
 
-/// <summary>
-/// 基岩版服务器管理页，按用户 ID 区分服务器列表（与基岩版存档页一致）。
-/// </summary>
 public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisposable
 {
     private const int PingConcurrency = 5;
@@ -38,7 +35,7 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
     private readonly CancellationTokenSource _disposeCancellation = new();
     private CancellationTokenSource? _sessionCancellation;
     private bool _isLoading, _isDisposed;
-    private int _loadSequence; // 加载序号，防止快速切换用户时旧的读取结果覆盖新的结果
+    private int _loadSequence; 
     private int _isRefreshing;
     private string _filter = string.Empty;
     private event PropertyChangedEventHandler? ServerPropertyChanged;
@@ -180,10 +177,7 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         await PingAllAsync();
     }
 
-    /// <summary>
-    /// 修改服务器列表后静默重载（LoadAsync 结束后会自动发起全量检测）。
-    /// </summary>
-    private async Task ReloadAsyncSilently()
+        private async Task ReloadAsyncSilently()
     {
         await LoadAsync();
     }
@@ -447,9 +441,6 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
     }
 }
 
-/// <summary>
-/// 基岩版服务器卡片条目状态。
-/// </summary>
 public enum BedrockServerItemStatus
 {
     Unknown,
@@ -458,9 +449,6 @@ public enum BedrockServerItemStatus
     Offline
 }
 
-/// <summary>
-/// 基岩版服务器胶囊卡片条目。
-/// </summary>
 public sealed partial class BedrockServerItem : ObservableObject, IDisposable
 {
     private static readonly IBrush OnlineBrush = new SolidColorBrush(Color.Parse("#52C41A"));

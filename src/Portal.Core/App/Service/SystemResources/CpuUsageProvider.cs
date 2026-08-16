@@ -19,7 +19,7 @@ internal static partial class CpuUsageProvider
         }
         catch
         {
-            // ignored
+            
         }
 
         return null;

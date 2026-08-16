@@ -38,7 +38,7 @@ public partial class OverlayWindow : Window
         "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
     };
     private static readonly string[] WeekDays = { "周日", "周一", "周二", "周三", "周四", "周五", "周六" };
-    // --- Win32 常量 ---
+    
     private const int GWL_EXSTYLE = -20;
     private const int GWL_STYLE = -16;
     private const int WS_CHILD = 0x40000000;
@@ -61,12 +61,12 @@ public partial class OverlayWindow : Window
     private const int VK_TAB = 0x09;
     private const int VK_ESCAPE = 0x1B;
 
-    // --- 成员变量 ---
+    
     private readonly LowLevelKeyboardProc _proc;
     private readonly Process? _targetProcess;
     private IntPtr _hookID = IntPtr.Zero;
 
-    // 动画控制
+    
     private volatile bool _isAnimating;
     private bool _isEmbedded;
     private bool _isOverlayVisible;
@@ -74,7 +74,7 @@ public partial class OverlayWindow : Window
     private Type? _currentPanelPageType;
     private bool _desiredState;
 
-    // UWP特定变量
+    
     private bool _isUWPApp;
     private IntPtr _myHandle = IntPtr.Zero;
     private InstanceDetailPage? _detailPage;
@@ -121,7 +121,7 @@ public partial class OverlayWindow : Window
         Closed += OnWindowClosed;
     }
 
-    // --- Win32 API 导入 ---
+    
     [DllImport("user32.dll")]
     private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
 

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace PeNet.Crypto;
 
-// For reference see: https://github.com/bcgit/bc-csharp/blob/master/crypto/src/crypto/digests/Sha1Digest.cs
+
 internal class Sha1 : Hash
 {
     private const uint Y1 = 0x5a827999;

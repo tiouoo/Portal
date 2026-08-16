@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace Portal.Core.Minecraft.Graphics;
 
-/// <summary>渲染器（图形驱动）抽象，基于 HMCL 的 Renderer 模型。</summary>
 public sealed record Renderer
 {
     public static readonly Renderer Default = new()

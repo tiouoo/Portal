@@ -2,7 +2,7 @@ namespace Portal.Views.Pages.DownloadPages;
 
 public static class BedrockResourceDefinitions
 {
-    // CurseForge identifies Minecraft Bedrock separately from Java Edition (432).
+    
     private const int CurseForgeBedrockGameId = 78022;
     public static JavaResourceDefinition BehaviorPack { get; } =
         new(JavaResourceKind.BedrockBehaviorPack, "行为包", string.Empty, null, true, false, false, CurseForgeBedrockGameId);

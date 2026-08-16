@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -9,127 +9,67 @@ namespace PeNet.Header.Net;
 
 public interface IMetaDataTablesHdr
 {
-    /// <summary>
-    ///     The size the indexes into the streams have.
-    ///     Bit 0 (0x01) set: Indexes into #String are 4 bytes wide.
-    ///     Bit 1 (0x02) set: Indexes into #GUID heap are 4 bytes wide.
-    ///     Bit 2 (0x04) set: Indexes into #Blob heap are 4 bytes wide.
-    ///     If bit not set: indexes into heap is 2 bytes wide.
-    /// </summary>
-    byte HeapSizes { get; set; }
+        byte HeapSizes { get; set; }
 
-    /// <summary>
-    ///     Access a list of defined tables in the Meta Data Tables Header
-    ///     with the name and number of rows of the table.
-    /// </summary>
-    List<MetaDataTablesHdr.MetaDataTableInfo> TableDefinitions { get; }
+        List<MetaDataTablesHdr.MetaDataTableInfo> TableDefinitions { get; }
 }
 
-/// <summary>
-///     The Meta Data Tables Header contains information about all present
-///     data tables in the .Net assembly.
-/// </summary>
 public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
 {
-    // Used to ensure consistent reading of structures within the tables stream.
+    
     private readonly byte _originalHeapSizes;
 
     private List<MetaDataTableInfo>? _tableDefinitions;
     private Tables? _tables;
 
-    /// <summary>
-    ///     Create a new Meta Data Tables Header instance from a byte array.
-    /// </summary>
-    /// <param name="peFile">PE file which contains a MetaDataTablesHdr structure.</param>
-    /// <param name="offset">Offset in the PE file, where the header starts.</param>
-    public MetaDataTablesHdr(IRawFile peFile, long offset)
+        public MetaDataTablesHdr(IRawFile peFile, long offset)
         : base(peFile, offset)
     {
         _originalHeapSizes = HeapSizes;
     }
 
-    /// <summary>
-    ///     Reserved1, always 0.
-    /// </summary>
-    public uint Reserved1
+        public uint Reserved1
     {
         get => PeFile.ReadUInt(Offset);
         set => PeFile.WriteUInt(Offset, value);
     }
 
-    /// <summary>
-    ///     Major Version.
-    /// </summary>
-    public byte MajorVersion
+        public byte MajorVersion
     {
         get => PeFile.ReadByte(Offset + 0x4);
         set => PeFile.WriteByte(Offset + 0x4, value);
     }
 
-    /// <summary>
-    ///     Minor Version.
-    /// </summary>
-    public byte MinorVersion
+        public byte MinorVersion
     {
         get => PeFile.ReadByte(Offset + 0x5);
         set => PeFile.WriteByte(Offset + 0x5, value);
     }
 
-    /// <summary>
-    ///     Reserved2, always 1.
-    /// </summary>
-    public byte Reserved2
+        public byte Reserved2
     {
         get => PeFile.ReadByte(Offset + 0x7);
         set => PeFile.WriteByte(Offset + 0x7, value);
     }
 
-    /// <summary>
-    ///     Bit mask which shows, which tables are present in the .Net assembly.
-    ///     Maximal 64 tables can be present, but most tables are not defined such that
-    ///     the high bits of the mask are always 0.
-    /// </summary>
-    public MaskValidType MaskValid
+        public MaskValidType MaskValid
     {
         get => (MaskValidType)PeFile.ReadULong(Offset + 0x8);
         set => PeFile.WriteULong(Offset + 0x8, (ulong)value);
     }
 
-    /// <summary>
-    ///     MaskValid flags resolved to readable strings.
-    /// </summary>
-    public List<string> MaskValidResolved
+        public List<string> MaskValidResolved
         => ResolveMaskValid(MaskValid);
 
-    /// <summary>
-    ///     Bit mask which shows, which tables are sorted.
-    /// </summary>
-    public ulong MaskSorted
+        public ulong MaskSorted
     {
         get => PeFile.ReadULong(Offset + 0x10);
         set => PeFile.WriteULong(Offset + 0x10, value);
     }
 
-    /// <summary>
-    ///     Gets a value indicating whether the tables stream header contains an additional 32-bits after the table
-    ///     row counts.
-    /// </summary>
-    /// <remarks>
-    ///     This is an undocumented feature of the CLR.
-    ///     See also:
-    ///     https://github.com/dotnet/runtime/blob/ce2165d8084cca98b95f5d8ff9386759bfd8c722/src/coreclr/md/runtime/metamodel.cpp#L290
-    /// </remarks>
-    public bool HasExtraData => (_originalHeapSizes & 0x40) != 0;
+        public bool HasExtraData => (_originalHeapSizes & 0x40) != 0;
 
-    /// <summary>
-    ///     When present in the PE file, gets or sets the extra 32-bits stored after the table row counts.
-    /// </summary>
-    /// <remarks>
-    ///     This is an undocumented feature of the CLR.
-    ///     See also:
-    ///     https://github.com/dotnet/runtime/blob/ce2165d8084cca98b95f5d8ff9386759bfd8c722/src/coreclr/md/runtime/metamodel.cpp#L290
-    /// </remarks>
-    public uint? ExtraData
+        public uint? ExtraData
     {
         get
         {
@@ -145,28 +85,25 @@ public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
         {
             if (value is { } newValue)
             {
-                // Verify that we actually have space to write the extra data to.
+                
                 if (!HasExtraData)
                     throw new InvalidOperationException(
                         "Cannot add extra data to a tables stream header that did not originally contain extra data.");
 
-                // Write the extra data.
+                
                 var tablesCount = HammingWeight((ulong)MaskValid);
                 PeFile.WriteUInt(Offset + 24 + tablesCount * sizeof(uint), newValue);
             }
             else if (HasExtraData)
             {
-                // We cannot remove the data, since this would reduce the size of the header according to spec.
+                
                 throw new InvalidOperationException(
                     "Cannot remove extra data from a tables stream header that originally contained extra data.");
             }
         }
     }
 
-    /// <summary>
-    ///     Access all parsed meta data tables.
-    /// </summary>
-    public Tables Tables
+        public Tables Tables
     {
         get
         {
@@ -176,26 +113,13 @@ public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
         }
     }
 
-    /// <summary>
-    ///     The first 3 bits indicate the size of indexes into the streams.
-    ///     Bit 0 (0x01) set: Indexes into #String are 4 bytes wide.
-    ///     Bit 1 (0x02) set: Indexes into #GUID heap are 4 bytes wide.
-    ///     Bit 2 (0x04) set: Indexes into #Blob heap are 4 bytes wide.
-    ///     If bit not set: indexes into heap is 2 bytes wide.
-    ///     The remainder bits are undocumented, but exist in the current implementation of the CLR.
-    ///     Bit 4 (0x40) set: Indicates that 4 extra bytes are stored in the tables stream header.
-    /// </summary>
-    public byte HeapSizes
+        public byte HeapSizes
     {
         get => PeFile.ReadByte(Offset + 0x6);
         set => PeFile.WriteByte(Offset + 0x6, value);
     }
 
-    /// <summary>
-    ///     Access a list of defined tables in the Meta Data Tables Header
-    ///     with the name and number of rows of the table.
-    /// </summary>
-    public List<MetaDataTableInfo> TableDefinitions
+        public List<MetaDataTableInfo> TableDefinitions
     {
         get
         {
@@ -217,7 +141,7 @@ public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
         var startOfTableDefinitions = Offset + 24;
         var names = ResolveMaskValid(MaskValid);
 
-        // Set number of rows per table
+        
         var cnt = 0;
         for (var i = 0; i < tables.Length; ++i)
             if (((ulong)MaskValid & (1UL << i)) != 0)
@@ -231,19 +155,19 @@ public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
 
                 cnt++;
 
-                // Sanity check: The row count cannot be larger than the
-                // remaining size of the PeFile
+                
+                
                 if (tables[i].RowCount > PeFile.Length - startOfTableDefinitions)
                 {
                     tables[i].RowCount = 0;
-                    // Set flag to indicate invalid table
+                    
                     tables[i].IsInvalid = true;
                 }
             }
 
         var indexSizes = new IndexSize(tables);
 
-        // Set row size of tables
+        
         tables[(int)MetadataToken.Module].BytesPerRow = 2 + heapSizes.String + heapSizes.Guid * 3;
         tables[(int)MetadataToken.TypeReference].BytesPerRow = indexSizes[Index.ResolutionScope] + heapSizes.String * 2;
         tables[(int)MetadataToken.TypeDef].BytesPerRow = 4 + heapSizes.String * 2 + indexSizes[Index.TypeDefOrRef] +
@@ -302,7 +226,7 @@ public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
             GetIndexSize(MetadataToken.GenericParameter, tables) + indexSizes[Index.TypeDefOrRef];
 
 
-        // Set offset of tables
+        
         uint offset = 0;
         for (var i = 0; i < tables.Length; ++i)
         {
@@ -401,13 +325,7 @@ public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
         return tables[(int)table].RowCount <= ushort.MaxValue ? 2U : 4U;
     }
 
-    /// <summary>
-    ///     Resolve which tables are present in the .Net header based
-    ///     on the MaskValid flags from the MetaDataTablesHdr.
-    /// </summary>
-    /// <param name="maskValid">MaskValid value from the MetaDataTablesHdr</param>
-    /// <returns>List with present table names.</returns>
-    public static List<string> ResolveMaskValid(MaskValidType maskValid)
+        public static List<string> ResolveMaskValid(MaskValidType maskValid)
     {
         var st = new List<string>();
 #if NET5_0_OR_GREATER
@@ -422,235 +340,96 @@ public class MetaDataTablesHdr : AbstractStructure, IMetaDataTablesHdr
         return st;
     }
 
-    /// <summary>
-    ///     Represents an table definition entry from the list
-    ///     of available tables in the Meta Data Tables Header
-    ///     in the .Net header of an assembly.
-    /// </summary>
-    public struct MetaDataTableInfo
+        public struct MetaDataTableInfo
     {
-        /// <summary>
-        ///     Number of rows of the table.
-        /// </summary>
-        public uint RowCount { get; set; }
+                public uint RowCount { get; set; }
 
-        /// <summary>
-        ///     Name of the table.
-        /// </summary>
-        public string Name { get; set; }
+                public string Name { get; set; }
 
-        /// <summary>
-        ///     Offset where the table starts.
-        /// </summary>
-        public uint Offset { get; set; }
+                public uint Offset { get; set; }
 
-        /// <summary>
-        ///     Byte per row in the table.
-        /// </summary>
-        public uint BytesPerRow { get; set; }
+                public uint BytesPerRow { get; set; }
 
-        /// <summary>
-        ///     Set if the table is invalid for some reason and cannot be parsed
-        ///     correctly.
-        /// </summary>
-        public bool IsInvalid { internal set; get; }
+                public bool IsInvalid { internal set; get; }
     }
 }
 
-/// <summary>
-///     MaskValid flags from the MetaDataTablesHdr.
-///     The flags show, which tables are present.
-/// </summary>
 [Flags]
 public enum MaskValidType : ulong
 {
-    /// <summary>
-    ///     Table Module is present.
-    /// </summary>
-    Module = 0x1,
+        Module = 0x1,
 
-    /// <summary>
-    ///     Table TypeRef is present.
-    /// </summary>
-    TypeRef = 0x2,
+        TypeRef = 0x2,
 
-    /// <summary>
-    ///     Table TypeDef is present.
-    /// </summary>
-    TypeDef = 0x4,
+        TypeDef = 0x4,
 
-    /// <summary>
-    ///     Table Field is present.
-    /// </summary>
-    Field = 0x10,
+        Field = 0x10,
 
-    /// <summary>
-    ///     Table MethodDef is present.
-    /// </summary>
-    MethodDef = 0x40,
+        MethodDef = 0x40,
 
-    /// <summary>
-    ///     Table Param is present.
-    /// </summary>
-    Param = 0x100,
+        Param = 0x100,
 
-    /// <summary>
-    ///     Table InterfaceImpl is present.
-    /// </summary>
-    InterfaceImpl = 0x200,
+        InterfaceImpl = 0x200,
 
-    /// <summary>
-    ///     Table MemberRef is present.
-    /// </summary>
-    MemberRef = 0x400,
+        MemberRef = 0x400,
 
-    /// <summary>
-    ///     Table Constant is present.
-    /// </summary>
-    Constant = 0x800,
+        Constant = 0x800,
 
-    /// <summary>
-    ///     Table CustomAttribute is present.
-    /// </summary>
-    CustomAttribute = 0x1000,
+        CustomAttribute = 0x1000,
 
-    /// <summary>
-    ///     Table FieldMarshal is present.
-    /// </summary>
-    FieldMarshal = 0x2000,
+        FieldMarshal = 0x2000,
 
-    /// <summary>
-    ///     Table DeclSecurity is present.
-    /// </summary>
-    DeclSecurity = 0x4000,
+        DeclSecurity = 0x4000,
 
-    /// <summary>
-    ///     Table ClassLayout is present.
-    /// </summary>
-    ClassLayout = 0x8000,
+        ClassLayout = 0x8000,
 
-    /// <summary>
-    ///     Table FieldLayout is present.
-    /// </summary>
-    FieldLayout = 0x10000,
+        FieldLayout = 0x10000,
 
-    /// <summary>
-    ///     Table StandAloneSig is present.
-    /// </summary>
-    StandAloneSig = 0x20000,
+        StandAloneSig = 0x20000,
 
-    /// <summary>
-    ///     Table EventMap is present.
-    /// </summary>
-    EventMap = 0x40000,
+        EventMap = 0x40000,
 
-    /// <summary>
-    ///     Table Event is present.
-    /// </summary>
-    Event = 0x100000,
+        Event = 0x100000,
 
-    /// <summary>
-    ///     Table PropertyMap is present.
-    /// </summary>
-    PropertyMap = 0x200000,
+        PropertyMap = 0x200000,
 
-    /// <summary>
-    ///     Table Property is present.
-    /// </summary>
-    Property = 0x800000,
+        Property = 0x800000,
 
-    /// <summary>
-    ///     Table MethodSemantics is present.
-    /// </summary>
-    MethodSemantics = 0x1000000,
+        MethodSemantics = 0x1000000,
 
-    /// <summary>
-    ///     Table MethodImpl is present.
-    /// </summary>
-    MethodImpl = 0x2000000,
+        MethodImpl = 0x2000000,
 
-    /// <summary>
-    ///     Table ModuleRef is present.
-    /// </summary>
-    ModuleRef = 0x4000000,
+        ModuleRef = 0x4000000,
 
-    /// <summary>
-    ///     Table TypeSpec is present.
-    /// </summary>
-    TypeSpec = 0x8000000,
+        TypeSpec = 0x8000000,
 
-    /// <summary>
-    ///     Table ImplMap is present.
-    /// </summary>
-    ImplMap = 0x10000000,
+        ImplMap = 0x10000000,
 
-    /// <summary>
-    ///     Table FieldRVA is present.
-    /// </summary>
-    FieldRva = 0x20000000,
+        FieldRva = 0x20000000,
 
-    /// <summary>
-    ///     Table Assembly is present.
-    /// </summary>
-    Assembly = 0x100000000,
+        Assembly = 0x100000000,
 
-    /// <summary>
-    ///     Table AssemblyProcessor is present.
-    /// </summary>
-    AssemblyProcessor = 0x200000000,
+        AssemblyProcessor = 0x200000000,
 
-    /// <summary>
-    ///     Table AssemblyOS is present.
-    /// </summary>
-    AssemblyOS = 0x400000000,
+        AssemblyOS = 0x400000000,
 
-    /// <summary>
-    ///     Table AssemblyRef is present.
-    /// </summary>
-    AssemblyRef = 0x800000000,
+        AssemblyRef = 0x800000000,
 
-    /// <summary>
-    ///     Table AssemblyRefProcessor is present.
-    /// </summary>
-    AssemblyRefProcessor = 0x1000000000,
+        AssemblyRefProcessor = 0x1000000000,
 
-    /// <summary>
-    ///     Table AssemblyRefOS is present.
-    /// </summary>
-    AssemblyRefOS = 0x2000000000,
+        AssemblyRefOS = 0x2000000000,
 
-    /// <summary>
-    ///     Table File is present.
-    /// </summary>
-    File = 0x4000000000,
+        File = 0x4000000000,
 
-    /// <summary>
-    ///     Table ExportedType is present.
-    /// </summary>
-    ExportedType = 0x8000000000,
+        ExportedType = 0x8000000000,
 
-    /// <summary>
-    ///     Table ManifestResource is present.
-    /// </summary>
-    ManifestResource = 0x10000000000,
+        ManifestResource = 0x10000000000,
 
-    /// <summary>
-    ///     Table NestedClass is present.
-    /// </summary>
-    NestedClass = 0x20000000000,
+        NestedClass = 0x20000000000,
 
-    /// <summary>
-    ///     Table GenericParam is present.
-    /// </summary>
-    GenericParam = 0x40000000000,
+        GenericParam = 0x40000000000,
 
-    /// <summary>
-    ///     Table MethodSpec is present
-    /// </summary>
-    MethodSpec = 0x80000000000,
+        MethodSpec = 0x80000000000,
 
-    /// <summary>
-    ///     Table GenericParamConstraint is present.
-    /// </summary>
-    GenericParamConstraint = 0x100000000000
+        GenericParamConstraint = 0x100000000000
 }

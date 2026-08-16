@@ -85,7 +85,7 @@ internal static class JavaResourceImport
             }
             catch (Exception)
             {
-                // Continue importing remaining files so one locked file does not block the selection.
+                
             }
         }
 
@@ -123,7 +123,7 @@ internal static class JavaResourceImport
             Directory.CreateDirectory(savesPath);
             var name = Path.GetFileNameWithoutExtension(archivePath);
             var targetPath = Path.Combine(savesPath, name);
-            // 存在同名存档时不覆盖删除，追加序号，与下载存档的行为保持一致
+            
             for (var suffix = 2; Directory.Exists(targetPath); suffix++)
                 targetPath = Path.Combine(savesPath, $"{name} ({suffix})");
             CopyDirectory(root, targetPath);

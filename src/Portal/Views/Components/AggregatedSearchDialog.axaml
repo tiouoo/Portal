@@ -8,7 +8,8 @@
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:entries="clr-namespace:Portal.Classes.Entries"
+    xmlns:entries="clr-namespace:Portal.Classes.Entries;assembly=Portal.Core"
+    xmlns:search="clr-namespace:Portal.Module.AggregatedSearch;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -48,7 +49,7 @@
                 SelectedItem="{Binding Data.UiProperty.AggregatedSelectedType}"
                 WindowDecorationProperties.ElementRole="User">
                 <tio:SelectionList.ItemTemplate>
-                    <DataTemplate DataType="components:AggregatedSearchType">
+                    <DataTemplate DataType="search:AggregatedSearchType">
                         <TextBlock Margin="7,3" Text="{Binding DisplayText}" />
                     </DataTemplate>
                 </tio:SelectionList.ItemTemplate>
