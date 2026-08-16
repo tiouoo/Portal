@@ -1,5 +1,5 @@
-using Portal.Core.App.Service;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Core.Services;
 using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;

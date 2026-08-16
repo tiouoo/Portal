@@ -2,7 +2,7 @@ using System.Net.NetworkInformation;
 using Hardware.Info;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.App.Service.SystemResources;
+namespace Portal.Core.Services.SystemResources;
 
 public sealed class SystemResourceService : IDisposable
 {

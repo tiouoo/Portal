@@ -1,7 +1,7 @@
 ﻿using MinecraftLaunch;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Utilities;
-using Portal.Core.App.Service;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;

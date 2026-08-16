@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Portal.Core.Classes.Entries;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.App.Service;
+namespace Portal.Core.Services;
 
 public sealed class AppVersionService
 {

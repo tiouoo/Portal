@@ -1,9 +1,9 @@
 using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Components.Provider;
-using Portal.Core.App.Service;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 

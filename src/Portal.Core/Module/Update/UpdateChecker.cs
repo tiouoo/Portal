@@ -6,9 +6,9 @@ using Avalonia.Threading;
 using Flurl.Http;
 using MinecraftLaunch.Utilities;
 using Newtonsoft.Json.Linq;
-using Portal.Core.App.Service;
 using Portal.Core.Classes;
 using Portal.Core.Const;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 

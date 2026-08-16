@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.App.Service.SystemResources;
+namespace Portal.Core.Services.SystemResources;
 
 public readonly record struct MemoryOptimizationResult(long ReclaimedBytes);
 

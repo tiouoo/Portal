@@ -1,11 +1,11 @@
 using System.Reflection;
 using Newtonsoft.Json;
-using Portal.Core.App.Service;
 using Portal.Core.Classes;
 using Portal.Core.Classes.Config;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Extensions;

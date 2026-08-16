@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Portal.Core.App.Service.SystemResources;
+namespace Portal.Core.Services.SystemResources;
 
 internal static partial class CpuUsageProvider
 {

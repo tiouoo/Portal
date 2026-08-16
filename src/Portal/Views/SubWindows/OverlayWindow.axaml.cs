@@ -6,9 +6,9 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Multiplayer;
+using Portal.Core.Services;
 using Portal.Views.Pages;
 
 namespace Portal.Views.SubWindows;

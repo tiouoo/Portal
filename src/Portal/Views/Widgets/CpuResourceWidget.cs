@@ -1,5 +1,5 @@
-using Portal.Core.App.Service.SystemResources;
 using Portal.Core.Module.Widgets;
+using Portal.Core.Services.SystemResources;
 
 namespace Portal.Views.Widgets;
 

@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Flurl.Http;
 using MinecraftLaunch.Utilities;
-using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;

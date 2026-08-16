@@ -2,10 +2,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Utilities;
 using Portal.Bedrock.Standard.Interface;
-using Portal.Core.App.Service;
 using Portal.Core.Classes;
 using Portal.Core.Classes.Config;
 using Portal.Core.Classes.Entries;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.Platform;
 
 namespace Portal.Core.Const;

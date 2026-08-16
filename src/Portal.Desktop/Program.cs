@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Avalonia;
-using Portal.Core.App.Service.SystemResources;
+using Portal.Core.Services.SystemResources;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 #if DEBUG
 using HotAvalonia;

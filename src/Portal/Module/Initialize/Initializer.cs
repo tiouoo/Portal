@@ -1,10 +1,10 @@
 using Portal.Bedrock.Standard.Interface;
 using Portal.Classes.Config;
-using Portal.Core.App.Service;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Module.Initialize;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Initialize;

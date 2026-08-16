@@ -1,4 +1,4 @@
-namespace Portal.Core.App.Service.SystemResources;
+namespace Portal.Core.Services.SystemResources;
 
 public sealed record ResourceSnapshot
 {

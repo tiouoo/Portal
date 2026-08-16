@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Portal.Core.App.Service;
+namespace Portal.Core.Services;
 
 public static class CredentialsService
 {
