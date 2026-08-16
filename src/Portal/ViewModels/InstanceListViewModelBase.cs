@@ -45,17 +45,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     private readonly ConcurrentDictionary<MinecraftInstance, InstancePinyinCache> _pinyinCache = new();
     private bool _isDisposed;
 
-    private MinecraftInstance? _recentInstance;
-
-    private string _searchText = string.Empty;
-
     private FolderFilterOption? _selectedFolderFilter;
-
-    private SortOption? _selectedSortOption;
-
-    private int _totalPlaySessions;
-
-    private long _totalPlayTimeSeconds;
 
     protected InstanceListViewModelBase()
     {
@@ -85,10 +75,10 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
     public long TotalPlayTimeSeconds
     {
-        get => _totalPlayTimeSeconds;
+        get;
         private set
         {
-            if (SetProperty(ref _totalPlayTimeSeconds, value))
+            if (SetProperty(ref field, value))
             {
                 OnPropertyChanged(nameof(DisplayTotalPlayTime));
                 OnPropertyChanged(nameof(PlayTimeUnit));
@@ -98,10 +88,10 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
     public int TotalPlaySessions
     {
-        get => _totalPlaySessions;
+        get;
         private set
         {
-            if (SetProperty(ref _totalPlaySessions, value)) OnPropertyChanged(nameof(DisplayTotalPlaySessions));
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(DisplayTotalPlaySessions));
         }
     }
 
@@ -131,10 +121,10 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
     public SortOption? SelectedSortOption
     {
-        get => _selectedSortOption;
+        get;
         set
         {
-            if (SetProperty(ref _selectedSortOption, value))
+            if (SetProperty(ref field, value))
             {
                 if (value != null) Data.ConfigEntry.DefaultInstanceSortType = value.SortType;
 
@@ -145,12 +135,12 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
     public string SearchText
     {
-        get => _searchText;
+        get;
         set
         {
-            if (SetProperty(ref _searchText, value)) ApplyFilterAndSort();
+            if (SetProperty(ref field, value)) ApplyFilterAndSort();
         }
-    }
+    } = string.Empty;
 
     public string SummaryText
     {
@@ -160,10 +150,10 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
     public MinecraftInstance? RecentInstance
     {
-        get => _recentInstance;
+        get;
         private set
         {
-            if (SetProperty(ref _recentInstance, value)) OnPropertyChanged(nameof(HasRecentInstance));
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(HasRecentInstance));
         }
     }
 
