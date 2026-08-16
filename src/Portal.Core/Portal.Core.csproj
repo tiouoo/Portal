@@ -42,7 +42,6 @@
 
     <ItemGroup>
         <Folder Include="App\Service\"/>
-        <Folder Include="Assets\"/>
         <Folder Include="Minecraft\Instance\Java\"/>
     </ItemGroup>
 
@@ -52,6 +51,9 @@
         </EmbeddedResource>
         <EmbeddedResource Include="..\..\assets\conf\version-ci.txt">
             <Link>Assets\version-ci.txt</Link>
+        </EmbeddedResource>
+        <EmbeddedResource Include="..\..\assets\conf\unlisted-versions.json">
+            <Link>Assets\unlisted-versions.json</Link>
         </EmbeddedResource>
     </ItemGroup>
 

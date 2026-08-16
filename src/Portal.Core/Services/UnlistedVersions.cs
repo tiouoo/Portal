@@ -7,7 +7,7 @@ namespace Portal.Core.Services;
 
 public static class UnlistedVersions
 {
-    private const string ResourcePath = "avares://Portal/Assets/unlisted-versions.json";
+    private const string ResourcePath = "avares://Portal.Core/Assets/unlisted-versions.json";
     private const string MidnightMarker = "T24:00:00";
 
     private static readonly object ResourceLock = new();
