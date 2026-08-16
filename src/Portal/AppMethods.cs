@@ -46,6 +46,7 @@ public partial class App : Application
                     WriteAtomic(ConfigPath.SettingDataPath, payload.ConfigJson);
                     WriteAtomic(Path.Combine(ConfigPath.UserDataRootPath, "ManagedSystemDialogs.portal"),
                         payload.ManagedDialogs);
+                    WriteAtomic(ConfigPath.DebugConsoleDataPath, payload.DebugConsole);
                 }
                 Logger.Info($"应用配置保存完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
             }
@@ -55,7 +56,7 @@ public partial class App : Application
             }
         }
 
-        private static (string ConfigJson, string ManagedDialogs) CaptureConfig()
+        private static (string ConfigJson, string ManagedDialogs, string DebugConsole) CaptureConfig()
         {
             ApplicationEvents.RaiseSaveSettings();
             // 与读取配置保持一致：使用 TypeNameHandling.Auto 写出 WidgetLayoutData.Data 的 $type，
@@ -66,7 +67,8 @@ public partial class App : Application
                 Formatting = Formatting.Indented
             };
             return (JsonConvert.SerializeObject(Data.ConfigEntry, settings),
-                Data.ConfigEntry.FilePicker == FilePicker.Managed ? "true" : "false");
+                Data.ConfigEntry.FilePicker == FilePicker.Managed ? "true" : "false",
+                Data.ConfigEntry.EnableDebugConsole ? "true" : "false");
         }
 
         /// <summary>先写同目录临时文件再原子替换，避免写入中途崩溃损坏原文件。</summary>

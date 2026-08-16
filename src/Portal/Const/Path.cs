@@ -19,4 +19,5 @@ public static class ConfigPath
 
     public static string SettingDataPath => Path.Combine(UserDataRootPath, "Setting.portal");
     public static string AppPathDataPath => Path.Combine(UserDataRootPath, "AppPath.portal");
+    public static string DebugConsoleDataPath => Path.Combine(UserDataRootPath, "DebugConsole.portal");
 }

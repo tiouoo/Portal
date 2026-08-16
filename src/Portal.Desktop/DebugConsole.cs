@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
 using Portal.Const;
 
 namespace Portal.Desktop;
@@ -29,9 +28,8 @@ internal static partial class DebugConsole
     {
         try
         {
-            if (!File.Exists(ConfigPath.SettingDataPath)) return false;
-            using var document = JsonDocument.Parse(File.ReadAllText(ConfigPath.SettingDataPath));
-            return document.RootElement.TryGetProperty("EnableDebugConsole", out var value) && value.ValueKind == JsonValueKind.True;
+            if (!File.Exists(ConfigPath.DebugConsoleDataPath)) return false;
+            return File.ReadAllText(ConfigPath.DebugConsoleDataPath) == "true";
         }
         catch (Exception exception)
         {
