@@ -213,10 +213,16 @@ internal static unsafe partial class Logger
             safeName = "native.log";
         }
 
-        string directory = Path.Combine(
-            Path.GetDirectoryName(Environment.ProcessPath) ?? ".",
-            "config", "Portal", "logs");
-        Directory.CreateDirectory(directory);
+        string baseDirectory = Path.GetDirectoryName(Environment.ProcessPath) ?? ".";
+        string directory = Path.Combine(baseDirectory, "config", "Portal", "logs");
+        try
+        {
+            Directory.CreateDirectory(directory);
+        }
+        catch
+        {
+            directory = Path.GetTempPath();
+        }
 
         return Path.Combine(directory, safeName);
     }

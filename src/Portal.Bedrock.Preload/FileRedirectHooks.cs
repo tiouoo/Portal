@@ -63,14 +63,14 @@ internal static unsafe partial class FileRedirectHooks
 
     private static void LogAddresses()
     {
-        Logger.Info($"NtCreateFile addr: {(ulong)_createFile}");
-        Logger.Info($"NtOpenFile addr: {(ulong)_openFile}");
-        Logger.Info($"NtQueryAttributesFile addr: {(ulong)_queryAttributes}");
-        Logger.Info($"NtQueryFullAttributesFile addr: {(ulong)_queryFullAttributes}");
-        Logger.Info($"NtSetInformationFile addr: {(ulong)_setInformation}");
-        Logger.Info($"NtDeleteFile addr: {(ulong)_deleteFile}");
-        Logger.Info($"NtQueryDirectoryFile addr: {(ulong)_queryDirectory}");
-        Logger.Info($"NtCreateSection addr: {(ulong)_createSection}");
+        Logger.Info($"NtCreateFile addr: 0x{_createFile:X}");
+        Logger.Info($"NtOpenFile addr: 0x{_openFile:X}");
+        Logger.Info($"NtQueryAttributesFile addr: 0x{_queryAttributes:X}");
+        Logger.Info($"NtQueryFullAttributesFile addr: 0x{_queryFullAttributes:X}");
+        Logger.Info($"NtSetInformationFile addr: 0x{_setInformation:X}");
+        Logger.Info($"NtDeleteFile addr: 0x{_deleteFile:X}");
+        Logger.Info($"NtQueryDirectoryFile addr: 0x{_queryDirectory:X}");
+        Logger.Info($"NtCreateSection addr: 0x{_createSection:X}");
     }
 
     private static bool Attach(ref nint original, nint detour)

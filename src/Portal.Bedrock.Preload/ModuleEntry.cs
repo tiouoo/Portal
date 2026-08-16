@@ -12,6 +12,7 @@ namespace Portal.Bedrock.Preload;
 internal static unsafe class ModuleEntry
 {
     private static readonly ConfigManager Config = new();
+    private static readonly nint InvalidHandle = new(-1);
     private static bool _initialized;
 
     [ModuleInitializer]
@@ -21,6 +22,7 @@ internal static unsafe class ModuleEntry
             return;
         _initialized = true;
 
+        WriteBootMarker("module-init-start");
         try
         {
             Run();
@@ -29,19 +31,74 @@ internal static unsafe class ModuleEntry
         {
             Logger.Error($"Module initialization failed: {ex}");
         }
+        WriteBootMarker("module-init-done");
+    }
+
+    /// <summary>
+    /// 极简启动标记：仅用原生句柄写入，不经过托管文件层（降低 DllMain 期间 loader 锁死锁风险）。
+    /// 用于区分"DLL 未被加载"与"加载后初始化中途失败"。
+    /// </summary>
+    private static void WriteBootMarker(string state)
+    {
+        try
+        {
+            string? directory = Path.GetDirectoryName(Environment.ProcessPath);
+            if (string.IsNullOrEmpty(directory))
+                return;
+
+            string path = Path.Combine(directory, "config", "Portal", "logs", "boot.log");
+            byte[] line = System.Text.Encoding.UTF8.GetBytes($"{DateTime.Now:O} {state}\n");
+            nint handle = NativeMethods.CreateFileW(path, 0x40000000 /* GENERIC_WRITE */,
+                0x7 /* SHARE_READ|WRITE|DELETE */, nint.Zero, 2 /* CREATE_ALWAYS */,
+                0x80 /* FILE_ATTRIBUTE_NORMAL */, nint.Zero);
+            if (handle == InvalidHandle)
+                return;
+
+            unsafe
+            {
+                fixed (byte* buffer = line)
+                {
+                    NativeMethods.WriteFile(handle, buffer, (uint)line.Length, out _, nint.Zero);
+                }
+            }
+            NativeMethods.CloseHandle(handle);
+        }
+        catch
+        {
+        }
     }
 
     private static void Run()
     {
-        UseExeDirectoryAsWorkingDirectory();
-
-        if (Config.GetConfigBool("isConsole"))
-            OpenConsole();
-
-        if (Config.GetConfigBool("isVersionIsolated"))
+        try
         {
-            Logger.Info("Initializing File Hook.");
-            FileRedirectHooks.Install(Config);
+            UseExeDirectoryAsWorkingDirectory();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Set working directory failed: {ex}");
+        }
+
+        try
+        {
+            if (Config.GetConfigBool("isConsole"))
+                OpenConsole();
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            if (Config.GetConfigBool("isVersionIsolated"))
+            {
+                Logger.Info("Initializing File Hook.");
+                FileRedirectHooks.Install(Config);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"File hook install failed: {ex}");
         }
 
         NativeExports.LogInjection();
@@ -50,6 +107,8 @@ internal static unsafe class ModuleEntry
             (nint)(delegate* unmanaged<nint, uint>)&WorkerThread, nint.Zero, 0, out _);
         if (thread != 0)
             NativeMethods.CloseHandle(thread);
+        else
+            Logger.Error($"CreateThread failed: {Marshal.GetLastWin32Error()}");
     }
 
     [UnmanagedCallersOnly]
@@ -59,6 +118,7 @@ internal static unsafe class ModuleEntry
         {
             bool console = Config.GetConfigBool("isConsole");
             Logger.Initialize(console, Config.GetConfig("nativeLogFile"));
+            Logger.Info($"Preload worker started. Exe: {Environment.ProcessPath} CWD: {Environment.CurrentDirectory}");
             if (console)
             {
                 PrintBanner();
