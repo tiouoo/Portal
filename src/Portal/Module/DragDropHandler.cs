@@ -9,8 +9,8 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Initialize;
-using Portal.Core.Operations.Account;
-using Portal.Core.Operations.OpenFile;
+using Portal.Views.Operations.Account;
+using Portal.Views.Operations.OpenFile;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -19,7 +19,11 @@ using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
-using AuthServer = Portal.Core.Operations.Account.AuthServer;
+using AuthServer = Portal.Views.Operations.Account.AuthServer;
+using AuthServerDetectedViewModel = Portal.Views.Operations.Account.AuthServerDetectedViewModel;
+using AuthServerViewModel = Portal.Views.Operations.Account.AuthServerViewModel;
+using NewMinecraftFolderViewModel = Portal.Views.Operations.OpenFile.NewMinecraftFolderViewModel;
+using YggdrasilAccountViewModel = Portal.Views.Operations.Account.YggdrasilAccountViewModel;
 
 namespace Portal.Module;
 

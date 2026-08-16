@@ -37,8 +37,7 @@ public partial class CrashWindow : TioWindow
     {
         try
         {
-            MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, 14, 2,
-                20);
+            MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow);
         }
         catch (Exception exception)
         {

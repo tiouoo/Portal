@@ -71,8 +71,7 @@ public partial class BedrockPackageImportWindow : TioWindow
     {
         try
         {
-            MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, 14, 2,
-                20);
+            MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle);
         }
         catch (Exception exception)
         {

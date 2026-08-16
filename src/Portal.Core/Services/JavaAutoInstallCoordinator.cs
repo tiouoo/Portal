@@ -5,7 +5,6 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Java;
-using Portal.Core.Operations.Java;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;

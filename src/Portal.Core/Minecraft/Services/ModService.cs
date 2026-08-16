@@ -89,7 +89,7 @@ public sealed class ModService
             try
             {
                 var hashes = await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken), cancellationToken);
-                return (Mod: mod, Sha1: (string?)hashes.Sha1, Fingerprint: hashes.Fingerprint);
+                return (Mod: mod, Sha1: (string?)hashes.Sha1, hashes.Fingerprint);
             }
             catch (IOException)
             {

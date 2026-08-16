@@ -17,10 +17,10 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Core.Operations.OpenFile;
 using Portal.Core.Services;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
+using Portal.Views.Operations.OpenFile;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.InstancePages;
 using Portal.Views.Widgets;
@@ -30,6 +30,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using NewMinecraftFolderViewModel = Portal.Views.Operations.OpenFile.NewMinecraftFolderViewModel;
 
 namespace Portal.Views.Pages;
 

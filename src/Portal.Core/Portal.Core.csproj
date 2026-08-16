@@ -41,7 +41,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="App\Service\" />
+        <Folder Include="App\Service\"/>
         <Folder Include="Assets\"/>
         <Folder Include="Minecraft\Instance\Java\"/>
     </ItemGroup>
@@ -67,13 +67,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Update="Operations\OpenFile\NewMinecraftFolder.axaml.cs">
-            <DependentUpon>Offline.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
     </ItemGroup>
 
     <ItemGroup>

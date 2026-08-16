@@ -6,7 +6,6 @@
     x:DataType="viewModels:NewsDetailsPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:converters="clr-namespace:Portal.Module.Converter;assembly=Portal"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="clr-namespace:Portal.ViewModels"

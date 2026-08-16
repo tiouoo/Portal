@@ -16,10 +16,10 @@ using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
-using Portal.Core.Operations.OpenFile;
 using Portal.Module;
 using Portal.Module.DefaultPage;
 using Portal.Views.Components;
+using Portal.Views.Operations.OpenFile;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using SkiaSharp;
@@ -33,6 +33,7 @@ using TioUi.Common.Extensions;
 using TioUi.Common.Helpers;
 using TioUi.Controls;
 using AutoCompleteBox = Avalonia.Controls.AutoCompleteBox;
+using NewMinecraftFolderViewModel = Portal.Views.Operations.OpenFile.NewMinecraftFolderViewModel;
 #if DEBUG
 using HotAvalonia;
 #endif

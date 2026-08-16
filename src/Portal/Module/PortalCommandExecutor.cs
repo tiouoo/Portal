@@ -107,10 +107,10 @@ public static class PortalCommandExecutor
 
             var candidates = (kind switch
             {
-                LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(minecraftVersion)),
-                LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(minecraftVersion)),
-                LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(minecraftVersion, true)),
-                LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(minecraftVersion)),
+                LoaderKind.Fabric => await FabricInstaller.EnumerableFabricAsync(minecraftVersion),
+                LoaderKind.Forge => await ForgeInstaller.EnumerableForgeAsync(minecraftVersion),
+                LoaderKind.NeoForge => await ForgeInstaller.EnumerableForgeAsync(minecraftVersion, true),
+                LoaderKind.Quilt => await QuiltInstaller.EnumerableQuiltAsync(minecraftVersion),
                 LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(minecraftVersion))
                     .Cast<IInstallEntry>(),
                 _ => throw new InvalidOperationException($"不支持的加载器：{kind}")

@@ -228,7 +228,7 @@ public readonly struct GameVersion : IComparable<GameVersion>, IEquatable<GameVe
 
     public override int GetHashCode()
     {
-        return (_kind.GetHashCode() << 24) ^ (_major << 16) ^ (_minor << 8) ^ (_patch);
+        return (_kind.GetHashCode() << 24) ^ (_major << 16) ^ (_minor << 8) ^ _patch;
     }
 
     public override string ToString()

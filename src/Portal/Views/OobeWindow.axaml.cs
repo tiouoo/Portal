@@ -3,16 +3,17 @@ using System.Runtime.InteropServices;
 using Avalonia.Interactivity;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
-using Portal.Core.Operations.Account;
-using Portal.Core.Operations.Java;
-using Portal.Core.Operations.OpenFile;
 using Portal.Styles;
+using Portal.Views.Operations.Account;
+using Portal.Views.Operations.Java;
+using Portal.Views.Operations.OpenFile;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Helpers;
 using TioUi.Controls;
 using TioUi.Shared;
+using NewMinecraftFolderViewModel = Portal.Views.Operations.OpenFile.NewMinecraftFolderViewModel;
 
 namespace Portal.Views;
 

@@ -6,11 +6,9 @@
     x:DataType="pages:NewTabViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
-    xmlns:converters="clr-namespace:Tio.Avalonia.Standard.Modules.Converters;assembly=Tio.Avalonia.Standard"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
-    xmlns:portalConverters="clr-namespace:Portal.Module.Converter;assembly=Portal"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources />

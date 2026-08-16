@@ -5,12 +5,13 @@ using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Core.Operations.OpenFile;
 using Portal.ViewModels;
+using Portal.Views.Operations.OpenFile;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using NewMinecraftFolderViewModel = Portal.Views.Operations.OpenFile.NewMinecraftFolderViewModel;
 
 namespace Portal.Views.Pages.SettingPages;
 

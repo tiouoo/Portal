@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Const;
-using Portal.Core.Operations.Java;
+using Portal.Core.Services;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;
