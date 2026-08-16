@@ -109,7 +109,7 @@ npm run dev
 
 Portal 建立在许多优秀的 [开源项目](src/Directory.Packages.props) 之上
 
-部分基岩版组件来自 [Round-Studio/PreLoadCpp](https://github.com/Round-Studio/PreLoadCpp) 与 [Round-Studio/Uwp.Injector](https://github.com/Round-Studio/Uwp.Injector)
+部分基岩版组件来自
 
 > [!NOTE]
 > 项目中使用的部分开源库进行了二次修改：
@@ -118,10 +118,10 @@ Portal 建立在许多优秀的 [开源项目](src/Directory.Packages.props) 之
 
 在交互设计、功能取舍与跨平台体验的探索中，Portal 也从下列开源项目的实践中获得了许多启发。感谢所有维护者与贡献者持续丰富 Minecraft 启动器生态；Portal 以独立的产品定位、架构与实现持续开发。
 
-- [BedrockBoot](https://github.com/Round-Studio/BedrockBoot)
-- [LauncherX](https://github.com/Corona-Studio/LXIT)
-- [Axolotl](https://github.com/Mystic-Stars/Axolotl)
-- [PCL-CE](https://github.com/PCL-Community/PCL-CE)
-- [Polymerium](https://github.com/d3ara1n/Polymerium)
-- [HMCL](https://github.com/HMCL-dev/HMCL)
-- [BakaXL](https://bakaxl.com)
+- [BedrockBoot](https://github.com/Round-Studio/BedrockBoot)：基岩版相关功能  ([PreLoadCpp](https://github.com/Round-Studio/PreLoadCpp)，[Uwp.Injector](https://github.com/Round-Studio/Uwp.Injector))
+- [LauncherX](https://github.com/Corona-Studio/LXIT)：部分外观设计与功能
+- [Axolotl](https://github.com/Mystic-Stars/Axolotl)：部分功能
+- [PCL-CE](https://github.com/PCL-Community/PCL-CE)：部分功能
+- [Polymerium](https://github.com/d3ara1n/Polymerium)：部分外观设计和功能
+- [HMCL](https://github.com/HMCL-dev/HMCL)：部分功能
+- [BakaXL](https://bakaxl.com)：内置游戏图标
