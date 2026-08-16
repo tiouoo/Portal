@@ -2,9 +2,9 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Core.Const;
-using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Controls;
+using OverlayWindow = Portal.Views.OverlayWindow;
 
 namespace Portal.Services;
 

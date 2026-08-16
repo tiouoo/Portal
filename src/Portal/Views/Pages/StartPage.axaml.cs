@@ -20,7 +20,7 @@ using Portal.Core.Services;
 using Portal.Module;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
-using Portal.Views.Operations.OpenFile;
+using Portal.Views.Components.Operations.OpenFile;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -30,7 +30,7 @@ using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 using AutoCompleteBox = TioUi.Controls.AutoCompleteBox;
-using NewMinecraftFolderViewModel = Portal.Views.Operations.OpenFile.NewMinecraftFolderViewModel;
+using NewMinecraftFolderViewModel = Portal.Views.Components.Operations.OpenFile.NewMinecraftFolderViewModel;
 
 namespace Portal.Views.Pages;
 

@@ -6,12 +6,12 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.ViewModels;
-using Portal.Views.Operations.OpenFile;
+using Portal.Views.Components.Operations.OpenFile;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
-using NewMinecraftFolderViewModel = Portal.Views.Operations.OpenFile.NewMinecraftFolderViewModel;
+using NewMinecraftFolderViewModel = Portal.Views.Components.Operations.OpenFile.NewMinecraftFolderViewModel;
 
 namespace Portal.Views.Pages.SettingPages;
 

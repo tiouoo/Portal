@@ -48,6 +48,5 @@
         <ProjectReference Include="..\Portal.Core\Portal.Core.csproj"/>
         <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj"/>
     </ItemGroup>
-
-
+    
 </Project>

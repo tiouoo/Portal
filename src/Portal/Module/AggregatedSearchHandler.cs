@@ -5,7 +5,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Services;
-using Portal.Views.Operations.Account;
+using Portal.Views.Components.Operations.Account;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -14,7 +14,7 @@ using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 using AuthServer = Portal.Core.Minecraft.Classes.AuthServer;
-using EditAuthServerViewModel = Portal.Views.Operations.Account.EditAuthServerViewModel;
+using EditAuthServerViewModel = Portal.Views.Components.Operations.Account.EditAuthServerViewModel;
 using TopLevel = Avalonia.Controls.TopLevel;
 
 

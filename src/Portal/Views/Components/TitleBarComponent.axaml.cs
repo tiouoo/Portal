@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Multiplayer;
-using Portal.Views.Operations.Account;
+using Portal.Views.Components.Operations.Account;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.SettingPages;

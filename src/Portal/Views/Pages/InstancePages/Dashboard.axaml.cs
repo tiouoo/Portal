@@ -19,7 +19,6 @@ using Portal.Core.Services;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;
-using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;

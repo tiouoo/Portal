@@ -6,10 +6,10 @@
     x:DataType="instancePages:Servers"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:controls1="clr-namespace:Portal.Views.Components.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:portalControls="clr-namespace:Portal.Views.Controls"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
@@ -249,7 +249,7 @@
                                                 IsVisible="{Binding HasVersion}"
                                                 Text="{Binding VersionText}"
                                                 VerticalAlignment="Center" />
-                                            <portalControls:MinecraftTextBlock
+                                            <controls1:MinecraftTextBlock
                                                 FontSize="13"
                                                 Foreground="{DynamicResource InnerForegroundColor}"
                                                 MaxLines="2"

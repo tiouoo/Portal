@@ -14,7 +14,7 @@ using Portal.Module.Imaging;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
-using ImageViewer = Portal.Views.StaticPages.ImageViewer;
+using ImageViewer = Portal.Views.Pages.StaticPages.ImageViewer;
 
 namespace Portal.Views.Pages.InstancePages;
 

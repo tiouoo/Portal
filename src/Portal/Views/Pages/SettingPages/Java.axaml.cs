@@ -10,7 +10,7 @@ using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Services.SystemResources;
 using Portal.ViewModels;
-using Portal.Views.Operations.Java;
+using Portal.Views.Components.Operations.Java;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;

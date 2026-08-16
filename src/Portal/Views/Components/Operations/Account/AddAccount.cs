@@ -1,0 +1,136 @@
+﻿using System.Collections.ObjectModel;
+using Portal.Core.Minecraft.Classes;
+using TioUi.Common;
+using TioUi.Controls;
+using Minecraft = Portal.Core.Minecraft;
+
+namespace Portal.Views.Components.Operations.Account;
+
+public class AddAccount
+{
+    public static async Task<BedrockAccount?> Bedrock(string? hostId)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
+        };
+        return await OverlayDialog.ShowCustomAsync<BedrockMicrosoft, BedrockMicrosoftViewModel, BedrockAccount>(
+            new BedrockMicrosoftViewModel(), hostId, options);
+    }
+
+    public static async Task<AccountAdditionResult?> Main(string hostId,
+        ObservableCollection<Minecraft.Classes.AuthServer> authServers)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
+        };
+
+        var result = await OverlayDialog
+            .ShowCustomAsync<SelectAccountType, SelectAccountTypeViewModel, SelectAccountTypeResult>(
+                new SelectAccountTypeViewModel(), hostId, options);
+
+        if (result?.Action != SelectAccountTypeAction.Select || result.SelectedServer == null) return null;
+
+        if (result.SelectedServer.AuthType == AccountType.Bedrock)
+        {
+            var bedrockAccount = await Bedrock(hostId);
+            return bedrockAccount == null ? null : new AccountAdditionResult([], bedrockAccount);
+        }
+
+        var accounts = await HandleAccountType(result.SelectedServer, authServers, hostId);
+
+        if (accounts == null || accounts.Length == 0 || accounts.All(a => a == null)) return null;
+
+        var validAccounts = accounts.Where(a => a != null).ToArray();
+        var viewResult = await OverlayDialog.ShowCustomAsync<ViewResult, ViewResultViewModel, object>(
+            new ViewResultViewModel(new ObservableCollection<MinecraftAccount>(validAccounts)),
+            hostId, options);
+
+        if (viewResult is ObservableCollection<MinecraftAccount> resultAccounts)
+            return new AccountAdditionResult(resultAccounts.ToArray(), null);
+
+        return null;
+    }
+
+    private static async Task<MinecraftAccount[]?> HandleAccountType(Minecraft.Classes.AuthServer authServer,
+        ObservableCollection<Minecraft.Classes.AuthServer> authServers, string? hostId)
+    {
+        var options = new OverlayDialogOptions
+        {
+            Mode = DialogMode.None,
+            Buttons = DialogButton.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false,
+            VerticalAnchor = VerticalPosition.Top,
+            VerticalOffset = 110
+        };
+
+        return authServer.AuthType switch
+        {
+            AccountType.Offline => await Offline(hostId, options),
+            AccountType.Microsoft => await Microsoft(hostId, options),
+            AccountType.Yggdrasil => await Yggdrasil(hostId, options, authServers),
+            _ => null
+        };
+    }
+
+    public static async Task<MinecraftAccount[]?> Offline(string? hostId, OverlayDialogOptions options)
+    {
+        var result = await OverlayDialog.ShowCustomAsync<Offline, OfflineAccountViewModel, MinecraftAccount>(
+            new OfflineAccountViewModel(), hostId, options);
+
+        return [result];
+    }
+
+    public static async Task<MinecraftAccount[]?> Microsoft(string? hostId, OverlayDialogOptions options)
+    {
+        var result = await OverlayDialog.ShowCustomAsync<Microsoft, MicrosoftAccountViewModel, object>(
+            new MicrosoftAccountViewModel(), hostId, options);
+
+        if (result is "retry") return await Microsoft(hostId, options);
+
+        return [result as MinecraftAccount];
+    }
+
+    public static async Task<MinecraftAccount[]?> Yggdrasil(string? hostId, OverlayDialogOptions options,
+        ObservableCollection<Minecraft.Classes.AuthServer> authServers)
+    {
+        var result = await OverlayDialog.ShowCustomAsync<Yggdrasil, YggdrasilAccountViewModel, MinecraftAccount[]>(
+            new YggdrasilAccountViewModel(authServers, hostId), hostId, options);
+
+        if (result == null) return null;
+
+        foreach (var account in result)
+        {
+            var host = Uri.TryCreate(account.YggdrasilServerUrl, UriKind.Absolute, out var uriResult)
+                ? uriResult.Host
+                : "";
+            account.AccountNote = host;
+            account.CreateAt = DateTime.Now;
+            account.LastRefreshTime = DateTime.Now;
+        }
+
+        return result;
+    }
+}
+
+public sealed record AccountAdditionResult(
+    IReadOnlyList<MinecraftAccount> JavaAccounts,
+    BedrockAccount? BedrockAccount);

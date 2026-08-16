@@ -9,7 +9,7 @@ using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Services;
 using Portal.ViewModels;
-using Portal.Views.Operations.Account;
+using Portal.Views.Components.Operations.Account;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Classes;

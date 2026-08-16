@@ -15,7 +15,6 @@ using Portal.Core.Services;
 using Portal.Core.Services.SystemResources;
 using Portal.Services;
 using Portal.Views;
-using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Platform;
@@ -23,6 +22,7 @@ using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Common;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Helpers;
+using OverlayWindow = Portal.Views.OverlayWindow;
 
 namespace Portal.Module.Initialize;
 

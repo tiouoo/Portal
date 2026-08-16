@@ -16,7 +16,6 @@ using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Multiplayer;
 using Portal.Views.Components;
-using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
