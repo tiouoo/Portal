@@ -35,7 +35,7 @@ namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("新标签页", "新标签页", "NewTab")]
 [DefaultPage("新标签页")]
-public partial class NewTabPage : DataUserControl, ITioTabPage
+public partial class NewTabPage : Dsc, ITioTabPage
 {
     public NewTabViewModel NewTabViewModel;
     private bool _isInitialized;

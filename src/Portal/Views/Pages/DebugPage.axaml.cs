@@ -7,7 +7,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-public partial class DebugPage : DataUserControl, ITioTabPage
+public partial class DebugPage : Dsc, ITioTabPage
 {
     public DebugPage()
     {

@@ -28,7 +28,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDisposable
+public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
 {
     private readonly InstanceDetailPage _parent;
     private bool _isDisposed;

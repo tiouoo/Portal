@@ -28,7 +28,7 @@ namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("实例", "实例", "Instances")]
 [DefaultPage("实例")]
-public partial class InstancesPage : DataUserControl, ITioTabPage
+public partial class InstancesPage : Dsc, ITioTabPage
 {
     public InstancesPageViewModel InstancesPageViewModel;
     private bool _isInitialized;

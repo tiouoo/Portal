@@ -13,7 +13,7 @@ namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("实用工具", "实用工具", "Tools")]
 [DefaultPage("实用工具")]
-public partial class ToolsPage : DataUserControl, ITioTabPage
+public partial class ToolsPage : Dsc, ITioTabPage
 {
     public ToolsPage()
     {

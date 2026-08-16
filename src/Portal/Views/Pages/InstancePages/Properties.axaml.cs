@@ -13,7 +13,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Properties : DataUserControl, INotifyPropertyChanged
+public partial class Properties : Dsc, INotifyPropertyChanged
 {
     public Properties(MinecraftInstance instance)
     {

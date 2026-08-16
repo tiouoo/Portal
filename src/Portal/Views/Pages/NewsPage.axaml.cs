@@ -16,7 +16,7 @@ namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("新闻", "新闻", "News")]
 [DefaultPage("新闻")]
-public partial class NewsPage : DataUserControl, ITioTabPage
+public partial class NewsPage : Dsc, ITioTabPage
 {
     public NewsPage(bool isInset = false)
     {

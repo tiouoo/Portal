@@ -15,7 +15,7 @@ using TioUi.Controls;
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("游戏目录", "设置/游戏目录", "GameFolder")]
-public partial class GameFolder : DataUserControl
+public partial class GameFolder : Dsc
 {
     public GameFolder()
     {

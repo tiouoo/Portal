@@ -6,7 +6,7 @@ using Portal.ViewModels;
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("默认行为", "设置/默认行为", "DefaultBehavior")]
-public partial class DefaultBehavior : DataUserControl
+public partial class DefaultBehavior : Dsc
 {
     public DefaultBehavior()
     {

@@ -8,7 +8,7 @@ using Portal.ViewModels;
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("下载设置", "设置/下载设置", "Download")]
-public partial class Download : DataUserControl, INotifyPropertyChanged, IDisposable
+public partial class Download : Dsc, INotifyPropertyChanged, IDisposable
 {
     private bool _isDisposed;
 
