@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Portal.Const;
+using Portal.Core.Const;
 
 namespace Portal.Desktop;
 

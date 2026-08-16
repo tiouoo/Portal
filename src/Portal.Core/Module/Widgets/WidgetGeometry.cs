@@ -1,6 +1,6 @@
 using Avalonia;
 
-namespace Portal.Module.Widgets;
+namespace Portal.Core.Module.Widgets;
 
 public static class WidgetGeometry
 {

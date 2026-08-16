@@ -1,16 +1,13 @@
-using System.Collections.Generic;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using MinecraftLaunch;
 using MinecraftLaunch.Base.Enums;
-using Portal.Classes.Enums;
+using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
-using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Shared;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Config;
 
 public partial class ConfigEntry : ObservableObject
 {

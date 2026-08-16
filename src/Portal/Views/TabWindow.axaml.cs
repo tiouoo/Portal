@@ -12,13 +12,17 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using Portal.Classes.Config;
 #if DEBUG
 using HotAvalonia;
 #endif
 using Portal.Classes.Entries;
-using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Core.Classes;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Module.Initialize;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.DefaultPage;
 using Portal.Module.DragDrop;

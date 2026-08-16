@@ -1,12 +1,12 @@
 using System.Collections.ObjectModel;
 using Avalonia.Threading;
-using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public sealed class RecentPlayListService
 {

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Operations.Java;
 using TioUi.Common.Interfaces;
 

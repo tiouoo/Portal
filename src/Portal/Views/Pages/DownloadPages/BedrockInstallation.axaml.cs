@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.Tasks;

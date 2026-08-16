@@ -1,8 +1,8 @@
-using Portal.Const;
+using Portal.Core.Classes.Config;
 using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Entries;
 
 public class ConfigIdentifyExtension
 {

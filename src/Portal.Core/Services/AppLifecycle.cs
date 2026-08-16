@@ -1,11 +1,8 @@
-using System;
 using System.Diagnostics;
-using System.IO;
-using Portal.Module.Initialize;
-using Tio.Avalonia.Standard.Modules.DiskIO;
+using Portal.Core.Module.Initialize;
 using Tio.Avalonia.Standard.Modules.Events;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public static class AppLifecycle
 {

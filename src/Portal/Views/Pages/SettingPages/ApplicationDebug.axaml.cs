@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Portal.Const;
+using Portal.Core.Module.AggregatedSearch;
+using Portal.Core.Module.Ipc;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.Ipc;
 using Portal.ViewModels;

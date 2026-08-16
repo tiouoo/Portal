@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using TioUi.Common.Interfaces;
 using Tio.Avalonia.Standard.Modules.DiskIO;

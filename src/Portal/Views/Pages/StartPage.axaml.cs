@@ -10,14 +10,18 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Classes.Entries;
 using Portal.Const;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.Module;
+using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Operations.OpenFile;
+using Portal.Core.Services;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
-using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;
@@ -406,7 +410,7 @@ public sealed record SearchMode(
     public bool Matches(string keyword) => Aliases.Contains(keyword);
 }
 
-public partial class StartPageViewModel : InstanceListViewModelBase
+public partial class StartPageViewModel : ViewModels.InstanceListViewModelBase
 {
     private readonly RecentPlayListService _recentPlayListService = RecentPlayListService.Instance;
     private List<RecentPlayItem> _allRecentPlays = [];

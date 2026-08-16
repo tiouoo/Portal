@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
-using Portal.Const;
-using Portal.Views.Pages.DownloadPages;
+using Portal.Core.Const;
+using Portal.Core.Minecraft.Models;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public enum FavoriteEdition { Java, Bedrock }
 

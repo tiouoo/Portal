@@ -5,6 +5,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Core.Services;
 using Portal.Services;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;

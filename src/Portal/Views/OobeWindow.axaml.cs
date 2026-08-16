@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
 using Portal.Core.Operations.Java;

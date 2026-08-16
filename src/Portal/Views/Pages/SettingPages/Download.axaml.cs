@@ -7,6 +7,9 @@ using Portal.Const;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using MinecraftLaunch.Base.Enums;
+using Portal.Core.Classes.Config;
+using Portal.Core.Const;
+using Portal.Core.Module.AggregatedSearch;
 
 namespace Portal.Views.Pages.SettingPages;
 

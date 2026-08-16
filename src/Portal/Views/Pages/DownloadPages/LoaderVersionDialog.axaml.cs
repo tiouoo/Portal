@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Interfaces;
+using Portal.Core.Minecraft.Models;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;

@@ -1,12 +1,10 @@
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Portal.Const;
-using Portal.Core;
 using Portal.Core.App.Service;
+using Portal.Core.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Module.Multiplayer;
+namespace Portal.Core.Module.Multiplayer;
 
 public sealed class GravityConeNodeClient
 {

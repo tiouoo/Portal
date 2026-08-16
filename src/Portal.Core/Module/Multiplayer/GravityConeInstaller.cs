@@ -1,15 +1,14 @@
 using System.Formats.Tar;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Portal.Const;
-using Portal.Module.Update;
+using Portal.Core.Const;
+using Portal.Core.Module.Update;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Module.Multiplayer;
+namespace Portal.Core.Module.Multiplayer;
 
 public enum ComponentUpdateStatus
 {

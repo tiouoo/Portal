@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
-using Portal.Classes.Enums;
+using Portal.Core.Classes;
 
 namespace Portal.Module.Converter;
 

@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Portal.Module.Multiplayer;
+namespace Portal.Core.Module.Multiplayer;
 
 public enum MinecraftEdition
 {

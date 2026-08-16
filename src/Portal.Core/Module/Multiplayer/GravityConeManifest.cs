@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Portal.Module.Multiplayer;
+namespace Portal.Core.Module.Multiplayer;
 
 public sealed class GravityConeManifest
 {

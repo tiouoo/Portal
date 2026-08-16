@@ -1,3 +1,5 @@
+using Portal.Core.Minecraft.Models;
+
 namespace Portal.Views.Pages.DownloadPages;
 
 public static class BedrockResourceDefinitions

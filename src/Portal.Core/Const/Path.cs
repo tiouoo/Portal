@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace Portal.Const;
+﻿namespace Portal.Core.Const;
 
 public static class ConfigPath
 {

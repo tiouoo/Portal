@@ -1,10 +1,9 @@
-using System.Diagnostics;
-using Portal.Const;
 using Portal.Core.App.Events;
+using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public static class MinecraftLaunchOptionsFactory
 {

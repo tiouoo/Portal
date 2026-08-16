@@ -1,4 +1,4 @@
-namespace Portal.Module.Widgets;
+namespace Portal.Core.Module.Widgets;
 
 public enum WidgetKind
 {

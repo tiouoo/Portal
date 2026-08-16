@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Markup.Xaml;
+using Portal.Core.Module.AggregatedSearch;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.Views.Widgets;

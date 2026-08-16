@@ -1,8 +1,7 @@
-using System;
-using Portal.Classes.Enums;
-using Portal.Const;
+using Portal.Core.Classes;
+using Portal.Core.Const;
 
-namespace Portal.Module.Update;
+namespace Portal.Core.Module.Update;
 
 public static class GithubMirror
 {

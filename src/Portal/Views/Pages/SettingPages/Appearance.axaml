@@ -6,6 +6,7 @@
     x:DataType="settingPages:Appearance"
     xmlns="https://github.com/avaloniaui"
     xmlns:const="clr-namespace:Portal.Const;assembly=Portal.Core"
+    xmlns:const1="clr-namespace:Portal.Core.Const;assembly=Portal.Core"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -111,7 +112,7 @@
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="{Binding AppScale, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                        Text="{Binding AppScale, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                         VerticalAlignment="Center" />
                     <TextBlock
                         FontSize="13"
@@ -124,8 +125,8 @@
                         Text="实际缩放: " />
                     <TextBlock
                         FontSize="13"
-                        Foreground="{DynamicResource InnerForegroundColor}"
                         FontWeight="SemiBold"
+                        Foreground="{DynamicResource InnerForegroundColor}"
                         Text="{Binding EffectiveScale, StringFormat={}{0:P0}}"
                         VerticalAlignment="Center" />
                 </StackPanel>
@@ -157,7 +158,7 @@
                     Minimum="0.5"
                     Name="AppScaleSlider"
                     TickFrequency="0.25"
-                    Value="{Binding AppScale, Source={x:Static const:Data.ConfigEntry}, Mode=OneWay}"
+                    Value="{Binding AppScale, Source={x:Static const1:Data.ConfigEntry}, Mode=OneWay}"
                     ValueChanged="AppScaleSlider_OnValueChanged" />
                 <TextBlock
                     Grid.Column="1"
@@ -172,17 +173,17 @@
                 Content="背景风格"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}}">
+            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}}">
                 <ComboBoxItem>默认主题</ComboBoxItem>
                 <ComboBoxItem>图片</ComboBoxItem>
                 <ComboBoxItem>纯色</ComboBoxItem>
                 <ComboBoxItem>亚克力</ComboBoxItem>
-                
+
                 <ComboBoxItem>云母</ComboBoxItem>
                 <ComboBoxItem>透明</ComboBoxItem>
             </ComboBox>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='SolidColor'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='SolidColor'}" Spacing="5">
             <Label
                 Content="背景颜色"
                 FontSize="13"
@@ -197,24 +198,24 @@
                 </tio:TioColorPicker.Palette>
             </tio:TioColorPicker>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label
                 Content="背景图片"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:PathPicker
                 FileFilter="[ImageAll]"
-                SelectedPathsText="{Binding BackgroundImagePath, Source={x:Static const:Data.ConfigEntry}}"
+                SelectedPathsText="{Binding BackgroundImagePath, Source={x:Static const1:Data.ConfigEntry}}"
                 Title="选择背景图片"
                 UsePickerType="OpenFile" />
             <TextBlock
                 FontSize="12"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Binding BackgroundImagePath, Source={x:Static const:Data.ConfigEntry}}"
+                Text="{Binding BackgroundImagePath, Source={x:Static const1:Data.ConfigEntry}}"
                 TextTrimming="CharacterEllipsis"
                 TextWrapping="NoWrap" />
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label
                 Content="模糊程度"
                 FontSize="13"
@@ -224,21 +225,21 @@
                     Grid.Column="0"
                     Maximum="1.0"
                     Minimum="0.0"
-                    Value="{Binding ImageBlurRadius, Source={x:Static const:Data.ConfigEntry}}" />
+                    Value="{Binding ImageBlurRadius, Source={x:Static const1:Data.ConfigEntry}}" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="6,0,0,0"
-                    Text="{Binding ImageBlurRadius, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    Text="{Binding ImageBlurRadius, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                     VerticalAlignment="Center"
                     Width="40" />
             </Grid>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label
                 Content="启用背景遮罩"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch IsChecked="{Binding EnableImageMask, Source={x:Static const:Data.ConfigEntry}}" />
+            <ToggleSwitch IsChecked="{Binding EnableImageMask, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <StackPanel.IsVisible>
@@ -247,8 +248,8 @@
                         Converter="{StaticResource BackgroundModeCompareConverter}"
                         ConverterParameter="Image"
                         Path="BackgroundMode"
-                        Source="{x:Static const:Data.ConfigEntry}" />
-                    <Binding Path="EnableImageMask" Source="{x:Static const:Data.ConfigEntry}" />
+                        Source="{x:Static const1:Data.ConfigEntry}" />
+                    <Binding Path="EnableImageMask" Source="{x:Static const1:Data.ConfigEntry}" />
                 </MultiBinding>
             </StackPanel.IsVisible>
             <Label
@@ -272,8 +273,8 @@
                         Converter="{StaticResource BackgroundModeCompareConverter}"
                         ConverterParameter="Image"
                         Path="BackgroundMode"
-                        Source="{x:Static const:Data.ConfigEntry}" />
-                    <Binding Path="EnableImageMask" Source="{x:Static const:Data.ConfigEntry}" />
+                        Source="{x:Static const1:Data.ConfigEntry}" />
+                    <Binding Path="EnableImageMask" Source="{x:Static const1:Data.ConfigEntry}" />
                 </MultiBinding>
             </StackPanel.IsVisible>
             <Label
@@ -285,16 +286,16 @@
                     Grid.Column="0"
                     Maximum="1.0"
                     Minimum="0.0"
-                    Value="{Binding ImageMaskOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                    Value="{Binding ImageMaskOpacity, Source={x:Static const1:Data.ConfigEntry}}" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="6,0,0,0"
-                    Text="{Binding ImageMaskOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    Text="{Binding ImageMaskOpacity, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                     VerticalAlignment="Center"
                     Width="40" />
             </Grid>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}" Spacing="5">
             <Label
                 Content="亚克力颜色"
                 FontSize="13"
@@ -309,7 +310,7 @@
                 </tio:TioColorPicker.Palette>
             </tio:TioColorPicker>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}" Spacing="5">
             <Label
                 Content="透明度"
                 FontSize="13"
@@ -319,16 +320,16 @@
                     Grid.Column="0"
                     Maximum="1.0"
                     Minimum="0.0"
-                    Value="{Binding AcrylicOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                    Value="{Binding AcrylicOpacity, Source={x:Static const1:Data.ConfigEntry}}" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="6,0,0,0"
-                    Text="{Binding AcrylicOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    Text="{Binding AcrylicOpacity, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                     VerticalAlignment="Center"
                     Width="40" />
             </Grid>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Blur'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Blur'}" Spacing="5">
             <Label
                 Content="模糊颜色"
                 FontSize="13"
@@ -343,7 +344,7 @@
                 </tio:TioColorPicker.Palette>
             </tio:TioColorPicker>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Blur'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Blur'}" Spacing="5">
             <Label
                 Content="透明度"
                 FontSize="13"
@@ -353,16 +354,16 @@
                     Grid.Column="0"
                     Maximum="1.0"
                     Minimum="0.0"
-                    Value="{Binding BlurOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                    Value="{Binding BlurOpacity, Source={x:Static const1:Data.ConfigEntry}}" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="6,0,0,0"
-                    Text="{Binding BlurOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    Text="{Binding BlurOpacity, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                     VerticalAlignment="Center"
                     Width="40" />
             </Grid>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Mica'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Mica'}" Spacing="5">
             <Label
                 Content="云母颜色"
                 FontSize="13"
@@ -377,7 +378,7 @@
                 </tio:TioColorPicker.Palette>
             </tio:TioColorPicker>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Mica'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Mica'}" Spacing="5">
             <Label
                 Content="透明度"
                 FontSize="13"
@@ -387,16 +388,16 @@
                     Grid.Column="0"
                     Maximum="1.0"
                     Minimum="0.0"
-                    Value="{Binding MicaOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                    Value="{Binding MicaOpacity, Source={x:Static const1:Data.ConfigEntry}}" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="6,0,0,0"
-                    Text="{Binding MicaOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    Text="{Binding MicaOpacity, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                     VerticalAlignment="Center"
                     Width="40" />
             </Grid>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
             <Label
                 Content="控件不透明度"
                 FontSize="13"
@@ -406,16 +407,16 @@
                     Grid.Column="0"
                     Maximum="1.0"
                     Minimum="0.0"
-                    Value="{Binding ControlOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                    Value="{Binding ControlOpacity, Source={x:Static const1:Data.ConfigEntry}}" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="6,0,0,0"
-                    Text="{Binding ControlOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    Text="{Binding ControlOpacity, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                     VerticalAlignment="Center"
                     Width="40" />
             </Grid>
         </StackPanel>
-        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
+        <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
             <Label
                 Content="半透明控件不透明度"
                 FontSize="13"
@@ -425,11 +426,11 @@
                     Grid.Column="0"
                     Maximum="1.0"
                     Minimum="0.0"
-                    Value="{Binding TranslucentControlOpacity, Source={x:Static const:Data.ConfigEntry}}" />
+                    Value="{Binding TranslucentControlOpacity, Source={x:Static const1:Data.ConfigEntry}}" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="6,0,0,0"
-                    Text="{Binding TranslucentControlOpacity, Source={x:Static const:Data.ConfigEntry}, StringFormat={}{0:P0}}"
+                    Text="{Binding TranslucentControlOpacity, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:P0}}"
                     VerticalAlignment="Center"
                     Width="40" />
             </Grid>
@@ -439,9 +440,9 @@
                 Content="使用自定义字体颜色"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch IsChecked="{Binding EnableCustomForegroundColor, Source={x:Static const:Data.ConfigEntry}}" />
+            <ToggleSwitch IsChecked="{Binding EnableCustomForegroundColor, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
-        <StackPanel IsVisible="{Binding EnableCustomForegroundColor, Source={x:Static const:Data.ConfigEntry}}" Spacing="5">
+        <StackPanel IsVisible="{Binding EnableCustomForegroundColor, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
             <Label
                 Content="全局字体颜色"
                 FontSize="13"
@@ -461,18 +462,18 @@
                 Content="禁用系统边框"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch IsChecked="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const:Data.ConfigEntry}}" />
+            <ToggleSwitch IsChecked="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
-        <StackPanel IsVisible="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const:Data.ConfigEntry}}" Spacing="5">
+        <StackPanel IsVisible="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
             <Label
                 Content="显示边框"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch IsChecked="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const:Data.ConfigEntry}}" />
+            <ToggleSwitch IsChecked="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
         <Border IsVisible="{Binding Data.ConfigEntry.EnableManagedWindowDecorationsOnWindows}" Margin="0,-5,0,0">
             <StackPanel
-                IsVisible="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const:Data.ConfigEntry}}"
+                IsVisible="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}"
                 Margin="0,5,0,0"
                 Spacing="5">
                 <Label
@@ -495,7 +496,7 @@
                 Content="小组件背景"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ToggleSwitch IsChecked="{Binding ShowWidgetBackground, Source={x:Static const:Data.ConfigEntry}}" />
+            <ToggleSwitch IsChecked="{Binding ShowWidgetBackground, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

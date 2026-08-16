@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Config;
 
 public partial class ShortcutConfig : ObservableObject
 {

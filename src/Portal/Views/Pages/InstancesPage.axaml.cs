@@ -9,13 +9,16 @@ using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Module;
+using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Operations.OpenFile;
+using Portal.Core.Services;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
-using Portal.Module.DesktopShortcut;
 using Portal.ViewModels;
 using Portal.Services;
 using Portal.Views.Pages.DownloadPages;
@@ -193,7 +196,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
     }
 }
 
-public partial class InstancesPageViewModel : InstanceListViewModelBase
+public partial class InstancesPageViewModel : ViewModels.InstanceListViewModelBase
 {
     protected override bool FolderFilterEnabled => true;
 

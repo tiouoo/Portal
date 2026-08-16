@@ -1,25 +1,18 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Flurl.Http;
 using MinecraftLaunch.Utilities;
 using Newtonsoft.Json.Linq;
-using Portal.Classes.Enums;
-using Portal.Const;
-using Portal.Core;
 using Portal.Core.App.Service;
+using Portal.Core.Classes;
+using Portal.Core.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
-namespace Portal.Module.Update;
+namespace Portal.Core.Module.Update;
 
 public sealed record UpdateAsset(string Name, string DownloadUrl, long Size, string? Sha256);
 

@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 
-namespace Portal.Views.Pages.DownloadPages;
+namespace Portal.Core.Minecraft.Models;
 
 public sealed record ModVersionGroupKey(string Loader, string MinecraftVersion);
 

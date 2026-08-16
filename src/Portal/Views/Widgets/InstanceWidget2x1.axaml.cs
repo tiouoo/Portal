@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Module.Widgets;
+using Portal.Core.Services;
 using Portal.Module.Widgets;
 using Portal.Services;
 using Portal.Views.Pages;

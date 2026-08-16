@@ -1,4 +1,5 @@
 using Portal.Classes.Entries;
+using Portal.Core.Module.Widgets;
 using Portal.Views.Widgets;
 
 namespace Portal.Module.Widgets;

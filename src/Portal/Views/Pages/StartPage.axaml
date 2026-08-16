@@ -8,12 +8,13 @@
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entries="clr-namespace:Portal.Classes.Entries;assembly=Portal.Core"
+    xmlns:entries1="clr-namespace:Portal.Core.Classes.Entries;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
-        <DataTemplate DataType="entries:AggregatedSearchEntry" x:Key="SearchItemTemplate">
+        <DataTemplate DataType="entries1:AggregatedSearchEntry" x:Key="SearchItemTemplate">
             <StackPanel Margin="4,0">
                 <TextBlock
                     MaxLines="1"
@@ -450,12 +451,12 @@
                                 Click="ButtonOpenInstance_OnClick"
                                 Theme="{StaticResource TransparentButton}">
                                 <StackPanel Orientation="Horizontal">
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
+
+
+
+
+
+
                                     <TextBlock
                                         FontSize="15"
                                         Foreground="{DynamicResource InnerForegroundColor}"

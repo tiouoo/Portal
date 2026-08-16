@@ -1,4 +1,4 @@
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Config;
 
 public static class ShortcutActionDefaults
 {

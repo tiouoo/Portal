@@ -1,15 +1,13 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using Avalonia.Threading;
 using Newtonsoft.Json;
-using Portal.Classes.Enums;
-using Portal.Const;
+using Portal.Core.Classes;
+using Portal.Core.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Helper;
 
-namespace Portal.Module.Initialize;
+namespace Portal.Core.Module.Initialize;
 
 public static class ConfigSaver
 {

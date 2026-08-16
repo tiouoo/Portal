@@ -5,12 +5,14 @@
     x:Class="Portal.Views.Components.AggregatedSearchDialog"
     x:DataType="components:AggregatedSearchDialogViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:aggregatedSearch="clr-namespace:Portal.Core.Module.AggregatedSearch;assembly=Portal.Core"
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entries="clr-namespace:Portal.Classes.Entries;assembly=Portal.Core"
-    xmlns:search="clr-namespace:Portal.Module.AggregatedSearch;assembly=Portal.Core"
+    xmlns:entries1="clr-namespace:Portal.Core.Classes.Entries;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:search="clr-namespace:Portal.Module.AggregatedSearch;assembly=Portal.Core"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -49,7 +51,7 @@
                 SelectedItem="{Binding Data.UiProperty.AggregatedSelectedType}"
                 WindowDecorationProperties.ElementRole="User">
                 <tio:SelectionList.ItemTemplate>
-                    <DataTemplate DataType="search:AggregatedSearchType">
+                    <DataTemplate DataType="aggregatedSearch:AggregatedSearchType">
                         <TextBlock Margin="7,3" Text="{Binding DisplayText}" />
                     </DataTemplate>
                 </tio:SelectionList.ItemTemplate>
@@ -94,7 +96,7 @@
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
-                    <DataTemplate DataType="entries:AggregatedSearchEntry">
+                    <DataTemplate DataType="entries1:AggregatedSearchEntry">
                         <StackPanel Margin="0,-4">
                             <TextBlock Text="{Binding Title}" />
                             <StackPanel

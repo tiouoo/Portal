@@ -1,5 +1,7 @@
 using Avalonia.Controls;
 using Portal.Classes.Entries;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Module.Widgets;
 using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;

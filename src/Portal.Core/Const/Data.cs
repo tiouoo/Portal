@@ -2,12 +2,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Utilities;
 using Portal.Bedrock.Standard.Interface;
-using Portal.Classes.Entries;
 using Portal.Core.App.Service;
+using Portal.Core.Classes;
+using Portal.Core.Classes.Config;
 using Portal.Core.Classes.Entries;
 using Tio.Avalonia.Standard.Modules.Platform;
 
-namespace Portal.Const;
+namespace Portal.Core.Const;
 
 public partial class Data : ObservableObject
 {
@@ -67,7 +68,7 @@ public partial class Data : ObservableObject
                 BedrockNetworkConfiguration.Configure(ConfigEntry.DisableSystemProxy,
                     ConfigEntry.EnableProxyServer ? ConfigEntry.ProxyServer : null, UserAgent,
                     ConfigEntry.EnableGithubMirror, ConfigEntry.GithubMirrorUrl,
-                    ConfigEntry.GithubMirrorMode == Classes.Enums.GithubMirrorMode.Direct,
+                    ConfigEntry.GithubMirrorMode == GithubMirrorMode.Direct,
                     ConfigEntry.EnableFragmentDownload, ConfigEntry.DownloadMaxFragmentCount,
                     ConfigEntry.DownloadMaxRetryCount);
                 break;

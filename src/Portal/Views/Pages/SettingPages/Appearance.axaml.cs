@@ -8,6 +8,8 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Portal.Core.Const;
+using Portal.Core.Module.AggregatedSearch;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Portal.Views.Components;
@@ -30,7 +32,7 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
         DataContext = this;
         Loaded += (_, _) =>
         {
-            ListBox.SelectedIndex = (int)Const.Data.ConfigEntry.Theme;
+            ListBox.SelectedIndex = (int)Data.ConfigEntry.Theme;
             UpdateApplyButtonState();
             SubscribeRenderScaling();
         };
@@ -41,7 +43,7 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
         ListBox.SelectionChanged += (_, _) =>
         {
             if (ListBox.SelectedIndex == -1) return;
-            Const.Data.ConfigEntry.Theme = (TioUi.Shared.Theme)ListBox.SelectedIndex;
+            Data.ConfigEntry.Theme = (TioUi.Shared.Theme)ListBox.SelectedIndex;
         };
     }
 
@@ -141,7 +143,7 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
     private async void CustomScale_OnClick(object? sender, RoutedEventArgs e)
     {
         var result = await OverlayDialog.ShowCustomAsync<ScaleInputDialog, ScaleInputDialogViewModel, double?>(
-            new ScaleInputDialogViewModel(Const.Data.ConfigEntry.AppScale), hostId: this.TryGetHostId());
+            new ScaleInputDialogViewModel(Data.ConfigEntry.AppScale), hostId: this.TryGetHostId());
         if (result is { } scale)
         {
             if (scale is < 0.5 or > 5) return;
@@ -151,13 +153,13 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
 
     private void ApplyScale(double scale)
     {
-        Const.Data.ConfigEntry.AppScale = scale;
+        Data.ConfigEntry.AppScale = scale;
         UpdateApplyButtonState();
     }
 
     private void UpdateApplyButtonState()
     {
-        var applied = Const.Data.ConfigEntry.AppScale;
+        var applied = Data.ConfigEntry.AppScale;
         var pending = AppScaleSlider.Value;
         ApplyScaleButton.IsEnabled = Math.Abs(pending - applied) > 0.0001;
     }

@@ -1,9 +1,9 @@
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
-using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Classes;
+namespace Portal.Core.Classes;
 
 public static class ModDependencyFilter
 {

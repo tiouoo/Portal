@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Const;
+using Portal.Core.Const;
 using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Controls;

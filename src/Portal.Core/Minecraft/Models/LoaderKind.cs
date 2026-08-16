@@ -1,4 +1,4 @@
-namespace Portal.Views.Pages.DownloadPages;
+namespace Portal.Core.Minecraft.Models;
 
 public enum LoaderKind
 {

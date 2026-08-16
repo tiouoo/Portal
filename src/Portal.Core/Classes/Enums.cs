@@ -1,4 +1,4 @@
-namespace Portal.Classes.Enums;
+namespace Portal.Core.Classes;
 
 public enum InstanceSortType
 {

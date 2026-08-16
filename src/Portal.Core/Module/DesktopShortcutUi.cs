@@ -3,7 +3,7 @@ using Avalonia.Controls.Notifications;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
-namespace Portal.Module.DesktopShortcut;
+namespace Portal.Core.Module;
 
 public static class DesktopShortcutUi
 {

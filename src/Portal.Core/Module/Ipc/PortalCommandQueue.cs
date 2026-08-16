@@ -2,7 +2,7 @@ using Avalonia.Threading;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
-namespace Portal.Module.Ipc;
+namespace Portal.Core.Module.Ipc;
 
 public static class PortalCommandQueue
 {

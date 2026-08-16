@@ -1,29 +1,24 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Utilities;
-using Portal.Const;
-using Portal.Module.Initialize;
+using Portal.Core.Const;
+using Portal.Core.Module.Initialize;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
-namespace Portal.Module.Update;
+namespace Portal.Core.Module.Update;
 
 public static class UpdateApp
 {

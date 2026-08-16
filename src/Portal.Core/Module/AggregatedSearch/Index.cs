@@ -1,14 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.App.Helpers;
-using Portal.Core.Helpers;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Services;
+using Portal.Core.Services;
 
-namespace Portal.Module.AggregatedSearch;
+namespace Portal.Core.Module.AggregatedSearch;
 
 public class Index
 {

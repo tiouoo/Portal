@@ -1,15 +1,15 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
+using Portal.Classes.Entries;
 using Portal.Const;
+using Portal.Core.Classes.Config;
+using Portal.Core.Const;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Interface;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Classes.Config;
 
 public static class ShortcutManager
 {

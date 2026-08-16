@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Entries;
 
 public class AggregatedSearchEntry
 {

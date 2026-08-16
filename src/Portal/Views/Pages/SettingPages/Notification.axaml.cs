@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Portal.Const;
+using Portal.Core.Module.AggregatedSearch;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Gateway;

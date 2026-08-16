@@ -11,10 +11,13 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Provider;
 using Portal.Const;
+using Portal.Core.Const;
+using Portal.Core.Minecraft.Models;
 using Portal.Views.Pages.InstancePages;
 using Portal.Views.Pages;
 using Portal.Services;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages.DownloadPages;

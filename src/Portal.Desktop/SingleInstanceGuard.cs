@@ -1,4 +1,5 @@
 using System.Threading;
+using Portal.Core.Module.Ipc;
 using Portal.Module.Ipc;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 

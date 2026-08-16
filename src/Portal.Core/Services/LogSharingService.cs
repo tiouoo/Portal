@@ -1,8 +1,7 @@
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public sealed record LogShareResult(string Platform, string? Url, string? Error)
 {

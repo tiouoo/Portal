@@ -1,23 +1,20 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Models.Network;
-using Portal.Classes.Entries;
-using Portal.Core.Minecraft.Classes;
+using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Instance;
-using Portal.Module.AggregatedSearch;
-using Portal.Services;
+using Portal.Core.Module.AggregatedSearch;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Standard.Ui;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common.Classes;
-using TioUi.Controls;
+using Index = Portal.Core.Module.AggregatedSearch.Index;
 
-namespace Portal.Const;
+namespace Portal.Core.Const;
 
 public partial class UiProperty : ObservableObject
 {
@@ -41,7 +38,7 @@ public partial class UiProperty : ObservableObject
 
     private void OnInstancesChanged(object? sender, EventArgs e)
     {
-        Portal.Module.AggregatedSearch.Index.MarkDirty();
+        Index.MarkDirty();
         if (AggregatedSelectedType.EnumFlag.HasFlag(AggregatedSearchEntryType.Instance) ||
             AggregatedSelectedType.EnumFlag == AggregatedSearchEntryType.All)
         {
@@ -53,7 +50,7 @@ public partial class UiProperty : ObservableObject
 
     private void OnRecentPlaysRefreshed(object? sender, EventArgs e)
     {
-        Portal.Module.AggregatedSearch.Index.MarkDirty();
+        Index.MarkDirty();
         if (AggregatedSelectedType.EnumFlag.HasFlag(AggregatedSearchEntryType.RecentPlay) ||
             AggregatedSelectedType.EnumFlag == AggregatedSearchEntryType.All)
         {

@@ -4,6 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Portal.Classes.Entries;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Module.Widgets;
 using Portal.Module.Widgets;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 

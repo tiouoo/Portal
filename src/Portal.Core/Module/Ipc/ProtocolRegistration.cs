@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using Portal.Const;
+using Portal.Core.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Module.Ipc;
+namespace Portal.Core.Module.Ipc;
 
 public static class ProtocolRegistration
 {

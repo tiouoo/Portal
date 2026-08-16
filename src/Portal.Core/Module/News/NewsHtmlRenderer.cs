@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
@@ -7,7 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using HtmlAgilityPack;
 
-namespace Portal.Module.News;
+namespace Portal.Core.Module.News;
 
 public static class NewsHtmlRenderer
 {

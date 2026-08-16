@@ -1,25 +1,21 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch;
 using Portal.Core.App.Events;
-using Portal.Classes.Enums;
-using Portal.Const;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
-using Portal.Module.Initialize;
+using Portal.Core.Module.Initialize;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common.Helpers;
-using TioUi.Shared;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Config;
 
 public partial class ConfigEntry : ObservableObject
 {

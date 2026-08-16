@@ -1,19 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Portal.Classes.Entries;
 using Portal.Const;
-using Portal.Module.Multiplayer;
+using Portal.Core.Classes.Config;
+using Portal.Core.Const;
+using Portal.Core.Module.Multiplayer;
+using Portal.Core.Services;
 using Portal.Services;
 using Portal.Views;
 using Portal.Views.Pages;
-using Portal.Views.Pages.DownloadPages;
-using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Shared;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Classes.Config;
 
 public sealed record ShortcutActionDefinition(
     ShortcutAction Action,

@@ -1,22 +1,18 @@
 using System.Text.Json.Nodes;
-using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Interfaces;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Parser;
-using Portal.Const;
-using Portal.Core.Helpers;
+using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.Operations.Java;
-using Portal.Views.Pages.DownloadPages;
+using Portal.Core.Minecraft.Models;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public static class VersionModifyService
 {

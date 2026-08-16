@@ -12,15 +12,18 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.Module;
+using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Operations;
 using Portal.Core.Operations.OpenFile;
+using Portal.Core.Services;
 using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
-using Portal.Module.DesktopShortcut;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Components;
@@ -351,7 +354,7 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     }
 }
 
-public partial class NewTabViewModel : InstanceListViewModelBase
+public partial class NewTabViewModel : ViewModels.InstanceListViewModelBase
 {
     private readonly RecentPlayListService _recentPlayListService = RecentPlayListService.Instance;
     private List<RecentPlayItem> _allRecentPlays = [];

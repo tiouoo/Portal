@@ -1,15 +1,12 @@
 using System.Text.Json.Nodes;
-using MinecraftLaunch.Base.Models.Game;
-using Portal.Const;
-using Portal.Core.Helpers;
+using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public static class InstanceRenameService
 {

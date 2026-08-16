@@ -1,14 +1,13 @@
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using Avalonia.Media.Imaging;
-using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Module.DesktopShortcut;
+namespace Portal.Core.Module;
 
 public static class DesktopShortcutService
 {

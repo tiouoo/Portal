@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using Portal.Classes.Enums;
-using Portal.Const;
-using Portal.Module.Initialize;
+using Portal.Core.Classes;
+using Portal.Core.Const;
+using Portal.Core.Module.Initialize;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public static class PortalVisibilityService
 {

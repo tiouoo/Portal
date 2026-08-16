@@ -1,6 +1,4 @@
-using System;
-
-namespace Portal.Module.AggregatedSearch;
+namespace Portal.Core.Module.AggregatedSearch;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class AggregatedSearchPageAttribute : Attribute

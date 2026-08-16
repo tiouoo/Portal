@@ -1,4 +1,4 @@
-namespace Portal.Module.Ipc;
+namespace Portal.Core.Module.Ipc;
 
 public enum PortalCommandKind
 {

@@ -3,12 +3,15 @@ using System.IO;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Portal.Classes.Entries;
-using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core;
 using Portal.Core.App.Service;
 using Portal.Core.Minecraft;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Classes.Config;
+using Portal.Core.Classes;
+using Portal.Core.Const;
+using Portal.Core.Module.Initialize;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -38,7 +41,7 @@ public static partial class Initializer
         BedrockNetworkConfiguration.Configure(Data.ConfigEntry.DisableSystemProxy,
             Data.ConfigEntry.EnableProxyServer ? Data.ConfigEntry.ProxyServer : null, Data.Instance.UserAgent,
             Data.ConfigEntry.EnableGithubMirror, Data.ConfigEntry.GithubMirrorUrl,
-            Data.ConfigEntry.GithubMirrorMode == Classes.Enums.GithubMirrorMode.Direct,
+            Data.ConfigEntry.GithubMirrorMode == GithubMirrorMode.Direct,
             Data.ConfigEntry.EnableFragmentDownload, Data.ConfigEntry.DownloadMaxFragmentCount,
             Data.ConfigEntry.DownloadMaxRetryCount);
         MinecraftCoreInitializer.Initialize(new MinecraftCoreInitializeOptions()

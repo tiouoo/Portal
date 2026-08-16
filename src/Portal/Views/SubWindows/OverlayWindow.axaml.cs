@@ -11,7 +11,7 @@ using Avalonia.Threading;
 using Portal.Const;
 using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
-using Portal.Module.Multiplayer;
+using Portal.Core.Module.Multiplayer;
 using Portal.Views.Pages;
 
 namespace Portal.Views.SubWindows;

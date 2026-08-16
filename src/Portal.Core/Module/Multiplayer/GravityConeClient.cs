@@ -1,15 +1,12 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Portal.Const;
-using Portal.Core;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
-namespace Portal.Module.Multiplayer;
+namespace Portal.Core.Module.Multiplayer;
 
 public sealed class GravityConeClient : IAsyncDisposable
 {

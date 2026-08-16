@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Portal.Classes.Entries;
+using Portal.Core.Classes.Entries;
 
 namespace Portal.Module.Converter;
 

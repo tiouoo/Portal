@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
+using Portal.Core.Services;
 using Portal.Services;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;

@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
-using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public sealed class BlockListDocument
 {

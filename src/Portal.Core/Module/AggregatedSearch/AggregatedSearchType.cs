@@ -1,6 +1,6 @@
-using Portal.Classes.Entries;
+using Portal.Core.Classes.Entries;
 
-namespace Portal.Module.AggregatedSearch;
+namespace Portal.Core.Module.AggregatedSearch;
 
 public class AggregatedSearchType
 {

@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Const;
+using Portal.Core.Const;
+using Portal.Core.Services;
 using Portal.Services;
 using TioUi.Common;
 using TioUi.Common.Extensions;

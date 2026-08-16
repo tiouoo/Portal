@@ -9,6 +9,7 @@ using AsyncImageLoader;
 using Avalonia.Media.Imaging;
 using Portal.Const;
 using MinecraftLaunch.Utilities;
+using Portal.Core.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Imaging;

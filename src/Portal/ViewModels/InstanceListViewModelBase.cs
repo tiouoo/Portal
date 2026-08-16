@@ -4,16 +4,17 @@ using System.Globalization;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Classes.Enums;
 using Portal.Const;
 using Portal.Core.App.Helpers;
-using Portal.Core.Helpers;
+using Portal.Core.Classes;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Services;
 using Portal.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
-namespace Portal.Views.Pages;
+namespace Portal.ViewModels;
 
 public class SortOption
 {

@@ -8,6 +8,9 @@ using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using Portal.Classes.Entries;
 using Portal.Const;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Const;
+using Portal.Core.Module.Widgets;
 using Portal.Module.Widgets;
 using Portal.ViewModels;
 

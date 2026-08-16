@@ -1,7 +1,7 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Dialogs;
-using Portal.Classes.Enums;
 using Portal.Const;
+using Portal.Core.Const;
 
 namespace Portal.Desktop;
 

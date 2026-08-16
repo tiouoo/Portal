@@ -1,20 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using Newtonsoft.Json;
-using Portal.Classes.Entries;
-using Portal.Classes.Enums;
-using Portal.Const;
 using Portal.Core.App.Service;
-using Portal.Core.Minecraft.Instance;
+using Portal.Core.Classes;
+using Portal.Core.Classes.Config;
+using Portal.Core.Classes.Entries;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Extensions;
-using Tio.Avalonia.Standard.Modules.Helper;
 
-namespace Portal.Module.Initialize;
+namespace Portal.Core.Module.Initialize;
 
 public class Config
 {

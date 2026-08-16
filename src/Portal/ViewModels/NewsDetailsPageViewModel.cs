@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
-using Portal.Module.News;
+using Portal.Core.Module.News;
 
 namespace Portal.ViewModels;
 

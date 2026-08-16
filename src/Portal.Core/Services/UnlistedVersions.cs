@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text.Json;
 using Avalonia.Platform;
 using MinecraftLaunch.Base.Models.Network;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public static class UnlistedVersions
 {

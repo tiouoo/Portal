@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Portal.Core.Module.AggregatedSearch;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;

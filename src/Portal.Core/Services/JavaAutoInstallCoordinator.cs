@@ -3,15 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Portal.Const;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Operations.Java;
-using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 
-namespace Portal.Services;
+namespace Portal.Core.Services;
 
 public static class JavaAutoInstallCoordinator
 {

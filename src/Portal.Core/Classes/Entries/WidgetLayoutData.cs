@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
-using Portal.Module.Widgets;
+using Portal.Core.Module.Widgets;
 
-namespace Portal.Classes.Entries;
+namespace Portal.Core.Classes.Entries;
 
 public sealed class WidgetLayoutData
 {
