@@ -22,7 +22,6 @@
         <StyleInclude Source="/Styles/Style.axaml" />
         <StyleInclude Source="/Styles/ScrollView.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
-        <tio:ScrollViewDefaultTheme />
         <Style Selector="Popup">
             <Setter Property="InheritsTransform" Value="True" />
         </Style>

@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/Module/">
-    <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi/TioUi.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard.Tab/Tio.Avalonia.Standard.Tab.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/src/Tio.Avalonia.Standard/Tio.Avalonia.Standard.csproj" />
     <Project Path="src/Portal.LitematicaViewer/LitematicaViewer.csproj" />
@@ -19,6 +18,12 @@
   <Folder Name="/Module/MinecraftLaunch/">
     <Project Path="module/MinecraftLaunch/src/MinecraftLaunch.Base/MinecraftLaunch.Base.csproj" />
     <Project Path="module/MinecraftLaunch/src/MinecraftLaunch/MinecraftLaunch.csproj" />
+  </Folder>
+  <Folder Name="/Module/TioUi/">
+    <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/Demo/TioUi.Demo.Desktop/TioUi.Demo.Desktop.csproj" />
+    <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/Demo/TioUi.Demo/TioUi.Demo.csproj" />
+    <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi.SmoothScroll/TioUi.SmoothScroll.csproj" />
+    <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi/TioUi.csproj" />
   </Folder>
   <Folder Name="/Solution Item/">
     <File Path="src/Directory.Build.props" />
