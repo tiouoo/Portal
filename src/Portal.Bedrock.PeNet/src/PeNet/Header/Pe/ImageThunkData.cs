@@ -6,13 +6,13 @@ public class ImageThunkData : AbstractStructure
 {
     private readonly bool _is64Bit;
 
-        public ImageThunkData(IRawFile peFile, uint offset, bool is64Bit)
+    public ImageThunkData(IRawFile peFile, uint offset, bool is64Bit)
         : base(peFile, offset)
     {
         _is64Bit = is64Bit;
     }
 
-        public ulong AddressOfData
+    public ulong AddressOfData
     {
         get => _is64Bit ? PeFile.ReadULong(Offset) : PeFile.ReadUInt(Offset);
         set
@@ -24,19 +24,7 @@ public class ImageThunkData : AbstractStructure
         }
     }
 
-        public ulong Ordinal
-    {
-        get => AddressOfData;
-        set => AddressOfData = value;
-    }
-
-        public ulong ForwarderString
-    {
-        get => AddressOfData;
-        set => AddressOfData = value;
-    }
-
-        public ulong Function
+    public ulong Ordinal
     {
         get => AddressOfData;
         set => AddressOfData = value;

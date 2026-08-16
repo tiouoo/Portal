@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace PeNet.FileParser;
@@ -45,7 +43,7 @@ public class StreamFile : IRawFile, IDisposable
             : stackalloc byte[length];
 
         _stream.Seek(offset, SeekOrigin.Begin);
-        _stream.Read(tmp);
+        _stream.ReadExactly(tmp);
         return Encoding.ASCII.GetString(tmp);
     }
 
@@ -53,47 +51,8 @@ public class StreamFile : IRawFile, IDisposable
     {
         Span<byte> s = new byte[(int)length];
         _stream.Seek(offset, SeekOrigin.Begin);
-        _stream.Read(s);
+        _stream.ReadExactly(s);
         return s;
-    }
-
-    public string ReadUnicodeString(long offset)
-    {
-        _stream.Seek(offset, SeekOrigin.Begin);
-        var chars = new List<byte>();
-        var sLen = _stream.Length - offset < 0 ? offset - _stream.Length : _stream.Length - offset;
-
-        while (true)
-        {
-            if (sLen == chars.Count || sLen == chars.Count - 1) break;
-
-            var b1 = (byte)_stream.ReadByte();
-            var b2 = (byte)_stream.ReadByte();
-
-            if (b1 + b2 == 0)
-                break;
-
-            chars.Add(b1);
-            chars.Add(b2);
-        }
-
-        return Encoding.Unicode.GetString(chars.ToArray());
-    }
-
-    public string ReadUnicodeString(long offset, long length)
-    {
-        _stream.Seek(offset, SeekOrigin.Begin);
-        var chars = new List<byte>();
-        for (var i = 1; i <= length; i++)
-        {
-            var b1 = (byte)_stream.ReadByte();
-            var b2 = (byte)_stream.ReadByte();
-
-            chars.Add(b1);
-            chars.Add(b2);
-        }
-
-        return Encoding.Unicode.GetString(chars.ToArray());
     }
 
     public byte ReadByte(long offset)
@@ -106,44 +65,24 @@ public class StreamFile : IRawFile, IDisposable
     {
         Span<byte> s = stackalloc byte[4];
         _stream.Seek(offset, SeekOrigin.Begin);
-        _stream.Read(s);
-#if NET48 || NETSTANDARD2_0
-            return BitConverter.ToUInt32(s.ToArray(), 0);
-#else
+        _stream.ReadExactly(s);
         return BitConverter.ToUInt32(s);
-#endif
     }
 
     public ulong ReadULong(long offset)
     {
         Span<byte> s = stackalloc byte[8];
         _stream.Seek(offset, SeekOrigin.Begin);
-        _stream.Read(s);
-#if NET48 || NETSTANDARD2_0
-            return BitConverter.ToUInt64(s.ToArray(), 0);
-#else
+        _stream.ReadExactly(s);
         return BitConverter.ToUInt64(s);
-#endif
     }
 
     public ushort ReadUShort(long offset)
     {
         Span<byte> s = stackalloc byte[2];
         _stream.Seek(offset, SeekOrigin.Begin);
-        _stream.Read(s);
-#if NET48 || NETSTANDARD2_0
-            return BitConverter.ToUInt16(s.ToArray(), 0);
-#else
+        _stream.ReadExactly(s);
         return BitConverter.ToUInt16(s);
-#endif
-    }
-
-    public byte[] ToArray()
-    {
-        using var ms = new MemoryStream { Position = 0 };
-        _stream.Position = 0;
-        _stream.CopyTo(ms);
-        return ms.ToArray();
     }
 
     public void WriteByte(long offset, byte value)
@@ -189,24 +128,13 @@ public class StreamFile : IRawFile, IDisposable
         _stream.Flush();
     }
 
-    public void RemoveRange(long offset, long length)
-    {
-        var _buff = ToArray();
-        var x = _buff.ToList();
-        x.RemoveRange((int)offset, (int)length);
-        _stream.Dispose();
-        _stream = new MemoryStream(_buff.ToArray());
-    }
-
     public int AppendBytes(Span<byte> bytes)
     {
         if (!_stream.CanWrite)
             throw new NotSupportedException("The stream does not support writing.");
 
-
         _stream.Seek(0, SeekOrigin.End);
         var appendPosition = (int)_stream.Position;
-
 
         _stream.Write(bytes);
 
