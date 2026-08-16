@@ -92,6 +92,7 @@ public class BedrockLaunch : IBedrockLaunch
         MinecraftProcess = launchedProcess ?? throw new InvalidOperationException(
             "基岩版启动状态已完成，但未找到 Minecraft 进程。游戏可能在启动时提前退出。");
         Log(BedrockLogLevel.Information, $"已获取 Minecraft 进程，PID：{MinecraftProcess.Id}");
+        BedrockPreloadTrigger.Trigger(MinecraftProcess, LogReceived);
         try
         {
             if (_instanceConfig.EnableMouseLock &&
