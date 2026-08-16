@@ -8,7 +8,10 @@ namespace Portal.Views.Widgets;
 
 public partial class ServerConnectDialog : UserControl
 {
-    public ServerConnectDialog() => InitializeComponent();
+    public ServerConnectDialog()
+    {
+        InitializeComponent();
+    }
 }
 
 public partial class ServerConnectDialogViewModel(MinecraftInstance instance) : ObservableObject, IDialogContext
@@ -19,6 +22,13 @@ public partial class ServerConnectDialogViewModel(MinecraftInstance instance) : 
     [ObservableProperty] private string _portText = "25565";
 
     public string InstanceHint => $"实例：{_instance.InstanceName}";
+
+    public void Close()
+    {
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
 
     [RelayCommand]
     private void Confirm()
@@ -35,10 +45,10 @@ public partial class ServerConnectDialogViewModel(MinecraftInstance instance) : 
     }
 
     [RelayCommand]
-    private void Cancel() => RequestClose?.Invoke(this, null);
-
-    public void Close() => Cancel();
-    public event EventHandler<object?>? RequestClose;
+    private void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 }
 
 public sealed record ServerConnectResult(string Address, int Port);

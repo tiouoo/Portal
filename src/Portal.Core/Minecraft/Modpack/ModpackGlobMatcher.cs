@@ -7,15 +7,18 @@ internal static class ModpackGlobMatcher
 {
     private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(1);
 
+    private static readonly Dictionary<string, Regex> Cached = new(StringComparer.Ordinal);
+
     public static bool Like(string input, string pattern)
     {
         pattern = pattern.Replace("#", "[0-9]");
         return GlobRegex(pattern).IsMatch(Normalize(input));
     }
 
-    public static string Normalize(string path) => path.Replace('\\', '/');
-
-    private static readonly Dictionary<string, Regex> Cached = new(StringComparer.Ordinal);
+    public static string Normalize(string path)
+    {
+        return path.Replace('\\', '/');
+    }
 
     private static Regex GlobRegex(string pattern)
     {
@@ -44,10 +47,9 @@ internal static class ModpackGlobMatcher
                 var doubleStar = index + 1 < pattern.Length && pattern[index + 1] == '*';
                 if (doubleStar)
                 {
-                    
                     sb.Append(".*");
                     index += 2;
-                    
+
                     if (index < pattern.Length && pattern[index] == '/')
                     {
                         sb.Append("/?");
@@ -82,7 +84,7 @@ internal static class ModpackGlobMatcher
 
     private static int AppendCharacterClass(string pattern, int start, StringBuilder sb)
     {
-        bool negate = false;
+        var negate = false;
         var index = start + 1;
         if (index < pattern.Length && pattern[index] is '!' or '^')
         {
@@ -102,7 +104,7 @@ internal static class ModpackGlobMatcher
                 break;
             }
 
-            if (c == '\\') index++; 
+            if (c == '\\') index++;
             if (index < pattern.Length)
                 content.Append(pattern[index]);
             index++;

@@ -8,13 +8,17 @@ public static class JavaServerManager
 {
     private static readonly object FileLock = new();
 
-    public static string GetServersDatPath(MinecraftInstance instance) =>
-        Path.Combine(instance.GetJavaGameDirectory(), "servers.dat");
+    public static string GetServersDatPath(MinecraftInstance instance)
+    {
+        return Path.Combine(instance.GetJavaGameDirectory(), "servers.dat");
+    }
 
-    public static bool IsSupported(MinecraftInstance instance) =>
-        instance.IsJava && instance.MinecraftEntry != null;
+    public static bool IsSupported(MinecraftInstance instance)
+    {
+        return instance.IsJava && instance.MinecraftEntry != null;
+    }
 
-        private static void Save(NbtFile file, string path)
+    private static void Save(NbtFile file, string path)
     {
         var compression = file.FileCompression;
         if (compression == NbtCompression.AutoDetect)
@@ -22,7 +26,7 @@ public static class JavaServerManager
         file.SaveToFile(path, compression);
     }
 
-        public static IReadOnlyList<MinecraftServerEntry> Read(MinecraftInstance instance)
+    public static IReadOnlyList<MinecraftServerEntry> Read(MinecraftInstance instance)
     {
         if (!IsSupported(instance))
             return [];
@@ -51,7 +55,7 @@ public static class JavaServerManager
         }
     }
 
-        public static bool Add(MinecraftInstance instance, string name, string address)
+    public static bool Add(MinecraftInstance instance, string name, string address)
     {
         if (!IsSupported(instance))
             return false;
@@ -63,10 +67,7 @@ public static class JavaServerManager
                 var path = GetServersDatPath(instance);
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 var file = new NbtFile();
-                if (File.Exists(path))
-                {
-                    file.LoadFromFile(path);
-                }
+                if (File.Exists(path)) file.LoadFromFile(path);
 
                 if (file.RootTag["servers"] is not NbtList list)
                 {
@@ -92,7 +93,7 @@ public static class JavaServerManager
         }
     }
 
-        public static bool Update(MinecraftInstance instance, int index, string name, string address)
+    public static bool Update(MinecraftInstance instance, int index, string name, string address)
     {
         if (!IsSupported(instance))
             return false;
@@ -125,7 +126,7 @@ public static class JavaServerManager
         }
     }
 
-        public static bool Remove(MinecraftInstance instance, int index)
+    public static bool Remove(MinecraftInstance instance, int index)
     {
         if (!IsSupported(instance))
             return false;
@@ -189,9 +190,8 @@ public static class JavaServerManager
         };
     }
 
-        public static (string Host, int Port) ParseAddress(string address)
+    public static (string Host, int Port) ParseAddress(string address)
     {
-        
         if (address.StartsWith('['))
         {
             var end = address.IndexOf(']');
@@ -205,7 +205,7 @@ public static class JavaServerManager
             }
         }
 
-        
+
         var separator = address.LastIndexOf(':');
         return separator > 0 && address.IndexOf(':') == separator &&
                int.TryParse(address[(separator + 1)..], out var port)

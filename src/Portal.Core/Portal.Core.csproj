@@ -3,82 +3,82 @@
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-    
+
     <PropertyGroup>
-      <CurseForgeApiKey>$([System.Environment]::GetEnvironmentVariable('CURSEFORGE_API_KEY'))</CurseForgeApiKey>
-      <MicrosoftClientId>$([System.Environment]::GetEnvironmentVariable('MICROSOFT_CLIENT_ID'))</MicrosoftClientId>
-      <GravityConeUptimeApiKey>$([System.Environment]::GetEnvironmentVariable('GRAVITYCONE_UPTIME_API_KEY'))</GravityConeUptimeApiKey>
-      <CnbUpdateToken>$([System.Environment]::GetEnvironmentVariable('CNB_UPDATE_TOKEN'))</CnbUpdateToken>
+        <CurseForgeApiKey>$([System.Environment]::GetEnvironmentVariable('CURSEFORGE_API_KEY'))</CurseForgeApiKey>
+        <MicrosoftClientId>$([System.Environment]::GetEnvironmentVariable('MICROSOFT_CLIENT_ID'))</MicrosoftClientId>
+        <GravityConeUptimeApiKey>$([System.Environment]::GetEnvironmentVariable('GRAVITYCONE_UPTIME_API_KEY'))</GravityConeUptimeApiKey>
+        <CnbUpdateToken>$([System.Environment]::GetEnvironmentVariable('CNB_UPDATE_TOKEN'))</CnbUpdateToken>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(CurseForgeApiKey)' != ''">
-      <AssemblyMetadata Include="Portal.CurseForgeApiKey" Value="$(CurseForgeApiKey)" />
+        <AssemblyMetadata Include="Portal.CurseForgeApiKey" Value="$(CurseForgeApiKey)"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(MicrosoftClientId)' != ''">
-      <AssemblyMetadata Include="Portal.MicrosoftClientId" Value="$(MicrosoftClientId)" />
+        <AssemblyMetadata Include="Portal.MicrosoftClientId" Value="$(MicrosoftClientId)"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(GravityConeUptimeApiKey)' != ''">
-      <AssemblyMetadata Include="Portal.GravityConeUptimeApiKey" Value="$(GravityConeUptimeApiKey)" />
+        <AssemblyMetadata Include="Portal.GravityConeUptimeApiKey" Value="$(GravityConeUptimeApiKey)"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(CnbUpdateToken)' != ''">
-      <AssemblyMetadata Include="Portal.CnbUpdateToken" Value="$(CnbUpdateToken)" />
+        <AssemblyMetadata Include="Portal.CnbUpdateToken" Value="$(CnbUpdateToken)"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Hardware.Info" />
-        <PackageReference Include="HtmlAgilityPack" />
-        <PackageReference Include="Microsoft.Data.Sqlite.Core" />
-        <PackageReference Include="CommunityToolkit.Mvvm" />
-        <PackageReference Include="fNbt" />
-        <PackageReference Include="PinYinConverterCore" />
-        <PackageReference Include="SkiaSharp" />
-        <PackageReference Include="SharpCompress" />
-        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
-        <PackageReference Include="Tmds.DBus" />
+        <PackageReference Include="Hardware.Info"/>
+        <PackageReference Include="HtmlAgilityPack"/>
+        <PackageReference Include="Microsoft.Data.Sqlite.Core"/>
+        <PackageReference Include="CommunityToolkit.Mvvm"/>
+        <PackageReference Include="fNbt"/>
+        <PackageReference Include="PinYinConverterCore"/>
+        <PackageReference Include="SkiaSharp"/>
+        <PackageReference Include="SharpCompress"/>
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3"/>
+        <PackageReference Include="Tmds.DBus"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Assets\" />
-      <Folder Include="Minecraft\Instance\Java\" />
+        <Folder Include="Assets\"/>
+        <Folder Include="Minecraft\Instance\Java\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="..\..\assets\conf\package-type.txt">
-        <Link>Assets\package-type.txt</Link>
-      </EmbeddedResource>
-      <EmbeddedResource Include="..\..\assets\conf\version-ci.txt">
-        <Link>Assets\version-ci.txt</Link>
-      </EmbeddedResource>
+        <EmbeddedResource Include="..\..\assets\conf\package-type.txt">
+            <Link>Assets\package-type.txt</Link>
+        </EmbeddedResource>
+        <EmbeddedResource Include="..\..\assets\conf\version-ci.txt">
+            <Link>Assets\version-ci.txt</Link>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.2D\LiteSkinViewer.2D.csproj" />
-      <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.3D\LiteSkinViewer.3D.csproj" />
-      <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.Shared\LiteSkinViewer.Shared.csproj" />
-      <ProjectReference Include="..\..\module\MinecraftLaunch\src\MinecraftLaunch\MinecraftLaunch.csproj" />
-      <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\module\TioUi.Avalonia\src\TioUi\TioUi.csproj" />
-      <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\src\Tio.Avalonia.Standard.Tab\Tio.Avalonia.Standard.Tab.csproj" />
-      <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj" />
+        <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.2D\LiteSkinViewer.2D.csproj"/>
+        <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.3D\LiteSkinViewer.3D.csproj"/>
+        <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.Shared\LiteSkinViewer.Shared.csproj"/>
+        <ProjectReference Include="..\..\module\MinecraftLaunch\src\MinecraftLaunch\MinecraftLaunch.csproj"/>
+        <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\module\TioUi.Avalonia\src\TioUi\TioUi.csproj"/>
+        <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\src\Tio.Avalonia.Standard.Tab\Tio.Avalonia.Standard.Tab.csproj"/>
+        <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj" />
+        <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Operations\OpenFile\NewMinecraftFolder.axaml.cs">
-        <DependentUpon>Offline.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+        <Compile Update="Operations\OpenFile\NewMinecraftFolder.axaml.cs">
+            <DependentUpon>Offline.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
-      
-      <None Remove="Assets\McIcons\**\*" />
-      <EmbeddedResource Include="Assets\McIcons\**\*" />
+
+        <None Remove="Assets\McIcons\**\*"/>
+        <EmbeddedResource Include="Assets\McIcons\**\*"/>
     </ItemGroup>
 
 </Project>

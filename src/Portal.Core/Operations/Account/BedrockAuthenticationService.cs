@@ -46,7 +46,7 @@ public sealed class BedrockAuthenticationService
                 ["client_id"] = ClientId,
                 ["grant_type"] = "device_code",
                 ["device_code"] = deviceCodeValue
-            }, cancellationToken, ensureSuccess: false);
+            }, cancellationToken, false);
 
             if (token.TryGetProperty("error", out var errorElement))
             {
@@ -57,6 +57,7 @@ public sealed class BedrockAuthenticationService
                     interval += 5;
                     continue;
                 }
+
                 throw new InvalidOperationException(token.TryGetProperty("error_description", out var description)
                     ? description.GetString() ?? error
                     : error);
@@ -113,7 +114,8 @@ public sealed class BedrockAuthenticationService
     {
         var userResponse = await PostJsonAsync("Xbox User Auth", "https://user.auth.xboxlive.com/user/authenticate", new
         {
-            Properties = new { AuthMethod = "RPS", SiteName = "user.auth.xboxlive.com", RpsTicket = $"t={accessToken}" },
+            Properties =
+                new { AuthMethod = "RPS", SiteName = "user.auth.xboxlive.com", RpsTicket = $"t={accessToken}" },
             RelyingParty = "http://auth.xboxlive.com",
             TokenType = "JWT"
         }, cancellationToken);
@@ -138,7 +140,7 @@ public sealed class BedrockAuthenticationService
         request.Headers.TryAddWithoutValidation("x-xbl-contract-version", "3");
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         await EnsureSuccessAsync("Xbox Profile", response, cancellationToken);
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: cancellationToken);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
         var settings = json.GetProperty("profileUsers")[0].GetProperty("settings");
         string? gamertag = null;
         string? avatarUrl = null;
@@ -148,15 +150,17 @@ public sealed class BedrockAuthenticationService
             if (id == "Gamertag") gamertag = setting.GetProperty("value").GetString();
             if (id == "GameDisplayPicRaw") avatarUrl = setting.GetProperty("value").GetString();
         }
+
         return (gamertag ?? throw new InvalidOperationException("Xbox 档案未返回玩家代号。"), avatarUrl);
     }
 
     private async Task<JsonElement> PostFormAsync(string endpoint, Dictionary<string, string> values,
         CancellationToken cancellationToken, bool ensureSuccess = true)
     {
-        using var response = await _httpClient.PostAsync(endpoint, new FormUrlEncodedContent(values), cancellationToken);
+        using var response =
+            await _httpClient.PostAsync(endpoint, new FormUrlEncodedContent(values), cancellationToken);
         if (ensureSuccess) await EnsureSuccessAsync("Microsoft OAuth", response, cancellationToken);
-        return await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
     }
 
     private async Task<JsonElement> PostJsonAsync(string operation, string endpoint, object value,
@@ -165,7 +169,7 @@ public sealed class BedrockAuthenticationService
         using var content = new StringContent(JsonSerializer.Serialize(value), Encoding.UTF8, "application/json");
         using var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
         await EnsureSuccessAsync(operation, response, cancellationToken);
-        return await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
     }
 
     private static async Task EnsureSuccessAsync(string operation, HttpResponseMessage response,
@@ -188,11 +192,14 @@ public sealed class BedrockAuthenticationService
         catch (JsonException)
         {
         }
+
         return "请检查网络和 Xbox 账户状态";
     }
 
-    private static string GetRequiredString(JsonElement element, string propertyName) =>
-        element.TryGetProperty(propertyName, out var value) && !string.IsNullOrWhiteSpace(value.GetString())
+    private static string GetRequiredString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var value) && !string.IsNullOrWhiteSpace(value.GetString())
             ? value.GetString()!
             : throw new InvalidOperationException($"账户服务响应缺少 {propertyName}。");
+    }
 }

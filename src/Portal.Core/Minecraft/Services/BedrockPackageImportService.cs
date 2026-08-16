@@ -5,9 +5,21 @@ using Portal.Core.Minecraft.Instance.Bedrock;
 
 namespace Portal.Core.Minecraft.Services;
 
-public enum BedrockPackageArchiveType { Mcpack, Mcaddon, Mcworld, Mctemplate }
+public enum BedrockPackageArchiveType
+{
+    Mcpack,
+    Mcaddon,
+    Mcworld,
+    Mctemplate
+}
 
-public enum BedrockPackageContentType { ResourcePack, BehaviorPack, SkinPack, WorldTemplate }
+public enum BedrockPackageContentType
+{
+    ResourcePack,
+    BehaviorPack,
+    SkinPack,
+    WorldTemplate
+}
 
 public sealed record BedrockPackageContent(
     BedrockPackageContentType Type,
@@ -23,19 +35,21 @@ public sealed record BedrockPackageContent(
     IReadOnlyList<string> Subpacks = default,
     byte[]? IconData = null);
 
-public sealed record BedrockPackageInspection(BedrockPackageArchiveType ArchiveType, string DisplayName,
+public sealed record BedrockPackageInspection(
+    BedrockPackageArchiveType ArchiveType,
+    string DisplayName,
     IReadOnlyList<BedrockPackageContent> Contents);
 
 public sealed class BedrockPackageImportService
 {
-    public static IReadOnlyList<string> SupportedExtensions { get; } =
-        [".mcpack", ".mcaddon", ".mcworld", ".mctemplate"];
-
     private static readonly JsonDocumentOptions JsonOptions = new()
     {
         CommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true
     };
+
+    public static IReadOnlyList<string> SupportedExtensions { get; } =
+        [".mcpack", ".mcaddon", ".mcworld", ".mctemplate"];
 
     public BedrockPackageInspection Inspect(string archivePath)
     {
@@ -65,11 +79,14 @@ public sealed class BedrockPackageImportService
 
             return new BedrockPackageInspection(archiveType, Path.GetFileNameWithoutExtension(archivePath), contents);
         }
-        catch (InvalidDataException) { throw; }
-        catch (IOException ex) { throw new InvalidDataException("无法读取基岩版包。", ex); }
+        catch (IOException ex)
+        {
+            throw new InvalidDataException("无法读取基岩版包。", ex);
+        }
     }
 
-    public void Import(string archivePath, BedrockPackageInspection inspection, MinecraftInstance instance, string? userId,
+    public void Import(string archivePath, BedrockPackageInspection inspection, MinecraftInstance instance,
+        string? userId,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(inspection);
@@ -82,10 +99,12 @@ public sealed class BedrockPackageImportService
         {
             if (string.IsNullOrWhiteSpace(userId))
                 throw new InvalidOperationException("请选择存档用户 ID。");
-            var level = archive.Entries.First(entry => entry.FullName.EndsWith("level.dat", StringComparison.OrdinalIgnoreCase));
+            var level = archive.Entries.First(entry =>
+                entry.FullName.EndsWith("level.dat", StringComparison.OrdinalIgnoreCase));
             var root = GetArchiveDirectory(level.FullName);
             var destinationRoot = BedrockDataPathResolver.GetWorldsFolder(instance.BedrockConfig, userId);
-            ExtractDirectory(archive, root, CreateDestination(destinationRoot, inspection.DisplayName), cancellationToken);
+            ExtractDirectory(archive, root, CreateDestination(destinationRoot, inspection.DisplayName),
+                cancellationToken);
             return;
         }
 
@@ -100,7 +119,8 @@ public sealed class BedrockPackageImportService
                 BedrockPackageContentType.WorldTemplate => MinecraftSpecialFolder.WorldTemplatesFolder,
                 _ => throw new InvalidOperationException("不支持的基岩版包类型。")
             });
-            ExtractDirectory(archive, content.ArchiveRoot, CreateDestination(destinationRoot, content.Name), cancellationToken);
+            ExtractDirectory(archive, content.ArchiveRoot, CreateDestination(destinationRoot, content.Name),
+                cancellationToken);
         }
     }
 
@@ -130,7 +150,8 @@ public sealed class BedrockPackageImportService
         {
             using var document = JsonDocument.Parse(entry.Open(), JsonOptions);
             var root = document.RootElement;
-            if (!root.TryGetProperty("modules", out var modulesElement) || modulesElement.ValueKind != JsonValueKind.Array)
+            if (!root.TryGetProperty("modules", out var modulesElement) ||
+                modulesElement.ValueKind != JsonValueKind.Array)
                 return null;
 
             var types = modulesElement.EnumerateArray().Where(module => module.ValueKind == JsonValueKind.Object)
@@ -170,13 +191,19 @@ public sealed class BedrockPackageImportService
                 archiveRoot, description, version, minEngineVersion, uuid, authors, modules, dependencies, subpacks,
                 ReadPackIcon(archive, archiveRoot));
         }
-        catch (JsonException) { return null; }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
-    private static string? GetStringProperty(JsonElement? element, string property) => element is { } value &&
-        value.TryGetProperty(property, out var elementValue) && elementValue.ValueKind == JsonValueKind.String
-        ? elementValue.GetString()?.Trim()
-        : null;
+    private static string? GetStringProperty(JsonElement? element, string property)
+    {
+        return element is { } value &&
+               value.TryGetProperty(property, out var elementValue) && elementValue.ValueKind == JsonValueKind.String
+            ? elementValue.GetString()?.Trim()
+            : null;
+    }
 
     private static string? GetVersionProperty(JsonElement? element, string property)
     {
@@ -218,6 +245,7 @@ public sealed class BedrockPackageImportService
                 AddDistinctString(list, GetStringProperty(dependency, "module_name"));
                 AddDistinctString(list, GetStringProperty(dependency, "uuid"));
             }
+
         return list;
     }
 
@@ -230,6 +258,7 @@ public sealed class BedrockPackageImportService
                 AddDistinctString(list, GetStringProperty(subpack, "name"));
                 AddDistinctString(list, GetStringProperty(subpack, "folder_name"));
             }
+
         return list;
     }
 
@@ -260,7 +289,10 @@ public sealed class BedrockPackageImportService
             stream.CopyTo(data);
             return data.ToArray();
         }
-        catch (Exception) { return null; }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private static string GetArchiveDirectory(string path)
@@ -273,7 +305,8 @@ public sealed class BedrockPackageImportService
     {
         Directory.CreateDirectory(root);
         var invalid = Path.GetInvalidFileNameChars();
-        var name = string.Concat(suggestedName.Select(character => invalid.Contains(character) ? '_' : character)).Trim();
+        var name = string.Concat(suggestedName.Select(character => invalid.Contains(character) ? '_' : character))
+            .Trim();
         if (string.IsNullOrEmpty(name) || name is "." or "..") name = "BedrockPack";
         var destination = Path.Combine(root, name);
         for (var suffix = 2; Directory.Exists(destination); suffix++)
@@ -281,10 +314,12 @@ public sealed class BedrockPackageImportService
         return destination;
     }
 
-    private static void ExtractDirectory(ZipArchive archive, string archiveRoot, string destination, CancellationToken cancellationToken)
+    private static void ExtractDirectory(ZipArchive archive, string archiveRoot, string destination,
+        CancellationToken cancellationToken)
     {
         var prefix = string.IsNullOrEmpty(archiveRoot) ? string.Empty : archiveRoot.TrimEnd('/') + "/";
-        var entries = archive.Entries.Where(entry => entry.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var entries = archive.Entries
+            .Where(entry => entry.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToArray();
         if (entries.Length == 0)
             throw new InvalidDataException("包中没有可解压的文件。");
 
@@ -296,7 +331,8 @@ public sealed class BedrockPackageImportService
             var relativePath = entry.FullName[prefix.Length..].Replace('/', Path.DirectorySeparatorChar);
             if (string.IsNullOrEmpty(relativePath)) continue;
             var targetPath = Path.GetFullPath(Path.Combine(destinationFullPath, relativePath));
-            if (!targetPath.StartsWith(destinationFullPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            if (!targetPath.StartsWith(destinationFullPath + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("压缩包包含不安全的文件路径。");
             if (entry.FullName.EndsWith('/'))
             {

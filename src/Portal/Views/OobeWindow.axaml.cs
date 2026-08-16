@@ -1,8 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Operations.Account;
@@ -12,7 +10,9 @@ using Portal.Module.Animations;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
+using TioUi.Common.Helpers;
 using TioUi.Controls;
+using TioUi.Shared;
 
 namespace Portal.Views;
 
@@ -22,12 +22,8 @@ public partial class OobeWindow : TioWindow
 
     private static readonly SoftBackEaseOut DotsEasing = new() { Amplitude = 0.6 };
 
-    private IntPtr _macOsWindowHandle;
+    private readonly IntPtr _macOsWindowHandle;
     private int _dotsAnimationToken;
-
-        public event Action? Completed;
-
-    public Data Data => Data.Instance;
 
     public OobeWindow()
     {
@@ -38,7 +34,7 @@ public partial class OobeWindow : TioWindow
         ThemeListBox.SelectionChanged += (_, _) =>
         {
             if (ThemeListBox.SelectedIndex == -1) return;
-            Data.ConfigEntry.Theme = (TioUi.Shared.Theme)ThemeListBox.SelectedIndex;
+            Data.ConfigEntry.Theme = (Theme)ThemeListBox.SelectedIndex;
         };
 
         GoToStep(0);
@@ -60,9 +56,12 @@ public partial class OobeWindow : TioWindow
         }
     }
 
+    public Data Data => Data.Instance;
+
+    public event Action? Completed;
+
     private void ConfigEntry_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        
         if (e.PropertyName != nameof(Data.ConfigEntry.Theme) || _macOsWindowHandle == IntPtr.Zero)
             return;
         RefreshMacOsTitleBarButtons(_macOsWindowHandle);
@@ -72,10 +71,7 @@ public partial class OobeWindow : TioWindow
     {
         try
         {
-            
-            
-            TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 14, y: 2,
-                spacing: 20);
+            MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow);
         }
         catch (Exception exception)
         {
@@ -101,7 +97,7 @@ public partial class OobeWindow : TioWindow
         UpdateStepDots(step);
     }
 
-        private void UpdateStepDots(int step)
+    private void UpdateStepDots(int step)
     {
         var dots = StepDots.Children;
         var count = dots.Count;
@@ -183,7 +179,7 @@ public partial class OobeWindow : TioWindow
         var result = await OverlayDialog
             .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
                 new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders.Select(x
-                    => x.FolderPath).ToList()), hostId: HostId, options: options);
+                    => x.FolderPath).ToList()), HostId, options);
 
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
@@ -193,10 +189,7 @@ public partial class OobeWindow : TioWindow
     {
         var result = await AddAccount.Main(HostId, Data.ConfigEntry.AuthServers);
         if (result == null) return;
-        foreach (var minecraftAccount in result.JavaAccounts)
-        {
-            Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
-        }
+        foreach (var minecraftAccount in result.JavaAccounts) Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
         if (result.JavaAccounts.Count > 0)
             Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.JavaAccounts[^1];
         if (result.BedrockAccount is { } bedrockAccount)
@@ -211,7 +204,7 @@ public partial class OobeWindow : TioWindow
     private async void ScanJava_OnClick(object? sender, RoutedEventArgs e)
     {
         SetJavaBusy(true);
-        NotificationGateway.Notice(this, "正在扫描中", NotificationType.Information);
+        this.Notice("正在扫描中");
         ShowJavaStatus("正在扫描 Java，请稍候…");
         try
         {

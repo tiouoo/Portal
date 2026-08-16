@@ -72,7 +72,10 @@
                 Spacing="8"
                 VerticalAlignment="Top">
                 <Button Command="{Binding CreateShortcutCommand}" Content="快捷方式" />
-                <Button Command="{Binding QuickEnterCommand}" Content="快速进入" IsVisible="{Binding CanQuickEnter}" />
+                <Button
+                    Command="{Binding QuickEnterCommand}"
+                    Content="快速进入"
+                    IsVisible="{Binding CanQuickEnter}" />
             </StackPanel>
         </Panel>
     </DockPanel>

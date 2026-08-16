@@ -1,62 +1,58 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using Portal.Classes.Entries;
 using Portal.Core.App.Service.SystemResources;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Module.Widgets;
-using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
-public abstract partial class ResourceWidgetBase : IWidgetContent
+public abstract class ResourceWidgetBase : IWidgetContent
 {
     public static readonly DirectProperty<ResourceWidgetBase, string> TitleProperty =
         AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(Title), o => o.Title, (o, v) => o.Title = v);
-    private string _title = string.Empty;
-    public string Title { get => _title; set => SetAndRaise(TitleProperty, ref _title, value); }
 
     public static readonly DirectProperty<ResourceWidgetBase, string> PrimaryTextProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(PrimaryText), o => o.PrimaryText, (o, v) => o.PrimaryText = v);
-    private string _primaryText = "--";
-    public string PrimaryText { get => _primaryText; set => SetAndRaise(PrimaryTextProperty, ref _primaryText, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(PrimaryText), o => o.PrimaryText,
+            (o, v) => o.PrimaryText = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, string> SecondaryTextProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(SecondaryText), o => o.SecondaryText, (o, v) => o.SecondaryText = v);
-    private string _secondaryText = string.Empty;
-    public string SecondaryText { get => _secondaryText; set => SetAndRaise(SecondaryTextProperty, ref _secondaryText, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(SecondaryText), o => o.SecondaryText,
+            (o, v) => o.SecondaryText = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, double> PercentageProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(Percentage), o => o.Percentage, (o, v) => o.Percentage = v);
-    private double _percentage;
-    public double Percentage { get => _percentage; set => SetAndRaise(PercentageProperty, ref _percentage, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(Percentage), o => o.Percentage,
+            (o, v) => o.Percentage = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, double> ProgressValueProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(ProgressValue), o => o.ProgressValue, (o, v) => o.ProgressValue = v);
-    private double _progressValue;
-    public double ProgressValue { get => _progressValue; set => SetAndRaise(ProgressValueProperty, ref _progressValue, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(ProgressValue), o => o.ProgressValue,
+            (o, v) => o.ProgressValue = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, double> ProgressMaximumProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(ProgressMaximum), o => o.ProgressMaximum, (o, v) => o.ProgressMaximum = v);
-    private double _progressMaximum = 100;
-    public double ProgressMaximum { get => _progressMaximum; set => SetAndRaise(ProgressMaximumProperty, ref _progressMaximum, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(ProgressMaximum), o => o.ProgressMaximum,
+            (o, v) => o.ProgressMaximum = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, string> IconGeometryProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(IconGeometry), o => o.IconGeometry, (o, v) => o.IconGeometry = v);
-    private string _iconGeometry = string.Empty;
-    public string IconGeometry { get => _iconGeometry; set => SetAndRaise(IconGeometryProperty, ref _iconGeometry, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(IconGeometry), o => o.IconGeometry,
+            (o, v) => o.IconGeometry = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, bool> HasSecondaryTextProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, bool>(nameof(HasSecondaryText), o => o.HasSecondaryText, (o, v) => o.HasSecondaryText = v);
-    private bool _hasSecondaryText = true;
-    public bool HasSecondaryText { get => _hasSecondaryText; set => SetAndRaise(HasSecondaryTextProperty, ref _hasSecondaryText, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, bool>(nameof(HasSecondaryText), o => o.HasSecondaryText,
+            (o, v) => o.HasSecondaryText = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, bool> IsLoadingProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, bool>(nameof(IsLoading), o => o.IsLoading, (o, v) => o.IsLoading = v);
-    private bool _isLoading = true;
-    public bool IsLoading { get => _isLoading; set => SetAndRaise(IsLoadingProperty, ref _isLoading, value); }
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, bool>(nameof(IsLoading), o => o.IsLoading,
+            (o, v) => o.IsLoading = v);
 
-        public abstract ResourceKind ResourceKind { get; }
+    private bool _hasSecondaryText = true;
+    private string _iconGeometry = string.Empty;
+    private bool _isLoading = true;
+    private double _percentage;
+    private string _primaryText = "--";
+    private double _progressMaximum = 100;
+    private double _progressValue;
+    private string _secondaryText = string.Empty;
+    private string _title = string.Empty;
 
     protected ResourceWidgetBase(WidgetCellSize size)
     {
@@ -64,12 +60,68 @@ public abstract partial class ResourceWidgetBase : IWidgetContent
         Content = CreateView(size);
     }
 
+    public string Title
+    {
+        get => _title;
+        set => SetAndRaise(TitleProperty, ref _title, value);
+    }
+
+    public string PrimaryText
+    {
+        get => _primaryText;
+        set => SetAndRaise(PrimaryTextProperty, ref _primaryText, value);
+    }
+
+    public string SecondaryText
+    {
+        get => _secondaryText;
+        set => SetAndRaise(SecondaryTextProperty, ref _secondaryText, value);
+    }
+
+    public double Percentage
+    {
+        get => _percentage;
+        set => SetAndRaise(PercentageProperty, ref _percentage, value);
+    }
+
+    public double ProgressValue
+    {
+        get => _progressValue;
+        set => SetAndRaise(ProgressValueProperty, ref _progressValue, value);
+    }
+
+    public double ProgressMaximum
+    {
+        get => _progressMaximum;
+        set => SetAndRaise(ProgressMaximumProperty, ref _progressMaximum, value);
+    }
+
+    public string IconGeometry
+    {
+        get => _iconGeometry;
+        set => SetAndRaise(IconGeometryProperty, ref _iconGeometry, value);
+    }
+
+    public bool HasSecondaryText
+    {
+        get => _hasSecondaryText;
+        set => SetAndRaise(HasSecondaryTextProperty, ref _hasSecondaryText, value);
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set => SetAndRaise(IsLoadingProperty, ref _isLoading, value);
+    }
+
+    public abstract ResourceKind ResourceKind { get; }
+
     public override void Initialize(WidgetLayoutData layout)
     {
         SystemResourceService.Instance.Updated += OnServiceUpdated;
         Unloaded += (_, _) => SystemResourceService.Instance.Updated -= OnServiceUpdated;
 
-        
+
         OnServiceUpdated(SystemResourceService.Instance, SystemResourceService.Instance.Latest);
     }
 
@@ -82,9 +134,9 @@ public abstract partial class ResourceWidgetBase : IWidgetContent
         });
     }
 
-        protected abstract void OnUpdate(ResourceSnapshot snapshot);
+    protected abstract void OnUpdate(ResourceSnapshot snapshot);
 
-        private UserControl CreateView(WidgetCellSize size)
+    private UserControl CreateView(WidgetCellSize size)
     {
         UserControl view = size switch
         {

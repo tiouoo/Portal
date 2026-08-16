@@ -1,6 +1,6 @@
-using Portal.Core.Minecraft.Instance.Java;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Portal.Core.Minecraft.Instance.Java;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Core.Operations.Java;
@@ -19,7 +19,6 @@ public static class JavaRuntimeOperations
         };
 
         if (OperatingSystem.IsWindows())
-        {
             options.FileTypeFilter =
             [
                 new FilePickerFileType("Java 可执行文件")
@@ -27,7 +26,6 @@ public static class JavaRuntimeOperations
                     Patterns = ["java", "java.exe", "javaw", "javaw.exe"]
                 }
             ];
-        }
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
         if (files.Count == 0)
@@ -77,7 +75,7 @@ public static class JavaRuntimeOperations
         return new JavaRuntimeScanResult(addedCount, duplicateCount);
     }
 
-        public static (ManagedTask Task, Task<(int Added, int Duplicate)> Result) CreateDeepScanTask(
+    public static (ManagedTask Task, Task<(int Added, int Duplicate)> Result) CreateDeepScanTask(
         ICollection<JavaRuntimeEntry> javaRuntimes)
     {
         var resultSource = new TaskCompletionSource<(int Added, int Duplicate)>(
@@ -101,7 +99,6 @@ public static class JavaRuntimeOperations
 
                     var progress = new Progress<DeepScanProgress>(p =>
                     {
-                        
                         if (ctx.CancellationToken.IsCancellationRequested) return;
                         try
                         {
@@ -114,7 +111,6 @@ public static class JavaRuntimeOperations
                         }
                         catch (InvalidOperationException)
                         {
-                            
                         }
                     });
 
@@ -125,13 +121,10 @@ public static class JavaRuntimeOperations
                     }
                     catch (OperationCanceledException)
                     {
-                        
                         found = Array.Empty<JavaRuntimeEntry>();
                     }
 
                     foreach (var java in found)
-                    {
-                        
                         if (javaRuntimes.Contains(java))
                         {
                             duplicateCount++;
@@ -141,14 +134,13 @@ public static class JavaRuntimeOperations
                             javaRuntimes.Add(java);
                             addedCount++;
                         }
-                    }
 
                     var cancelled = ctx.CancellationToken.IsCancellationRequested;
                     var finishText = cancelled
                         ? $"已取消，已找到的新增 {addedCount} 个 Java，重复 {duplicateCount} 个"
                         : $"扫描完成：新增 {addedCount} 个 Java，重复 {duplicateCount} 个";
 
-                    
+
                     if (!cancelled)
                     {
                         ctx.SetDescription(finishText);

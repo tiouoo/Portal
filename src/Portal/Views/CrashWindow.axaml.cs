@@ -1,11 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using TioUi.Common.Helpers;
 using TioUi.Controls;
 
 namespace Portal.Views;
@@ -39,9 +37,8 @@ public partial class CrashWindow : TioWindow
     {
         try
         {
-            
-            TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 14, y: 2,
-                spacing: 20);
+            MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, 14, 2,
+                20);
         }
         catch (Exception exception)
         {

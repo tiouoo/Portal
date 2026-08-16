@@ -38,8 +38,8 @@ public static class ServerEditDialogHelper
             VerticalOffset = 110
         };
 
-        return await OverlayDialog.ShowCustomAsync<ServerEditResult?>(dialog, dialog.DataContext, hostId: hostId,
-            options: options);
+        return await OverlayDialog.ShowCustomAsync<ServerEditResult?>(dialog, dialog.DataContext, hostId,
+            options);
     }
 }
 
@@ -49,20 +49,6 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
 {
     private readonly int _defaultPort;
     private readonly Dictionary<string, List<string>> _errors = [];
-
-    [ObservableProperty]
-    public partial string Title { get; set; }
-
-    [ObservableProperty]
-    public partial string Name { get; set; }
-
-    [ObservableProperty]
-    public partial string Address { get; set; }
-
-    public string AddressPlaceholder { get; }
-    public string PortHint { get; }
-    public ICommand ConfirmCommand { get; }
-    public ICommand CancelCommand { get; }
 
     public ServerEditDialogViewModel(string title, string name, string address, int defaultPort)
     {
@@ -75,6 +61,35 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
         CancelCommand = new RelayCommand(Cancel);
         Validate();
+    }
+
+    [ObservableProperty] public partial string Title { get; set; }
+
+    [ObservableProperty] public partial string Name { get; set; }
+
+    [ObservableProperty] public partial string Address { get; set; }
+
+    public string AddressPlaceholder { get; }
+    public string PortHint { get; }
+    public ICommand ConfirmCommand { get; }
+    public ICommand CancelCommand { get; }
+
+    public void Close()
+    {
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    public bool HasErrors => _errors.Count > 0;
+
+    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+    public IEnumerable GetErrors(string? propertyName)
+    {
+        if (string.IsNullOrEmpty(propertyName) || !_errors.ContainsKey(propertyName)) return Enumerable.Empty<string>();
+
+        return _errors[propertyName];
     }
 
     partial void OnNameChanged(string value)
@@ -129,7 +144,10 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
             _errors[nameof(Address)] = ["服务器地址格式无效"];
     }
 
-    private bool CanConfirm() => _errors.Count == 0;
+    private bool CanConfirm()
+    {
+        return _errors.Count == 0;
+    }
 
     private void Confirm()
     {
@@ -139,23 +157,8 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
         RequestClose?.Invoke(this, new ServerEditResult(Name!.Trim(), Address!.Trim()));
     }
 
-    private void Cancel() => RequestClose?.Invoke(this, null);
-
-    public void Close() => Cancel();
-
-    public event EventHandler<object?>? RequestClose;
-
-    public bool HasErrors => _errors.Count > 0;
-
-    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
-
-    public IEnumerable GetErrors(string? propertyName)
+    private void Cancel()
     {
-        if (string.IsNullOrEmpty(propertyName) || !_errors.ContainsKey(propertyName))
-        {
-            return Enumerable.Empty<string>();
-        }
-
-        return _errors[propertyName];
+        RequestClose?.Invoke(this, null);
     }
 }

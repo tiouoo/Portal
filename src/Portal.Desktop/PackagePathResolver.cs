@@ -25,7 +25,7 @@ internal static class PackagePathResolver
         Logger.Info($"从命令行参数解析到 Bedrock 整合包路径：{packagePath}");
         return true;
     }
-    
+
     public static bool TryGetJavaPackagePath(string[] args, out string? packagePath)
     {
         packagePath = null;

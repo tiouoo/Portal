@@ -1,31 +1,25 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
-using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
-using MinecraftLaunch.Base.Models.Game;
-using Portal.Const;
+using Avalonia.Threading;
 using Portal.Core.Const;
-using Portal.Core.Helpers;
-using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
+using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
-using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Module;
 using Portal.Core.Services;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.SubWindows;
-using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -36,28 +30,8 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDisposable
 {
-    private InstanceDetailPage _parent;
-    private event PropertyChangedEventHandler? DashboardPropertyChanged;
+    private readonly InstanceDetailPage _parent;
     private bool _isDisposed;
-
-    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
-    {
-        add => DashboardPropertyChanged += value;
-        remove => DashboardPropertyChanged -= value;
-    }
-
-    public MinecraftInstance Instance { get; }
-    public ObservableCollection<string> WorldUserIds { get; } = [];
-
-    public string TotalPlayTime
-    {
-        get
-        {
-            var seconds = Instance.GetTotalPlayTimeSeconds();
-            return seconds < 60 ? $"{seconds} 秒" :
-                seconds < 3600 ? $"{seconds / 60.0:F1} 分钟" : $"{seconds / 3600.0:F1} 小时";
-        }
-    }
 
     public Dashboard(MinecraftInstance instance, InstanceDetailPage parent)
     {
@@ -67,8 +41,6 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         DataContext = this;
         Loaded += (_, _) =>
         {
-            
-            
             InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
             InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
             InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
@@ -77,7 +49,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             Instance.StorageUsage.Refresh();
             Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
 
-            
+
             if (TopLevel.GetTopLevel(this) is OverlayWindow)
             {
                 EditButton.IsVisible = false;
@@ -95,6 +67,38 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
     {
         InitializeComponent();
     }
+
+    public MinecraftInstance Instance { get; }
+    public ObservableCollection<string> WorldUserIds { get; } = [];
+
+    public string TotalPlayTime
+    {
+        get
+        {
+            var seconds = Instance.GetTotalPlayTimeSeconds();
+            return seconds < 60 ? $"{seconds} 秒" :
+                seconds < 3600 ? $"{seconds / 60.0:F1} 分钟" : $"{seconds / 3600.0:F1} 小时";
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
+        InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
+        DataContext = null;
+    }
+
+    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+    {
+        add => DashboardPropertyChanged += value;
+        remove => DashboardPropertyChanged -= value;
+    }
+
+    private event PropertyChangedEventHandler? DashboardPropertyChanged;
 
     private void OpenFolder_Click(object? sender, RoutedEventArgs e)
     {
@@ -131,7 +135,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             {
                 Margin = new Thickness(24),
                 Text = $"确定要永久删除实例“{Instance.InstanceName}”吗？此操作无法撤销。",
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
@@ -148,7 +152,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
 
         if (!InstanceDeletionCoordinator.TryBegin(Instance))
         {
-            NotificationGateway.Notice(topLevel, "该实例正在删除中。", NotificationType.Warning);
+            topLevel.Notice("该实例正在删除中。", NotificationType.Warning);
             return;
         }
 
@@ -158,27 +162,25 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             await Task.Run(() =>
             {
                 foreach (var path in Instance.GetDeletionPaths())
-                {
                     if (Directory.Exists(path))
                         Directory.Delete(path, true);
                     else if (File.Exists(path))
                         File.Delete(path);
-                }
             });
             var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
             var instances = await Task.Run(() => InstanceManager.Instance.ScanAll(folders));
             InstanceManager.Instance.ApplyInstances(instances);
-            NotificationGateway.Notice(topLevel, "实例已删除", NotificationType.Success);
+            topLevel.Notice("实例已删除", NotificationType.Success);
         }
         catch (IOException ex)
         {
-            NotificationGateway.Notice(topLevel, IsFileInUse(ex)
+            topLevel.Notice(IsFileInUse(ex)
                 ? "无法删除实例：实例文件正在被其他程序占用。请先关闭正在运行的游戏、文件管理器或占用该实例文件夹的程序，再重试删除。"
                 : $"无法删除实例：{ex.Message}", NotificationType.Error);
         }
         catch (UnauthorizedAccessException)
         {
-            NotificationGateway.Notice(topLevel, "无法删除实例：没有删除此实例的权限。", NotificationType.Error);
+            topLevel.Notice("无法删除实例：没有删除此实例的权限。", NotificationType.Error);
         }
         finally
         {
@@ -186,16 +188,14 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         }
     }
 
-        private static bool IsFileInUse(IOException exception)
+    private static bool IsFileInUse(IOException exception)
     {
         if (exception.HResult is unchecked((int)0x80070020) or unchecked((int)0x80070021))
             return true;
 
         for (var inner = exception.InnerException; inner is not null; inner = inner.InnerException)
-        {
             if (inner is Win32Exception { NativeErrorCode: 32 or 33 })
                 return true;
-        }
 
         return false;
     }
@@ -221,17 +221,6 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         });
     }
 
-    public void Dispose()
-    {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
-        InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
-        DataContext = null;
-    }
-
     private void ToggleChartDays_Click(object? sender, RoutedEventArgs e)
     {
         RecentPlayTimeChart.Days = RecentPlayTimeChart.Days == 7 ? 30 : 7;
@@ -248,7 +237,8 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         foreach (var userId in userIds) WorldUserIds.Add(userId);
         WorldUserIdSelector.SelectedItem = selectedUserId != null && WorldUserIds.Contains(selectedUserId)
             ? selectedUserId
-            : WorldUserIds.FirstOrDefault(userId => !string.Equals(userId, "Shared", StringComparison.OrdinalIgnoreCase))
+            : WorldUserIds.FirstOrDefault(userId =>
+                  !string.Equals(userId, "Shared", StringComparison.OrdinalIgnoreCase))
               ?? WorldUserIds.FirstOrDefault();
     }
 
@@ -279,11 +269,11 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         {
             await using var stream = await file.OpenWriteAsync();
             Instance.sourceIcon.Save(stream, PngBitmapEncoderOptions.Default);
-            NotificationGateway.Notice(topLevel, "图标已保存", NotificationType.Success);
+            topLevel.Notice("图标已保存", NotificationType.Success);
         }
         catch (Exception ex)
         {
-            NotificationGateway.Notice(topLevel, $"保存失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"保存失败：{ex.Message}", NotificationType.Error);
         }
 
         Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
@@ -311,7 +301,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             VerticalOffset = 110
         };
         var result = await OverlayDialog.ShowCustomAsync<IconPicker, IconPickerViewModel, IconPickerResult>(
-            new IconPickerViewModel(), hostId: this.TryGetHostId(), options: options);
+            new IconPickerViewModel(), this.TryGetHostId(), options);
         if (result == null) return;
 
         try
@@ -322,13 +312,13 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
             if (stream == null)
                 throw new FileNotFoundException("未找到所选的内置图标。");
 
-            using var icon = new Avalonia.Media.Imaging.Bitmap(stream);
+            using var icon = new Bitmap(stream);
             Instance.SetIcon(icon);
-            NotificationGateway.Notice(topLevel, "图标已更换", NotificationType.Success);
+            topLevel.Notice("图标已更换", NotificationType.Success);
         }
         catch (Exception ex)
         {
-            NotificationGateway.Notice(topLevel, $"更换失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"更换失败：{ex.Message}", NotificationType.Error);
         }
 
         Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
@@ -342,11 +332,11 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         try
         {
             Instance.ResetIcon();
-            NotificationGateway.Notice(topLevel, "图标已重置", NotificationType.Success);
+            topLevel.Notice("图标已重置", NotificationType.Success);
         }
         catch (Exception ex)
         {
-            NotificationGateway.Notice(topLevel, $"重置失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"重置失败：{ex.Message}", NotificationType.Error);
         }
 
         Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
@@ -356,38 +346,24 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
     {
         var tag = (sender as Control).Tag as string;
         if (tag == "mods")
-        {
             _parent.NavigateTo(typeof(Mods));
-        }
         else if (tag == "resource")
-        {
             _parent.NavigateTo(typeof(ResourcePacks));
-        }
         else if (tag == "shader")
-        {
             _parent.NavigateTo(typeof(ShaderPacks));
-        }
         else if (tag == "saves")
-        {
             _parent.NavigateTo(typeof(Saves));
-        }
         else if (tag == "bedrock-resource-packs")
-        {
             _parent.NavigateTo(typeof(BedrockResourcePacks));
-        }
         else if (tag == "bedrock-behavior-packs")
-        {
             _parent.NavigateTo(typeof(BedrockBehaviorPacks));
-        }
-        else if (tag == "bedrock-worlds")
-        {
-            _parent.NavigateTo(typeof(BedrockWorlds));
-        }
+        else if (tag == "bedrock-worlds") _parent.NavigateTo(typeof(BedrockWorlds));
     }
 
     private async void CreateLink_Click(object? sender, RoutedEventArgs e)
     {
-        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this), () => DesktopShortcutService.CreateAsync(Instance));
+        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
+            () => DesktopShortcutService.CreateAsync(Instance));
     }
 
     private async void ModifyVersion_Click(object? sender, RoutedEventArgs e)
@@ -408,7 +384,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (result is null) return;
 
         var viewModel = (VersionModifyDialogViewModel)dialog.DataContext!;
-        
+
         _parent.HostTab.Close();
         _ = NotifyModifyOutcomeAsync(viewModel.StartedTask, topLevel);
     }
@@ -423,7 +399,7 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (string.IsNullOrWhiteSpace(newId))
             return;
 
-        
+
         var task = InstanceRenameService.CreateRenameTask(Instance, newId);
         task.Start();
         _parent.HostTab.Close();
@@ -462,11 +438,11 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (topLevel is null) return;
         await task.Completion;
         if (task.Status is ManagedTaskStatus.Faulted)
-            NotificationGateway.Notice(topLevel, $"导出整合包失败：{task.ErrorMessage}", NotificationType.Error);
+            topLevel.Notice($"导出整合包失败：{task.ErrorMessage}", NotificationType.Error);
         else if (task.Status is ManagedTaskStatus.Cancelled)
-            NotificationGateway.Notice(topLevel, "导出整合包已取消。", NotificationType.Warning);
+            topLevel.Notice("导出整合包已取消。", NotificationType.Warning);
         else
-            NotificationGateway.Notice(topLevel, "整合包已导出", NotificationType.Success);
+            topLevel.Notice("整合包已导出", NotificationType.Success);
     }
 
     private static async Task NotifyRenameOutcomeAsync(ManagedTask task, TopLevel? topLevel)
@@ -474,11 +450,11 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (topLevel is null) return;
         await task.Completion;
         if (task.Status is ManagedTaskStatus.Faulted)
-            NotificationGateway.Notice(topLevel, $"实例重命名失败：{task.ErrorMessage}", NotificationType.Error);
+            topLevel.Notice($"实例重命名失败：{task.ErrorMessage}", NotificationType.Error);
         else if (task.Status is ManagedTaskStatus.Cancelled)
-            NotificationGateway.Notice(topLevel, "实例重命名已取消，未发生改动。", NotificationType.Warning);
+            topLevel.Notice("实例重命名已取消，未发生改动。", NotificationType.Warning);
         else
-            NotificationGateway.Notice(topLevel, "实例已重命名", NotificationType.Success);
+            topLevel.Notice("实例已重命名", NotificationType.Success);
     }
 
     private static async Task NotifyModifyOutcomeAsync(ManagedTask? task, TopLevel? topLevel)
@@ -486,8 +462,8 @@ public partial class Dashboard : DataUserControl, INotifyPropertyChanged, IDispo
         if (task is null || topLevel is null) return;
         await task.Completion;
         if (task.Status is ManagedTaskStatus.Faulted)
-            NotificationGateway.Notice(topLevel, $"版本修改失败：{task.ErrorMessage}", NotificationType.Error);
+            topLevel.Notice($"版本修改失败：{task.ErrorMessage}", NotificationType.Error);
         else if (task.Status is ManagedTaskStatus.Cancelled)
-            NotificationGateway.Notice(topLevel, "版本修改已取消，实例未发生改动。", NotificationType.Warning);
+            topLevel.Notice("版本修改已取消，实例未发生改动。", NotificationType.Warning);
     }
 }

@@ -10,6 +10,30 @@ namespace Portal.Core.Minecraft.Classes;
 
 public partial class MinecraftFolderEntry : ObservableObject, IEquatable<MinecraftFolderEntry>
 {
+    private string _folderSize = "0.0";
+
+    private int _instanceCount;
+    private bool _isRefreshing;
+    private string _sizeUnit = "B";
+
+    public MinecraftFolderEntry()
+    {
+        PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(FolderPath) or nameof(FolderName) or nameof(FolderKind))
+            {
+                if (e.PropertyName == nameof(FolderPath))
+                {
+                    OnPropertyChanged(nameof(DetectedLayout));
+                    OnPropertyChanged(nameof(FolderTypeDescription));
+                    OnPropertyChanged(nameof(SupportsInstallation));
+                }
+
+                Events.RaiseSaveSettings();
+            }
+        };
+    }
+
     [ObservableProperty] public partial string FolderName { get; set; }
     [ObservableProperty] public partial string FolderPath { get; set; }
     [ObservableProperty] public partial MinecraftFolderKind FolderKind { get; set; } = MinecraftFolderKind.Auto;
@@ -23,19 +47,15 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                 return new MinecraftFolderLayout(MinecraftFolderKind.Standard, FolderPath, FolderPath,
                     "传统 .minecraft 文件夹");
             if (FolderKind is not (MinecraftFolderKind.Auto or MinecraftFolderKind.Standard or
-                MinecraftFolderKind.Unknown) &&
+                    MinecraftFolderKind.Unknown) &&
                 detected.Kind != FolderKind)
                 return MinecraftFolderLayout.FromFolderKind(FolderKind, FolderPath);
             return detected;
         }
     }
+
     public string FolderTypeDescription => DetectedLayout.DisplayName;
     public bool SupportsInstallation => DetectedLayout.SupportsInstallation;
-
-    private int _instanceCount;
-    private string _folderSize = "0.0";
-    private string _sizeUnit = "B";
-    private bool _isRefreshing;
 
     public string FolderSize
     {
@@ -67,33 +87,24 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
         private set => SetProperty(ref _instanceCount, value);
     }
 
-    public MinecraftFolderEntry()
+    public bool Equals(MinecraftFolderEntry? other)
     {
-        PropertyChanged += (_, e) => 
-        { 
-            if (e.PropertyName is nameof(FolderPath) or nameof(FolderName) or nameof(FolderKind))
-            {
-                if (e.PropertyName == nameof(FolderPath))
-                {
-                    OnPropertyChanged(nameof(DetectedLayout));
-                    OnPropertyChanged(nameof(FolderTypeDescription));
-                    OnPropertyChanged(nameof(SupportsInstallation));
-                }
-                Events.RaiseSaveSettings(); 
-            }
-        };
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return string.Equals(FolderPath, other.FolderPath, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task RefreshDataAsync()
     {
-        if (_isRefreshing || string.IsNullOrEmpty(FolderPath) || !Directory.Exists(FolderPath)) 
+        if (_isRefreshing || string.IsNullOrEmpty(FolderPath) || !Directory.Exists(FolderPath))
             return;
 
         _isRefreshing = true;
 
         try
         {
-            int freshCount = await Task.Run(() =>
+            var freshCount = await Task.Run(() =>
             {
                 try
                 {
@@ -101,18 +112,21 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                     return layout.Kind switch
                     {
                         MinecraftFolderKind.Standard => new MinecraftParser(layout.RootPath).GetMinecrafts().Count +
-                                                       CountBedrockInstances(layout.RootPath),
+                                                        CountBedrockInstances(layout.RootPath),
                         MinecraftFolderKind.Modrinth => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
                         MinecraftFolderKind.ModrinthInstance => 1,
                         MinecraftFolderKind.MultiMc => CountInstances(Path.Combine(layout.RootPath, "instances"),
-                            "mmc-pack.json") + CountInstances(Path.Combine(layout.RootPath, "instances"), "package.info"),
+                                                           "mmc-pack.json") +
+                                                       CountInstances(Path.Combine(layout.RootPath, "instances"),
+                                                           "package.info"),
                         MinecraftFolderKind.MultiMcInstance => 1,
                         MinecraftFolderKind.CurseForge => CountInstances(Path.Combine(layout.RootPath, "Instances"),
                             "minecraftinstance.json"),
                         MinecraftFolderKind.CurseForgeInstance => 1,
                         MinecraftFolderKind.PortalMc => CountPortalMcInstances(layout.RootPath) +
-                                                       CountInstances(Path.Combine(layout.RootPath, "bedrock_instances"),
-                                                           "appxmanifest.xml"),
+                                                        CountInstances(
+                                                            Path.Combine(layout.RootPath, "bedrock_instances"),
+                                                            "appxmanifest.xml"),
                         _ => 0
                     };
                 }
@@ -147,34 +161,38 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
         }
     }
 
-    private static int CountDirectories(string path) => Directory.Exists(path)
-        ? Directory.GetDirectories(path).Length
-        : 0;
+    private static int CountDirectories(string path)
+    {
+        return Directory.Exists(path)
+            ? Directory.GetDirectories(path).Length
+            : 0;
+    }
 
-    private static int CountInstances(string path, string marker) => Directory.Exists(path)
-        ? Directory.GetDirectories(path).Count(directory => File.Exists(Path.Combine(directory, marker)))
-        : 0;
+    private static int CountInstances(string path, string marker)
+    {
+        return Directory.Exists(path)
+            ? Directory.GetDirectories(path).Count(directory => File.Exists(Path.Combine(directory, marker)))
+            : 0;
+    }
 
-    private static int CountPortalMcInstances(string rootPath) => Directory.Exists(Path.Combine(rootPath, "instances"))
-        ? Directory.GetDirectories(Path.Combine(rootPath, "instances"))
-            .Count(directory => File.Exists(Path.Combine(directory, $"{Path.GetFileName(directory)}.json")))
-        : 0;
+    private static int CountPortalMcInstances(string rootPath)
+    {
+        return Directory.Exists(Path.Combine(rootPath, "instances"))
+            ? Directory.GetDirectories(Path.Combine(rootPath, "instances"))
+                .Count(directory => File.Exists(Path.Combine(directory, $"{Path.GetFileName(directory)}.json")))
+            : 0;
+    }
 
-    private static int CountBedrockInstances(string rootPath) => CountInstances(
-        Path.Combine(rootPath, "bedrock_versions"), "appxmanifest.xml");
+    private static int CountBedrockInstances(string rootPath)
+    {
+        return CountInstances(
+            Path.Combine(rootPath, "bedrock_versions"), "appxmanifest.xml");
+    }
 
     public void OpenFolder(object parameter)
     {
         var topLevel = (parameter as Control)?.GetTopLevel();
         topLevel?.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(FolderPath));
-    }
-
-    public bool Equals(MinecraftFolderEntry? other)
-    {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
-
-        return string.Equals(FolderPath, other.FolderPath, StringComparison.OrdinalIgnoreCase);
     }
 
     public override bool Equals(object? obj)

@@ -7,10 +7,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
-using Portal.Const;
 using Portal.Core.Const;
-using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -48,14 +47,14 @@ public partial class CustomDownloadPage : UserControl
         if (!Uri.TryCreate(viewModel.Url?.Trim(), UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            NotificationGateway.Notice(topLevel, "请输入有效的 HTTP/HTTPS 链接", NotificationType.Warning);
+            topLevel.Notice("请输入有效的 HTTP/HTTPS 链接", NotificationType.Warning);
             return;
         }
 
         var folder = viewModel.FolderPath?.Trim().Trim('"');
         if (string.IsNullOrWhiteSpace(folder))
         {
-            NotificationGateway.Notice(topLevel, "请选择保存文件夹", NotificationType.Warning);
+            topLevel.Notice("请选择保存文件夹", NotificationType.Warning);
             return;
         }
 
@@ -66,14 +65,13 @@ public partial class CustomDownloadPage : UserControl
         string destination;
         try
         {
-            
             fileName = CustomDownloadPageViewModel.DeduplicateFileName(folder, fileName);
             destination = Path.GetFullPath(Path.Combine(folder, fileName));
         }
         catch (Exception exception)
         {
             Logger.Warning($"[CustomDownload] Invalid destination {folder}/{fileName}: {exception}");
-            NotificationGateway.Notice(topLevel, "保存文件夹或文件名无效", NotificationType.Warning);
+            topLevel.Notice("保存文件夹或文件名无效", NotificationType.Warning);
             return;
         }
 
@@ -118,7 +116,7 @@ public partial class CustomDownloadPage : UserControl
                     context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(progress.Speed, true)}");
                 })
             };
-            
+
             var downloader = new DefaultDownloader
             {
                 MaxFragment = Math.Max(1, Data.ConfigEntry.CustomDownloadMaxFragmentCount),
@@ -153,10 +151,10 @@ public partial class CustomDownloadPage : UserControl
 
         if (task.Status == ManagedTaskStatus.Completed)
             Dispatcher.UIThread.Post(() =>
-                NotificationGateway.Notice(topLevel, $"{fileName} 下载完成", NotificationType.Success));
+                topLevel.Notice($"{fileName} 下载完成", NotificationType.Success));
         else if (task.Status == ManagedTaskStatus.Faulted)
             Dispatcher.UIThread.Post(() =>
-                NotificationGateway.Notice(topLevel, $"{fileName} 下载失败", NotificationType.Error));
+                topLevel.Notice($"{fileName} 下载失败", NotificationType.Error));
         await Task.Delay(TimeSpan.FromSeconds(3));
         Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
     }
@@ -172,11 +170,17 @@ public partial class CustomDownloadPageViewModel : ObservableObject
     [ObservableProperty] public partial string FolderPath { get; set; } = string.Empty;
     [ObservableProperty] public partial string FileName { get; set; } = string.Empty;
 
-    partial void OnUrlChanged(string value) => AutoFillFileName();
+    partial void OnUrlChanged(string value)
+    {
+        AutoFillFileName();
+    }
 
-    partial void OnFolderPathChanged(string value) => AutoFillFileName();
+    partial void OnFolderPathChanged(string value)
+    {
+        AutoFillFileName();
+    }
 
-        private void AutoFillFileName()
+    private void AutoFillFileName()
     {
         if (!string.IsNullOrEmpty(FileName) && FileName != _lastAutoFileName)
             return;
@@ -211,7 +215,7 @@ public partial class CustomDownloadPageViewModel : ObservableObject
         }
     }
 
-        public static string DeduplicateFileName(string? folder, string name)
+    public static string DeduplicateFileName(string? folder, string name)
     {
         folder = folder?.Trim().Trim('"');
         if (string.IsNullOrWhiteSpace(folder))

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using MinecraftLaunch.Base.Models.Game;
@@ -14,6 +15,13 @@ public class InstanceManager
 {
     private static InstanceManager? _instance;
 
+    private InstanceManager()
+    {
+        if (OperatingSystem.IsWindows() ||
+            (OperatingSystem.IsLinux() && RuntimeInformation.ProcessArchitecture == Architecture.X64))
+            VersionFolders.Add("bedrock_versions");
+    }
+
     public static InstanceManager Instance
     {
         get { return _instance ??= new InstanceManager(); }
@@ -23,20 +31,13 @@ public class InstanceManager
 
     public List<string> VersionFolders { get; } = new() { "versions" };
 
-        public event EventHandler? InstancesChanged;
+    public event EventHandler? InstancesChanged;
 
-        public event EventHandler? StatisticsChanged;
+    public event EventHandler? StatisticsChanged;
 
-        public event EventHandler<MinecraftInstance>? InstanceIconChanged;
+    public event EventHandler<MinecraftInstance>? InstanceIconChanged;
 
-    private InstanceManager()
-    {
-        if (OperatingSystem.IsWindows() ||
-            OperatingSystem.IsLinux() && RuntimeInformation.ProcessArchitecture == Architecture.X64)
-            VersionFolders.Add("bedrock_versions");
-    }
-
-        public void NotifyStatisticsChanged()
+    public void NotifyStatisticsChanged()
     {
         StatisticsChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -54,7 +55,7 @@ public class InstanceManager
 
     public List<MinecraftInstance> ScanAll(IEnumerable<MinecraftFolderEntry> folders)
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         var result = new List<MinecraftInstance>();
         foreach (var folder in folders)
         {
@@ -92,7 +93,6 @@ public class InstanceManager
                 continue;
 
             foreach (var instanceFolder in Directory.GetDirectories(versionsPath))
-            {
                 try
                 {
                     var config = BedrockHelper.GetInstanceConfig(instanceFolder);
@@ -102,7 +102,6 @@ public class InstanceManager
                 {
                     Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
                 }
-            }
         }
 
         return result;
@@ -133,8 +132,8 @@ public class InstanceManager
 
 internal class FolderScanner
 {
-    private readonly string _gameRootFolder;
     private readonly string _folderName;
+    private readonly string _gameRootFolder;
     private readonly List<string> _versionFolders;
 
     public FolderScanner(string gameRootFolder, string folderName, List<string> versionFolders)
@@ -182,27 +181,21 @@ internal class FolderScanner
                 var instanceType = InstanceManager.GetInstanceType(instanceFolder);
 
                 if (instanceType == MinecraftInstanceType.Java)
-                {
-                    
                     try
                     {
                         var folderName = Path.GetFileName(instanceFolder);
                         if (javaEntries.TryGetValue(folderName, out var minecraftEntry))
-                        {
                             instances.Add(new MinecraftInstance(minecraftEntry)
                             {
                                 FolderName = _folderName,
                                 FolderPath = _gameRootFolder
                             });
-                        }
                     }
                     catch (Exception e)
                     {
                         Logger.Error($"扫描 Java 实例失败：{instanceFolder}", e);
                     }
-                }
                 else if (instanceType == MinecraftInstanceType.Bedrock)
-                {
                     try
                     {
                         var bedrockConfig = BedrockHelper.GetInstanceConfig(instanceFolder);
@@ -212,7 +205,6 @@ internal class FolderScanner
                     {
                         Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
                     }
-                }
             }
         }
 

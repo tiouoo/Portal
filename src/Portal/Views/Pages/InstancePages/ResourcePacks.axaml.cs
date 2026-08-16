@@ -6,11 +6,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -21,35 +21,17 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDisposable
 {
-    private readonly MinecraftInstance? _instance;
-    private MinecraftSpecialFolder _folder = MinecraftSpecialFolder.ResourcePacksFolder;
-    private string _packName = "资源包";
-    private bool _isCompactLayout;
-    private readonly ResourcePackService _resourcePackService = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
-    private bool _hasLoaded;
-    private bool _isLoading;
-    private bool _isDisposed;
+    private readonly MinecraftSpecialFolder _folder = MinecraftSpecialFolder.ResourcePacksFolder;
+    private readonly MinecraftInstance? _instance;
+    private readonly bool _isCompactLayout;
+    private readonly ResourcePackService _resourcePackService = new();
     private string _filter = string.Empty;
-    private ResourceSortMode _sortMode = ResourceSortMode.FileName;
     private ResourceFilterMode _filterMode = ResourceFilterMode.All;
-
-    public ObservableCollection<ResourcePackItem> Items { get; } = [];
-    public ObservableCollection<ResourcePackItem> FilteredItems { get; } = [];
-    public string[] SortOptions => ResourceListUi.SortOptions;
-    public ObservableCollection<ResourceFilterOption> FilterOptions { get; } = [];
-
-    public bool IsLoading { get => _isLoading; private set { if (_isLoading != value) { _isLoading = value; RaisePropertyChanged(nameof(IsLoading)); } } }
-    public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string ResourcePackCountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
-    public int SelectedCount => Items.Count(item => item.IsSelected);
-    public string SelectedCountText => $"批量操作{SelectedCount}个";
-    public bool HasMultipleSelection => SelectedCount >= 1;
-    public string PackName => _packName;
-    public string SearchPlaceholder => $"搜索{PackName}";
-    public string LoadingText => $"正在读取{PackName}...";
-    public string EmptyText => $"此实例没有可识别的{PackName}";
-    public int CardMinHeight => 117;
+    private bool _hasLoaded;
+    private bool _isDisposed;
+    private bool _isLoading;
+    private ResourceSortMode _sortMode = ResourceSortMode.FileName;
 
     public ResourcePacks()
     {
@@ -61,19 +43,63 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
     }
 
-    public ResourcePacks(MinecraftInstance instance) : this(instance, MinecraftSpecialFolder.ResourcePacksFolder, "资源包") { }
+    public ResourcePacks(MinecraftInstance instance) : this(instance, MinecraftSpecialFolder.ResourcePacksFolder, "资源包")
+    {
+    }
 
-    protected ResourcePacks(MinecraftInstance instance, MinecraftSpecialFolder folder, string packName, bool isCompactLayout = false) : this()
+    protected ResourcePacks(MinecraftInstance instance, MinecraftSpecialFolder folder, string packName,
+        bool isCompactLayout = false) : this()
     {
         _instance = instance;
         _folder = folder;
-        _packName = packName;
+        PackName = packName;
         _isCompactLayout = isCompactLayout;
         RaisePropertyChanged(nameof(PackName));
         RaisePropertyChanged(nameof(SearchPlaceholder));
         RaisePropertyChanged(nameof(LoadingText));
         RaisePropertyChanged(nameof(EmptyText));
     }
+
+    public ObservableCollection<ResourcePackItem> Items { get; } = [];
+    public ObservableCollection<ResourcePackItem> FilteredItems { get; } = [];
+    public string[] SortOptions => ResourceListUi.SortOptions;
+    public ObservableCollection<ResourceFilterOption> FilterOptions { get; } = [];
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set
+        {
+            if (_isLoading != value)
+            {
+                _isLoading = value;
+                RaisePropertyChanged(nameof(IsLoading));
+            }
+        }
+    }
+
+    public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
+    public string ResourcePackCountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public int SelectedCount => Items.Count(item => item.IsSelected);
+    public string SelectedCountText => $"批量操作{SelectedCount}个";
+    public bool HasMultipleSelection => SelectedCount >= 1;
+    public string PackName { get; } = "资源包";
+
+    public string SearchPlaceholder => $"搜索{PackName}";
+    public string LoadingText => $"正在读取{PackName}...";
+    public string EmptyText => $"此实例没有可识别的{PackName}";
+    public int CardMinHeight => 117;
+
+    public void Dispose()
+    {
+        if (_isDisposed) return;
+        _isDisposed = true;
+        _disposeCancellation.Cancel();
+        foreach (var item in Items) item.Dispose();
+        _disposeCancellation.Dispose();
+    }
+
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -98,10 +124,17 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             foreach (var pack in packs) Items.Add(new ResourcePackItem(pack, _isCompactLayout));
             ApplyFilter();
         }
-        catch (OperationCanceledException exception) { Logger.Debug($"[ResourcePacks] {_packName} scan cancelled: {exception}"); }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[ResourcePacks] {PackName} scan cancelled: {exception}");
+        }
         finally
         {
-            if (!_isDisposed) { IsLoading = false; RaiseListProperties(); }
+            if (!_isDisposed)
+            {
+                IsLoading = false;
+                RaiseListProperties();
+            }
         }
     }
 
@@ -113,17 +146,36 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         await topLevel.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(_instance.GetSpecialFolder(_folder)));
     }
 
-    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private async void Import_OnClick(object? sender, RoutedEventArgs e)
+    {
+        await ImportAsync(null);
+    }
+
     private void Resource_OnDragOver(object? sender, DragEventArgs e)
     {
         var extensions = _instance?.IsBedrock == true ? new[] { ".mcpack", ".mcaddon" } : new[] { ".zip" };
-        if (( _instance?.IsBedrock == true ? BedrockResourceImport.Accepts(e.DataTransfer, extensions) : JavaResourceImport.Accepts(e.DataTransfer, extensions))) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+        if (_instance?.IsBedrock == true
+                ? BedrockResourceImport.Accepts(e.DataTransfer, extensions)
+                : JavaResourceImport.Accepts(e.DataTransfer, extensions))
+        {
+            e.DragEffects = DragDropEffects.Copy;
+            e.Handled = true;
+        }
     }
-    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
+
+    private async void Resource_OnDrop(object? sender, DragEventArgs e)
+    {
+        await ImportAsync(e);
+    }
+
     private async Task ImportAsync(DragEventArgs? drop)
     {
         if (_instance == null) return;
-        var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
+        var refresh = async () =>
+        {
+            _hasLoaded = false;
+            await LoadAsync();
+        };
         if (_instance.IsBedrock)
         {
             var expectedType = _folder == MinecraftSpecialFolder.BehaviorPacksFolder
@@ -131,12 +183,19 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
                 : _folder == MinecraftSpecialFolder.SkinPacksFolder
                     ? BedrockPackageContentType.SkinPack
                     : BedrockPackageContentType.ResourcePack;
-            if (drop == null) await BedrockResourceImport.SelectAndImportAsync(this, _instance, $"选择{PackName}", PackName, [".mcpack", ".mcaddon"], null, expectedType, refresh);
-            else await BedrockResourceImport.ImportDropAsync(this, drop, _instance, PackName, [".mcpack", ".mcaddon"], null, expectedType, refresh);
+            if (drop == null)
+                await BedrockResourceImport.SelectAndImportAsync(this, _instance, $"选择{PackName}", PackName,
+                    [".mcpack", ".mcaddon"], null, expectedType, refresh);
+            else
+                await BedrockResourceImport.ImportDropAsync(this, drop, _instance, PackName, [".mcpack", ".mcaddon"],
+                    null, expectedType, refresh);
             return;
         }
+
         var destination = _instance.GetSpecialFolder(_folder);
-        if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, $"选择{PackName}", destination, PackName, [".zip"], false, refresh);
+        if (drop == null)
+            await JavaResourceImport.SelectAndImportAsync(this, $"选择{PackName}", destination, PackName, [".zip"], false,
+                refresh);
         else await JavaResourceImport.ImportDropAsync(this, drop, destination, PackName, [".zip"], false, refresh);
     }
 
@@ -205,13 +264,16 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         ApplyFilter();
     }
 
-    private IEnumerable<ResourcePackItem> SortItems(IEnumerable<ResourcePackItem> source) => _sortMode switch
+    private IEnumerable<ResourcePackItem> SortItems(IEnumerable<ResourcePackItem> source)
     {
-        ResourceSortMode.Name => source.OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase),
-        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.Info.LastWriteTime),
-        ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
-        _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
-    };
+        return _sortMode switch
+        {
+            ResourceSortMode.Name => source.OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase),
+            ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.Info.LastWriteTime),
+            ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
+            _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
+        };
+    }
 
     private void ResourcePackCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -221,9 +283,20 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         RaiseSelectionProperties();
     }
 
-    private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => true);
-    private void ClearSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => false);
-    private void InvertSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => !item.IsSelected);
+    private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => true);
+    }
+
+    private void ClearSelection_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => false);
+    }
+
+    private void InvertSelection_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => !item.IsSelected);
+    }
 
     private async void DeleteSelected_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -243,9 +316,12 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     private async void ShowResourcePackDetails_OnClick(object? sender, RoutedEventArgs e)
     {
         if (GetItem(sender) is not { } item) return;
-        await OverlayDialog.ShowStandardAsync(new TextBlock { Margin = new Thickness(24),
-            Text = item.DetailsText,
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap }, null, this.TryGetHostId(),
+        await OverlayDialog.ShowStandardAsync(new TextBlock
+            {
+                Margin = new Thickness(24),
+                Text = item.DetailsText,
+                TextWrapping = TextWrapping.Wrap
+            }, null, this.TryGetHostId(),
             new OverlayDialogOptions { Title = $"{PackName}详情", Buttons = DialogButton.OK, CanResize = false });
     }
 
@@ -257,43 +333,85 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             await topLevel.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(item.Info.FilePath));
             return;
         }
+
         if (OperatingSystem.IsWindows())
         {
-            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Info.FilePath}\"") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Info.FilePath}\"")
+                { UseShellExecute = true });
             return;
         }
+
         await topLevel.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(Path.GetDirectoryName(item.Info.FilePath)!));
     }
 
-    private async Task<DialogResult> ConfirmDeleteAsync(string message) => await OverlayDialog.ShowStandardAsync(new TextBlock
+    private async Task<DialogResult> ConfirmDeleteAsync(string message)
     {
-        Margin = new Thickness(24), Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap
-    }, null, this.TryGetHostId(), new OverlayDialogOptions { Title = $"删除{PackName}", Mode = DialogMode.Error,
-        Buttons = DialogButton.YesNo, OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false });
+        return await OverlayDialog.ShowStandardAsync(new TextBlock
+        {
+            Margin = new Thickness(24), Text = message, TextWrapping = TextWrapping.Wrap
+        }, null, this.TryGetHostId(), new OverlayDialogOptions
+        {
+            Title = $"删除{PackName}", Mode = DialogMode.Error,
+            Buttons = DialogButton.YesNo, OverrideYesButtonText = "删除", OverrideNoButtonText = "取消",
+            CanLightDismiss = false, CanResize = false
+        });
+    }
 
     private async Task DeleteAsync(IEnumerable<ResourcePackItem> items)
     {
         var failed = 0;
-        foreach (var item in items) try
-        {
-            if (item.Info.IsBedrock) Directory.Delete(item.Info.FilePath, true);
-            else File.Delete(item.Info.FilePath);
-        }
-        catch (IOException exception) { Logger.Warning($"[ResourcePacks] Failed to delete {item.Info.FilePath}: {exception}"); failed++; }
-        catch (UnauthorizedAccessException exception) { Logger.Warning($"[ResourcePacks] Failed to delete {item.Info.FilePath}: {exception}"); failed++; }
+        foreach (var item in items)
+            try
+            {
+                if (item.Info.IsBedrock) Directory.Delete(item.Info.FilePath, true);
+                else File.Delete(item.Info.FilePath);
+            }
+            catch (IOException exception)
+            {
+                Logger.Warning($"[ResourcePacks] Failed to delete {item.Info.FilePath}: {exception}");
+                failed++;
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                Logger.Warning($"[ResourcePacks] Failed to delete {item.Info.FilePath}: {exception}");
+                failed++;
+            }
+
         _hasLoaded = false;
         await LoadAsync();
         if (TopLevel.GetTopLevel(this) is { } topLevel)
-            NotificationGateway.Notice(topLevel, failed == 0 ? $"已删除所选{PackName}" : $"删除完成，但有 {failed} 个{PackName}操作失败", failed == 0 ? NotificationType.Success : NotificationType.Warning);
+            topLevel.Notice(failed == 0 ? $"已删除所选{PackName}" : $"删除完成，但有 {failed} 个{PackName}操作失败",
+                failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }
 
-    private static ResourcePackItem? GetItem(object? sender) => (sender as Control)?.Tag as ResourcePackItem;
-    private void SetSelection(Func<ResourcePackItem, bool> selection) { foreach (var item in Items) item.IsSelected = selection(item); RaiseSelectionProperties(); }
-    private void RaiseListProperties() { RaisePropertyChanged(nameof(IsEmpty)); RaisePropertyChanged(nameof(ResourcePackCountText)); }
-    private void RaiseSelectionProperties() { RaisePropertyChanged(nameof(SelectedCount)); RaisePropertyChanged(nameof(SelectedCountText)); RaisePropertyChanged(nameof(HasMultipleSelection)); }
-    public new event PropertyChangedEventHandler? PropertyChanged;
-    private void RaisePropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    public void Dispose() { if (_isDisposed) return; _isDisposed = true; _disposeCancellation.Cancel(); foreach (var item in Items) item.Dispose(); _disposeCancellation.Dispose(); }
+    private static ResourcePackItem? GetItem(object? sender)
+    {
+        return (sender as Control)?.Tag as ResourcePackItem;
+    }
+
+    private void SetSelection(Func<ResourcePackItem, bool> selection)
+    {
+        foreach (var item in Items) item.IsSelected = selection(item);
+        RaiseSelectionProperties();
+    }
+
+    private void RaiseListProperties()
+    {
+        RaisePropertyChanged(nameof(IsEmpty));
+        RaisePropertyChanged(nameof(ResourcePackCountText));
+    }
+
+    private void RaiseSelectionProperties()
+    {
+        RaisePropertyChanged(nameof(SelectedCount));
+        RaisePropertyChanged(nameof(SelectedCountText));
+        RaisePropertyChanged(nameof(HasMultipleSelection));
+    }
+
+    private void RaisePropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }
 
 public sealed class BehaviorPacks(MinecraftInstance instance) : ResourcePacks(instance,
@@ -302,7 +420,8 @@ public sealed class BehaviorPacks(MinecraftInstance instance) : ResourcePacks(in
 public sealed class SkinPacks(MinecraftInstance instance) : ResourcePacks(instance,
     MinecraftSpecialFolder.SkinPacksFolder, "皮肤包", true);
 
-public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout = false) : INotifyPropertyChanged, IDisposable
+public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout = false)
+    : INotifyPropertyChanged, IDisposable
 {
     private bool _isSelected;
     public ResourcePackInfo Info { get; } = info;
@@ -310,22 +429,56 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
     public string FileName => Info.FileName;
     public string SizeAndNameText => $"{ResourceListUi.FormatSize(Info.FileSize)}·{FileName}";
     public bool IsCompactLayout { get; } = isCompactLayout;
+
     public string SecondaryText => IsCompactLayout
         ? $"{ResourceListUi.FormatSize(Info.FileSize)}·{(Info.SkinCount is int count ? $"包含 {count} 个皮肤" : "皮肤数量未知")}"
-        : Info.IsBedrock ? $"{ResourceListUi.FormatSize(Info.FileSize)}·最低支持版本：{Info.MinEngineVersion ?? "未知"}"
-        : SizeAndNameText;
+        : Info.IsBedrock
+            ? $"{ResourceListUi.FormatSize(Info.FileSize)}·最低支持版本：{Info.MinEngineVersion ?? "未知"}"
+            : SizeAndNameText;
+
     public string DescriptionText => string.IsNullOrWhiteSpace(Info.Description) ? "没有可用的资源包描述" : Info.Description;
     public string SupportedFormatsText => Info.SupportedFormats ?? "未知";
     public string VersionLabel => Info.IsBedrock ? "版本:" : "支持格式:";
+
     public string DetailsText => IsCompactLayout
         ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{SupportedFormatsText}\n皮肤：{DescriptionText}"
         : Info.IsBedrock
-        ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{SupportedFormatsText}\n最低引擎版本：{Info.MinEngineVersion ?? "未知"}\n作者：{(Info.Authors.Count == 0 ? "未知" : string.Join("、", Info.Authors))}\n模块：{(Info.Modules.Count == 0 ? "无" : string.Join("、", Info.Modules))}\n依赖：{(Info.Dependencies.Count == 0 ? "无" : string.Join("、", Info.Dependencies))}\n子包：{(Info.Subpacks.Count == 0 ? "无" : string.Join("、", Info.Subpacks))}\n能力：{(Info.Capabilities.Count == 0 ? "无" : string.Join("、", Info.Capabilities))}\n\n{DescriptionText}"
-        : $"名称：{DisplayName}\n文件：{FileName}\n支持格式：{SupportedFormatsText}\n\n{DescriptionText}";
+            ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{SupportedFormatsText}\n最低引擎版本：{Info.MinEngineVersion ?? "未知"}\n作者：{(Info.Authors.Count == 0 ? "未知" : string.Join("、", Info.Authors))}\n模块：{(Info.Modules.Count == 0 ? "无" : string.Join("、", Info.Modules))}\n依赖：{(Info.Dependencies.Count == 0 ? "无" : string.Join("、", Info.Dependencies))}\n子包：{(Info.Subpacks.Count == 0 ? "无" : string.Join("、", Info.Subpacks))}\n能力：{(Info.Capabilities.Count == 0 ? "无" : string.Join("、", Info.Capabilities))}\n\n{DescriptionText}"
+            : $"名称：{DisplayName}\n文件：{FileName}\n支持格式：{SupportedFormatsText}\n\n{DescriptionText}";
+
     public Bitmap? Icon { get; } = CreateIcon(info.IconData);
     public bool HasIcon => Icon != null;
-    public bool IsSelected { get => _isSelected; set { if (_isSelected != value) { _isSelected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected))); } } }
-    private static Bitmap? CreateIcon(byte[]? data) { if (data == null) return null; try { return new Bitmap(new MemoryStream(data)); } catch (InvalidDataException) { return null; } }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected != value)
+            {
+                _isSelected = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Icon?.Dispose();
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
-    public void Dispose() => Icon?.Dispose();
+
+    private static Bitmap? CreateIcon(byte[]? data)
+    {
+        if (data == null) return null;
+        try
+        {
+            return new Bitmap(new MemoryStream(data));
+        }
+        catch (InvalidDataException)
+        {
+            return null;
+        }
+    }
 }

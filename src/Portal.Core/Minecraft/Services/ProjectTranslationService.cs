@@ -21,11 +21,11 @@ public static class ProjectTranslationService
     public static async Task<IReadOnlyDictionary<string, string>> GetTranslationsAsync(
         ProjectTranslationSource source, IEnumerable<string> projectIds, CancellationToken cancellationToken = default)
     {
-        var requested = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToArray();
+        var requested = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal)
+            .ToArray();
         var results = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
         var missing = new List<string>();
         foreach (var id in requested)
-        {
             if (Cache.TryGetValue(GetCacheKey(source, id), out var translated))
             {
                 if (!string.IsNullOrWhiteSpace(translated)) results[id] = translated;
@@ -34,7 +34,6 @@ public static class ProjectTranslationService
             {
                 missing.Add(id);
             }
-        }
 
         using var semaphore = new SemaphoreSlim(MaximumConcurrentRequests);
         await Task.WhenAll(missing.Chunk(BatchSize).Select(async batch =>
@@ -48,7 +47,8 @@ public static class ProjectTranslationService
                 foreach (var id in batch) Cache.TryAdd(GetCacheKey(source, id), string.Empty);
                 foreach (var translation in translations)
                 {
-                    if (string.IsNullOrWhiteSpace(translation.ProjectId) || string.IsNullOrWhiteSpace(translation.Translated))
+                    if (string.IsNullOrWhiteSpace(translation.ProjectId) ||
+                        string.IsNullOrWhiteSpace(translation.Translated))
                         continue;
                     Cache[GetCacheKey(source, translation.ProjectId)] = translation.Translated;
                     results[translation.ProjectId] = translation.Translated;
@@ -76,7 +76,8 @@ public static class ProjectTranslationService
                     .WithTimeout(TimeSpan.FromSeconds(8))
                     .PostJsonAsync(new { modids = ids }, cancellationToken: cancellationToken)
                     .ReceiveJson<List<CurseForgeTranslation>>();
-                return response.Select(item => new ProjectTranslation(item.ModId.ToString(), item.Translated)).ToArray();
+                return response.Select(item => new ProjectTranslation(item.ModId.ToString(), item.Translated))
+                    .ToArray();
             }
 
             var modrinthResponse = await $"{ApiRoot}/modrinth".WithHeader("Accept", "application/json")
@@ -103,13 +104,21 @@ public static class ProjectTranslationService
         }
     }
 
-    private static string GetCacheKey(ProjectTranslationSource source, string projectId) => $"{source}:{projectId}";
+    private static string GetCacheKey(ProjectTranslationSource source, string projectId)
+    {
+        return $"{source}:{projectId}";
+    }
 
     private sealed record ProjectTranslation(string ProjectId, string? Translated);
+
     private sealed record CurseForgeTranslation(
         [property: JsonPropertyName("modid")] int ModId,
-        [property: JsonPropertyName("translated")] string? Translated);
+        [property: JsonPropertyName("translated")]
+        string? Translated);
+
     private sealed record ModrinthTranslation(
-        [property: JsonPropertyName("project_id")] string ProjectId,
-        [property: JsonPropertyName("translated")] string? Translated);
+        [property: JsonPropertyName("project_id")]
+        string ProjectId,
+        [property: JsonPropertyName("translated")]
+        string? Translated);
 }

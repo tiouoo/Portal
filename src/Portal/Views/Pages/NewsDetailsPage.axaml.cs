@@ -9,9 +9,6 @@ namespace Portal.Views.Pages;
 
 public partial class NewsDetailsPage : UserControl, ITioTabPage
 {
-    public NewsDetailsPageViewModel ViewModel { get; }
-
-    
     public NewsDetailsPage() : this(new NewsEntry
     {
         Title = "新闻详情",
@@ -34,6 +31,8 @@ public partial class NewsDetailsPage : UserControl, ITioTabPage
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }
 
+    public NewsDetailsPageViewModel ViewModel { get; }
+
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
 
@@ -43,7 +42,7 @@ public partial class NewsDetailsPage : UserControl, ITioTabPage
         DataContext = null;
     }
 
-        public static void Open(TopLevel sender, NewsEntry entry)
+    public static void Open(TopLevel sender, NewsEntry entry)
     {
         if (sender is not TioTabWindowBase window) return;
         if (entry == null || string.IsNullOrEmpty(entry.Id)) return;

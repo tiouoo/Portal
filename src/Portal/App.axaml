@@ -3,7 +3,6 @@
     RequestedThemeVariant="Default"
     x:Class="Portal.App"
     xmlns="https://github.com/avaloniaui"
-    xmlns:services="clr-namespace:Portal.Services"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>

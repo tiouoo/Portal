@@ -1,10 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Input;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Helpers;
@@ -23,15 +20,6 @@ public partial class AuthServer : UserControl
 
 public partial class AuthServerViewModel : ObservableObject, IDialogContext, INotifyDataErrorInfo
 {
-    [ObservableProperty]
-    public partial string? ServerName { get; set; }
-
-    [ObservableProperty]
-    public partial string? ServerUrl { get; set; }
-
-    public ICommand NextCommand { get; }
-    public ICommand CancelCommand { get; }
-
     private readonly Dictionary<string, List<string>> _errors = new();
     private readonly Minecraft.Classes.AuthServer[] _existingServers;
 
@@ -40,6 +28,30 @@ public partial class AuthServerViewModel : ObservableObject, IDialogContext, INo
         _existingServers = existingServers;
         NextCommand = new RelayCommand(Next, CanNext);
         CancelCommand = new RelayCommand(Cancel);
+    }
+
+    [ObservableProperty] public partial string? ServerName { get; set; }
+
+    [ObservableProperty] public partial string? ServerUrl { get; set; }
+
+    public ICommand NextCommand { get; }
+    public ICommand CancelCommand { get; }
+
+    public void Close()
+    {
+        RequestClose?.Invoke(this, null);
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    public bool HasErrors => _errors.Count > 0;
+
+    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+    public IEnumerable GetErrors(string? propertyName)
+    {
+        if (string.IsNullOrEmpty(propertyName) || !_errors.ContainsKey(propertyName)) return Enumerable.Empty<string>();
+        return _errors[propertyName];
     }
 
     partial void OnServerNameChanged(string? value)
@@ -58,15 +70,9 @@ public partial class AuthServerViewModel : ObservableObject, IDialogContext, INo
     {
         var propertyName = nameof(ServerName);
 
-        if (_errors.ContainsKey(propertyName))
-        {
-            _errors.Remove(propertyName);
-        }
+        if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            _errors[propertyName] = new List<string> { "服务器名称不能为空" };
-        }
+        if (string.IsNullOrWhiteSpace(value)) _errors[propertyName] = new List<string> { "服务器名称不能为空" };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
@@ -75,23 +81,13 @@ public partial class AuthServerViewModel : ObservableObject, IDialogContext, INo
     {
         var propertyName = nameof(ServerUrl);
 
-        if (_errors.ContainsKey(propertyName))
-        {
-            _errors.Remove(propertyName);
-        }
+        if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
         if (string.IsNullOrWhiteSpace(value))
-        {
             _errors[propertyName] = new List<string> { "服务器 URL 不能为空" };
-        }
         else if (!UrlHelper.IsValidUrl(value))
-        {
             _errors[propertyName] = new List<string> { "URL 地址格式不正确" };
-        }
-        else if (IsUrlExists(value))
-        {
-            _errors[propertyName] = new List<string> { "该验证服务器已存在" };
-        }
+        else if (IsUrlExists(value)) _errors[propertyName] = new List<string> { "该验证服务器已存在" };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
@@ -120,25 +116,5 @@ public partial class AuthServerViewModel : ObservableObject, IDialogContext, INo
     private void Cancel()
     {
         RequestClose?.Invoke(this, null);
-    }
-
-    public void Close()
-    {
-        RequestClose?.Invoke(this, null);
-    }
-
-    public event EventHandler<object?>? RequestClose;
-
-    public bool HasErrors => _errors.Count > 0;
-
-    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
-
-    public IEnumerable GetErrors(string? propertyName)
-    {
-        if (string.IsNullOrEmpty(propertyName) || !_errors.ContainsKey(propertyName))
-        {
-            return Enumerable.Empty<string>();
-        }
-        return _errors[propertyName];
     }
 }

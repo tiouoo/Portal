@@ -4,7 +4,11 @@ using Portal.Core.Minecraft.Models;
 
 namespace Portal.Core.Services;
 
-public enum FavoriteEdition { Java, Bedrock }
+public enum FavoriteEdition
+{
+    Java,
+    Bedrock
+}
 
 public class FavoriteResource
 {
@@ -35,8 +39,6 @@ public sealed class FavoriteCollectionService
 {
     private const string FileName = "Favorites.portal.json";
     private readonly string _path = Path.Combine(ConfigPath.UserDataRootPath, FileName);
-    public static FavoriteCollectionService Instance { get; } = new();
-    public FavoriteCollectionDocument Document { get; private set; }
 
     private FavoriteCollectionService()
     {
@@ -44,16 +46,25 @@ public sealed class FavoriteCollectionService
         EnsureCollection();
     }
 
+    public static FavoriteCollectionService Instance { get; } = new();
+    public FavoriteCollectionDocument Document { get; }
+
     public event EventHandler? Changed;
 
-    public bool Contains(FavoriteResource resource) => Document.Collections
-        .SelectMany(collection => collection.Items)
-        .Any(item => item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source);
+    public bool Contains(FavoriteResource resource)
+    {
+        return Document.Collections
+            .SelectMany(collection => collection.Items)
+            .Any(item => item.ProjectId == resource.ProjectId && item.Kind == resource.Kind &&
+                         item.Source == resource.Source);
+    }
 
     public void Add(FavoriteResource resource, string? collectionId = null)
     {
-        var collection = Document.Collections.FirstOrDefault(item => item.Id == collectionId) ?? Document.Collections[0];
-        if (collection.Items.Any(item => item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source))
+        var collection = Document.Collections.FirstOrDefault(item => item.Id == collectionId) ??
+                         Document.Collections[0];
+        if (collection.Items.Any(item =>
+                item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source))
             return;
         collection.Items.Add(resource);
         Save();
@@ -62,7 +73,8 @@ public sealed class FavoriteCollectionService
     public void Remove(FavoriteResource resource)
     {
         foreach (var collection in Document.Collections)
-            collection.Items.RemoveAll(item => item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source);
+            collection.Items.RemoveAll(item =>
+                item.ProjectId == resource.ProjectId && item.Kind == resource.Kind && item.Source == resource.Source);
         Save();
     }
 
@@ -80,12 +92,14 @@ public sealed class FavoriteCollectionService
         var imported = JsonConvert.DeserializeObject<FavoriteCollectionDocument>(File.ReadAllText(path));
         if (imported?.Collections is null)
             throw new InvalidDataException("收藏夹文件格式无效。");
-        foreach (var collection in imported.Collections.Where(collection => !string.IsNullOrWhiteSpace(collection.Name)))
+        foreach (var collection in
+                 imported.Collections.Where(collection => !string.IsNullOrWhiteSpace(collection.Name)))
         {
             collection.Id = Guid.NewGuid().ToString("N");
             collection.Items ??= [];
             Document.Collections.Add(collection);
         }
+
         EnsureCollection();
         Save();
     }
@@ -101,7 +115,8 @@ public sealed class FavoriteCollectionService
         try
         {
             return File.Exists(_path)
-                ? JsonConvert.DeserializeObject<FavoriteCollectionDocument>(File.ReadAllText(_path)) ?? new FavoriteCollectionDocument()
+                ? JsonConvert.DeserializeObject<FavoriteCollectionDocument>(File.ReadAllText(_path)) ??
+                  new FavoriteCollectionDocument()
                 : new FavoriteCollectionDocument();
         }
         catch

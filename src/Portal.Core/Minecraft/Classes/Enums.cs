@@ -15,5 +15,5 @@ public enum MinecraftSpecialFolder
     SkinPacksFolder,
     WorldTemplatesFolder,
     DevelopmentResourcePacksFolder,
-    DevelopmentBehaviorPacksFolder,
+    DevelopmentBehaviorPacksFolder
 }

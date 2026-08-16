@@ -20,7 +20,15 @@ public sealed class MinecraftServerPingService
 {
     private const int DefaultTimeoutMs = 8000;
 
-        public async Task<MinecraftServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
+    private static readonly Dictionary<string, string> ChatColorMap = new()
+    {
+        { "black", "0" }, { "dark_blue", "1" }, { "dark_green", "2" }, { "dark_aqua", "3" },
+        { "dark_red", "4" }, { "dark_purple", "5" }, { "gold", "6" }, { "gray", "7" },
+        { "dark_gray", "8" }, { "blue", "9" }, { "green", "a" }, { "aqua", "b" },
+        { "red", "c" }, { "light_purple", "d" }, { "yellow", "e" }, { "white", "f" }
+    };
+
+    public async Task<MinecraftServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(address))
             return null;
@@ -127,7 +135,7 @@ public sealed class MinecraftServerPingService
                 return null;
 
             var text = Encoding.BigEndianUnicode.GetString(data, 1, data.Length - 1);
-            
+
             var parts = text.Split('\0', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 4)
                 return null;
@@ -150,7 +158,7 @@ public sealed class MinecraftServerPingService
             return null;
 
         var packetData = await ReadExactAsync(stream, packetLength, cancellationToken).ConfigureAwait(false);
-        using var packetStream = new MemoryStream(packetData, writable: false);
+        using var packetStream = new MemoryStream(packetData, false);
         var packetId = checked((int)await ReadVarIntAsync(packetStream, cancellationToken).ConfigureAwait(false));
         if (packetId != 0)
             return null;
@@ -167,7 +175,7 @@ public sealed class MinecraftServerPingService
             return 0;
 
         var packetData = await ReadExactAsync(stream, packetLength, cancellationToken).ConfigureAwait(false);
-        using var packetStream = new MemoryStream(packetData, writable: false);
+        using var packetStream = new MemoryStream(packetData, false);
         var packetId = checked((int)await ReadVarIntAsync(packetStream, cancellationToken).ConfigureAwait(false));
         if (packetId != 1)
             return 0;
@@ -206,7 +214,7 @@ public sealed class MinecraftServerPingService
         }
     }
 
-        private static string ToFormattedText(JsonNode? node)
+    private static string ToFormattedText(JsonNode? node)
     {
         if (node == null)
             return string.Empty;
@@ -215,14 +223,6 @@ public sealed class MinecraftServerPingService
         AppendComponent(sb, node, []);
         return sb.ToString();
     }
-
-    private static readonly Dictionary<string, string> ChatColorMap = new()
-    {
-        { "black", "0" }, { "dark_blue", "1" }, { "dark_green", "2" }, { "dark_aqua", "3" },
-        { "dark_red", "4" }, { "dark_purple", "5" }, { "gold", "6" }, { "gray", "7" },
-        { "dark_gray", "8" }, { "blue", "9" }, { "green", "a" }, { "aqua", "b" },
-        { "red", "c" }, { "light_purple", "d" }, { "yellow", "e" }, { "white", "f" }
-    };
 
     private static void AppendComponent(StringBuilder sb, JsonNode node, List<string> formats)
     {
@@ -263,7 +263,8 @@ public sealed class MinecraftServerPingService
 
                 if (obj.TryGetPropertyValue("text", out var textNode) && textNode is JsonValue textValue)
                     sb.Append(textValue.GetValue<string>());
-                else if (obj.TryGetPropertyValue("translate", out var translateNode) && translateNode is JsonValue translateValue)
+                else if (obj.TryGetPropertyValue("translate", out var translateNode) &&
+                         translateNode is JsonValue translateValue)
                     sb.Append(translateValue.GetValue<string>());
 
                 if (obj.TryGetPropertyValue("extra", out var extra) && extra is JsonArray extraArray)
@@ -291,7 +292,6 @@ public sealed class MinecraftServerPingService
         }
     }
 
-    
 
     private static byte[] BuildHandshakePacket(string host, int port)
     {
@@ -331,7 +331,6 @@ public sealed class MinecraftServerPingService
         return buffer;
     }
 
-    
 
     private static byte[] EncodeVarInt(int value)
     {

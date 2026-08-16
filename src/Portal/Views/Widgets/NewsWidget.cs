@@ -1,42 +1,34 @@
-using System;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Portal.Classes.Entries;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
-using Portal.Module.Widgets;
 using Portal.ViewModels;
 using Portal.Views.Components;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Widgets;
 
 public sealed class NewsWidget : IWidgetContent
 {
-    private NewsWidgetData? _data;
-    private NewsFilterType _filter = NewsFilterType.All;
-    private NewsEntry? _current;
-
-    
-    private readonly NewsImage _image;
-    private readonly TextBlock _titleText;
-    private readonly TextBlock _descText;
     private readonly TextBlock _dateText;
+    private readonly TextBlock _descText;
     private readonly TextBlock _editionText;
-    private readonly Border _typeTag;
-    private readonly TextBlock _typeText;
     private readonly TextBlock _emptyText;
 
-    public NewsFilterType Filter => _filter;
+
+    private readonly NewsImage _image;
+    private readonly TextBlock _titleText;
+    private readonly Border _typeTag;
+    private readonly TextBlock _typeText;
+    private NewsEntry? _current;
+    private NewsWidgetData? _data;
 
     public NewsWidget(WidgetCellSize size)
     {
@@ -89,12 +81,14 @@ public sealed class NewsWidget : IWidgetContent
         Content = size.Rows == 1 ? CreateHorizontalLayout() : CreateVerticalLayout();
     }
 
-        private Control CreateHorizontalLayout()
+    public NewsFilterType Filter { get; private set; } = NewsFilterType.All;
+
+    private Control CreateHorizontalLayout()
     {
         _descText.MaxLines = 3;
         _descText.Margin = new Thickness(0, -2, 0, 0);
-        
-        
+
+
         var imageBorder = new Border
         {
             ClipToBounds = true,
@@ -124,7 +118,7 @@ public sealed class NewsWidget : IWidgetContent
             Children = { editionTag, _typeTag }
         };
 
-        
+
         var bottomRow = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -146,23 +140,22 @@ public sealed class NewsWidget : IWidgetContent
         rightPanel.Children.Add(bottomRow);
         rightPanel.Children.Add(topRow);
 
-        
+
         DockPanel.SetDock(imageBorder, Dock.Left);
 
         var root = new DockPanel { LastChildFill = true };
         root.Children.Add(imageBorder);
         root.Children.Add(rightPanel);
 
-        
+
         var overlay = new Grid();
         overlay.Children.Add(root);
         overlay.Children.Add(_emptyText);
         return overlay;
     }
 
-        private Control CreateVerticalLayout()
+    private Control CreateVerticalLayout()
     {
-        
         var imageBorder = new Border
         {
             ClipToBounds = true,
@@ -182,7 +175,7 @@ public sealed class NewsWidget : IWidgetContent
         editionTag.Bind(Border.BorderBrushProperty, this.GetResourceObservable("TranslucentBorderBrush"));
         editionTag.Bind(Border.BackgroundProperty, this.GetResourceObservable("TranslucentBackgroundColor"));
 
-        
+
         var bottomPanel = new Panel
         {
             Margin = new Thickness(0, 3, 0, 0),
@@ -199,7 +192,7 @@ public sealed class NewsWidget : IWidgetContent
             }
         };
 
-        
+
         var infoPanel = new DockPanel
         {
             Margin = new Thickness(14, 10, 14, 8),
@@ -211,14 +204,14 @@ public sealed class NewsWidget : IWidgetContent
         infoPanel.Children.Add(_titleText);
         infoPanel.Children.Add(_descText);
 
-        
+
         DockPanel.SetDock(imageBorder, Dock.Top);
 
         var root = new DockPanel { LastChildFill = true };
         root.Children.Add(imageBorder);
         root.Children.Add(infoPanel);
 
-        
+
         var overlay = new Grid();
         overlay.Children.Add(root);
         overlay.Children.Add(_emptyText);
@@ -234,7 +227,7 @@ public sealed class NewsWidget : IWidgetContent
             layout.Data = _data;
         }
 
-        _filter = ParseFilter(_data.Filter);
+        Filter = ParseFilter(_data.Filter);
 
         NewsService.NewsUpdated += OnNewsUpdated;
         Unloaded += (_, _) => NewsService.NewsUpdated -= OnNewsUpdated;
@@ -242,19 +235,25 @@ public sealed class NewsWidget : IWidgetContent
         RefreshNews();
     }
 
-    private static NewsFilterType ParseFilter(string? s) => s switch
+    private static NewsFilterType ParseFilter(string? s)
     {
-        "Java" => NewsFilterType.Java,
-        "Bedrock" => NewsFilterType.Bedrock,
-        _ => NewsFilterType.All
-    };
+        return s switch
+        {
+            "Java" => NewsFilterType.Java,
+            "Bedrock" => NewsFilterType.Bedrock,
+            _ => NewsFilterType.All
+        };
+    }
 
-    private static string FilterToString(NewsFilterType f) => f switch
+    private static string FilterToString(NewsFilterType f)
     {
-        NewsFilterType.Java => "Java",
-        NewsFilterType.Bedrock => "Bedrock",
-        _ => "All"
-    };
+        return f switch
+        {
+            NewsFilterType.Java => "Java",
+            NewsFilterType.Bedrock => "Bedrock",
+            _ => "All"
+        };
+    }
 
     private void OnNewsUpdated(object? sender, EventArgs e)
     {
@@ -263,7 +262,7 @@ public sealed class NewsWidget : IWidgetContent
 
     private void RefreshNews()
     {
-        IEnumerable<NewsEntry> list = _filter switch
+        var list = Filter switch
         {
             NewsFilterType.Java => NewsService.JavaNews,
             NewsFilterType.Bedrock => NewsService.BedrockNews,
@@ -291,7 +290,7 @@ public sealed class NewsWidget : IWidgetContent
             return;
         }
 
-        
+
         _image.Source = entry.ImageUrl;
         _titleText.Text = entry.Title;
         _descText.Text = string.IsNullOrEmpty(entry.ShortText) ? string.Empty : entry.ShortText + "...";
@@ -301,10 +300,10 @@ public sealed class NewsWidget : IWidgetContent
         _typeTag.IsVisible = !string.IsNullOrEmpty(entry.Type);
     }
 
-        public void SetFilter(NewsFilterType filter)
+    public void SetFilter(NewsFilterType filter)
     {
-        if (_filter == filter) return;
-        _filter = filter;
+        if (Filter == filter) return;
+        Filter = filter;
         if (_data != null)
             _data.Filter = FilterToString(filter);
         RefreshNews();
@@ -312,8 +311,6 @@ public sealed class NewsWidget : IWidgetContent
 
     public override void PerformClick()
     {
-        
-        
         if (_current != null)
         {
             NewsDetailsPage.Open(TopLevel.GetTopLevel(this), _current);

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Instance.Bedrock;
 
 namespace Portal.Core.Minecraft.Classes;
@@ -6,8 +7,53 @@ namespace Portal.Core.Minecraft.Classes;
 public partial class InstanceStorageUsage : ObservableObject
 {
     private readonly MinecraftInstance _instance;
-    private Task? _loadTask;
     private readonly object _loadLock = new();
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(BehaviorPacksSizeText), nameof(ResourceContentSizeText))]
+    private long _behaviorPacksBytes;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ConfigSizeText), nameof(ConfigPercentageText))]
+    private long _configBytes;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CrashReportsSizeText), nameof(CrashReportsPercentageText),
+        nameof(CrashReportsDisplayText))]
+    private long _crashReportsBytes;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(DevelopmentPacksSizeText), nameof(ResourceContentSizeText))]
+    private long _developmentPacksBytes;
+
+    private Task? _loadTask;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(LogsSizeText), nameof(LogsPercentageText))]
+    private long _logsBytes;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ModsSizeText), nameof(ModsPercentageText), nameof(ModsDisplayText))]
+    private long _modsBytes;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(OtherSizeText), nameof(OtherPercentageText))]
+    private long _otherBytes;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ResourcePacksSizeText), nameof(ResourcePacksPercentageText),
+        nameof(ResourcePacksDisplayText), nameof(ResourceContentSizeText))]
+    private long _resourcePacksBytes;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SavesSizeText), nameof(SavesPercentageText), nameof(SavesDisplayText))]
+    private long _savesBytes;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ScreenshotsSizeText), nameof(ScreenshotsPercentageText))]
+    private long _screenshotsBytes;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShaderPacksSizeText), nameof(ShaderPacksPercentageText),
+        nameof(ShaderPacksDisplayText))]
+    private long _shaderPacksBytes;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(SkinPacksSizeText), nameof(ResourceContentSizeText))]
+    private long _skinPacksBytes;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(VersionFolderSizeText), nameof(ModsPercentageText),
@@ -17,44 +63,16 @@ public partial class InstanceStorageUsage : ObservableObject
         nameof(ShaderPacksDisplayText), nameof(SavesDisplayText))]
     private long _versionFolderBytes;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ModsSizeText), nameof(ModsPercentageText), nameof(ModsDisplayText))]
-    private long _modsBytes;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(WorldTemplatesSizeText))]
+    private long _worldTemplatesBytes;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ResourcePacksSizeText), nameof(ResourcePacksPercentageText),
-        nameof(ResourcePacksDisplayText), nameof(ResourceContentSizeText))]
-    private long _resourcePacksBytes;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(WorldsSizeText))]
+    private long _worldsBytes;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShaderPacksSizeText), nameof(ShaderPacksPercentageText),
-        nameof(ShaderPacksDisplayText))]
-    private long _shaderPacksBytes;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SavesSizeText), nameof(SavesPercentageText), nameof(SavesDisplayText))]
-    private long _savesBytes;
-
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ScreenshotsSizeText), nameof(ScreenshotsPercentageText))]
-    private long _screenshotsBytes;
-
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ConfigSizeText), nameof(ConfigPercentageText))]
-    private long _configBytes;
-
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(LogsSizeText), nameof(LogsPercentageText))]
-    private long _logsBytes;
-
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(CrashReportsSizeText), nameof(CrashReportsPercentageText), nameof(CrashReportsDisplayText))]
-    private long _crashReportsBytes;
-
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(OtherSizeText), nameof(OtherPercentageText))]
-    private long _otherBytes;
-
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(WorldsSizeText))] private long _worldsBytes;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(BehaviorPacksSizeText), nameof(ResourceContentSizeText))] private long _behaviorPacksBytes;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(SkinPacksSizeText), nameof(ResourceContentSizeText))] private long _skinPacksBytes;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(WorldTemplatesSizeText))] private long _worldTemplatesBytes;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(DevelopmentPacksSizeText), nameof(ResourceContentSizeText))] private long _developmentPacksBytes;
+    public InstanceStorageUsage(MinecraftInstance instance)
+    {
+        _instance = instance;
+    }
 
     public bool CanDisplayPercentage => _instance.JavaConfig?.EnableIndependentInstance == true;
     public string VersionFolderSizeText => FormatSize(VersionFolderBytes);
@@ -92,15 +110,12 @@ public partial class InstanceStorageUsage : ObservableObject
     public string CrashReportsDisplayText => FormatSizeAndPercentage(CrashReportsBytes);
     public string OtherDisplayText => FormatSizeAndPercentage(OtherBytes);
 
-    public InstanceStorageUsage(MinecraftInstance instance)
-    {
-        _instance = instance;
-    }
-
     public Task EnsureLoadedAsync()
     {
         lock (_loadLock)
+        {
             return _loadTask ??= LoadAsync();
+        }
     }
 
     public void Refresh()
@@ -111,7 +126,9 @@ public partial class InstanceStorageUsage : ObservableObject
         OnPropertyChanged(nameof(ShaderPacksDisplayText));
         OnPropertyChanged(nameof(SavesDisplayText));
         lock (_loadLock)
+        {
             _loadTask = LoadAsync();
+        }
     }
 
     public Task RefreshBedrockWorldsAsync()
@@ -122,7 +139,7 @@ public partial class InstanceStorageUsage : ObservableObject
         return RefreshBedrockWorldsAsync(config);
     }
 
-    private async Task RefreshBedrockWorldsAsync(Portal.Bedrock.Standard.Manifest.BedrockInstanceConfig config)
+    private async Task RefreshBedrockWorldsAsync(BedrockInstanceConfig config)
     {
         WorldsBytes = await Task.Run(() => GetBedrockWorldsSize(config));
     }
@@ -135,13 +152,19 @@ public partial class InstanceStorageUsage : ObservableObject
             {
                 var instanceBytes = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder));
                 var worlds = _instance.BedrockConfig is { } config ? GetBedrockWorldsSize(config) : 0;
-                var resources = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.ResourcePacksFolder));
-                var behaviors = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.BehaviorPacksFolder));
+                var resources =
+                    GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.ResourcePacksFolder));
+                var behaviors =
+                    GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.BehaviorPacksFolder));
                 var skins = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.SkinPacksFolder));
-                var templates = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.WorldTemplatesFolder));
-                var development = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.DevelopmentResourcePacksFolder)) +
-                                  GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.DevelopmentBehaviorPacksFolder));
-                var screenshots = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.ScreenshotsFolder));
+                var templates =
+                    GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.WorldTemplatesFolder));
+                var development =
+                    GetDirectorySize(
+                        _instance.GetSpecialFolder(MinecraftSpecialFolder.DevelopmentResourcePacksFolder)) +
+                    GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.DevelopmentBehaviorPacksFolder));
+                var screenshots =
+                    GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.ScreenshotsFolder));
                 return (instanceBytes, worlds, resources, behaviors, skins, templates, development, screenshots);
             });
 
@@ -169,7 +192,8 @@ public partial class InstanceStorageUsage : ObservableObject
                 GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.ScreenshotsFolder));
             var configBytes = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.ConfigFolder));
             var logsBytes = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.LogsFolder));
-            var crashReportsBytes = GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.CrashReportsFolder));
+            var crashReportsBytes =
+                GetDirectorySize(_instance.GetSpecialFolder(MinecraftSpecialFolder.CrashReportsFolder));
 
 
             var categorizedBytes = modsBytes + resourcePacksBytes + shaderPacksBytes + savesBytes +
@@ -194,13 +218,19 @@ public partial class InstanceStorageUsage : ObservableObject
         OtherBytes = usage.otherBytes;
     }
 
-    private string FormatPercentage(long bytes) => VersionFolderBytes == 0
-        ? "0%"
-        : $"{bytes * 100d / VersionFolderBytes:F1}%";
+    private string FormatPercentage(long bytes)
+    {
+        return VersionFolderBytes == 0
+            ? "0%"
+            : $"{bytes * 100d / VersionFolderBytes:F1}%";
+    }
 
-    private string FormatSizeAndPercentage(long bytes) => CanDisplayPercentage
-        ? $"{FormatSize(bytes)} / {FormatPercentage(bytes)}"
-        : FormatSize(bytes);
+    private string FormatSizeAndPercentage(long bytes)
+    {
+        return CanDisplayPercentage
+            ? $"{FormatSize(bytes)} / {FormatPercentage(bytes)}"
+            : FormatSize(bytes);
+    }
 
     private static string FormatSize(long bytes)
     {
@@ -230,20 +260,16 @@ public partial class InstanceStorageUsage : ObservableObject
                          IgnoreInaccessible = true,
                          AttributesToSkip = FileAttributes.ReparsePoint
                      }))
-            {
                 try
                 {
                     total += new FileInfo(file).Length;
                 }
                 catch (IOException)
                 {
-                    
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    
                 }
-            }
         }
         catch (IOException)
         {
@@ -255,7 +281,9 @@ public partial class InstanceStorageUsage : ObservableObject
         return total;
     }
 
-    private static long GetBedrockWorldsSize(Portal.Bedrock.Standard.Manifest.BedrockInstanceConfig config) =>
-        BedrockDataPathResolver.GetWorldUserIds(config)
+    private static long GetBedrockWorldsSize(BedrockInstanceConfig config)
+    {
+        return BedrockDataPathResolver.GetWorldUserIds(config)
             .Sum(userId => GetDirectorySize(BedrockDataPathResolver.GetWorldsFolder(config, userId)));
+    }
 }

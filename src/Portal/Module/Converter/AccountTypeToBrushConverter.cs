@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Data.Converters;
@@ -17,7 +16,7 @@ public class AccountTypeToBrushConverter : IValueConverter
         [
             new GradientStop(Color.Parse("#FF9A9E"), 0.0),
             new GradientStop(Color.Parse("#FAD0C4"), 0.5),
-            new GradientStop(Color.Parse("#FFD1FF"), 1.0),
+            new GradientStop(Color.Parse("#FFD1FF"), 1.0)
         ]
     };
 
@@ -28,7 +27,7 @@ public class AccountTypeToBrushConverter : IValueConverter
         GradientStops =
         [
             new GradientStop(Color.Parse("#83a1fd"), 0.0),
-            new GradientStop(Color.Parse("#79fbd1"), 1.0),
+            new GradientStop(Color.Parse("#79fbd1"), 1.0)
         ]
     };
 
@@ -39,7 +38,7 @@ public class AccountTypeToBrushConverter : IValueConverter
         GradientStops =
         [
             new GradientStop(Color.Parse("#fda184"), 0.0),
-            new GradientStop(Color.Parse("#f6d166"), 1.0),
+            new GradientStop(Color.Parse("#f6d166"), 1.0)
         ]
     };
 
@@ -53,7 +52,7 @@ public class AccountTypeToBrushConverter : IValueConverter
             AccountType.Microsoft => MicrosoftBrush,
             AccountType.Yggdrasil => YggdrasilBrush,
             AccountType.Offline => OfflineBrush,
-            _ => MicrosoftBrush,
+            _ => MicrosoftBrush
         };
     }
 

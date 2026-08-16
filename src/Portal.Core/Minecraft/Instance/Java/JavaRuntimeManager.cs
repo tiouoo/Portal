@@ -9,6 +9,7 @@ public static class JavaRuntimeManager
     private const int BfsMaxDepth = 8;
     private const int BfsMaxDirsPerRoot = 50_000;
     private const int FullExploreDepth = 3;
+
     private static readonly string[] DirNameKeywords =
     [
         "java", "jdk", "jre", "dragonwell", "azul", "zulu", "oracle", "open",
@@ -18,6 +19,7 @@ public static class JavaRuntimeManager
         "pcl", "bakaxl", "fluent", "mc", "bin", "tool", "dev", "software", "app",
         "program", "game", "server", "agent", "platform", "engine"
     ];
+
     private static readonly string[] ExcludedDirNames =
     [
         "javapath", "java8path", "common files", "netease", "node_modules",
@@ -29,28 +31,27 @@ public static class JavaRuntimeManager
         ".gradle", ".m2", ".idea", ".vscode", ".vs", "packages"
     ];
 
-    public static async Task<JavaRuntimeEntry?> FromPathAsync(string javaPath, CancellationToken cancellationToken = default)
+    public static async Task<JavaRuntimeEntry?> FromPathAsync(string javaPath,
+        CancellationToken cancellationToken = default)
     {
         var java = await JavaUtil.GetJavaInfoAsync(javaPath, cancellationToken);
         return java == null ? null : Convert(java);
     }
 
-        public static async Task<IReadOnlyList<JavaRuntimeEntry>> ScanAsync(CancellationToken cancellationToken = default)
+    public static async Task<IReadOnlyList<JavaRuntimeEntry>> ScanAsync(CancellationToken cancellationToken = default)
     {
         return await Task.Run(async () =>
         {
             var result = new List<JavaRuntimeEntry>();
-            await foreach (var java in JavaUtil.EnumerableJavaAsync(fastMode: true, cancellationToken))
-            {
+            await foreach (var java in JavaUtil.EnumerableJavaAsync(true, cancellationToken))
                 if (java != null)
                     result.Add(Convert(java));
-            }
 
             return (IReadOnlyList<JavaRuntimeEntry>)result;
         }, cancellationToken);
     }
 
-        public static async Task<IReadOnlyList<JavaRuntimeEntry>> DeepScanAsync(
+    public static async Task<IReadOnlyList<JavaRuntimeEntry>> DeepScanAsync(
         IProgress<DeepScanProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
@@ -59,12 +60,11 @@ public static class JavaRuntimeManager
         long totalDirsScanned = 0;
         long totalDirsToScan = 0;
 
-        
+
         progress?.Report(new DeepScanProgress(0, 0, 0, "阶段 1/2：执行自动扫描（registry + where + 常见路径）…"));
         try
         {
-            await foreach (var java in JavaUtil.EnumerableJavaAsync(fastMode: false, cancellationToken))
-            {
+            await foreach (var java in JavaUtil.EnumerableJavaAsync(false, cancellationToken))
                 if (java != null)
                 {
                     result.Add(Convert(java));
@@ -72,14 +72,12 @@ public static class JavaRuntimeManager
                     progress?.Report(new DeepScanProgress(0, 0, result.Count,
                         $"自动扫描找到: {java.JavaVersion}"));
                 }
-            }
         }
         catch (OperationCanceledException)
         {
-            
         }
 
-        
+
         var roots = GetBfsSearchRoots().ToList();
         totalDirsToScan = roots.Count;
         progress?.Report(new DeepScanProgress(
@@ -112,6 +110,7 @@ public static class JavaRuntimeManager
                                 {
                                     result.Add(entry);
                                 }
+
                                 progress?.Report(new DeepScanProgress(
                                     totalDirsScanned, totalDirsToScan, result.Count,
                                     $"深度扫描找到 Java: {Path.GetFileName(Path.GetDirectoryName(javaPath))}"));
@@ -154,22 +153,16 @@ public static class JavaRuntimeManager
 
         if (Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) is { } home &&
             Directory.Exists(home))
-        {
             roots.Add(home);
-        }
 
         if (OperatingSystem.IsWindows())
         {
             if (Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) is { } appData &&
                 Directory.Exists(appData))
-            {
                 roots.Add(appData);
-            }
             if (Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) is { } localAppData &&
                 Directory.Exists(localAppData))
-            {
                 roots.Add(localAppData);
-            }
 
             try
             {
@@ -183,7 +176,6 @@ public static class JavaRuntimeManager
             }
             catch
             {
-                
             }
         }
         else if (OperatingSystem.IsMacOS())
@@ -205,29 +197,24 @@ public static class JavaRuntimeManager
                              .Where(d => d.IsReady && d.DriveType is DriveType.Fixed))
                 {
                     var mount = drive.RootDirectory.FullName;
-                    if (mount != "/" && Directory.Exists(mount))
-                    {
-                        roots.Add(mount);
-                    }
+                    if (mount != "/" && Directory.Exists(mount)) roots.Add(mount);
                 }
             }
             catch
             {
-                
             }
+
             foreach (var common in new[] { "/mnt", "/media", "/run/media" })
             {
                 if (!Directory.Exists(common)) continue;
                 try
                 {
                     foreach (var entry in Directory.EnumerateDirectories(common))
-                    {
-                        if (Directory.Exists(entry)) roots.Add(entry);
-                    }
+                        if (Directory.Exists(entry))
+                            roots.Add(entry);
                 }
                 catch
                 {
-                    
                 }
             }
         }
@@ -244,7 +231,7 @@ public static class JavaRuntimeManager
         if (Directory.Exists(path)) roots.Add(path);
     }
 
-        private static HashSet<string> BfsKeywordScan(
+    private static HashSet<string> BfsKeywordScan(
         string root,
         HashSet<string> foundPaths,
         ref long totalDirsScanned,
@@ -253,7 +240,7 @@ public static class JavaRuntimeManager
         CancellationToken cancellationToken)
     {
         var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        int scannedDirs = 0;
+        var scannedDirs = 0;
         var queue = new Queue<(string dir, int depth)>();
         queue.Enqueue((root, 0));
 
@@ -293,21 +280,16 @@ public static class JavaRuntimeManager
 
                 scannedDirs++;
                 Interlocked.Increment(ref totalDirsScanned);
-                if (scannedDirs > BfsMaxDirsPerRoot)
-                {
-                    return found;
-                }
+                if (scannedDirs > BfsMaxDirsPerRoot) return found;
 
                 if (scannedDirs % 200 == 0)
-                {
                     progress?.Report(new DeepScanProgress(
                         Volatile.Read(ref totalDirsScanned),
                         Volatile.Read(ref totalDirsToScan),
                         foundPaths.Count + found.Count,
                         $"正在扫描: {entryPath}"));
-                }
 
-                
+
                 try
                 {
                     var binDir = Path.Combine(entryPath, "bin");
@@ -328,11 +310,9 @@ public static class JavaRuntimeManager
                 }
                 catch
                 {
-                    
                 }
 
-                
-                
+
                 if (depth + 1 < BfsMaxDepth &&
                     (depth + 1 < FullExploreDepth || DirNameMatchesKeywords(name)))
                 {
@@ -345,11 +325,15 @@ public static class JavaRuntimeManager
         return found;
     }
 
-    private static bool DirNameMatchesKeywords(string name) =>
-        DirNameKeywords.Any(keyword => name.Contains(keyword, StringComparison.Ordinal));
+    private static bool DirNameMatchesKeywords(string name)
+    {
+        return DirNameKeywords.Any(keyword => name.Contains(keyword, StringComparison.Ordinal));
+    }
 
-    private static bool DirNameExcluded(string name) =>
-        ExcludedDirNames.Any(excluded => name.Contains(excluded, StringComparison.Ordinal));
+    private static bool DirNameExcluded(string name)
+    {
+        return ExcludedDirNames.Any(excluded => name.Contains(excluded, StringComparison.Ordinal));
+    }
 
     private static JavaRuntimeEntry Convert(JavaEntry java)
     {

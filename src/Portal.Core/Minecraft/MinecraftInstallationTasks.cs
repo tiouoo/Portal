@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Avalonia.Threading;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
@@ -6,7 +7,6 @@ using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
-using Portal.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
@@ -21,8 +21,9 @@ namespace Portal.Core.Minecraft;
 public static class MinecraftInstallationTasks
 {
     public static ManagedTask CreateInstallationTask(VersionManifestEntry vanilla, MinecraftFolderEntry folder,
-        string versionId, IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath) =>
-        TaskManager.Instance.CreateTask(new TaskOptions
+        string versionId, IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
+    {
+        return TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = $"安装 Minecraft Java {versionId}",
             Description = "正在创建安装任务",
@@ -44,9 +45,12 @@ public static class MinecraftInstallationTasks
                 }
             ]
         }, context => RunInstallationAsync(context, vanilla, folder, versionId, selectedEntries, javaPath));
+    }
 
-    public static bool RequiresJavaRuntime(IEnumerable<LoaderKind> kinds) =>
-        kinds.Any(kind => kind is LoaderKind.Forge or LoaderKind.NeoForge or LoaderKind.OptiFine);
+    public static bool RequiresJavaRuntime(IEnumerable<LoaderKind> kinds)
+    {
+        return kinds.Any(kind => kind is LoaderKind.Forge or LoaderKind.NeoForge or LoaderKind.OptiFine);
+    }
 
     private static async Task RunInstallationAsync(TaskExecutionContext context, VersionManifestEntry vanilla,
         MinecraftFolderEntry folder, string versionId,
@@ -68,7 +72,8 @@ public static class MinecraftInstallationTasks
         var metaRoot = Path.Combine(folder.FolderPath, "meta");
         var instancesRoot = Path.Combine(folder.FolderPath, "instances");
         var hasLoaders = selectedEntries.Count > 0;
-        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder.FolderPath);
+        var sourceRoots =
+            MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder.FolderPath);
 
         await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
         {
@@ -80,6 +85,7 @@ public static class MinecraftInstallationTasks
                 if (string.IsNullOrWhiteSpace(javaPath))
                     throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
             }
+
             if (Directory.Exists(Path.Combine(instancesRoot, versionId)))
                 throw new InvalidOperationException($"实例 ID “{versionId}”已存在于所选文件夹，请更换名称。");
             step.ReportProgress(1);
@@ -115,34 +121,31 @@ public static class MinecraftInstallationTasks
             });
             var preloadTasks = new List<Task>();
             if (primaryInstaller is not null)
-            {
                 preloadTasks.Add(RunStepAsync(context, $"预下载 {primary.Key}", $"正在并行下载 {primary.Key} 安装文件", step =>
                 {
                     AttachProgressReporter(primaryInstaller, step);
-                    return RunInBackgroundAsync(token => PreloadInstallerAsync(primaryInstaller, token), step.CancellationToken);
+                    return RunInBackgroundAsync(token => PreloadInstallerAsync(primaryInstaller, token),
+                        step.CancellationToken);
                 }));
-            }
             if (optifineInstaller is not null)
-            {
                 preloadTasks.Add(RunStepAsync(context, "预下载 OptiFine", "正在并行下载 OptiFine 安装包", step =>
                 {
                     AttachProgressReporter(optifineInstaller, step);
                     return RunInBackgroundAsync(optifineInstaller.PreloadAsync, step.CancellationToken);
                 }));
-            }
 
             await Task.WhenAll([vanillaTask, .. preloadTasks]);
             var minecraft = await vanillaTask;
             if (primaryInstaller is not null)
-            {
-                minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}", primaryInstaller);
-            }
+                minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}",
+                    primaryInstaller);
 
             if (optifineInstaller is not null)
             {
                 var installer = primaryInstaller is not null
                     ? OptifineInstaller.Create(metaRoot, (OptifineInstallEntry)optifineEntry!, minecraft)
-                    : OptifineInstaller.Create(metaRoot, javaPath!, (OptifineInstallEntry)optifineEntry!, effectiveLoaderId);
+                    : OptifineInstaller.Create(metaRoot, javaPath!, (OptifineInstallEntry)optifineEntry!,
+                        effectiveLoaderId);
                 minecraft = await RunInstallerStepAsync(context, "安装 OptiFine", "正在安装最新版 OptiFine", installer);
             }
 
@@ -170,6 +173,7 @@ public static class MinecraftInstallationTasks
                 {
                     WritePortalMcMinimalInstanceJson(instanceDirectory, versionId, vanillaId);
                 }
+
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
@@ -210,7 +214,7 @@ public static class MinecraftInstallationTasks
         Directory.CreateDirectory(instanceDirectory);
         var jsonPath = Path.Combine(instanceDirectory, $"{instanceId}.json");
         using var stream = File.Create(jsonPath);
-        using var writer = new System.Text.Json.Utf8JsonWriter(stream);
+        using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
         writer.WriteString("id", instanceId);
         writer.WriteString("inheritsFrom", vanillaId);
@@ -221,7 +225,8 @@ public static class MinecraftInstallationTasks
         writer.WriteEndObject();
     }
 
-    private static async Task RunTraditionalInstallationAsync(TaskExecutionContext context, VersionManifestEntry vanilla,
+    private static async Task RunTraditionalInstallationAsync(TaskExecutionContext context,
+        VersionManifestEntry vanilla,
         MinecraftFolderEntry folder, string versionId,
         IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
     {
@@ -235,6 +240,7 @@ public static class MinecraftInstallationTasks
                 if (string.IsNullOrWhiteSpace(javaPath))
                     throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
             }
+
             if (Directory.Exists(Path.Combine(folder.FolderPath, "versions", versionId)))
                 throw new InvalidOperationException($"实例 ID “{versionId}”已存在于所选文件夹，请更换名称。");
             step.ReportProgress(1);
@@ -246,14 +252,16 @@ public static class MinecraftInstallationTasks
         var vanillaId = selectedEntries.Count > 0 ? vanilla.Id : versionId;
         var vanillaDirectory = Path.Combine(folder.FolderPath, "versions", vanillaId);
         var vanillaDirectoryExisted = Directory.Exists(vanillaDirectory);
-        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder.FolderPath);
+        var sourceRoots =
+            MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder.FolderPath);
         try
         {
             var primary = selectedEntries.FirstOrDefault(x => x.Key != LoaderKind.OptiFine);
             var primaryEntry = primary.Value;
             var primaryInstaller = primaryEntry is null
                 ? null
-                : CreatePrimaryInstaller(primary.Key, primaryEntry, folder.FolderPath, versionId, javaPath, sourceRoots);
+                : CreatePrimaryInstaller(primary.Key, primaryEntry, folder.FolderPath, versionId, javaPath,
+                    sourceRoots);
             var optifineInstaller = selectedEntries.TryGetValue(LoaderKind.OptiFine, out var optifineEntry)
                 ? CreatePreloadOptifineInstaller(folder.FolderPath, (OptifineInstallEntry)optifineEntry, javaPath)
                 : null;
@@ -267,34 +275,31 @@ public static class MinecraftInstallationTasks
             });
             var preloadTasks = new List<Task>();
             if (primaryInstaller is not null)
-            {
                 preloadTasks.Add(RunStepAsync(context, $"预下载 {primary.Key}", $"正在并行下载 {primary.Key} 安装文件", step =>
                 {
                     AttachProgressReporter(primaryInstaller, step);
-                    return RunInBackgroundAsync(token => PreloadInstallerAsync(primaryInstaller, token), step.CancellationToken);
+                    return RunInBackgroundAsync(token => PreloadInstallerAsync(primaryInstaller, token),
+                        step.CancellationToken);
                 }));
-            }
             if (optifineInstaller is not null)
-            {
                 preloadTasks.Add(RunStepAsync(context, "预下载 OptiFine", "正在并行下载 OptiFine 安装包", step =>
                 {
                     AttachProgressReporter(optifineInstaller, step);
                     return RunInBackgroundAsync(optifineInstaller.PreloadAsync, step.CancellationToken);
                 }));
-            }
 
             await Task.WhenAll([vanillaTask, .. preloadTasks]);
             var minecraft = await vanillaTask;
             if (primaryInstaller is not null)
-            {
-                minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}", primaryInstaller);
-            }
+                minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}",
+                    primaryInstaller);
 
             if (optifineInstaller is not null)
             {
                 var installer = primaryInstaller is not null
                     ? OptifineInstaller.Create(folder.FolderPath, (OptifineInstallEntry)optifineEntry!, minecraft)
-                    : OptifineInstaller.Create(folder.FolderPath, javaPath!, (OptifineInstallEntry)optifineEntry!, versionId);
+                    : OptifineInstaller.Create(folder.FolderPath, javaPath!, (OptifineInstallEntry)optifineEntry!,
+                        versionId);
                 minecraft = await RunInstallerStepAsync(context, "安装 OptiFine", "正在安装最新版 OptiFine", installer);
             }
 
@@ -325,19 +330,23 @@ public static class MinecraftInstallationTasks
         }
     }
 
-    private static Task DeleteVersionDirectoryAsync(string directory) => Task.Run(() =>
+    private static Task DeleteVersionDirectoryAsync(string directory)
     {
-        try
+        return Task.Run(() =>
         {
-            if (Directory.Exists(directory)) Directory.Delete(directory, true);
-        }
-        catch (Exception exception)
-        {
-            Logger.Warning($"[MinecraftInstall] Failed to clean up {directory}: {exception}");
-        }
-    });
+            try
+            {
+                if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            }
+            catch (Exception exception)
+            {
+                Logger.Warning($"[MinecraftInstall] Failed to clean up {directory}: {exception}");
+            }
+        });
+    }
 
-    private static InstallerBase CreatePrimaryInstaller(LoaderKind kind, IInstallEntry entry, string folder, string versionId,
+    private static InstallerBase CreatePrimaryInstaller(LoaderKind kind, IInstallEntry entry, string folder,
+        string versionId,
         string? javaPath, IEnumerable<string> sourceRoots)
     {
         InstallerBase installer = kind switch
@@ -352,32 +361,50 @@ public static class MinecraftInstallationTasks
         return installer;
     }
 
-    private static OptifineInstaller CreatePreloadOptifineInstaller(string folder, OptifineInstallEntry entry, string? javaPath) =>
-        OptifineInstaller.Create(folder, javaPath!, entry);
-
-    private static Task PreloadInstallerAsync(InstallerBase installer, CancellationToken cancellationToken) => installer switch
+    private static OptifineInstaller CreatePreloadOptifineInstaller(string folder, OptifineInstallEntry entry,
+        string? javaPath)
     {
-        ForgeInstaller forge => forge.PreloadAsync(cancellationToken),
-        FabricInstaller fabric => fabric.PreloadAsync(cancellationToken),
-        QuiltInstaller quilt => quilt.PreloadAsync(cancellationToken),
-        _ => throw new NotSupportedException($"不支持预下载的加载器：{installer.GetType().Name}")
-    };
+        return OptifineInstaller.Create(folder, javaPath!, entry);
+    }
 
-    private static async Task<MinecraftEntry> RunInstallerStepAsync(TaskExecutionContext context, string name, string description,
-        InstallerBase installer) => await RunStepAsync(context, name, description, async step =>
+    private static Task PreloadInstallerAsync(InstallerBase installer, CancellationToken cancellationToken)
     {
-        AttachProgressReporter(installer, step);
-        return await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
-    });
+        return installer switch
+        {
+            ForgeInstaller forge => forge.PreloadAsync(cancellationToken),
+            FabricInstaller fabric => fabric.PreloadAsync(cancellationToken),
+            QuiltInstaller quilt => quilt.PreloadAsync(cancellationToken),
+            _ => throw new NotSupportedException($"不支持预下载的加载器：{installer.GetType().Name}")
+        };
+    }
 
-    public static Task RunInBackgroundAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken) =>
-        Task.Run(() => operation(cancellationToken), cancellationToken);
+    private static async Task<MinecraftEntry> RunInstallerStepAsync(TaskExecutionContext context, string name,
+        string description,
+        InstallerBase installer)
+    {
+        return await RunStepAsync(context, name, description, async step =>
+        {
+            AttachProgressReporter(installer, step);
+            return await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
+        });
+    }
+
+    public static Task RunInBackgroundAsync(Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken)
+    {
+        return Task.Run(() => operation(cancellationToken), cancellationToken);
+    }
 
     public static Task<T> RunInBackgroundAsync<T>(Func<CancellationToken, Task<T>> operation,
-        CancellationToken cancellationToken) => Task.Run(() => operation(cancellationToken), cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        return Task.Run(() => operation(cancellationToken), cancellationToken);
+    }
 
-    public static void AttachProgressReporter(InstallerBase installer, TaskExecutionContext context) =>
+    public static void AttachProgressReporter(InstallerBase installer, TaskExecutionContext context)
+    {
         installer.ProgressChanged += CreateProgressReporter(context);
+    }
 
     private static EventHandler<InstallProgressChangedEventArgs> CreateProgressReporter(TaskExecutionContext context)
     {
@@ -404,7 +431,8 @@ public static class MinecraftInstallationTasks
         Func<TaskExecutionContext, Task> operation)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
-        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 }, operation);
+        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 },
+            operation);
         step.Start();
         await step.Completion;
         if (step.Exception is not null) throw new InvalidOperationException(step.Exception.Message, step.Exception);
@@ -415,10 +443,7 @@ public static class MinecraftInstallationTasks
         Func<TaskExecutionContext, Task<T>> operation)
     {
         T? result = default;
-        await RunStepAsync(context, name, description, async step =>
-        {
-            result = await operation(step);
-        });
+        await RunStepAsync(context, name, description, async step => { result = await operation(step); });
         return result!;
     }
 
@@ -453,22 +478,25 @@ public static class MinecraftInstallationTasks
         });
     }
 
-    private static string GetInstallStepDescription(InstallStep step) => step switch
+    private static string GetInstallStepDescription(InstallStep step)
     {
-        InstallStep.Started => "正在准备安装器",
-        InstallStep.DownloadVersionJson => "正在下载版本元数据",
-        InstallStep.ParseMinecraft => "正在解析 Minecraft 版本信息",
-        InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
-        InstallStep.DownloadLibraries => "正在下载游戏依赖文件",
-        InstallStep.CopyLibraries => "正在复制本地资源文件",
-        InstallStep.DownloadPackage => "正在下载加载器安装包",
-        InstallStep.ParsePackage => "正在解析加载器安装包",
-        InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入版本与依赖配置",
-        InstallStep.RunInstallProcessor => "正在运行加载器安装处理器",
-        InstallStep.RanToCompletion => "安装文件已完成",
-        InstallStep.Interrupted => "安装已中断",
-        _ => "正在安装游戏文件"
-    };
+        return step switch
+        {
+            InstallStep.Started => "正在准备安装器",
+            InstallStep.DownloadVersionJson => "正在下载版本元数据",
+            InstallStep.ParseMinecraft => "正在解析 Minecraft 版本信息",
+            InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
+            InstallStep.DownloadLibraries => "正在下载游戏依赖文件",
+            InstallStep.CopyLibraries => "正在复制本地资源文件",
+            InstallStep.DownloadPackage => "正在下载加载器安装包",
+            InstallStep.ParsePackage => "正在解析加载器安装包",
+            InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入版本与依赖配置",
+            InstallStep.RunInstallProcessor => "正在运行加载器安装处理器",
+            InstallStep.RanToCompletion => "安装文件已完成",
+            InstallStep.Interrupted => "安装已中断",
+            _ => "正在安装游戏文件"
+        };
+    }
 
     private static string FormatDownloadSpeed(double bytesPerSecond)
     {
@@ -480,14 +508,18 @@ public static class MinecraftInstallationTasks
             value /= 1024;
             unit++;
         }
+
         return $"{value:0.##} {units[unit]}";
     }
 
-    public static string GetLoaderVersion(LoaderKind kind, IInstallEntry entry) => kind switch
+    public static string GetLoaderVersion(LoaderKind kind, IInstallEntry entry)
     {
-        LoaderKind.Quilt => ((QuiltInstallEntry)entry).Loader.Version,
-        _ => entry.DisplayVersion
-    };
+        return kind switch
+        {
+            LoaderKind.Quilt => ((QuiltInstallEntry)entry).Loader.Version,
+            _ => entry.DisplayVersion
+        };
+    }
 
     public static string? GetJavaPath()
     {
@@ -499,7 +531,8 @@ public static class MinecraftInstallationTasks
     public static int GetRecommendedJavaVersion(string minecraftVersion)
     {
         var parts = minecraftVersion.Split('.', '-', '_');
-        if (parts.Length < 2 || !int.TryParse(parts[0], out var major) || !int.TryParse(parts[1], out var minor) || major != 1)
+        if (parts.Length < 2 || !int.TryParse(parts[0], out var major) || !int.TryParse(parts[1], out var minor) ||
+            major != 1)
             return 21;
         if (minor >= 21) return 21;
         if (minor == 20 && parts.Length > 2 && int.TryParse(parts[2], out var patch) && patch >= 5) return 21;

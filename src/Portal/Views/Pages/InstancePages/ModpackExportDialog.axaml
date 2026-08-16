@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="640"
     d:DesignWidth="820"
     mc:Ignorable="d"
@@ -30,14 +30,8 @@
                         PlaceholderText="1.0.0"
                         Text="{Binding PackVersion}" />
                 </StackPanel>
-                
-                
-                
-                
-                
-                
-                
-                
+
+
                 <StackPanel DockPanel.Dock="Left" Margin="0,0,16,0">
                     <TextBlock Margin="5,0,0,2" Text="整合包名称" />
                     <TextBox

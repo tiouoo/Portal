@@ -19,6 +19,6 @@ public sealed record RecentPlayTarget(
     int? ServerPort = null)
 {
     public bool CanQuickPlay => Type == RecentPlayTargetType.Server ||
-        (Type == RecentPlayTargetType.World && Instance.MinecraftEntry is { } entry &&
-         entry.ReleaseTime > new DateTime(2023, 4, 4));
+                                (Type == RecentPlayTargetType.World && Instance.MinecraftEntry is { } entry &&
+                                 entry.ReleaseTime > new DateTime(2023, 4, 4));
 }

@@ -21,6 +21,7 @@ public static class UnlistedVersions
             if (_versions is not null) return _versions;
             _versions = LoadFromResource();
         }
+
         return _versions;
     }
 
@@ -28,7 +29,7 @@ public static class UnlistedVersions
     {
         if (entry is null || string.IsNullOrWhiteSpace(entry.Url)) return false;
         return Uri.TryCreate(entry.Url, UriKind.Absolute, out var uri) &&
-            uri.Host.Equals("zkitefly.github.io", StringComparison.OrdinalIgnoreCase);
+               uri.Host.Equals("zkitefly.github.io", StringComparison.OrdinalIgnoreCase);
     }
 
     public static void MergeInto(IList<VersionManifestEntry> entries)
@@ -37,10 +38,8 @@ public static class UnlistedVersions
 
         var existing = new HashSet<string>(entries.Select(x => x.Id), StringComparer.OrdinalIgnoreCase);
         foreach (var version in GetVersions())
-        {
             if (existing.Add(version.Id))
                 entries.Add(version);
-        }
 
         var sorted = entries.OrderByDescending(x => x.ReleaseTime).ToList();
         entries.Clear();
@@ -55,10 +54,8 @@ public static class UnlistedVersions
             using var document = JsonDocument.Parse(stream);
             var versions = new List<VersionManifestEntry>();
             foreach (var item in document.RootElement.GetProperty("versions").EnumerateArray())
-            {
                 if (TryParseEntry(item, out var entry))
                     versions.Add(entry);
-            }
             return versions.OrderByDescending(x => x.ReleaseTime).ToList();
         }
         catch (Exception)

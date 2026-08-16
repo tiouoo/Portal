@@ -5,11 +5,15 @@ namespace Portal.Core.Minecraft.Services;
 
 public sealed class WorldLevelDataService
 {
-    public Task<WorldLevelData?> LoadAsync(string worldPath, CancellationToken cancellationToken = default) =>
-        Task.Run(() => Load(worldPath, cancellationToken), cancellationToken);
+    public Task<WorldLevelData?> LoadAsync(string worldPath, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Load(worldPath, cancellationToken), cancellationToken);
+    }
 
-    public Task SaveAsync(string worldPath, WorldLevelData data, CancellationToken cancellationToken = default) =>
-        Task.Run(() => Save(worldPath, data, cancellationToken), cancellationToken);
+    public Task SaveAsync(string worldPath, WorldLevelData data, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Save(worldPath, data, cancellationToken), cancellationToken);
+    }
 
     private static WorldLevelData? Load(string worldPath, CancellationToken cancellationToken)
     {
@@ -23,7 +27,9 @@ public sealed class WorldLevelDataService
             GetInt(data, "GameType") ?? -1,
             GetInt(data, "Difficulty") ?? -1,
             GetBool(data, "allowCommands") ?? false,
-            (data["WorldGenSettings"] is NbtCompound settings ? GetLong(settings, "seed") : GetLong(data, "RandomSeed")) ?? 0);
+            (data["WorldGenSettings"] is NbtCompound settings
+                ? GetLong(settings, "seed")
+                : GetLong(data, "RandomSeed")) ?? 0);
     }
 
     private static void Save(string worldPath, WorldLevelData settings, CancellationToken cancellationToken)
@@ -37,7 +43,8 @@ public sealed class WorldLevelDataService
 
         if (data["GameType"] is NbtInt gameType) gameType.Value = settings.GameMode;
         if (data["Difficulty"] is NbtByte difficulty) difficulty.Value = (byte)settings.Difficulty;
-        if (data["allowCommands"] is NbtByte allowCommands) allowCommands.Value = settings.AllowCommands ? (byte)1 : (byte)0;
+        if (data["allowCommands"] is NbtByte allowCommands)
+            allowCommands.Value = settings.AllowCommands ? (byte)1 : (byte)0;
 
         if (data["WorldGenSettings"] is NbtCompound settingsTag)
         {
@@ -51,21 +58,32 @@ public sealed class WorldLevelDataService
         file.SaveToFile(path, NbtCompression.GZip);
     }
 
-    private static long? GetLong(NbtCompound parent, string name) => parent[name] switch
+    private static long? GetLong(NbtCompound parent, string name)
     {
-        NbtLong tag => tag.Value,
-        NbtInt tag => tag.Value,
-        _ => null
-    };
-    private static int? GetInt(NbtCompound parent, string name) => parent[name] switch
+        return parent[name] switch
+        {
+            NbtLong tag => tag.Value,
+            NbtInt tag => tag.Value,
+            _ => null
+        };
+    }
+
+    private static int? GetInt(NbtCompound parent, string name)
     {
-        NbtInt tag => tag.Value,
-        NbtByte tag => tag.Value,
-        _ => null
-    };
-    private static bool? GetBool(NbtCompound parent, string name) => parent[name] switch
+        return parent[name] switch
+        {
+            NbtInt tag => tag.Value,
+            NbtByte tag => tag.Value,
+            _ => null
+        };
+    }
+
+    private static bool? GetBool(NbtCompound parent, string name)
     {
-        NbtByte tag => tag.Value != 0,
-        _ => null
-    };
+        return parent[name] switch
+        {
+            NbtByte tag => tag.Value != 0,
+            _ => null
+        };
+    }
 }

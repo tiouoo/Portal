@@ -40,16 +40,20 @@ public sealed class ModpackExportService
     private const string CurseforgeFingerprintEndpoint = "https://api.curseforge.com/v1/fingerprints/432/";
 
     private static readonly string[] RootSkipFolders = ["assets", "versions", "libraries"];
+
     private static readonly string[] GlobalSkipFolders =
     [
         "structureCacheV1", ".fabric", ".git", "avatar-cache", "cosmetic-cache"
     ];
+
     private static readonly string[] HostedExtensions = [".zip", ".rar", ".jar", ".disabled", ".old"];
     private static readonly string[] HostedPathHints = ["mods", "packs", "openloader", "resource"];
 
     public static Task<ModpackExportResult> ExportAsync(MinecraftInstance instance, ModpackExportOptions options,
         string outputPath, Action<ModpackExportProgress>? report = null, CancellationToken cancellationToken = default)
-        => ExportAsync(instance, options, outputPath, report, null, cancellationToken);
+    {
+        return ExportAsync(instance, options, outputPath, report, null, cancellationToken);
+    }
 
     public static async Task<ModpackExportResult> ExportAsync(MinecraftInstance instance, ModpackExportOptions options,
         string outputPath, Action<ModpackExportProgress>? report, IProgress<double>? progressReporter,
@@ -67,7 +71,7 @@ public sealed class ModpackExportService
 
         try
         {
-            report?.Invoke(new("copy", 0.1, "正在复制文件"));
+            report?.Invoke(new ModpackExportProgress("copy", 0.1, "正在复制文件"));
             var copyResult = CopyFilesAsync(gameRoot, options.Rules, overridesFolder, report, cancellationToken);
 
             if (options.IncludePortalSettings)
@@ -79,15 +83,16 @@ public sealed class ModpackExportService
             var filesIndex = new JsonArray();
             if (options.CheckHostedAssets)
             {
-                report?.Invoke(new("fetch", 0.5, "正在从平台获取下载地址"));
-                await FetchHostedDownloadsAsync(copyResult.HostedFiles, filesIndex, overridesFolder, options.ModrinthOnly,
+                report?.Invoke(new ModpackExportProgress("fetch", 0.5, "正在从平台获取下载地址"));
+                await FetchHostedDownloadsAsync(copyResult.HostedFiles, filesIndex, overridesFolder,
+                    options.ModrinthOnly,
                     report, cancellationToken);
             }
 
-            report?.Invoke(new("archive", 0.85, "正在生成整合包"));
+            report?.Invoke(new ModpackExportProgress("archive", 0.85, "正在生成整合包"));
             var mrpackPath = await Task.Run(() => BuildArchive(instance, options, filesIndex, modpackRoot, outputPath),
                 cancellationToken);
-            report?.Invoke(new("done", 1.0, "导出完成"));
+            report?.Invoke(new ModpackExportProgress("done", 1.0, "导出完成"));
             progressReporter?.Report(1.0);
 
             return new ModpackExportResult
@@ -128,7 +133,7 @@ public sealed class ModpackExportService
             Logger.Warning($"[Export] 复制 Portal 实例设置失败：{exception}");
         }
     }
-    
+
     private static void CopyPortalIcon(MinecraftInstance instance, string overridesFolder)
     {
         var iconPath = instance.GetExportIconPath();
@@ -146,8 +151,6 @@ public sealed class ModpackExportService
             Logger.Warning($"[Export] 复制 Portal 实例图标失败：{exception}");
         }
     }
-
-    private sealed record CopyResult(List<ModFileInfo> HostedFiles, int CopiedCount);
 
     private static CopyResult CopyFilesAsync(string gameRoot, IReadOnlyList<string> rules,
         string overridesFolder, Action<ModpackExportProgress>? report, CancellationToken cancellationToken)
@@ -192,24 +195,15 @@ public sealed class ModpackExportService
 
                 if (HostedExtensions.Contains(entry.Extension.ToLowerInvariant()) &&
                     HostedPathHints.Any(hint => relativePath.Contains(hint, StringComparison.OrdinalIgnoreCase)))
-                {
                     hostedFiles.Add(new ModFileInfo { Path = targetPath });
-                }
 
                 if (++progress % 25 == 0)
-                    report?.Invoke(new("copy", 0, $"已复制 {progress} 个文件"));
+                    report?.Invoke(new ModpackExportProgress("copy", 0, $"已复制 {progress} 个文件"));
             }
         }
 
         SearchFolder(new DirectoryInfo(gameRoot));
         return new CopyResult(hostedFiles, copiedCount);
-    }
-
-    private sealed class ModFileInfo
-    {
-        public required string Path { get; init; }
-        public string? Sha1 { get; set; }
-        public uint? Fingerprint { get; set; }
     }
 
     private static async Task FetchHostedDownloadsAsync(IReadOnlyList<ModFileInfo> hostedFiles,
@@ -225,12 +219,17 @@ public sealed class ModpackExportService
             await hashSemaphore.WaitAsync(cancellationToken);
             try
             {
-                var hashes = await Task.Run(() => ModService.ComputeHashes(modFile.Path, cancellationToken), cancellationToken);
+                var hashes = await Task.Run(() => ModService.ComputeHashes(modFile.Path, cancellationToken),
+                    cancellationToken);
                 modFile.Sha1 = hashes.Sha1;
                 modFile.Fingerprint = hashes.Fingerprint;
             }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
             finally
             {
                 hashSemaphore.Release();
@@ -241,7 +240,6 @@ public sealed class ModpackExportService
 
         var sha1List = hostedFiles.Where(f => f.Sha1 is not null).Select(f => f.Sha1!).ToArray();
         if (sha1List.Length > 0)
-        {
             try
             {
                 var modrinthRaw = await HttpUtil.Request(ModrinthVersionFilesEndpoint)
@@ -250,7 +248,8 @@ public sealed class ModpackExportService
                 foreach (var modFile in hostedFiles)
                 {
                     if (modFile.Sha1 is not { } sha1) continue;
-                    if (!modrinthRaw.TryGetPropertyValue(sha1, out var versionNode) || versionNode is not JsonObject version)
+                    if (!modrinthRaw.TryGetPropertyValue(sha1, out var versionNode) ||
+                        versionNode is not JsonObject version)
                         continue;
                     var files = version["files"] as JsonArray;
                     var url = files?[0]?["url"]?.GetValue<string>();
@@ -258,17 +257,16 @@ public sealed class ModpackExportService
                     AddDownloadUrl(downloads, modFile.Path, url);
                 }
             }
-            catch (Exception exception) when (exception is FlurlHttpException or System.Text.Json.JsonException)
+            catch (Exception exception) when (exception is FlurlHttpException or JsonException)
             {
                 Logger.Warning($"[Export] 从 Modrinth 获取下载地址失败：{exception.Message}");
             }
-        }
 
         if (!modrinthOnly && CredentialsService.CurseForgeApiKey is { } apiKey)
         {
-            var fingerprints = hostedFiles.Where(f => f.Fingerprint is not null).Select(f => f.Fingerprint!.Value).ToArray();
+            var fingerprints = hostedFiles.Where(f => f.Fingerprint is not null).Select(f => f.Fingerprint!.Value)
+                .ToArray();
             if (fingerprints.Length > 0)
-            {
                 try
                 {
                     var curseRaw = await HttpUtil.Request(CurseforgeFingerprintEndpoint)
@@ -277,7 +275,6 @@ public sealed class ModpackExportService
                         .ReceiveJson<JsonObject>();
                     var exactMatches = curseRaw["data"]?["exactMatches"] as JsonArray;
                     if (exactMatches != null)
-                    {
                         foreach (var match in exactMatches)
                         {
                             var file = match?["file"];
@@ -288,13 +285,11 @@ public sealed class ModpackExportService
                             if (modFile is null) continue;
                             AddDownloadUrl(downloads, modFile.Path, HandleCurseForgeDownloadUrls(downloadUrl));
                         }
-                    }
                 }
                 catch (Exception exception) when (exception is FlurlHttpException or IOException or JsonException)
                 {
                     Logger.Warning($"[Export] 从 CurseForge 获取下载地址失败：{exception.Message}");
                 }
-            }
         }
 
         foreach (var modFile in hostedFiles)
@@ -311,9 +306,9 @@ public sealed class ModpackExportService
                     ["sha1"] = modFile.Sha1,
                     ["sha512"] = ComputeSha512(modFile.Path)
                 },
-                ["downloads"] = new JsonArray((
-                    urls.OrderByDescending(u => u.Contains("modrinth.com", StringComparison.OrdinalIgnoreCase))
-                        .Select(u => (JsonNode)u).ToArray())),
+                ["downloads"] = new JsonArray(urls
+                    .OrderByDescending(u => u.Contains("modrinth.com", StringComparison.OrdinalIgnoreCase))
+                    .Select(u => (JsonNode)u).ToArray()),
                 ["fileSize"] = new FileInfo(modFile.Path).Length
             });
             File.Delete(modFile.Path);
@@ -327,10 +322,13 @@ public sealed class ModpackExportService
         list.Add(url);
     }
 
-    internal static string HandleCurseForgeDownloadUrls(string url) => url
-        .Replace("-service.overwolf.wtf", ".forgecdn.net")
-        .Replace("://media.", "://edge.")
-        .Replace("://mediafilez.", "://edge.");
+    internal static string HandleCurseForgeDownloadUrls(string url)
+    {
+        return url
+            .Replace("-service.overwolf.wtf", ".forgecdn.net")
+            .Replace("://media.", "://edge.")
+            .Replace("://mediafilez.", "://edge.");
+    }
 
     private static string ComputeSha512(string path)
     {
@@ -346,9 +344,7 @@ public sealed class ModpackExportService
             : instance.VersionId;
         var dependencies = new JsonObject { ["minecraft"] = minecraftVersion };
         if (instance.MinecraftEntry is ModifiedMinecraftEntry modified)
-        {
             foreach (var loader in modified.ModLoaders)
-            {
                 switch (loader.Type)
                 {
                     case ModLoaderType.Forge:
@@ -364,8 +360,6 @@ public sealed class ModpackExportService
                         dependencies["quilt-loader"] = loader.Version;
                         break;
                 }
-            }
-        }
 
         var index = new JsonObject
         {
@@ -378,11 +372,21 @@ public sealed class ModpackExportService
             ["dependencies"] = dependencies
         };
 
-        File.WriteAllText(Path.Combine(modpackRoot, "modrinth.index.json"), index.ToJsonString(new()));
+        File.WriteAllText(Path.Combine(modpackRoot, "modrinth.index.json"),
+            index.ToJsonString(new JsonSerializerOptions()));
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         if (File.Exists(outputPath))
             File.Delete(outputPath);
         ZipFile.CreateFromDirectory(modpackRoot, outputPath);
         return outputPath;
+    }
+
+    private sealed record CopyResult(List<ModFileInfo> HostedFiles, int CopiedCount);
+
+    private sealed class ModFileInfo
+    {
+        public required string Path { get; init; }
+        public string? Sha1 { get; set; }
+        public uint? Fingerprint { get; set; }
     }
 }

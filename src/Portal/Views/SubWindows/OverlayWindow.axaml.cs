@@ -1,14 +1,11 @@
-using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using Portal.Const;
 using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Multiplayer;
@@ -18,27 +15,6 @@ namespace Portal.Views.SubWindows;
 
 public partial class OverlayWindow : Window
 {
-    private readonly DispatcherTimer _clockTimer;
-    private readonly TextBlock _timeBlock;
-    private readonly TextBlock _dateBlock;
-    private readonly TextBlock _lunarBlock;
-    private readonly TextBlock _weekBlock;
-    private readonly MinecraftInstance _instance;
-
-    private static readonly ChineseLunisolarCalendar LunarCalendar = new();
-    private static readonly string[] LunarMonths =
-    {
-        "正月", "二月", "三月", "四月", "五月", "六月",
-        "七月", "八月", "九月", "十月", "冬月", "腊月"
-    };
-    private static readonly string[] LunarDays =
-    {
-        "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
-        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
-        "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
-    };
-    private static readonly string[] WeekDays = { "周日", "周一", "周二", "周三", "周四", "周五", "周六" };
-    
     private const int GWL_EXSTYLE = -20;
     private const int GWL_STYLE = -16;
     private const int WS_CHILD = 0x40000000;
@@ -61,24 +37,47 @@ public partial class OverlayWindow : Window
     private const int VK_TAB = 0x09;
     private const int VK_ESCAPE = 0x1B;
 
-    
+    private static readonly ChineseLunisolarCalendar LunarCalendar = new();
+
+    private static readonly string[] LunarMonths =
+    {
+        "正月", "二月", "三月", "四月", "五月", "六月",
+        "七月", "八月", "九月", "十月", "冬月", "腊月"
+    };
+
+    private static readonly string[] LunarDays =
+    {
+        "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+        "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
+    };
+
+    private static readonly string[] WeekDays = { "周日", "周一", "周二", "周三", "周四", "周五", "周六" };
+    private readonly DispatcherTimer _clockTimer;
+    private readonly TextBlock _dateBlock;
+    private readonly MinecraftInstance _instance;
+    private readonly TextBlock _lunarBlock;
+
+
     private readonly LowLevelKeyboardProc _proc;
     private readonly Process? _targetProcess;
-    private IntPtr _hookID = IntPtr.Zero;
-
-    
-    private volatile bool _isAnimating;
-    private bool _isEmbedded;
-    private bool _isOverlayVisible;
-    private bool _isInstanceDetailVisible;
+    private readonly TextBlock _timeBlock;
+    private readonly TextBlock _weekBlock;
     private Type? _currentPanelPageType;
     private bool _desiredState;
-
-    
-    private bool _isUWPApp;
-    private IntPtr _myHandle = IntPtr.Zero;
     private InstanceDetailPage? _detailPage;
+    private IntPtr _hookID = IntPtr.Zero;
+
+
+    private volatile bool _isAnimating;
+    private bool _isEmbedded;
+    private bool _isInstanceDetailVisible;
+    private bool _isOverlayVisible;
+
+
+    private bool _isUWPApp;
     private MultiplayerPage? _multiplayerPage;
+    private IntPtr _myHandle = IntPtr.Zero;
     private int _originalHeight;
     private int _originalWidth;
     private int _originalX;
@@ -121,7 +120,7 @@ public partial class OverlayWindow : Window
         Closed += OnWindowClosed;
     }
 
-    
+
     [DllImport("user32.dll")]
     private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
 
@@ -180,7 +179,8 @@ public partial class OverlayWindow : Window
     private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
     [DllImport("user32.dll")]
-    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy,
+        uint uFlags);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
@@ -233,10 +233,7 @@ public partial class OverlayWindow : Window
             }
 
             if (_targetHwnd == IntPtr.Zero)
-                Dispatcher.UIThread.Invoke(() =>
-                {
-                    Debug.WriteLine("无法找到目标进程的窗口");
-                });
+                Dispatcher.UIThread.Invoke(() => { Debug.WriteLine("无法找到目标进程的窗口"); });
         });
     }
 
@@ -244,20 +241,20 @@ public partial class OverlayWindow : Window
     {
         if (_targetProcess == null) return IntPtr.Zero;
 
-        IntPtr foundHandle = IntPtr.Zero;
+        var foundHandle = IntPtr.Zero;
 
         EnumWindows((hWnd, lParam) =>
         {
             if (!IsWindowVisible(hWnd)) return true;
 
-            StringBuilder sbClass = new StringBuilder(256);
+            var sbClass = new StringBuilder(256);
             GetClassName(hWnd, sbClass, 256);
-            string className = sbClass.ToString();
+            var className = sbClass.ToString();
 
             if (className.Contains("ConsoleWindowClass") || className.Contains("Ghost"))
                 return true;
 
-            GetWindowThreadProcessId(hWnd, out uint pid);
+            GetWindowThreadProcessId(hWnd, out var pid);
 
             if (pid == _targetProcess.Id)
             {
@@ -267,15 +264,16 @@ public partial class OverlayWindow : Window
 
             if (className == "ApplicationFrameWindow")
             {
-                bool isMatch = false;
+                var isMatch = false;
                 EnumChildWindows(hWnd, (childHwnd, l) =>
                 {
-                    GetWindowThreadProcessId(childHwnd, out uint childPid);
+                    GetWindowThreadProcessId(childHwnd, out var childPid);
                     if (childPid == _targetProcess.Id)
                     {
                         isMatch = true;
                         return false;
                     }
+
                     return true;
                 }, IntPtr.Zero);
 
@@ -383,7 +381,6 @@ public partial class OverlayWindow : Window
         try
         {
             while (_isOverlayVisible != _desiredState)
-            {
                 if (_desiredState)
                 {
                     if (ShowOverlayImmediate())
@@ -397,7 +394,6 @@ public partial class OverlayWindow : Window
                     await AnimateOpacity(1, 0, 150);
                     HideOverlayComplete();
                 }
-            }
         }
         finally
         {
@@ -605,7 +601,7 @@ public partial class OverlayWindow : Window
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
-        if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
+        if (nCode >= 0 && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN))
         {
             var vkCode = Marshal.ReadInt32(lParam);
 
@@ -617,7 +613,7 @@ public partial class OverlayWindow : Window
                 if (foreground == _targetHwnd || foreground == _myHandle)
                 {
                     Dispatcher.UIThread.Post(() => SetOverlayState(!_isOverlayVisible));
-                    return (IntPtr)1;
+                    return 1;
                 }
             }
 
@@ -627,7 +623,7 @@ public partial class OverlayWindow : Window
                 if (foreground == _myHandle && _isOverlayVisible)
                 {
                     Dispatcher.UIThread.Post(() => SetOverlayState(false));
-                    return (IntPtr)1;
+                    return 1;
                 }
             }
         }
@@ -660,15 +656,6 @@ public partial class OverlayWindow : Window
 
         return $"{monthName}{LunarDays[lunarDay - 1]}";
     }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RECT
-    {
-        public int Left, Top, Right, Bottom;
-    }
-
-    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-    private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     private void InputElement_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -732,4 +719,14 @@ public partial class OverlayWindow : Window
     {
         HideInstanceDetail();
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 }

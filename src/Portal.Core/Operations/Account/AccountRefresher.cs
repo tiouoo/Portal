@@ -19,12 +19,12 @@ public static class AccountRefresher
         try
         {
             Logger.Info($"开始刷新微软账户：{account.Name}");
-            
+
             var authenticator = new MicrosoftAuthenticator(CredentialsService.MicrosoftClientId);
             var authResult = await authenticator.RefreshAsync(new MicrosoftAccount(account.Name, (Guid)account.Uuid!,
                 account.AccessToken, account.RefreshToken, account.LastLoginTime));
 
-            string skinBase64 = MinecraftAccount.SteveSkin;
+            var skinBase64 = MinecraftAccount.SteveSkin;
             try
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -48,7 +48,7 @@ public static class AccountRefresher
                 Uuid = authResult.Uuid,
                 Name = authResult.Name,
                 Skin = skinBase64,
-                AccountNote = account.AccountNote,
+                AccountNote = account.AccountNote
             };
 
             Logger.Info($"微软账户刷新成功：{newAccount.Name}");
@@ -69,9 +69,7 @@ public static class AccountRefresher
             string.IsNullOrEmpty(account.YggdrasilServerUrl) ||
             string.IsNullOrEmpty(account.Email) ||
             string.IsNullOrEmpty(account.Password))
-        {
             return null;
-        }
 
         try
         {
@@ -105,10 +103,7 @@ public static class AccountRefresher
 
             foreach (var authenticatedAccount in authenticatedAccounts)
             {
-                if (!refreshedUuids.Add(authenticatedAccount.Uuid))
-                {
-                    continue;
-                }
+                if (!refreshedUuids.Add(authenticatedAccount.Uuid)) continue;
 
                 existingByUuid.TryGetValue(authenticatedAccount.Uuid, out var existingAccount);
                 refreshedAccounts.Add(await CreateYggdrasilAccount(
@@ -117,12 +112,16 @@ public static class AccountRefresher
                     existingAccount));
             }
 
-            var updated = refreshedAccounts.Where(candidate => existingByUuid.ContainsKey(candidate.Uuid!.Value)).ToList();
-            var added = refreshedAccounts.Where(candidate => !existingByUuid.ContainsKey(candidate.Uuid!.Value)).ToList();
-            var removed = existingAccounts.Where(candidate => !candidate.Uuid.HasValue || !refreshedUuids.Contains(candidate.Uuid.Value))
+            var updated = refreshedAccounts.Where(candidate => existingByUuid.ContainsKey(candidate.Uuid!.Value))
+                .ToList();
+            var added = refreshedAccounts.Where(candidate => !existingByUuid.ContainsKey(candidate.Uuid!.Value))
+                .ToList();
+            var removed = existingAccounts.Where(candidate =>
+                    !candidate.Uuid.HasValue || !refreshedUuids.Contains(candidate.Uuid.Value))
                 .ToList();
 
-            Logger.Info($"外置账户重新登录完成：{account.Name}，刷新 {refreshedAccounts.Count} 个账户，新增 {added.Count} 个，移除 {removed.Count} 个");
+            Logger.Info(
+                $"外置账户重新登录完成：{account.Name}，刷新 {refreshedAccounts.Count} 个账户，新增 {added.Count} 个，移除 {removed.Count} 个");
             return new YggdrasilRefreshResult(existingAccounts, refreshedAccounts, updated, added, removed);
         }
         catch (Exception e)
@@ -166,7 +165,7 @@ public static class AccountRefresher
             ServerNote = existingAccount?.ServerNote ?? loginAccount.ServerNote,
             MetaData = authenticatedAccount.MetaData,
             Email = loginAccount.Email,
-            Password = loginAccount.Password,
+            Password = loginAccount.Password
         };
     }
 }

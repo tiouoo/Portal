@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -17,10 +18,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
 using Portal.Core.Services;
-using Portal.Services;
-using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -32,23 +30,28 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
 {
     private const int PingConcurrency = 5;
     private static readonly TimeSpan AutoRefreshInterval = TimeSpan.FromSeconds(30);
-
-    private readonly MinecraftInstance? _instance;
-    private readonly MinecraftServerPingService _pingService = new();
-    private readonly SemaphoreSlim _pingSemaphore = new(PingConcurrency);
     private readonly DispatcherTimer _autoRefreshTimer = new() { Interval = AutoRefreshInterval };
     private readonly CancellationTokenSource _disposeCancellation = new();
-    private CancellationTokenSource? _sessionCancellation;
+
+    private readonly MinecraftInstance? _instance;
+    private readonly SemaphoreSlim _pingSemaphore = new(PingConcurrency);
+    private readonly MinecraftServerPingService _pingService = new();
     private bool _hasLoaded;
+    private bool _isDisposed;
     private bool _isLoading;
     private int _isRefreshing;
-    private bool _isDisposed;
-    private event PropertyChangedEventHandler? ServerPropertyChanged;
+    private CancellationTokenSource? _sessionCancellation;
 
-    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+    public Servers()
     {
-        add => ServerPropertyChanged += value;
-        remove => ServerPropertyChanged -= value;
+        InitializeComponent();
+        DataContext = this;
+        _autoRefreshTimer.Tick += AutoRefreshTimer_OnTick;
+    }
+
+    public Servers(MinecraftInstance instance) : this()
+    {
+        _instance = instance;
     }
 
     public ObservableCollection<ServerItem> Items { get; } = [];
@@ -80,17 +83,30 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         }
     }
 
-    public Servers()
+    public void Dispose()
     {
-        InitializeComponent();
-        DataContext = this;
-        _autoRefreshTimer.Tick += AutoRefreshTimer_OnTick;
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _autoRefreshTimer.Stop();
+        _autoRefreshTimer.Tick -= AutoRefreshTimer_OnTick;
+        _disposeCancellation.Cancel();
+        CancelSession();
+        _disposeCancellation.Dispose();
+        foreach (var item in Items)
+            item.Dispose();
+        Items.Clear();
+        DataContext = null;
     }
 
-    public Servers(MinecraftInstance instance) : this()
+    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
     {
-        _instance = instance;
+        add => ServerPropertyChanged += value;
+        remove => ServerPropertyChanged -= value;
     }
+
+    private event PropertyChangedEventHandler? ServerPropertyChanged;
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -109,7 +125,7 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == Visual.IsVisibleProperty)
+        if (change.Property == IsVisibleProperty)
         {
             if (IsVisible)
                 _autoRefreshTimer.Start();
@@ -127,7 +143,7 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         await ReloadAsync();
     }
 
-        private async Task RefreshOnAttachAsync()
+    private async Task RefreshOnAttachAsync()
     {
         if (_instance == null)
             return;
@@ -156,14 +172,13 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
 
     private async void AutoRefreshTimer_OnTick(object? sender, EventArgs e)
     {
-        
         if (!IsVisible || _isRefreshing != 0)
             return;
 
         await PingAllAsync();
     }
 
-        private async Task RefreshAllAsync()
+    private async Task RefreshAllAsync()
     {
         await ReloadAsync();
         Notify(_instance == null ? "刷新失败" : "服务器状态已刷新", NotificationType.Success);
@@ -432,34 +447,18 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         RaisePropertyChanged(nameof(ServerCountText));
     }
 
-    private void RaisePropertyChanged(string propertyName) =>
+    private void RaisePropertyChanged(string propertyName)
+    {
         ServerPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
     private static void Notify(string message, NotificationType type)
     {
-        if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes
-            .IClassicDesktopStyleApplicationLifetime
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
             {
                 MainWindow: { } window
             })
-            NotificationGateway.Notice(window, message, type);
-    }
-
-    public void Dispose()
-    {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        _autoRefreshTimer.Stop();
-        _autoRefreshTimer.Tick -= AutoRefreshTimer_OnTick;
-        _disposeCancellation.Cancel();
-        CancelSession();
-        _disposeCancellation.Dispose();
-        foreach (var item in Items)
-            item.Dispose();
-        Items.Clear();
-        DataContext = null;
+            window.Notice(message, type);
     }
 }
 
@@ -482,54 +481,51 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
 
     private Bitmap? _ownedIcon;
 
+    public ServerItem(MinecraftServerEntry entry)
+    {
+        Entry = entry;
+        SetIcon(DecodeBitmap(entry.IconData));
+    }
+
     public MinecraftServerEntry Entry { get; }
 
     public string Name => Entry.Name;
     public string AddressText => Entry.DisplayAddress;
 
-    [ObservableProperty]
-    public partial Bitmap? Icon { get; set; }
+    [ObservableProperty] public partial Bitmap? Icon { get; set; }
 
-    [ObservableProperty]
-    public partial bool HasIcon { get; set; }
+    [ObservableProperty] public partial bool HasIcon { get; set; }
 
-    [ObservableProperty]
-    public partial ServerItemStatus Status { get; set; }
+    [ObservableProperty] public partial ServerItemStatus Status { get; set; }
 
-    [ObservableProperty]
-    public partial string StatusText { get; set; } = "未检测";
+    [ObservableProperty] public partial string StatusText { get; set; } = "未检测";
 
-    [ObservableProperty]
-    public partial IBrush StatusBrush { get; set; } = PendingBrush;
+    [ObservableProperty] public partial IBrush StatusBrush { get; set; } = PendingBrush;
 
-    [ObservableProperty]
-    public partial string PingText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string PingText { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial bool HasPing { get; set; }
+    [ObservableProperty] public partial bool HasPing { get; set; }
 
-    [ObservableProperty]
-    public partial IBrush PingBrush { get; set; } = PingGoodBrush;
+    [ObservableProperty] public partial IBrush PingBrush { get; set; } = PingGoodBrush;
 
-    [ObservableProperty]
-    public partial string PlayersText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string PlayersText { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial bool HasPlayers { get; set; }
+    [ObservableProperty] public partial bool HasPlayers { get; set; }
 
-    [ObservableProperty]
-    public partial string VersionText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string VersionText { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial bool HasVersion { get; set; }
+    [ObservableProperty] public partial bool HasVersion { get; set; }
 
-    [ObservableProperty]
-    public partial string DescriptionText { get; set; } = "等待检测...";
+    [ObservableProperty] public partial string DescriptionText { get; set; } = "等待检测...";
 
-    public ServerItem(MinecraftServerEntry entry)
+    public void Dispose()
     {
-        Entry = entry;
-        SetIcon(DecodeBitmap(entry.IconData));
+        var icon = _ownedIcon;
+        _ownedIcon = null;
+        Icon = null;
+        HasIcon = false;
+        if (icon != null)
+            Dispatcher.UIThread.Post(icon.Dispose, DispatcherPriority.Background);
     }
 
     public void ApplyPinging()
@@ -618,15 +614,5 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
         {
             return null;
         }
-    }
-
-    public void Dispose()
-    {
-        var icon = _ownedIcon;
-        _ownedIcon = null;
-        Icon = null;
-        HasIcon = false;
-        if (icon != null)
-            Dispatcher.UIThread.Post(icon.Dispose, DispatcherPriority.Background);
     }
 }

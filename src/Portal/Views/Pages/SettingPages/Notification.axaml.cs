@@ -1,10 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using Portal.Const;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Extensions;
@@ -22,6 +17,6 @@ public partial class Notification : DataUserControl
 
     private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        NotificationGateway.Notice((sender as Control)!.GetTopLevel(), "通知测试");
+        (sender as Control)!.GetTopLevel().Notice("通知测试");
     }
 }

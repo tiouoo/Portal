@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Portal.Core.Minecraft.Classes;
 
-public partial class NewsEntry : ObservableObject
+public class NewsEntry : ObservableObject
 {
     public string Title { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
@@ -70,9 +70,9 @@ public class NewsDetail
     public string Type { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
     public DateTime Date { get; set; }
-        public string Body { get; set; } = string.Empty;
+    public string Body { get; set; } = string.Empty;
     public DateTime FetchedAt { get; set; }
-        public bool? NeedsTranslation { get; set; }
+    public bool? NeedsTranslation { get; set; }
 }
 
 public class NewsContentResponse

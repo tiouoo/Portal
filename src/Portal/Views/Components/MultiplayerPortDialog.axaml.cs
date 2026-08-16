@@ -7,19 +7,32 @@ namespace Portal.Views.Components;
 
 public partial class MultiplayerPortDialog : UserControl
 {
-    public MultiplayerPortDialog() => InitializeComponent();
+    public MultiplayerPortDialog()
+    {
+        InitializeComponent();
+    }
 }
 
 public partial class MultiplayerPortDialogViewModel(string port) : ObservableObject, IDialogContext
 {
     [ObservableProperty] public partial string Port { get; set; } = port;
 
-    [RelayCommand]
-    private void Confirm() => RequestClose?.Invoke(this, Port.Trim());
+    public void Close()
+    {
+        Cancel();
+    }
 
-    [RelayCommand]
-    private void Cancel() => RequestClose?.Invoke(this, null);
-
-    public void Close() => Cancel();
     public event EventHandler<object?>? RequestClose;
+
+    [RelayCommand]
+    private void Confirm()
+    {
+        RequestClose?.Invoke(this, Port.Trim());
+    }
+
+    [RelayCommand]
+    private void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 }

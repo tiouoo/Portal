@@ -9,6 +9,7 @@ using Portal.Core.Minecraft.Instance.Bedrock;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Extensions;
+using Index = Portal.Core.Module.AggregatedSearch.Index;
 
 namespace Portal.Core.Module.Initialize;
 
@@ -67,6 +68,7 @@ public class Config
             {
                 Logger.Error($"备份损坏配置文件失败：{ConfigPath.SettingDataPath}", backupEx);
             }
+
             Data.ConfigEntry = new ConfigEntry();
         }
 
@@ -81,16 +83,17 @@ public class Config
 
         if (Data.ConfigEntry.UsingBedrockAccount is { } selectedBedrockAccount)
             Data.ConfigEntry.UsingBedrockAccount = Data.ConfigEntry.BedrockAccounts
-                .FirstOrDefault(account => account.Id == selectedBedrockAccount.Id || account.Xuid == selectedBedrockAccount.Xuid);
+                .FirstOrDefault(account =>
+                    account.Id == selectedBedrockAccount.Id || account.Xuid == selectedBedrockAccount.Xuid);
         Data.ConfigEntry.UsingBedrockAccount ??= Data.ConfigEntry.BedrockAccounts.FirstOrDefault();
 
         if (isFirstRun) Data.ConfigEntry.IsInitialized = false;
 
         if (FailedSettingKeys.Count > 0) Logger.Error($"Setting load with errors: {FailedSettingKeys.AsJson()}");
 
-        Data.ConfigEntry.MinecraftAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
-        Data.ConfigEntry.BedrockAccounts.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
-        Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => AggregatedSearch.Index.MarkDirty();
+        Data.ConfigEntry.MinecraftAccounts.CollectionChanged += (_, _) => Index.MarkDirty();
+        Data.ConfigEntry.BedrockAccounts.CollectionChanged += (_, _) => Index.MarkDirty();
+        Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => Index.MarkDirty();
 
         var version = AppVersionService.Instance.Version;
         Logger.Info($"已加载版本信息：{version.VersionTitle} ({version.Type})");
@@ -105,7 +108,7 @@ public class Config
         var result1 = reader1.ReadToEnd();
         Data.Instance.PackageType = string.IsNullOrWhiteSpace(result1) ? "portable" : result1.Trim().ToLowerInvariant();
         Logger.Info($"已识别安装包类型：{Data.Instance.PackageType}");
-        
+
         ConfigIdentifyExtension.Window(Data.ConfigEntry);
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);

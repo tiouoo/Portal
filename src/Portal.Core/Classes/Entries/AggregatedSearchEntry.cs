@@ -26,8 +26,8 @@ public enum AggregatedSearchEntryType
     Page = 1 << 3,
     Instance = 1 << 4,
     RecentPlay = 1 << 5,
-    
-    
+
+
     All = NextLevelSearch | MinecraftAccount | AuthServer | Page | Instance | RecentPlay,
-    Account = MinecraftAccount | AuthServer,
+    Account = MinecraftAccount | AuthServer
 }

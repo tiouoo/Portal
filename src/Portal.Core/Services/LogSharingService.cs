@@ -13,7 +13,7 @@ public static class LogSharingService
     private const string Source = "Portal";
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(90) };
 
-        public static async Task<LogShareResult[]> ShareAllAsync(string content, CancellationToken ct)
+    public static async Task<LogShareResult[]> ShareAllAsync(string content, CancellationToken ct)
     {
         var logShareTask = ShareToLogShareCnAsync(content, ct);
         var mcloTask = ShareToMcLogsAsync(content, ct);
@@ -32,7 +32,8 @@ public static class LogSharingService
             using var response = await Client.SendAsync(request, ct);
             var body = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
-                return new("LogShare.CN", null, $"HTTP {(int)response.StatusCode}：{ExtractError(body) ?? "服务器返回错误"}");
+                return new LogShareResult("LogShare.CN", null,
+                    $"HTTP {(int)response.StatusCode}：{ExtractError(body) ?? "服务器返回错误"}");
 
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
@@ -41,12 +42,12 @@ public static class LogSharingService
                 data.TryGetProperty("url", out urlElement))
                 url = urlElement.GetString();
             if (string.IsNullOrWhiteSpace(url))
-                return new("LogShare.CN", null, "服务器未返回分享链接");
-            return new("LogShare.CN", url, null);
+                return new LogShareResult("LogShare.CN", null, "服务器未返回分享链接");
+            return new LogShareResult("LogShare.CN", url, null);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or IOException)
         {
-            return new("LogShare.CN", null, ex.Message);
+            return new LogShareResult("LogShare.CN", null, ex.Message);
         }
     }
 
@@ -61,22 +62,23 @@ public static class LogSharingService
             using var response = await Client.SendAsync(request, ct);
             var body = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
-                return new("mclo.gs", null, $"HTTP {(int)response.StatusCode}：{ExtractError(body) ?? "服务器返回错误"}");
+                return new LogShareResult("mclo.gs", null,
+                    $"HTTP {(int)response.StatusCode}：{ExtractError(body) ?? "服务器返回错误"}");
 
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
             var url = root.TryGetProperty("url", out var urlElement) ? urlElement.GetString() : null;
             if (string.IsNullOrWhiteSpace(url))
-                return new("mclo.gs", null, "服务器未返回分享链接");
-            return new("mclo.gs", url, null);
+                return new LogShareResult("mclo.gs", null, "服务器未返回分享链接");
+            return new LogShareResult("mclo.gs", url, null);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or IOException)
         {
-            return new("mclo.gs", null, ex.Message);
+            return new LogShareResult("mclo.gs", null, ex.Message);
         }
     }
 
-        public static async Task<string> AnalyseAiAsync(string content, Action<string>? onChunk, CancellationToken ct)
+    public static async Task<string> AnalyseAiAsync(string content, Action<string>? onChunk, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.logshare.cn/v1/ai/analyse");
         request.Content = new StringContent(
@@ -120,7 +122,6 @@ public static class LogSharingService
             }
             catch (JsonException)
             {
-                
             }
         }
 
@@ -129,7 +130,7 @@ public static class LogSharingService
         return builder.ToString();
     }
 
-        private static string LimitContent(string content, int maxBytes, int maxLines)
+    private static string LimitContent(string content, int maxBytes, int maxLines)
     {
         if (Encoding.UTF8.GetByteCount(content) <= maxBytes)
             return content;
@@ -153,6 +154,7 @@ public static class LogSharingService
         catch (JsonException)
         {
         }
+
         return null;
     }
 }

@@ -5,36 +5,38 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
-using Portal.Const;
 using Portal.Core.App.Service.SystemResources;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Operations.Java;
-using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Classes;
-using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("Java 环境", "设置/Java 环境", "Java")]
 public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
 {
-    private int _totalMemoryMb;
-    private int _availableMemoryMb;
+    private const int HostVmInfo = 2;
+    private const int _ScPagesize = 29;
     private readonly DispatcherTimer _memoryRefreshTimer = new() { Interval = TimeSpan.FromSeconds(2) };
+    private int _availableMemoryMb;
     private bool _isDisposed;
+    private int _totalMemoryMb;
 
-    private event PropertyChangedEventHandler? MemoryStatusChanged;
-
-    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+    public Java()
     {
-        add => MemoryStatusChanged += value;
-        remove => MemoryStatusChanged -= value;
+        InitializeComponent();
+        DataContext = this;
+        _memoryRefreshTimer.Tick += MemoryRefreshTimer_OnTick;
+        Data.ConfigEntry.PropertyChanged += ConfigEntry_PropertyChanged;
+        Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
+        Slider.ValueChanged += (_, _) => Data.ConfigEntry.MinecraftMaxMemory = (int)Slider.Value;
+        Loaded += (_, _) => Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
     }
 
     public bool HasMemoryStatus { get; private set; }
@@ -52,16 +54,25 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
     public string MinecraftMemoryDescription => $"Minecraft {Data.ConfigEntry.MinecraftMaxMemory:N0} MB";
     public bool HasMemoryWarning => HasMemoryStatus && Data.ConfigEntry.MinecraftMaxMemory > _availableMemoryMb;
 
-    public Java()
+    public void Dispose()
     {
-        InitializeComponent();
-        DataContext = this;
-        _memoryRefreshTimer.Tick += MemoryRefreshTimer_OnTick;
-        Data.ConfigEntry.PropertyChanged += ConfigEntry_PropertyChanged;
-        Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
-        Slider.ValueChanged += (_, _) => Data.ConfigEntry.MinecraftMaxMemory = (int)Slider.Value;
-        Loaded += (_, _) => Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _memoryRefreshTimer.Stop();
+        _memoryRefreshTimer.Tick -= MemoryRefreshTimer_OnTick;
+        Data.ConfigEntry.PropertyChanged -= ConfigEntry_PropertyChanged;
+        DataContext = null;
     }
+
+    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+    {
+        add => MemoryStatusChanged += value;
+        remove => MemoryStatusChanged -= value;
+    }
+
+    private event PropertyChangedEventHandler? MemoryStatusChanged;
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -86,18 +97,9 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(HasMemoryWarning));
     }
 
-    private void MemoryRefreshTimer_OnTick(object? sender, EventArgs e) => RefreshMemoryStatus();
-
-    public void Dispose()
+    private void MemoryRefreshTimer_OnTick(object? sender, EventArgs e)
     {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        _memoryRefreshTimer.Stop();
-        _memoryRefreshTimer.Tick -= MemoryRefreshTimer_OnTick;
-        Data.ConfigEntry.PropertyChanged -= ConfigEntry_PropertyChanged;
-        DataContext = null;
+        RefreshMemoryStatus();
     }
 
     private void RefreshMemoryStatus()
@@ -146,10 +148,15 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(HasMemoryWarning));
     }
 
-    private GridLength CreateMemoryWidth(int memoryMb) =>
-        new(Math.Min(Math.Max(0, memoryMb), TotalMemoryMb), GridUnitType.Star);
+    private GridLength CreateMemoryWidth(int memoryMb)
+    {
+        return new GridLength(Math.Min(Math.Max(0, memoryMb), TotalMemoryMb), GridUnitType.Star);
+    }
 
-    private static int ToMegabytes(ulong bytes) => (int)Math.Min(int.MaxValue, bytes / 1024 / 1024);
+    private static int ToMegabytes(ulong bytes)
+    {
+        return (int)Math.Min(int.MaxValue, bytes / 1024 / 1024);
+    }
 
     private static bool TryGetLinuxMemoryStatus(out int totalMemoryMb, out int availableMemoryMb)
     {
@@ -191,8 +198,8 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
 
         totalMemoryMb = ToMegabytes(totalMemoryBytes);
         availableMemoryMb =
-            ToMegabytes((ulong)(vmStatistics.FreeCount + vmStatistics.InactiveCount + vmStatistics.PurgeableCount +
-                                vmStatistics.SpeculativeCount) * (ulong)pageSize);
+            ToMegabytes((vmStatistics.FreeCount + vmStatistics.InactiveCount + vmStatistics.PurgeableCount +
+                         vmStatistics.SpeculativeCount) * (ulong)pageSize);
         return totalMemoryMb > 0 && availableMemoryMb >= 0;
     }
 
@@ -203,21 +210,9 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         return SysctlByName(name, ref value, ref size, IntPtr.Zero, 0) == 0 && value > 0;
     }
 
-    private void OnPropertyChanged(string propertyName) =>
-        MemoryStatusChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-    private struct MemoryStatusEx
+    private void OnPropertyChanged(string propertyName)
     {
-        public uint Length;
-        public uint MemoryLoad;
-        public ulong TotalPhysical;
-        public ulong AvailablePhysical;
-        public ulong TotalPageFile;
-        public ulong AvailablePageFile;
-        public ulong TotalVirtual;
-        public ulong AvailableVirtual;
-        public ulong AvailableExtendedVirtual;
+        MemoryStatusChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
     [DllImport("kernel32.dll", EntryPoint = "GlobalMemoryStatusEx", SetLastError = true)]
@@ -228,29 +223,6 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
     {
         memoryStatus = new MemoryStatusEx { Length = (uint)Marshal.SizeOf<MemoryStatusEx>() };
         return GlobalMemoryStatusExNative(ref memoryStatus);
-    }
-
-    private const int HostVmInfo = 2;
-    private const int _ScPagesize = 29;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct VmStatistics
-    {
-        public uint FreeCount;
-        public uint ActiveCount;
-        public uint InactiveCount;
-        public uint WireCount;
-        public uint ZeroFillCount;
-        public uint Reactivations;
-        public uint PageIns;
-        public uint PageOuts;
-        public uint Faults;
-        public uint CowFaults;
-        public uint Lookups;
-        public uint Hits;
-        public uint Purges;
-        public uint PurgeableCount;
-        public uint SpeculativeCount;
     }
 
     [DllImport("libSystem.B.dylib", EntryPoint = "sysctlbyname")]
@@ -285,9 +257,12 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         }
     }
 
-    private static string FormatMemory(long bytes) => bytes >= 1024L * 1024 * 1024
-        ? $"{bytes / 1024d / 1024 / 1024:F1} GB 内存"
-        : $"{bytes / 1024d / 1024:F0} MB 内存";
+    private static string FormatMemory(long bytes)
+    {
+        return bytes >= 1024L * 1024 * 1024
+            ? $"{bytes / 1024d / 1024 / 1024:F1} GB 内存"
+            : $"{bytes / 1024d / 1024:F0} MB 内存";
+    }
 
     private async void AddJava_Click(object? sender, RoutedEventArgs e)
     {
@@ -324,7 +299,7 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
-        
+
         DeepScanButton.IsEnabled = false;
         try
         {
@@ -339,25 +314,20 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
             }
             catch (OperationCanceledException)
             {
-                
                 result = (0, 0);
             }
 
             if (Data.ConfigEntry.DefaultJavaRuntime == null)
                 Data.ConfigEntry.DefaultJavaRuntime = Data.ConfigEntry.JavaRuntimes.FirstOrDefault();
 
-            if (task.Status == Tio.Avalonia.Standard.Modules.Tasks.ManagedTaskStatus.Cancelled)
-            {
+            if (task.Status == ManagedTaskStatus.Cancelled)
                 topLevel.Notice(
                     $"扫描已取消，已找到的 Java 已添加：{result.Added} 个新增，{result.Duplicate} 个重复",
                     NotificationType.Warning);
-            }
             else
-            {
                 topLevel.Notice(
                     $"强力扫描完成：新增 {result.Added} 个 Java，重复 {result.Duplicate} 个",
                     NotificationType.Success);
-            }
         }
         catch (Exception ex)
         {
@@ -422,5 +392,39 @@ public partial class Java : DataUserControl, INotifyPropertyChanged, IDisposable
                 }, true)
             ]
         });
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct MemoryStatusEx
+    {
+        public uint Length;
+        public uint MemoryLoad;
+        public ulong TotalPhysical;
+        public ulong AvailablePhysical;
+        public ulong TotalPageFile;
+        public ulong AvailablePageFile;
+        public ulong TotalVirtual;
+        public ulong AvailableVirtual;
+        public ulong AvailableExtendedVirtual;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct VmStatistics
+    {
+        public uint FreeCount;
+        public uint ActiveCount;
+        public uint InactiveCount;
+        public uint WireCount;
+        public uint ZeroFillCount;
+        public uint Reactivations;
+        public uint PageIns;
+        public uint PageOuts;
+        public uint Faults;
+        public uint CowFaults;
+        public uint Lookups;
+        public uint Hits;
+        public uint Purges;
+        public uint PurgeableCount;
+        public uint SpeculativeCount;
     }
 }

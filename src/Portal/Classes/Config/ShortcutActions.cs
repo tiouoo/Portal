@@ -1,12 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.Classes.Config;
 using Portal.Core.Const;
 using Portal.Core.Module.Multiplayer;
 using Portal.Core.Services;
-using Portal.Services;
 using Portal.Views;
 using Portal.Views.Pages;
 using TioUi.Shared;
@@ -21,7 +18,7 @@ public sealed record ShortcutActionDefinition(
     Action<TabWindow> Execute,
     Func<bool>? Available = null)
 {
-        public bool IsAvailable => Available?.Invoke() ?? true;
+    public bool IsAvailable => Available?.Invoke() ?? true;
 }
 
 public sealed record ShortcutCategory(string Name, IReadOnlyList<ShortcutActionDefinition> Items);
@@ -44,20 +41,29 @@ public static class ShortcutActions
         .Where(category => category.Items.Count > 0)
         .ToList();
 
-    public static Dictionary<string, string> CreateDefaultBindings() => All
-        .Where(definition => !string.IsNullOrWhiteSpace(definition.DefaultGesture))
-        .ToDictionary(definition => definition.Action.ToString(), definition => definition.DefaultGesture!);
+    public static Dictionary<string, string> CreateDefaultBindings()
+    {
+        return All
+            .Where(definition => !string.IsNullOrWhiteSpace(definition.DefaultGesture))
+            .ToDictionary(definition => definition.Action.ToString(), definition => definition.DefaultGesture!);
+    }
 
-    public static string GetDisplayName(ShortcutAction action) =>
-        All.First(definition => definition.Action == action).DisplayName;
+    public static string GetDisplayName(ShortcutAction action)
+    {
+        return All.First(definition => definition.Action == action).DisplayName;
+    }
 
-    public static string? GetDefaultGesture(ShortcutAction action) =>
-        All.First(definition => definition.Action == action).DefaultGesture;
+    public static string? GetDefaultGesture(ShortcutAction action)
+    {
+        return All.First(definition => definition.Action == action).DefaultGesture;
+    }
 
-        public static string? GetStoredGesture(ShortcutAction action) =>
-        Data.ConfigEntry.Shortcuts.GetGesture(action);
+    public static string? GetStoredGesture(ShortcutAction action)
+    {
+        return Data.ConfigEntry.Shortcuts.GetGesture(action);
+    }
 
-        public static KeyGesture? ParseGesture(string? gestureText)
+    public static KeyGesture? ParseGesture(string? gestureText)
     {
         if (string.IsNullOrWhiteSpace(gestureText)) return null;
         try
@@ -70,7 +76,10 @@ public static class ShortcutActions
         }
     }
 
-        public static string GestureToString(KeyGesture gesture) => gesture.ToString("g", null);
+    public static string GestureToString(KeyGesture gesture)
+    {
+        return gesture.ToString("g", null);
+    }
 
     private static List<ShortcutActionDefinition> Build()
     {
@@ -80,7 +89,8 @@ public static class ShortcutActions
             Define(ShortcutAction.CloseTab, "标签页", "关闭当前标签页", "Ctrl+W", window => window.SelectedTab?.Close()),
             Define(ShortcutAction.CloseOtherTabs, "标签页", "关闭其他标签页", null, window => window.SelectedTab?.CloseOther()),
             Define(ShortcutAction.CloseAllTabs, "标签页", "关闭所有标签页", "Ctrl+Shift+W", window => window.CloseAllTab()),
-            Define(ShortcutAction.OpenInNewWindow, "标签页", "在新窗口打开", null, window => window.SelectedTab?.MoveTabToNewWindow()),
+            Define(ShortcutAction.OpenInNewWindow, "标签页", "在新窗口打开", null,
+                window => window.SelectedTab?.MoveTabToNewWindow()),
             Define(ShortcutAction.NextTab, "标签页", "切换到下一个标签页", null, window =>
             {
                 var tabs = window.Tabs;
@@ -93,17 +103,23 @@ public static class ShortcutActions
                 if (tabs.Count < 2 || window.SelectedTab is null) return;
                 window.SelectTab(tabs[(tabs.IndexOf(window.SelectedTab) - 1 + tabs.Count) % tabs.Count]);
             }),
-            Define(ShortcutAction.MoveTabForward, "标签页", "标签页向前移动", null, window => window.SelectedTab?.MoveTabForward()),
-            Define(ShortcutAction.MoveTabBackward, "标签页", "标签页向后移动", null, window => window.SelectedTab?.MoveTabBackward()),
+            Define(ShortcutAction.MoveTabForward, "标签页", "标签页向前移动", null,
+                window => window.SelectedTab?.MoveTabForward()),
+            Define(ShortcutAction.MoveTabBackward, "标签页", "标签页向后移动", null,
+                window => window.SelectedTab?.MoveTabBackward()),
 
             Define(ShortcutAction.OpenStartPage, "页面", "打开起始页", null, window => window.OpenPage(new StartPage())),
             Define(ShortcutAction.OpenNewTabPage, "页面", "打开新标签页", null, window => window.OpenPage(new NewTabPage())),
             Define(ShortcutAction.OpenWidgetsPage, "页面", "打开小组件", null, window => window.OpenPage(new WidgetsPage())),
-            Define(ShortcutAction.OpenDownloadPage, "页面", "打开下载中心", null, window => window.OpenPage(new DownloadPage())),
-            Define(ShortcutAction.OpenInstancesPage, "页面", "打开实例", null, window => window.OpenPage(new InstancesPage())),
-            Define(ShortcutAction.OpenMultiplayerJava, "页面", "打开联机（Java）", null, window => window.OpenPage(new MultiplayerPage(MinecraftEdition.Java))),
-            Define(ShortcutAction.OpenMultiplayerBedrock, "页面", "打开联机（基岩）", null, window => window.OpenPage(new MultiplayerPage(MinecraftEdition.Bedrock)),
-                available: () => OperatingSystem.IsWindows()),
+            Define(ShortcutAction.OpenDownloadPage, "页面", "打开下载中心", null,
+                window => window.OpenPage(new DownloadPage())),
+            Define(ShortcutAction.OpenInstancesPage, "页面", "打开实例", null,
+                window => window.OpenPage(new InstancesPage())),
+            Define(ShortcutAction.OpenMultiplayerJava, "页面", "打开联机（Java）", null,
+                window => window.OpenPage(new MultiplayerPage(MinecraftEdition.Java))),
+            Define(ShortcutAction.OpenMultiplayerBedrock, "页面", "打开联机（基岩）", null,
+                window => window.OpenPage(new MultiplayerPage(MinecraftEdition.Bedrock)),
+                () => OperatingSystem.IsWindows()),
             Define(ShortcutAction.OpenNewsPage, "页面", "打开新闻", null, window => window.OpenPage(new NewsPage())),
             Define(ShortcutAction.OpenToolsPage, "页面", "打开实用工具", null, window => window.OpenPage(new ToolsPage())),
             Define(ShortcutAction.OpenTaskPage, "页面", "打开任务", null, window => window.OpenPage(new TaskPage())),
@@ -134,7 +150,7 @@ public static class ShortcutActions
                 window => window.WindowState = WindowState.Minimized)
         };
 
-        
+
         ShortcutAction[] selectTabActions =
         [
             ShortcutAction.SelectTab1, ShortcutAction.SelectTab2, ShortcutAction.SelectTab3,
@@ -152,6 +168,8 @@ public static class ShortcutActions
     }
 
     private static ShortcutActionDefinition Define(ShortcutAction action, string category, string displayName,
-        string? defaultGesture, Action<TabWindow> execute, Func<bool>? available = null) =>
-        new(action, category, displayName, defaultGesture, execute, available);
+        string? defaultGesture, Action<TabWindow> execute, Func<bool>? available = null)
+    {
+        return new ShortcutActionDefinition(action, category, displayName, defaultGesture, execute, available);
+    }
 }

@@ -8,13 +8,17 @@ namespace Portal.Core.Minecraft.Services;
 public sealed class RecentPlayService
 {
     private const string HistoryFileName = "Portal.recent-play.json";
-    
+
     private static readonly object HistoryLock = new();
+
+    private static readonly Regex ConnectingPattern = new(@"\bConnecting to ([^,\s]+),\s*(\d+)", RegexOptions.Compiled);
     private readonly WorldSaveService _worldSaveService = new();
 
     public Task<IReadOnlyList<RecentPlayTarget>> ScanAsync(IEnumerable<MinecraftInstance> instances,
-        CancellationToken cancellationToken = default) =>
-        Task.Run(() => Scan(instances.ToArray(), cancellationToken), cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Scan(instances.ToArray(), cancellationToken), cancellationToken);
+    }
 
     private IReadOnlyList<RecentPlayTarget> Scan(IReadOnlyList<MinecraftInstance> instances,
         CancellationToken cancellationToken)
@@ -41,20 +45,18 @@ public sealed class RecentPlayService
 
                 targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
                     GetServerHistoryKey(server.Address, server.Port), server.Name, $"服务器·{server.Address}",
-                    recorded.LastPlayedTime, ServerIconData: server.IconData, ServerAddress: server.Host, ServerPort: server.Port));
+                    recorded.LastPlayedTime, ServerIconData: server.IconData, ServerAddress: server.Host,
+                    ServerPort: server.Port));
             }
 
-            
-            
-            
+
             foreach (var recorded in history.Where(item => !item.WasSaved && !IsLanAddress(item.Address) &&
-                          !servers.Any(server => IsSameServer(item, server.Host, server.Port))))
-            {
+                                                           !servers.Any(server =>
+                                                               IsSameServer(item, server.Host, server.Port))))
                 targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
                     GetServerHistoryKey(recorded.Address, recorded.Port), recorded.Name ?? recorded.Address,
                     $"服务器·{recorded.Address}:{recorded.Port}",
                     recorded.LastPlayedTime, ServerAddress: recorded.Address, ServerPort: recorded.Port));
-            }
         }
 
         return targets.OrderByDescending(target => target.LastPlayedTime).ToArray();
@@ -68,15 +70,16 @@ public sealed class RecentPlayService
             {
                 var history = ReadHistory(instance);
                 var servers = JavaServerManager.Read(instance).ToArray();
-                var savedServer = servers.FirstOrDefault(server => IsSameServer(address, port, server.Host, server.Port));
+                var savedServer =
+                    servers.FirstOrDefault(server => IsSameServer(address, port, server.Host, server.Port));
                 history.RemoveAll(item => IsSameServer(item, address, port));
-                history.Add(new RecentServerHistory(address, port, savedServer?.Name, savedServer != null, DateTime.Now));
+                history.Add(
+                    new RecentServerHistory(address, port, savedServer?.Name, savedServer != null, DateTime.Now));
                 WriteHistory(instance, history);
             }
         }
         catch (Exception e)
         {
-            
             Logger.Error("记录服务器游玩历史失败。", e);
         }
     }
@@ -89,8 +92,6 @@ public sealed class RecentPlayService
         RecordServerPlay(instance, address, port);
     }
 
-    private static readonly Regex ConnectingPattern = new(@"\bConnecting to ([^,\s]+),\s*(\d+)", RegexOptions.Compiled);
-
     private static bool TryGetConnection(string logLine, out string address, out int port)
     {
         var match = ConnectingPattern.Match(logLine);
@@ -99,22 +100,31 @@ public sealed class RecentPlayService
         return match.Success && int.TryParse(match.Groups[2].Value, out port);
     }
 
-    private static string GetServerHistoryKey(string address, int port) => $"server:{address}:{port}";
+    private static string GetServerHistoryKey(string address, int port)
+    {
+        return $"server:{address}:{port}";
+    }
 
-    private static bool IsSameServer(RecentServerHistory history, string address, int port) =>
-        IsSameServer(history.Address, history.Port, address, port);
+    private static bool IsSameServer(RecentServerHistory history, string address, int port)
+    {
+        return IsSameServer(history.Address, history.Port, address, port);
+    }
 
-    private static bool IsSameServer(string leftAddress, int leftPort, string rightAddress, int rightPort) =>
-        leftPort == rightPort && string.Equals(leftAddress, rightAddress, StringComparison.OrdinalIgnoreCase);
+    private static bool IsSameServer(string leftAddress, int leftPort, string rightAddress, int rightPort)
+    {
+        return leftPort == rightPort && string.Equals(leftAddress, rightAddress, StringComparison.OrdinalIgnoreCase);
+    }
 
-    private static bool IsLanAddress(string address) =>
-        address.StartsWith("192.168.", StringComparison.Ordinal) ||
-        address.StartsWith("10.", StringComparison.Ordinal) ||
-        Is172PrivateAddress(address) ||
-        address.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-        address.Equals("127.0.0.1", StringComparison.Ordinal);
+    private static bool IsLanAddress(string address)
+    {
+        return address.StartsWith("192.168.", StringComparison.Ordinal) ||
+               address.StartsWith("10.", StringComparison.Ordinal) ||
+               Is172PrivateAddress(address) ||
+               address.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+               address.Equals("127.0.0.1", StringComparison.Ordinal);
+    }
 
-    
+
     private static bool Is172PrivateAddress(string address)
     {
         if (!address.StartsWith("172.", StringComparison.Ordinal))
@@ -153,7 +163,7 @@ public sealed class RecentPlayService
             return null;
 
         var addressAndPort = key[prefix.Length..];
-        
+
         var separator = addressAndPort.LastIndexOf(':');
         var (address, port) = separator > 0 && int.TryParse(addressAndPort[(separator + 1)..], out var legacyPort)
             ? (addressAndPort[..separator], legacyPort)
@@ -167,10 +177,18 @@ public sealed class RecentPlayService
         File.WriteAllText(path, JsonSerializer.Serialize(history));
     }
 
-    private static string GetGameModeText(int? gameMode) => gameMode switch
+    private static string GetGameModeText(int? gameMode)
     {
-        0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式"
-    };
+        return gameMode switch
+        {
+            0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式"
+        };
+    }
 
-    private sealed record RecentServerHistory(string Address, int Port, string? Name, bool WasSaved, DateTime LastPlayedTime);
+    private sealed record RecentServerHistory(
+        string Address,
+        int Port,
+        string? Name,
+        bool WasSaved,
+        DateTime LastPlayedTime);
 }

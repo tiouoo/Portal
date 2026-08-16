@@ -25,8 +25,8 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left" />
             <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
                 FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
                 Text="创建任务后可通过标题栏圆点打开抽屉，或从抽屉打开任务标签页。"
                 TextWrapping="Wrap" />
             <Button Click="StartWorkflowTest" Content="开始完整下载流程" />

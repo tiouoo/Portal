@@ -4,6 +4,10 @@ namespace Portal.Core.App.Service.SystemResources;
 
 internal static class GpuUsageProvider
 {
+    private const uint PdhFmtDouble = 0x00000200;
+    private const uint PdhMoreData = 0x800007D2;
+    private const uint PdhNoData = 0x800007D5;
+    private const uint PdhInvalidData = 0xC0000BC6;
     private static IntPtr _query = IntPtr.Zero;
     private static readonly List<IntPtr> Counters = [];
     private static bool _initialized;
@@ -11,32 +15,33 @@ internal static class GpuUsageProvider
     public static float? GetUsage()
     {
         if (!OperatingSystem.IsWindows()) return null;
-        try { return GetWindowsUsage(); }
-        catch { return null; }
-    }
-
-    private const uint PdhFmtDouble = 0x00000200;
-    private const uint PdhMoreData = 0x800007D2;
-    private const uint PdhNoData = 0x800007D5;
-    private const uint PdhInvalidData = 0xC0000BC6;
-
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
-    private struct PdhFmtCountervalue
-    {
-        [FieldOffset(0)] public uint CStatus;
-        [FieldOffset(8)] public double DoubleValue;
+        try
+        {
+            return GetWindowsUsage();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     [DllImport("pdh.dll", CharSet = CharSet.Unicode)]
     private static extern uint PdhOpenQuery(IntPtr dataSource, uint userData, out IntPtr query);
+
     [DllImport("pdh.dll", CharSet = CharSet.Unicode)]
     private static extern uint PdhAddCounterW(IntPtr query, string counterPath, uint userData, out IntPtr counter);
+
     [DllImport("pdh.dll")]
     private static extern uint PdhCollectQueryData(IntPtr query);
+
     [DllImport("pdh.dll")]
-    private static extern uint PdhGetFormattedCounterValue(IntPtr counter, uint format, out uint type, out PdhFmtCountervalue value);
+    private static extern uint PdhGetFormattedCounterValue(IntPtr counter, uint format, out uint type,
+        out PdhFmtCountervalue value);
+
     [DllImport("pdh.dll", CharSet = CharSet.Unicode)]
-    private static extern uint PdhExpandWildCardPathW(string? machine, string wildcardPath, IntPtr expandedPathList, ref uint bufferSize, uint flags);
+    private static extern uint PdhExpandWildCardPathW(string? machine, string wildcardPath, IntPtr expandedPathList,
+        ref uint bufferSize, uint flags);
+
     [DllImport("pdh.dll")]
     private static extern uint PdhCloseQuery(IntPtr query);
 
@@ -66,6 +71,7 @@ internal static class GpuUsageProvider
             PdhCollectQueryData(_query);
             return null;
         }
+
         if (collectResult != 0) return null;
 
         double max = 0;
@@ -86,6 +92,7 @@ internal static class GpuUsageProvider
                     break;
             }
         }
+
         if (anyStale) BuildQuery();
         return anyValid ? (float)Math.Clamp(max, 0, 100) : null;
     }
@@ -113,13 +120,20 @@ internal static class GpuUsageProvider
             if (paths.Count == 0) return;
 
             status = PdhOpenQuery(IntPtr.Zero, 0, out _query);
-            if (status != 0) { _query = IntPtr.Zero; return; }
-            foreach (var p in paths)
+            if (status != 0)
             {
-                if (PdhAddCounterW(_query, p, 0, out var c) == 0) Counters.Add(c);
+                _query = IntPtr.Zero;
+                return;
             }
+
+            foreach (var p in paths)
+                if (PdhAddCounterW(_query, p, 0, out var c) == 0)
+                    Counters.Add(c);
         }
-        finally { Marshal.FreeHGlobal(buffer); }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
     }
 
     private static List<string> ReadMultiString(IntPtr buffer, int sizeChars)
@@ -133,6 +147,14 @@ internal static class GpuUsageProvider
             list.Add(s);
             offset += s.Length + 1;
         }
+
         return list;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 16)]
+    private struct PdhFmtCountervalue
+    {
+        [FieldOffset(0)] public uint CStatus;
+        [FieldOffset(8)] public double DoubleValue;
     }
 }

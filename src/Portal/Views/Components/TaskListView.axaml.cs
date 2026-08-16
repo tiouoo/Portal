@@ -11,7 +11,7 @@ public partial class TaskListView : UserControl
         InitializeComponent();
         DataContext = this;
         if (inset)
-            this.ScrollViewer.Width = 500;
+            ScrollViewer.Width = 500;
     }
 
     public TaskListView()

@@ -1,6 +1,4 @@
-using System;
 using AsyncImageLoader;
-using Avalonia;
 using Portal.Module.Imaging;
 
 namespace Portal.Views.Components;

@@ -1,6 +1,8 @@
 using System.Formats.Tar;
 using System.IO.Compression;
+using System.Net;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -12,11 +14,11 @@ namespace Portal.Core.Module.Multiplayer;
 
 public enum ComponentUpdateStatus
 {
-        Current,
+    Current,
 
-        UpdateRequired,
+    UpdateRequired,
 
-        Unknown
+    Unknown
 }
 
 public static class GravityConeInstaller
@@ -215,7 +217,7 @@ public static class GravityConeInstaller
 
             context.ReportDownloadProgress(0, total, $"正在下载 {package.FileName}");
 
-            bool supportsRange = total > 0 && await ValidateRangeSupportAsync(downloadUrl, cancellationToken);
+            var supportsRange = total > 0 && await ValidateRangeSupportAsync(downloadUrl, cancellationToken);
 
             if (supportsRange)
                 await DownloadMultiPartAsync(downloadUrl, archive, total, context, cancellationToken);
@@ -233,14 +235,19 @@ public static class GravityConeInstaller
 
             context.ReportMessage($"正在解压 {package.FileName}");
             if (package.ArchiveType.Equals("zip", StringComparison.OrdinalIgnoreCase))
+            {
                 ZipFile.ExtractToDirectory(archive, extracted);
+            }
             else if (package.ArchiveType.Equals("tar.gz", StringComparison.OrdinalIgnoreCase))
             {
                 await using var input = File.OpenRead(archive);
                 await using var gzip = new GZipStream(input, CompressionMode.Decompress);
                 TarFile.ExtractToDirectory(gzip, extracted, false);
             }
-            else throw new InvalidDataException($"不支持的压缩格式：{package.ArchiveType}");
+            else
+            {
+                throw new InvalidDataException($"不支持的压缩格式：{package.ArchiveType}");
+            }
 
             foreach (var file in Directory.EnumerateFiles(extracted, "*", SearchOption.AllDirectories))
             {
@@ -262,18 +269,22 @@ public static class GravityConeInstaller
     {
         using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
         rangeRequest.Headers.Range = new RangeHeaderValue(0, 0);
-        using var response = await Client.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        return response.StatusCode == System.Net.HttpStatusCode.PartialContent;
+        using var response =
+            await Client.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        return response.StatusCode == HttpStatusCode.PartialContent;
     }
 
     private static async Task DownloadMultiPartAsync(string url, string path, long total,
         DownloadContext context, CancellationToken cancellationToken)
     {
-        await using (var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write, BufferSize, true))
+        await using (var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write, BufferSize,
+                         true))
+        {
             file.SetLength(total);
+        }
 
         long downloaded = 0;
-        long segmentSize = (total + DownloadConcurrency - 1) / DownloadConcurrency;
+        var segmentSize = (total + DownloadConcurrency - 1) / DownloadConcurrency;
         var downloads = Enumerable.Range(0, DownloadConcurrency).Select(async index =>
         {
             var start = index * segmentSize;
@@ -281,7 +292,7 @@ public static class GravityConeInstaller
             var end = Math.Min(start + segmentSize, total) - 1;
             await DownloadRangeAsync(url, path, start, end, bytes =>
             {
-                long current = Interlocked.Add(ref downloaded, bytes);
+                var current = Interlocked.Add(ref downloaded, bytes);
                 context.ReportDownloadProgress(current, total, $"正在下载 {context.Package.FileName}");
             }, cancellationToken);
         });
@@ -293,10 +304,12 @@ public static class GravityConeInstaller
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Range = new RangeHeaderValue(start, end);
-        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response =
+            await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
         await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var output = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Write, BufferSize, true);
+        await using var output =
+            new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Write, BufferSize, true);
         output.Seek(start, SeekOrigin.Begin);
         var buffer = new byte[BufferSize];
         int read;
@@ -328,47 +341,47 @@ public static class GravityConeInstaller
 
     private static string GetRid()
     {
-        var architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture switch
+        var architecture = RuntimeInformation.ProcessArchitecture switch
         {
-            System.Runtime.InteropServices.Architecture.X64 => "x64",
-            System.Runtime.InteropServices.Architecture.Arm64 => "arm64",
+            Architecture.X64 => "x64",
+            Architecture.Arm64 => "arm64",
             _ => throw new PlatformNotSupportedException("联机组件仅支持 x64 和 arm64。")
         };
-        var os = OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsLinux() ? "linux" :
+        var os = OperatingSystem.IsWindows() ? "win" :
+            OperatingSystem.IsLinux() ? "linux" :
             OperatingSystem.IsMacOS() ? "osx" : throw new PlatformNotSupportedException("当前系统不支持联机组件。");
         return $"{os}-{architecture}";
     }
 
-    private static string GetCliName(string rid) => rid switch
+    private static string GetCliName(string rid)
     {
-        "win-x64" => "gravitycone-cli-windows-amd64.exe",
-        "win-arm64" => "gravitycone-cli-windows-arm64.exe",
-        "linux-x64" => "gravitycone-cli-linux-amd64",
-        "linux-arm64" => "gravitycone-cli-linux-arm64",
-        "osx-x64" => "gravitycone-cli-darwin-amd64",
-        "osx-arm64" => "gravitycone-cli-darwin-arm64",
-        _ => throw new PlatformNotSupportedException($"联机组件暂不支持 {rid}。")
-    };
+        return rid switch
+        {
+            "win-x64" => "gravitycone-cli-windows-amd64.exe",
+            "win-arm64" => "gravitycone-cli-windows-arm64.exe",
+            "linux-x64" => "gravitycone-cli-linux-amd64",
+            "linux-arm64" => "gravitycone-cli-linux-arm64",
+            "osx-x64" => "gravitycone-cli-darwin-amd64",
+            "osx-arm64" => "gravitycone-cli-darwin-arm64",
+            _ => throw new PlatformNotSupportedException($"联机组件暂不支持 {rid}。")
+        };
+    }
 
     private static void MakeExecutable(string path)
     {
         if (OperatingSystem.IsWindows()) return;
         File.SetUnixFileMode(path, File.GetUnixFileMode(path) |
-                                  UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute);
+                                   UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute);
     }
 
-    private sealed record InstallationState(string GravityConeVersion, string EasyTierVersion, string Rid,
+    private sealed record InstallationState(
+        string GravityConeVersion,
+        string EasyTierVersion,
+        string Rid,
         string CliExecutable);
 
     private sealed class DownloadContext
     {
-        public OnlinePackageManifest Package { get; }
-        public string Destination { get; }
-        public bool Flatten { get; }
-        public int Index { get; }
-
-        public ParallelDownloadProgress? ProgressState { get; set; }
-
         public DownloadContext(OnlinePackageManifest package, string destination, bool flatten, int index)
         {
             Package = package;
@@ -376,6 +389,13 @@ public static class GravityConeInstaller
             Flatten = flatten;
             Index = index;
         }
+
+        public OnlinePackageManifest Package { get; }
+        public string Destination { get; }
+        public bool Flatten { get; }
+        public int Index { get; }
+
+        public ParallelDownloadProgress? ProgressState { get; set; }
 
         public void ReportDownloadProgress(long downloaded, long total, string message)
         {
@@ -395,18 +415,17 @@ public static class GravityConeInstaller
 
     private sealed class ParallelDownloadProgress
     {
-        private readonly int _count;
-        private readonly IProgress<(double? Progress, string Message)>? _progress;
-        private readonly long[] _downloadedBytes;
-        private readonly long[] _totalBytes;
-        private readonly string[] _messages;
-        private readonly int[] _states;
-        private int _started;
-
         private const int StateIdle = 0;
         private const int StateDownloading = 1;
         private const int StateExtracting = 2;
         private const int StateCompleted = 3;
+        private readonly int _count;
+        private readonly long[] _downloadedBytes;
+        private readonly string[] _messages;
+        private readonly IProgress<(double? Progress, string Message)>? _progress;
+        private readonly int[] _states;
+        private readonly long[] _totalBytes;
+        private int _started;
 
         public ParallelDownloadProgress(int count, IProgress<(double? Progress, string Message)>? progress)
         {
@@ -453,12 +472,12 @@ public static class GravityConeInstaller
             long totalSum = 0;
             long downloadedSum = 0;
             var messages = new List<string>();
-            int completedCount = 0;
+            var completedCount = 0;
 
-            for (int i = 0; i < _count; i++)
+            for (var i = 0; i < _count; i++)
             {
-                long total = Volatile.Read(ref _totalBytes[i]);
-                long downloaded = Volatile.Read(ref _downloadedBytes[i]);
+                var total = Volatile.Read(ref _totalBytes[i]);
+                var downloaded = Volatile.Read(ref _downloadedBytes[i]);
                 totalSum += total;
                 downloadedSum += Math.Min(downloaded, total);
 
@@ -470,7 +489,7 @@ public static class GravityConeInstaller
             }
 
             double? progress = totalSum > 0 ? (double)downloadedSum / totalSum : null;
-            string message = completedCount == _count
+            var message = completedCount == _count
                 ? "联机组件下载完成"
                 : messages.Count > 0
                     ? string.Join("，", messages)

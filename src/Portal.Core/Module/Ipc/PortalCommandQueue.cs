@@ -27,7 +27,10 @@ public static class PortalCommandQueue
         UiLoaded += () =>
         {
             lock (CommandLock)
+            {
                 _isReady = true;
+            }
+
             Logger.Info("主界面已就绪，开始执行等待中的外部命令。");
             Dispatcher.UIThread.Post(DrainPendingCommands);
         };
@@ -53,7 +56,10 @@ public static class PortalCommandQueue
         {
             PortalCommand? command;
             lock (CommandLock)
+            {
                 command = PendingCommands.Count > 0 ? PendingCommands.Dequeue() : null;
+            }
+
             if (command == null)
                 return;
 

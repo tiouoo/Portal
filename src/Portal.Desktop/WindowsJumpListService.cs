@@ -10,7 +10,6 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Services;
-using Portal.Services;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -28,7 +27,10 @@ internal static partial class WindowsJumpListService
     private static bool _isReady;
     private static bool _isDrainingCommands;
 
-    public static void SetAppUserModelId() => SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
+    public static void SetAppUserModelId()
+    {
+        SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
+    }
 
     public static bool TryForwardToRunningInstance(string[] args)
     {
@@ -54,7 +56,10 @@ internal static partial class WindowsJumpListService
         }
     }
 
-    public static void StartCommandServer() => _ = Task.Run(ListenForCommandsAsync);
+    public static void StartCommandServer()
+    {
+        _ = Task.Run(ListenForCommandsAsync);
+    }
 
     public static void Initialize(string[] args)
     {
@@ -74,13 +79,12 @@ internal static partial class WindowsJumpListService
     private static async Task ListenForCommandsAsync()
     {
         while (true)
-        {
             try
             {
                 await using var pipe = new NamedPipeServerStream(PipeName, PipeDirection.In, 1,
                     PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
                 await pipe.WaitForConnectionAsync();
-                using var reader = new StreamReader(pipe, Encoding.UTF8, detectEncodingFromByteOrderMarks: false,
+                using var reader = new StreamReader(pipe, Encoding.UTF8, false,
                     leaveOpen: true);
                 var json = await reader.ReadToEndAsync();
                 if (string.IsNullOrWhiteSpace(json))
@@ -99,13 +103,14 @@ internal static partial class WindowsJumpListService
             {
                 await Task.Delay(1000);
             }
-        }
     }
 
     private static void QueueCommand(JumpListCommand command)
     {
         lock (CommandLock)
+        {
             PendingCommands.Enqueue(command);
+        }
 
         if (_isReady)
             Dispatcher.UIThread.Post(DrainPendingCommands);
@@ -206,7 +211,8 @@ internal static partial class WindowsJumpListService
                 return;
         }
 
-        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(instance), target);
+        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(instance),
+            target);
     }
 
     private static async Task RefreshAsync()
@@ -231,11 +237,9 @@ internal static partial class WindowsJumpListService
             var recentPlay = (await RecentPlayService.ScanAsync(InstanceManager.Instance.Instances)).FirstOrDefault();
 
             if (recentPlay != null)
-            {
                 items.Add(("继续游戏", recentPlay.Name, $"{recentPlay.Instance.InstanceName}·{recentPlay.Details}",
                     new JumpListCommand(JumpListCommandKind.RecentPlay, recentPlay.Instance.InstanceFolderPath,
                         recentPlay.Type, recentPlay.Id)));
-            }
 
             BuildJumpList(items);
         }
@@ -245,7 +249,8 @@ internal static partial class WindowsJumpListService
         }
     }
 
-    private static void BuildJumpList(IEnumerable<(string Category, string Title, string Description, JumpListCommand Command)> items)
+    private static void BuildJumpList(
+        IEnumerable<(string Category, string Title, string Description, JumpListCommand Command)> items)
     {
         var destinationList = (ICustomDestinationList)new CDestinationList();
         destinationList.SetAppId(AppUserModelId);
@@ -258,6 +263,7 @@ internal static partial class WindowsJumpListService
                 collection.AddObject(CreateShellLink(item.Title, item.Description, item.Command));
             destinationList.AppendCategory(category.Key, collection);
         }
+
         destinationList.CommitList();
     }
 
@@ -265,7 +271,8 @@ internal static partial class WindowsJumpListService
     {
         var link = (IShellLinkW)new CShellLink();
         link.SetPath(Environment.ProcessPath!);
-        link.SetArguments($"{CommandArgument} {Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(command)))}");
+        link.SetArguments(
+            $"{CommandArgument} {Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(command)))}");
         link.SetDescription(description);
         link.SetIconLocation(Environment.ProcessPath!, 0);
         var propertyStore = (IPropertyStore)link;
@@ -280,6 +287,7 @@ internal static partial class WindowsJumpListService
         {
             PropVariantClear(ref titleValue);
         }
+
         return link;
     }
 
@@ -291,16 +299,19 @@ internal static partial class WindowsJumpListService
             return false;
         try
         {
-            command = JsonSerializer.Deserialize<JumpListCommand>(Encoding.UTF8.GetString(Convert.FromBase64String(args[index + 1])))!;
+            command = JsonSerializer.Deserialize<JumpListCommand>(
+                Encoding.UTF8.GetString(Convert.FromBase64String(args[index + 1])))!;
             return command != null;
         }
-        catch (FormatException) { return false; }
-        catch (JsonException) { return false; }
+        catch (FormatException)
+        {
+            return false;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
-
-    private enum JumpListCommandKind { Continue, NewTab, Settings, RecentPlay }
-    private sealed record JumpListCommand(JumpListCommandKind Kind, string? InstanceFolderPath,
-        RecentPlayTargetType? TargetType = null, string? TargetId = null);
 
     [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
     private static partial void SetCurrentProcessExplicitAppUserModelID(string appId);
@@ -308,7 +319,23 @@ internal static partial class WindowsJumpListService
     [LibraryImport("ole32.dll")]
     private static partial void PropVariantClear(ref PropVariant variant);
 
-    [GeneratedComInterface, Guid("6332DEBF-87B5-4670-90C0-5E57B408A49E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private enum JumpListCommandKind
+    {
+        Continue,
+        NewTab,
+        Settings,
+        RecentPlay
+    }
+
+    private sealed record JumpListCommand(
+        JumpListCommandKind Kind,
+        string? InstanceFolderPath,
+        RecentPlayTargetType? TargetType = null,
+        string? TargetId = null);
+
+    [GeneratedComInterface]
+    [Guid("6332DEBF-87B5-4670-90C0-5E57B408A49E")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public partial interface ICustomDestinationList
     {
         void SetAppId([MarshalAs(UnmanagedType.LPWStr)] string appId);
@@ -322,7 +349,9 @@ internal static partial class WindowsJumpListService
         void AbortList();
     }
 
-    [GeneratedComInterface, Guid("5632B1A4-E38A-400A-928A-D4CD63230295"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [GeneratedComInterface]
+    [Guid("5632B1A4-E38A-400A-928A-D4CD63230295")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public partial interface IObjectCollection : IObjectArray
     {
         void AddObject([MarshalAs(UnmanagedType.Interface)] object item);
@@ -331,7 +360,9 @@ internal static partial class WindowsJumpListService
         void Clear();
     }
 
-    [GeneratedComInterface, Guid("92CA9DCD-5622-4BBA-A805-5E9F541BD8C9"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [GeneratedComInterface]
+    [Guid("92CA9DCD-5622-4BBA-A805-5E9F541BD8C9")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public partial interface IObjectArray
     {
         void GetCount(out uint count);
@@ -343,11 +374,20 @@ internal static partial class WindowsJumpListService
     {
         private readonly List<object> _items = [];
 
-        public void GetCount(out uint count) => count = (uint)_items.Count;
+        public void GetCount(out uint count)
+        {
+            count = (uint)_items.Count;
+        }
 
-        public void GetAt(uint index, ref Guid riid, out object item) => item = _items[(int)index];
+        public void GetAt(uint index, ref Guid riid, out object item)
+        {
+            item = _items[(int)index];
+        }
 
-        public void AddObject(object item) => _items.Add(item);
+        public void AddObject(object item)
+        {
+            _items.Add(item);
+        }
 
         public void AddFromArray(IObjectArray source)
         {
@@ -360,35 +400,50 @@ internal static partial class WindowsJumpListService
             }
         }
 
-        public void RemoveObjectAt(uint index) => _items.RemoveAt((int)index);
+        public void RemoveObjectAt(uint index)
+        {
+            _items.RemoveAt((int)index);
+        }
 
-        public void Clear() => _items.Clear();
+        public void Clear()
+        {
+            _items.Clear();
+        }
     }
 
-    [ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [ComImport]
+    [Guid("000214F9-0000-0000-C000-000000000046")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IShellLinkW
     {
-        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int capacity, out IntPtr findData, uint flags);
+        void GetPath([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int capacity, out IntPtr findData,
+            uint flags);
+
         void GetIDList(out IntPtr itemIdList);
         void SetIDList(IntPtr itemIdList);
-        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int capacity);
+        void GetDescription([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int capacity);
         void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
-        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory, int capacity);
+        void GetWorkingDirectory([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory, int capacity);
         void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string directory);
-        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments, int capacity);
+        void GetArguments([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments, int capacity);
         void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
         void GetHotkey(out short hotkey);
         void SetHotkey(short hotkey);
         void GetShowCmd(out int showCommand);
         void SetShowCmd(int showCommand);
-        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int capacity, out int iconIndex);
+
+        void GetIconLocation([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int capacity,
+            out int iconIndex);
+
         void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string iconPath, int iconIndex);
         void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string path, uint reserved);
         void Resolve(IntPtr hwnd, uint flags);
         void SetPath([MarshalAs(UnmanagedType.LPWStr)] string file);
     }
 
-    [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [ComImport]
+    [Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IPropertyStore
     {
         void GetCount(out uint count);
@@ -410,6 +465,7 @@ internal static partial class WindowsJumpListService
     {
         [FieldOffset(0)] private ushort _valueType;
         [FieldOffset(8)] private IntPtr _pointerValue;
+
         public PropVariant(string value)
         {
             this = default;
@@ -423,9 +479,12 @@ internal static partial class WindowsJumpListService
         public static readonly PropertyKey Title = new(new Guid("F29F85E0-4FF9-1068-AB91-08002B27B3D9"), 2);
     }
 
-    [ComImport, Guid("77F10CF0-3DB5-4966-B520-B7C54FD35ED6")]
+    [ComImport]
+    [Guid("77F10CF0-3DB5-4966-B520-B7C54FD35ED6")]
     private class CDestinationList;
-    [ComImport, Guid("00021401-0000-0000-C000-000000000046")]
+
+    [ComImport]
+    [Guid("00021401-0000-0000-C000-000000000046")]
     private class CShellLink;
 }
 #endif

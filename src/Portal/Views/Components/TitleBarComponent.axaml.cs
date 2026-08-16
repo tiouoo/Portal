@@ -1,28 +1,20 @@
-using System;
-using System.IO;
-using System.Linq;
-using CommunityToolkit.Mvvm.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using Portal.Const;
+using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Multiplayer;
-using Portal.Core.Operations;
 using Portal.Core.Operations.Account;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.SettingPages;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
@@ -37,9 +29,13 @@ public partial class TitleBarComponent : Grid
 {
     private const double TaskTitleScrollStep = 0.7;
     private const int TaskTitlePauseTicks = 40;
+
+    public static readonly StyledProperty<string?> DropMsgProperty =
+        AvaloniaProperty.Register<TitleBarComponent, string?>(nameof(DropMsg));
+
     private readonly DispatcherTimer _taskTitleScrollTimer;
-    private double _taskTitleOverflow;
     private int _taskTitleDirection = 1;
+    private double _taskTitleOverflow;
     private int _taskTitlePauseTicksRemaining;
 
     public TitleBarComponent()
@@ -53,9 +49,6 @@ public partial class TitleBarComponent : Grid
         Loaded += (_, _) => Dispatcher.UIThread.Post(UpdateTaskTitleAnimation, DispatcherPriority.Render);
         DetachedFromVisualTree += (_, _) => _taskTitleScrollTimer.Stop();
     }
-
-    public static readonly StyledProperty<string?> DropMsgProperty =
-        AvaloniaProperty.Register<TitleBarComponent, string?>(nameof(DropMsg));
 
     public string? DropMsg
     {
@@ -163,13 +156,10 @@ public partial class TitleBarComponent : Grid
     private async void AddAcountButton_OnClick(object? sender, RoutedEventArgs e)
     {
         AccountFlyout.Flyout.Hide();
-        var tryGetHostId = ((Control)Root!).TryGetHostId()!;
+        var tryGetHostId = Root!.TryGetHostId()!;
         var result = await AddAccount.Main(tryGetHostId, Data.ConfigEntry.AuthServers);
         if (result == null) return;
-        foreach (var minecraftAccount in result.JavaAccounts)
-        {
-            Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
-        }
+        foreach (var minecraftAccount in result.JavaAccounts) Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
         if (result.JavaAccounts.Count > 0)
             Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.JavaAccounts[^1];
         if (result.BedrockAccount is { } bedrockAccount)
@@ -194,7 +184,7 @@ public partial class TitleBarComponent : Grid
             Data.ConfigEntry.MinecraftAccounts.Remove(account);
         }
 
-        NotificationGateway.Notice(Root.GetTopLevel(), new NotificationOptions()
+        Root.GetTopLevel().Notice(new NotificationOptions
         {
             Content = $"已移除账户：{account.Name} ({account.DisplayAccountNote})",
             Type = NotificationType.Success,
@@ -205,7 +195,7 @@ public partial class TitleBarComponent : Grid
                 {
                     Data.ConfigEntry.MinecraftAccounts.Add(account);
                     Data.ConfigEntry.UsingMinecraftMinecraftAccount = account;
-                }, true),
+                }, true)
             ]
         });
 
@@ -260,6 +250,7 @@ public partial class TitleBarComponent : Grid
         tioTabWindowBase.CreateTab(tabEntry);
         tioTabWindowBase.SelectTab(tabEntry);
     }
+
     private void ToolsButton_OnClick(object? sender, RoutedEventArgs e)
     {
         var tioTabWindowBase = Root.GetTopLevel() as TioTabWindowBase;
@@ -317,12 +308,12 @@ public partial class TitleBarComponent : Grid
         if (sender is not Button btn || btn.Tag is not MinecraftAccount account) return;
 
         AccountFlyout.Flyout.Hide();
-        var hostId = ((Control)Root!).TryGetHostId();
+        var hostId = Root!.TryGetHostId();
         var result = await ChangeSkinDialog.Show(hostId, null);
         if (!string.IsNullOrEmpty(result) && File.Exists(result))
             account.Skin = Convert.ToBase64String(await File.ReadAllBytesAsync(result));
     }
-    
+
     private void InputElement_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         AccountFlyout.Flyout.Hide();

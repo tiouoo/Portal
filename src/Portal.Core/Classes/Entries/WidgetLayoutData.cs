@@ -13,7 +13,7 @@ public sealed class WidgetLayoutData
     public int Rows { get; set; } = 1;
     public bool? ShowBackground { get; set; }
 
-        public object? Data { get; set; }
+    public object? Data { get; set; }
 
     [JsonIgnore]
     public WidgetCellSize Size
@@ -32,31 +32,33 @@ public class InstanceBoundWidgetData
     public string? InstanceFolderPath { get; set; }
 }
 
-public sealed class InstanceWidgetData : InstanceBoundWidgetData { }
+public sealed class InstanceWidgetData : InstanceBoundWidgetData
+{
+}
 
 public sealed class QuickWorldWidgetData : InstanceBoundWidgetData
 {
-        public string? WorldFolderName { get; set; }
+    public string? WorldFolderName { get; set; }
 }
 
 public sealed class QuickServerWidgetData : InstanceBoundWidgetData
 {
-        public string? ServerAddress { get; set; }
-        public int? ServerPort { get; set; }
+    public string? ServerAddress { get; set; }
+    public int? ServerPort { get; set; }
 }
 
 public sealed class MemoryWidgetData
 {
-        public bool? ShowPercentage { get; set; }
+    public bool? ShowPercentage { get; set; }
 }
 
 public sealed class ImageWidgetData
 {
-        public string? ImagePath { get; set; }
-        public bool? StretchFill { get; set; }
+    public string? ImagePath { get; set; }
+    public bool? StretchFill { get; set; }
 }
 
 public sealed class NewsWidgetData
 {
-        public string? Filter { get; set; }
+    public string? Filter { get; set; }
 }

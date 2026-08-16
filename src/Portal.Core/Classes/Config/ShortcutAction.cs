@@ -2,7 +2,6 @@ namespace Portal.Core.Classes.Config;
 
 public enum ShortcutAction
 {
-    
     NewTab,
     CloseTab,
     CloseOtherTabs,
@@ -22,7 +21,7 @@ public enum ShortcutAction
     SelectTab8,
     SelectTab9,
 
-    
+
     OpenStartPage,
     OpenNewTabPage,
     OpenWidgetsPage,
@@ -35,12 +34,12 @@ public enum ShortcutAction
     OpenTaskPage,
     OpenSettingsPage,
 
-    
+
     OpenAggregatedSearch,
     OpenCreateInstanceDialog,
     AddMinecraftFolder,
 
-    
+
     ToggleTheme,
     OpenDebugPage,
     RestartApp,

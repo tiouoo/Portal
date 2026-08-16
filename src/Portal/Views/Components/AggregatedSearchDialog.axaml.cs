@@ -1,13 +1,7 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
@@ -34,19 +28,16 @@ public partial class AggregatedSearchDialog : UserControl
             var a = (s! as Control)!.GetTopLevel() as CustomDialogWindow;
             a.KeyDown += (_, e) =>
             {
-                if (e.Key == Key.Escape)
-                {
-                    a.Close();
-                }
+                if (e.Key == Key.Escape) a.Close();
             };
             a.Loaded += (_, e) =>
             {
                 Data.UiProperty.AggregatedSearchResults.Clear();
                 Data.UiProperty.AggregatedSearchResults.AddRange(
                     Searcher.Search(
-                        Data.UiProperty.AggregatedSearchQuery, 
+                        Data.UiProperty.AggregatedSearchQuery,
                         Data.UiProperty.AggregatedSelectedType.EnumFlag));
-                
+
                 SearchBox.Focus();
                 SearchBox.SelectAll();
             };
@@ -71,13 +62,14 @@ public partial class AggregatedSearchDialog : UserControl
     }
 }
 
-public partial class AggregatedSearchDialogViewModel : ObservableObject
+public class AggregatedSearchDialogViewModel : ObservableObject
 {
     public readonly TioWindow Window;
-    public Data Data => Data.Instance;
 
     public AggregatedSearchDialogViewModel(TioWindow window)
     {
         Window = window;
     }
+
+    public Data Data => Data.Instance;
 }

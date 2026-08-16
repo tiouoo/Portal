@@ -9,10 +9,8 @@
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:entries="clr-namespace:Portal.Classes.Entries;assembly=Portal.Core"
     xmlns:entries1="clr-namespace:Portal.Core.Classes.Entries;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:search="clr-namespace:Portal.Module.AggregatedSearch;assembly=Portal.Core"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -24,12 +22,7 @@
                         Opacity="0.6"
                         x:Key="IndicatorBackground" />
                 </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush
-                        Color="{DynamicResource SystemAccentColorLight3}"
-                        Opacity="1"
-                        x:Key="IndicatorBackground" />
-                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark" />
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>

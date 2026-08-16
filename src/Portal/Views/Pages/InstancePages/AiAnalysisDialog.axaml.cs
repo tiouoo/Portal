@@ -11,7 +11,10 @@ namespace Portal.Views.Pages.InstancePages;
 
 internal partial class AiAnalysisDialog : UserControl
 {
-    public AiAnalysisDialog() => InitializeComponent();
+    public AiAnalysisDialog()
+    {
+        InitializeComponent();
+    }
 
     private async void Copy_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -21,7 +24,7 @@ internal partial class AiAnalysisDialog : UserControl
         if (topLevel is null)
             return;
         await topLevel.Clipboard!.SetTextAsync(viewModel.ResultText);
-        NotificationGateway.Notice(topLevel, "分析结果已复制", NotificationType.Success);
+        topLevel.Notice("分析结果已复制", NotificationType.Success);
     }
 
     private void Close_OnClick(object? sender, RoutedEventArgs e)
@@ -33,6 +36,9 @@ internal partial class AiAnalysisDialog : UserControl
 
 internal partial class AiAnalysisDialogViewModel : ObservableObject, IDialogContext
 {
+    private static readonly IBrush WorkingBrush = new SolidColorBrush(Color.Parse("#5B8FF9"));
+    private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#4CAF50"));
+    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#F44336"));
     [ObservableProperty] public partial string ResultText { get; set; } = string.Empty;
     [ObservableProperty] public partial string StatusText { get; set; } = "AI 分析中…";
     [ObservableProperty] public partial bool IsComplete { get; set; }
@@ -40,7 +46,17 @@ internal partial class AiAnalysisDialogViewModel : ObservableObject, IDialogCont
 
     public IBrush StatusColor => IsFailed ? ErrorBrush : IsComplete ? SuccessBrush : WorkingBrush;
 
-    public void Append(string chunk) => ResultText += chunk;
+    public void Close()
+    {
+        RequestClose?.Invoke(this, null);
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    public void Append(string chunk)
+    {
+        ResultText += chunk;
+    }
 
     public void Complete()
     {
@@ -55,15 +71,13 @@ internal partial class AiAnalysisDialogViewModel : ObservableObject, IDialogCont
         StatusText = $"分析失败：{message}";
     }
 
-    partial void OnIsCompleteChanged(bool value) => OnPropertyChanged(nameof(StatusColor));
+    partial void OnIsCompleteChanged(bool value)
+    {
+        OnPropertyChanged(nameof(StatusColor));
+    }
 
-    partial void OnIsFailedChanged(bool value) => OnPropertyChanged(nameof(StatusColor));
-
-    public void Close() => RequestClose?.Invoke(this, null);
-
-    public event EventHandler<object?>? RequestClose;
-
-    private static readonly IBrush WorkingBrush = new SolidColorBrush(Color.Parse("#5B8FF9"));
-    private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#4CAF50"));
-    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#F44336"));
+    partial void OnIsFailedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(StatusColor));
+    }
 }

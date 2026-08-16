@@ -23,17 +23,26 @@ public static class BedrockDataPathResolver
         return config.EnableLauncherSharedData ? GetWindowsDataRoot(config) : GetPortalDataRoot();
     }
 
-    private static string GetPortalIsolationRoot(string instancePath) =>
-        Path.Combine(instancePath, "config", "Portal", "isolation");
+    private static string GetPortalIsolationRoot(string instancePath)
+    {
+        return Path.Combine(instancePath, "config", "Portal", "isolation");
+    }
 
-    private static string GetInstanceSharedDataRoot(BedrockInstanceConfig config) =>
-        Path.Combine(config.InstancePath, GetBedrockFolderName(config));
+    private static string GetInstanceSharedDataRoot(BedrockInstanceConfig config)
+    {
+        return Path.Combine(config.InstancePath, GetBedrockFolderName(config));
+    }
 
-    private static string GetWindowsDataRoot(BedrockInstanceConfig config) =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GetBedrockFolderName(config));
+    private static string GetWindowsDataRoot(BedrockInstanceConfig config)
+    {
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            GetBedrockFolderName(config));
+    }
 
-    private static string GetBedrockFolderName(BedrockInstanceConfig config) =>
-        config.Type == BedrockInstanceReleaseType.Release ? "Minecraft Bedrock" : "Minecraft Bedrock Preview";
+    private static string GetBedrockFolderName(BedrockInstanceConfig config)
+    {
+        return config.Type == BedrockInstanceReleaseType.Release ? "Minecraft Bedrock" : "Minecraft Bedrock Preview";
+    }
 
     private static string GetLinuxProtonDataRoot(BedrockInstanceConfig config)
     {
@@ -42,7 +51,8 @@ public static class BedrockDataPathResolver
         {
             var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
             if (string.IsNullOrWhiteSpace(dataHome))
-                dataHome = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
+                dataHome = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local",
+                    "share");
             prefix = Path.Combine(dataHome, "Portal", "Bedrock", "proton-prefix");
         }
 
@@ -83,18 +93,26 @@ public static class BedrockDataPathResolver
         return userIds;
     }
 
-    public static string GetWorldsFolder(BedrockInstanceConfig config, string userId) =>
-        Path.Combine(GetMojangDataRoot(config, userId), "minecraftWorlds");
+    public static string GetWorldsFolder(BedrockInstanceConfig config, string userId)
+    {
+        return Path.Combine(GetMojangDataRoot(config, userId), "minecraftWorlds");
+    }
 
     public static void EnsurePortalDataDirectories()
     {
         var mojangRoot = Path.Combine(GetPortalDataRoot(), "Users", "Shared", "games", "com.mojang");
-        foreach (var folder in new[] { "behavior_packs", "minecraftpe", "minecraftWorlds", "resource_packs", "Screenshots", "skin_packs" })
+        foreach (var folder in new[]
+                 {
+                     "behavior_packs", "minecraftpe", "minecraftWorlds", "resource_packs", "Screenshots", "skin_packs"
+                 })
             Directory.CreateDirectory(Path.Combine(mojangRoot, folder));
     }
 
-    private static string GetPortalDataRoot() => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "cc.tiouo.Portal", "Bedrock");
+    private static string GetPortalDataRoot()
+    {
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "cc.tiouo.Portal", "Bedrock");
+    }
 
     private static string GetUwpLocalStateRoot(BedrockInstanceConfig config)
     {
@@ -136,18 +154,23 @@ public static class BedrockDataPathResolver
         }
     }
 
-    public static string GetFolder(BedrockInstanceConfig config, MinecraftSpecialFolder folder) => folder switch
+    public static string GetFolder(BedrockInstanceConfig config, MinecraftSpecialFolder folder)
     {
-        MinecraftSpecialFolder.InstanceFolder => config.InstancePath,
-        MinecraftSpecialFolder.SavesFolder => GetWorldsFolder(config, "Shared"),
-        MinecraftSpecialFolder.ResourcePacksFolder => Path.Combine(GetMojangDataRoot(config), "resource_packs"),
-        MinecraftSpecialFolder.BehaviorPacksFolder => Path.Combine(GetMojangDataRoot(config), "behavior_packs"),
-        MinecraftSpecialFolder.SkinPacksFolder => Path.Combine(GetMojangDataRoot(config), "skin_packs"),
-        MinecraftSpecialFolder.WorldTemplatesFolder => Path.Combine(GetMojangDataRoot(config), "world_templates"),
-        MinecraftSpecialFolder.DevelopmentResourcePacksFolder => Path.Combine(GetMojangDataRoot(config), "development_resource_packs"),
-        MinecraftSpecialFolder.DevelopmentBehaviorPacksFolder => Path.Combine(GetMojangDataRoot(config), "development_behavior_packs"),
-        MinecraftSpecialFolder.ScreenshotsFolder => Path.Combine(GetMojangDataRoot(config), "Screenshots"),
-        MinecraftSpecialFolder.ConfigFolder => Path.Combine(config.InstancePath, BedrockHelper.ConfigFolder),
-        _ => config.InstancePath
-    };
+        return folder switch
+        {
+            MinecraftSpecialFolder.InstanceFolder => config.InstancePath,
+            MinecraftSpecialFolder.SavesFolder => GetWorldsFolder(config, "Shared"),
+            MinecraftSpecialFolder.ResourcePacksFolder => Path.Combine(GetMojangDataRoot(config), "resource_packs"),
+            MinecraftSpecialFolder.BehaviorPacksFolder => Path.Combine(GetMojangDataRoot(config), "behavior_packs"),
+            MinecraftSpecialFolder.SkinPacksFolder => Path.Combine(GetMojangDataRoot(config), "skin_packs"),
+            MinecraftSpecialFolder.WorldTemplatesFolder => Path.Combine(GetMojangDataRoot(config), "world_templates"),
+            MinecraftSpecialFolder.DevelopmentResourcePacksFolder => Path.Combine(GetMojangDataRoot(config),
+                "development_resource_packs"),
+            MinecraftSpecialFolder.DevelopmentBehaviorPacksFolder => Path.Combine(GetMojangDataRoot(config),
+                "development_behavior_packs"),
+            MinecraftSpecialFolder.ScreenshotsFolder => Path.Combine(GetMojangDataRoot(config), "Screenshots"),
+            MinecraftSpecialFolder.ConfigFolder => Path.Combine(config.InstancePath, BedrockHelper.ConfigFolder),
+            _ => config.InstancePath
+        };
+    }
 }

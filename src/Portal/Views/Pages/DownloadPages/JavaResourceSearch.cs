@@ -1,20 +1,17 @@
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using AsyncImageLoader;
-using Portal.Module.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Provider;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
-using Portal.Services;
-using Portal.Views.Pages.InstancePages;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Services;
+using Portal.Module.Imaging;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -33,12 +30,16 @@ public static class JavaResourceDefinitions
 {
     public static JavaResourceDefinition Modpack { get; } =
         new(JavaResourceKind.Modpack, "整合包", "modpack", 4471, false, true);
+
     public static JavaResourceDefinition ResourcePack { get; } =
         new(JavaResourceKind.ResourcePack, "材质包", "resourcepack", 12, true, false);
+
     public static JavaResourceDefinition ShaderPack { get; } =
         new(JavaResourceKind.ShaderPack, "光影包", "shader", 6552, true, false);
+
     public static JavaResourceDefinition DataPack { get; } =
         new(JavaResourceKind.DataPack, "数据包", "datapack", 6945, true, false);
+
     public static JavaResourceDefinition Save { get; } =
         new(JavaResourceKind.Save, "存档", "world", 17, true, false, false);
 }
@@ -49,11 +50,26 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
     private static Task<IReadOnlyList<VersionManifestEntry>>? _versionLoadTask;
     private static readonly BoundedCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new(32);
-    private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseForge = new();
-    private bool _initialized;
     private readonly CancellationTokenSource _disposeCancellation = new();
+    private readonly ModrinthProvider _modrinth = new();
     private bool _disposed;
+    private bool _initialized;
+
+    protected JavaResourceSearchViewModel(JavaResourceDefinition definition)
+    {
+        Definition = definition;
+        Sources = definition.SupportsModrinth
+            ?
+            [
+                new JavaResourceSearchSource("CurseForge", SearchSource.CurseForge),
+                new JavaResourceSearchSource("Modrinth", SearchSource.Modrinth)
+            ]
+            : [new JavaResourceSearchSource("CurseForge", SearchSource.CurseForge)];
+        SelectedSource = Sources.Last();
+        SelectedLoader = Loaders[0];
+        SelectedSort = SortOptions[0];
+    }
 
     public JavaResourceDefinition Definition { get; }
     public string PageTitle => $"{Definition.DisplayName}搜索";
@@ -62,34 +78,40 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     public ObservableCollection<JavaResourceSearchResultItem> Results { get; } = [];
     public ObservableCollection<string> MinecraftVersions { get; } = [];
     public IReadOnlyList<JavaResourceSearchSource> Sources { get; }
-    protected JavaResourceSearchViewModel(JavaResourceDefinition definition)
-    {
-        Definition = definition;
-        Sources = definition.SupportsModrinth
-            ? [new("CurseForge", SearchSource.CurseForge), new("Modrinth", SearchSource.Modrinth)]
-            : [new("CurseForge", SearchSource.CurseForge)];
-        SelectedSource = Sources.Last();
-        SelectedLoader = Loaders[0];
-        SelectedSort = SortOptions[0];
-    }
+
     public IReadOnlyList<ModSearchLoader> Loaders { get; } =
-        [new("全部加载器", ModLoaderType.Any), new("Forge", ModLoaderType.Forge),
-            new("NeoForge", ModLoaderType.NeoForge), new("Fabric", ModLoaderType.Fabric),
-            new("Quilt", ModLoaderType.Quilt)];
+    [
+        new("全部加载器", ModLoaderType.Any), new("Forge", ModLoaderType.Forge),
+        new("NeoForge", ModLoaderType.NeoForge), new("Fabric", ModLoaderType.Fabric),
+        new("Quilt", ModLoaderType.Quilt)
+    ];
+
     public IReadOnlyList<ModSearchSort> SortOptions { get; } =
-        [new("相关度", SearchSort.Relevance), new("热度", SearchSort.Popularity),
-            new("最近更新", SearchSort.Updated), new("最新发布", SearchSort.Newest)];
+    [
+        new("相关度", SearchSort.Relevance), new("热度", SearchSort.Popularity),
+        new("最近更新", SearchSort.Updated), new("最新发布", SearchSort.Newest)
+    ];
 
     [ObservableProperty] public partial JavaResourceSearchSource? SelectedSource { get; set; }
     [ObservableProperty] public partial ModSearchLoader? SelectedLoader { get; set; }
     [ObservableProperty] public partial ModSearchSort? SelectedSort { get; set; }
-    [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
     [ObservableProperty] public partial string GameVersion { get; set; } = string.Empty;
     [ObservableProperty] public partial string StatusText { get; set; } = "准备搜索...";
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
     public bool HasResults => Results.Count > 0;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _disposeCancellation.Cancel();
+        Results.Clear();
+        MinecraftVersions.Clear();
+    }
+
+    [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
 
     public async Task InitializeAsync()
     {
@@ -126,11 +148,15 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             CurrentPage = 1;
             return Task.CompletedTask;
         }
+
         return SearchAsync(string.IsNullOrWhiteSpace(SearchText));
     }
 
     [RelayCommand]
-    private Task RetryAsync() => SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+    private Task RetryAsync()
+    {
+        return SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+    }
 
     [RelayCommand]
     private Task GoToPageAsync(int page)
@@ -147,6 +173,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             CurrentPage = 1;
             return;
         }
+
         _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
     }
 
@@ -199,9 +226,11 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
                 items.Select(item => item.ProjectId), cancellationToken);
             return new JavaResourceSearchPage(items.Select(item =>
-                new JavaResourceSearchResultItem(
-                    translations.TryGetValue(item.ProjectId, out var translated) ? item with { Summary = translated } : item,
-                    Definition, request.GameVersion, request.Loader)).ToArray(),
+                    new JavaResourceSearchResultItem(
+                        translations.TryGetValue(item.ProjectId, out var translated)
+                            ? item with { Summary = translated }
+                            : item,
+                        Definition, request.GameVersion, request.Loader)).ToArray(),
                 page.TotalCount);
         }
 
@@ -218,12 +247,15 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             PageSize = PageSize
         }, cancellationToken);
         var curseForgeItems = curseForgePage.Items.ToArray();
-        var curseForgeTranslations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.CurseForge,
+        var curseForgeTranslations = await ProjectTranslationService.GetTranslationsAsync(
+            ProjectTranslationSource.CurseForge,
             curseForgeItems.Select(item => item.Id.ToString()), cancellationToken);
         return new JavaResourceSearchPage(curseForgeItems.Select(item =>
-            new JavaResourceSearchResultItem(
-                curseForgeTranslations.TryGetValue(item.Id.ToString(), out var translated) ? item with { Summary = translated } : item,
-                Definition, request.GameVersion, request.Loader)).ToArray(),
+                new JavaResourceSearchResultItem(
+                    curseForgeTranslations.TryGetValue(item.Id.ToString(), out var translated)
+                        ? item with { Summary = translated }
+                        : item,
+                    Definition, request.GameVersion, request.Loader)).ToArray(),
             curseForgePage.TotalCount);
     }
 
@@ -241,6 +273,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             Results.Clear();
             foreach (var item in page.Items) Results.Add(item);
         }
+
         TotalCount = page.TotalCount;
         HasError = false;
         StatusText = page.TotalCount == 0
@@ -249,11 +282,14 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         OnPropertyChanged(nameof(HasResults));
     }
 
-    private bool IsCurrent(JavaResourceSearchRequest request) => !_disposed && Definition.Kind == request.Kind &&
-        SelectedSource?.Kind == request.Source && SearchText.Trim() == request.Query &&
-        GameVersion.Trim() == request.GameVersion &&
-        (ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any) == request.Loader &&
-        SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
+    private bool IsCurrent(JavaResourceSearchRequest request)
+    {
+        return !_disposed && Definition.Kind == request.Kind &&
+               SelectedSource?.Kind == request.Source && SearchText.Trim() == request.Query &&
+               GameVersion.Trim() == request.GameVersion &&
+               (ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any) == request.Loader &&
+               SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
+    }
 
     private async Task LoadVersionsAsync()
     {
@@ -265,10 +301,11 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         {
             return;
         }
+
         try
         {
             var entries = Data.UiProperty.MinecraftVersionManifestEntries;
-            
+
             if (_versionLoadTask is { IsCompleted: true, IsCompletedSuccessfully: false })
                 _versionLoadTask = null;
             _versionLoadTask ??= entries.Count == 0
@@ -296,30 +333,27 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         }
     }
 
-    public void Dispose()
+    private static ModrinthSearchIndex ToModrinthSort(SearchSort sort)
     {
-        if (_disposed) return;
-        _disposed = true;
-        _disposeCancellation.Cancel();
-        Results.Clear();
-        MinecraftVersions.Clear();
+        return sort switch
+        {
+            SearchSort.Popularity => ModrinthSearchIndex.Downloads,
+            SearchSort.Updated => ModrinthSearchIndex.DateUpdated,
+            SearchSort.Newest => ModrinthSearchIndex.DatePublished,
+            _ => ModrinthSearchIndex.Relevance
+        };
     }
 
-    private static ModrinthSearchIndex ToModrinthSort(SearchSort sort) => sort switch
+    private static SortField ToCurseForgeSort(SearchSort sort)
     {
-        SearchSort.Popularity => ModrinthSearchIndex.Downloads,
-        SearchSort.Updated => ModrinthSearchIndex.DateUpdated,
-        SearchSort.Newest => ModrinthSearchIndex.DatePublished,
-        _ => ModrinthSearchIndex.Relevance
-    };
-
-    private static SortField ToCurseForgeSort(SearchSort sort) => sort switch
-    {
-        SearchSort.Popularity => SortField.Popularity,
-        SearchSort.Updated => SortField.LastUpdated,
-        SearchSort.Newest => SortField.ReleasedDate,
-        _ => SortField.Featured
-    };
+        return sort switch
+        {
+            SearchSort.Popularity => SortField.Popularity,
+            SearchSort.Updated => SortField.LastUpdated,
+            SearchSort.Newest => SortField.ReleasedDate,
+            _ => SortField.Featured
+        };
+    }
 
     private static async Task<IReadOnlyList<VersionManifestEntry>> LoadReleaseManifestAsync()
     {
@@ -330,11 +364,12 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
     private static MinecraftVersionSortKey ParseMinecraftVersion(string value)
     {
-        var match = System.Text.RegularExpressions.Regex.Match(value,
+        var match = Regex.Match(value,
             @"^(?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?(?<suffix>.*)$");
         if (!match.Success) return new MinecraftVersionSortKey(-1, -1, -1, -1);
         var suffix = match.Groups["suffix"].Value;
-        var stage = string.IsNullOrEmpty(suffix) ? 3 : suffix.Contains("rc", StringComparison.OrdinalIgnoreCase) ? 2 :
+        var stage = string.IsNullOrEmpty(suffix) ? 3 :
+            suffix.Contains("rc", StringComparison.OrdinalIgnoreCase) ? 2 :
             suffix.Contains("pre", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         return new MinecraftVersionSortKey(int.Parse(match.Groups["major"].Value),
             int.Parse(match.Groups["minor"].Value),
@@ -344,15 +379,6 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
 public sealed partial class JavaResourceSearchResultItem : ObservableObject
 {
-    [ObservableProperty] public partial string Name { get; set; }
-    [ObservableProperty] public partial string Summary { get; set; }
-    [ObservableProperty] public partial string? IconUrl { get; set; }
-    [ObservableProperty] public partial string Metadata { get; set; }
-    public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
-    [ObservableProperty] public partial bool IsFavorite { get; set; }
-    public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
-    public JavaResourceDetailsTarget Target { get; private set; }
-
     public JavaResourceSearchResultItem(ModrinthResource item, JavaResourceDefinition definition,
         string gameVersion, ModLoaderType loader)
     {
@@ -362,7 +388,8 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Metadata = $"{FormatRelativeTime(item.Updated)}·{item.DownloadCount:N0} 下载";
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.Modrinth, item.ProjectId,
             gameVersion, loader);
-        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
+        IsFavorite =
+            FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
     }
 
     public JavaResourceSearchResultItem(CurseforgeResource item, JavaResourceDefinition definition,
@@ -374,8 +401,18 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.CurseForge, item.Id.ToString(),
             gameVersion, loader);
-        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
+        IsFavorite =
+            FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
     }
+
+    [ObservableProperty] public partial string Name { get; set; }
+    [ObservableProperty] public partial string Summary { get; set; }
+    [ObservableProperty] public partial string? IconUrl { get; set; }
+    [ObservableProperty] public partial string Metadata { get; set; }
+    public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
+    [ObservableProperty] public partial bool IsFavorite { get; set; }
+    public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
+    public JavaResourceDetailsTarget Target { get; private set; }
 
     public void Update(JavaResourceSearchResultItem item)
     {
@@ -388,10 +425,14 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         IsFavorite = item.IsFavorite;
     }
 
-    private static FavoriteEdition GetEdition(JavaResourceDefinition definition) => definition.Kind is
-        JavaResourceKind.BedrockBehaviorPack or JavaResourceKind.BedrockResourcePack or JavaResourceKind.BedrockWorld or JavaResourceKind.BedrockWorldTemplate
+    private static FavoriteEdition GetEdition(JavaResourceDefinition definition)
+    {
+        return definition.Kind is
+            JavaResourceKind.BedrockBehaviorPack or JavaResourceKind.BedrockResourcePack
+            or JavaResourceKind.BedrockWorld or JavaResourceKind.BedrockWorldTemplate
             ? FavoriteEdition.Bedrock
             : FavoriteEdition.Java;
+    }
 
     internal static string FormatRelativeTime(DateTime timestamp)
     {
@@ -408,22 +449,37 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
 }
 
 public sealed record JavaResourceSearchSource(string DisplayName, SearchSource Kind);
-public sealed record JavaResourceSearchRequest(JavaResourceKind Kind, SearchSource Source, string Query,
-    string GameVersion, ModLoaderType Loader, SearchSort Sort, int Page);
+
+public sealed record JavaResourceSearchRequest(
+    JavaResourceKind Kind,
+    SearchSource Source,
+    string Query,
+    string GameVersion,
+    ModLoaderType Loader,
+    SearchSort Sort,
+    int Page);
+
 public sealed record JavaResourceSearchPage(IReadOnlyList<JavaResourceSearchResultItem> Items, int TotalCount);
 
 public sealed class ModpackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Modpack);
-public sealed class ResourcePackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.ResourcePack);
+
+public sealed class ResourcePackSearchPageViewModel()
+    : JavaResourceSearchViewModel(JavaResourceDefinitions.ResourcePack);
+
 public sealed class ShaderPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.ShaderPack);
+
 public sealed class DataPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.DataPack);
+
 public sealed class SaveSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Save);
-public sealed class BedrockResourceSearchViewModel(JavaResourceDefinition definition) : JavaResourceSearchViewModel(definition);
+
+public sealed class BedrockResourceSearchViewModel(JavaResourceDefinition definition)
+    : JavaResourceSearchViewModel(definition);
 
 internal sealed class BoundedCache<TKey, TValue>(int capacity) where TKey : notnull
 {
     private readonly Dictionary<TKey, LinkedListNode<(TKey Key, TValue Value)>> _entries = new();
-    private readonly LinkedList<(TKey Key, TValue Value)> _usage = new();
     private readonly object _lock = new();
+    private readonly LinkedList<(TKey Key, TValue Value)> _usage = new();
 
     public bool TryGetValue(TKey key, out TValue? value)
     {

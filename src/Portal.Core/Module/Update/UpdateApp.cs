@@ -24,13 +24,8 @@ public static class UpdateApp
 {
     private const int RetainedUpdateDirectories = 1;
 
-    public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller, bool WaitForStart = false);
-
-    private sealed class UpdateTaskHandle
-    {
-        public required ManagedTask Task { get; init; }
-        public PreparedUpdate? PreparedUpdate { get; set; }
-    }
+    private const int DownloadBufferSize = 81920;
+    private const double DownloadRetryBackoffSeconds = 1.5;
 
     public static async Task<PreparedUpdate?> Prepare(TopLevel sender)
     {
@@ -56,10 +51,10 @@ public static class UpdateApp
             var packagePath = Path.Combine(updateDirectory, asset.Name);
             Logger.Info($"已选择更新包：{asset.Name}，下载目录：{updateDirectory}");
 
-            sender.Notice($"正在下载 {asset.Name}", NotificationType.Information);
+            sender.Notice($"正在下载 {asset.Name}");
             var taskHandle = await Download(asset, packagePath);
 
-            
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "installer")
             {
                 var installerUpdate = new PreparedUpdate(
@@ -67,18 +62,20 @@ public static class UpdateApp
                 CompletePreparation(taskHandle, installerUpdate);
                 return installerUpdate;
             }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType is "deb" or "rpm")
             {
                 var processPath = Environment.ProcessPath
                                   ?? throw new InvalidOperationException("无法确定当前程序路径。");
                 var packageUpdate = new PreparedUpdate(
-                    await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType, processPath)), true, true);
+                    await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType, processPath)),
+                    true, true);
                 CompletePreparation(taskHandle, packageUpdate);
                 return packageUpdate;
             }
 
             var path = Environment.ProcessPath
-                              ?? throw new InvalidOperationException("无法确定当前程序路径。");
+                       ?? throw new InvalidOperationException("无法确定当前程序路径。");
             ProcessStartInfo updater;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "portable")
                 updater = await Task.Run(() => PrepareWindowsPortable(packagePath, updateDirectory, path));
@@ -114,6 +111,7 @@ public static class UpdateApp
             if (process.ExitCode != 0)
                 throw new InvalidOperationException($"更新安装程序未能启动（退出代码 {process.ExitCode}）。");
         }
+
         Environment.Exit(0);
     }
 
@@ -165,7 +163,6 @@ public static class UpdateApp
 
     private static async Task<UpdateTaskHandle> Download(UpdateAsset asset, string destination)
     {
-        
         var downloadUrl = GithubMirror.Apply(asset.DownloadUrl);
         if (!downloadUrl.Equals(asset.DownloadUrl, StringComparison.Ordinal))
             Logger.Info($"Downloading update via GitHub mirror: {downloadUrl}");
@@ -203,7 +200,7 @@ public static class UpdateApp
                     CanExecute = managedTask => managedTask.Status == ManagedTaskStatus.Completed
                                                 && handle?.PreparedUpdate is not null,
                     IsVisible = managedTask => managedTask.Status == ManagedTaskStatus.Completed
-                                              && handle?.PreparedUpdate is not null
+                                               && handle?.PreparedUpdate is not null
                 }
             ]
         }, async context =>
@@ -237,6 +234,7 @@ public static class UpdateApp
             File.Delete(temporary);
             throw new InvalidDataException($"更新包大小校验失败（预期 {asset.Size}，实际 {actualSize}）。");
         }
+
         if (asset.Sha256 is not null)
         {
             await using var package = File.OpenRead(temporary);
@@ -247,16 +245,12 @@ public static class UpdateApp
                 throw new InvalidDataException("更新包 SHA-256 校验失败。");
             }
         }
+
         File.Move(temporary, destination, true);
         return handle;
     }
 
-    private const int DownloadBufferSize = 81920;
-    private const double DownloadRetryBackoffSeconds = 1.5;
 
-    
-    
-    
     private static async Task ResumableDownloadAsync(string url, string path, long expectedSize,
         Action<ResourceDownloadProgressChangedEventArgs> progress, CancellationToken cancellationToken)
     {
@@ -266,7 +260,7 @@ public static class UpdateApp
         {
             try
             {
-                long resumeFrom = File.Exists(path) ? new FileInfo(path).Length : 0;
+                var resumeFrom = File.Exists(path) ? new FileInfo(path).Length : 0;
                 await ResumableDownloadAttemptAsync(url, path, expectedSize, resumeFrom, progress, cancellationToken);
                 return;
             }
@@ -277,13 +271,14 @@ public static class UpdateApp
             catch (HttpRequestException exception)
             {
                 lastError = exception;
-                
+
                 if (exception.StatusCode == HttpStatusCode.TooManyRequests && attempt < maxRetries)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(DownloadRetryBackoffSeconds * (attempt + 1) * 5),
                         cancellationToken);
                     continue;
                 }
+
                 if (attempt < maxRetries)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(DownloadRetryBackoffSeconds * (attempt + 1)),
@@ -301,18 +296,20 @@ public static class UpdateApp
                     continue;
                 }
             }
+
             throw lastError ?? new IOException("更新包下载失败。");
         }
     }
 
-    private static async Task ResumableDownloadAttemptAsync(string url, string path, long expectedSize, long initialOffset,
+    private static async Task ResumableDownloadAttemptAsync(string url, string path, long expectedSize,
+        long initialOffset,
         Action<ResourceDownloadProgressChangedEventArgs> progress, CancellationToken cancellationToken)
     {
-        long resumeFrom = initialOffset;
+        var resumeFrom = initialOffset;
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        
+
         if (expectedSize > 0 && resumeFrom >= expectedSize)
-            resumeFrom = 0; 
+            resumeFrom = 0;
         if (resumeFrom > 0)
             request.Headers.Range = new RangeHeaderValue(resumeFrom, null);
 
@@ -326,15 +323,16 @@ public static class UpdateApp
             ?? (expectedSize > 0 ? expectedSize : 0);
 
         await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
-        
+
         var fileMode = supportsResume ? FileMode.Append : FileMode.Create;
-        await using var output = new FileStream(path, fileMode, FileAccess.Write, FileShare.ReadWrite, DownloadBufferSize,
+        await using var output = new FileStream(path, fileMode, FileAccess.Write, FileShare.ReadWrite,
+            DownloadBufferSize,
             FileOptions.Asynchronous);
 
         var buffer = new byte[DownloadBufferSize];
-        long downloaded = supportsResume ? resumeFrom : 0;
+        var downloaded = supportsResume ? resumeFrom : 0;
         var stopwatch = Stopwatch.StartNew();
-        long lastReportBytes = downloaded;
+        var lastReportBytes = downloaded;
         var lastReportTime = stopwatch.Elapsed;
         int read;
         while ((read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
@@ -352,6 +350,7 @@ public static class UpdateApp
                 lastReportTime = now;
             }
         }
+
         await output.FlushAsync(cancellationToken);
 
         if (total > 0 && downloaded != total)
@@ -403,7 +402,6 @@ public static class UpdateApp
                 .ThenByDescending(directory => directory.LastWriteTimeUtc)
                 .Skip(RetainedUpdateDirectories);
             foreach (var directory in oldDirectories)
-            {
                 try
                 {
                     directory.Delete(true);
@@ -412,7 +410,6 @@ public static class UpdateApp
                 {
                     Logger.Error($"删除过期更新目录失败：{directory.FullName}", ex);
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -428,34 +425,34 @@ public static class UpdateApp
         var replacement = Directory.GetFiles(extracted, "*.exe", SearchOption.AllDirectories).SingleOrDefault()
                           ?? throw new InvalidDataException("portable 更新包中必须有且只有一个 EXE。");
         var script = Path.Combine(updateDirectory, "apply-update.ps1");
-        
+
         File.WriteAllText(script, $$"""
-            $ErrorActionPreference = 'Stop'
-            $pidToWait = {{Environment.ProcessId}}
-            $target = '{{Ps(target)}}'
-            $source = '{{Ps(replacement)}}'
-            $backup = $target + '.portal-update-old'
-            $newFile = $target + '.portal-update-new'
-            try {
-              Wait-Process -Id $pidToWait -Timeout 60 -ErrorAction SilentlyContinue
-              if (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) { throw 'Portal did not exit in time.' }
-              Copy-Item -LiteralPath $source -Destination $newFile -Force
-              if (Test-Path -LiteralPath $backup) { Remove-Item -LiteralPath $backup -Force }
-              Move-Item -LiteralPath $target -Destination $backup -Force
-              Move-Item -LiteralPath $newFile -Destination $target -Force
-              $process = Start-Process -FilePath $target -WorkingDirectory (Split-Path -Parent $target) -PassThru
-              Start-Sleep -Seconds 5
-              if ($process.HasExited) { throw 'The updated Portal exited immediately.' }
-              Remove-Item -LiteralPath $backup -Force -ErrorAction SilentlyContinue
-            } catch {
-              if (Test-Path -LiteralPath $backup) {
-                Remove-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue
-                Move-Item -LiteralPath $backup -Destination $target -Force
-                Start-Process -FilePath $target -WorkingDirectory (Split-Path -Parent $target)
-              }
-              throw
-            }
-            """, new UTF8Encoding(true));
+                                    $ErrorActionPreference = 'Stop'
+                                    $pidToWait = {{Environment.ProcessId}}
+                                    $target = '{{Ps(target)}}'
+                                    $source = '{{Ps(replacement)}}'
+                                    $backup = $target + '.portal-update-old'
+                                    $newFile = $target + '.portal-update-new'
+                                    try {
+                                      Wait-Process -Id $pidToWait -Timeout 60 -ErrorAction SilentlyContinue
+                                      if (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) { throw 'Portal did not exit in time.' }
+                                      Copy-Item -LiteralPath $source -Destination $newFile -Force
+                                      if (Test-Path -LiteralPath $backup) { Remove-Item -LiteralPath $backup -Force }
+                                      Move-Item -LiteralPath $target -Destination $backup -Force
+                                      Move-Item -LiteralPath $newFile -Destination $target -Force
+                                      $process = Start-Process -FilePath $target -WorkingDirectory (Split-Path -Parent $target) -PassThru
+                                      Start-Sleep -Seconds 5
+                                      if ($process.HasExited) { throw 'The updated Portal exited immediately.' }
+                                      Remove-Item -LiteralPath $backup -Force -ErrorAction SilentlyContinue
+                                    } catch {
+                                      if (Test-Path -LiteralPath $backup) {
+                                        Remove-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue
+                                        Move-Item -LiteralPath $backup -Destination $target -Force
+                                        Start-Process -FilePath $target -WorkingDirectory (Split-Path -Parent $target)
+                                      }
+                                      throw
+                                    }
+                                    """, new UTF8Encoding(true));
         return PowerShell(script, !CanWriteDirectory(Path.GetDirectoryName(target)!));
     }
 
@@ -487,92 +484,93 @@ public static class UpdateApp
         var install = packageType switch
         {
             "deb" => $$"""
-                if command -v apt-get >/dev/null 2>&1; then
-                  apt-get install -y {{Sh(packagePath)}}
-                else
-                  dpkg -i {{Sh(packagePath)}}
-                fi
-                """,
+                       if command -v apt-get >/dev/null 2>&1; then
+                         apt-get install -y {{Sh(packagePath)}}
+                       else
+                         dpkg -i {{Sh(packagePath)}}
+                       fi
+                       """,
             "rpm" => $$"""
-                if command -v dnf >/dev/null 2>&1; then
-                  dnf install -y {{Sh(packagePath)}}
-                elif command -v zypper >/dev/null 2>&1; then
-                  zypper --non-interactive install {{Sh(packagePath)}}
-                else
-                  rpm -Uvh {{Sh(packagePath)}}
-                fi
-                """,
+                       if command -v dnf >/dev/null 2>&1; then
+                         dnf install -y {{Sh(packagePath)}}
+                       elif command -v zypper >/dev/null 2>&1; then
+                         zypper --non-interactive install {{Sh(packagePath)}}
+                       else
+                         rpm -Uvh {{Sh(packagePath)}}
+                       fi
+                       """,
             _ => throw new ArgumentOutOfRangeException(nameof(packageType), packageType, "不支持的 Linux 安装包类型。")
         };
         File.WriteAllText(workerScript, $$"""
-            #!/bin/sh
-            set -eu
-            log={{Sh(log)}}
-            exec >>"$log" 2>&1
-            echo "Portal package update started: $(date -Is)"
-            pid='{{Environment.ProcessId}}'
-            target={{Sh(processPath)}}
-            uid="${PKEXEC_UID:-}"
-            i=0
-            while kill -0 "$pid" 2>/dev/null; do
-              i=$((i + 1)); [ "$i" -gt 120 ] && exit 1
-              sleep 0.5
-            done
-            {{install}}
-            if [ -z "$uid" ]; then
-              echo "pkexec did not provide the original user ID."
-              exit 1
-            fi
-            passwd_entry="$(getent passwd "$uid")"
-            user="$(printf '%s' "$passwd_entry" | cut -d: -f1)"
-            home="$(printf '%s' "$passwd_entry" | cut -d: -f6)"
-            if [ -z "$user" ]; then
-              echo "Unable to resolve the original user ID: $uid"
-              exit 1
-            fi
-            if [ -z "$home" ]; then
-              echo "Unable to resolve the home directory for user: $user"
-              exit 1
-            fi
-            display={{Sh(Environment.GetEnvironmentVariable("DISPLAY") ?? "")}}
-            wayland_display={{Sh(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY") ?? "")}}
-            xauthority={{Sh(Environment.GetEnvironmentVariable("XAUTHORITY") ?? "")}}
-            dbus_address={{Sh(Environment.GetEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS") ?? "")}}
-            xdg_runtime_dir={{Sh(Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR") ?? "")}}
-            [ -n "$xdg_runtime_dir" ] || xdg_runtime_dir="/run/user/$uid"
-            echo "Starting the updated Portal process as $user."
-            if ! command -v runuser >/dev/null 2>&1; then
-              echo "The system does not provide runuser; Portal was installed but not restarted."
-              exit 1
-            fi
-            runuser -u "$user" -- env \
-              HOME="$home" \
-              USER="$user" \
-              LOGNAME="$user" \
-              DISPLAY="$display" \
-              WAYLAND_DISPLAY="$wayland_display" \
-              XAUTHORITY="$xauthority" \
-              DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
-              XDG_RUNTIME_DIR="$xdg_runtime_dir" \
-              nohup "$target" >/dev/null 2>&1 &
-            echo "Portal package update completed: $(date -Is)"
-            """);
+                                          #!/bin/sh
+                                          set -eu
+                                          log={{Sh(log)}}
+                                          exec >>"$log" 2>&1
+                                          echo "Portal package update started: $(date -Is)"
+                                          pid='{{Environment.ProcessId}}'
+                                          target={{Sh(processPath)}}
+                                          uid="${PKEXEC_UID:-}"
+                                          i=0
+                                          while kill -0 "$pid" 2>/dev/null; do
+                                            i=$((i + 1)); [ "$i" -gt 120 ] && exit 1
+                                            sleep 0.5
+                                          done
+                                          {{install}}
+                                          if [ -z "$uid" ]; then
+                                            echo "pkexec did not provide the original user ID."
+                                            exit 1
+                                          fi
+                                          passwd_entry="$(getent passwd "$uid")"
+                                          user="$(printf '%s' "$passwd_entry" | cut -d: -f1)"
+                                          home="$(printf '%s' "$passwd_entry" | cut -d: -f6)"
+                                          if [ -z "$user" ]; then
+                                            echo "Unable to resolve the original user ID: $uid"
+                                            exit 1
+                                          fi
+                                          if [ -z "$home" ]; then
+                                            echo "Unable to resolve the home directory for user: $user"
+                                            exit 1
+                                          fi
+                                          display={{Sh(Environment.GetEnvironmentVariable("DISPLAY") ?? "")}}
+                                          wayland_display={{Sh(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY") ?? "")}}
+                                          xauthority={{Sh(Environment.GetEnvironmentVariable("XAUTHORITY") ?? "")}}
+                                          dbus_address={{Sh(Environment.GetEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS") ?? "")}}
+                                          xdg_runtime_dir={{Sh(Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR") ?? "")}}
+                                          [ -n "$xdg_runtime_dir" ] || xdg_runtime_dir="/run/user/$uid"
+                                          echo "Starting the updated Portal process as $user."
+                                          if ! command -v runuser >/dev/null 2>&1; then
+                                            echo "The system does not provide runuser; Portal was installed but not restarted."
+                                            exit 1
+                                          fi
+                                          runuser -u "$user" -- env \
+                                            HOME="$home" \
+                                            USER="$user" \
+                                            LOGNAME="$user" \
+                                            DISPLAY="$display" \
+                                            WAYLAND_DISPLAY="$wayland_display" \
+                                            XAUTHORITY="$xauthority" \
+                                            DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
+                                            XDG_RUNTIME_DIR="$xdg_runtime_dir" \
+                                            nohup "$target" >/dev/null 2>&1 &
+                                          echo "Portal package update completed: $(date -Is)"
+                                          """);
         File.WriteAllText(launcherScript, $$"""
-            #!/bin/sh
-            set -eu
-            worker={{Sh(workerScript)}}
-            log={{Sh(log)}}
-            echo "Portal update authentication accepted: $(date -Is)" >>"$log"
-            nohup "$worker" >>"$log" 2>&1 </dev/null &
-            exit 0
-            """);
+                                            #!/bin/sh
+                                            set -eu
+                                            worker={{Sh(workerScript)}}
+                                            log={{Sh(log)}}
+                                            echo "Portal update authentication accepted: $(date -Is)" >>"$log"
+                                            nohup "$worker" >>"$log" 2>&1 </dev/null &
+                                            exit 0
+                                            """);
         RunAndWait("/bin/chmod", "+x", workerScript, launcherScript);
         return UnixScript(launcherScript, true);
     }
 
     private static ProcessStartInfo PrepareMacApp(string packagePath, string updateDirectory, string processPath)
     {
-        var marker = $"{Path.DirectorySeparatorChar}Contents{Path.DirectorySeparatorChar}MacOS{Path.DirectorySeparatorChar}";
+        var marker =
+            $"{Path.DirectorySeparatorChar}Contents{Path.DirectorySeparatorChar}MacOS{Path.DirectorySeparatorChar}";
         var markerIndex = processPath.IndexOf(marker, StringComparison.Ordinal);
         if (markerIndex < 0) throw new InvalidOperationException("当前程序不在 macOS .app 应用程序包中。");
         var target = processPath[..markerIndex];
@@ -595,27 +593,27 @@ public static class UpdateApp
         var script = Path.Combine(directory, "apply-update.sh");
         var launch = isMac ? $"/usr/bin/open -n {Sh(target)}" : $"{Sh(target)} >/dev/null 2>&1 &";
         File.WriteAllText(script, $$"""
-            #!/bin/sh
-            set -eu
-            pid='{{Environment.ProcessId}}'
-            target={{Sh(target)}}
-            source={{Sh(source)}}
-            backup="${target}.portal-update-old"
-            cleanup_new="${target}.portal-update-new"
-            i=0
-            while kill -0 "$pid" 2>/dev/null; do
-              i=$((i + 1)); [ "$i" -gt 120 ] && exit 1
-              sleep 0.5
-            done
-            rm -rf "$cleanup_new" "$backup"
-            cp -R "$source" "$cleanup_new"
-            {{(isMac ? ":" : "chmod --reference=\"$target\" \"$cleanup_new\" 2>/dev/null || chmod +x \"$cleanup_new\"")}}
-            mv "$target" "$backup"
-            if ! mv "$cleanup_new" "$target"; then mv "$backup" "$target"; exit 1; fi
-            if ! {{launch}}; then rm -rf "$target"; mv "$backup" "$target"; {{launch}}; exit 1; fi
-            sleep 5
-            rm -rf "$backup"
-            """);
+                                    #!/bin/sh
+                                    set -eu
+                                    pid='{{Environment.ProcessId}}'
+                                    target={{Sh(target)}}
+                                    source={{Sh(source)}}
+                                    backup="${target}.portal-update-old"
+                                    cleanup_new="${target}.portal-update-new"
+                                    i=0
+                                    while kill -0 "$pid" 2>/dev/null; do
+                                      i=$((i + 1)); [ "$i" -gt 120 ] && exit 1
+                                      sleep 0.5
+                                    done
+                                    rm -rf "$cleanup_new" "$backup"
+                                    cp -R "$source" "$cleanup_new"
+                                    {{(isMac ? ":" : "chmod --reference=\"$target\" \"$cleanup_new\" 2>/dev/null || chmod +x \"$cleanup_new\"")}}
+                                    mv "$target" "$backup"
+                                    if ! mv "$cleanup_new" "$target"; then mv "$backup" "$target"; exit 1; fi
+                                    if ! {{launch}}; then rm -rf "$target"; mv "$backup" "$target"; {{launch}}; exit 1; fi
+                                    sleep 5
+                                    rm -rf "$backup"
+                                    """);
         RunAndWait("/bin/chmod", "+x", script);
         return script;
     }
@@ -663,7 +661,10 @@ public static class UpdateApp
         try
         {
             var probe = Path.Combine(directory, $".portal-write-test-{Guid.NewGuid():N}");
-            using (File.Create(probe, 1, FileOptions.DeleteOnClose)) { }
+            using (File.Create(probe, 1, FileOptions.DeleteOnClose))
+            {
+            }
+
             return true;
         }
         catch (Exception exception)
@@ -682,7 +683,27 @@ public static class UpdateApp
         if (process.ExitCode != 0) throw new InvalidOperationException($"{fileName} 执行失败（{process.ExitCode}）。");
     }
 
-    private static string Ps(string value) => value.Replace("'", "''", StringComparison.Ordinal);
-    private static string Sh(string value) => "'" + value.Replace("'", "'\"'\"'", StringComparison.Ordinal) + "'";
-    private static string AppleScript(string value) => "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+    private static string Ps(string value)
+    {
+        return value.Replace("'", "''", StringComparison.Ordinal);
+    }
+
+    private static string Sh(string value)
+    {
+        return "'" + value.Replace("'", "'\"'\"'", StringComparison.Ordinal) + "'";
+    }
+
+    private static string AppleScript(string value)
+    {
+        return "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+    }
+
+    public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller, bool WaitForStart = false);
+
+    private sealed class UpdateTaskHandle
+    {
+        public required ManagedTask Task { get; init; }
+        public PreparedUpdate? PreparedUpdate { get; set; }
+    }
 }

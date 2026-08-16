@@ -15,6 +15,9 @@ public partial class BedrockResourcePacks : UserControl, IDisposable
         ResourcePacksContent.Content = new ResourcePacks(instance);
     }
 
-    
-    public void Dispose() => (ResourcePacksContent.Content as IDisposable)?.Dispose();
+
+    public void Dispose()
+    {
+        (ResourcePacksContent.Content as IDisposable)?.Dispose();
+    }
 }

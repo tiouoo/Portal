@@ -19,9 +19,20 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class BedrockPackageImportDialog : UserControl
 {
-    public BedrockPackageImportDialog() => InitializeComponent();
-    private void Import_Click(object? sender, RoutedEventArgs e) => (DataContext as BedrockPackageImportDialogViewModel)?.Import();
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => (DataContext as BedrockPackageImportDialogViewModel)?.Cancel();
+    public BedrockPackageImportDialog()
+    {
+        InitializeComponent();
+    }
+
+    private void Import_Click(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as BedrockPackageImportDialogViewModel)?.Import();
+    }
+
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as BedrockPackageImportDialogViewModel)?.Cancel();
+    }
 
     public static async Task ImportAsync(TopLevel topLevel, string archivePath, BedrockPackageInspection inspection)
     {
@@ -32,40 +43,64 @@ public partial class BedrockPackageImportDialog : UserControl
         {
             await Task.Run(() => new BedrockPackageImportService().Import(archivePath, inspection, result.Instance,
                 result.WorldUserId));
-            NotificationGateway.Notice(topLevel, $"{Path.GetFileName(archivePath)} 已导入", NotificationType.Success);
+            topLevel.Notice($"{Path.GetFileName(archivePath)} 已导入", NotificationType.Success);
         }
         catch (Exception ex)
         {
-            NotificationGateway.Notice(topLevel, $"导入失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"导入失败：{ex.Message}", NotificationType.Error);
         }
     }
 
     public static Task<BedrockPackageImportDialogResult?> SelectDestinationAsync(TopLevel topLevel,
-        JavaResourceDefinition definition) => SelectDestinationAsync(topLevel,
-        new BedrockPackageImportDialogViewModel(definition));
+        JavaResourceDefinition definition)
+    {
+        return SelectDestinationAsync(topLevel,
+            new BedrockPackageImportDialogViewModel(definition));
+    }
 
     private static Task<BedrockPackageImportDialogResult?> SelectDestinationAsync(TopLevel topLevel,
-        BedrockPackageImportDialogViewModel viewModel) => OverlayDialog.ShowCustomAsync<BedrockPackageImportDialog,
+        BedrockPackageImportDialogViewModel viewModel)
+    {
+        return OverlayDialog.ShowCustomAsync<BedrockPackageImportDialog,
             BedrockPackageImportDialogViewModel, BedrockPackageImportDialogResult>(viewModel, topLevel.TryGetHostId(),
             new OverlayDialogOptions
             {
                 Title = "导入基岩版包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
             });
+    }
 }
 
 public sealed record BedrockPackageImportDialogResult(MinecraftInstance Instance, string? WorldUserId);
+
 public sealed record BedrockPackageInstanceItem(MinecraftInstance Instance, string Name, string Version);
 
 public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDialogContext
 {
-    private readonly BedrockPackageInspection? _inspection;
     private readonly JavaResourceDefinition? _definition;
+    private readonly BedrockPackageInspection? _inspection;
+
+    public BedrockPackageImportDialogViewModel(BedrockPackageInspection inspection)
+    {
+        _inspection = inspection;
+        InitializeInstances();
+    }
+
+    public BedrockPackageImportDialogViewModel(JavaResourceDefinition definition)
+    {
+        _definition = definition;
+        InitializeInstances();
+    }
+
     public ObservableCollection<BedrockPackageInstanceItem> Instances { get; } = [];
     public ObservableCollection<string> WorldUserIds { get; } = [];
     public bool HasNoInstances => Instances.Count == 0;
+
     public bool RequiresUserId => _inspection?.ArchiveType == BedrockPackageArchiveType.Mcworld ||
                                   _definition?.Kind == JavaResourceKind.BedrockWorld;
-    public bool CanImport => SelectedInstance != null && (!RequiresUserId || !string.IsNullOrWhiteSpace(SelectedWorldUserId));
+
+    public bool CanImport =>
+        SelectedInstance != null && (!RequiresUserId || !string.IsNullOrWhiteSpace(SelectedWorldUserId));
+
     public string PackageDescription => _definition is not null ? $"将下载并安装{_definition.DisplayName}" :
         RequiresUserId ? $"{_inspection!.DisplayName}（存档）" :
         $"{_inspection!.DisplayName}（{string.Join("、", _inspection.Contents.Select(content => content.Type switch
@@ -80,17 +115,12 @@ public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDi
     [ObservableProperty] public partial BedrockPackageInstanceItem? SelectedInstance { get; set; }
     [ObservableProperty] public partial string? SelectedWorldUserId { get; set; }
 
-    public BedrockPackageImportDialogViewModel(BedrockPackageInspection inspection)
+    public void Close()
     {
-        _inspection = inspection;
-        InitializeInstances();
+        Cancel();
     }
 
-    public BedrockPackageImportDialogViewModel(JavaResourceDefinition definition)
-    {
-        _definition = definition;
-        InitializeInstances();
-    }
+    public event EventHandler<object?>? RequestClose;
 
     private void InitializeInstances()
     {
@@ -103,19 +133,28 @@ public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDi
     {
         WorldUserIds.Clear();
         if (RequiresUserId && value?.Instance.BedrockConfig is { } config)
-            foreach (var userId in BedrockDataPathResolver.GetWorldUserIds(config)) WorldUserIds.Add(userId);
-        SelectedWorldUserId = WorldUserIds.FirstOrDefault(userId => !string.Equals(userId, "Shared", StringComparison.OrdinalIgnoreCase))
-                              ?? WorldUserIds.FirstOrDefault();
+            foreach (var userId in BedrockDataPathResolver.GetWorldUserIds(config))
+                WorldUserIds.Add(userId);
+        SelectedWorldUserId =
+            WorldUserIds.FirstOrDefault(userId => !string.Equals(userId, "Shared", StringComparison.OrdinalIgnoreCase))
+            ?? WorldUserIds.FirstOrDefault();
         OnPropertyChanged(nameof(CanImport));
     }
 
-    partial void OnSelectedWorldUserIdChanged(string? value) => OnPropertyChanged(nameof(CanImport));
+    partial void OnSelectedWorldUserIdChanged(string? value)
+    {
+        OnPropertyChanged(nameof(CanImport));
+    }
+
     public void Import()
     {
         if (SelectedInstance != null && CanImport)
-            RequestClose?.Invoke(this, new BedrockPackageImportDialogResult(SelectedInstance.Instance, SelectedWorldUserId));
+            RequestClose?.Invoke(this,
+                new BedrockPackageImportDialogResult(SelectedInstance.Instance, SelectedWorldUserId));
     }
-    public void Cancel() => RequestClose?.Invoke(this, null);
-    public void Close() => Cancel();
-    public event EventHandler<object?>? RequestClose;
+
+    public void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 }

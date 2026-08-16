@@ -35,7 +35,7 @@ public static class InstanceRenameService
             throw new InvalidOperationException("新名称与原名称相同，无需重命名。");
 
         var instancesRoot = Path.GetDirectoryName(layout.InstanceRoot)
-            ?? throw new InvalidOperationException("无法确定实例所在目录。");
+                            ?? throw new InvalidOperationException("无法确定实例所在目录。");
         var newInstanceDirectory = Path.Combine(instancesRoot, newId);
         if (Directory.Exists(newInstanceDirectory))
             throw new InvalidOperationException($"实例 ID “{newId}”已存在，请更换名称。");
@@ -96,6 +96,7 @@ public static class InstanceRenameService
                             File.Move(newJar, oldJar);
                     });
                 }
+
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
@@ -124,7 +125,6 @@ public static class InstanceRenameService
         {
             Logger.Error($"[InstanceRename] 重命名实例“{instance.InstanceName}”失败，正在回滚。{Environment.NewLine}{exception}");
             for (var i = undoActions.Count - 1; i >= 0; i--)
-            {
                 try
                 {
                     undoActions[i]();
@@ -133,12 +133,12 @@ public static class InstanceRenameService
                 {
                     Logger.Warning($"[InstanceRename] 回滚失败：{rollbackException}");
                 }
-            }
+
             throw;
         }
     }
 
-        private static void RewriteJsonId(string jsonPath, string id)
+    private static void RewriteJsonId(string jsonPath, string id)
     {
         try
         {
@@ -182,7 +182,8 @@ public static class InstanceRenameService
         }
     }
 
-    private static async Task RefreshInstancesAsync(TaskExecutionContext context) =>
+    private static async Task RefreshInstancesAsync(TaskExecutionContext context)
+    {
         await MinecraftInstallationTasks.RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的实例", step =>
         {
             InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
@@ -190,4 +191,5 @@ public static class InstanceRenameService
             step.ReportProgress(1);
             return Task.CompletedTask;
         });
+    }
 }

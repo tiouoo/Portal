@@ -1,14 +1,7 @@
-using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,17 +10,12 @@ using Portal.LitematicaViewer.Enums;
 using Portal.LitematicaViewer.Helpers;
 using Portal.LitematicaViewer.Parsers;
 using Portal.LitematicaViewer.Services;
-using Portal.Module.AggregatedSearch;
-using Portal.Module.DefaultPage;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
-
-
 
 public partial class LitematicaPage : UserControl, ITioTabPage
 {
@@ -51,7 +39,6 @@ public partial class LitematicaPage : UserControl, ITioTabPage
 
     public void OnClose()
     {
-        
         _vm.Release();
         DataContext = null;
     }
@@ -71,30 +58,29 @@ public partial class LitematicaPage : UserControl, ITioTabPage
 
 public partial class LitematicaPageViewModel : ObservableObject
 {
-    [ObservableProperty] private string? _filePath;
-
-    [ObservableProperty] private bool _hasData;
-
-    [ObservableProperty] private long _totalBlocks;
+    private AnalysisResult? _analysisResult;
 
     [ObservableProperty] private int _blockTypes;
 
     [ObservableProperty] private ObservableCollection<BlockEntry> _blocks = [];
 
+    [ObservableProperty] private ObservableCollection<BlockCategoryFilter> _categories = [];
+    [ObservableProperty] private string? _filePath;
+
     [ObservableProperty] private ObservableCollection<BlockEntry> _filteredBlocks = [];
 
-    [ObservableProperty] private ObservableCollection<BlockCategoryFilter> _categories = [];
-
-    [ObservableProperty] private BlockCategoryFilter? _selectedCategory;
+    [ObservableProperty] private bool _hasData;
 
     [ObservableProperty] private bool _isLoading;
 
     [ObservableProperty] private double _progress;
-
-    private AnalysisResult? _analysisResult;
     private string? _projectName;
 
-        public void Release()
+    [ObservableProperty] private BlockCategoryFilter? _selectedCategory;
+
+    [ObservableProperty] private long _totalBlocks;
+
+    public void Release()
     {
         _analysisResult = null;
         _projectName = null;
@@ -120,10 +106,7 @@ public partial class LitematicaPageViewModel : ObservableObject
             var file = parser.Load(FilePath);
             _projectName = file.Name;
 
-            var progress = new Progress<AnalysisProgress>(p =>
-            {
-                Progress = p.Percent / 100.0;
-            });
+            var progress = new Progress<AnalysisProgress>(p => { Progress = p.Percent / 100.0; });
 
             var analysis = new AnalysisService();
             _analysisResult = analysis.Analyze(file, progress);
@@ -137,7 +120,7 @@ public partial class LitematicaPageViewModel : ObservableObject
                     var nameCn = CnTranslateHelper.ToChinese(kv.Key);
                     var category = BlockCategoryHelper.Classify(kv.Key);
                     var percent = TotalBlocks > 0 ? (double)kv.Value / TotalBlocks : 0;
-                    var units = UnitConverter.Convert((long)kv.Value);
+                    var units = UnitConverter.Convert(kv.Value);
                     return new BlockEntry(kv.Key, nameCn, kv.Value, category, percent, units);
                 })
                 .ToList();
@@ -172,29 +155,32 @@ public partial class LitematicaPageViewModel : ObservableObject
                 Blocks.Where(b => b.Category == SelectedCategory.Category));
     }
 
-    public static string GetCategoryDisplayName(BlockCategory category) => category switch
+    public static string GetCategoryDisplayName(BlockCategory category)
     {
-        BlockCategory.Wool => "羊毛",
-        BlockCategory.Wood => "木材",
-        BlockCategory.Stone => "石料",
-        BlockCategory.Concrete => "混凝土",
-        BlockCategory.Glass => "玻璃",
-        BlockCategory.Terracotta => "陶瓦",
-        BlockCategory.Redstone => "红石",
-        BlockCategory.Container => "容器",
-        BlockCategory.Ore => "矿石",
-        BlockCategory.Iron => "铁制品",
-        BlockCategory.Quartz => "石英",
-        BlockCategory.Clay => "黏土",
-        BlockCategory.Prismarine => "海晶石",
-        BlockCategory.End => "末地",
-        BlockCategory.Nether => "下界",
-        BlockCategory.Liquid => "液体",
-        BlockCategory.Entity => "实体",
-        BlockCategory.Natural => "自然",
-        BlockCategory.OtherRock => "其他石料",
-        _ => category.ToString()
-    };
+        return category switch
+        {
+            BlockCategory.Wool => "羊毛",
+            BlockCategory.Wood => "木材",
+            BlockCategory.Stone => "石料",
+            BlockCategory.Concrete => "混凝土",
+            BlockCategory.Glass => "玻璃",
+            BlockCategory.Terracotta => "陶瓦",
+            BlockCategory.Redstone => "红石",
+            BlockCategory.Container => "容器",
+            BlockCategory.Ore => "矿石",
+            BlockCategory.Iron => "铁制品",
+            BlockCategory.Quartz => "石英",
+            BlockCategory.Clay => "黏土",
+            BlockCategory.Prismarine => "海晶石",
+            BlockCategory.End => "末地",
+            BlockCategory.Nether => "下界",
+            BlockCategory.Liquid => "液体",
+            BlockCategory.Entity => "实体",
+            BlockCategory.Natural => "自然",
+            BlockCategory.OtherRock => "其他石料",
+            _ => category.ToString()
+        };
+    }
 
     public async Task ExportTxtAsync(Control sender)
     {
@@ -214,7 +200,8 @@ public partial class LitematicaPageViewModel : ObservableObject
         sender.AsTopLevel().Notice("已导出 CSV 文件", NotificationType.Success);
     }
 
-    private static async Task<string?> PickSavePath(Control sender, string ext, string display, string? suggestedFileName)
+    private static async Task<string?> PickSavePath(Control sender, string ext, string display,
+        string? suggestedFileName)
     {
         var storage = TopLevel.GetTopLevel(sender)?.StorageProvider;
         if (storage == null) return null;
@@ -242,5 +229,8 @@ public record BlockEntry(
 
 public record BlockCategoryFilter(BlockCategory? Category, string DisplayText)
 {
-    public override string ToString() => DisplayText;
+    public override string ToString()
+    {
+        return DisplayText;
+    }
 }

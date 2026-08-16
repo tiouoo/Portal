@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="272"
     d:DesignWidth="272"
     mc:Ignorable="d"
@@ -6,34 +6,37 @@
     x:DataType="local:ResourceWidgetBase"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Widgets"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:Portal.Views.Widgets">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="16,12,16,12">
-        
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6">
+
+        <StackPanel
+            DockPanel.Dock="Top"
+            Orientation="Horizontal"
+            Spacing="6">
             <PathIcon
                 Data="{Binding IconGeometry}"
-                Width="16"
                 Height="16"
-                VerticalAlignment="Center" />
+                VerticalAlignment="Center"
+                Width="16" />
             <TextBlock
                 FontSize="14"
                 Text="{Binding Title}"
                 VerticalAlignment="Center" />
         </StackPanel>
-        
+
         <TextBlock
             DockPanel.Dock="Bottom"
             FontSize="12"
             Foreground="{DynamicResource InnerForegroundColor}"
             HorizontalAlignment="Center"
+            IsVisible="{Binding HasSecondaryText}"
             Margin="0,0,0,4"
             MaxLines="1"
             Text="{Binding SecondaryText}"
-            TextTrimming="CharacterEllipsis"
-            IsVisible="{Binding HasSecondaryText}" />
-        
+            TextTrimming="CharacterEllipsis" />
+
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
             <ProgressBar
                 BorderThickness="10"

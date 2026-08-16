@@ -11,7 +11,10 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScrollViewer Classes="Flat" Margin="12">
-        <StackPanel Spacing="15" Margin="8" MaxWidth="900">
+        <StackPanel
+            Margin="8"
+            MaxWidth="900"
+            Spacing="15">
             <TextBlock FontSize="22" Text="Litematica 投影分析" />
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
@@ -55,12 +58,24 @@
                 <StackPanel Spacing="6">
                     <WrapPanel HorizontalAlignment="Stretch">
                         <TextBlock>
-                            <Run FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Text="方块总数：" />
-                            <Run FontSize="14" FontWeight="DemiBold" Text="{Binding TotalBlocks, StringFormat={}{0:N0}}" />
+                            <Run
+                                FontSize="14"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="方块总数：" />
+                            <Run
+                                FontSize="14"
+                                FontWeight="DemiBold"
+                                Text="{Binding TotalBlocks, StringFormat={}{0:N0}}" />
                         </TextBlock>
                         <TextBlock Margin="30,0,0,0">
-                            <Run FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Text="方块种类：" />
-                            <Run FontSize="14" FontWeight="DemiBold" Text="{Binding BlockTypes}" />
+                            <Run
+                                FontSize="14"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="方块种类：" />
+                            <Run
+                                FontSize="14"
+                                FontWeight="DemiBold"
+                                Text="{Binding BlockTypes}" />
                         </TextBlock>
                     </WrapPanel>
                 </StackPanel>
@@ -87,9 +102,7 @@
                         Background="Transparent"
                         Classes="Flat"
                         MaxHeight="400">
-                        <DataGrid
-                            AutoGenerateColumns="False"
-                            ItemsSource="{Binding FilteredBlocks}">
+                        <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding FilteredBlocks}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn
                                     Binding="{Binding NameCn}"
@@ -116,9 +129,7 @@
                     </ScrollViewer>
                 </StackPanel>
             </Border>
-            <WrapPanel
-                HorizontalAlignment="Stretch"
-                IsVisible="{Binding HasData}">
+            <WrapPanel HorizontalAlignment="Stretch" IsVisible="{Binding HasData}">
                 <Button
                     Click="ExportTxt_Click"
                     Content="导出 TXT"

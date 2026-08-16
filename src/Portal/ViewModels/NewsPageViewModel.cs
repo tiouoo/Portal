@@ -3,19 +3,26 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
-using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.ViewModels;
 
 public partial class NewsPageViewModel : ObservableObject
 {
-    
-    public static NewsPageViewModel Instance { get; } = new();
+    private List<NewsEntry> _bedrockNews = [];
 
     private List<NewsEntry> _javaNews = [];
-    private List<NewsEntry> _bedrockNews = [];
     private int _newsRefreshVersion;
+
+
+    private NewsPageViewModel()
+    {
+        SelectedFilter = FilterOptions[0];
+        NewsService.NewsUpdated += OnNewsUpdated;
+        HandleNewsUpdate();
+    }
+
+    public static NewsPageViewModel Instance { get; } = new();
 
     public ObservableCollection<NewsEntry> FilteredNews { get; } = [];
 
@@ -30,21 +37,18 @@ public partial class NewsPageViewModel : ObservableObject
     [ObservableProperty] public partial NewsFilterOption? SelectedFilter { get; set; }
     [ObservableProperty] public partial DateTime? SelectedStartDate { get; set; } = DateTime.Now.AddMonths(-1);
 
-    
-    private NewsPageViewModel()
+    partial void OnSelectedFilterChanged(NewsFilterOption? value)
     {
-        SelectedFilter = FilterOptions[0];
-        NewsService.NewsUpdated += OnNewsUpdated;
-        HandleNewsUpdate();
+        ApplyFilter();
     }
 
-    partial void OnSelectedFilterChanged(NewsFilterOption? value) => ApplyFilter();
-
-    partial void OnSelectedStartDateChanged(DateTime? value) => ApplyFilter();
+    partial void OnSelectedStartDateChanged(DateTime? value)
+    {
+        ApplyFilter();
+    }
 
     private void OnNewsUpdated(object? sender, EventArgs e)
     {
-        
         Dispatcher.UIThread.Post(HandleNewsUpdate);
     }
 
@@ -67,8 +71,6 @@ public partial class NewsPageViewModel : ObservableObject
 
     private async Task RefreshImagesAfterInitialLoadAsync(int refreshVersion)
     {
-        
-        
         await Task.Delay(TimeSpan.FromMilliseconds(1500));
         Dispatcher.UIThread.Post(() =>
         {
@@ -79,11 +81,9 @@ public partial class NewsPageViewModel : ObservableObject
 
     private void ApplyFilter()
     {
-        
-        
         FilteredNews.Clear();
         var filter = SelectedFilter?.Type ?? NewsFilterType.All;
-        IEnumerable<NewsEntry> list = filter switch
+        var list = filter switch
         {
             NewsFilterType.Java => _javaNews,
             NewsFilterType.Bedrock => _bedrockNews,
@@ -99,8 +99,6 @@ public partial class NewsPageViewModel : ObservableObject
         list = list.OrderByDescending(x => x.Date);
         FilteredNews.AddRange(list);
     }
-
-    
 }
 
 public class NewsFilterOption

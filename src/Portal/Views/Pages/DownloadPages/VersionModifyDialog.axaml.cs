@@ -9,19 +9,16 @@ using MinecraftLaunch.Base.Interfaces;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
-using Portal.Const;
 using Portal.Core.Const;
-using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
-using Portal.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using TioUi.Common;
-using TioUi.Controls;
 using TioUi.Common.Extensions;
 using TioUi.Common.Interfaces;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -66,32 +63,46 @@ internal partial class VersionModifyDialog : UserControl
         viewModel.Complete();
     }
 
-    private void Cancel_OnClick(object? sender, RoutedEventArgs e) =>
+    private void Cancel_OnClick(object? sender, RoutedEventArgs e)
+    {
         (DataContext as VersionModifyDialogViewModel)?.Cancel();
+    }
 }
 
 public sealed record VersionModifyDialogResult;
 
 public partial class VersionModifyDialogViewModel : ObservableObject, IDialogContext, IDisposable
 {
-    private readonly MinecraftInstance _instance;
-    private readonly CancellationTokenSource _disposeCancellation = new();
-    private readonly Dictionary<LoaderKind, IInstallEntry> _selectedLoaders = [];
     private readonly Dictionary<LoaderKind, IReadOnlyList<IInstallEntry>> _availableLoaderVersions = [];
-    private readonly Dictionary<LoaderKind, string> _installedLoaderVersions = [];
-    private readonly Dictionary<LoaderKind, int> _loadGenerations = [];
-    private readonly Dictionary<(string Version, LoaderKind Kind), IReadOnlyList<IInstallEntry>> _loaderOptionsCache = [];
     private readonly List<VersionOption> _categoryVersions = [];
-    private VersionManifestEntry? _vanilla;
-    private List<MinecraftVersionListItem> _javaVersions = [];
-    private int _versionLoadGeneration;
-    private bool _userTyping;
-    private bool _isSyncingVersionText;
-    private bool _versionRefreshQueued;
-    private bool _updatingSelection;
-    private int _loadingCount;
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private readonly Dictionary<LoaderKind, string> _installedLoaderVersions = [];
+    private readonly MinecraftInstance _instance;
+    private readonly Dictionary<LoaderKind, int> _loadGenerations = [];
+
+    private readonly Dictionary<(string Version, LoaderKind Kind), IReadOnlyList<IInstallEntry>> _loaderOptionsCache =
+        [];
+
+    private readonly Dictionary<LoaderKind, IInstallEntry> _selectedLoaders = [];
     private bool _disposed;
     private bool _isModifying;
+    private bool _isSyncingVersionText;
+    private List<MinecraftVersionListItem> _javaVersions = [];
+    private int _loadingCount;
+    private bool _updatingSelection;
+    private bool _userTyping;
+    private VersionManifestEntry? _vanilla;
+    private int _versionLoadGeneration;
+    private bool _versionRefreshQueued;
+
+    public VersionModifyDialogViewModel(MinecraftInstance instance)
+    {
+        _instance = instance;
+        SelectedVersionFilter = VersionFilters[0];
+        PreselectInstalledLoaders();
+        DependentWarning = BuildDependentWarning(instance);
+        UpdateVersionState();
+    }
 
     public string InstanceName => _instance.InstanceName;
 
@@ -125,7 +136,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
     [ObservableProperty] public partial bool IsVersionDropDownOpen { get; set; }
     [ObservableProperty] public partial VersionOption? SelectedVersion { get; set; }
     [ObservableProperty] public partial bool IsVersionsLoading { get; set; }
-    partial void OnIsVersionsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsVersionComboEnabled));
 
     [ObservableProperty] public partial string VersionsPlaceholder { get; set; } = "加载中...";
     [ObservableProperty] public partial bool IsFabricSelected { get; set; }
@@ -141,9 +151,11 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     public bool HasModLoader => IsFabricSelected || IsForgeSelected || IsNeoForgeSelected || IsQuiltSelected ||
                                 IsOptiFineSelected;
+
     public bool RequiresJava => IsForgeSelected || IsNeoForgeSelected || IsOptiFineSelected;
     public bool IsVersionComboEnabled => !IsVersionsLoading;
     public bool CanSelectLoaderVersion => HasModLoader && _loadingCount == 0 && SelectedLoadersAreReady();
+
     public bool CanModify => !_isModifying && _loadingCount == 0 && !IsVersionsLoading &&
                              SelectedVersion?.Value is VersionManifestEntry && SelectedLoadersAreReady() &&
                              HasChanges && !HasDependentWarning;
@@ -160,13 +172,23 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     public ManagedTask? StartedTask { get; private set; }
 
-    public VersionModifyDialogViewModel(MinecraftInstance instance)
+    public void Close()
     {
-        _instance = instance;
-        SelectedVersionFilter = VersionFilters[0];
-        PreselectInstalledLoaders();
-        DependentWarning = BuildDependentWarning(instance);
-        UpdateVersionState();
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _disposeCancellation.Cancel();
+    }
+
+    partial void OnIsVersionsLoadingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsVersionComboEnabled));
     }
 
     private static string BuildDependentWarning(MinecraftInstance instance)
@@ -180,7 +202,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             : $"该实例被其他版本依赖（{string.Join("、", dependents)}），修改本实例会破坏它们。" +
               "请改为修改依赖链末端的实例（如加载器实例），或先删除这些依赖版本。";
     }
-    
+
     private void PreselectInstalledLoaders()
     {
         if (_instance.MinecraftEntry is not ModifiedMinecraftEntry { ModLoaders: { } modLoaders })
@@ -195,15 +217,18 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         }
     }
 
-    private static LoaderKind? ToLoaderKind(ModLoaderType type) => type switch
+    private static LoaderKind? ToLoaderKind(ModLoaderType type)
     {
-        ModLoaderType.Fabric => LoaderKind.Fabric,
-        ModLoaderType.Forge => LoaderKind.Forge,
-        ModLoaderType.NeoForge => LoaderKind.NeoForge,
-        ModLoaderType.Quilt => LoaderKind.Quilt,
-        ModLoaderType.OptiFine => LoaderKind.OptiFine,
-        _ => null
-    };
+        return type switch
+        {
+            ModLoaderType.Fabric => LoaderKind.Fabric,
+            ModLoaderType.Forge => LoaderKind.Forge,
+            ModLoaderType.NeoForge => LoaderKind.NeoForge,
+            ModLoaderType.Quilt => LoaderKind.Quilt,
+            ModLoaderType.OptiFine => LoaderKind.OptiFine,
+            _ => null
+        };
+    }
 
     private void SetLoaderChecked(LoaderKind kind, bool value)
     {
@@ -264,13 +289,35 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         UpdateVersionState();
     }
 
-    partial void OnIsFabricSelectedChanged(bool value) => SelectionChanged(LoaderKind.Fabric, value);
-    partial void OnIsForgeSelectedChanged(bool value) => SelectionChanged(LoaderKind.Forge, value);
-    partial void OnIsNeoForgeSelectedChanged(bool value) => SelectionChanged(LoaderKind.NeoForge, value);
-    partial void OnIsQuiltSelectedChanged(bool value) => SelectionChanged(LoaderKind.Quilt, value);
-    partial void OnIsOptiFineSelectedChanged(bool value) => SelectionChanged(LoaderKind.OptiFine, value);
+    partial void OnIsFabricSelectedChanged(bool value)
+    {
+        SelectionChanged(LoaderKind.Fabric, value);
+    }
 
-    public void NotifyVersionTextInput() => _userTyping = true;
+    partial void OnIsForgeSelectedChanged(bool value)
+    {
+        SelectionChanged(LoaderKind.Forge, value);
+    }
+
+    partial void OnIsNeoForgeSelectedChanged(bool value)
+    {
+        SelectionChanged(LoaderKind.NeoForge, value);
+    }
+
+    partial void OnIsQuiltSelectedChanged(bool value)
+    {
+        SelectionChanged(LoaderKind.Quilt, value);
+    }
+
+    partial void OnIsOptiFineSelectedChanged(bool value)
+    {
+        SelectionChanged(LoaderKind.OptiFine, value);
+    }
+
+    public void NotifyVersionTextInput()
+    {
+        _userTyping = true;
+    }
 
     private void QueueVersionRefresh()
     {
@@ -372,8 +419,8 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
         IsVersionsLoading = false;
         SelectedVersion = _categoryVersions.FirstOrDefault(option =>
-            string.Equals(option.DisplayText, currentId, StringComparison.OrdinalIgnoreCase))
-            ?? _categoryVersions.FirstOrDefault();
+                              string.Equals(option.DisplayText, currentId, StringComparison.OrdinalIgnoreCase))
+                          ?? _categoryVersions.FirstOrDefault();
         if (SelectedVersion is not null)
             VersionSearchText = SelectedVersion.DisplayText;
 
@@ -381,35 +428,34 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         UpdateVersionState();
     }
 
-    private string? GetCurrentVanillaId() => _instance.MinecraftEntry switch
+    private string? GetCurrentVanillaId()
     {
-        ModifiedMinecraftEntry { InheritedMinecraft: { } inherited } => inherited.Version.VersionId,
-        { } entry => entry.Version.VersionId,
-        _ => null
-    };
+        return _instance.MinecraftEntry switch
+        {
+            ModifiedMinecraftEntry { InheritedMinecraft: { } inherited } => inherited.Version.VersionId,
+            { } entry => entry.Version.VersionId,
+            _ => null
+        };
+    }
 
     private void RefreshVersionList()
     {
         var query = VersionSearchText.Trim();
         var selected = SelectedVersion;
-        
+
         var isFiltering = IsVersionDropDownOpen && _userTyping && query.Length > 0;
-        
+
         var keep = new HashSet<VersionOption>(_categoryVersions.Where(version =>
             !isFiltering || version.DisplayText.Contains(query, StringComparison.OrdinalIgnoreCase)));
         if (selected is not null) keep.Add(selected);
 
         for (var i = Versions.Count - 1; i >= 0; i--)
-        {
             if (!keep.Contains(Versions[i]))
                 Versions.RemoveAt(i);
-        }
 
         foreach (var item in keep)
-        {
             if (!Versions.Contains(item))
                 Versions.Add(item);
-        }
 
         VersionsPlaceholder = IsVersionsLoading
             ? "加载中..."
@@ -466,7 +512,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             }
 
             foreach (var loaderKind in Enum.GetValues<LoaderKind>())
-            {
                 if (!IsSelected(loaderKind))
                 {
                     _selectedLoaders.Remove(loaderKind);
@@ -474,7 +519,6 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                     SetStatus(loaderKind, "不安装");
                     _loadGenerations[loaderKind] = _loadGenerations.GetValueOrDefault(loaderKind) + 1;
                 }
-            }
         }
         finally
         {
@@ -552,28 +596,31 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         }
 
         if (kind == LoaderKind.OptiFine)
-        {
             foreach (var entry in entries)
-            {
                 if (MinecraftInstallationViewModel.GetLoaderVersion(kind, entry)
                     .StartsWith(installedVersion, StringComparison.OrdinalIgnoreCase))
                     return entry;
-            }
-        }
 
         return null;
     }
 
-    private async Task<IReadOnlyList<IInstallEntry>> FetchVersionsAsync(LoaderKind kind) =>
-        await Task.Run(async () => kind switch
+    private async Task<IReadOnlyList<IInstallEntry>> FetchVersionsAsync(LoaderKind kind)
+    {
+        return await Task.Run(async () => kind switch
         {
-            LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(_vanilla!.Id)).Cast<IInstallEntry>().ToList(),
-            LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla!.Id)).Cast<IInstallEntry>().ToList(),
-            LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla!.Id, true)).Cast<IInstallEntry>().ToList(),
-            LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(_vanilla!.Id)).Cast<IInstallEntry>().ToList(),
-            LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(_vanilla!.Id)).Cast<IInstallEntry>().ToList(),
+            LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(_vanilla!.Id)).Cast<IInstallEntry>()
+                .ToList(),
+            LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla!.Id)).Cast<IInstallEntry>()
+                .ToList(),
+            LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(_vanilla!.Id, true)).Cast<IInstallEntry>()
+                .ToList(),
+            LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(_vanilla!.Id)).Cast<IInstallEntry>()
+                .ToList(),
+            LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(_vanilla!.Id)).Cast<IInstallEntry>()
+                .ToList(),
             _ => []
         });
+    }
 
     public async Task SelectLoaderVersionAsync(Control owner)
     {
@@ -582,19 +629,21 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         var versions = _availableLoaderVersions
             .Where(pair => IsSelected(pair.Key))
             .SelectMany(pair => pair.Value.Select(entry =>
-                new LoaderVersionItem(pair.Key, entry, MinecraftInstallationViewModel.GetLoaderVersion(pair.Key, entry))))
+                new LoaderVersionItem(pair.Key, entry,
+                    MinecraftInstallationViewModel.GetLoaderVersion(pair.Key, entry))))
             .ToList();
-        var selected = await OverlayDialog.ShowCustomAsync<LoaderVersionDialog, LoaderVersionDialogViewModel, LoaderVersionItem>(
-            new LoaderVersionDialogViewModel(versions), owner.GetTopLevel().TryGetHostId(),
-            new OverlayDialogOptions
-            {
-                Title = "选择加载器版本",
-                Buttons = DialogButton.None,
-                CanLightDismiss = false,
-                CanResize = false,
-                VerticalAnchor = VerticalPosition.Top,
-                VerticalOffset = 80
-            });
+        var selected = await OverlayDialog
+            .ShowCustomAsync<LoaderVersionDialog, LoaderVersionDialogViewModel, LoaderVersionItem>(
+                new LoaderVersionDialogViewModel(versions), owner.GetTopLevel().TryGetHostId(),
+                new OverlayDialogOptions
+                {
+                    Title = "选择加载器版本",
+                    Buttons = DialogButton.None,
+                    CanLightDismiss = false,
+                    CanResize = false,
+                    VerticalAnchor = VerticalPosition.Top,
+                    VerticalOffset = 80
+                });
         if (selected is null || !IsSelected(selected.Kind)) return;
 
         _selectedLoaders[selected.Kind] = selected.Entry;
@@ -641,19 +690,23 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         {
             _updatingSelection = false;
         }
+
         UpdateVersionState();
     }
 
-    private HashSet<LoaderKind> GetInstalledLoaderKinds() =>
-        _instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } modLoaders }
+    private HashSet<LoaderKind> GetInstalledLoaderKinds()
+    {
+        return _instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } modLoaders }
             ? modLoaders.Select(loader => ToLoaderKind(loader.Type)).OfType<LoaderKind>().ToHashSet()
             : [];
+    }
 
     private static bool LoaderVersionsMatch(LoaderKind kind, string selectedVersion, string installedVersion)
     {
         if (string.Equals(selectedVersion, installedVersion, StringComparison.OrdinalIgnoreCase)) return true;
         if (kind == LoaderKind.Forge &&
-            string.Equals(selectedVersion.Split('-').LastOrDefault(), installedVersion, StringComparison.OrdinalIgnoreCase))
+            string.Equals(selectedVersion.Split('-').LastOrDefault(), installedVersion,
+                StringComparison.OrdinalIgnoreCase))
             return true;
         if (kind == LoaderKind.OptiFine &&
             selectedVersion.StartsWith(installedVersion, StringComparison.OrdinalIgnoreCase))
@@ -709,15 +762,18 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         OnPropertyChanged(nameof(HasChanges));
     }
 
-    private bool IsSelected(LoaderKind kind) => kind switch
+    private bool IsSelected(LoaderKind kind)
     {
-        LoaderKind.Fabric => IsFabricSelected,
-        LoaderKind.Forge => IsForgeSelected,
-        LoaderKind.NeoForge => IsNeoForgeSelected,
-        LoaderKind.Quilt => IsQuiltSelected,
-        LoaderKind.OptiFine => IsOptiFineSelected,
-        _ => false
-    };
+        return kind switch
+        {
+            LoaderKind.Fabric => IsFabricSelected,
+            LoaderKind.Forge => IsForgeSelected,
+            LoaderKind.NeoForge => IsNeoForgeSelected,
+            LoaderKind.Quilt => IsQuiltSelected,
+            LoaderKind.OptiFine => IsOptiFineSelected,
+            _ => false
+        };
+    }
 
     private void SetStatus(LoaderKind kind, string status)
     {
@@ -731,8 +787,11 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         }
     }
 
-    private bool SelectedLoadersAreReady() => Enum.GetValues<LoaderKind>()
-        .Where(IsSelected).All(_selectedLoaders.ContainsKey);
+    private bool SelectedLoadersAreReady()
+    {
+        return Enum.GetValues<LoaderKind>()
+            .Where(IsSelected).All(_selectedLoaders.ContainsKey);
+    }
 
     private void UpdateVersionState()
     {
@@ -744,15 +803,13 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         OnPropertyChanged(nameof(CanUninstallAllLoaders));
     }
 
-    public void Complete() => RequestClose?.Invoke(this, new VersionModifyDialogResult());
-    public void Cancel() => RequestClose?.Invoke(this, null);
-    public void Close() => Cancel();
-    public event EventHandler<object?>? RequestClose;
-
-    public void Dispose()
+    public void Complete()
     {
-        if (_disposed) return;
-        _disposed = true;
-        _disposeCancellation.Cancel();
+        RequestClose?.Invoke(this, new VersionModifyDialogResult());
+    }
+
+    public void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
     }
 }

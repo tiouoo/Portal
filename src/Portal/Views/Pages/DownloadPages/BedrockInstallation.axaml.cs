@@ -1,19 +1,16 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
-using Avalonia.Threading;
 using Avalonia.Input;
-using Avalonia.Interactivity;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Bedrock.Standard.Interface;
-using Portal.Const;
+using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Extensions;
-using Tio.Avalonia.Standard.Tab.Gateway;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -45,7 +42,7 @@ public partial class BedrockInstallation : UserControl
 
         var result = await OverlayDialog.ShowCustomAsync<BedrockInstallDialog, BedrockInstallDialogViewModel,
             BedrockInstallDialogResult>(new BedrockInstallDialogViewModel(version, folders,
-            _viewModel.GetPreferredInstallFolder(folders), _viewModel), this.GetTopLevel().TryGetHostId(),
+                _viewModel.GetPreferredInstallFolder(folders), _viewModel), this.GetTopLevel().TryGetHostId(),
             new OverlayDialogOptions
             {
                 Buttons = DialogButton.None,
@@ -73,12 +70,41 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
     [ObservableProperty] public partial string StatusText { get; set; } = "正在获取基岩版版本列表...";
 
     public bool CanInstall => !IsInstalling && !IsLoading && BedrockInstallationService.DefaultInstaller is not null &&
-                               GetTraditionalInstallFolders().Count > 0;
-    partial void OnIsInstallingChanged(bool value) => UpdateInstallState();
-    partial void OnIsLoadingChanged(bool value) => UpdateInstallState();
-    partial void OnSelectedReleaseChannelChanged(int value) => ApplyFilter();
-    partial void OnSelectedBuildTypeChanged(int value) => ApplyFilter();
-    partial void OnSearchTextChanged(string value) => ApplyFilter();
+                              GetTraditionalInstallFolders().Count > 0;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _pageCancellation.Cancel();
+        Versions.Clear();
+        _allVersions.Clear();
+    }
+
+    partial void OnIsInstallingChanged(bool value)
+    {
+        UpdateInstallState();
+    }
+
+    partial void OnIsLoadingChanged(bool value)
+    {
+        UpdateInstallState();
+    }
+
+    partial void OnSelectedReleaseChannelChanged(int value)
+    {
+        ApplyFilter();
+    }
+
+    partial void OnSelectedBuildTypeChanged(int value)
+    {
+        ApplyFilter();
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
 
     public async Task LoadVersionsAsync()
     {
@@ -111,18 +137,10 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         }
     }
 
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        _pageCancellation.Cancel();
-        Versions.Clear();
-        _allVersions.Clear();
-    }
-
     public async Task InstallAsync(BedrockVersion version, MinecraftFolderEntry folder)
     {
-        if (!CanInstall || folder.DetectedLayout.Kind is not (MinecraftFolderKind.Standard or MinecraftFolderKind.PortalMc) ||
+        if (!CanInstall ||
+            folder.DetectedLayout.Kind is not (MinecraftFolderKind.Standard or MinecraftFolderKind.PortalMc) ||
             BedrockInstallationService.DefaultInstaller is null) return;
 
         var installer = BedrockInstallationService.DefaultInstaller;
@@ -194,10 +212,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
                         Name = $"解压 {buildLabel} 安装包",
                         Description = "正在解压",
                         Progress = 0
-                    }, async step =>
-                    {
-                        await extractionFinished.Task.WaitAsync(step.CancellationToken);
-                    });
+                    }, async step => { await extractionFinished.Task.WaitAsync(step.CancellationToken); });
                     extractionStep.Start();
                 }
 
@@ -241,6 +256,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
                     downloadFinished.TrySetException(exception);
                     extractionFinished?.TrySetException(exception);
                 }
+
                 throw;
             }
             finally
@@ -266,9 +282,18 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
     private static async Task ObserveInstallationAsync(ManagedTask task,
         WeakReference<BedrockInstallationViewModel> viewModelReference)
     {
-        try { await task.Completion; }
-        catch (OperationCanceledException exception) { Logger.Debug($"[BedrockInstall] Installation cancelled: {exception}"); }
-        catch (Exception exception) { Logger.Error(exception); }
+        try
+        {
+            await task.Completion;
+        }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[BedrockInstall] Installation cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+        }
 
         if (viewModelReference.TryGetTarget(out var viewModel) && !viewModel._disposed)
             viewModel.IsInstalling = false;
@@ -297,8 +322,8 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         };
         versions = SelectedBuildType switch
         {
-            1 => versions.Where(version => version.BuildType == Portal.Bedrock.Standard.Manifest.BedrockBuildType.UWP),
-            2 => versions.Where(version => version.BuildType == Portal.Bedrock.Standard.Manifest.BedrockBuildType.GDK),
+            1 => versions.Where(version => version.BuildType == BedrockBuildType.UWP),
+            2 => versions.Where(version => version.BuildType == BedrockBuildType.GDK),
             _ => versions
         };
         if (!string.IsNullOrWhiteSpace(SearchText))
@@ -314,27 +339,39 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         return $"版本：{version.Id}\n渠道：{version.ChannelLabel}\n构建：{version.BuildLabel} x64\n发布日期：{version.ReleaseTime:g}";
     }
 
-    public string GetDestinationPath(BedrockGdkVersion version, MinecraftFolderEntry folder) =>
-        Path.Combine(folder.FolderPath,
+    public string GetDestinationPath(BedrockGdkVersion version, MinecraftFolderEntry folder)
+    {
+        return Path.Combine(folder.FolderPath,
             folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc ? "bedrock_instances" : "bedrock_versions",
             GetInstanceName(version));
+    }
 
-    private static string GetInstanceName(BedrockGdkVersion version) =>
-        version is BedrockVersion { BuildType: Portal.Bedrock.Standard.Manifest.BedrockBuildType.UWP }
+    private static string GetInstanceName(BedrockGdkVersion version)
+    {
+        return version is BedrockVersion { BuildType: BedrockBuildType.UWP }
             ? $"{version.Id}-UWP"
             : version.Id;
+    }
 
-    public List<MinecraftFolderEntry> GetTraditionalInstallFolders() => Data.ConfigEntry.InstallableMinecraftFolders.ToList();
+    public List<MinecraftFolderEntry> GetTraditionalInstallFolders()
+    {
+        return Data.ConfigEntry.InstallableMinecraftFolders.ToList();
+    }
 
-    public MinecraftFolderEntry GetPreferredInstallFolder(IReadOnlyList<MinecraftFolderEntry> folders) =>
-        Data.ConfigEntry.DefaultMinecraftFolder is { SupportsInstallation: true } folder &&
-        folders.Contains(folder) ? folder : folders[0];
+    public MinecraftFolderEntry GetPreferredInstallFolder(IReadOnlyList<MinecraftFolderEntry> folders)
+    {
+        return Data.ConfigEntry.DefaultMinecraftFolder is { SupportsInstallation: true } folder &&
+               folders.Contains(folder)
+            ? folder
+            : folders[0];
+    }
 
     private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
         Func<TaskExecutionContext, Task> operation)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
-        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 }, operation);
+        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 },
+            operation);
         step.Start();
         await step.Completion;
         if (step.Exception is not null) throw new InvalidOperationException(step.Exception.Message, step.Exception);
@@ -351,18 +388,20 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         return $"正在下载 {update.Item}{percentage}{speed}{remaining}";
     }
 
-    private static Task DeleteDirectoryAsync(string directory) => Task.Run(() =>
+    private static Task DeleteDirectoryAsync(string directory)
     {
-        try
+        return Task.Run(() =>
         {
-            if (Directory.Exists(directory)) Directory.Delete(directory, true);
-        }
-        catch (Exception exception)
-        {
-            Logger.Warning($"[BedrockInstall] Failed to clean up {directory}: {exception}");
-            
-        }
-    });
+            try
+            {
+                if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            }
+            catch (Exception exception)
+            {
+                Logger.Warning($"[BedrockInstall] Failed to clean up {directory}: {exception}");
+            }
+        });
+    }
 
     private sealed class ThrottledProgress<T>(Action<T> handler) : IProgress<T>
     {

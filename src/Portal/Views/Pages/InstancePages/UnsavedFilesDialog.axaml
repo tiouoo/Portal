@@ -1,21 +1,38 @@
 <UserControl
+    d:DesignHeight="220"
+    d:DesignWidth="460"
+    mc:Ignorable="d"
     x:Class="Portal.Views.Pages.InstancePages.UnsavedFilesDialog"
     x:DataType="local:UnsavedFilesDialogViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    d:DesignHeight="220"
-    d:DesignWidth="460"
-    mc:Ignorable="d">
-    <Grid Margin="24" RowDefinitions="Auto,Auto,Auto" Width="430">
-        <TextBlock FontSize="17" FontWeight="SemiBold" Text="文件尚未保存" />
-        <TextBlock Grid.Row="1" Margin="0,10,0,22" Text="{Binding Message}" TextWrapping="Wrap" />
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto"
+        Width="430">
+        <TextBlock
+            FontSize="17"
+            FontWeight="SemiBold"
+            Text="文件尚未保存" />
+        <TextBlock
+            Grid.Row="1"
+            Margin="0,10,0,22"
+            Text="{Binding Message}"
+            TextWrapping="Wrap" />
         <Grid ColumnDefinitions="Auto,*,Auto,Auto" Grid.Row="2">
             <Button Command="{Binding CancelCommand}" Content="取消" />
-            <Button Command="{Binding DiscardCommand}" Content="不保存" Grid.Column="2" Margin="0,0,8,0" />
-            <Button Command="{Binding SaveCommand}" Content="保存" Grid.Column="3" />
+            <Button
+                Command="{Binding DiscardCommand}"
+                Content="不保存"
+                Grid.Column="2"
+                Margin="0,0,8,0" />
+            <Button
+                Command="{Binding SaveCommand}"
+                Content="保存"
+                Grid.Column="3" />
         </Grid>
     </Grid>
 </UserControl>

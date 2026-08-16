@@ -1,4 +1,4 @@
-using System.Net.Http;
+using System.Diagnostics;
 using Newtonsoft.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
@@ -8,14 +8,13 @@ namespace Portal.Core.Minecraft;
 
 public static class NewsService
 {
-    public static event EventHandler? NewsUpdated;
-
-    public static List<NewsEntry> JavaNews { get; private set; } = [];
-    public static List<NewsEntry> BedrockNews { get; private set; } = [];
-
     private const string JavaApiUrl = "https://mcnews.tiouo.cc/v2/javaPatchNotes";
     private const string BedrockApiUrl = "https://mcnews.tiouo.cc/v2/bedrockPatchNotes";
     private const string BaseImageUrl = "https://launchercontent.mojang.com";
+
+    public static List<NewsEntry> JavaNews { get; private set; } = [];
+    public static List<NewsEntry> BedrockNews { get; private set; } = [];
+    public static event EventHandler? NewsUpdated;
 
     public static void InitializeFromCache()
     {
@@ -33,7 +32,7 @@ public static class NewsService
 
     public static async Task FetchAndRefreshAsync()
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         Logger.Info("开始从远程服务刷新新闻。");
         try
         {
@@ -42,10 +41,19 @@ public static class NewsService
 
             var java = await jTask;
             var bedrock = await bTask;
-            bool changed = false;
+            var changed = false;
 
-            if (java?.Count > 0) { JavaNews = java; changed = true; }
-            if (bedrock?.Count > 0) { BedrockNews = bedrock; changed = true; }
+            if (java?.Count > 0)
+            {
+                JavaNews = java;
+                changed = true;
+            }
+
+            if (bedrock?.Count > 0)
+            {
+                BedrockNews = bedrock;
+                changed = true;
+            }
 
             if (changed) NewsUpdated?.Invoke(null, EventArgs.Empty);
             Logger.Info($"远程新闻刷新完成，数据是否变更：{changed}，耗时 {stopwatch.ElapsedMilliseconds} ms。");
@@ -95,9 +103,7 @@ public static class NewsService
     {
         var imageUrl = string.Empty;
         if (!string.IsNullOrEmpty(entry.Image?.Url))
-        {
             imageUrl = entry.Image.Url.StartsWith("http") ? entry.Image.Url : BaseImageUrl + entry.Image.Url;
-        }
 
         return new NewsEntry
         {
@@ -117,10 +123,10 @@ public static class NewsService
 
 internal static class NewsHttp
 {
-    public static readonly HttpClient Client = new HttpClient(
+    public static readonly HttpClient Client = new(
         new HttpClientHandler
         {
             ServerCertificateCustomValidationCallback = (_, _, _, _) => true
         },
-        disposeHandler: true);
+        true);
 }

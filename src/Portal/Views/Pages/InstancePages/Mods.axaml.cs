@@ -1,52 +1,81 @@
 using System.Collections.ObjectModel;
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Text;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Media.Imaging;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using AsyncImageLoader;
-using Portal.Module.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Flurl.Http;
-using Portal.Const;
-using Portal.Views.Pages;
-using Portal.Views.Pages.DownloadPages;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
-using Tio.Avalonia.Standard.Modules.Extensions;
+using Portal.Module.Imaging;
+using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using AutoCompleteBox = Avalonia.Controls.AutoCompleteBox;
 
 namespace Portal.Views.Pages.InstancePages;
 
 public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 {
+    private readonly CancellationTokenSource _disposeCancellation = new();
+    private readonly HashSet<string> _duplicateHashes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _duplicateProjectIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly MinecraftInstance? _instance;
     private readonly ModService _modService = new();
+    private string _filter = string.Empty;
+    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
     private bool _hasLoaded;
+    private bool _isDisposed;
     private bool _isLoading;
     private bool _isLoadingMetadata;
-    private bool _isDisposed;
-    private int _loadVersion; 
-    private string _filter = string.Empty;
+    private int _loadVersion;
     private ResourceSortMode _sortMode = ResourceSortMode.FileName;
-    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
-    private readonly HashSet<string> _duplicateProjectIds = new(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _duplicateHashes = new(StringComparer.OrdinalIgnoreCase);
-    private readonly CancellationTokenSource _disposeCancellation = new();
+
+    public Mods()
+    {
+        InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
+        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
+        SelectAllCommand = new RelayCommand(() => SetSelection(item => true));
+        ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
+        InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
+        DataContext = this;
+        InitializeFilterOptions();
+        KeyBindings.Add(new KeyBinding
+        {
+            Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),
+            Gesture = KeyGesture.Parse("ctrl+A")
+        });
+        KeyBindings.Add(new KeyBinding
+        {
+            Command = ClearSelectionCommand,
+            Gesture = KeyGesture.Parse("ctrl+Shift+A")
+        });
+        KeyBindings.Add(new KeyBinding
+        {
+            Command = InvertSelectionCommand,
+            Gesture = KeyGesture.Parse("ctrl+I")
+        });
+    }
+
+    public Mods(MinecraftInstance instance) : this()
+    {
+        _instance = instance;
+    }
 
     public ObservableCollection<ModItem> Items { get; } = [];
     public ObservableCollection<ModItem> FilteredItems { get; } = [];
@@ -67,6 +96,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
     public string ModCountText => $"{FilteredItems.Count} 个";
+
     public bool IsLoadingMetadata
     {
         get => _isLoadingMetadata;
@@ -77,6 +107,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             RaisePropertyChanged(nameof(IsLoadingMetadata));
         }
     }
+
     public int SelectedCount => Items.Count(item => item.IsSelected);
     public string SelectedCountText => $"批量操作{SelectedCount}个";
     public bool HasMultipleSelection => SelectedCount >= 1;
@@ -84,36 +115,21 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     public IRelayCommand ClearSelectionCommand { get; }
     public IRelayCommand InvertSelectionCommand { get; }
 
-    public Mods()
+    public void Dispose()
     {
-        InitializeComponent();
-        DragDrop.SetAllowDrop(this, true);
-        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
-        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
-        SelectAllCommand = new RelayCommand(() => SetSelection(item => true));
-        ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
-        InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
-        DataContext = this;
-        InitializeFilterOptions();
-        KeyBindings.Add(new KeyBinding()
-        {
-            
-            Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),
-            Gesture = KeyGesture.Parse("ctrl+A")
-        });
-        KeyBindings.Add(new KeyBinding()
-        {
-            Command = ClearSelectionCommand,
-            Gesture = KeyGesture.Parse("ctrl+Shift+A")
-        });
-        KeyBindings.Add(new KeyBinding()
-        {
-            Command = InvertSelectionCommand,
-            Gesture = KeyGesture.Parse("ctrl+I")
-        });
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _disposeCancellation.Cancel();
+        foreach (var item in Items)
+            item.Dispose();
+        Items.Clear();
+        FilteredItems.Clear();
+        _disposeCancellation.Dispose();
     }
 
-    public Mods(MinecraftInstance instance) : this() => _instance = instance;
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -165,7 +181,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
         _hasLoaded = true;
         var stopwatch = Stopwatch.StartNew();
-        Logger.Info($"[Mods] Scanning mods for {_instance.InstanceName} at {_instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder)}.");
+        Logger.Info(
+            $"[Mods] Scanning mods for {_instance.InstanceName} at {_instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder)}.");
         var version = ++_loadVersion;
         IsLoading = true;
         RaiseListProperties();
@@ -180,10 +197,11 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         {
             foreach (var mod in batch)
                 Items.Add(new ModItem(mod));
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { },
-                Avalonia.Threading.DispatcherPriority.Background);
+            await Dispatcher.UIThread.InvokeAsync(() => { },
+                DispatcherPriority.Background);
             if (_isDisposed || version != _loadVersion) return;
         }
+
         ApplyFilter();
         IsLoading = false;
         RaiseListProperties();
@@ -204,14 +222,20 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         try
         {
             await _modService.CacheFriendlyNamesAsync(mods, WikiEntries.FindChineseName,
-                updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                updated => Dispatcher.UIThread.Post(() =>
                 {
                     if (!_isDisposed)
                         Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath)?.Update(updated);
-                }, Avalonia.Threading.DispatcherPriority.Background), cancellationToken);
+                }, DispatcherPriority.Background), cancellationToken);
         }
-        catch (OperationCanceledException exception) { Logger.Debug($"[Mods] Friendly-name caching cancelled: {exception}"); }
-        catch (Exception exception) { Logger.Warning($"[Mods] Friendly-name caching failed: {exception}"); }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[Mods] Friendly-name caching cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Mods] Friendly-name caching failed: {exception}");
+        }
     }
 
     private async Task RefreshMetadataAsync(IReadOnlyList<ModInfo> mods, CancellationToken cancellationToken)
@@ -219,18 +243,21 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         try
         {
             await _modService.RefreshMetadataAsync(mods, WikiEntries.FindChineseName,
-                updated => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                updated => Dispatcher.UIThread.Post(() =>
                 {
                     if (_isDisposed)
                         return;
                     Items.FirstOrDefault(candidate => candidate.Info.FilePath == updated.FilePath)?.Update(updated);
-                }, Avalonia.Threading.DispatcherPriority.Background), isLoading => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                }, DispatcherPriority.Background), isLoading => Dispatcher.UIThread.Post(() =>
                 {
                     if (!_isDisposed)
                         IsLoadingMetadata = isLoading;
-                }, Avalonia.Threading.DispatcherPriority.Background), cancellationToken);
+                }, DispatcherPriority.Background), cancellationToken);
         }
-        catch (OperationCanceledException exception) { Logger.Debug($"[Mods] Metadata refresh cancelled: {exception}"); }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[Mods] Metadata refresh cancelled: {exception}");
+        }
         catch (FlurlHttpException exception)
         {
             var statusCode = exception.Call.Response?.StatusCode;
@@ -261,32 +288,42 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             item.IsDuplicate = IsDuplicate(item);
             FilteredItems.Add(item);
         }
+
         RefreshFilterOptions();
         RaiseListProperties();
     }
 
-    private bool MatchesSearchFilter(ModItem item) => string.IsNullOrWhiteSpace(_filter) ||
-        item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-        item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-        item.FriendlyName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-        item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase);
-
-    private bool MatchesStateFilter(ModItem item) => _filterMode switch
+    private bool MatchesSearchFilter(ModItem item)
     {
-        ResourceFilterMode.All => true,
-        ResourceFilterMode.Enabled => item.IsEnabled,
-        ResourceFilterMode.Disabled => item.IsDisabled,
-        ResourceFilterMode.Duplicates => IsDuplicate(item),
-        _ => true
-    };
+        return string.IsNullOrWhiteSpace(_filter) ||
+               item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+               item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+               item.FriendlyName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+               item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase);
+    }
 
-    private IEnumerable<ModItem> SortItems(IEnumerable<ModItem> source) => _sortMode switch
+    private bool MatchesStateFilter(ModItem item)
     {
-        ResourceSortMode.Name => source.OrderBy(item => item.FriendlyName, StringComparer.OrdinalIgnoreCase),
-        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.Info.LastWriteTime),
-        ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
-        _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
-    };
+        return _filterMode switch
+        {
+            ResourceFilterMode.All => true,
+            ResourceFilterMode.Enabled => item.IsEnabled,
+            ResourceFilterMode.Disabled => item.IsDisabled,
+            ResourceFilterMode.Duplicates => IsDuplicate(item),
+            _ => true
+        };
+    }
+
+    private IEnumerable<ModItem> SortItems(IEnumerable<ModItem> source)
+    {
+        return _sortMode switch
+        {
+            ResourceSortMode.Name => source.OrderBy(item => item.FriendlyName, StringComparer.OrdinalIgnoreCase),
+            ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.Info.LastWriteTime),
+            ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
+            _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
+        };
+    }
 
     private void BuildDuplicateSets()
     {
@@ -302,15 +339,16 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
     private static string? DuplicateProjectKey(ModItem item)
     {
-        
         if (string.IsNullOrWhiteSpace(item.Info.Source) || string.IsNullOrWhiteSpace(item.Info.ProjectId))
             return null;
         return $"{item.Info.Source}|{item.Info.ProjectId}".ToLowerInvariant();
     }
 
-    private bool IsDuplicate(ModItem item) =>
-        (DuplicateProjectKey(item) is { } key && _duplicateProjectIds.Contains(key)) ||
-        (item.Info.Sha1 is { Length: > 0 } sha1 && _duplicateHashes.Contains(sha1));
+    private bool IsDuplicate(ModItem item)
+    {
+        return (DuplicateProjectKey(item) is { } key && _duplicateProjectIds.Contains(key)) ||
+               (item.Info.Sha1 is { Length: > 0 } sha1 && _duplicateHashes.Contains(sha1));
+    }
 
     private void RefreshFilterOptions()
     {
@@ -329,19 +367,37 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             new DirectoryInfo(_instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder)));
     }
 
-    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private async void Import_OnClick(object? sender, RoutedEventArgs e)
+    {
+        await ImportAsync(null);
+    }
+
     private void Resource_OnDragOver(object? sender, DragEventArgs e)
     {
-        if (JavaResourceImport.Accepts(e.DataTransfer, ".jar")) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+        if (JavaResourceImport.Accepts(e.DataTransfer, ".jar"))
+        {
+            e.DragEffects = DragDropEffects.Copy;
+            e.Handled = true;
+        }
     }
-    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
-    private async Task ImportAsync(DragEventArgs? drop) 
+
+    private async void Resource_OnDrop(object? sender, DragEventArgs e)
+    {
+        await ImportAsync(e);
+    }
+
+    private async Task ImportAsync(DragEventArgs? drop)
     {
         if (_instance == null) return;
-        var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
+        var refresh = async () =>
+        {
+            _hasLoaded = false;
+            await LoadAsync();
+        };
         var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
         Logger.Info($"[Mods] Importing mod(s) into {destination} for {_instance.InstanceName}.");
-        if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, "选择模组", destination, "模组", [".jar"], false, refresh);
+        if (drop == null)
+            await JavaResourceImport.SelectAndImportAsync(this, "选择模组", destination, "模组", [".jar"], false, refresh);
         else await JavaResourceImport.ImportDropAsync(this, drop, destination, "模组", [".jar"], false, refresh);
     }
 
@@ -367,17 +423,30 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         RaiseSelectionProperties();
     }
 
-    private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => true);
+    private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => true);
+    }
 
-    private void ClearSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => false);
+    private void ClearSelection_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => false);
+    }
 
-    private void InvertSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => !item.IsSelected);
+    private void InvertSelection_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => !item.IsSelected);
+    }
 
-    private async void EnableSelected_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void EnableSelected_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetSelectedDisabledAsync(false);
+    }
 
-    private async void DisableSelected_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void DisableSelected_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetSelectedDisabledAsync(true);
+    }
 
     private async void DeleteSelected_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -389,7 +458,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             new TextBlock
             {
                 Margin = new Thickness(24), Text = $"确定要永久删除选中的 {selected.Length} 个模组吗？此操作无法撤销。",
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
@@ -416,16 +485,19 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             return;
         }
 
-        
-        
+
         ModDetailsPage.Open(topLevel, new ModDetailsTarget(detailSource.Value, projectId), item.FriendlyName);
     }
 
-    private async void EnableMod_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void EnableMod_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetModDisabledAsync(GetModItem(sender), false);
+    }
 
-    private async void DisableMod_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void DisableMod_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetModDisabledAsync(GetModItem(sender), true);
+    }
 
     private async void DeleteMod_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -435,7 +507,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
             Margin = new Thickness(24), Text = $"确定要永久删除模组“{item.DisplayName}”吗？此操作无法撤销。",
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
             await RunSelectedFileActionAsync([item], mod => File.Delete(mod.Info.FilePath), null, "删除");
@@ -473,15 +545,18 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         }, disabled ? "禁用" : "启用");
     }
 
-    private Task SetModDisabledAsync(ModItem? item, bool disabled) => item == null || item.IsDisabled == disabled
-        ? Task.CompletedTask
-        : RunSelectedFileActionAsync([item], mod => File.Move(mod.Info.FilePath,
-                disabled ? mod.Info.FilePath + ".disabled" : mod.Info.FilePath[..^".disabled".Length]),
-            mod => mod.Info with
-            {
-                FilePath = disabled ? mod.Info.FilePath + ".disabled" : mod.Info.FilePath[..^".disabled".Length],
-                IsDisabled = disabled
-            }, disabled ? "禁用" : "启用");
+    private Task SetModDisabledAsync(ModItem? item, bool disabled)
+    {
+        return item == null || item.IsDisabled == disabled
+            ? Task.CompletedTask
+            : RunSelectedFileActionAsync([item], mod => File.Move(mod.Info.FilePath,
+                    disabled ? mod.Info.FilePath + ".disabled" : mod.Info.FilePath[..^".disabled".Length]),
+                mod => mod.Info with
+                {
+                    FilePath = disabled ? mod.Info.FilePath + ".disabled" : mod.Info.FilePath[..^".disabled".Length],
+                    IsDisabled = disabled
+                }, disabled ? "禁用" : "启用");
+    }
 
     private Task RunSelectedFileActionAsync(IEnumerable<ModItem> selected, Action<ModItem> action,
         Func<ModItem, ModInfo>? localUpdate, string actionName)
@@ -490,7 +565,6 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         var selectedItems = selected.ToArray();
         Logger.Info($"[Mods] {actionName} requested for {selectedItems.Length} mod(s) in {_instance?.InstanceName}.");
         foreach (var item in selectedItems)
-        {
             try
             {
                 action(item);
@@ -515,7 +589,6 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                 Logger.Warning($"[Mods] {actionName} failed for {item.Info.FilePath}: {exception}");
                 failed++;
             }
-        }
 
         ApplyFilter();
         RaiseSelectionProperties();
@@ -525,18 +598,30 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         return Task.CompletedTask;
     }
 
-    private ModItem[] GetSelectedItems() => Items.Where(item => item.IsSelected).ToArray();
-
-    private bool IsTextInputFocused() =>
-        TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox or Avalonia.Controls.AutoCompleteBox or TioUi.Controls.AutoCompleteBox;
-
-    private static ModItem? GetModItem(object? sender) => (sender as Control)?.Tag as ModItem;
-
-    private static OverlayDialogOptions CreateDeleteConfirmationOptions() => new()
+    private ModItem[] GetSelectedItems()
     {
-        Title = "删除模组", Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
-        OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
-    };
+        return Items.Where(item => item.IsSelected).ToArray();
+    }
+
+    private bool IsTextInputFocused()
+    {
+        return TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox
+            or AutoCompleteBox or TioUi.Controls.AutoCompleteBox;
+    }
+
+    private static ModItem? GetModItem(object? sender)
+    {
+        return (sender as Control)?.Tag as ModItem;
+    }
+
+    private static OverlayDialogOptions CreateDeleteConfirmationOptions()
+    {
+        return new OverlayDialogOptions
+        {
+            Title = "删除模组", Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
+            OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
+        };
+    }
 
     private void SetSelection(Func<ModItem, bool> selection)
     {
@@ -562,26 +647,12 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     {
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel != null)
-            NotificationGateway.Notice(topLevel, message, type);
+            topLevel.Notice(message, type);
     }
 
-    public new event PropertyChangedEventHandler? PropertyChanged;
-
-    private void RaisePropertyChanged(string propertyName) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-    public void Dispose()
+    private void RaisePropertyChanged(string propertyName)
     {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        _disposeCancellation.Cancel();
-        foreach (var item in Items)
-            item.Dispose();
-        Items.Clear();
-        FilteredItems.Clear();
-        _disposeCancellation.Dispose();
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 
@@ -589,8 +660,10 @@ public static class WikiEntries
 {
     private static readonly Lazy<Dictionary<string, string>> Entries = new(Load);
 
-    public static string? FindChineseName(string curseForgeSlug) =>
-        Entries.Value.GetValueOrDefault(curseForgeSlug);
+    public static string? FindChineseName(string curseForgeSlug)
+    {
+        return Entries.Value.GetValueOrDefault(curseForgeSlug);
+    }
 
     private static Dictionary<string, string> Load()
     {
@@ -636,19 +709,19 @@ public static class WikiEntries
 
 public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
 {
-    private bool _isSelected;
     private bool _isDuplicate;
-    private ModInfo _info = info;
-    public ModInfo Info => _info;
-    public string DisplayName => _info.DisplayName;
-    public string FriendlyName => _info.FriendlyName ?? _info.DisplayName;
-    public string FileName => _info.FileName + ".jar";
-    public string SizeAndNameText => $"{ResourceListUi.FormatSize(_info.FileSize)}·{FileName}";
-    public string DescriptionText => _info.Description ?? "没有可用的模组描述";
-    public string? IconUrl => _info.IconUrl;
+    private bool _isSelected;
+    public ModInfo Info { get; private set; } = info;
+
+    public string DisplayName => Info.DisplayName;
+    public string FriendlyName => Info.FriendlyName ?? Info.DisplayName;
+    public string FileName => Info.FileName + ".jar";
+    public string SizeAndNameText => $"{ResourceListUi.FormatSize(Info.FileSize)}·{FileName}";
+    public string DescriptionText => Info.Description ?? "没有可用的模组描述";
+    public string? IconUrl => Info.IconUrl;
     public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
-    public bool IsDisabled => _info.IsDisabled;
+    public bool IsDisabled => Info.IsDisabled;
     public bool IsEnabled => !IsDisabled;
 
     public bool IsDuplicate
@@ -673,17 +746,22 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
         }
     }
 
-    public void Update(ModInfo info)
+    public void Dispose()
     {
-        _info = info;
-        foreach (var propertyName in new[] { nameof(DisplayName), nameof(FriendlyName), nameof(FileName), nameof(SizeAndNameText), nameof(DescriptionText),
-                     nameof(IconUrl), nameof(HasIcon), nameof(IsDisabled), nameof(IsEnabled) })
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        ImageLoader.Dispose();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public void Dispose() => ImageLoader.Dispose();
+    public void Update(ModInfo info)
+    {
+        Info = info;
+        foreach (var propertyName in new[]
+                 {
+                     nameof(DisplayName), nameof(FriendlyName), nameof(FileName), nameof(SizeAndNameText),
+                     nameof(DescriptionText),
+                     nameof(IconUrl), nameof(HasIcon), nameof(IsDisabled), nameof(IsEnabled)
+                 })
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }
-
-

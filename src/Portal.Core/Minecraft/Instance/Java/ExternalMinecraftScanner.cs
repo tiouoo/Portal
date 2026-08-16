@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using MinecraftLaunch.Base.Enums;
@@ -5,6 +7,7 @@ using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using SQLitePCL;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Instance.Java;
@@ -52,7 +55,6 @@ internal static class ExternalMinecraftScanner
                 continue;
             try
             {
-                
                 string? vanillaId;
                 bool isReferenceVanilla;
                 using (var document = JsonDocument.Parse(File.ReadAllText(instanceJsonPath)))
@@ -61,14 +63,15 @@ internal static class ExternalMinecraftScanner
                     vanillaId = rootElement.TryGetProperty("inheritsFrom", out var inheritsFromNode)
                         ? inheritsFromNode.GetString()
                         : null;
-                    
-                    
+
+
                     isReferenceVanilla = !string.IsNullOrEmpty(vanillaId) &&
                                          instanceId.Equals(vanillaId, StringComparison.OrdinalIgnoreCase) &&
                                          rootElement.TryGetProperty("libraries", out var librariesNode) &&
                                          librariesNode.ValueKind == JsonValueKind.Array &&
                                          librariesNode.GetArrayLength() == 0;
                 }
+
                 if (string.IsNullOrWhiteSpace(vanillaId))
                     continue;
 
@@ -76,8 +79,7 @@ internal static class ExternalMinecraftScanner
                 if (!File.Exists(vanillaJsonPath))
                     continue;
 
-                
-                
+
                 var cacheRoot = NormalizePortalMcMetadata(folderLayout.RootPath, instanceId, vanillaId,
                     instanceJsonPath, vanillaJsonPath, isReferenceVanilla);
                 var parsed = new MinecraftParser(cacheRoot).GetMinecraft(instanceId);
@@ -85,7 +87,7 @@ internal static class ExternalMinecraftScanner
                 var entry = WithLayout(parsed, instanceId, instanceRoot, metadataRoot,
                     Path.Combine(metadataRoot, "versions", vanillaId), "vanilla", null,
                     Path.Combine(metadataRoot, "versions", vanillaId, $"{vanillaId}.jar"), nativesDirectory);
-                
+
                 entry = WithPortalMcDependencyPaths(entry, metadataRoot, instanceRoot, nativesDirectory);
                 var iconPath = ResolveIcon(instanceRoot, "icon.png") ?? ResolveIcon(instanceRoot, "Icon.png")
                     ?? ResolveIcon(instanceRoot, "Portal.Icon.png");
@@ -95,10 +97,11 @@ internal static class ExternalMinecraftScanner
                     nativesDirectory, iconPath), instanceId));
             }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or
-                                              ArgumentException or InvalidOperationException)
+                                                  ArgumentException or InvalidOperationException)
             {
             }
         }
+
         return result;
     }
 
@@ -111,7 +114,6 @@ internal static class ExternalMinecraftScanner
 
         var result = new List<MinecraftInstance>();
         foreach (var instanceFolder in Directory.GetDirectories(instancesRoot))
-        {
             try
             {
                 var config = BedrockHelper.GetInstanceConfig(instanceFolder);
@@ -121,11 +123,11 @@ internal static class ExternalMinecraftScanner
             {
                 Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
             }
-        }
+
         return result;
     }
 
-        private static string NormalizePortalMcMetadata(string root, string instanceId, string vanillaId,
+    private static string NormalizePortalMcMetadata(string root, string instanceId, string vanillaId,
         string instanceJsonPath, string vanillaJsonPath, bool isReferenceVanilla)
     {
         var cacheRoot = Path.Combine(Path.GetTempPath(), "Portal", "PortalMcMetadata", GetStablePathName(root));
@@ -135,9 +137,6 @@ internal static class ExternalMinecraftScanner
 
         if (instanceId.Equals(vanillaId, StringComparison.OrdinalIgnoreCase))
         {
-            
-            
-            
             if (isReferenceVanilla)
                 return cacheRoot;
 
@@ -158,27 +157,25 @@ internal static class ExternalMinecraftScanner
         return cacheRoot;
     }
 
-        private static string RewriteInheritsFrom(string instanceJsonPath, string newInheritsFrom)
+    private static string RewriteInheritsFrom(string instanceJsonPath, string newInheritsFrom)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(instanceJsonPath));
         using var stream = new MemoryStream();
-        using (var writer = new System.Text.Json.Utf8JsonWriter(stream))
+        using (var writer = new Utf8JsonWriter(stream))
         {
             writer.WriteStartObject();
             foreach (var property in document.RootElement.EnumerateObject())
-            {
                 if (property.NameEquals("inheritsFrom"))
                     writer.WriteString("inheritsFrom", newInheritsFrom);
                 else
                     property.WriteTo(writer);
-            }
             writer.WriteEndObject();
         }
 
-        return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
-        private static MinecraftEntry WithPortalMcDependencyPaths(MinecraftEntry entry, string metadataRoot,
+    private static MinecraftEntry WithPortalMcDependencyPaths(MinecraftEntry entry, string metadataRoot,
         string gameDirectory, string nativesDirectory)
     {
         if (entry is not ModifiedMinecraftEntry { HasInheritance: true } modified)
@@ -195,7 +192,7 @@ internal static class ExternalMinecraftScanner
             AssetIndexJsonPath = Path.Combine(metadataRoot, "assets", "indexes",
                 Path.GetFileName(inherited.AssetIndexJsonPath)),
             MinecraftFolderPath = metadataRoot,
-            
+
             VersionDirectoryPath = Path.Combine(metadataRoot, "versions", inherited.Version.VersionId),
             GameDirectoryPath = gameDirectory,
             AssetsDirectoryPath = Path.Combine(metadataRoot, "assets"),
@@ -219,7 +216,7 @@ internal static class ExternalMinecraftScanner
     private static IReadOnlyList<MinecraftInstance> ScanMultiMc(MinecraftFolderEntry folder,
         MinecraftFolderLayout folderLayout)
     {
-        bool isRoot = folderLayout.Kind is MinecraftFolderKind.MultiMc;
+        var isRoot = folderLayout.Kind is MinecraftFolderKind.MultiMc;
         var instanceRoots = isRoot
             ? Directory.Exists(Path.Combine(folderLayout.RootPath, "instances"))
                 ? Directory.GetDirectories(Path.Combine(folderLayout.RootPath, "instances"))
@@ -235,6 +232,7 @@ internal static class ExternalMinecraftScanner
                 packPath = Path.Combine(instanceRoot, "package.info");
                 isBakaXl = File.Exists(packPath);
             }
+
             if (!File.Exists(packPath))
                 continue;
             try
@@ -282,19 +280,23 @@ internal static class ExternalMinecraftScanner
                 else
                 {
                     var cfg = ReadCfg(Path.Combine(instanceRoot, "instance.cfg"));
-                    iconPath = ResolveMultiMcIcon(folderLayout.RootPath, instanceRoot, cfg.GetValueOrDefault("iconKey"));
+                    iconPath = ResolveMultiMcIcon(folderLayout.RootPath, instanceRoot,
+                        cfg.GetValueOrDefault("iconKey"));
                     name = cfg.GetValueOrDefault("name") ?? Path.GetFileName(instanceRoot);
                 }
 
                 result.Add(CreateInstance(entry, folder, new MinecraftInstanceLayout(
-                    MinecraftFolderKind.MultiMc, folderLayout.RootPath, instanceRoot, gameDirectory,
-                    Path.Combine(folderLayout.RootPath, "meta"), Path.Combine(folderLayout.RootPath, "assets"),
-                    Path.Combine(folderLayout.RootPath, "libraries"), Path.Combine(instanceRoot, "natives"), iconPath), name));
+                        MinecraftFolderKind.MultiMc, folderLayout.RootPath, instanceRoot, gameDirectory,
+                        Path.Combine(folderLayout.RootPath, "meta"), Path.Combine(folderLayout.RootPath, "assets"),
+                        Path.Combine(folderLayout.RootPath, "libraries"), Path.Combine(instanceRoot, "natives"),
+                        iconPath),
+                    name));
             }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException)
             {
             }
         }
+
         return result;
     }
 
@@ -321,7 +323,7 @@ internal static class ExternalMinecraftScanner
                 var gameVersion = root.GetProperty("gameVersion").GetString();
                 if (string.IsNullOrWhiteSpace(gameVersion)) continue;
                 var versionId = gameVersion;
-                string loader = "vanilla";
+                var loader = "vanilla";
                 string? loaderVersion = null;
                 if (root.TryGetProperty("baseModLoader", out var baseLoader) &&
                     baseLoader.ValueKind == JsonValueKind.Object)
@@ -334,6 +336,7 @@ internal static class ExternalMinecraftScanner
                         ? forgeVersion.GetString()
                         : null;
                 }
+
                 var parsed = new MinecraftParser(installRoot).GetMinecraft(versionId);
                 var gameDirectory = root.TryGetProperty("installPath", out var installPathNode) &&
                                     !string.IsNullOrWhiteSpace(installPathNode.GetString())
@@ -358,6 +361,7 @@ internal static class ExternalMinecraftScanner
             {
             }
         }
+
         return result;
     }
 
@@ -370,20 +374,19 @@ internal static class ExternalMinecraftScanner
 
         try
         {
-            SQLitePCL.Batteries.Init();
+            Batteries.Init();
             using var connection = new SqliteConnection($"Data Source={databasePath};Mode=ReadOnly;Pooling=False");
             connection.Open();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                SELECT i.path, i.name, i.icon_path, c.game_version, c.loader, c.loader_version
-                FROM instances i
-                JOIN instance_content_sets c ON c.id = i.applied_content_set_id
-                WHERE i.install_stage = 'installed'
-                """;
+                                  SELECT i.path, i.name, i.icon_path, c.game_version, c.loader, c.loader_version
+                                  FROM instances i
+                                  JOIN instance_content_sets c ON c.id = i.applied_content_set_id
+                                  WHERE i.install_stage = 'installed'
+                                  """;
             using var reader = command.ExecuteReader();
             var result = new List<MinecraftInstance>();
             while (reader.Read())
-            {
                 try
                 {
                     var profilePath = reader.GetString(0);
@@ -411,10 +414,10 @@ internal static class ExternalMinecraftScanner
                         Path.Combine(metadataRoot, "natives", profilePath), icon), reader.GetString(1)));
                 }
                 catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or
-                                                  ArgumentException or InvalidOperationException)
+                                                      ArgumentException or InvalidOperationException)
                 {
                 }
-            }
+
             return result;
         }
         catch (SqliteException)
@@ -436,7 +439,8 @@ internal static class ExternalMinecraftScanner
                 Id = entry.Id, Version = entry.Version, ClientJarPath = entry.ClientJarPath,
                 ReleaseTime = entry.ReleaseTime, ClientJsonPath = entry.ClientJsonPath,
                 AssetIndexJsonPath = Path.Combine(dependencyRoot, "assets", "indexes",
-                    Path.GetFileName(entry.AssetIndexJsonPath)), MinecraftFolderPath = dependencyRoot,
+                    Path.GetFileName(entry.AssetIndexJsonPath)),
+                MinecraftFolderPath = dependencyRoot,
                 VersionDirectoryPath = entry.VersionDirectoryPath, GameDirectoryPath = gameDirectory,
                 AssetsDirectoryPath = Path.Combine(dependencyRoot, "assets"),
                 LibrariesDirectoryPath = Path.Combine(dependencyRoot, "libraries"),
@@ -448,7 +452,8 @@ internal static class ExternalMinecraftScanner
             Id = entry.Id, Version = entry.Version, ClientJarPath = entry.ClientJarPath,
             ReleaseTime = entry.ReleaseTime, ClientJsonPath = entry.ClientJsonPath,
             AssetIndexJsonPath = Path.Combine(dependencyRoot, "assets", "indexes",
-                Path.GetFileName(entry.AssetIndexJsonPath)), MinecraftFolderPath = dependencyRoot,
+                Path.GetFileName(entry.AssetIndexJsonPath)),
+            MinecraftFolderPath = dependencyRoot,
             VersionDirectoryPath = entry.VersionDirectoryPath, GameDirectoryPath = gameDirectory,
             AssetsDirectoryPath = Path.Combine(dependencyRoot, "assets"),
             LibrariesDirectoryPath = Path.Combine(dependencyRoot, "libraries"),
@@ -457,12 +462,15 @@ internal static class ExternalMinecraftScanner
     }
 
     private static MinecraftInstance CreateInstance(MinecraftEntry entry, MinecraftFolderEntry folder,
-        MinecraftInstanceLayout layout, string displayName) => new(entry, layout)
+        MinecraftInstanceLayout layout, string displayName)
     {
-        FolderName = folder.FolderName,
-        FolderPath = folder.FolderPath,
-        ExternalDisplayName = displayName
-    };
+        return new MinecraftInstance(entry, layout)
+        {
+            FolderName = folder.FolderName,
+            FolderPath = folder.FolderPath,
+            ExternalDisplayName = displayName
+        };
+    }
 
     private static MinecraftEntry WithLayout(MinecraftEntry entry, string id, string gameDirectory,
         string metadataRoot, string versionDirectory, string loader, string? loaderVersion, string? clientJar = null,
@@ -491,7 +499,8 @@ internal static class ExternalMinecraftScanner
                 ReleaseTime = common.ReleaseTime, ClientJsonPath = common.ClientJsonPath,
                 AssetIndexJsonPath = common.AssetIndexJsonPath, MinecraftFolderPath = common.MinecraftFolderPath,
                 VersionDirectoryPath = common.VersionDirectoryPath, GameDirectoryPath = common.GameDirectoryPath,
-                AssetsDirectoryPath = common.AssetsDirectoryPath, LibrariesDirectoryPath = common.LibrariesDirectoryPath,
+                AssetsDirectoryPath = common.AssetsDirectoryPath,
+                LibrariesDirectoryPath = common.LibrariesDirectoryPath,
                 NativesDirectoryPath = common.NativesDirectoryPath, InheritedMinecraft = modified.InheritedMinecraft,
                 ModLoaders = modified.ModLoaders
             };
@@ -503,7 +512,8 @@ internal static class ExternalMinecraftScanner
                 ReleaseTime = common.ReleaseTime, ClientJsonPath = common.ClientJsonPath,
                 AssetIndexJsonPath = common.AssetIndexJsonPath, MinecraftFolderPath = common.MinecraftFolderPath,
                 VersionDirectoryPath = common.VersionDirectoryPath, GameDirectoryPath = common.GameDirectoryPath,
-                AssetsDirectoryPath = common.AssetsDirectoryPath, LibrariesDirectoryPath = common.LibrariesDirectoryPath,
+                AssetsDirectoryPath = common.AssetsDirectoryPath,
+                LibrariesDirectoryPath = common.LibrariesDirectoryPath,
                 NativesDirectoryPath = common.NativesDirectoryPath,
                 ModLoaders = [new ModLoaderInfo { Type = loaderType.Value, Version = loaderVersion ?? string.Empty }]
             };
@@ -544,22 +554,31 @@ internal static class ExternalMinecraftScanner
             writer.WritePropertyName(name);
             value.WriteTo(writer);
         }
+
         writer.WriteString("id", version);
         writer.WriteEndObject();
         return cacheRoot;
     }
 
-    private static string GetStablePathName(string path) => Convert.ToHexString(
-        System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(path))))[..16];
+    private static string GetStablePathName(string path)
+    {
+        return Convert.ToHexString(
+                SHA256.HashData(
+                    Encoding.UTF8.GetBytes(Path.GetFullPath(path))))
+            [..16];
+    }
 
-    private static string GetMultiMcClientJar(string root, string version) =>
-        Path.Combine(root, "libraries", "com", "mojang", "minecraft", version, $"minecraft-{version}-client.jar");
+    private static string GetMultiMcClientJar(string root, string version)
+    {
+        return Path.Combine(root, "libraries", "com", "mojang", "minecraft", version,
+            $"minecraft-{version}-client.jar");
+    }
 
     private static Dictionary<string, string> ReadCfg(string path)
     {
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (!File.Exists(path)) return values;
-        
+
         foreach (var parts in File.ReadLines(path).Select(line => line.Split('=', 2))
                      .Where(parts => parts.Length == 2))
             values[parts[0]] = parts[1];
@@ -579,6 +598,7 @@ internal static class ExternalMinecraftScanner
             candidates.Add(Path.Combine(root, "icons", $"{iconKey}.png"));
             candidates.Add(Path.Combine(root, "icons", iconKey));
         }
+
         return candidates.FirstOrDefault(File.Exists);
     }
 

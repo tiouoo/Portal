@@ -1,8 +1,10 @@
+using AsyncImageLoader;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Classes;
+using Portal.Module.Imaging;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.InstancePages;
@@ -47,13 +49,13 @@ public sealed record BuiltInIcon(string ResourceName, string FileName)
 {
     public string ResourceUri => $"resm:{ResourceName}?assembly=Portal.Core";
 
-    
-    public AsyncImageLoader.IAsyncImageLoader ImageLoader { get; } = new Portal.Module.Imaging.ResourceImageLoader(104);
+
+    public IAsyncImageLoader ImageLoader { get; } = new ResourceImageLoader(104);
 }
 
 public sealed record IconPickerResult(string? BuiltInResourceName, IStorageFile? CustomImageFile);
 
-public partial class IconPickerViewModel : ObservableObject, IDialogContext
+public class IconPickerViewModel : ObservableObject, IDialogContext
 {
     private const string McIconResourcePrefix = "Portal.Core.Assets.McIcons.";
 
@@ -65,6 +67,13 @@ public partial class IconPickerViewModel : ObservableObject, IDialogContext
         .Select(name => new BuiltInIcon(name, name[McIconResourcePrefix.Length..]))
         .ToList();
 
+    public void Close()
+    {
+        RequestClose?.Invoke(this, null);
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
     public void SelectBuiltInIcon(BuiltInIcon icon)
     {
         RequestClose?.Invoke(this, new IconPickerResult(icon.ResourceName, null));
@@ -74,11 +83,4 @@ public partial class IconPickerViewModel : ObservableObject, IDialogContext
     {
         RequestClose?.Invoke(this, new IconPickerResult(null, imageFile));
     }
-
-    public void Close()
-    {
-        RequestClose?.Invoke(this, null);
-    }
-
-    public event EventHandler<object?>? RequestClose;
 }

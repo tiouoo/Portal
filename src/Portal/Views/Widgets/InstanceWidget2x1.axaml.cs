@@ -1,12 +1,8 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Portal.Core.Minecraft;
-using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
 using Portal.Core.Services;
-using Portal.Module.Widgets;
-using Portal.Services;
 using Portal.Views.Pages;
 
 namespace Portal.Views.Widgets;
@@ -19,9 +15,15 @@ public partial class InstanceWidget2x1 : InstanceBoundWidgetBase
         InitializeComponent();
     }
 
-    protected override void OnInstanceResolved() => RefreshDisplay();
+    protected override void OnInstanceResolved()
+    {
+        RefreshDisplay();
+    }
 
-    protected override void OnInstanceIconRefreshed() => RefreshDisplay();
+    protected override void OnInstanceIconRefreshed()
+    {
+        RefreshDisplay();
+    }
 
     private void RefreshDisplay()
     {

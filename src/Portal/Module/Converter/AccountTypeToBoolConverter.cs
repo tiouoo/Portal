@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Portal.Core.Minecraft.Classes;

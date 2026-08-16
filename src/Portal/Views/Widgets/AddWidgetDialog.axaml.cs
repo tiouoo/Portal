@@ -2,20 +2,16 @@ using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Input;
-using Avalonia.Media;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Classes.Entries;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
 using Portal.Module.Widgets;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
-using TioUi.Common.Extensions;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
 
@@ -23,13 +19,10 @@ namespace Portal.Views.Widgets;
 
 public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialogContext
 {
-    private readonly WidgetWorkspace _workspace;
     private readonly string? _hostId;
+    private readonly WidgetWorkspace _workspace;
 
     [ObservableProperty] private string _searchText = string.Empty;
-        public WidgetCategory SelectedCategory { get; set; } = WidgetCategory.Game;
-
-    public ObservableCollection<WidgetDefinition> Items { get; } = [];
 
     public AddWidgetDialogViewModel(WidgetWorkspace workspace, string? hostId)
     {
@@ -38,9 +31,23 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
         ApplyFilter();
     }
 
-    partial void OnSearchTextChanged(string value) => ApplyFilter();
+    public WidgetCategory SelectedCategory { get; set; } = WidgetCategory.Game;
 
-        [RelayCommand]
+    public ObservableCollection<WidgetDefinition> Items { get; } = [];
+
+    public void Close()
+    {
+        RequestClose?.Invoke(this, null);
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
+
+    [RelayCommand]
     private void SelectCategory(WidgetCategory category)
     {
         SelectedCategory = category;
@@ -145,7 +152,7 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
         var result = await OverlayDialog
             .ShowCustomAsync<InstancePickerDialog, InstancePickerDialogViewModel, object?>(
-                new InstancePickerDialogViewModel(), hostId: _hostId, options: options);
+                new InstancePickerDialogViewModel(), _hostId, options);
 
         return result as MinecraftInstance;
     }
@@ -163,7 +170,7 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
         var result = await OverlayDialog
             .ShowCustomAsync<WorldPickerDialog, WorldPickerDialogViewModel, object?>(
-                new WorldPickerDialogViewModel(instance), hostId: _hostId, options: options);
+                new WorldPickerDialogViewModel(instance), _hostId, options);
 
         return result as WorldPickItem;
     }
@@ -181,12 +188,12 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
         var result = await OverlayDialog
             .ShowCustomAsync<ServerConnectDialog, ServerConnectDialogViewModel, object?>(
-                new ServerConnectDialogViewModel(instance), hostId: _hostId, options: options);
+                new ServerConnectDialogViewModel(instance), _hostId, options);
 
         return result as ServerConnectResult;
     }
 
-        private async Task<string?> PickImageAsync()
+    private async Task<string?> PickImageAsync()
     {
         var topLevel = TopLevel.GetTopLevel(_workspace);
         if (topLevel == null)
@@ -207,9 +214,6 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
         return files.Count == 0 ? null : files[0].TryGetLocalPath();
     }
-
-    public void Close() => RequestClose?.Invoke(this, null);
-    public event EventHandler<object?>? RequestClose;
 }
 
 public partial class AddWidgetDialog : UserControl
@@ -223,13 +227,13 @@ public partial class AddWidgetDialog : UserControl
         InitializeComponent();
     }
 
-    private void CloseButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is AddWidgetDialogViewModel vm)
             vm.Close();
     }
 
-    private async void Add_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Add_OnClick(object? sender, RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is WidgetDefinition definition &&
             DataContext is AddWidgetDialogViewModel viewModel)

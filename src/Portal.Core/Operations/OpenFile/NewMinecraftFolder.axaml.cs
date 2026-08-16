@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -55,6 +51,29 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     private readonly List<string> _paths;
 
 
+    public NewMinecraftFolderViewModel(List<string> paths)
+    {
+        _paths = paths;
+
+
+        DetectedLaunchers = FindInstalledLaunchers(paths);
+
+
+        NextCommand = new RelayCommand(
+            Next,
+            CanNext);
+
+
+        CancelCommand = new RelayCommand(
+            Cancel);
+
+
+        FolderPickedCommand =
+            new RelayCommand<IReadOnlyList<IStorageItem>?>(
+                OnFolderPicked);
+    }
+
+
     [ObservableProperty] public partial string? FolderName { get; set; }
 
 
@@ -91,27 +110,13 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     public ICommand FolderPickedCommand { get; }
 
 
-    public NewMinecraftFolderViewModel(List<string> paths)
+    public void Close()
     {
-        _paths = paths;
-
-
-        DetectedLaunchers = FindInstalledLaunchers(paths);
-
-
-        NextCommand = new RelayCommand(
-            Next,
-            CanNext);
-
-
-        CancelCommand = new RelayCommand(
-            Cancel);
-
-
-        FolderPickedCommand =
-            new RelayCommand<IReadOnlyList<IStorageItem>?>(
-                OnFolderPicked);
+        RequestClose?.Invoke(this, null);
     }
+
+
+    public event EventHandler<object?>? RequestClose;
 
 
     partial void OnFolderPathChanged(string? value)
@@ -134,11 +139,9 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
         var layout = MinecraftFolderLayout.Detect(folderPath);
 
-        
+
         if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
-        {
             layout = MinecraftFolderLayout.FromFolderKind(MinecraftFolderKind.PortalMc, folderPath);
-        }
 
         FolderName = new DirectoryInfo(layout.SelectedPath).Name;
         FolderTypeDescription = layout.DisplayName;
@@ -146,7 +149,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
         Contain = _paths.Contains(folderPath, StringComparer.OrdinalIgnoreCase);
 
-        
+
         Warning = layout.Kind == MinecraftFolderKind.Standard &&
                   !IsDirectoryEmpty(folderPath) &&
                   !MinecraftFolderLayout.LooksLikeMinecraftRoot(folderPath);
@@ -201,7 +204,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         var folderPath = FolderPath!.Trim();
         var layout = MinecraftFolderLayout.Detect(folderPath);
 
-        
+
         if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
         {
             Directory.CreateDirectory(Path.Combine(folderPath, "meta"));
@@ -237,7 +240,6 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                 return false;
 
             foreach (var file in Directory.GetFiles(path))
-            {
                 try
                 {
                     var attr = File.GetAttributes(file);
@@ -248,7 +250,6 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                 {
                     return false;
                 }
-            }
 
             return true;
         }
@@ -299,7 +300,6 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
             path = Path.GetFullPath(path);
 
 
-            
             if (existing.Contains(path))
                 continue;
 
@@ -325,17 +325,17 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     {
         return
         [
-            new(
+            new MinecraftFolderProvider(
                 MinecraftFolderKind.Modrinth,
                 "Modrinth",
                 ReadModrinthFolder),
 
-            new(
+            new MinecraftFolderProvider(
                 MinecraftFolderKind.Modrinth,
                 "Axolotl",
                 ReadAxolotlFolder),
 
-            new(
+            new MinecraftFolderProvider(
                 MinecraftFolderKind.CurseForge,
                 "CurseForge",
                 () =>
@@ -350,7 +350,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                     };
 
 
-                    foreach(var root in roots)
+                    foreach (var root in roots)
                     {
                         var path = Path.Combine(
                             root,
@@ -358,7 +358,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                             "minecraft");
 
 
-                        if(Directory.Exists(path))
+                        if (Directory.Exists(path))
                             return path;
                     }
 
@@ -366,7 +366,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                     return null;
                 }),
 
-            new(
+            new MinecraftFolderProvider(
                 MinecraftFolderKind.MultiMc,
                 "MultiMC",
                 () =>
@@ -390,7 +390,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                     return null;
                 }),
 
-            new(
+            new MinecraftFolderProvider(
                 MinecraftFolderKind.MultiMc,
                 "Prism Launcher",
                 () =>
@@ -414,7 +414,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
                     return null;
                 }),
 
-            new(
+            new MinecraftFolderProvider(
                 MinecraftFolderKind.MultiMc,
                 "BakaXL",
                 () =>
@@ -517,15 +517,6 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     {
         RequestClose?.Invoke(this, null);
     }
-
-
-    public void Close()
-    {
-        RequestClose?.Invoke(this, null);
-    }
-
-
-    public event EventHandler<object?>? RequestClose;
 
 
     private sealed record MinecraftFolderProvider(

@@ -7,18 +7,17 @@ namespace Portal.Core.App.Service;
 
 public sealed class AppVersionService
 {
-    private static AppVersionService? _instance;
-
-    public static AppVersionService Instance => _instance ??= new AppVersionService();
-
     private const string VersionResourceName = "Portal.Core.Assets.version-ci.txt";
-
-    public CiVersionInfo Version { get; private set; }
+    private static AppVersionService? _instance;
 
     private AppVersionService()
     {
         Version = LoadVersionInfo();
     }
+
+    public static AppVersionService Instance => _instance ??= new AppVersionService();
+
+    public CiVersionInfo Version { get; private set; }
 
     private static CiVersionInfo LoadVersionInfo()
     {
@@ -37,9 +36,12 @@ public sealed class AppVersionService
         return versionInfo;
     }
 
-    private static CiVersionInfo CreateLocalVersionInfo() => new()
+    private static CiVersionInfo CreateLocalVersionInfo()
     {
-        Type = "dev",
-        VersionTitle = "local-build"
-    };
+        return new CiVersionInfo
+        {
+            Type = "dev",
+            VersionTitle = "local-build"
+        };
+    }
 }

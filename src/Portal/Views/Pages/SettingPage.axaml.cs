@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Const;
 using Portal.Module.DefaultPage;
 using Portal.Views.Pages.SettingPages;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
-using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Controls;
 
 namespace Portal.Views.Pages;
@@ -65,53 +59,25 @@ public partial class SettingPage : UserControl, ITioTabPage
         if (navMenu == null) return;
 
         foreach (var topItem in navMenu.Items.OfType<NavMenuItem>())
-        {
-            foreach (var childItem in topItem.Items.OfType<NavMenuItem>())
+        foreach (var childItem in topItem.Items.OfType<NavMenuItem>())
+            if (childItem.CommandParameter is Type paramType && paramType == pageType)
             {
-                if (childItem.CommandParameter is Type paramType && paramType == pageType)
-                {
-                    navMenu.SelectedItem = childItem;
-                    return;
-                }
+                navMenu.SelectedItem = childItem;
+                return;
             }
-        }
     }
 }
 
 public partial class SettingPageViewModel : ObservableObject, IDisposable
 {
-    [ObservableProperty]
-    public partial UserControl? CurrentPage { get; set; }
-    
     private readonly Dictionary<Type, UserControl> _settingPageCache = new();
-    
+
     public SettingPageViewModel()
     {
         NavigateType(typeof(Appearance));
     }
-    
-    [RelayCommand]
-    public void NavigateType(object? parameter)
-    {
-        if (parameter is not Type pageType) return;
 
-        if (!typeof(UserControl).IsAssignableFrom(pageType)) return;
-
-        if (!_settingPageCache.TryGetValue(pageType, out var page))
-        {
-            if (Activator.CreateInstance(pageType) is UserControl newPage)
-            {
-                page = newPage;
-                _settingPageCache[pageType] = page;
-                Logger.Info($"[Settings] Created settings page {pageType.Name}.");
-            }
-        }
-
-        if (page != null)
-        {
-            CurrentPage = page;
-        }
-    }
+    [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
 
     public void Dispose()
     {
@@ -120,5 +86,23 @@ public partial class SettingPageViewModel : ObservableObject, IDisposable
         foreach (var page in _settingPageCache.Values.OfType<IDisposable>())
             page.Dispose();
         _settingPageCache.Clear();
+    }
+
+    [RelayCommand]
+    public void NavigateType(object? parameter)
+    {
+        if (parameter is not Type pageType) return;
+
+        if (!typeof(UserControl).IsAssignableFrom(pageType)) return;
+
+        if (!_settingPageCache.TryGetValue(pageType, out var page))
+            if (Activator.CreateInstance(pageType) is UserControl newPage)
+            {
+                page = newPage;
+                _settingPageCache[pageType] = page;
+                Logger.Info($"[Settings] Created settings page {pageType.Name}.");
+            }
+
+        if (page != null) CurrentPage = page;
     }
 }

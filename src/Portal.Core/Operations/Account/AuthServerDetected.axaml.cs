@@ -1,5 +1,4 @@
 using System.Windows.Input;
-using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -24,13 +23,6 @@ public enum AuthServerDetectedAction
 
 public partial class AuthServerDetectedViewModel : ObservableObject, IDialogContext
 {
-    [ObservableProperty]
-    public partial string? ServerUrl { get; set; }
-
-    public ICommand CancelCommand { get; }
-    public ICommand AddServerCommand { get; }
-    public ICommand LoginCommand { get; }
-
     public AuthServerDetectedViewModel(string serverUrl)
     {
         ServerUrl = serverUrl;
@@ -38,6 +30,19 @@ public partial class AuthServerDetectedViewModel : ObservableObject, IDialogCont
         AddServerCommand = new RelayCommand(AddServer);
         LoginCommand = new RelayCommand(Login);
     }
+
+    [ObservableProperty] public partial string? ServerUrl { get; set; }
+
+    public ICommand CancelCommand { get; }
+    public ICommand AddServerCommand { get; }
+    public ICommand LoginCommand { get; }
+
+    public void Close()
+    {
+        RequestClose?.Invoke(this, AuthServerDetectedAction.Cancel);
+    }
+
+    public event EventHandler<object?>? RequestClose;
 
     private void Cancel()
     {
@@ -53,11 +58,4 @@ public partial class AuthServerDetectedViewModel : ObservableObject, IDialogCont
     {
         RequestClose?.Invoke(this, AuthServerDetectedAction.Login);
     }
-
-    public void Close()
-    {
-        RequestClose?.Invoke(this, AuthServerDetectedAction.Cancel);
-    }
-
-    public event EventHandler<object?>? RequestClose;
 }

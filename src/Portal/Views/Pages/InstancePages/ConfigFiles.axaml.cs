@@ -3,10 +3,12 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
@@ -19,6 +21,7 @@ using TioUi.Common.Extensions;
 using TioUi.Controls;
 using Tomlyn;
 using Tomlyn.Model;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Portal.Views.Pages.InstancePages;
 
@@ -26,16 +29,34 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
 {
     private static readonly Geometry FolderIcon = Geometry.Parse("M3 5h5l2 2h11v12H3z");
     private static readonly Geometry FileIcon = Geometry.Parse("M6 2h8l5 5v15H6z M14 2v6h5");
-    private readonly IHighlightingDefinition _highlighting;
     private readonly List<ConfigTreeItem> _allRootItems = [];
+    private readonly IHighlightingDefinition _highlighting;
+    private bool _isWordWrap;
+    private string _searchText = string.Empty;
+
+    private ConfigEditorTab? _selectedTab;
+
+    public ConfigFiles()
+    {
+        ConfigPath = string.Empty;
+        _highlighting = LoadHighlighting();
+        InitializeComponent();
+        DataContext = this;
+    }
+
+    public ConfigFiles(MinecraftInstance instance)
+    {
+        ConfigPath = instance.GetSpecialFolder(MinecraftSpecialFolder.ConfigFolder);
+        _highlighting = LoadHighlighting();
+        LoadTree();
+        InitializeComponent();
+        DataContext = this;
+        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+    }
 
     public string ConfigPath { get; }
     public ObservableCollection<ConfigTreeItem> RootItems { get; } = [];
     public ObservableCollection<ConfigEditorTab> Tabs { get; } = [];
-
-    private ConfigEditorTab? _selectedTab;
-    private bool _isWordWrap;
-    private string _searchText = string.Empty;
 
     public string SearchText
     {
@@ -77,28 +98,19 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
     public bool HasOpenTabs => SelectedTab != null;
     public bool CanFormatSelectedFile => SelectedTab != null && IsFormatSupported(SelectedTab.FilePath);
 
-    public ConfigFiles()
+    public void Dispose()
     {
-        ConfigPath = string.Empty;
-        _highlighting = LoadHighlighting();
-        InitializeComponent();
-        DataContext = this;
+        foreach (var tab in Tabs)
+            tab.Dispose();
+        Tabs.Clear();
     }
 
-    public ConfigFiles(MinecraftInstance instance)
-    {
-        ConfigPath = instance.GetSpecialFolder(MinecraftSpecialFolder.ConfigFolder);
-        _highlighting = LoadHighlighting();
-        LoadTree();
-        InitializeComponent();
-        DataContext = this;
-        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
-    }
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     private static IHighlightingDefinition LoadHighlighting()
     {
         var uri = new Uri("avares://Portal/Assets/Highlighting/Config.xshd");
-        using var stream = Avalonia.Platform.AssetLoader.Open(uri);
+        using var stream = AssetLoader.Open(uri);
         using var reader = XmlReader.Create(stream);
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
@@ -160,7 +172,6 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
 
         foreach (var entry in entries.OrderByDescending(x => x is DirectoryInfo)
                      .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
-        {
             if (entry is DirectoryInfo childDirectory)
             {
                 var children = entry.Attributes.HasFlag(FileAttributes.ReparsePoint)
@@ -172,7 +183,6 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
             {
                 yield return new ConfigTreeItem(entry.Name, entry.FullName, false, FileIcon, []);
             }
-        }
     }
 
     private async void FileTree_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -226,7 +236,7 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
     private void EditorTabs_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
         if (sender is not Control || e.Delta.Y == 0) return;
-        ListBox.Scroll.Offset = new Avalonia.Vector(
+        ListBox.Scroll.Offset = new Vector(
             Math.Clamp(ListBox.Scroll.Offset.X - e.Delta.Y * 40, 0, ListBox.Scroll.Extent.Width),
             ListBox.Scroll.Offset.Y);
         e.Handled = true;
@@ -238,7 +248,7 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
             return;
 
         var maxOffset = Math.Max(0, scrollViewer.Extent.Width - scrollViewer.Viewport.Width);
-        scrollViewer.Offset = new Avalonia.Vector(
+        scrollViewer.Offset = new Vector(
             Math.Clamp(scrollViewer.Offset.X - e.Delta.Y * 40, 0, maxOffset),
             scrollViewer.Offset.Y);
         e.Handled = true;
@@ -283,28 +293,51 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         }
     }
 
-    private void Undo_OnClick(object? sender, RoutedEventArgs e) => Editor.Undo();
+    private void Undo_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Editor.Undo();
+    }
 
-    private void Redo_OnClick(object? sender, RoutedEventArgs e) => Editor.Redo();
+    private void Redo_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Editor.Redo();
+    }
 
-    private void Cut_OnClick(object? sender, RoutedEventArgs e) => Editor.Cut();
+    private void Cut_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Editor.Cut();
+    }
 
-    private void Copy_OnClick(object? sender, RoutedEventArgs e) => Editor.Copy();
+    private void Copy_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Editor.Copy();
+    }
 
-    private void Paste_OnClick(object? sender, RoutedEventArgs e) => Editor.Paste();
+    private void Paste_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Editor.Paste();
+    }
 
-    private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => Editor.SelectAll();
+    private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Editor.SelectAll();
+    }
 
     private void Save_OnClick(object? sender, RoutedEventArgs e)
     {
         if (SelectedTab != null)
             _ = SaveAsync(SelectedTab);
     }
+
     private void OpenPath(string path)
     {
         _ = this.GetTopLevel().Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path));
     }
-    private void Format_OnClick(object? sender, RoutedEventArgs e) => _ = FormatAsync();
+
+    private void Format_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = FormatAsync();
+    }
 
     private async Task FormatAsync()
     {
@@ -341,7 +374,7 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         using var stringWriter = new StringWriter();
         using var writer = new JsonTextWriter(stringWriter)
         {
-            Formatting = Newtonsoft.Json.Formatting.Indented,
+            Formatting = Formatting.Indented,
             Indentation = 2
         };
         while (reader.Read())
@@ -385,8 +418,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
     {
         return await OverlayDialog.ShowCustomAsync<UnsavedFilesDialog, UnsavedFilesDialogViewModel, UnsavedFilesAction>(
             new UnsavedFilesDialogViewModel(message),
-            hostId: this.TryGetHostId(),
-            options: new OverlayDialogOptions
+            this.TryGetHostId(),
+            new OverlayDialogOptions
             {
                 Mode = DialogMode.None,
                 Buttons = DialogButton.None,
@@ -399,10 +432,10 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
     private async Task ShowErrorAsync(string message)
     {
         await OverlayDialog.ShowStandardAsync(
-            new TextBlock { Margin = new Avalonia.Thickness(24), Text = message, TextWrapping = TextWrapping.Wrap },
+            new TextBlock { Margin = new Thickness(24), Text = message, TextWrapping = TextWrapping.Wrap },
             null,
-            hostId: this.TryGetHostId(),
-            options: new OverlayDialogOptions
+            this.TryGetHostId(),
+            new OverlayDialogOptions
             {
                 Title = "配置文件",
                 Mode = DialogMode.Error,
@@ -410,15 +443,6 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
                 CanLightDismiss = false
             });
     }
-
-    public void Dispose()
-    {
-        foreach (var tab in Tabs)
-            tab.Dispose();
-        Tabs.Clear();
-    }
-
-    public new event PropertyChangedEventHandler? PropertyChanged;
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
@@ -460,6 +484,15 @@ public partial class ConfigEditorTab : ObservableObject, IDisposable
 {
     private string _savedText;
 
+    private ConfigEditorTab(string filePath, string text, Encoding encoding)
+    {
+        FilePath = filePath;
+        Encoding = encoding;
+        _savedText = text;
+        Document = new TextDocument(text);
+        Document.TextChanged += Document_OnTextChanged;
+    }
+
     public string FilePath { get; }
     public string FileName => Path.GetFileName(FilePath);
     public TextDocument Document { get; }
@@ -470,13 +503,9 @@ public partial class ConfigEditorTab : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(Header))]
     public partial bool IsDirty { get; private set; }
 
-    private ConfigEditorTab(string filePath, string text, Encoding encoding)
+    public void Dispose()
     {
-        FilePath = filePath;
-        Encoding = encoding;
-        _savedText = text;
-        Document = new TextDocument(text);
-        Document.TextChanged += Document_OnTextChanged;
+        Document.TextChanged -= Document_OnTextChanged;
     }
 
     public static async Task<ConfigEditorTab> LoadAsync(string filePath)
@@ -499,10 +528,5 @@ public partial class ConfigEditorTab : ObservableObject, IDisposable
         await writer.WriteAsync(Document.Text);
         _savedText = Document.Text;
         IsDirty = false;
-    }
-
-    public void Dispose()
-    {
-        Document.TextChanged -= Document_OnTextChanged;
     }
 }

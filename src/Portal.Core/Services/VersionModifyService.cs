@@ -57,14 +57,12 @@ public static class VersionModifyService
 
         if (!instance.CanModifyVersion)
             throw new InvalidOperationException("仅支持修改 Portal 游戏目录下的实例版本，其他格式的实例请在对应启动器中修改。");
-        
+
         var dependents = FindDependentVersionIds(minecraftEntry.MinecraftFolderPath, minecraftEntry.Id);
         if (dependents.Count > 0)
-        {
             throw new InvalidOperationException(
                 $"实例“{minecraftEntry.Id}”被其他版本依赖（{string.Join("、", dependents)}），" +
                 "直接修改会破坏依赖它的实例。请改为修改依赖链末端的实例（如加载器实例），或先删除这些依赖版本。");
-        }
 
         var folderPath = minecraftEntry.MinecraftFolderPath;
         var instanceId = minecraftEntry.Id;
@@ -77,7 +75,8 @@ public static class VersionModifyService
         var usesTempBase = !isPortalMc && hasLoaders &&
                            string.Equals(instanceId, vanilla.Id, StringComparison.OrdinalIgnoreCase);
         var tempBaseId = $".portal-{instanceId}-base";
-        var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, instance.FolderPath);
+        var sourceRoots =
+            MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, instance.FolderPath);
 
         try
         {
@@ -94,10 +93,11 @@ public static class VersionModifyService
                     if (string.IsNullOrWhiteSpace(javaPath))
                         throw new InvalidOperationException("所选修改方案需要有效的 Java 运行时，修改失败。");
                 }
+
                 step.ReportProgress(1);
                 await Task.CompletedTask;
             });
-            
+
             if (hasLoaders)
             {
                 if (isPortalMc)
@@ -122,9 +122,11 @@ public static class VersionModifyService
             else
             {
                 if (isPortalMc)
-                    await InstallPureVanillaPortalMcAsync(context, metadataRoot, instanceDirectory, instanceId, vanilla, sourceRoots);
+                    await InstallPureVanillaPortalMcAsync(context, metadataRoot, instanceDirectory, instanceId, vanilla,
+                        sourceRoots);
                 else
-                    await InstallPureVanillaAsync(context, folderPath, instanceDirectory, instanceId, vanilla, sourceRoots);
+                    await InstallPureVanillaAsync(context, folderPath, instanceDirectory, instanceId, vanilla,
+                        sourceRoots);
             }
 
             if (usesTempBase)
@@ -144,7 +146,7 @@ public static class VersionModifyService
             throw;
         }
     }
-    
+
     public static List<string> FindDependentVersionIds(string folderPath, string instanceId)
     {
         var dependents = new List<string>();
@@ -233,18 +235,23 @@ public static class VersionModifyService
         {
             Logger.Debug($"[VersionModify] Failed to parse vanilla base {id}: {exception}");
         }
+
         return null;
     }
 
     private static async Task<MinecraftEntry> InstallVanillaBaseAsync(TaskExecutionContext context, string folderPath,
-        VersionManifestEntry vanilla, string baseId, IEnumerable<string> sourceRoots) =>
-        await MinecraftInstallationTasks.RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", async step =>
-        {
-            var installer = VanillaInstaller.Create(folderPath, vanilla, baseId);
-            installer.SourceRootDirectories = sourceRoots;
-            MinecraftInstallationTasks.AttachProgressReporter(installer, step);
-            return await MinecraftInstallationTasks.RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
-        });
+        VersionManifestEntry vanilla, string baseId, IEnumerable<string> sourceRoots)
+    {
+        return await MinecraftInstallationTasks.RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}",
+            async step =>
+            {
+                var installer = VanillaInstaller.Create(folderPath, vanilla, baseId);
+                installer.SourceRootDirectories = sourceRoots;
+                MinecraftInstallationTasks.AttachProgressReporter(installer, step);
+                return await MinecraftInstallationTasks.RunInBackgroundAsync(installer.InstallAsync,
+                    step.CancellationToken);
+            });
+    }
 
     private static async Task BackupAsync(TaskExecutionContext context, string instanceDirectory, string instanceId)
     {
@@ -310,7 +317,8 @@ public static class VersionModifyService
 
     private static async Task InstallLoadersAsync(TaskExecutionContext context, string folderPath,
         string instanceDirectory, string instanceId, VersionManifestEntry vanilla,
-        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath, bool flatten, string tempBaseId,
+        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath, bool flatten,
+        string tempBaseId,
         IEnumerable<string> sourceRoots)
     {
         await Task.Run(() =>
@@ -330,7 +338,6 @@ public static class VersionModifyService
 
         var preloadTasks = new List<Task>();
         if (primaryInstaller is not null)
-        {
             preloadTasks.Add(MinecraftInstallationTasks.RunStepAsync(context, $"预加载 {primary.Key}",
                 $"正在下载 {primary.Key} 安装所需的文件", step =>
                 {
@@ -338,9 +345,7 @@ public static class VersionModifyService
                     return MinecraftInstallationTasks.RunInBackgroundAsync(
                         token => PreloadInstallerAsync(primaryInstaller, token), step.CancellationToken);
                 }));
-        }
         if (optifineInstaller is not null)
-        {
             preloadTasks.Add(MinecraftInstallationTasks.RunStepAsync(context, "预加载 OptiFine",
                 "正在下载 OptiFine 安装所需的文件", step =>
                 {
@@ -348,16 +353,13 @@ public static class VersionModifyService
                     return MinecraftInstallationTasks.RunInBackgroundAsync(optifineInstaller.PreloadAsync,
                         step.CancellationToken);
                 }));
-        }
 
         await Task.WhenAll(preloadTasks);
 
         MinecraftEntry? minecraft = null;
         if (primaryInstaller is not null)
-        {
             minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}",
                 $"正在将 {primary.Key} 应用到当前实例", primaryInstaller);
-        }
 
         if (optifineInstaller is not null)
         {
@@ -402,10 +404,11 @@ public static class VersionModifyService
             return Task.CompletedTask;
         });
     }
-    
+
     private static async Task InstallLoadersPortalMcAsync(TaskExecutionContext context, string metadataRoot,
         string instanceDirectory, string instanceId, VersionManifestEntry vanilla,
-        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath, IEnumerable<string> sourceRoots)
+        IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath,
+        IEnumerable<string> sourceRoots)
     {
         var tempLoaderId = $"{instanceId}.portal-tmp";
         var loaderDirectory = Path.Combine(metadataRoot, "versions", tempLoaderId);
@@ -428,7 +431,6 @@ public static class VersionModifyService
 
         var preloadTasks = new List<Task>();
         if (primaryInstaller is not null)
-        {
             preloadTasks.Add(MinecraftInstallationTasks.RunStepAsync(context, $"预加载 {primary.Key}",
                 $"正在下载 {primary.Key} 安装所需的文件", step =>
                 {
@@ -436,9 +438,7 @@ public static class VersionModifyService
                     return MinecraftInstallationTasks.RunInBackgroundAsync(
                         token => PreloadInstallerAsync(primaryInstaller, token), step.CancellationToken);
                 }));
-        }
         if (optifineInstaller is not null)
-        {
             preloadTasks.Add(MinecraftInstallationTasks.RunStepAsync(context, "预加载 OptiFine",
                 "正在下载 OptiFine 安装所需的文件", step =>
                 {
@@ -446,16 +446,13 @@ public static class VersionModifyService
                     return MinecraftInstallationTasks.RunInBackgroundAsync(optifineInstaller.PreloadAsync,
                         step.CancellationToken);
                 }));
-        }
 
         await Task.WhenAll(preloadTasks);
 
         MinecraftEntry? minecraft = null;
         if (primaryInstaller is not null)
-        {
             minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}",
                 $"正在将 {primary.Key} 应用到当前实例", primaryInstaller);
-        }
 
         if (optifineInstaller is not null)
         {
@@ -514,7 +511,7 @@ public static class VersionModifyService
             Logger.Warning($"[VersionModify] Failed to rewrite instance id in {jsonPath}: {exception}");
         }
     }
-    
+
     private static async Task FlattenAsync(TaskExecutionContext context, string folderPath, string instanceId,
         string vanillaId, string tempBaseId)
     {
@@ -526,9 +523,9 @@ public static class VersionModifyService
             var vanillaJsonPath = Path.Combine(baseDirectory, $"{tempBaseId}.json");
 
             var vanillaNode = JsonNode.Parse(File.ReadAllText(vanillaJsonPath)) as JsonObject
-                ?? throw new InvalidOperationException("无法解析原版版本文件。");
+                              ?? throw new InvalidOperationException("无法解析原版版本文件。");
             var loaderNode = JsonNode.Parse(File.ReadAllText(loaderJsonPath)) as JsonObject
-                ?? throw new InvalidOperationException("无法解析加载器版本文件。");
+                             ?? throw new InvalidOperationException("无法解析加载器版本文件。");
 
             var merged = MergeVersionJson(vanillaNode, [loaderNode], instanceId);
             File.WriteAllText(loaderJsonPath, merged.ToJsonString());
@@ -541,6 +538,7 @@ public static class VersionModifyService
                 Directory.CreateDirectory(instanceDirectory);
                 File.Copy(baseJar, instanceJar, true);
             }
+
             step.ReportProgress(1);
             return Task.CompletedTask;
         });
@@ -548,7 +546,8 @@ public static class VersionModifyService
         DeleteDirectory(Path.Combine(folderPath, "versions", tempBaseId));
     }
 
-    internal static JsonObject MergeVersionJson(JsonObject vanilla, IReadOnlyList<JsonObject> loaders, string instanceId)
+    internal static JsonObject MergeVersionJson(JsonObject vanilla, IReadOnlyList<JsonObject> loaders,
+        string instanceId)
     {
         var output = (JsonObject)vanilla.DeepClone();
         foreach (var loader in loaders)
@@ -572,7 +571,8 @@ public static class VersionModifyService
             if (sourceValue is null)
                 continue;
 
-            if (key == "minecraftArguments" && target[key] is JsonValue targetValue && sourceValue is JsonValue sourceString)
+            if (key == "minecraftArguments" && target[key] is JsonValue targetValue &&
+                sourceValue is JsonValue sourceString)
             {
                 var baseArgs = targetValue.GetValue<string>();
                 var addedArgs = sourceString.GetValue<string>();
@@ -615,27 +615,35 @@ public static class VersionModifyService
     }
 
     private static OptifineInstaller CreatePreloadOptifineInstaller(string folder, OptifineInstallEntry entry,
-        string? javaPath) => OptifineInstaller.Create(folder, javaPath!, entry);
+        string? javaPath)
+    {
+        return OptifineInstaller.Create(folder, javaPath!, entry);
+    }
 
-    private static Task PreloadInstallerAsync(InstallerBase installer, CancellationToken cancellationToken) =>
-        installer switch
+    private static Task PreloadInstallerAsync(InstallerBase installer, CancellationToken cancellationToken)
+    {
+        return installer switch
         {
             ForgeInstaller forge => forge.PreloadAsync(cancellationToken),
             FabricInstaller fabric => fabric.PreloadAsync(cancellationToken),
             QuiltInstaller quilt => quilt.PreloadAsync(cancellationToken),
             _ => throw new NotSupportedException($"暂不支持预加载 {installer.GetType().Name} 安装器")
         };
+    }
 
     private static async Task<MinecraftEntry> RunInstallerStepAsync(TaskExecutionContext context, string name,
-        string description, InstallerBase installer) =>
-        await MinecraftInstallationTasks.RunStepAsync(context, name, description, async step =>
+        string description, InstallerBase installer)
+    {
+        return await MinecraftInstallationTasks.RunStepAsync(context, name, description, async step =>
         {
             MinecraftInstallationTasks.AttachProgressReporter(installer, step);
             return await MinecraftInstallationTasks.RunInBackgroundAsync(installer.InstallAsync,
                 step.CancellationToken);
         });
+    }
 
-    private static async Task RefreshInstancesAsync(TaskExecutionContext context) =>
+    private static async Task RefreshInstancesAsync(TaskExecutionContext context)
+    {
         await MinecraftInstallationTasks.RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的实例", step =>
         {
             InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
@@ -643,4 +651,5 @@ public static class VersionModifyService
             step.ReportProgress(1);
             return Task.CompletedTask;
         });
+    }
 }

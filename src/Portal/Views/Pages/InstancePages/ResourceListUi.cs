@@ -5,24 +5,24 @@ namespace Portal.Views.Pages.InstancePages;
 
 public enum ResourceSortMode
 {
-        FileName = 0,
+    FileName = 0,
 
-        Name = 1,
+    Name = 1,
 
-        LastWriteTime = 2,
+    LastWriteTime = 2,
 
-        FileSize = 3
+    FileSize = 3
 }
 
 public enum ResourceFilterMode
 {
-        All = 0,
+    All = 0,
 
-        Enabled = 1,
+    Enabled = 1,
 
-        Disabled = 2,
+    Disabled = 2,
 
-        Duplicates = 3
+    Duplicates = 3
 }
 
 public sealed class ResourceFilterOption(string label) : INotifyPropertyChanged
@@ -42,14 +42,17 @@ public sealed class ResourceFilterOption(string label) : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public override string ToString() => _label;
+    public override string ToString()
+    {
+        return _label;
+    }
 }
 
 public static class ResourceListUi
 {
-        public static string[] SortOptions { get; } = ["文件名称", "资源名称", "加入时间", "文件大小"];
+    public static string[] SortOptions { get; } = ["文件名称", "资源名称", "加入时间", "文件大小"];
 
-        public static string FormatSize(long size)
+    public static string FormatSize(long size)
     {
         if (size < 0)
             size = 0;
@@ -67,7 +70,7 @@ public static class ResourceListUi
         return $"{size} B";
     }
 
-        public static long GetFolderSize(string folderPath)
+    public static long GetFolderSize(string folderPath)
     {
         try
         {
@@ -86,5 +89,8 @@ public static class ResourceListUi
         }
     }
 
-        public static string BuildFilterLabel(string name, int count) => $"{name}({count})";
+    public static string BuildFilterLabel(string name, int count)
+    {
+        return $"{name}({count})";
+    }
 }

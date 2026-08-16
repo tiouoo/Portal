@@ -25,16 +25,13 @@ public sealed class ServerPing
 
     private readonly MinecraftServerPingService _pingService = new();
     private CancellationTokenSource? _cts;
-    private ServerPingState _state;
     private long _latency;
-    private int _onlinePlayers;
     private int _maxPlayers;
+    private int _onlinePlayers;
 
-    public event Action? Changed;
+    public ServerPingState State { get; private set; }
 
-    public ServerPingState State => _state;
-
-        public string StatusText => _state switch
+    public string StatusText => State switch
     {
         ServerPingState.Pinging => "检测中",
         ServerPingState.Online => "在线",
@@ -42,18 +39,18 @@ public sealed class ServerPing
         _ => "未检测"
     };
 
-        public IBrush StatusBrush => _state switch
+    public IBrush StatusBrush => State switch
     {
         ServerPingState.Online => OnlineBrush,
         ServerPingState.Offline => OfflineBrush,
         _ => PendingBrush
     };
 
-        public string PingText => _state == ServerPingState.Online ? $"{_latency} ms" : string.Empty;
+    public string PingText => State == ServerPingState.Online ? $"{_latency} ms" : string.Empty;
 
-    public bool HasPing => _state == ServerPingState.Online;
+    public bool HasPing => State == ServerPingState.Online;
 
-        public IBrush PingBrush => _state switch
+    public IBrush PingBrush => State switch
     {
         ServerPingState.Online when _latency < 100 => PingGoodBrush,
         ServerPingState.Online when _latency < 300 => PingFairBrush,
@@ -61,17 +58,23 @@ public sealed class ServerPing
         _ => PingGoodBrush
     };
 
-        public string PlayersText => HasPlayers ? $"{_onlinePlayers} / {_maxPlayers} 人" : string.Empty;
+    public string PlayersText => HasPlayers ? $"{_onlinePlayers} / {_maxPlayers} 人" : string.Empty;
 
     public bool HasPlayers { get; private set; }
 
-        public static string BuildAddress(string host, int port) =>
-        host.Contains(':') ? $"[{host}]:{port}" : $"{host}:{port}";
+    public event Action? Changed;
 
-        public static string BuildDisplayAddress(string host, int port) =>
-        port == 25565 ? host : BuildAddress(host, port);
+    public static string BuildAddress(string host, int port)
+    {
+        return host.Contains(':') ? $"[{host}]:{port}" : $"{host}:{port}";
+    }
 
-        public void Start(string address)
+    public static string BuildDisplayAddress(string host, int port)
+    {
+        return port == 25565 ? host : BuildAddress(host, port);
+    }
+
+    public void Start(string address)
     {
         Cancel();
 
@@ -133,7 +136,7 @@ public sealed class ServerPing
 
     private void SetState(ServerPingState state, long latency = 0, int onlinePlayers = 0, int maxPlayers = 0)
     {
-        _state = state;
+        State = state;
         _latency = latency;
         if (state == ServerPingState.Online)
         {

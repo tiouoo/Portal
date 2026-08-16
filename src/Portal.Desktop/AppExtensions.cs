@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Dialogs;
-using Portal.Const;
 using Portal.Core.Const;
 
 namespace Portal.Desktop;
@@ -17,8 +16,8 @@ public static class AppExtensions
         }
         catch
         {
-            
         }
+
         return builder;
     }
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Media;
@@ -19,9 +20,9 @@ namespace Portal.Core.Classes.Config;
 
 public partial class ConfigEntry : ObservableObject
 {
+    private readonly HashSet<MinecraftFolderEntry> _observedMinecraftFolders = [];
     private bool _isMinecraftFolderRecoveryScheduled;
     private bool _isMinecraftFolderRefreshScheduled;
-    private readonly HashSet<MinecraftFolderEntry> _observedMinecraftFolders = [];
 
     public ConfigEntry()
     {
@@ -53,9 +54,11 @@ public partial class ConfigEntry : ObservableObject
     public bool HasBedrockAccounts => !OperatingSystem.IsMacOS() && BedrockAccounts.Count > 0;
     public bool HasBothAccountEditions => HasJavaAccounts && HasBedrockAccounts;
     public bool HasAnyAccounts => HasJavaAccounts || HasBedrockAccounts;
+
     public string CurrentAccountDisplay => UsingMinecraftMinecraftAccount?.ShortDisplay
                                            ?? (OperatingSystem.IsMacOS() ? null : UsingBedrockAccount?.ShortDisplay)
                                            ?? "无账户";
+
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
     public bool CanDisableSystemProxy => !EnableProxyServer;
 
@@ -146,9 +149,7 @@ public partial class ConfigEntry : ObservableObject
 
         if (Data.UiProperty.ConfigLoaded && e.PropertyName == nameof(DefaultMinecraftFolder) &&
             MinecraftFolders.Count > 0)
-        {
             ScheduleMinecraftFolderRecovery();
-        }
 
         ConfigSaver.SaveConfig();
     }
@@ -158,32 +159,30 @@ public partial class ConfigEntry : ObservableObject
         if (value != UpdateSource.Github) Data.UiProperty.OverrideUpdateChannel = "release";
     }
 
-    partial void OnUsingMinecraftMinecraftAccountChanged(MinecraftAccount? value) =>
+    partial void OnUsingMinecraftMinecraftAccountChanged(MinecraftAccount? value)
+    {
         OnPropertyChanged(nameof(CurrentAccountDisplay));
+    }
 
-    partial void OnUsingBedrockAccountChanged(BedrockAccount? value) =>
+    partial void OnUsingBedrockAccountChanged(BedrockAccount? value)
+    {
         OnPropertyChanged(nameof(CurrentAccountDisplay));
+    }
 
     private void OnMinecraftFoldersChanged(object? sender,
-        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        NotifyCollectionChangedEventArgs e)
     {
         if (e.OldItems != null)
-        {
             foreach (MinecraftFolderEntry folder in e.OldItems)
             {
                 folder.PropertyChanged -= OnMinecraftFolderPropertyChanged;
                 _observedMinecraftFolders.Remove(folder);
             }
-        }
 
         if (e.NewItems != null)
-        {
             foreach (MinecraftFolderEntry folder in e.NewItems)
-            {
                 if (_observedMinecraftFolders.Add(folder))
                     folder.PropertyChanged += OnMinecraftFolderPropertyChanged;
-            }
-        }
 
         OnPropertyChanged(nameof(InstallableMinecraftFolders));
         ConfigSaver.SaveConfig();
@@ -205,8 +204,8 @@ public partial class ConfigEntry : ObservableObject
             return;
 
         _isMinecraftFolderRecoveryScheduled = true;
-        
-        
+
+
         Dispatcher.UIThread.Post(() =>
         {
             _isMinecraftFolderRecoveryScheduled = false;
@@ -258,13 +257,9 @@ public partial class ConfigEntry : ObservableObject
     private void ApplyForegroundColor()
     {
         if (EnableCustomForegroundColor)
-        {
             SetForegroundColor(ForegroundColor);
-        }
         else
-        {
             ClearForegroundColor();
-        }
     }
 
     public static void SetForegroundColor(Color color)

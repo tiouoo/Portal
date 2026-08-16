@@ -11,27 +11,36 @@ namespace Portal.Core.Module;
 
 public static class DesktopShortcutService
 {
-        public static string BuildLaunchUrl(MinecraftInstance instance)
+    public static string BuildLaunchUrl(MinecraftInstance instance)
     {
         var id = instance.MinecraftEntry?.Id
-                 ?? Path.GetFileName(instance.InstanceFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                 ?? Path.GetFileName(instance.InstanceFolderPath.TrimEnd(Path.DirectorySeparatorChar,
+                     Path.AltDirectorySeparatorChar));
         return $"portal://launch?id={Uri.EscapeDataString(id)}&folder={Uri.EscapeDataString(instance.FolderPath)}";
     }
 
-        public static string BuildWorldLaunchUrl(MinecraftInstance instance, string worldFolder) =>
-        $"{BuildLaunchUrl(instance)}&world={Uri.EscapeDataString(worldFolder)}";
+    public static string BuildWorldLaunchUrl(MinecraftInstance instance, string worldFolder)
+    {
+        return $"{BuildLaunchUrl(instance)}&world={Uri.EscapeDataString(worldFolder)}";
+    }
 
-        public static string BuildServerLaunchUrl(MinecraftInstance instance, string address, int port) =>
-        $"{BuildLaunchUrl(instance)}&server={Uri.EscapeDataString(address)}&port={port}";
+    public static string BuildServerLaunchUrl(MinecraftInstance instance, string address, int port)
+    {
+        return $"{BuildLaunchUrl(instance)}&server={Uri.EscapeDataString(address)}&port={port}";
+    }
 
-        public static Task<string> CreateAsync(MinecraftInstance instance) =>
-        CreateAsync(instance, BuildLaunchUrl(instance), instance.InstanceName, instance.Icons[256] as Bitmap);
+    public static Task<string> CreateAsync(MinecraftInstance instance)
+    {
+        return CreateAsync(instance, BuildLaunchUrl(instance), instance.InstanceName,
+            instance.Icons[256]);
+    }
 
-        public static Task<string> CreateAsync(MinecraftInstance instance, RecentPlayTarget target)
+    public static Task<string> CreateAsync(MinecraftInstance instance, RecentPlayTarget target)
     {
         var url = target.Type switch
         {
-            RecentPlayTargetType.World when !string.IsNullOrWhiteSpace(target.Id) => BuildWorldLaunchUrl(instance, target.Id),
+            RecentPlayTargetType.World when !string.IsNullOrWhiteSpace(target.Id) => BuildWorldLaunchUrl(instance,
+                target.Id),
             RecentPlayTargetType.Server when !string.IsNullOrWhiteSpace(target.ServerAddress) =>
                 BuildServerLaunchUrl(instance, target.ServerAddress, target.ServerPort ?? 25565),
             _ => BuildLaunchUrl(instance)
@@ -41,11 +50,12 @@ public static class DesktopShortcutService
                    !string.Equals(target.Name, target.Id, StringComparison.Ordinal)
             ? $"{target.Name} ({target.Id})"
             : target.Name;
-        var icon = TryLoadIcon(target.WorldIconPath, target.ServerIconData) ?? (instance.Icons[256] as Bitmap);
+        var icon = TryLoadIcon(target.WorldIconPath, target.ServerIconData) ?? instance.Icons[256];
         return CreateAsync(instance, url, $"{instance.InstanceName} - {name}", icon);
     }
 
-    private static async Task<string> CreateAsync(MinecraftInstance instance, string url, string displayName, Bitmap? icon)
+    private static async Task<string> CreateAsync(MinecraftInstance instance, string url, string displayName,
+        Bitmap? icon)
     {
         if (OperatingSystem.IsWindows()) return CreateWindowsShortcut(url, displayName, icon);
         if (OperatingSystem.IsLinux()) return await CreateLinuxShortcutAsync(url, displayName, icon);
@@ -71,7 +81,6 @@ public static class DesktopShortcutService
         }
         catch (Exception)
         {
-            
         }
 
         return null;
@@ -82,20 +91,17 @@ public static class DesktopShortcutService
         var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         if (Directory.Exists(desktop)) return desktop;
 
-        
-        
+
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         foreach (var candidate in new[] { Path.Combine(home, "Desktop"), Path.Combine(home, "桌面") })
-        {
-            if (Directory.Exists(candidate)) return candidate;
-        }
+            if (Directory.Exists(candidate))
+                return candidate;
 
         return desktop;
     }
 
     private static string GetExecutablePath()
     {
-        
         if (Environment.GetEnvironmentVariable("APPIMAGE") is { Length: > 0 } appImagePath && File.Exists(appImagePath))
             return appImagePath;
         return Environment.ProcessPath ?? throw new InvalidOperationException("无法确定启动器可执行文件路径。");
@@ -117,7 +123,7 @@ public static class DesktopShortcutService
         var safeName = SanitizeFileName(displayName);
         var path = Path.Combine(desktop, $"{safeName}.lnk");
 
-        
+
         var iconFile = TryWriteIcon(icon, EncodeIco, ".ico", safeName) ?? GetExecutablePath();
 
         var link = (IShellLinkW)new ShellLink();
@@ -138,50 +144,6 @@ public static class DesktopShortcutService
 
         Logger.Info($"已创建桌面快捷方式：{path}");
         return path;
-    }
-
-    [ComImport]
-    [Guid("000214F9-0000-0000-C000-000000000046")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IShellLinkW
-    {
-        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int maxPath, IntPtr findData, uint flags);
-        void GetIDList(out IntPtr idList);
-        void SetIDList(IntPtr idList);
-        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int maxName);
-        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
-        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory, int maxPath);
-        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string directory);
-        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments, int maxPath);
-        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
-        void GetHotkey(out short hotkey);
-        void SetHotkey(short hotkey);
-        void GetShowCmd(out int showCommand);
-        void SetShowCmd(int showCommand);
-        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int maxPath, out int iconIndex);
-        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string iconPath, int iconIndex);
-        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string path, uint reserved);
-        void Resolve(IntPtr windowHandle, uint flags);
-        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string path);
-    }
-
-    [ComImport]
-    [Guid("0000010B-0000-0000-C000-000000000046")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IPersistFile
-    {
-        void GetClassID(out Guid classId);
-        void IsDirty();
-        void Load([MarshalAs(UnmanagedType.LPWStr)] string fileName, uint mode);
-        void Save([MarshalAs(UnmanagedType.LPWStr)] string fileName, [MarshalAs(UnmanagedType.Bool)] bool remember);
-        void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string fileName);
-        void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string fileName);
-    }
-
-    [ComImport]
-    [Guid("00021401-0000-0000-C000-000000000046")]
-    private class ShellLink
-    {
     }
 
     private static async Task<string> CreateLinuxShortcutAsync(string url, string displayName, Bitmap? icon)
@@ -206,8 +168,8 @@ public static class DesktopShortcutService
         builder.AppendLine("Categories=Game;");
         await File.WriteAllTextAsync(path, builder.ToString());
 
-        
-        await RunProcessAsync("chmod", ["+x", path], required: false);
+
+        await RunProcessAsync("chmod", ["+x", path], false);
         Logger.Info($"已创建桌面快捷方式：{path}");
         return path;
     }
@@ -218,15 +180,15 @@ public static class DesktopShortcutService
         var path = Path.Combine(desktop, $"{SanitizeFileName(displayName)}.webloc");
 
         var plist = $"""
-            <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-            <plist version="1.0">
-            <dict>
-                <key>URL</key>
-                <string>{SecurityElement.Escape(url)}</string>
-            </dict>
-            </plist>
-            """;
+                     <?xml version="1.0" encoding="UTF-8"?>
+                     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+                     <plist version="1.0">
+                     <dict>
+                         <key>URL</key>
+                         <string>{SecurityElement.Escape(url)}</string>
+                     </dict>
+                     </plist>
+                     """;
         File.WriteAllText(path, plist);
         Logger.Info($"已创建桌面快捷方式：{path}");
         return path;
@@ -247,7 +209,6 @@ public static class DesktopShortcutService
         }
         catch (Exception e)
         {
-            
             Logger.Error("写入快捷方式图标失败。", e);
             return null;
         }
@@ -264,29 +225,32 @@ public static class DesktopShortcutService
     {
         var png = EncodePng(bitmap);
         using var stream = new MemoryStream();
-        using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
+        using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
         {
-            writer.Write((short)0);   
-            writer.Write((short)1);   
-            writer.Write((short)1);   
+            writer.Write((short)0);
+            writer.Write((short)1);
+            writer.Write((short)1);
             var size = bitmap.PixelSize;
             writer.Write((byte)(size.Width >= 256 ? 0 : size.Width));
             writer.Write((byte)(size.Height >= 256 ? 0 : size.Height));
-            writer.Write((byte)0);    
-            writer.Write((byte)0);    
-            writer.Write((short)1);   
-            writer.Write((short)32);  
-            writer.Write(png.Length); 
-            writer.Write(22);         
+            writer.Write((byte)0);
+            writer.Write((byte)0);
+            writer.Write((short)1);
+            writer.Write((short)32);
+            writer.Write(png.Length);
+            writer.Write(22);
             writer.Write(png);
         }
+
         return stream.ToArray();
     }
 
-        private static string EscapeDesktopValue(string value) =>
-        value.Replace("\\", "\\\\").Replace("\r", string.Empty).Replace("\n", string.Empty);
+    private static string EscapeDesktopValue(string value)
+    {
+        return value.Replace("\\", "\\\\").Replace("\r", string.Empty).Replace("\n", string.Empty);
+    }
 
-        private static string EscapeDesktopExec(string value)
+    private static string EscapeDesktopExec(string value)
     {
         value = value.Replace("\\", "\\\\").Replace("%", "%%");
         return $"\"{value}\"";
@@ -296,7 +260,8 @@ public static class DesktopShortcutService
     {
         try
         {
-            var startInfo = new ProcessStartInfo { FileName = fileName, UseShellExecute = false, CreateNoWindow = true };
+            var startInfo = new ProcessStartInfo
+                { FileName = fileName, UseShellExecute = false, CreateNoWindow = true };
             foreach (var argument in arguments) startInfo.ArgumentList.Add(argument);
             using var process = Process.Start(startInfo)
                                 ?? throw new InvalidOperationException($"无法启动 {fileName}。");
@@ -307,5 +272,54 @@ public static class DesktopShortcutService
         catch (Exception) when (!required)
         {
         }
+    }
+
+    [ComImport]
+    [Guid("000214F9-0000-0000-C000-000000000046")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IShellLinkW
+    {
+        void GetPath([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int maxPath, IntPtr findData,
+            uint flags);
+
+        void GetIDList(out IntPtr idList);
+        void SetIDList(IntPtr idList);
+        void GetDescription([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int maxName);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
+        void GetWorkingDirectory([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory, int maxPath);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string directory);
+        void GetArguments([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments, int maxPath);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
+        void GetHotkey(out short hotkey);
+        void SetHotkey(short hotkey);
+        void GetShowCmd(out int showCommand);
+        void SetShowCmd(int showCommand);
+
+        void GetIconLocation([Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int maxPath,
+            out int iconIndex);
+
+        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string iconPath, int iconIndex);
+        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string path, uint reserved);
+        void Resolve(IntPtr windowHandle, uint flags);
+        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string path);
+    }
+
+    [ComImport]
+    [Guid("0000010B-0000-0000-C000-000000000046")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IPersistFile
+    {
+        void GetClassID(out Guid classId);
+        void IsDirty();
+        void Load([MarshalAs(UnmanagedType.LPWStr)] string fileName, uint mode);
+        void Save([MarshalAs(UnmanagedType.LPWStr)] string fileName, [MarshalAs(UnmanagedType.Bool)] bool remember);
+        void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string fileName);
+        void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string fileName);
+    }
+
+    [ComImport]
+    [Guid("00021401-0000-0000-C000-000000000046")]
+    private class ShellLink
+    {
     }
 }

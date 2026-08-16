@@ -6,7 +6,6 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Services;
-using Portal.Services;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
 
@@ -14,7 +13,10 @@ namespace Portal.Views.Pages.InstancePages;
 
 internal partial class LogShareResultDialog : UserControl
 {
-    public LogShareResultDialog() => InitializeComponent();
+    public LogShareResultDialog()
+    {
+        InitializeComponent();
+    }
 
     private async void Copy_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -38,7 +40,7 @@ internal partial class LogShareResultDialog : UserControl
         if (topLevel is null)
             return;
         await topLevel.Clipboard!.SetTextAsync(text);
-        NotificationGateway.Notice(topLevel, "链接已复制", NotificationType.Success);
+        topLevel.Notice("链接已复制", NotificationType.Success);
     }
 
     private async void Open_OnClick(object? sender, RoutedEventArgs e)
@@ -56,36 +58,34 @@ internal partial class LogShareResultDialog : UserControl
     }
 }
 
-internal partial class LogShareResultDialogViewModel : ObservableObject, IDialogContext
+internal class LogShareResultDialogViewModel : ObservableObject, IDialogContext
 {
-    public ObservableCollection<LogShareResultItemViewModel> Items { get; } = [];
-
     public LogShareResultDialogViewModel(IEnumerable<LogShareResult> results)
     {
         foreach (var result in results)
             Items.Add(LogShareResultItemViewModel.From(result));
     }
 
+    public ObservableCollection<LogShareResultItemViewModel> Items { get; } = [];
+
     public bool HasAnyUrl => Items.Any(item => item.HasUrl);
 
-    public void Close() => RequestClose?.Invoke(this, null);
+    public void Close()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 
     public event EventHandler<object?>? RequestClose;
 }
 
 internal sealed class LogShareResultItemViewModel
 {
+    private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#4CAF50"));
+    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#F44336"));
+
     private LogShareResultItemViewModel()
     {
     }
-
-    public static LogShareResultItemViewModel From(LogShareResult result) => new()
-    {
-        Platform = result.Platform,
-        IsSuccess = result.IsSuccess,
-        Url = result.Url,
-        Error = result.Error
-    };
 
     public required string Platform { get; init; }
     public required bool IsSuccess { get; init; }
@@ -97,6 +97,14 @@ internal sealed class LogShareResultItemViewModel
     public string StatusText => IsSuccess ? "分享成功" : "分享失败";
     public IBrush StatusColor => IsSuccess ? SuccessBrush : ErrorBrush;
 
-    private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#4CAF50"));
-    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#F44336"));
+    public static LogShareResultItemViewModel From(LogShareResult result)
+    {
+        return new LogShareResultItemViewModel
+        {
+            Platform = result.Platform,
+            IsSuccess = result.IsSuccess,
+            Url = result.Url,
+            Error = result.Error
+        };
+    }
 }

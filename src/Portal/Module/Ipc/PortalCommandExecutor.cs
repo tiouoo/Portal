@@ -6,11 +6,8 @@ using MinecraftLaunch.Base.Interfaces;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
-using MinecraftLaunch.Components.Installer.Modpack;
 using MinecraftLaunch.Components.Provider;
 using MinecraftLaunch.Utilities;
-using Portal.Const;
-using Portal.Classes;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft;
@@ -19,11 +16,9 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Module.Ipc;
 using Portal.Core.Services;
-using Portal.Services;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
@@ -31,6 +26,8 @@ namespace Portal.Module.Ipc;
 
 public static class PortalCommandExecutor
 {
+    private static StringComparison PathComparison =>
+        OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
     public static async Task ExecuteAsync(PortalCommand command)
     {
@@ -110,11 +107,12 @@ public static class PortalCommandExecutor
 
             var candidates = (kind switch
             {
-                LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(minecraftVersion)).Cast<IInstallEntry>(),
-                LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(minecraftVersion)).Cast<IInstallEntry>(),
-                LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(minecraftVersion, true)).Cast<IInstallEntry>(),
-                LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(minecraftVersion)).Cast<IInstallEntry>(),
-                LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(minecraftVersion)).Cast<IInstallEntry>(),
+                LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(minecraftVersion)),
+                LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(minecraftVersion)),
+                LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(minecraftVersion, true)),
+                LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(minecraftVersion)),
+                LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(minecraftVersion))
+                    .Cast<IInstallEntry>(),
                 _ => throw new InvalidOperationException($"不支持的加载器：{kind}")
             }).ToList();
 
@@ -130,7 +128,7 @@ public static class PortalCommandExecutor
             result[kind] = entry;
         }
 
-        
+
         var primaries = result.Keys.Where(kind => kind != LoaderKind.OptiFine).ToList();
         if (primaries.Count > 1)
             throw new InvalidOperationException($"加载器 {string.Join("、", primaries)} 不能同时安装。");
@@ -140,15 +138,19 @@ public static class PortalCommandExecutor
         return result;
     }
 
-    private static LoaderKind ParseLoaderKind(string value) => value.ToLowerInvariant() switch
+    private static LoaderKind ParseLoaderKind(string value)
     {
-        "fabric" => LoaderKind.Fabric,
-        "forge" => LoaderKind.Forge,
-        "neoforge" => LoaderKind.NeoForge,
-        "quilt" => LoaderKind.Quilt,
-        "optifine" => LoaderKind.OptiFine,
-        _ => throw new InvalidOperationException($"未知的加载器“{value}”，支持：fabric / forge / neoforge / quilt / optifine。")
-    };
+        return value.ToLowerInvariant() switch
+        {
+            "fabric" => LoaderKind.Fabric,
+            "forge" => LoaderKind.Forge,
+            "neoforge" => LoaderKind.NeoForge,
+            "quilt" => LoaderKind.Quilt,
+            "optifine" => LoaderKind.OptiFine,
+            _ => throw new InvalidOperationException(
+                $"未知的加载器“{value}”，支持：fabric / forge / neoforge / quilt / optifine。")
+        };
+    }
 
     private static string CreateRecommendedVersionId(string minecraftVersion,
         Dictionary<LoaderKind, IInstallEntry> loaders)
@@ -158,16 +160,6 @@ public static class PortalCommandExecutor
             $"{pair.Key}-{MinecraftInstallationViewModel.GetLoaderVersion(pair.Key, pair.Value)}");
         return $"{minecraftVersion} {string.Join(" + ", names)}";
     }
-
-    private enum ModpackSourceKind
-    {
-        LocalFile,
-        RemoteUrl,
-        Project
-    }
-
-    private sealed record ResolvedPackFile(string Url, string FileName, long Size, string DisplayName,
-        string? IconUrl = null);
 
     private static void StartModpackInstall(TopLevel window, PortalCommand command)
     {
@@ -194,7 +186,11 @@ public static class PortalCommandExecutor
                 new TaskActionDefinition
                 {
                     Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
-                    ExecuteAsync = (managedTask, _) => { managedTask.RequestCancellation(); return Task.CompletedTask; },
+                    ExecuteAsync = (managedTask, _) =>
+                    {
+                        managedTask.RequestCancellation();
+                        return Task.CompletedTask;
+                    },
                     CanExecute = managedTask => managedTask.CanBeCancelled,
                     IsVisible = managedTask => !managedTask.IsTerminal
                 }
@@ -274,7 +270,10 @@ public static class PortalCommandExecutor
                             Directory.Delete(temporaryFolder, true);
                         }
                     }
-                    catch (Exception exception) { Logger.Error($"清理外部命令整合包临时目录失败：{temporaryFolder}", exception); }
+                    catch (Exception exception)
+                    {
+                        Logger.Error($"清理外部命令整合包临时目录失败：{temporaryFolder}", exception);
+                    }
                 }).Forget("清理外部命令整合包临时目录");
         }
     }
@@ -287,7 +286,7 @@ public static class PortalCommandExecutor
         throw new InvalidOperationException("无法识别的整合包：仅支持 Modrinth（.mrpack）与 CurseForge（.zip）整合包。");
     }
 
-        private static async Task<ResolvedPackFile> ResolveProjectFileAsync(TaskExecutionContext context, string query,
+    private static async Task<ResolvedPackFile> ResolveProjectFileAsync(TaskExecutionContext context, string query,
         string? provider, string? packVersion)
     {
         var providers = provider switch
@@ -327,7 +326,7 @@ public static class PortalCommandExecutor
         CancellationToken cancellationToken)
     {
         var provider = new ModrinthProvider();
-        MinecraftLaunch.Base.Models.Network.ModrinthResource? project = null;
+        ModrinthResource? project = null;
         try
         {
             var direct = await provider.SearchByProjectIdAsync(query, cancellationToken);
@@ -337,14 +336,13 @@ public static class PortalCommandExecutor
         }
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {
-            
         }
 
         project ??= (await provider.SearchAsync(query, projectType: "modpack", cancellationToken: cancellationToken))
                     .FirstOrDefault()
                     ?? throw new InvalidOperationException($"Modrinth 上未找到整合包“{query}”。");
 
-        MinecraftLaunch.Base.Models.Network.ModrinthResourceFile? file = null;
+        ModrinthResourceFile? file = null;
         if (!string.IsNullOrWhiteSpace(packVersion))
         {
             try
@@ -355,6 +353,7 @@ public static class PortalCommandExecutor
             catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
             }
+
             file ??= (await provider.GetModFilesByProjectIdAsync(project.ProjectId, cancellationToken))
                      .FirstOrDefault(candidate =>
                          string.Equals(candidate.VersionNumber, packVersion, StringComparison.OrdinalIgnoreCase) ||
@@ -377,7 +376,7 @@ public static class PortalCommandExecutor
         CancellationToken cancellationToken)
     {
         var provider = new CurseforgeProvider();
-        MinecraftLaunch.Base.Models.Network.CurseforgeResource? project = null;
+        CurseforgeResource? project = null;
         if (long.TryParse(query, out var modId))
             project = (await provider.GetResourcesByModIdsAsync([modId], cancellationToken)).FirstOrDefault();
         project ??= (await provider.SearchResourcesPageAsync(new CurseforgeSearchOptions
@@ -408,11 +407,11 @@ public static class PortalCommandExecutor
     }
 
     private static async Task<string> ResolveCurseForgeDownloadUrlAsync(
-        MinecraftLaunch.Base.Models.Network.CurseforgeResourceFile file, CancellationToken cancellationToken)
+        CurseforgeResourceFile file, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(file.DownloadUrl)) return file.DownloadUrl;
 
-        
+
         var idText = file.Id.ToString();
         if (idText.Length <= 4)
             throw new InvalidOperationException($"无法获取 CurseForge 文件“{file.FileName}”的下载地址。");
@@ -423,7 +422,6 @@ public static class PortalCommandExecutor
             $"https://mediafiles.forgecdn.net/files/{idText[..4]}/{idText[4..]}/{encodedName}"
         ];
         foreach (var candidate in candidates)
-        {
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Head, candidate);
@@ -433,12 +431,12 @@ public static class PortalCommandExecutor
             catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
             }
-        }
 
         throw new InvalidOperationException($"无法获取 CurseForge 文件“{file.FileName}”的下载地址。");
     }
 
-        private static async Task<string?> TryGetIconUrlFromModrinthCdnAsync(string url, CancellationToken cancellationToken)
+    private static async Task<string?> TryGetIconUrlFromModrinthCdnAsync(string url,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -481,7 +479,8 @@ public static class PortalCommandExecutor
             }, DispatcherPriority.Background)
         };
         var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
-        if (result.Type == DownloadResultType.Cancelled) throw new OperationCanceledException(context.CancellationToken);
+        if (result.Type == DownloadResultType.Cancelled)
+            throw new OperationCanceledException(context.CancellationToken);
         if (result.Type != DownloadResultType.Successful) throw result.Exception ?? new IOException("整合包下载失败。");
     }
 
@@ -513,12 +512,13 @@ public static class PortalCommandExecutor
                            : $"文件夹“{command.Folder}”中未找到实例“{id}”。");
 
         var target = BuildLaunchTarget(instance, command);
-        
-        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(instance, logSession =>
-            MinecraftLogPage.Open(logSession, window)), target);
+
+        _ = MinecraftLaunchService.LaunchAsync(instance, window, MinecraftLaunchOptionsFactory.Create(instance,
+            logSession =>
+                MinecraftLogPage.Open(logSession, window)), target);
     }
 
-        private static RecentPlayTarget? BuildLaunchTarget(MinecraftInstance instance, PortalCommand command)
+    private static RecentPlayTarget? BuildLaunchTarget(MinecraftInstance instance, PortalCommand command)
     {
         if (!string.IsNullOrWhiteSpace(command.WorldFolder))
         {
@@ -542,13 +542,15 @@ public static class PortalCommandExecutor
         return null;
     }
 
-    private static bool MatchesInstanceId(MinecraftInstance instance, string id) =>
-        string.Equals(instance.MinecraftEntry?.Id, id, StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Path.GetFileName(NormalizePath(instance.InstanceFolderPath)), id,
-            StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(instance.InstanceName, id, StringComparison.OrdinalIgnoreCase);
+    private static bool MatchesInstanceId(MinecraftInstance instance, string id)
+    {
+        return string.Equals(instance.MinecraftEntry?.Id, id, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(Path.GetFileName(NormalizePath(instance.InstanceFolderPath)), id,
+                   StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(instance.InstanceName, id, StringComparison.OrdinalIgnoreCase);
+    }
 
-        private static MinecraftFolderEntry ResolveInstallFolder(string? specification)
+    private static MinecraftFolderEntry ResolveInstallFolder(string? specification)
     {
         var folders = Data.ConfigEntry.MinecraftFolders
             .Where(folder => folder.SupportsInstallation).ToList();
@@ -570,7 +572,7 @@ public static class PortalCommandExecutor
                 string.Equals(NormalizePath(folder.FolderPath), fullPath, PathComparison));
             if (byPath is not null) return byPath;
 
-            
+
             if (Directory.Exists(fullPath))
             {
                 var entry = new MinecraftFolderEntry
@@ -610,27 +612,24 @@ public static class PortalCommandExecutor
         }
     }
 
-        private static StringComparison PathComparison =>
-        OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-
     private static string NormalizePath(string path)
     {
-        
         try
         {
             path = Path.GetFullPath(path);
         }
         catch (Exception)
         {
-            
         }
+
         return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
     private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
         Func<TaskExecutionContext, Task> operation)
     {
-        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 }, operation);
+        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 },
+            operation);
         step.Start();
         await step.Completion;
         if (step.Exception is null) return;
@@ -642,10 +641,21 @@ public static class PortalCommandExecutor
         Func<TaskExecutionContext, Task<T>> operation)
     {
         T? result = default;
-        await RunStepAsync(context, name, description, async step =>
-        {
-            result = await operation(step);
-        });
+        await RunStepAsync(context, name, description, async step => { result = await operation(step); });
         return result!;
     }
+
+    private enum ModpackSourceKind
+    {
+        LocalFile,
+        RemoteUrl,
+        Project
+    }
+
+    private sealed record ResolvedPackFile(
+        string Url,
+        string FileName,
+        long Size,
+        string DisplayName,
+        string? IconUrl = null);
 }

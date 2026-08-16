@@ -1,16 +1,11 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
-using Avalonia.VisualTree;
-using Portal.Classes.Entries;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
 using Portal.Core.Services;
-using Portal.Module.Widgets;
-using Portal.Services;
 using Portal.Views.Pages;
 
 namespace Portal.Views.Widgets;
@@ -27,11 +22,20 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
         _ping.Changed += OnPingChanged;
     }
 
-    protected override void OnInstanceResolved() => RefreshDisplay();
+    protected override void OnInstanceResolved()
+    {
+        RefreshDisplay();
+    }
 
-    protected override void OnInstanceIconRefreshed() => RefreshDisplay();
+    protected override void OnInstanceIconRefreshed()
+    {
+        RefreshDisplay();
+    }
 
-    private void OnPingChanged() => RefreshDisplay();
+    private void OnPingChanged()
+    {
+        RefreshDisplay();
+    }
 
     private void RefreshDisplay()
     {
@@ -57,6 +61,7 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
             statusText.Text = _ping.StatusText;
             statusText.Foreground = _ping.StatusBrush;
         }
+
         if (statusDot != null) statusDot.Fill = _ping.StatusBrush;
         if (pingText != null)
         {
@@ -64,6 +69,7 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
             pingText.Foreground = _ping.PingBrush;
             pingText.IsVisible = _ping.HasPing;
         }
+
         if (playersText != null)
         {
             playersText.Text = _ping.PlayersText;
@@ -113,6 +119,7 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
             ServerPort: port);
 
         _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)),
+            target);
     }
 }

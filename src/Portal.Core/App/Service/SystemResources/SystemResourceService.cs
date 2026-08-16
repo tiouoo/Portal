@@ -1,3 +1,4 @@
+using System.Net.NetworkInformation;
 using Hardware.Info;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -5,8 +6,35 @@ namespace Portal.Core.App.Service.SystemResources;
 
 public sealed class SystemResourceService : IDisposable
 {
-    private readonly IHardwareInfo _hardware = new HardwareInfo();
+    private static readonly string[] VirtualGpuKeywords =
+    [
+        "microsoft basic render",
+        "remote display",
+        "mirror",
+        "virtual",
+        "indirect",
+        "software",
+        "rdp",
+        "parsec",
+        "anydesk",
+        "todesk",
+        "teamviewer",
+        "splashtop",
+        "spacedesk",
+        "duet",
+        "displaylink",
+        "iddcx",
+        "ammyy",
+        "supremo",
+        "no machine",
+        "meshconsole",
+        "lite manager",
+        "usb video",
+        "microsoft hyper-v"
+    ];
+
     private readonly Timer _fastTimer;
+    private readonly IHardwareInfo _hardware = new HardwareInfo();
     private readonly Timer _slowTimer;
     private bool _disposed;
 
@@ -14,16 +42,17 @@ public sealed class SystemResourceService : IDisposable
     private ulong _lastNetBytesSent;
     private DateTime _lastNetSampleTime;
 
-    public static SystemResourceService Instance { get; } = new();
-
-    public event EventHandler<ResourceSnapshot>? Updated;
-
-    public ResourceSnapshot Latest { get; private set; } = new();
-
     private SystemResourceService()
     {
-        try { _hardware.RefreshVideoControllerList(refreshMonitorList: false); }
-        catch (Exception exception) { Logger.Error("预热 GPU 信息采集失败。", exception); }
+        try
+        {
+            _hardware.RefreshVideoControllerList(false);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error("预热 GPU 信息采集失败。", exception);
+        }
+
         _ = CpuUsageProvider.GetUsage();
         _ = GpuUsageProvider.GetUsage();
 
@@ -31,7 +60,24 @@ public sealed class SystemResourceService : IDisposable
         _slowTimer = new Timer(_ => SampleSlow(), null, 2000, 3000);
     }
 
-    public static void Initialize() => _ = Instance;
+    public static SystemResourceService Instance { get; } = new();
+
+    public ResourceSnapshot Latest { get; private set; } = new();
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _fastTimer.Dispose();
+        _slowTimer.Dispose();
+        _disposed = true;
+    }
+
+    public event EventHandler<ResourceSnapshot>? Updated;
+
+    public static void Initialize()
+    {
+        _ = Instance;
+    }
 
     private void SampleFast()
     {
@@ -47,8 +93,8 @@ public sealed class SystemResourceService : IDisposable
         var memStatus = _hardware.MemoryStatus;
 
         var cpuUsage = CpuUsageProvider.GetUsage();
-        ulong totalMem = memStatus.TotalPhysical;
-        ulong usedMem = totalMem - memStatus.AvailablePhysical;
+        var totalMem = memStatus.TotalPhysical;
+        var usedMem = totalMem - memStatus.AvailablePhysical;
 
         ulong totalDisk = 0, usedDisk = 0;
         float diskUsage = 0;
@@ -73,9 +119,9 @@ public sealed class SystemResourceService : IDisposable
         try
         {
             var now = DateTime.UtcNow;
-            var interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
-                .Where(ni => ni.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up &&
-                             ni.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback);
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up &&
+                             ni.NetworkInterfaceType != NetworkInterfaceType.Loopback);
             ulong totalReceived = 0, totalSent = 0;
             foreach (var ni in interfaces)
             {
@@ -126,7 +172,7 @@ public sealed class SystemResourceService : IDisposable
 
         try
         {
-            _hardware.RefreshVideoControllerList(refreshMonitorList: false);
+            _hardware.RefreshVideoControllerList(false);
             var gpu = PickRealGpu(_hardware.VideoControllerList);
             if (gpu != null)
                 gpuName = gpu.Name;
@@ -166,40 +212,5 @@ public sealed class SystemResourceService : IDisposable
             return true;
         var lower = name.ToLowerInvariant();
         return VirtualGpuKeywords.Any(lower.Contains);
-    }
-
-    private static readonly string[] VirtualGpuKeywords =
-    [
-        "microsoft basic render",
-        "remote display",
-        "mirror",
-        "virtual",
-        "indirect",
-        "software",
-        "rdp",
-        "parsec",
-        "anydesk",
-        "todesk",
-        "teamviewer",
-        "splashtop",
-        "spacedesk",
-        "duet",
-        "displaylink",
-        "iddcx",
-        "ammyy",
-        "supremo",
-        "no machine",
-        "meshconsole",
-        "lite manager",
-        "usb video",
-        "microsoft hyper-v"
-    ];
-
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _fastTimer.Dispose();
-        _slowTimer.Dispose();
-        _disposed = true;
     }
 }

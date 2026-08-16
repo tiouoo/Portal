@@ -1,10 +1,4 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Minecraft;
@@ -12,11 +6,8 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Operations.Account;
 using Portal.Core.Services;
-using Portal.Module.Initialize;
-using Portal.Services;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
@@ -48,7 +39,7 @@ public class Handler
         {
             var minecraftAccount = entry.Data as MinecraftAccount;
             Data.ConfigEntry.UsingMinecraftMinecraftAccount = minecraftAccount;
-            NotificationGateway.Notice(sender, $"已切换到 {minecraftAccount.Name}", NotificationType.Success);
+            sender.Notice($"已切换到 {minecraftAccount.Name}", NotificationType.Success);
         }
         else if (entry.Type == AggregatedSearchEntryType.AuthServer)
         {
@@ -94,7 +85,8 @@ public class Handler
         if (entry.Data is not RecentPlayTarget target) return;
 
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, sender,
-            MinecraftLaunchOptionsFactory.Create(target.Instance, logSession => MinecraftLogPage.Open(logSession, sender)), target);
+            MinecraftLaunchOptionsFactory.Create(target.Instance,
+                logSession => MinecraftLogPage.Open(logSession, sender)), target);
     }
 
     private static async Task EditAuthServer(AggregatedSearchEntry entry, TopLevel sender)
@@ -119,19 +111,19 @@ public class Handler
         var result = await OverlayDialog
             .ShowCustomAsync<EditAuthServer, EditAuthServerViewModel, EditAuthServerResult>(
                 new EditAuthServerViewModel(authServer, Data.ConfigEntry.AuthServers.ToArray()),
-                hostId: hostId, options: options);
+                hostId, options);
 
         if (result != null)
         {
             if (result.IsDeleted)
             {
                 Data.ConfigEntry.AuthServers.Remove(result.Server);
-                NotificationGateway.Notice(sender, $"已删除验证服务器：{result.Server.DisplayText}", NotificationType.Success);
+                sender.Notice($"已删除验证服务器：{result.Server.DisplayText}", NotificationType.Success);
             }
             else
             {
                 ConfigSaver.SaveConfig();
-                NotificationGateway.Notice(sender, "验证服务器已更新", NotificationType.Success);
+                sender.Notice("验证服务器已更新", NotificationType.Success);
             }
         }
     }

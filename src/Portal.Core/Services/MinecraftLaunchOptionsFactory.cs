@@ -27,7 +27,9 @@ public static class MinecraftLaunchOptionsFactory
             MaxMemory = Data.ConfigEntry.MinecraftMaxMemory,
             AutoSetJavaHighPerformanceGpu = Data.ConfigEntry.AutoSetJavaHighPerformanceGpu,
             AutoOptimizeMemoryBeforeGameLaunch = Data.ConfigEntry.AutoOptimizeMemoryBeforeGameLaunch,
-            SetChineseLanguageOnLaunch = overrideAdvanced ? javaConfig.AutoSetChineseLanguage : Data.ConfigEntry.AutoSetChineseLanguage,
+            SetChineseLanguageOnLaunch = overrideAdvanced
+                ? javaConfig.AutoSetChineseLanguage
+                : Data.ConfigEntry.AutoSetChineseLanguage,
             WindowTitle = overrideAdvanced && !string.IsNullOrWhiteSpace(javaConfig.OverrideMinecraftWindowTitle)
                 ? javaConfig.OverrideMinecraftWindowTitle
                 : Data.ConfigEntry.OverrideMinecraftWindowTitle,
@@ -48,7 +50,8 @@ public static class MinecraftLaunchOptionsFactory
             AccountRefreshed = UpdateMicrosoftAccount,
             BedrockAccountRefreshed = UpdateBedrockAccount,
             OpenLog = openLog,
-            InstallMissingJava = (version, progress, token) => JavaAutoInstallCoordinator.EnsureAsync(version, progress, token),
+            InstallMissingJava = (version, progress, token) =>
+                JavaAutoInstallCoordinator.EnsureAsync(version, progress, token),
             ResourceSourceRoots = ResolveResourceSourceRoots(instance)
         };
     }

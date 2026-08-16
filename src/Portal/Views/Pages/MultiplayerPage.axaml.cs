@@ -7,27 +7,21 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
-using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Module.AggregatedSearch;
-using Portal.Module.DefaultPage;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Multiplayer;
+using Portal.Views.Components;
 using Portal.Views.SubWindows;
+using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
-using Tio.Avalonia.Standard.Modules.Tasks;
-using Tio.Avalonia.Standard.Modules.DiskIO;
-using TioUi.Common;
-using TioUi.Common.Extensions;
-using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
@@ -60,14 +54,20 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; } = null!;
 
+    public void OnClose()
+    {
+        Logger.Info($"[Multiplayer] Page closing for {ViewModel.Edition} edition.");
+        Loaded -= OnLoaded;
+        ViewModel.Deactivate();
+        DataContext = null;
+    }
+
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
         Logger.Info($"[Multiplayer] Page loaded for {ViewModel.Edition} edition.");
         if (TopLevel.GetTopLevel(this) is OverlayWindow)
-        {
             this.FindControl<ContentControl>("Frame")!.MaxWidth = double.PositiveInfinity;
-        }
 
         ViewModel.Activate();
         ShowEditionContent();
@@ -82,15 +82,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     private void ShowEditionContent()
     {
-        this.FindControl<ContentControl>("Frame")!.Content = new Components.MultiplayerContentPage(ViewModel);
-    }
-
-    public void OnClose()
-    {
-        Logger.Info($"[Multiplayer] Page closing for {ViewModel.Edition} edition.");
-        Loaded -= OnLoaded;
-        ViewModel.Deactivate();
-        DataContext = null;
+        this.FindControl<ContentControl>("Frame")!.Content = new MultiplayerContentPage(ViewModel);
     }
 }
 
@@ -99,29 +91,29 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private static readonly GravityConeClient SharedClient = new();
     private static readonly SemaphoreSlim SharedClientStartLock = new(1, 1);
     private static GravityConeInstallation? SharedInstallation;
+    private readonly RoomState _bedrockRoom = new();
+    private readonly RoomState _javaRoom = new();
     private readonly CancellationTokenSource _lifetime = new();
     private GravityConeClient? _client;
-    private GravityConeInstallation? _installation;
     private bool _disposed;
+    private GravityConeInstallation? _installation;
     private bool _isActive;
-    private MinecraftEdition _edition = MinecraftEdition.Java;
-    private readonly RoomState _javaRoom = new();
-    private readonly RoomState _bedrockRoom = new();
-    private DateTimeOffset _lastRoomStatusRequest = DateTimeOffset.MinValue;
     private int _isRefreshingRoomStatus;
+    private DateTimeOffset _lastRoomStatusRequest = DateTimeOffset.MinValue;
     private CancellationTokenSource? _roomOperationCancellation;
 
     public MultiplayerPageViewModel(MinecraftEdition edition)
     {
-        _edition = edition;
+        Edition = edition;
         PlayerName = string.IsNullOrWhiteSpace(Data.ConfigEntry.OnlinePlayerName)
             ? Data.ConfigEntry.UsingMinecraftMinecraftAccount?.Name ?? string.Empty
             : Data.ConfigEntry.OnlinePlayerName;
     }
 
-    public MinecraftEdition Edition => _edition;
-    public bool IsJava => _edition == MinecraftEdition.Java;
-    public bool IsBedrock => _edition == MinecraftEdition.Bedrock;
+    public MinecraftEdition Edition { get; } = MinecraftEdition.Java;
+
+    public bool IsJava => Edition == MinecraftEdition.Java;
+    public bool IsBedrock => Edition == MinecraftEdition.Bedrock;
     public string EditionTitle => "联机";
     public bool IsNotBusy => !IsBusy;
     public bool CanOperate => IsReady && !IsBusy;
@@ -179,11 +171,13 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     public bool IsReady => !IsComponentMissing && !IsComponentOutdated && !IsComponentUnverifiable && IsBackendReady;
     public bool IsComponentBannerVisible => IsComponentMissing || IsComponentOutdated || IsComponentUnverifiable;
+
     public string ComponentTitle => IsComponentMissing
         ? "需要安装联机组件"
         : IsComponentUnverifiable
             ? "无法确认联机组件版本，请更新"
             : "联机组件需要更新";
+
     public string InstallActionText => IsComponentOutdated || IsComponentUnverifiable ? "更新并安装" : "下载并安装";
     public bool HasStatusText => !string.IsNullOrWhiteSpace(StatusText);
 
@@ -194,9 +188,11 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     public string NatProbeButtonText => IsProbingNat ? "检测中" : "检测 NAT";
     public string CreateRoomButtonText => IsCreatingRoom ? "创建中" : "创建房间";
     public string JoinRoomButtonText => IsJoiningRoom ? "加入中" : "加入";
+
     public string JoinCodePlaceholder => IsJava
         ? "请输入房间码（U/XXXX-XXXX-XXXX-XXXX）"
         : "请输入房间码（P/XXXX-XXXX-XXXX-XXXX）";
+
     public bool CanProbeNat => IsReady && !IsBusy && !IsProbingNat;
 
     [ObservableProperty] public partial string StatusText { get; set; } = "正在检测联机组件";
@@ -241,24 +237,41 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     [NotifyPropertyChangedFor(nameof(NatProbeButtonText))]
     public partial bool IsProbingNat { get; set; }
 
-    partial void OnStatusTextChanged(string value) => OnPropertyChanged(nameof(HasStatusText));
-
     public ObservableCollection<LanServerEntry> LanServers { get; } = [];
     public ObservableCollection<OnlineMember> Members { get; } = [];
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _lifetime.Cancel();
+        IsBackendReady = false;
+        if (_client is not null) _client.EventReceived -= ClientOnEventReceived;
+
+        _lifetime.Dispose();
+    }
+
+    partial void OnStatusTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasStatusText));
+    }
 
     partial void OnPlayerNameChanged(string value)
     {
         Data.ConfigEntry.OnlinePlayerName = value.Trim();
     }
 
-    partial void OnManualJavaPortChanged(string value) => OnPropertyChanged(nameof(CanCreateRoom));
+    partial void OnManualJavaPortChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanCreateRoom));
+    }
 
     public async Task InitializeAsync()
     {
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[Multiplayer] Initializing {Edition} multiplayer service.");
-        
-        
+
+
         if (await Task.Run(GravityConeInstaller.FindInstalled) is not { } installation)
         {
             IsComponentMissing = true;
@@ -282,19 +295,22 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                     Logger.Error(ex);
                     Notify($"联机服务启动失败：{FriendlyError(ex)}", NotificationType.Error);
                 }
+
                 break;
 
             case ComponentUpdateStatus.UpdateRequired:
                 IsComponentOutdated = true;
                 StatusText = "联机组件需要更新";
-                Logger.Warning($"[Multiplayer] {Edition} multiplayer component requires an update after {stopwatch.Elapsed}.");
+                Logger.Warning(
+                    $"[Multiplayer] {Edition} multiplayer component requires an update after {stopwatch.Elapsed}.");
                 await StopSharedClientIfOutdatedAsync();
                 break;
 
             case ComponentUpdateStatus.Unknown:
                 IsComponentUnverifiable = true;
                 StatusText = "联机组件版本校验失败";
-                Logger.Warning($"[Multiplayer] {Edition} multiplayer component version could not be verified after {stopwatch.Elapsed}.");
+                Logger.Warning(
+                    $"[Multiplayer] {Edition} multiplayer component version could not be verified after {stopwatch.Elapsed}.");
                 break;
         }
     }
@@ -307,7 +323,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         {
             if (SharedClient.IsRunning)
             {
-                Logger.Warning($"[Multiplayer] Detected outdated component; stopping shared client {SharedInstallation.CliPath}.");
+                Logger.Warning(
+                    $"[Multiplayer] Detected outdated component; stopping shared client {SharedInstallation.CliPath}.");
                 await SharedClient.StopAsync();
             }
         }
@@ -315,6 +332,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         {
             SharedClientStartLock.Release();
         }
+
         SharedInstallation = null;
     }
 
@@ -323,7 +341,10 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         _isActive = true;
     }
 
-    public void Deactivate() => _isActive = false;
+    public void Deactivate()
+    {
+        _isActive = false;
+    }
 
     [RelayCommand]
     private async Task InstallAsync()
@@ -362,7 +383,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 context.SetDescription(item.Message);
             }));
             var installation = await GravityConeInstaller.EnsureInstalledAsync(progress, context.CancellationToken,
-                forceUpdate: IsComponentOutdated || IsComponentUnverifiable);
+                IsComponentOutdated || IsComponentUnverifiable);
             context.ReportProgress(1);
             context.SetDescription("联机组件下载完成");
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -411,7 +432,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 }
                 else if (task.Status == ManagedTaskStatus.Faulted)
                 {
-                    Logger.Warning($"[Multiplayer] Component installation failed after {stopwatch.Elapsed}: {task.Exception}");
+                    Logger.Warning(
+                        $"[Multiplayer] Component installation failed after {stopwatch.Elapsed}: {task.Exception}");
                     Notify("联机组件下载失败", NotificationType.Error);
                 }
             });
@@ -681,10 +703,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             await _client.RequestAsync(room.Role == "host" ? "room.stop" : "room.leave", RoomParameters(Edition),
                 timeout: TimeSpan.FromSeconds(8), cancellationToken: _lifetime.Token);
             var otherEdition = Edition == MinecraftEdition.Java ? MinecraftEdition.Bedrock : MinecraftEdition.Java;
-            if (await CanRestartSharedClientAsync(otherEdition))
-            {
-                await RestartClientAsync();
-            }
+            if (await CanRestartSharedClientAsync(otherEdition)) await RestartClientAsync();
             ClearRoom(Edition);
             Logger.Info($"[Multiplayer] Left {Edition} room in {stopwatch.Elapsed}.");
             Notify("已离开房间", NotificationType.Success);
@@ -786,7 +805,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 case "paperconnect.room.player_left":
                     _ = RefreshRoomStatusAsync(edition: MinecraftEdition.Bedrock);
                     break;
-                case "paperconnect.room.info": ApplyRoomData(e.Data, _bedrockRoom.Role, MinecraftEdition.Bedrock); break;
+                case "paperconnect.room.info":
+                    ApplyRoomData(e.Data, _bedrockRoom.Role, MinecraftEdition.Bedrock); break;
                 case "room.closed":
                 case "room.disconnected":
                     ClearRoom(MinecraftEdition.Java);
@@ -825,7 +845,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             if (!force && DateTimeOffset.UtcNow - _lastRoomStatusRequest < TimeSpan.FromSeconds(1)) return;
             _lastRoomStatusRequest = DateTimeOffset.UtcNow;
             var targetEdition = edition ?? Edition;
-            var response = await _client.RequestAsync("room.status", RoomParameters(targetEdition), timeout: TimeSpan.FromSeconds(4),
+            var response = await _client.RequestAsync("room.status", RoomParameters(targetEdition),
+                timeout: TimeSpan.FromSeconds(4),
                 cancellationToken: _lifetime.Token);
             var role = response.Data.TryGetProperty("role", out var roleValue)
                 ? roleValue.GetString() ?? "none"
@@ -859,7 +880,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         room.Code = GetString(data, "code") ?? GetString(data, "room_code") ?? room.Code;
         room.Members.Clear();
         if (data.TryGetProperty("players", out var players) && players.ValueKind == JsonValueKind.Array)
-        {
             foreach (var player in players.EnumerateArray())
             {
                 var name = GetString(player, "name") ?? GetString(player, "player") ?? "未知成员";
@@ -870,7 +890,6 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                                : "GUEST");
                 room.Members.Add(new OnlineMember { Name = name, Vendor = vendor, Kind = kind });
             }
-        }
 
         if (edition == Edition) ApplyActiveRoomState();
     }
@@ -952,12 +971,17 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (edition == Edition) ApplyActiveRoomState();
     }
 
-    private RoomState GetRoomState(MinecraftEdition edition) =>
-        edition == MinecraftEdition.Java ? _javaRoom : _bedrockRoom;
+    private RoomState GetRoomState(MinecraftEdition edition)
+    {
+        return edition == MinecraftEdition.Java ? _javaRoom : _bedrockRoom;
+    }
 
-    private static object RoomParameters(MinecraftEdition edition) => edition == MinecraftEdition.Bedrock
-        ? new { protocol = "paperconnect" }
-        : new { };
+    private static object RoomParameters(MinecraftEdition edition)
+    {
+        return edition == MinecraftEdition.Bedrock
+            ? new { protocol = "paperconnect" }
+            : new { };
+    }
 
     private void ApplyActiveRoomState()
     {
@@ -969,33 +993,36 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         OnPropertyChanged(nameof(MemberCountText));
     }
 
-    private sealed class RoomState
+    private static string? GetString(JsonElement element, string property)
     {
-        public string Role { get; set; } = "none";
-        public string Code { get; set; } = string.Empty;
-        public List<OnlineMember> Members { get; } = [];
-    }
-
-    private static string? GetString(JsonElement element, string property) =>
-        element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
-        value.ValueKind == JsonValueKind.String
+        return element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
+               value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
+    }
 
-    private static string FriendlyError(Exception exception) =>
-        exception is GravityConeException { Code: "INTERNAL_ERROR" } &&
-        exception.Message.Contains("未检测", StringComparison.Ordinal)
+    private static string FriendlyError(Exception exception)
+    {
+        return exception is GravityConeException { Code: "INTERNAL_ERROR" } &&
+               exception.Message.Contains("未检测", StringComparison.Ordinal)
             ? "未检测到已开放的 Minecraft 世界"
             : exception.Message;
+    }
 
-    private static string NatName(int type) => type switch
+    private static string NatName(int type)
     {
-        1 => "开放网络", 2 => "对称防火墙", 3 => "完全圆锥", 4 => "受限圆锥",
-        5 => "端口受限", 6 => "对称递增", 7 => "对称 NAT", _ => "未知"
-    };
+        return type switch
+        {
+            1 => "开放网络", 2 => "对称防火墙", 3 => "完全圆锥", 4 => "受限圆锥",
+            5 => "端口受限", 6 => "对称递增", 7 => "对称 NAT", _ => "未知"
+        };
+    }
 
     [RelayCommand]
-    private void ClearJoinCode() => JoinCode = string.Empty;
+    private void ClearJoinCode()
+    {
+        JoinCode = string.Empty;
+    }
 
     private static void Notify(string message, NotificationType type)
     {
@@ -1003,20 +1030,13 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             {
                 MainWindow: { } window
             })
-            NotificationGateway.Notice(window, message, type);
+            window.Notice(message, type);
     }
 
-    public async ValueTask DisposeAsync()
+    private sealed class RoomState
     {
-        if (_disposed) return;
-        _disposed = true;
-        _lifetime.Cancel();
-        IsBackendReady = false;
-        if (_client is not null)
-        {
-            _client.EventReceived -= ClientOnEventReceived;
-        }
-
-        _lifetime.Dispose();
+        public string Role { get; set; } = "none";
+        public string Code { get; set; } = string.Empty;
+        public List<OnlineMember> Members { get; } = [];
     }
 }

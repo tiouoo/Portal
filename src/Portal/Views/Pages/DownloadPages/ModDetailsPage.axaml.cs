@@ -1,36 +1,34 @@
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using AsyncImageLoader;
-using Portal.Module.Imaging;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Classes;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Provider;
 using MinecraftLaunch.Components.Downloader;
+using MinecraftLaunch.Components.Provider;
 using Portal.Core.Classes;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
-using Portal.Views.Pages.InstancePages;
 using Portal.Core.Minecraft.Services;
-using Tio.Avalonia.Standard.Modules.Tasks;
+using Portal.Module.Imaging;
+using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
-using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -42,8 +40,8 @@ public sealed record ModDetailsTarget(
 
 public partial class ModDetailsPage : UserControl, ITioTabPage
 {
-    private ModVersionGroup? _targetVersionGroup;
     private bool _isWaitingForTargetVersionGroup;
+    private ModVersionGroup? _targetVersionGroup;
 
     public ModDetailsPage() : this(new ModDetailsTarget(ModDetailsSource.Modrinth, string.Empty))
     {
@@ -102,7 +100,7 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         _isWaitingForTargetVersionGroup = false;
         _targetVersionGroup = null;
         expander.IsExpanded = true;
-        
+
         Dispatcher.UIThread.Post(() => expander.BringIntoView(), DispatcherPriority.Render);
     }
 
@@ -120,7 +118,7 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         if (result is null)
             return;
 
-        string? destination = result.Destination == ModDownloadDestination.Install && result.Instance is not null
+        var destination = result.Destination == ModDownloadDestination.Install && result.Instance is not null
             ? Path.Combine(result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder), file.FileName)
             : await SelectSaveDestinationAsync(topLevel, file);
         if (string.IsNullOrWhiteSpace(destination))
@@ -139,8 +137,9 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     public static async Task QuickDownloadAsync(TopLevel topLevel, ModDetailsTarget target)
     {
         var loading = new QuickDownloadLoadingDialogViewModel("下载模组");
-        var loadingDialog = OverlayDialog.ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
-            object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
+        var loadingDialog = OverlayDialog
+            .ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
+                object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
             {
                 Title = "下载模组", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
             });
@@ -148,9 +147,11 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         {
             IReadOnlyList<ModVersionFileItem> files = target.Source switch
             {
-                ModDetailsSource.Modrinth => (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
+                ModDetailsSource.Modrinth =>
+                    (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
                     .Select(ModVersionFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(long.Parse(target.ProjectId)))
+                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(
+                        long.Parse(target.ProjectId)))
                     .Select(ModVersionFileItem.From).ToArray(),
                 _ => []
             };
@@ -184,7 +185,7 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         if (result is null) return;
         var file = result.File;
 
-        string? destination = result.Destination == ModDownloadDestination.Install && result.Instance is not null
+        var destination = result.Destination == ModDownloadDestination.Install && result.Instance is not null
             ? Path.Combine(result.Instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder), file.FileName)
             : await SelectSaveDestinationAsync(topLevel, file);
         if (string.IsNullOrWhiteSpace(destination)) return;
@@ -267,10 +268,10 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
 
         if (task.Status == ManagedTaskStatus.Completed)
             Dispatcher.UIThread.Post(() =>
-                NotificationGateway.Notice(topLevel, $"{fileName} 下载完成", NotificationType.Success));
+                topLevel.Notice($"{fileName} 下载完成", NotificationType.Success));
         else if (task.Status == ManagedTaskStatus.Faulted)
             Dispatcher.UIThread.Post(() =>
-                NotificationGateway.Notice(topLevel, $"{fileName} 下载失败", NotificationType.Error));
+                topLevel.Notice($"{fileName} 下载失败", NotificationType.Error));
         await Task.Delay(TimeSpan.FromSeconds(3));
         Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
     }
@@ -289,18 +290,17 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
 
 public partial class ModDetailsPageViewModel(ModDetailsTarget target) : ObservableObject, IDisposable
 {
-    private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseforge = new();
-    private bool _loaded;
-    private bool _buildingFilters;
-    private bool _hasLocatedTargetVersionGroup;
-    private bool _disposed;
     private readonly CancellationTokenSource _disposeCancellation = new();
+    private readonly ModrinthProvider _modrinth = new();
+    private IReadOnlyList<ModVersionGroup> _allVersionGroups = [];
+    private bool _buildingFilters;
+    private bool _disposed;
     private CancellationTokenSource? _filterCancellation;
     private CancellationTokenSource? _filterDebounce;
-    private IReadOnlyList<ModVersionGroup> _allVersionGroups = [];
+    private bool _hasLocatedTargetVersionGroup;
+    private bool _loaded;
     private int _nextVersionGroupIndex;
-    public event Action<ModVersionGroup>? TargetVersionGroupReady;
     public ObservableCollection<ModMinecraftVersionFilter> VersionFilters { get; } = [];
     public ObservableCollection<ModLoaderFilter> LoaderFilters { get; } = [];
     [ObservableProperty] public partial ObservableCollection<ModVersionGroup> VersionGroups { get; set; } = [];
@@ -326,6 +326,29 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     public string LoadMoreVersionGroupsText => $"显示更多版本（剩余 {_allVersionGroups.Count - _nextVersionGroupIndex} 个）";
     private IReadOnlyList<ModVersionFileItem> Files { get; set; } = [];
 
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _buildingFilters = true;
+        _filterCancellation = null;
+        _filterDebounce = null;
+        CancelInBackground(_disposeCancellation);
+
+        VersionGroups = [];
+        TargetVersionGroupReady = null;
+        VersionFilters.Clear();
+        LoaderFilters.Clear();
+        Screenshots.Clear();
+        ScreenshotIndices.Clear();
+        SelectedVersionFilter = null;
+        SelectedLoaderFilter = null;
+        Files = [];
+        _allVersionGroups = [];
+    }
+
+    public event Action<ModVersionGroup>? TargetVersionGroupReady;
+
     public async Task LoadAsync()
     {
         if (_loaded) return;
@@ -337,7 +360,8 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             if (target.Source == ModDetailsSource.Modrinth)
             {
                 var project = await _modrinth.SearchByProjectIdAsync(target.ProjectId, cancellationToken);
-                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
+                var translations = await ProjectTranslationService.GetTranslationsAsync(
+                    ProjectTranslationSource.Modrinth,
                     [project.ProjectId], cancellationToken);
                 Name = project.Name;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
@@ -354,7 +378,8 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
                     (await _curseforge.GetResourcesByModIdsAsync([long.Parse(target.ProjectId)], cancellationToken))
                     .First();
                 var projectId = project.Id.ToString();
-                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.CurseForge,
+                var translations = await ProjectTranslationService.GetTranslationsAsync(
+                    ProjectTranslationSource.CurseForge,
                     [projectId], cancellationToken);
                 Name = project.Name;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
@@ -477,12 +502,14 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             LoadMoreVersionGroups();
             if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(target.GameVersion) &&
                 VersionGroups.FirstOrDefault(group => group.MinecraftVersion == target.GameVersion &&
-                    (LoaderName(target.Loader) is not { } targetLoader || group.Loader == targetLoader)) is { } targetGroup)
+                                                      (LoaderName(target.Loader) is not { } targetLoader ||
+                                                       group.Loader == targetLoader)) is { } targetGroup)
             {
                 _hasLocatedTargetVersionGroup = true;
                 targetGroup.IsExpanded = true;
                 TargetVersionGroupReady?.Invoke(targetGroup);
             }
+
             OnPropertyChanged(nameof(IsEmpty));
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -517,8 +544,10 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         OnPropertyChanged(nameof(HasScreenshots));
     }
 
-    private static string FormatMetadata(DateTime updated, int downloadCount, string source) =>
-        $"{source}·{FormatRelativeTime(updated)}·{downloadCount:N0} 下载";
+    private static string FormatMetadata(DateTime updated, int downloadCount, string source)
+    {
+        return $"{source}·{FormatRelativeTime(updated)}·{downloadCount:N0} 下载";
+    }
 
     private static string FormatRelativeTime(DateTime timestamp)
     {
@@ -541,31 +570,13 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         return match.Success ? $"{match.Groups[1].Value}.{match.Groups[2].Value}" : null;
     }
 
-    private static string? LoaderName(ModLoaderType loader) => loader switch
+    private static string? LoaderName(ModLoaderType loader)
     {
-        ModLoaderType.NeoForge => "NeoForge", ModLoaderType.Forge => "Forge", ModLoaderType.Fabric => "Fabric",
-        ModLoaderType.Quilt => "Quilt", _ => null
-    };
-
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        _buildingFilters = true;
-        _filterCancellation = null;
-        _filterDebounce = null;
-        CancelInBackground(_disposeCancellation);
-        
-        VersionGroups = [];
-        TargetVersionGroupReady = null;
-        VersionFilters.Clear();
-        LoaderFilters.Clear();
-        Screenshots.Clear();
-        ScreenshotIndices.Clear();
-        SelectedVersionFilter = null;
-        SelectedLoaderFilter = null;
-        Files = [];
-        _allVersionGroups = [];
+        return loader switch
+        {
+            ModLoaderType.NeoForge => "NeoForge", ModLoaderType.Forge => "Forge", ModLoaderType.Fabric => "Fabric",
+            ModLoaderType.Quilt => "Quilt", _ => null
+        };
     }
 
     private static void CancelInBackground(CancellationTokenSource cancellation)
@@ -583,7 +594,10 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         {
             Logger.Debug($"[ModDetails] Cancellation source was already disposed: {exception}");
         }
-        finally { cancellation.Dispose(); }
+        finally
+        {
+            cancellation.Dispose();
+        }
     }
 }
 
@@ -595,6 +609,17 @@ public sealed partial class ModVersionGroup : ObservableObject
 {
     private const int PageSize = 20;
     private readonly IReadOnlyList<ModVersionFileItem> _files;
+
+    public ModVersionGroup(string title, IReadOnlyList<ModVersionFileItem> files, string loader,
+        string minecraftVersion)
+    {
+        Title = title;
+        _files = files;
+        Loader = loader;
+        MinecraftVersion = minecraftVersion;
+        LoadMore();
+    }
+
     public string Title { get; }
     public string Loader { get; }
     public string MinecraftVersion { get; }
@@ -605,15 +630,6 @@ public sealed partial class ModVersionGroup : ObservableObject
 
     [ObservableProperty] public partial bool IsExpanded { get; set; }
 
-    public ModVersionGroup(string title, IReadOnlyList<ModVersionFileItem> files, string loader, string minecraftVersion)
-    {
-        Title = title;
-        _files = files;
-        Loader = loader;
-        MinecraftVersion = minecraftVersion;
-        LoadMore();
-    }
-
     [RelayCommand]
     private void LoadMore()
     {
@@ -622,5 +638,3 @@ public sealed partial class ModVersionGroup : ObservableObject
         OnPropertyChanged(nameof(LoadMoreText));
     }
 }
-
-

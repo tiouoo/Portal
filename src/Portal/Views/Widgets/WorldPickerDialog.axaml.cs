@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.IO;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media.Imaging;
@@ -13,7 +12,10 @@ namespace Portal.Views.Widgets;
 
 public partial class WorldPickerDialog : UserControl
 {
-    public WorldPickerDialog() => InitializeComponent();
+    public WorldPickerDialog()
+    {
+        InitializeComponent();
+    }
 
     private void WorldItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -29,19 +31,26 @@ public partial class WorldPickerDialogViewModel : ObservableObject, IDialogConte
     private readonly MinecraftInstance _instance;
     private readonly WorldSaveService _saveService = new();
     private List<WorldPickItem> _allItems = [];
-
-    [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private bool _isEmpty;
 
-    public ObservableCollection<WorldPickItem> FilteredItems { get; } = [];
-
-    public string InstanceHint => $"实例：{_instance.InstanceName}";
+    [ObservableProperty] private string _searchText = string.Empty;
 
     public WorldPickerDialogViewModel(MinecraftInstance instance)
     {
         _instance = instance;
         _ = LoadAsync();
     }
+
+    public ObservableCollection<WorldPickItem> FilteredItems { get; } = [];
+
+    public string InstanceHint => $"实例：{_instance.InstanceName}";
+
+    public void Close()
+    {
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
 
     private async Task LoadAsync()
     {
@@ -50,7 +59,10 @@ public partial class WorldPickerDialogViewModel : ObservableObject, IDialogConte
         ApplyFilter();
     }
 
-    partial void OnSearchTextChanged(string value) => ApplyFilter();
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
 
     private void ApplyFilter()
     {
@@ -67,12 +79,15 @@ public partial class WorldPickerDialogViewModel : ObservableObject, IDialogConte
     }
 
     [RelayCommand]
-    private void Cancel() => RequestClose?.Invoke(this, null);
+    private void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 
-    public void Confirm(WorldPickItem item) => RequestClose?.Invoke(this, item);
-
-    public void Close() => Cancel();
-    public event EventHandler<object?>? RequestClose;
+    public void Confirm(WorldPickItem item)
+    {
+        RequestClose?.Invoke(this, item);
+    }
 }
 
 public sealed class WorldPickItem(WorldSaveInfo info)
@@ -81,7 +96,7 @@ public sealed class WorldPickItem(WorldSaveInfo info)
     public string FolderName => Info.FolderName;
     public string DisplayName => string.IsNullOrWhiteSpace(Info.LevelName) ? Info.FolderName : Info.LevelName;
     public string Summary => $"{Info.Version ?? "未知版本"}·{GetGameModeText(Info.GameMode)}";
-    public string LastPlayedText => $"最近游玩：{(Info.LastPlayedTime ?? Info.LastWriteTime):yyyy-MM-dd HH:mm}";
+    public string LastPlayedText => $"最近游玩：{Info.LastPlayedTime ?? Info.LastWriteTime:yyyy-MM-dd HH:mm}";
 
     public Bitmap? Icon
     {
@@ -92,6 +107,8 @@ public sealed class WorldPickItem(WorldSaveInfo info)
         }
     }
 
-    private static string GetGameModeText(int? gameMode) =>
-        gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+    private static string GetGameModeText(int? gameMode)
+    {
+        return gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+    }
 }

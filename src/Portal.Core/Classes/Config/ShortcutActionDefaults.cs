@@ -12,10 +12,15 @@ public static class ShortcutActionDefaults
         [ShortcutAction.OpenDebugPage] = "Shift+F12"
     };
 
-    public static Dictionary<string, string> CreateDefaultBindings() => DefaultGestures
-        .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
-        .ToDictionary(pair => pair.Key.ToString(), pair => pair.Value);
+    public static Dictionary<string, string> CreateDefaultBindings()
+    {
+        return DefaultGestures
+            .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
+            .ToDictionary(pair => pair.Key.ToString(), pair => pair.Value);
+    }
 
-    public static string? GetDefaultGesture(ShortcutAction action) =>
-        DefaultGestures.GetValueOrDefault(action);
+    public static string? GetDefaultGesture(ShortcutAction action)
+    {
+        return DefaultGestures.GetValueOrDefault(action);
+    }
 }

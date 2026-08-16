@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
@@ -17,10 +18,8 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class Logs : UserControl
 {
-    private readonly string? _logsPath;
     private readonly IHighlightingDefinition _highlighting;
-
-    public ObservableCollection<InstanceLogFileItem> LogFiles { get; } = [];
+    private readonly string? _logsPath;
 
     public Logs()
     {
@@ -37,6 +36,8 @@ public partial class Logs : UserControl
         AttachedToVisualTree += async (_, _) => await RefreshLogFilesAsync();
     }
 
+    public ObservableCollection<InstanceLogFileItem> LogFiles { get; } = [];
+
     private void ConfigureEditor()
     {
         LogEditor.Document = new TextDocument();
@@ -46,7 +47,7 @@ public partial class Logs : UserControl
 
     private static IHighlightingDefinition LoadHighlighting()
     {
-        using var stream = Avalonia.Platform.AssetLoader.Open(new Uri("avares://Portal/Assets/Highlighting/MinecraftLog.xshd"));
+        using var stream = AssetLoader.Open(new Uri("avares://Portal/Assets/Highlighting/MinecraftLog.xshd"));
         using var reader = XmlReader.Create(stream);
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
@@ -72,7 +73,8 @@ public partial class Logs : UserControl
         LogFiles.Clear();
         foreach (var file in files)
             LogFiles.Add(file);
-        LogFileSelector.SelectedItem = LogFiles.FirstOrDefault(file => file.Path == selectedPath) ?? LogFiles.FirstOrDefault();
+        LogFileSelector.SelectedItem =
+            LogFiles.FirstOrDefault(file => file.Path == selectedPath) ?? LogFiles.FirstOrDefault();
     }
 
     private async void LogFileSelector_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -90,9 +92,10 @@ public partial class Logs : UserControl
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel != null)
-                NotificationGateway.Notice(topLevel, "latest.log 被锁定", NotificationType.Warning);
+                topLevel.Notice("latest.log 被锁定", NotificationType.Warning);
 
-            var nextLog = LogFiles.FirstOrDefault(file => !string.Equals(file.Path, path, StringComparison.OrdinalIgnoreCase));
+            var nextLog =
+                LogFiles.FirstOrDefault(file => !string.Equals(file.Path, path, StringComparison.OrdinalIgnoreCase));
             if (nextLog != null)
                 LogFileSelector.SelectedItem = nextLog;
         }
@@ -100,7 +103,7 @@ public partial class Logs : UserControl
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel != null)
-                NotificationGateway.Notice(topLevel, $"无法读取日志：{ex.Message}", NotificationType.Error);
+                topLevel.Notice($"无法读取日志：{ex.Message}", NotificationType.Error);
         }
     }
 
@@ -120,7 +123,7 @@ public partial class Logs : UserControl
     {
         try
         {
-            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(bytes);
+            return new UTF8Encoding(false, true).GetString(bytes);
         }
         catch (DecoderFallbackException)
         {
@@ -129,19 +132,40 @@ public partial class Logs : UserControl
         }
     }
 
-    private static bool IsFileLocked(IOException exception) => (exception.HResult & 0xffff) is 32 or 33;
+    private static bool IsFileLocked(IOException exception)
+    {
+        return (exception.HResult & 0xffff) is 32 or 33;
+    }
 
-    private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e) => _ = RefreshLogFilesAsync();
+    private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _ = RefreshLogFilesAsync();
+    }
 
-    private void Export_OnClick(object? sender, RoutedEventArgs e) => _ = ExportLogAsync();
+    private void Export_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = ExportLogAsync();
+    }
 
-    private void Share_OnClick(object? sender, RoutedEventArgs e) => _ = LogSharingInteraction.ShareAsync(this, LogEditor.Document, "日志");
+    private void Share_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = LogSharingInteraction.ShareAsync(this, LogEditor.Document, "日志");
+    }
 
-    private void AnalyseAi_OnClick(object? sender, RoutedEventArgs e) => _ = LogSharingInteraction.AnalyseAiAsync(this, LogEditor.Document, "日志");
+    private void AnalyseAi_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = LogSharingInteraction.AnalyseAiAsync(this, LogEditor.Document, "日志");
+    }
 
-    private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => LogEditor.SelectAll();
+    private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
+    {
+        LogEditor.SelectAll();
+    }
 
-    private void Copy_OnClick(object? sender, RoutedEventArgs e) => LogEditor.Copy();
+    private void Copy_OnClick(object? sender, RoutedEventArgs e)
+    {
+        LogEditor.Copy();
+    }
 
     private async Task ExportLogAsync()
     {
@@ -151,7 +175,7 @@ public partial class Logs : UserControl
 
         if (string.IsNullOrWhiteSpace(LogEditor.Document.Text))
         {
-            NotificationGateway.Notice(topLevel, "没有可导出的日志", NotificationType.Warning);
+            topLevel.Notice("没有可导出的日志", NotificationType.Warning);
             return;
         }
 
@@ -172,11 +196,11 @@ public partial class Logs : UserControl
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new StreamWriter(stream);
             await writer.WriteAsync(LogEditor.Document.Text);
-            NotificationGateway.Notice(topLevel, "日志已导出", NotificationType.Success);
+            topLevel.Notice("日志已导出", NotificationType.Success);
         }
         catch (Exception ex)
         {
-            NotificationGateway.Notice(topLevel, $"导出失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"导出失败：{ex.Message}", NotificationType.Error);
         }
     }
 

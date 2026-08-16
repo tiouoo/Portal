@@ -10,8 +10,8 @@ namespace Portal.Core.Services;
 
 public sealed class RecentPlayListService
 {
-    private readonly object _refreshLock = new();
     private readonly RecentPlayService _recentPlayService = new();
+    private readonly object _refreshLock = new();
     private Task? _refreshTask;
 
     private RecentPlayListService()
@@ -33,7 +33,9 @@ public sealed class RecentPlayListService
     public Task RefreshAsync()
     {
         lock (_refreshLock)
+        {
             return _refreshTask ??= RefreshCoreAsync();
+        }
     }
 
     private async Task RefreshCoreAsync()
@@ -59,7 +61,9 @@ public sealed class RecentPlayListService
         finally
         {
             lock (_refreshLock)
+            {
                 _refreshTask = null;
+            }
         }
     }
 }

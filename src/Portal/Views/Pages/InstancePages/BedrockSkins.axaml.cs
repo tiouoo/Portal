@@ -15,6 +15,9 @@ public partial class BedrockSkins : UserControl, IDisposable
         SkinPacksContent.Content = new SkinPacks(instance);
     }
 
-    
-    public void Dispose() => (SkinPacksContent.Content as IDisposable)?.Dispose();
+
+    public void Dispose()
+    {
+        (SkinPacksContent.Content as IDisposable)?.Dispose();
+    }
 }

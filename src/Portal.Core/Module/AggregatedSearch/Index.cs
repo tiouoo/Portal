@@ -11,9 +11,8 @@ namespace Portal.Core.Module.AggregatedSearch;
 
 public class Index
 {
-    public static ObservableCollection<AggregatedSearchEntry> IndexedAggregatedSearchEntries { get; } = [];
-
     private static bool _isDirty = true;
+    public static ObservableCollection<AggregatedSearchEntry> IndexedAggregatedSearchEntries { get; } = [];
 
     public static void MarkDirty()
     {
@@ -28,29 +27,18 @@ public class Index
         IndexedAggregatedSearchEntries.Clear();
 
         foreach (var account in Data.ConfigEntry.MinecraftAccounts)
-        {
             IndexedAggregatedSearchEntries.Add(WithPinyin(CreateAccountEntry(account)));
-        }
 
         foreach (var authServer in Data.ConfigEntry.AuthServers)
-        {
             IndexedAggregatedSearchEntries.Add(WithPinyin(CreateAuthServerEntry(authServer)));
-        }
 
-        foreach (var page in GetAllPages())
-        {
-            IndexedAggregatedSearchEntries.Add(WithPinyin(page));
-        }
+        foreach (var page in GetAllPages()) IndexedAggregatedSearchEntries.Add(WithPinyin(page));
 
         foreach (var instance in InstanceManager.Instance.Instances)
-        {
             IndexedAggregatedSearchEntries.Add(WithPinyin(CreateInstanceEntry(instance)));
-        }
 
         foreach (var target in RecentPlayListService.Instance.Items)
-        {
             IndexedAggregatedSearchEntries.Add(WithPinyin(CreateRecentPlayEntry(target)));
-        }
     }
 
     private static AggregatedSearchEntry WithPinyin(AggregatedSearchEntry entry)
@@ -119,7 +107,7 @@ public class Index
         if (target.Type != RecentPlayTargetType.World || string.IsNullOrWhiteSpace(target.Id))
             return prefix + target.Details;
 
-        
+
         var details = target.Details;
         var separator = details.IndexOf('·');
         if (separator < 0) return prefix + $"{details}·{target.Id}";

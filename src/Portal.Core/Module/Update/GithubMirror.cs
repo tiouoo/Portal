@@ -14,15 +14,14 @@ public static class GithubMirror
         if (string.IsNullOrEmpty(mirror) || !IsMirrorable(url)) return url;
 
         var rewritten = Rewrite(url, mirror);
-        
+
         return Uri.TryCreate(rewritten, UriKind.Absolute, out var uri)
                && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
             ? rewritten
             : url;
     }
 
-    
-    
+
     private static bool IsMirrorable(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
@@ -36,7 +35,6 @@ public static class GithubMirror
 
     private static string Rewrite(string url, string mirror)
     {
-        
         if (mirror.Contains(UrlPlaceholder, StringComparison.OrdinalIgnoreCase))
             return ReplacePlaceholder(mirror, url);
 
@@ -45,8 +43,7 @@ public static class GithubMirror
             : RewritePrefix(url, mirror);
     }
 
-    
-    
+
     private static string RewriteDirect(string url, string mirror)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var original)) return url;
@@ -61,7 +58,7 @@ public static class GithubMirror
             Port = mirrorUri.IsDefaultPort ? -1 : mirrorUri.Port
         };
 
-        
+
         var mirrorPath = mirrorUri.AbsolutePath.TrimEnd('/');
         var originalPath = original.AbsolutePath;
 
@@ -72,14 +69,13 @@ public static class GithubMirror
         return builder.Uri.AbsoluteUri;
     }
 
-    
-    
+
     private static string RewritePrefix(string url, string mirror)
     {
         return $"{NormalizePrefix(mirror)}/{url}";
     }
 
-    
+
     private static Uri? ParseMirrorUrl(string mirror)
     {
         var candidate = mirror.Trim();
@@ -97,7 +93,7 @@ public static class GithubMirror
     private static string NormalizePrefix(string mirror)
     {
         var prefix = mirror.TrimEnd('/');
-        foreach (var suffix in (string[]) ["/https://github.com", "/http://github.com", "/github.com"])
+        foreach (var suffix in (string[])["/https://github.com", "/http://github.com", "/github.com"])
         {
             if (!prefix.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) continue;
             prefix = prefix[..^suffix.Length];

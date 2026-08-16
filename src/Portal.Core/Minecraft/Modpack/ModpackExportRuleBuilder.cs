@@ -11,13 +11,14 @@ public sealed record ModpackExportOption
     public bool RequireOptiFine { get; init; }
     public bool RequireModLoaderOrOptiFine { get; init; }
 }
+
 public static class ModpackExportRuleBuilder
 {
     public static readonly IReadOnlyList<string> BuiltInExcludes =
     [
         "!*.log", "!*.dat_old", "!*.BakaCoreInfo", "!hmclversion.cfg", "!log4j2.xml"
     ];
-    
+
     public static IEnumerable<string> BuildRules(IEnumerable<ModpackExportOption> options)
     {
         foreach (var option in options)

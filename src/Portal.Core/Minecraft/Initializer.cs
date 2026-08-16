@@ -1,10 +1,10 @@
-﻿using Portal.Core.App.Service;
+﻿using MinecraftLaunch;
+using MinecraftLaunch.Base.Enums;
+using MinecraftLaunch.Utilities;
+using Portal.Core.App.Service;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;
-
-using MinecraftLaunch;
-using MinecraftLaunch.Base.Enums;
-using Tio.Avalonia.Standard.Modules.DiskIO;
 
 public static class MinecraftCoreInitializer
 {
@@ -32,12 +32,12 @@ public static class MinecraftCoreInitializer
         });
         if (options.EnableCustomUserAgent && !string.IsNullOrEmpty(options.CustomUserAgent))
         {
-            MinecraftLaunch.Utilities.HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent", options.CustomUserAgent);
+            HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent", options.CustomUserAgent);
             Logger.Info("Minecraft 核心已应用自定义 User-Agent: " + options.CustomUserAgent);
         }
         else
         {
-            MinecraftLaunch.Utilities.HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent",
+            HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent",
                 $"Portal/{options.AppVersion}");
             Logger.Debug("Minecraft 核心已应用 Portal 默认 User-Agent: " + $"Portal/{options.AppVersion}");
         }

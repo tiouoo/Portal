@@ -1,7 +1,5 @@
-using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
-using Portal.Classes.Entries;
 using Portal.Core.Classes.Entries;
 
 namespace Portal.Module.Converter;
@@ -22,7 +20,7 @@ public class BackgroundModeCompareConverter : IValueConverter
             "Image" => currentMode == BackgroundMode.Image,
             "SolidColor" => currentMode == BackgroundMode.Color,
             "Acrylic" => currentMode == BackgroundMode.Acrylic,
-            
+
             "Mica" => currentMode == BackgroundMode.Mica,
             _ => false
         };

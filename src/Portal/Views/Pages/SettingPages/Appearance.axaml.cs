@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -6,25 +5,23 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Portal.Views.Components;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using TioUi.Shared;
 
 namespace Portal.Views.Pages.SettingPages;
 
 [AggregatedSearchPage("界面外观", "设置/界面外观", "Appearance")]
 public partial class Appearance : DataUserControl, INotifyPropertyChanged
 {
-    private TopLevel? _topLevel;
-    private DispatcherTimer? _monitorTimer;
     private double _currentRenderScaling = 1.0;
+    private DispatcherTimer? _monitorTimer;
+    private TopLevel? _topLevel;
 
     public Appearance()
     {
@@ -36,18 +33,13 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
             UpdateApplyButtonState();
             SubscribeRenderScaling();
         };
-        Unloaded += (_, _) =>
-        {
-            UnsubscribeRenderScaling();
-        };
+        Unloaded += (_, _) => { UnsubscribeRenderScaling(); };
         ListBox.SelectionChanged += (_, _) =>
         {
             if (ListBox.SelectedIndex == -1) return;
-            Data.ConfigEntry.Theme = (TioUi.Shared.Theme)ListBox.SelectedIndex;
+            Data.ConfigEntry.Theme = (Theme)ListBox.SelectedIndex;
         };
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     public double CurrentRenderScaling
     {
@@ -65,6 +57,8 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
 
     public object IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     private void SubscribeRenderScaling()
     {
         _topLevel = TopLevel.GetTopLevel(this);
@@ -77,10 +71,8 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
         _topLevel.PropertyChanged += OnTopLevelPropertyChanged;
         UpdateRenderScaling();
 
-        _monitorTimer = new DispatcherTimer(TimeSpan.FromSeconds(0.5), DispatcherPriority.Background, (_, _) =>
-        {
-            UpdateRenderScaling();
-        });
+        _monitorTimer = new DispatcherTimer(TimeSpan.FromSeconds(0.5), DispatcherPriority.Background,
+            (_, _) => { UpdateRenderScaling(); });
         _monitorTimer.Start();
     }
 
@@ -110,10 +102,8 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
             _topLevel.PropertyChanged += OnTopLevelPropertyChanged;
             UpdateRenderScaling();
 
-            _monitorTimer = new DispatcherTimer(TimeSpan.FromSeconds(0.5), DispatcherPriority.Background, (_, _) =>
-            {
-                UpdateRenderScaling();
-            });
+            _monitorTimer = new DispatcherTimer(TimeSpan.FromSeconds(0.5), DispatcherPriority.Background,
+                (_, _) => { UpdateRenderScaling(); });
             _monitorTimer.Start();
         }
     }
@@ -143,7 +133,7 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
     private async void CustomScale_OnClick(object? sender, RoutedEventArgs e)
     {
         var result = await OverlayDialog.ShowCustomAsync<ScaleInputDialog, ScaleInputDialogViewModel, double?>(
-            new ScaleInputDialogViewModel(Data.ConfigEntry.AppScale), hostId: this.TryGetHostId());
+            new ScaleInputDialogViewModel(Data.ConfigEntry.AppScale), this.TryGetHostId());
         if (result is { } scale)
         {
             if (scale is < 0.5 or > 5) return;
@@ -165,5 +155,7 @@ public partial class Appearance : DataUserControl, INotifyPropertyChanged
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
 }

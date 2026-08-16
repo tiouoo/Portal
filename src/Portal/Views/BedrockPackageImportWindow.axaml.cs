@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
@@ -10,15 +9,18 @@ using Portal.Core.Minecraft.Services;
 using Portal.Module.Initialize;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using TioUi.Common.Helpers;
 using TioUi.Controls;
 
 namespace Portal.Views;
 
 public partial class BedrockPackageImportWindow : TioWindow
 {
-    private IntPtr _macOsWindowHandle;
+    private readonly IntPtr _macOsWindowHandle;
 
-    public BedrockPackageImportWindow() : this(string.Empty) { }
+    public BedrockPackageImportWindow() : this(string.Empty)
+    {
+    }
 
     public BedrockPackageImportWindow(string archivePath)
     {
@@ -69,8 +71,8 @@ public partial class BedrockPackageImportWindow : TioWindow
     {
         try
         {
-            TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, x: 14, y: 2,
-                spacing: 20);
+            MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, 14, 2,
+                20);
         }
         catch (Exception exception)
         {
@@ -86,66 +88,17 @@ public partial class BedrockPackageImportWindow : TioWindow
             (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
     }
 
-    private void Cancel_OnClick(object? sender, RoutedEventArgs e) => Close();
+    private void Cancel_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 }
 
 public partial class BedrockPackageImportWindowViewModel : ObservableObject
 {
     private readonly string _archivePath;
     private readonly BedrockPackageInspection? _inspection;
-
-    public BedrockPackageImportDialogViewModel ViewModel { get; }
-    public string ImportTitle => GetImportTitle(_inspection);
-    public string WindowTitle => $"Portal - {ImportTitle}";
-    public string PackageDescription =>
-        string.IsNullOrWhiteSpace(PrimaryContent?.Description) ? "暂无描述" : PrimaryContent!.Description.Trim();
-    public bool HasStatus => !string.IsNullOrWhiteSpace(StatusText);
-    public string ImportButtonText => IsBusy ? "导入中" : "导入";
-    public bool CanImport => !IsBusy && _inspection != null && ViewModel.CanImport;
-    public bool IsInitialized { get; }
-
-    public BedrockPackageContent? PrimaryContent =>
-        _inspection?.Contents.FirstOrDefault();
-    public string PackageName => PrimaryContent?.Name ?? (_inspection?.DisplayName ?? "暂无信息");
-    public string PackageVersionText
-    {
-        get
-        {
-            var version = PrimaryContent?.Version;
-            var engine = PrimaryContent?.MinEngineVersion;
-
-            var hasVersion = !string.IsNullOrWhiteSpace(version);
-            var hasEngine = !string.IsNullOrWhiteSpace(engine);
-
-            return hasVersion switch
-            {
-                true when hasEngine => $"{version} ({engine})",
-                true => version,
-                _ => hasEngine ? engine : "暂无版本信息"
-            };
-        }
-    }
-    public string PackageAuthorsText =>
-        PrimaryContent?.Authors is { Count: > 0 } authors ? $"{string.Join("、", authors)}" : "暂无作者信息";
-    public Bitmap? PackageIcon => _packageIcon ??= CreateIcon(PrimaryContent?.IconData);
-    public bool HasPackageIcon => PackageIcon != null;
     private Bitmap? _packageIcon;
-
-    private static Bitmap? CreateIcon(byte[]? data)
-    {
-        if (data == null) return null;
-        try { return new Bitmap(new MemoryStream(data)); }
-        catch (Exception) { return null; }
-    }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasStatus))]
-    public partial string? StatusText { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ImportButtonText))]
-    [NotifyPropertyChangedFor(nameof(CanImport))]
-    public partial bool IsBusy { get; set; }
 
     public BedrockPackageImportWindowViewModel(string archivePath, bool initialize = true)
     {
@@ -168,7 +121,8 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
         catch (Exception exception)
         {
             ViewModel = new BedrockPackageImportDialogViewModel(
-                new BedrockPackageInspection(BedrockPackageArchiveType.Mcpack, Path.GetFileNameWithoutExtension(archivePath), []));
+                new BedrockPackageInspection(BedrockPackageArchiveType.Mcpack,
+                    Path.GetFileNameWithoutExtension(archivePath), []));
             StatusText = $"无法读取此文件：{exception.Message}";
         }
     }
@@ -180,6 +134,70 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
         IsInitialized = true;
         ViewModel = new BedrockPackageImportDialogViewModel(inspection);
         ViewModel.PropertyChanged += ViewModel_OnPropertyChanged;
+    }
+
+    public BedrockPackageImportDialogViewModel ViewModel { get; }
+    public string ImportTitle => GetImportTitle(_inspection);
+    public string WindowTitle => $"Portal - {ImportTitle}";
+
+    public string PackageDescription =>
+        string.IsNullOrWhiteSpace(PrimaryContent?.Description) ? "暂无描述" : PrimaryContent!.Description.Trim();
+
+    public bool HasStatus => !string.IsNullOrWhiteSpace(StatusText);
+    public string ImportButtonText => IsBusy ? "导入中" : "导入";
+    public bool CanImport => !IsBusy && _inspection != null && ViewModel.CanImport;
+    public bool IsInitialized { get; }
+
+    public BedrockPackageContent? PrimaryContent =>
+        _inspection?.Contents.FirstOrDefault();
+
+    public string PackageName => PrimaryContent?.Name ?? _inspection?.DisplayName ?? "暂无信息";
+
+    public string PackageVersionText
+    {
+        get
+        {
+            var version = PrimaryContent?.Version;
+            var engine = PrimaryContent?.MinEngineVersion;
+
+            var hasVersion = !string.IsNullOrWhiteSpace(version);
+            var hasEngine = !string.IsNullOrWhiteSpace(engine);
+
+            return hasVersion switch
+            {
+                true when hasEngine => $"{version} ({engine})",
+                true => version,
+                _ => hasEngine ? engine : "暂无版本信息"
+            };
+        }
+    }
+
+    public string PackageAuthorsText =>
+        PrimaryContent?.Authors is { Count: > 0 } authors ? $"{string.Join("、", authors)}" : "暂无作者信息";
+
+    public Bitmap? PackageIcon => _packageIcon ??= CreateIcon(PrimaryContent?.IconData);
+    public bool HasPackageIcon => PackageIcon != null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasStatus))]
+    public partial string? StatusText { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ImportButtonText))]
+    [NotifyPropertyChangedFor(nameof(CanImport))]
+    public partial bool IsBusy { get; set; }
+
+    private static Bitmap? CreateIcon(byte[]? data)
+    {
+        if (data == null) return null;
+        try
+        {
+            return new Bitmap(new MemoryStream(data));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private static string GetImportTitle(BedrockPackageInspection? inspection)

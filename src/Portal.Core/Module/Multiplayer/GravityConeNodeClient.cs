@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Portal.Core.App.Service;
@@ -16,13 +17,15 @@ public sealed class GravityConeNodeClient
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(15) };
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-    private static string NodeCachePath => Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer", "uptime-nodes.json");
 
     public static readonly GravityConeNodeClient Instance = new();
 
+    private static string NodeCachePath =>
+        Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer", "uptime-nodes.json");
+
     public static bool IsUptimeConfigured =>
         !string.IsNullOrWhiteSpace(CredentialsService.GravityConeUptimeApiKey);
-    
+
     public async Task<IReadOnlyList<string>> FetchPeerUrlsAsync(CancellationToken cancellationToken)
     {
         var apiKey = CredentialsService.GravityConeUptimeApiKey;
@@ -81,10 +84,12 @@ public sealed class GravityConeNodeClient
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, UptimeBaseUrl + NodeListEndpoint);
         ApplyRequestHeaders(request, apiKey);
-        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response =
+            await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var body = await ReadLimitedAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken);
+        var body = await ReadLimitedAsync(await response.Content.ReadAsStreamAsync(cancellationToken),
+            cancellationToken);
         var document = JsonDocument.Parse(body);
         var root = document.RootElement;
         if (!root.TryGetProperty("data", out var data) || !data.TryGetProperty("p2p", out var p2p) ||
@@ -93,25 +98,26 @@ public sealed class GravityConeNodeClient
 
         var nodes = new List<NodeEntry>();
         foreach (var node in p2p.EnumerateArray())
-        {
             nodes.Add(new NodeEntry(
                 GetInt64(node, "id") ?? 0,
                 GetString(node, "name") ?? string.Empty,
                 GetString(node, "getKey") ?? string.Empty));
-        }
 
         return nodes;
     }
 
-    private static async Task<string> FetchNodeUrlAsync(string apiKey, string getKey, CancellationToken cancellationToken)
+    private static async Task<string> FetchNodeUrlAsync(string apiKey, string getKey,
+        CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get,
             string.Format(UptimeBaseUrl + NodeUrlEndpoint, Uri.EscapeDataString(getKey)));
         ApplyRequestHeaders(request, apiKey);
-        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response =
+            await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var body = await ReadLimitedAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken);
+        var body = await ReadLimitedAsync(await response.Content.ReadAsStreamAsync(cancellationToken),
+            cancellationToken);
         var raw = body.Trim();
         if (raw.StartsWith("txt://", StringComparison.Ordinal))
         {
@@ -129,26 +135,33 @@ public sealed class GravityConeNodeClient
 
     private static void ApplyRequestHeaders(HttpRequestMessage request, string apiKey)
     {
-        request.Headers.TryAddWithoutValidation("User-Agent", $"Portal/{AppVersionService.Instance.Version.VersionTitle}");
+        request.Headers.TryAddWithoutValidation("User-Agent",
+            $"Portal/{AppVersionService.Instance.Version.VersionTitle}");
         request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
     }
 
-    internal static bool IsValidPeer(string peer) =>
-        Uri.TryCreate(peer, UriKind.Absolute, out var uri) &&
-        uri.Scheme is "http" or "https" or "tcp" or "udp" or "ws" or "wss" or "txt" &&
-        !string.IsNullOrWhiteSpace(uri.Host);
+    internal static bool IsValidPeer(string peer)
+    {
+        return Uri.TryCreate(peer, UriKind.Absolute, out var uri) &&
+               uri.Scheme is "http" or "https" or "tcp" or "udp" or "ws" or "wss" or "txt" &&
+               !string.IsNullOrWhiteSpace(uri.Host);
+    }
 
-    private static string? GetString(JsonElement element, string property) =>
-        element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
-        value.ValueKind == JsonValueKind.String
+    private static string? GetString(JsonElement element, string property)
+    {
+        return element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
+               value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
+    }
 
-    private static long? GetInt64(JsonElement element, string property) =>
-        element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
-        value.ValueKind is JsonValueKind.Number && value.TryGetInt64(out var result)
+    private static long? GetInt64(JsonElement element, string property)
+    {
+        return element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
+               value.ValueKind is JsonValueKind.Number && value.TryGetInt64(out var result)
             ? result
             : null;
+    }
 
     private static async Task<string> ReadLimitedAsync(Stream stream, CancellationToken cancellationToken)
     {
@@ -162,7 +175,7 @@ public sealed class GravityConeNodeClient
             await memory.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
         }
 
-        return System.Text.Encoding.UTF8.GetString(memory.ToArray());
+        return Encoding.UTF8.GetString(memory.ToArray());
     }
 
     private static async Task SaveCacheAsync(IReadOnlyList<string> peers, CancellationToken cancellationToken)

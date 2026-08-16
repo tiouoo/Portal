@@ -1,12 +1,8 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
@@ -40,8 +36,9 @@ public static class RenameOfflineAccountDialog
             VerticalOffset = 110
         };
 
-        var result = await OverlayDialog.ShowCustomAsync<RenameOfflineAccount, RenameOfflineAccountViewModel, MinecraftAccount>(
-            new RenameOfflineAccountViewModel(account), hostId: hostId, options: options);
+        var result = await OverlayDialog
+            .ShowCustomAsync<RenameOfflineAccount, RenameOfflineAccountViewModel, MinecraftAccount>(
+                new RenameOfflineAccountViewModel(account), hostId, options);
 
         return result;
     }
@@ -49,24 +46,8 @@ public static class RenameOfflineAccountDialog
 
 public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogContext, INotifyDataErrorInfo
 {
-    private readonly MinecraftAccount _originalAccount;
-
-    [ObservableProperty]
-    public partial string? RoleName { get; set; }
-
-    [ObservableProperty]
-    public partial string? Uuid { get; set; }
-
-    [ObservableProperty]
-    public partial bool SyncUuid { get; set; }
-
-    [ObservableProperty]
-    public partial bool IgnoreStandard { get; set; }
-
-    public ICommand ConfirmCommand { get; }
-    public ICommand CancelCommand { get; }
-
     private readonly Dictionary<string, List<string>> _errors = new();
+    private readonly MinecraftAccount _originalAccount;
 
     public RenameOfflineAccountViewModel(MinecraftAccount account)
     {
@@ -77,6 +58,34 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
         CancelCommand = new RelayCommand(Cancel);
     }
 
+    [ObservableProperty] public partial string? RoleName { get; set; }
+
+    [ObservableProperty] public partial string? Uuid { get; set; }
+
+    [ObservableProperty] public partial bool SyncUuid { get; set; }
+
+    [ObservableProperty] public partial bool IgnoreStandard { get; set; }
+
+    public ICommand ConfirmCommand { get; }
+    public ICommand CancelCommand { get; }
+
+    public void Close()
+    {
+        RequestClose?.Invoke(this, null);
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    public bool HasErrors => _errors.Count > 0;
+
+    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+    public IEnumerable GetErrors(string? propertyName)
+    {
+        if (string.IsNullOrEmpty(propertyName) || !_errors.ContainsKey(propertyName)) return Enumerable.Empty<string>();
+        return _errors[propertyName];
+    }
+
     partial void OnRoleNameChanged(string? value)
     {
         ValidateRoleName(value);
@@ -84,13 +93,9 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
         if (SyncUuid)
         {
             if (string.IsNullOrWhiteSpace(value))
-            {
                 Uuid = string.Empty;
-            }
             else
-            {
                 Uuid = MinecraftAccount.GetMinecraftOfflineUuid(value).ToString();
-            }
         }
 
         (ConfirmCommand as RelayCommand)?.NotifyCanExecuteChanged();
@@ -106,9 +111,7 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
     partial void OnSyncUuidChanged(bool value)
     {
         if (value && !string.IsNullOrWhiteSpace(RoleName))
-        {
             Uuid = MinecraftAccount.GetMinecraftOfflineUuid(RoleName).ToString();
-        }
 
         ValidateRoleName(RoleName);
         ValidateUuid(Uuid);
@@ -125,10 +128,7 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
     {
         var propertyName = nameof(RoleName);
 
-        if (_errors.ContainsKey(propertyName))
-        {
-            _errors.Remove(propertyName);
-        }
+        if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -137,13 +137,8 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
         else if (!IgnoreStandard)
         {
             if (value.Length < 3 || value.Length > 15)
-            {
                 _errors[propertyName] = new List<string> { "玩家名称必须为3~15位字符" };
-            }
-            else if (!Regex().IsMatch(value))
-            {
-                _errors[propertyName] = new List<string> { "玩家名称只能包含数字、大小写字母和下划线" };
-            }
+            else if (!Regex().IsMatch(value)) _errors[propertyName] = new List<string> { "玩家名称只能包含数字、大小写字母和下划线" };
         }
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
@@ -153,15 +148,10 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
     {
         var propertyName = nameof(Uuid);
 
-        if (_errors.ContainsKey(propertyName))
-        {
-            _errors.Remove(propertyName);
-        }
+        if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
         if (!string.IsNullOrWhiteSpace(value) && !IsValidUuid(value))
-        {
             _errors[propertyName] = new List<string> { "UUID 格式不正确" };
-        }
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
@@ -202,7 +192,7 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
             LastLoginTime = _originalAccount.LastLoginTime,
             LastRefreshTime = _originalAccount.LastRefreshTime,
             Skin = _originalAccount.Skin,
-            AccountNote = _originalAccount.AccountNote,
+            AccountNote = _originalAccount.AccountNote
         };
 
         RequestClose?.Invoke(this, newAccount);
@@ -211,26 +201,6 @@ public partial class RenameOfflineAccountViewModel : ObservableObject, IDialogCo
     private void Cancel()
     {
         RequestClose?.Invoke(this, null);
-    }
-
-    public void Close()
-    {
-        RequestClose?.Invoke(this, null);
-    }
-
-    public event EventHandler<object?>? RequestClose;
-
-    public bool HasErrors => _errors.Count > 0;
-
-    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
-
-    public IEnumerable GetErrors(string? propertyName)
-    {
-        if (string.IsNullOrEmpty(propertyName) || !_errors.ContainsKey(propertyName))
-        {
-            return Enumerable.Empty<string>();
-        }
-        return _errors[propertyName];
     }
 
     [GeneratedRegex(@"^[a-zA-Z0-9_]+$")]

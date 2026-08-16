@@ -1,7 +1,6 @@
 <UserControl
     x:Class="Portal.Views.Pages.InstancePages.BedrockBehaviorPacks"
     xmlns="https://github.com/avaloniaui"
-    xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ContentControl Name="BehaviorPacksContent" />
 </UserControl>

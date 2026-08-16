@@ -1,8 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.Classes.Config;
 using Portal.Core.Const;
 using Portal.Views;
@@ -17,7 +15,7 @@ public static class ShortcutManager
     private static readonly HashSet<TioTabWindowBase> ClosedSubscribed = new();
     private static bool _initialized;
 
-        public static void Initialize()
+    public static void Initialize()
     {
         if (_initialized) return;
         _initialized = true;
@@ -25,16 +23,14 @@ public static class ShortcutManager
         ApplyToAll();
     }
 
-        public static void Apply(TioTabWindowBase window)
+    public static void Apply(TioTabWindowBase window)
     {
         if (ClosedSubscribed.Add(window))
             window.Closed += OnWindowClosed;
 
         if (Managed.Remove(window, out var existing))
-        {
             foreach (var binding in existing)
                 window.KeyBindings.Remove(binding);
-        }
 
         var config = Data.ConfigEntry.Shortcuts;
         if (config is null) return;

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -17,8 +15,8 @@ public class MinecraftTextBlock : TextBlock
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()".ToCharArray();
 
     private static readonly Random Random = new();
-    private readonly DispatcherTimer _obfuscatedTimer;
     private readonly List<Run> _obfuscatedRuns = [];
+    private readonly DispatcherTimer _obfuscatedTimer;
 
     static MinecraftTextBlock()
     {
@@ -72,7 +70,6 @@ public class MinecraftTextBlock : TextBlock
     {
         var run = new Run(text);
         if (segment.ColorHex != null)
-        {
             try
             {
                 run.Foreground = new SolidColorBrush(Color.Parse(segment.ColorHex));
@@ -80,7 +77,6 @@ public class MinecraftTextBlock : TextBlock
             catch (FormatException)
             {
             }
-        }
 
         if (segment.Bold)
             run.FontWeight = FontWeight.Bold;

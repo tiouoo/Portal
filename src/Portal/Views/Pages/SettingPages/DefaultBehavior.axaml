@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -54,7 +54,7 @@
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.FilePicker}">
                 <ComboBoxItem Content="系统对话框" />
                 <ComboBoxItem Content="接管对话框" />
-                
+
             </ComboBox>
             <TextBlock
                 FontSize="11"

@@ -4,7 +4,7 @@ public enum GraphicsApi
 {
     Default,
     OpenGL,
-    Vulkan,
+    Vulkan
 }
 
 public static class GraphicsApiExtensions
@@ -12,7 +12,7 @@ public static class GraphicsApiExtensions
     private static readonly GameVersion Version26_2Snap1 = GameVersion.Parse("26.2-snapshot-1");
     private static readonly GameVersion Version26_2Snap2 = GameVersion.Parse("26.2-snapshot-2");
     private static readonly GameVersion Version26_2 = GameVersion.Parse("26.2");
-    
+
     public static GraphicsApi GetDefault(GameVersion version)
     {
         if (version < Version26_2Snap1)
@@ -24,20 +24,28 @@ public static class GraphicsApiExtensions
         return GraphicsApi.OpenGL;
     }
 
-    public static bool IsSupported(this GraphicsApi api, GameVersion version) => api switch
+    public static bool IsSupported(this GraphicsApi api, GameVersion version)
     {
-        GraphicsApi.Default or GraphicsApi.OpenGL => true,
-        GraphicsApi.Vulkan => version >= Version26_2Snap1,
-        _ => false,
-    };
+        return api switch
+        {
+            GraphicsApi.Default or GraphicsApi.OpenGL => true,
+            GraphicsApi.Vulkan => version >= Version26_2Snap1,
+            _ => false
+        };
+    }
 
-    public static string GetMinecraftArg(this GraphicsApi api) =>
-        api switch
+    public static string GetMinecraftArg(this GraphicsApi api)
+    {
+        return api switch
         {
             GraphicsApi.OpenGL => "opengl",
             GraphicsApi.Vulkan => "vulkan",
-            _ => "default",
+            _ => "default"
         };
+    }
 
-    public static bool CanChooseBackend(this GameVersion version) => version >= Version26_2Snap2;
+    public static bool CanChooseBackend(this GameVersion version)
+    {
+        return version >= Version26_2Snap2;
+    }
 }

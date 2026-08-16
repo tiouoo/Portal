@@ -1,24 +1,19 @@
-using System.ComponentModel;
-using System.IO;
 using System.Numerics;
 using System.Windows.Input;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LiteSkinViewer3D.Avalonia.Controls;
 using LiteSkinViewer3D.Shared.Enums;
-using Pointer = LiteSkinViewer3D.Shared.Enums.PointerType;
 using Portal.Core.Minecraft.Classes;
+using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
-using Tio.Avalonia.Standard.Tab.Gateway;
-using Tio.Avalonia.Standard.Modules.DiskIO;
+using Pointer = LiteSkinViewer3D.Shared.Enums.PointerType;
 
 namespace Portal.Core.Operations.Account;
 
@@ -115,11 +110,11 @@ public static class ChangeSkinDialog
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalAnchor = VerticalPosition.Center,
+            VerticalAnchor = VerticalPosition.Center
         };
 
         var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(
-            new ChangeSkinViewModel(currentSkinPath, false), hostId: hostId, options: options);
+            new ChangeSkinViewModel(currentSkinPath), hostId, options);
 
         return result;
     }
@@ -137,11 +132,11 @@ public static class ChangeSkinDialog
             CanDragMove = true,
             IsCloseButtonVisible = false,
             CanResize = false,
-            VerticalAnchor = VerticalPosition.Center,
+            VerticalAnchor = VerticalPosition.Center
         };
 
         var result = await OverlayDialog.ShowCustomAsync<ChangeSkin, ChangeSkinViewModel, string?>(
-            new ChangeSkinViewModel(skinPath, true), hostId: hostId, options: options);
+            new ChangeSkinViewModel(skinPath, true), hostId, options);
 
         try
         {
@@ -156,14 +151,22 @@ public static class ChangeSkinDialog
         {
             Logger.Warning($"没有权限删除皮肤预览临时文件：{skinPath}{Environment.NewLine}{exception}");
         }
+
         return result;
     }
 }
 
 public partial class ChangeSkinViewModel : ObservableObject, IDialogContext
 {
-    [ObservableProperty]
-    public partial string? SkinPath { get; set; }
+    public ChangeSkinViewModel(string? currentSkinPath, bool isPreview = false)
+    {
+        SkinPath = currentSkinPath;
+        IsPreview = isPreview;
+        ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
+        CancelCommand = new RelayCommand(Cancel);
+    }
+
+    [ObservableProperty] public partial string? SkinPath { get; set; }
 
     [ObservableProperty] public partial bool IsPreview { get; set; }
 
@@ -174,13 +177,12 @@ public partial class ChangeSkinViewModel : ObservableObject, IDialogContext
     public ICommand ConfirmCommand { get; }
     public ICommand CancelCommand { get; }
 
-    public ChangeSkinViewModel(string? currentSkinPath, bool isPreview = false)
+    public void Close()
     {
-        SkinPath = currentSkinPath;
-        IsPreview = isPreview;
-        ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
-        CancelCommand = new RelayCommand(Cancel);
+        RequestClose?.Invoke(this, null);
     }
+
+    public event EventHandler<object?>? RequestClose;
 
     partial void OnSkinPathChanged(string? value)
     {
@@ -189,7 +191,7 @@ public partial class ChangeSkinViewModel : ObservableObject, IDialogContext
 
     private bool CanConfirm()
     {
-        return !string.IsNullOrEmpty(SkinPath) && System.IO.File.Exists(SkinPath);
+        return !string.IsNullOrEmpty(SkinPath) && File.Exists(SkinPath);
     }
 
     private void Confirm()
@@ -201,11 +203,4 @@ public partial class ChangeSkinViewModel : ObservableObject, IDialogContext
     {
         RequestClose?.Invoke(this, null);
     }
-
-    public void Close()
-    {
-        RequestClose?.Invoke(this, null);
-    }
-
-    public event EventHandler<object?>? RequestClose;
 }

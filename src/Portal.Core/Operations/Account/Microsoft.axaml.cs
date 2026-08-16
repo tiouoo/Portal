@@ -1,31 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text.RegularExpressions;
-using System.Windows.Input;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Components.Provider;
 using Portal.Core.App.Service;
 using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
-using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Core.Operations.Account;
 
 public partial class Microsoft : UserControl
 {
-    bool _fl = true;
+    private bool _fl = true;
 
     public Microsoft()
     {
@@ -42,25 +33,27 @@ public partial class Microsoft : UserControl
     {
         var clipboard = TopLevel.GetTopLevel(this).Clipboard;
         clipboard?.SetTextAsync((DataContext as MicrosoftAccountViewModel).Url);
-        NotificationGateway.Notice(TopLevel.GetTopLevel(this)!,"已复制到剪切板", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice("已复制到剪切板", NotificationType.Success);
     }
+
     private void CopyCode(object? sender, RoutedEventArgs e)
     {
         var clipboard = TopLevel.GetTopLevel(this).Clipboard;
         clipboard?.SetTextAsync((DataContext as MicrosoftAccountViewModel)._code);
-        NotificationGateway.Notice(TopLevel.GetTopLevel(this)!,"已复制到剪切板", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice("已复制到剪切板", NotificationType.Success);
     }
 
     private void OpenBrowser(object? sender, RoutedEventArgs e)
     {
         var launcher = TopLevel.GetTopLevel(this).Launcher;
         launcher.LaunchUriAsync(new Uri((DataContext as MicrosoftAccountViewModel).Url));
-        NotificationGateway.Notice(TopLevel.GetTopLevel(this)!,"已打开浏览器", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice("已打开浏览器", NotificationType.Success);
     }
 }
 
 public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContext
 {
+    public string _code;
     [ObservableProperty] public partial bool IsReady { get; set; }
     [ObservableProperty] public partial bool IsError { get; set; }
     [ObservableProperty] public partial bool IsAuthing { get; set; }
@@ -68,10 +61,16 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
     [ObservableProperty] public partial string Error { get; set; }
     [ObservableProperty] public partial string Code { get; set; }
     [ObservableProperty] public partial string Url { get; set; }
-
-    public string _code;
     public RelayCommand Cancel => new(Close);
     public RelayCommand Retry => new(() => { RequestClose.Invoke(this, "retry"); });
+
+
+    public void Close()
+    {
+        RequestClose.Invoke(this, null);
+    }
+
+    public event EventHandler<object?>? RequestClose;
 
     public async Task Auth()
     {
@@ -91,7 +90,7 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
             IsAuthing = true;
             var account = await authenticator.AuthenticateAsync(oAuth2Token);
 
-            string skin = MinecraftAccount.SteveSkin;
+            var skin = MinecraftAccount.SteveSkin;
             try
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -102,7 +101,6 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
             }
             catch
             {
-                
             }
 
             RequestClose.Invoke(this, new MinecraftAccount(AccountType.Microsoft)
@@ -121,12 +119,4 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
             Error = e.ToString();
         }
     }
-
-
-    public void Close()
-    {
-        RequestClose.Invoke(this, null);
-    }
-
-    public event EventHandler<object?>? RequestClose;
 }

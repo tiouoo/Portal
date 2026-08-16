@@ -5,18 +5,15 @@
     x:Class="Portal.Views.Pages.NewsPage"
     x:DataType="viewModels:NewsPageViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:converters="clr-namespace:Portal.Module.Converter;assembly=Portal"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:viewModels="clr-namespace:Portal.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
-        <converters:WidthToColumnsConverter x:Key="WidthToColumnsConv" />
         <converters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
     </UserControl.Resources>
 
@@ -57,11 +54,8 @@
                 Orientation="Horizontal"
                 Spacing="8"
                 VerticalAlignment="Center">
-                
-                
-                
-                
-                
+
+
                 <ComboBox
                     ItemsSource="{Binding FilterOptions}"
                     SelectedItem="{Binding SelectedFilter}"

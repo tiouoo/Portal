@@ -5,14 +5,12 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Interface;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Extensions;
-using TioUi.Controls; 
+using Tio.Avalonia.Standard.Tab.Interface;
+using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
@@ -20,8 +18,6 @@ namespace Portal.Views.Pages;
 [DefaultPage("新闻")]
 public partial class NewsPage : DataUserControl, ITioTabPage
 {
-    public NewsPageViewModel NewsPageViewModel { get; }
-
     public NewsPage(bool isInset = false)
     {
         InitializeComponent();
@@ -41,6 +37,8 @@ public partial class NewsPage : DataUserControl, ITioTabPage
     {
     }
 
+    public NewsPageViewModel NewsPageViewModel { get; }
+
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = "新闻",
@@ -50,7 +48,7 @@ public partial class NewsPage : DataUserControl, ITioTabPage
 
     public TabEntry HostTab { get; set; }
 
-    
+
     public void OnClose()
     {
         DataContext = null;
@@ -66,10 +64,10 @@ public partial class NewsPage : DataUserControl, ITioTabPage
         window.SelectTab(tab);
     }
 
-        private void NewsCard_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    private void NewsCard_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (sender is not Control { DataContext: NewsEntry entry } control) return;
-        
+
         if (e.InitialPressMouseButton != MouseButton.Left) return;
         NewsDetailsPage.Open(control.AsTopLevel(), entry);
     }

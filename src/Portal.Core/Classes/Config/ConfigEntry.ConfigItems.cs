@@ -11,11 +11,14 @@ namespace Portal.Core.Classes.Config;
 
 public partial class ConfigEntry : ObservableObject
 {
-    [ObservableProperty] public partial bool IsInitialized { get; set; } = true; 
+    [ObservableProperty] public partial bool IsInitialized { get; set; } = true;
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
     [ObservableProperty] public partial UpdateSource UpdateSource { get; set; } = UpdateSource.Cnb;
-    [ObservableProperty] public partial DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
+
+    [ObservableProperty]
+    public partial DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
+
     [ObservableProperty] public partial DownloadSourceMode MinecraftFileSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial DownloadSourceMode ModrinthSource { get; set; } = DownloadSourceMode.Auto;
     [ObservableProperty] public partial DownloadSourceMode CurseForgeSource { get; set; } = DownloadSourceMode.Auto;
@@ -63,8 +66,13 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
     [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
     [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
-    [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
-    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
+
+    [ObservableProperty]
+    public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
+
+    [ObservableProperty]
+    public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
+
     [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 64;
     [ObservableProperty] public partial int DownloadMaxRetryCount { get; set; } = 4;
     [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 32;

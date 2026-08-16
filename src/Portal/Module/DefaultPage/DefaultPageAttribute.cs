@@ -1,5 +1,3 @@
-using System;
-
 namespace Portal.Module.DefaultPage;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]

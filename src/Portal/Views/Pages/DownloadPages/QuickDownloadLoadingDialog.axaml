@@ -9,10 +9,19 @@
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Margin="24" Spacing="14" Width="400">
+    <StackPanel
+        Margin="24"
+        Spacing="14"
+        Width="400">
         <TextBlock FontSize="16" Text="{Binding Title}" />
         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
-        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Message}" TextWrapping="Wrap" />
-        <Button Click="Close_Click" Content="关闭" HorizontalAlignment="Right" />
+        <TextBlock
+            Foreground="{DynamicResource InnerForegroundColor}"
+            Text="{Binding Message}"
+            TextWrapping="Wrap" />
+        <Button
+            Click="Close_Click"
+            Content="关闭"
+            HorizontalAlignment="Right" />
     </StackPanel>
 </UserControl>

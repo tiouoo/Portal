@@ -276,12 +276,7 @@
                                     InputGesture="Shift+Alt+F" />
                             </ContextMenu>
                         </avaloniaEdit:TextEditor.ContextMenu>
-                        <avaloniaEdit:TextEditor.Resources>
-                            <SolidColorBrush
-                                Color="{DynamicResource SystemAccentColor}"
-                                Opacity="0.2"
-                                x:Key="TextAreaSelectionBrush" />
-                        </avaloniaEdit:TextEditor.Resources>
+                        <avaloniaEdit:TextEditor.Resources />
                     </avaloniaEdit:TextEditor>
                 </Border>
             </Grid>

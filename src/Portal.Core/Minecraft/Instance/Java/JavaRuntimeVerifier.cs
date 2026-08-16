@@ -1,14 +1,14 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 
 namespace Portal.Core.Minecraft.Instance.Java;
 
 public static class JavaRuntimeVerifier
 {
     private static readonly ConcurrentDictionary<string, bool> ModuleCache = new(StringComparer.OrdinalIgnoreCase);
-    
-    public static async Task<bool> IsUsableAsync(string javaPath, int majorVersion, CancellationToken cancellationToken = default)
+
+    public static async Task<bool> IsUsableAsync(string javaPath, int majorVersion,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(javaPath) || !File.Exists(javaPath))
             return false;
@@ -57,7 +57,7 @@ public static class JavaRuntimeVerifier
                 return false;
 
             return output.Contains("jdk.zipfs", StringComparison.OrdinalIgnoreCase)
-                && output.Contains("jdk.unsupported", StringComparison.OrdinalIgnoreCase);
+                   && output.Contains("jdk.unsupported", StringComparison.OrdinalIgnoreCase);
         }
         catch (OperationCanceledException)
         {

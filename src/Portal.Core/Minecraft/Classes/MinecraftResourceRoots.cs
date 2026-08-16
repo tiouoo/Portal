@@ -14,20 +14,19 @@ public static class MinecraftResourceRoots
 
         switch (layout.Kind)
         {
-            
             case MinecraftFolderKind.PortalMc:
             case MinecraftFolderKind.Modrinth:
             case MinecraftFolderKind.ModrinthInstance:
                 yield return Path.Combine(root, "meta");
                 break;
 
-            
+
             case MinecraftFolderKind.CurseForge:
             case MinecraftFolderKind.CurseForgeInstance:
                 yield return Path.Combine(root, "Install");
                 break;
 
-            
+
             case MinecraftFolderKind.MultiMc:
             case MinecraftFolderKind.MultiMcInstance:
             case MinecraftFolderKind.Standard:
@@ -36,7 +35,8 @@ public static class MinecraftResourceRoots
         }
     }
 
-        public static IReadOnlyList<string> ResolveForInstall(IEnumerable<MinecraftFolderEntry> folders, string? targetFolderPath)
+    public static IReadOnlyList<string> ResolveForInstall(IEnumerable<MinecraftFolderEntry> folders,
+        string? targetFolderPath)
     {
         if (folders is null)
             return [];
@@ -46,7 +46,8 @@ public static class MinecraftResourceRoots
             return folders
                 .Where(folder => !string.IsNullOrWhiteSpace(folder?.FolderPath))
                 .Where(folder => string.IsNullOrWhiteSpace(targetFolderPath)
-                    || !string.Equals(folder.FolderPath, targetFolderPath, StringComparison.OrdinalIgnoreCase))
+                                 || !string.Equals(folder.FolderPath, targetFolderPath,
+                                     StringComparison.OrdinalIgnoreCase))
                 .SelectMany(Resolve)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();

@@ -11,7 +11,6 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
 using Portal.Module.Imaging;
-using Portal.Services;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -29,7 +28,8 @@ public partial class FavoritesPage : UserControl
     private void Item_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (e.GetCurrentPoint(sender as Control).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed ||
-            (sender as Control)?.DataContext is not FavoriteResource resource || TopLevel.GetTopLevel(this) is not { } topLevel)
+            (sender as Control)?.DataContext is not FavoriteResource resource ||
+            TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
         if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() is not null))
             return;
@@ -91,15 +91,10 @@ public partial class FavoritesPage : UserControl
 public partial class FavoritesPageViewModel : ObservableObject
 {
     private readonly FavoriteCollectionService _service = FavoriteCollectionService.Instance;
-    public ObservableCollection<FavoriteCollection> Collections { get; } = [];
-    public ObservableCollection<FavoriteResourceItem> Items { get; } = [];
-    public IReadOnlyList<string> Editions { get; } = ["全部", "Java 版", "基岩版"];
-    public IReadOnlyList<string> Kinds { get; } = ["全部类型", "模组", "整合包", "材质包", "光影包", "数据包", "存档"];
-    [ObservableProperty] private FavoriteCollection? selectedCollection;
     [ObservableProperty] private string searchText = string.Empty;
+    [ObservableProperty] private FavoriteCollection? selectedCollection;
     [ObservableProperty] private string selectedEdition = "全部";
     [ObservableProperty] private string selectedKind = "全部类型";
-    public bool ShowKindFilter => SelectedEdition != "基岩版";
 
     public FavoritesPageViewModel()
     {
@@ -107,28 +102,59 @@ public partial class FavoritesPageViewModel : ObservableObject
         RefreshCollections();
     }
 
+    public ObservableCollection<FavoriteCollection> Collections { get; } = [];
+    public ObservableCollection<FavoriteResourceItem> Items { get; } = [];
+    public IReadOnlyList<string> Editions { get; } = ["全部", "Java 版", "基岩版"];
+    public IReadOnlyList<string> Kinds { get; } = ["全部类型", "模组", "整合包", "材质包", "光影包", "数据包", "存档"];
+    public bool ShowKindFilter => SelectedEdition != "基岩版";
+
     partial void OnSelectedCollectionChanged(FavoriteCollection? value)
     {
         RefreshItems();
     }
-    partial void OnSearchTextChanged(string value) => RefreshItems();
-    partial void OnSelectedEditionChanged(string value) { OnPropertyChanged(nameof(ShowKindFilter)); RefreshItems(); }
-    partial void OnSelectedKindChanged(string value) => RefreshItems();
 
-    [RelayCommand] private void AddCollection()
+    partial void OnSearchTextChanged(string value)
+    {
+        RefreshItems();
+    }
+
+    partial void OnSelectedEditionChanged(string value)
+    {
+        OnPropertyChanged(nameof(ShowKindFilter));
+        RefreshItems();
+    }
+
+    partial void OnSelectedKindChanged(string value)
+    {
+        RefreshItems();
+    }
+
+    [RelayCommand]
+    private void AddCollection()
     {
         var collection = new FavoriteCollection { Name = "新收藏夹" };
         _service.Document.Collections.Add(collection);
         _service.Save();
         SelectedCollection = collection;
     }
-    public void Remove(FavoriteResource resource) { _service.Remove(resource); RefreshItems(); }
-    public void Import(string path) => _service.Import(path);
+
+    public void Remove(FavoriteResource resource)
+    {
+        _service.Remove(resource);
+        RefreshItems();
+    }
+
+    public void Import(string path)
+    {
+        _service.Import(path);
+    }
+
     public void Export(string path)
     {
         if (SelectedCollection is not null)
             _service.Export(SelectedCollection, path);
     }
+
     public void ApplyEdit(FavoriteCollectionEditResult result)
     {
         if (SelectedCollection is null) return;
@@ -138,9 +164,14 @@ public partial class FavoritesPageViewModel : ObservableObject
             if (_service.Document.Collections.Count == 0) _service.Document.Collections.Add(new FavoriteCollection());
         }
         else if (!string.IsNullOrWhiteSpace(result.Name))
+        {
             SelectedCollection.Name = result.Name;
+        }
         else
+        {
             return;
+        }
+
         _service.Save();
     }
 
@@ -152,21 +183,36 @@ public partial class FavoritesPageViewModel : ObservableObject
         SelectedCollection = Collections.FirstOrDefault(item => item.Id == selectedId) ?? Collections.FirstOrDefault();
         RefreshItems();
     }
+
     private void RefreshItems()
     {
         Items.Clear();
         if (SelectedCollection is null) return;
         foreach (var resource in SelectedCollection.Items.Where(Matches)) Items.Add(new FavoriteResourceItem(resource));
     }
-    private bool Matches(FavoriteResource resource) =>
-        (string.IsNullOrWhiteSpace(SearchText) || resource.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) || resource.Summary.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
-        (SelectedEdition == "全部" || (SelectedEdition == "Java 版" ? resource.Edition == FavoriteEdition.Java : resource.Edition == FavoriteEdition.Bedrock)) &&
-        (SelectedEdition == "基岩版" || SelectedKind == "全部类型" || resource.Kind.ToString() == KindFromDisplay(SelectedKind).ToString());
-    private static JavaResourceKind KindFromDisplay(string value) => value switch
+
+    private bool Matches(FavoriteResource resource)
     {
-        "模组" => JavaResourceKind.Mod, "整合包" => JavaResourceKind.Modpack, "材质包" => JavaResourceKind.ResourcePack, "光影包" => JavaResourceKind.ShaderPack,
-        "数据包" => JavaResourceKind.DataPack, "存档" => JavaResourceKind.Save, _ => JavaResourceKind.Modpack
-    };
+        return (string.IsNullOrWhiteSpace(SearchText) ||
+                resource.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                resource.Summary.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
+               (SelectedEdition == "全部" || (SelectedEdition == "Java 版"
+                   ? resource.Edition == FavoriteEdition.Java
+                   : resource.Edition == FavoriteEdition.Bedrock)) &&
+               (SelectedEdition == "基岩版" || SelectedKind == "全部类型" ||
+                resource.Kind.ToString() == KindFromDisplay(SelectedKind).ToString());
+    }
+
+    private static JavaResourceKind KindFromDisplay(string value)
+    {
+        return value switch
+        {
+            "模组" => JavaResourceKind.Mod, "整合包" => JavaResourceKind.Modpack, "材质包" => JavaResourceKind.ResourcePack,
+            "光影包" => JavaResourceKind.ShaderPack,
+            "数据包" => JavaResourceKind.DataPack, "存档" => JavaResourceKind.Save, _ => JavaResourceKind.Modpack
+        };
+    }
+
     public static void OpenDetails(TopLevel topLevel, FavoriteResource resource)
     {
         if (resource.Kind == JavaResourceKind.Mod)
@@ -174,6 +220,7 @@ public partial class FavoritesPageViewModel : ObservableObject
             ModDetailsPage.Open(topLevel, new ModDetailsTarget(resource.Source, resource.ProjectId), resource.Name);
             return;
         }
+
         var definition = resource.Edition == FavoriteEdition.Bedrock
             ? BedrockResourceDefinitions.ResourcePack
             : resource.Kind switch
@@ -186,9 +233,11 @@ public partial class FavoritesPageViewModel : ObservableObject
                 _ => JavaResourceDefinitions.ResourcePack
             };
         var target = new JavaResourceDetailsTarget(definition, resource.Source, resource.ProjectId);
-        if (resource.Edition == FavoriteEdition.Bedrock) BedrockResourceDetailsPage.Open(topLevel, target, resource.Name);
+        if (resource.Edition == FavoriteEdition.Bedrock)
+            BedrockResourceDetailsPage.Open(topLevel, target, resource.Name);
         else if (resource.Kind == JavaResourceKind.Modpack) ModpackDetailsPage.Open(topLevel, target, resource.Name);
-        else if (resource.Kind == JavaResourceKind.ShaderPack) ShaderPackDetailsPage.Open(topLevel, target, resource.Name);
+        else if (resource.Kind == JavaResourceKind.ShaderPack)
+            ShaderPackDetailsPage.Open(topLevel, target, resource.Name);
         else if (resource.Kind == JavaResourceKind.DataPack) DataPackDetailsPage.Open(topLevel, target, resource.Name);
         else if (resource.Kind == JavaResourceKind.Save) SaveDetailsPage.Open(topLevel, target, resource.Name);
         else ResourcePackDetailsPage.Open(topLevel, target, resource.Name);
@@ -254,5 +303,7 @@ public sealed class FavoriteResourceItem : FavoriteResource
     }
 
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
-    public string SourceText => $"{(Edition == FavoriteEdition.Java ? "Java 版" : "基岩版")}·{(Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth")}";
+
+    public string SourceText =>
+        $"{(Edition == FavoriteEdition.Java ? "Java 版" : "基岩版")}·{(Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth")}";
 }

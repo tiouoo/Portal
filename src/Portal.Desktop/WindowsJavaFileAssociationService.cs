@@ -1,6 +1,7 @@
 #if WINDOWS
-using Microsoft.Win32;
 using System.Runtime.InteropServices;
+using Microsoft.Win32;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;
 
@@ -61,7 +62,7 @@ internal static partial class WindowsJavaFileAssociationService
         }
         catch (Exception exception)
         {
-            Tio.Avalonia.Standard.Modules.DiskIO.Logger.Error($"注册整合包文件关联失败：{exception}");
+            Logger.Error($"注册整合包文件关联失败：{exception}");
         }
     }
 

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text;
 
 namespace Portal.Core.Minecraft;
@@ -94,13 +93,14 @@ public static class MinecraftTextParser
                         bold = italic = underline = strikethrough = obfuscated = false;
                         break;
                     case 'x':
-                        
+
                         if (i + 12 < text.Length && TryReadRgbCode(text, i + 1, out var hex))
                         {
                             color = $"#{hex}";
                             bold = italic = underline = strikethrough = obfuscated = false;
                             i += 12;
                         }
+
                         break;
                 }
 
@@ -130,10 +130,8 @@ public static class MinecraftTextParser
             return false;
 
         for (var i = 0; i < 6; i++)
-        {
             if (!IsHexDigit(text[start + i]))
                 return false;
-        }
 
         hex = text.Substring(start, 6);
         return true;
@@ -155,6 +153,8 @@ public static class MinecraftTextParser
         return true;
     }
 
-    private static bool IsHexDigit(char c) =>
-        (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    private static bool IsHexDigit(char c)
+    {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
 }

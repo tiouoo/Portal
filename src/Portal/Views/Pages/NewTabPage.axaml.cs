@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -11,28 +10,22 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Const;
 using Portal.Core.Const;
-using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft;
+using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Core.Operations;
 using Portal.Core.Operations.OpenFile;
 using Portal.Core.Services;
-using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
-using Portal.Services;
 using Portal.ViewModels;
-using Portal.Views.Components;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.InstancePages;
 using Portal.Views.Widgets;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
-using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -63,11 +56,6 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
     }
 
-    private void OnStatisticsChanged(object? sender, EventArgs e)
-    {
-        Dispatcher.UIThread.Post(NewTabViewModel.UpdateStatistics);
-    }
-
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = "新标签页",
@@ -82,6 +70,11 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
         NewTabViewModel.Dispose();
         DataContext = null;
+    }
+
+    private void OnStatisticsChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(NewTabViewModel.UpdateStatistics);
     }
 
     private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -144,8 +137,10 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
             () => DesktopShortcutService.CreateAsync(instance));
     }
 
-    private void NewTabPage_OnSizeChanged(object? sender, SizeChangedEventArgs e) =>
+    private void NewTabPage_OnSizeChanged(object? sender, SizeChangedEventArgs e)
+    {
         NewTabViewModel.SetRecentPlayWidth(e.NewSize.Width);
+    }
 
     private void QuickPlay_Click(object? sender, RoutedEventArgs e)
     {
@@ -326,7 +321,7 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
         var result = await OverlayDialog
             .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
                 new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders.Select(x
-                    => x.FolderPath).ToList()), hostId: this.TryGetHostId(), options: options);
+                    => x.FolderPath).ToList()), this.TryGetHostId(), options);
 
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
@@ -354,12 +349,14 @@ public partial class NewTabPage : DataUserControl, ITioTabPage
     }
 }
 
-public partial class NewTabViewModel : ViewModels.InstanceListViewModelBase
+public partial class NewTabViewModel : InstanceListViewModelBase
 {
     private readonly RecentPlayListService _recentPlayListService = RecentPlayListService.Instance;
     private List<RecentPlayItem> _allRecentPlays = [];
-    private int _recentPlayCapacity = 1;
     private bool _isDisposed;
+    private int _recentPlayCapacity = 1;
+
+    private RecentPlayItem? _recentPlayTargetItem;
 
     public NewTabViewModel()
     {
@@ -375,8 +372,6 @@ public partial class NewTabViewModel : ViewModels.InstanceListViewModelBase
 
     public string ToggleRecentPlaysText =>
         Data.ConfigEntry.NewTabRecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
-
-    private RecentPlayItem? _recentPlayTargetItem;
 
     public RecentPlayItem? RecentPlayTargetItem
     {
@@ -405,8 +400,10 @@ public partial class NewTabViewModel : ViewModels.InstanceListViewModelBase
         UpdateRecentPlayTargetItem();
     }
 
-    protected override IEnumerable<RecentPlayTarget> GetRecentPlayTargets() =>
-        _allRecentPlays.Select(item => item.Target);
+    protected override IEnumerable<RecentPlayTarget> GetRecentPlayTargets()
+    {
+        return _allRecentPlays.Select(item => item.Target);
+    }
 
     private void UpdateRecentPlays(IEnumerable<RecentPlayTarget> targets)
     {
@@ -467,10 +464,13 @@ public partial class NewTabViewModel : ViewModels.InstanceListViewModelBase
         ApplyRecentPlayCapacity();
     }
 
-    private void SortRecentPlays() => _allRecentPlays = _allRecentPlays
-        .OrderByDescending(item => item.IsFavorite)
-        .ThenByDescending(item => item.LastPlayedTime)
-        .ToList();
+    private void SortRecentPlays()
+    {
+        _allRecentPlays = _allRecentPlays
+            .OrderByDescending(item => item.IsFavorite)
+            .ThenByDescending(item => item.LastPlayedTime)
+            .ToList();
+    }
 
     [RelayCommand]
     public void ToggleFavorite(MinecraftInstance instance)
@@ -506,14 +506,13 @@ public partial class NewTabViewModel : ViewModels.InstanceListViewModelBase
 
 public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
 {
-    private readonly RecentPlayTarget _target;
     private readonly ServerPing _ping = new();
-    private Bitmap? _ownedIcon;
     private bool _iconLoaded;
+    private Bitmap? _ownedIcon;
 
     public RecentPlayItem(RecentPlayTarget target)
     {
-        _target = target;
+        Target = target;
         if (target.Type == RecentPlayTargetType.Server)
         {
             _ping.Changed += OnPingChanged;
@@ -524,46 +523,45 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
         }
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public RecentPlayTarget Target { get; }
 
-    public RecentPlayTarget Target => _target;
-    public string Name => _target.Name;
-    public string InstanceName => _target.Instance.InstanceName;
-    public string Details => _target.Details;
-    public DateTime LastPlayedTime => _target.LastPlayedTime;
-    public string RelativeTime => GetRelativeTime(_target.LastPlayedTime);
-    public bool CanQuickPlay => _target.CanQuickPlay;
+    public string Name => Target.Name;
+    public string InstanceName => Target.Instance.InstanceName;
+    public string Details => Target.Details;
+    public DateTime LastPlayedTime => Target.LastPlayedTime;
+    public string RelativeTime => GetRelativeTime(Target.LastPlayedTime);
+    public bool CanQuickPlay => Target.CanQuickPlay;
 
-    public string? FolderName => _target.Type == RecentPlayTargetType.World
-        ? _target.Id
+    public string? FolderName => Target.Type == RecentPlayTargetType.World
+        ? Target.Id
         : null;
 
     public bool HasFolderName => FolderName is not null;
 
-    public bool IsServer => _target.Type == RecentPlayTargetType.Server;
+    public bool IsServer => Target.Type == RecentPlayTargetType.Server;
 
-        public string? SubtitleText => _target.Type == RecentPlayTargetType.World ? FolderName : ServerDisplayAddress;
+    public string? SubtitleText => Target.Type == RecentPlayTargetType.World ? FolderName : ServerDisplayAddress;
 
     public bool HasSubtitle => SubtitleText is not null;
 
-        public string StatusText => _ping.StatusText;
+    public string StatusText => _ping.StatusText;
 
-        public IBrush StatusBrush => _ping.StatusBrush;
+    public IBrush StatusBrush => _ping.StatusBrush;
 
-        public string PingText => _ping.PingText;
+    public string PingText => _ping.PingText;
 
     public bool HasPing => _ping.HasPing;
 
     public IBrush PingBrush => _ping.PingBrush;
 
-        public string PlayersText => _ping.PlayersText;
+    public string PlayersText => _ping.PlayersText;
 
     public bool HasPlayers => _ping.HasPlayers;
 
     public bool IsFavorite =>
-        _target.Instance.Config.RecentPlayFavorites?.TryGetValue(_target.Id, out var favorite) == true && favorite;
+        Target.Instance.Config.RecentPlayFavorites?.TryGetValue(Target.Id, out var favorite) == true && favorite;
 
-    public bool IsBlocked => BlockListService.Instance.IsRecentPlayBlocked(_target);
+    public bool IsBlocked => BlockListService.Instance.IsRecentPlayBlocked(Target);
     public string BlockHeaderText => IsBlocked ? "取消屏蔽" : "屏蔽";
     public string FavoriteHeaderText => IsFavorite ? "取消收藏" : "收藏";
 
@@ -574,25 +572,49 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
             if (!_iconLoaded)
             {
                 _iconLoaded = true;
-                _ownedIcon = _target.Type == RecentPlayTargetType.Server && _target.ServerIconData is { Length: > 0 }
-                    ? LoadIcon(_target.ServerIconData)
-                    : _target.WorldIconPath is { } path && File.Exists(path)
+                _ownedIcon = Target.Type == RecentPlayTargetType.Server && Target.ServerIconData is { Length: > 0 }
+                    ? LoadIcon(Target.ServerIconData)
+                    : Target.WorldIconPath is { } path && File.Exists(path)
                         ? LoadIcon(path)
                         : null;
             }
 
-            return _ownedIcon ?? _target.Instance.Icon;
+            return _ownedIcon ?? Target.Instance.Icon;
         }
     }
 
+    private string? ServerDisplayAddress
+    {
+        get
+        {
+            var address = Target.ServerAddress;
+            if (string.IsNullOrWhiteSpace(address))
+                return null;
+
+            return ServerPing.BuildDisplayAddress(address, Target.ServerPort ?? 25565);
+        }
+    }
+
+    public void Dispose()
+    {
+        _ping.Changed -= OnPingChanged;
+        _ping.Cancel();
+        var icon = _ownedIcon;
+        _ownedIcon = null;
+        if (icon != null)
+            Dispatcher.UIThread.Post(icon.Dispose, DispatcherPriority.Background);
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public void ToggleFavorite()
     {
-        var favorites = _target.Instance.Config.RecentPlayFavorites ??= [];
+        var favorites = Target.Instance.Config.RecentPlayFavorites ??= [];
         if (IsFavorite)
-            favorites.Remove(_target.Id);
+            favorites.Remove(Target.Id);
         else
-            favorites[_target.Id] = true;
-        _target.Instance.SaveConfig();
+            favorites[Target.Id] = true;
+        Target.Instance.SaveConfig();
         OnPropertyChanged(nameof(IsFavorite));
         OnPropertyChanged(nameof(FavoriteHeaderText));
     }
@@ -614,20 +636,10 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(HasPlayers));
     }
 
-    private string? ServerDisplayAddress
+    private void OnPropertyChanged(string propertyName)
     {
-        get
-        {
-            var address = _target.ServerAddress;
-            if (string.IsNullOrWhiteSpace(address))
-                return null;
-
-            return ServerPing.BuildDisplayAddress(address, _target.ServerPort ?? 25565);
-        }
-    }
-
-    private void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
     private static Bitmap? LoadIcon(byte[] data)
     {
@@ -653,16 +665,6 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
         {
             return null;
         }
-    }
-
-    public void Dispose()
-    {
-        _ping.Changed -= OnPingChanged;
-        _ping.Cancel();
-        var icon = _ownedIcon;
-        _ownedIcon = null;
-        if (icon != null)
-            Dispatcher.UIThread.Post(icon.Dispose, DispatcherPriority.Background);
     }
 
     private static string GetRelativeTime(DateTime time)

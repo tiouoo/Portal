@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Views.SubWindows;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -20,7 +15,6 @@ public class AppScaling
 
     static AppScaling()
     {
-        
         Control.LoadedEvent.AddClassHandler<Control>(OnControlLoaded);
     }
 
@@ -30,12 +24,12 @@ public class AppScaling
             Wrap(window);
     }
 
-        public static void ApplyScale(double scale)
+    public static void ApplyScale(double scale)
     {
         _scale = scale;
         var transform = new ScaleTransform(scale, scale);
 
-        
+
         foreach (var window in TioTabWindowBase.AllWindows.ToArray())
             Wrap(window);
 
@@ -58,11 +52,9 @@ public class AppScaling
             return;
         }
 
-        
+
         if (window is TioWindow tioWindow && tioWindow.RootBorder is { } root)
         {
-            
-            
             if (root.Parent is Panel outerPanel && outerPanel.Parent is Border outerBorder)
             {
                 var ltc = new LayoutTransformControl { LayoutTransform = new ScaleTransform(scale, scale) };
@@ -75,7 +67,7 @@ public class AppScaling
             if (WrapRootChild(window, root, scale)) return;
         }
 
-        
+
         if (window.Content is Control content && content is not LayoutTransformControl)
         {
             var ltc = new LayoutTransformControl { LayoutTransform = new ScaleTransform(scale, scale) };

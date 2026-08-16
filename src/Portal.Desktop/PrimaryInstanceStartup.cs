@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using Portal.Core.App.Service;
 using Portal.Core.Module.Ipc;
-using Portal.Module.Ipc;
 using Tio.Avalonia.Standard.Modules;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 

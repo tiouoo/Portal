@@ -50,6 +50,7 @@ public static class PinyinHelper
         {
             result.Add(c.ToString());
         }
+
         return result;
     }
 

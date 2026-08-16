@@ -4,10 +4,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Flurl.Http;
-using Portal.Core.Minecraft;
-using Portal.Core.Minecraft.Classes;
 using MinecraftLaunch.Utilities;
 using Portal.Core.App.Service;
+using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -39,14 +38,19 @@ public sealed class ModService
         foreach (var candidate in candidates)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             try
             {
                 ModInfo mod;
                 if (candidate.Sha1 is { } sha1 && ReadCache(sha1) is { MetadataFetched: not false } cached)
+                {
                     mod = CreateModInfo(candidate.Path, cached);
-                else if (candidate.Fingerprint is { } fingerprint && ReadCache(fingerprint) is { MetadataFetched: not false } fingerprintCached)
+                }
+                else if (candidate.Fingerprint is { } fingerprint && ReadCache(fingerprint) is
+                             { MetadataFetched: not false } fingerprintCached)
+                {
                     mod = CreateModInfo(candidate.Path, fingerprintCached);
+                }
                 else
                 {
                     mod = ReadMod(candidate.Path, cancellationToken);
@@ -54,7 +58,7 @@ public sealed class ModService
                         WriteCache(missingFingerprint, CreateLocalCacheEntry(mod));
                 }
 
-                
+
                 results[candidate.Path] = mod with { Sha1 = candidate.Sha1, Fingerprint = candidate.Fingerprint };
             }
             catch (IOException)
@@ -72,7 +76,8 @@ public sealed class ModService
     }
 
     public async Task RefreshMetadataAsync(IEnumerable<ModInfo> mods, Func<string, string?>? findFriendlyName,
-        Action<ModInfo> metadataUpdated, Action<bool>? loadingChanged = null, CancellationToken cancellationToken = default)
+        Action<ModInfo> metadataUpdated, Action<bool>? loadingChanged = null,
+        CancellationToken cancellationToken = default)
     {
         using var hashSemaphore = new SemaphoreSlim(MaximumConcurrentHashes);
         var fingerprintedMods = await Task.WhenAll(mods.Select(async mod =>
@@ -84,15 +89,15 @@ public sealed class ModService
             try
             {
                 var hashes = await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken), cancellationToken);
-                return (Mod: mod, Sha1: (string?)hashes.Sha1, Fingerprint: (uint?)hashes.Fingerprint);
+                return (Mod: mod, Sha1: (string?)hashes.Sha1, Fingerprint: hashes.Fingerprint);
             }
             catch (IOException)
             {
-                return (Mod: mod, Sha1: (string?)null, Fingerprint: (uint?)null);
+                return (Mod: mod, Sha1: null, Fingerprint: null);
             }
             catch (UnauthorizedAccessException)
             {
-                return (Mod: mod, Sha1: (string?)null, Fingerprint: (uint?)null);
+                return (Mod: mod, Sha1: null, Fingerprint: null);
             }
             finally
             {
@@ -166,9 +171,11 @@ public sealed class ModService
         }
     }
 
-    private static bool IsModFile(string path) =>
-        Path.GetExtension(path).Equals(".jar", StringComparison.OrdinalIgnoreCase) ||
-        Path.GetExtension(path).Equals(".disabled", StringComparison.OrdinalIgnoreCase);
+    private static bool IsModFile(string path)
+    {
+        return Path.GetExtension(path).Equals(".jar", StringComparison.OrdinalIgnoreCase) ||
+               Path.GetExtension(path).Equals(".disabled", StringComparison.OrdinalIgnoreCase);
+    }
 
     private static ModInfo ReadMod(string path, CancellationToken cancellationToken)
     {
@@ -192,14 +199,17 @@ public sealed class ModService
             entry.Source == "Modrinth" ? entry.ModrinthVersionId : entry.FileId?.ToString());
     }
 
-    private static ModCacheEntry CreateLocalCacheEntry(ModInfo mod) => new()
+    private static ModCacheEntry CreateLocalCacheEntry(ModInfo mod)
     {
-        DisplayName = mod.DisplayName,
-        Description = mod.Description,
-        IconUrl = mod.IconUrl,
-        FriendlyName = mod.FriendlyName,
-        MetadataFetched = false
-    };
+        return new ModCacheEntry
+        {
+            DisplayName = mod.DisplayName,
+            Description = mod.Description,
+            IconUrl = mod.IconUrl,
+            FriendlyName = mod.FriendlyName,
+            MetadataFetched = false
+        };
+    }
 
     private static async Task FetchBatchAsync((ModInfo Mod, string Sha1, uint? Fingerprint)[] batch,
         Func<string, string?>? findFriendlyName, Action<ModInfo> metadataUpdated, CancellationToken cancellationToken)
@@ -208,7 +218,8 @@ public sealed class ModService
         var missing = batch.Where(item => !entries.ContainsKey(item.Sha1) && item.Fingerprint.HasValue)
             .Select(item => item.Fingerprint!.Value).ToArray();
         var curseForgeEntries = missing.Length == 0 || CredentialsService.CurseForgeApiKey is null
-            ? [] : await FetchMetadataBatchAsync(missing, cancellationToken);
+            ? []
+            : await FetchMetadataBatchAsync(missing, cancellationToken);
 
         await TranslateEntriesAsync(entries.Values.Concat(curseForgeEntries.Values).OfType<ModCacheEntry>(),
             cancellationToken);
@@ -234,7 +245,8 @@ public sealed class ModService
         }
     }
 
-    private static async Task TranslateEntriesAsync(IEnumerable<ModCacheEntry> entries, CancellationToken cancellationToken)
+    private static async Task TranslateEntriesAsync(IEnumerable<ModCacheEntry> entries,
+        CancellationToken cancellationToken)
     {
         var grouped = entries.Where(entry => entry.TranslatedDescription == null)
             .Select(entry => (Entry: entry, Identity: GetTranslationIdentity(entry)))
@@ -262,8 +274,9 @@ public sealed class ModService
         }
     }
 
-    private static (ProjectTranslationSource Source, string ProjectId)? GetTranslationIdentity(ModCacheEntry entry) =>
-        entry.Source switch
+    private static (ProjectTranslationSource Source, string ProjectId)? GetTranslationIdentity(ModCacheEntry entry)
+    {
+        return entry.Source switch
         {
             "Modrinth" when !string.IsNullOrWhiteSpace(entry.ModrinthProjectId) =>
                 (ProjectTranslationSource.Modrinth, entry.ModrinthProjectId),
@@ -271,8 +284,10 @@ public sealed class ModService
                 (ProjectTranslationSource.CurseForge, entry.ProjectId.Value.ToString()),
             _ => null
         };
+    }
 
-    private static async Task<Dictionary<string, ModCacheEntry>> FetchModrinthMetadataBatchAsync(IEnumerable<string> hashes,
+    private static async Task<Dictionary<string, ModCacheEntry>> FetchModrinthMetadataBatchAsync(
+        IEnumerable<string> hashes,
         CancellationToken cancellationToken)
     {
         var requested = hashes.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -294,7 +309,9 @@ public sealed class ModService
         {
             return [];
         }
-        var projects = await FetchModrinthProjectsAsync(response.Values.Select(version => version.ProjectId), cancellationToken);
+
+        var projects =
+            await FetchModrinthProjectsAsync(response.Values.Select(version => version.ProjectId), cancellationToken);
         return response.ToDictionary(pair => pair.Key, pair =>
         {
             projects.TryGetValue(pair.Value.ProjectId ?? string.Empty, out var project);
@@ -312,10 +329,12 @@ public sealed class ModService
         }, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static async Task<Dictionary<string, ModrinthProject>> FetchModrinthProjectsAsync(IEnumerable<string?> projectIds,
+    private static async Task<Dictionary<string, ModrinthProject>> FetchModrinthProjectsAsync(
+        IEnumerable<string?> projectIds,
         CancellationToken cancellationToken)
     {
-        var requested = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToArray();
+        var requested = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal)
+            .ToArray();
         if (requested.Length == 0) return [];
 
         try
@@ -358,6 +377,7 @@ public sealed class ModService
         {
             return [];
         }
+
         var matches = response.Data?.ExactMatches
             ?.Where(match => match.File != null)
             .ToDictionary(match => match.File!.Fingerprint) ?? [];
@@ -402,13 +422,15 @@ public sealed class ModService
             try
             {
                 var fingerprint = mod.Fingerprint ??
-                    (await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken), cancellationToken)).Fingerprint;
+                                  (await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken),
+                                      cancellationToken)).Fingerprint;
                 var cached = ReadCache(fingerprint);
                 if (cached is { IsWikiFriendlyName: true, FriendlyName: not null })
                 {
                     friendlyNameUpdated(ApplyMetadata(mod, cached));
                     continue;
                 }
+
                 if (cached == null || GetFriendlyNameSlug(cached) == null)
                 {
                     if (cached != null)
@@ -420,12 +442,21 @@ public sealed class ModService
                 if (string.Equals(cached.FriendlyName, friendlyName, StringComparison.Ordinal))
                     continue;
 
-                cached = cached with { FriendlyName = friendlyName, IsWikiFriendlyName = !string.IsNullOrWhiteSpace(friendlyName) };
+                cached = cached with
+                {
+                    FriendlyName = friendlyName, IsWikiFriendlyName = !string.IsNullOrWhiteSpace(friendlyName)
+                };
                 WriteCache(fingerprint, cached);
                 friendlyNameUpdated(ApplyMetadata(mod, cached));
             }
-            catch (IOException exception) { Logger.Error($"更新模组友好名称缓存失败：{mod.FilePath}", exception); }
-            catch (UnauthorizedAccessException exception) { Logger.Error($"更新模组友好名称缓存被拒绝：{mod.FilePath}", exception); }
+            catch (IOException exception)
+            {
+                Logger.Error($"更新模组友好名称缓存失败：{mod.FilePath}", exception);
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                Logger.Error($"更新模组友好名称缓存被拒绝：{mod.FilePath}", exception);
+            }
         }
     }
 
@@ -448,25 +479,30 @@ public sealed class ModService
         };
     }
 
-    private static ModInfo ApplyMetadata(ModInfo mod, ModCacheEntry entry) => mod with
+    private static ModInfo ApplyMetadata(ModInfo mod, ModCacheEntry entry)
     {
-        DisplayName = entry.DisplayName ?? mod.DisplayName,
-        Description = entry.TranslatedDescription ?? entry.Description ?? mod.Description,
-        IconUrl = entry.IconUrl ?? mod.IconUrl,
-        FriendlyName = entry.FriendlyName ?? mod.FriendlyName,
-        Source = entry.Source ?? mod.Source,
-        ProjectId = entry.Source == "Modrinth" ? entry.ModrinthProjectId : entry.ProjectId?.ToString(),
-        VersionId = entry.Source == "Modrinth" ? entry.ModrinthVersionId : entry.FileId?.ToString()
-    };
+        return mod with
+        {
+            DisplayName = entry.DisplayName ?? mod.DisplayName,
+            Description = entry.TranslatedDescription ?? entry.Description ?? mod.Description,
+            IconUrl = entry.IconUrl ?? mod.IconUrl,
+            FriendlyName = entry.FriendlyName ?? mod.FriendlyName,
+            Source = entry.Source ?? mod.Source,
+            ProjectId = entry.Source == "Modrinth" ? entry.ModrinthProjectId : entry.ProjectId?.ToString(),
+            VersionId = entry.Source == "Modrinth" ? entry.ModrinthVersionId : entry.FileId?.ToString()
+        };
+    }
 
-    private static string? GetFriendlyNameSlug(ModCacheEntry entry) => entry.Source == "Modrinth"
-        ? entry.ModrinthSlug
-        : entry.CurseForgeSlug;
+    private static string? GetFriendlyNameSlug(ModCacheEntry entry)
+    {
+        return entry.Source == "Modrinth"
+            ? entry.ModrinthSlug
+            : entry.CurseForgeSlug;
+    }
 
     private static async Task<(string Path, string? Sha1, uint? Fingerprint)[]> ComputeHashesAsync(
         IReadOnlyList<string> paths, CancellationToken cancellationToken)
     {
-        
         using var semaphore = new SemaphoreSlim(MaximumConcurrentHashes);
         return await Task.WhenAll(paths.Select(async path =>
         {
@@ -504,10 +540,8 @@ public sealed class ModService
                 cancellationToken.ThrowIfCancellationRequested();
                 sha1.AppendData(buffer, 0, read);
                 for (var index = 0; index < read; index++)
-                {
                     if (!IsCurseForgeWhitespace(buffer[index]))
                         filteredLength++;
-                }
             }
         }
 
@@ -534,51 +568,10 @@ public sealed class ModService
         return (Convert.ToHexString(sha1.GetHashAndReset()).ToLowerInvariant(), fingerprint.Complete());
     }
 
-        private struct CurseForgeFingerprint(uint filteredLength)
+    private static bool IsCurseForgeWhitespace(byte value)
     {
-        private uint _hash = 1u ^ filteredLength;
-        private uint _tail;
-        private int _tailLength;
-
-        public void Append(ReadOnlySpan<byte> data)
-        {
-            var index = 0;
-            while (_tailLength > 0 && _tailLength < 4 && index < data.Length)
-                _tail |= (uint)data[index++] << (8 * _tailLength++);
-
-            if (_tailLength == 4)
-            {
-                Mix(ref _hash, _tail);
-                _tail = 0;
-                _tailLength = 0;
-            }
-
-            while (data.Length - index >= 4)
-            {
-                Mix(ref _hash, BitConverter.ToUInt32(data.Slice(index, 4)));
-                index += 4;
-            }
-
-            while (index < data.Length)
-                _tail |= (uint)data[index++] << (8 * _tailLength++);
-        }
-
-        public uint Complete()
-        {
-            if (_tailLength > 0)
-            {
-                _hash ^= _tail;
-                _hash *= 0x5bd1e995u;
-            }
-
-            _hash ^= _hash >> 13;
-            _hash *= 0x5bd1e995u;
-            _hash ^= _hash >> 15;
-            return _hash;
-        }
+        return value is 0x20 or 0x09 or 0x0a or 0x0d;
     }
-
-    private static bool IsCurseForgeWhitespace(byte value) => value is 0x20 or 0x09 or 0x0a or 0x0d;
 
     private static void Mix(ref uint hash, uint value)
     {
@@ -589,16 +582,30 @@ public sealed class ModService
         hash ^= value;
     }
 
-    private static ModCacheEntry? ReadCache(uint fingerprint) => CacheDatabase.ReadMod(fingerprint);
+    private static ModCacheEntry? ReadCache(uint fingerprint)
+    {
+        return CacheDatabase.ReadMod(fingerprint);
+    }
 
-    private static ModCacheEntry? ReadCache(string sha1) => CacheDatabase.ReadMod(sha1);
+    private static ModCacheEntry? ReadCache(string sha1)
+    {
+        return CacheDatabase.ReadMod(sha1);
+    }
 
-    private static void WriteCache(uint fingerprint, ModCacheEntry entry) => CacheDatabase.WriteMod(fingerprint, entry);
+    private static void WriteCache(uint fingerprint, ModCacheEntry entry)
+    {
+        CacheDatabase.WriteMod(fingerprint, entry);
+    }
 
-    private static void WriteCache(string sha1, ModCacheEntry entry) => CacheDatabase.WriteMod(sha1, entry);
+    private static void WriteCache(string sha1, ModCacheEntry entry)
+    {
+        CacheDatabase.WriteMod(sha1, entry);
+    }
 
-    private static void WriteCache(uint fingerprint, string sha1, ModCacheEntry entry) =>
+    private static void WriteCache(uint fingerprint, string sha1, ModCacheEntry entry)
+    {
         CacheDatabase.WriteMod(fingerprint, sha1, entry);
+    }
 
     private static string GetFileName(string path)
     {
@@ -695,11 +702,57 @@ public sealed class ModService
             : null;
     }
 
-    private static string? GetJsonString(JsonElement element, string propertyName) =>
-        element.TryGetProperty(propertyName, out var property) &&
-        property.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(property.GetString())
+    private static string? GetJsonString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) &&
+               property.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(property.GetString())
             ? property.GetString()!.Trim()
             : null;
+    }
+
+    private struct CurseForgeFingerprint(uint filteredLength)
+    {
+        private uint _hash = 1u ^ filteredLength;
+        private uint _tail;
+        private int _tailLength;
+
+        public void Append(ReadOnlySpan<byte> data)
+        {
+            var index = 0;
+            while (_tailLength > 0 && _tailLength < 4 && index < data.Length)
+                _tail |= (uint)data[index++] << (8 * _tailLength++);
+
+            if (_tailLength == 4)
+            {
+                Mix(ref _hash, _tail);
+                _tail = 0;
+                _tailLength = 0;
+            }
+
+            while (data.Length - index >= 4)
+            {
+                Mix(ref _hash, BitConverter.ToUInt32(data.Slice(index, 4)));
+                index += 4;
+            }
+
+            while (index < data.Length)
+                _tail |= (uint)data[index++] << (8 * _tailLength++);
+        }
+
+        public uint Complete()
+        {
+            if (_tailLength > 0)
+            {
+                _hash ^= _tail;
+                _hash *= 0x5bd1e995u;
+            }
+
+            _hash ^= _hash >> 13;
+            _hash *= 0x5bd1e995u;
+            _hash ^= _hash >> 15;
+            return _hash;
+        }
+    }
 }
 
 public sealed record ModInfo(

@@ -1,17 +1,15 @@
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Xml;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
@@ -25,9 +23,9 @@ namespace Portal.Views.Pages;
 public partial class MinecraftLogPage : UserControl, ITioTabPage
 {
     private const int MaximumVisibleLogLines = 10_000;
-    private readonly MinecraftLogSession? _logSession;
     private readonly List<MinecraftLogEntry> _entries = [];
     private readonly IHighlightingDefinition _highlighting;
+    private readonly MinecraftLogSession? _logSession;
 
     public MinecraftLogPage(MinecraftLogSession logSession)
     {
@@ -50,28 +48,33 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
         ConfigureEditor();
     }
 
+    public MinecraftInstance? Instance => _logSession?.Instance;
+
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = "Minecraft 日志",
-        Icon = StreamGeometry.Parse("F1 M640,640z M0,0z M128,128C128,92.7,156.7,64,192,64L341.5,64C358.5,64,374.8,70.7,386.8,82.7L493.3,189.3C505.3,201.3,512,217.6,512,234.6L512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,416 188.3,416 237.1,478.7C242.2,485.3 250.4,488.7 258.7,487.8 267,486.9 274.2,481.7 277.8,474.2L320.7,383 330.6,402.8C334.7,410.9,343,416.1,352.1,416.1L424.1,416.1C437.4,416.1 448.1,405.4 448.1,392.1 448.1,378.8 437.4,368.1 424.1,368.1L366.9,368.1 341.5,317.4C337.4,309.2 328.9,304 319.7,304.1 310.5,304.2 302.2,309.6 298.3,317.9L251,418.5 219,377.4C214.4,371.4,207.4,368,200,368L128,368 128,128z M336,122.5L336,216C336,229.3,346.7,240,360,240L453.5,240 336,122.5z")
+        Icon = StreamGeometry.Parse(
+            "F1 M640,640z M0,0z M128,128C128,92.7,156.7,64,192,64L341.5,64C358.5,64,374.8,70.7,386.8,82.7L493.3,189.3C505.3,201.3,512,217.6,512,234.6L512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,416 188.3,416 237.1,478.7C242.2,485.3 250.4,488.7 258.7,487.8 267,486.9 274.2,481.7 277.8,474.2L320.7,383 330.6,402.8C334.7,410.9,343,416.1,352.1,416.1L424.1,416.1C437.4,416.1 448.1,405.4 448.1,392.1 448.1,378.8 437.4,368.1 424.1,368.1L366.9,368.1 341.5,317.4C337.4,309.2 328.9,304 319.7,304.1 310.5,304.2 302.2,309.6 298.3,317.9L251,418.5 219,377.4C214.4,371.4,207.4,368,200,368L128,368 128,128z M336,122.5L336,216C336,229.3,346.7,240,360,240L453.5,240 336,122.5z")
     };
 
     public TabEntry HostTab { get; set; } = null!;
-    public MinecraftInstance? Instance => _logSession?.Instance;
 
     public void OnClose()
     {
         if (_logSession != null)
             _logSession.LogReceived -= OnLogReceived;
 
-        
+
         _entries.Clear();
         LogEditor.SyntaxHighlighting = null;
         LogEditor.Document = new TextDocument();
         DataContext = null;
     }
 
-    public Task<bool> RequestCloseAsync() => Task.FromResult(true);
+    public Task<bool> RequestCloseAsync()
+    {
+        return Task.FromResult(true);
+    }
 
     public static void Open(MinecraftLogSession logSession, TopLevel sender)
     {
@@ -80,16 +83,13 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
 
         TioTabWindowBase window;
         if (sender is not TioTabWindowBase window1)
-        {
             window = UiProperty.ActiveWindow as TioTabWindowBase ?? UiProperty.TabWindow;
-        }
         else
-        {
             window = window1;
-        }
-        if(window is null) return;
+        if (window is null) return;
 
-        var tab = new TabEntry(window, new MinecraftLogPage(logSession)) { Title = $"{logSession.Instance.InstanceName} 日志" };
+        var tab = new TabEntry(window, new MinecraftLogPage(logSession))
+            { Title = $"{logSession.Instance.InstanceName} 日志" };
         window.CreateTab(tab);
         window.SelectTab(tab);
     }
@@ -126,7 +126,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
             _entries.Where(entry => IsLogLevelEnabled(entry.Level)).Select(entry => entry.Text));
     }
 
-        private void TrimDocument()
+    private void TrimDocument()
     {
         var document = LogEditor.Document;
         while (document.LineCount > MaximumVisibleLogLines + 1)
@@ -136,15 +136,18 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
         }
     }
 
-    private bool IsLogLevelEnabled(MinecraftLogLevel level) => level switch
+    private bool IsLogLevelEnabled(MinecraftLogLevel level)
     {
-        MinecraftLogLevel.Information => InformationFilter.IsChecked == true,
-        MinecraftLogLevel.Warning => WarningFilter.IsChecked == true,
-        MinecraftLogLevel.Error => ErrorFilter.IsChecked == true,
-        MinecraftLogLevel.Debug => DebugFilter.IsChecked == true,
-        MinecraftLogLevel.Trace => TraceFilter.IsChecked == true,
-        _ => OtherFilter.IsChecked == true
-    };
+        return level switch
+        {
+            MinecraftLogLevel.Information => InformationFilter.IsChecked == true,
+            MinecraftLogLevel.Warning => WarningFilter.IsChecked == true,
+            MinecraftLogLevel.Error => ErrorFilter.IsChecked == true,
+            MinecraftLogLevel.Debug => DebugFilter.IsChecked == true,
+            MinecraftLogLevel.Trace => TraceFilter.IsChecked == true,
+            _ => OtherFilter.IsChecked == true
+        };
+    }
 
     private void ScrollToLatest()
     {
@@ -160,7 +163,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
 
     private static IHighlightingDefinition LoadHighlighting()
     {
-        using var stream = Avalonia.Platform.AssetLoader.Open(new Uri("avares://Portal/Assets/Highlighting/MinecraftLog.xshd"));
+        using var stream = AssetLoader.Open(new Uri("avares://Portal/Assets/Highlighting/MinecraftLog.xshd"));
         using var reader = XmlReader.Create(stream);
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
@@ -169,12 +172,21 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
     {
         _ = ExportLogAsync();
     }
-    
-    private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => LogEditor.SelectAll();
 
-    private void Copy_OnClick(object? sender, RoutedEventArgs e) => LogEditor.Copy();
+    private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
+    {
+        LogEditor.SelectAll();
+    }
 
-    private void Export_OnClick(object? sender, RoutedEventArgs e) => _ = ExportLogAsync();
+    private void Copy_OnClick(object? sender, RoutedEventArgs e)
+    {
+        LogEditor.Copy();
+    }
+
+    private void Export_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = ExportLogAsync();
+    }
 
     private async Task ExportLogAsync()
     {
@@ -185,7 +197,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
         var logContent = LogEditor.Document.Text;
         if (string.IsNullOrWhiteSpace(logContent))
         {
-            NotificationGateway.Notice(topLevel, "没有可导出的日志", NotificationType.Warning);
+            topLevel.Notice("没有可导出的日志", NotificationType.Warning);
             return;
         }
 
@@ -204,11 +216,11 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new StreamWriter(stream);
             await writer.WriteAsync(logContent);
-            NotificationGateway.Notice(topLevel, "日志已导出", NotificationType.Success);
+            topLevel.Notice("日志已导出", NotificationType.Success);
         }
         catch (Exception ex)
         {
-            NotificationGateway.Notice(topLevel, $"导出失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"导出失败：{ex.Message}", NotificationType.Error);
         }
     }
 

@@ -16,10 +16,18 @@ public partial class BedrockAccount : ObservableObject
 
     public string DisplayAccountNote => string.IsNullOrWhiteSpace(AccountNote) ? "基岩版 · Xbox" : AccountNote;
     public string ShortDisplay => $"基岩·{Gamertag}";
+
     public string DisplayLastLoginTime => LastLoginTime == DateTime.MinValue
         ? "从未登录"
         : LastLoginTime.ToString("yyyy-MM-dd HH:mm");
 
-    partial void OnAccountNoteChanged(string? value) => OnPropertyChanged(nameof(DisplayAccountNote));
-    partial void OnGamertagChanged(string value) => OnPropertyChanged(nameof(ShortDisplay));
+    partial void OnAccountNoteChanged(string? value)
+    {
+        OnPropertyChanged(nameof(DisplayAccountNote));
+    }
+
+    partial void OnGamertagChanged(string value)
+    {
+        OnPropertyChanged(nameof(ShortDisplay));
+    }
 }

@@ -1,13 +1,8 @@
-using System;
 using System.Collections.Concurrent;
-using System.IO;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
-using Portal.Const;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -16,11 +11,10 @@ namespace Portal.Module.Imaging;
 
 public class DiskCachedImageLoader : IAsyncImageLoader
 {
-    
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> DownloadLocks = new();
+    private readonly string _cacheCategory;
 
     private readonly int _decodeWidth;
-    private readonly string _cacheCategory;
 
     protected DiskCachedImageLoader(string cacheCategory, int decodeWidth)
     {
@@ -55,25 +49,52 @@ public class DiskCachedImageLoader : IAsyncImageLoader
                 await using var stream = await response.Content.ReadAsStreamAsync();
                 using var bitmap = Bitmap.DecodeToWidth(stream, _decodeWidth);
                 Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
-                
+
                 var temporaryPath = $"{cachePath}.{Guid.NewGuid():N}.tmp";
                 using (var output = File.Create(temporaryPath))
+                {
                     bitmap.Save(output, PngBitmapEncoderOptions.Default);
+                }
+
                 File.Move(temporaryPath, cachePath, true);
                 return Decode(cachePath);
             }
             finally
             {
                 downloadLock.Release();
-                
+
                 DownloadLocks.TryRemove(cachePath, out _);
             }
         }
-        catch (HttpRequestException exception) { Logger.Error($"下载远程图片失败：{url}", exception); return null; }
-        catch (IOException exception) { Logger.Error($"读写图片缓存失败：{url}", exception); return null; }
-        catch (UnauthorizedAccessException exception) { Logger.Error($"访问图片缓存被拒绝：{url}", exception); return null; }
-        catch (InvalidDataException exception) { Logger.Error($"解析远程图片失败：{url}", exception); return null; }
-        catch (ArgumentException exception) { Logger.Error($"处理远程图片地址失败：{url}", exception); return null; }
+        catch (HttpRequestException exception)
+        {
+            Logger.Error($"下载远程图片失败：{url}", exception);
+            return null;
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"读写图片缓存失败：{url}", exception);
+            return null;
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.Error($"访问图片缓存被拒绝：{url}", exception);
+            return null;
+        }
+        catch (InvalidDataException exception)
+        {
+            Logger.Error($"解析远程图片失败：{url}", exception);
+            return null;
+        }
+        catch (ArgumentException exception)
+        {
+            Logger.Error($"处理远程图片地址失败：{url}", exception);
+            return null;
+        }
+    }
+
+    public void Dispose()
+    {
     }
 
     private Bitmap Decode(string cachePath)
@@ -86,9 +107,5 @@ public class DiskCachedImageLoader : IAsyncImageLoader
     {
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(url))).ToLowerInvariant();
         return Path.Combine(ConfigPath.CacheFolderPath, _cacheCategory, hash[..2], hash + ".png");
-    }
-
-    public void Dispose()
-    {
     }
 }

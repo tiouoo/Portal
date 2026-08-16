@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
@@ -9,33 +7,29 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
-using Portal.Classes.Entries;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Widgets;
 using Portal.Module.AggregatedSearch;
-using Portal.Module.Widgets;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
-using TioUi.Controls;
-using TioUi.Common.Extensions;
+using AutoCompleteBox = TioUi.Controls.AutoCompleteBox;
 
 namespace Portal.Views.Widgets;
 
 public sealed class SearchWidget : IWidgetContent
 {
-    private readonly TioUi.Controls.AutoCompleteBox _searchBox;
-    private readonly ComboBox _modeComboBox;
-    private readonly Grid _root;
-    private readonly Panel _innerLeftPlaceholder;
-    private IReadOnlyList<SearchMode> _searchModes = [];
-    private SearchMode? _selectedMode;
-
     private static readonly string SearchIconData =
         "F1 M512,512z M0,0z M416,208C416,253.9,401.1,296.3,376,330.7L502.6,457.4C515.1,469.9 515.1,490.2 502.6,502.7 490.1,515.2 469.8,515.2 457.3,502.7L330.7,376C296.3,401.1 253.9,416 208,416 93.1,416 0,322.9 0,208 0,93.1 93.1,0 208,0 322.9,0 416,93.1 416,208z M208,352A144,144,0,1,0,208,64A144,144,0,1,0,208,352z";
+
+    private readonly Panel _innerLeftPlaceholder;
+    private readonly ComboBox _modeComboBox;
+    private readonly Grid _root;
+    private readonly AutoCompleteBox _searchBox;
+    private readonly IReadOnlyList<SearchMode> _searchModes = [];
+    private SearchMode? _selectedMode;
 
     public SearchWidget(WidgetCellSize size)
     {
@@ -44,7 +38,7 @@ public sealed class SearchWidget : IWidgetContent
         _searchModes = StartPageViewModel.DefaultSearchModes;
         _selectedMode = _searchModes.FirstOrDefault();
 
-        
+
         _modeComboBox = new ComboBox
         {
             Theme = (ControlTheme)Application.Current!.FindResource("BareComboBox")!,
@@ -69,7 +63,8 @@ public sealed class SearchWidget : IWidgetContent
                         Width = 16,
                         IsVisible = !string.IsNullOrEmpty(mode?.IconData)
                     },
-                    new TextBlock { Text = mode?.DisplayText ?? string.Empty, VerticalAlignment = VerticalAlignment.Center }
+                    new TextBlock
+                        { Text = mode?.DisplayText ?? string.Empty, VerticalAlignment = VerticalAlignment.Center }
                 }
             });
         _modeComboBox.SelectionChanged += (_, _) =>
@@ -79,8 +74,8 @@ public sealed class SearchWidget : IWidgetContent
         };
         _modeComboBox.SelectedIndex = 0;
 
-        
-        _searchBox = new TioUi.Controls.AutoCompleteBox
+
+        _searchBox = new AutoCompleteBox
         {
             FilterMode = AutoCompleteFilterMode.None,
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -88,7 +83,7 @@ public sealed class SearchWidget : IWidgetContent
             MaxDropDownHeight = 336
         };
 
-        
+
         _innerLeftPlaceholder = new Panel { Width = 0 };
         _modeComboBox.SizeChanged += (_, e) =>
             _innerLeftPlaceholder.Width = e.NewSize.Width;
@@ -101,12 +96,12 @@ public sealed class SearchWidget : IWidgetContent
             Width = 14
         };
         searchIcon.Bind(
-            PathIcon.ForegroundProperty,
+            ForegroundProperty,
             searchIcon.GetResourceObservable("InnerForegroundColor")
         );
         _searchBox.InnerRightContent = searchIcon;
 
-        
+
         _searchBox.ItemTemplate = new FuncDataTemplate<AggregatedSearchEntry>((entry, _) =>
         {
             var typeText = new TextBlock
@@ -151,12 +146,12 @@ public sealed class SearchWidget : IWidgetContent
 
         _searchBox.Populating += (_, e) =>
         {
-            
             if (_selectedMode?.PageType is not null)
             {
                 e.Cancel = true;
                 return;
             }
+
             _searchBox.ItemsSource = Searcher.Search(e.Parameter ?? string.Empty);
         };
         _searchBox.DropDownOpened += (_, _) =>
@@ -166,6 +161,7 @@ public sealed class SearchWidget : IWidgetContent
                 _searchBox.IsDropDownOpen = false;
                 return;
             }
+
             _searchBox.ItemsSource = Searcher.Search(_searchBox.Text ?? string.Empty);
         };
         _searchBox.SelectionChanged += (_, e) =>
@@ -179,9 +175,9 @@ public sealed class SearchWidget : IWidgetContent
             _searchBox.IsDropDownOpen = false;
             Handler.HandleAsync(entry, topLevel);
         };
-        _searchBox.AddHandler(InputElement.KeyDownEvent, OnSearchKeyDown, RoutingStrategies.Bubble, true);
+        _searchBox.AddHandler(KeyDownEvent, OnSearchKeyDown, RoutingStrategies.Bubble, true);
 
-        
+
         _root = new Grid();
         _root.Children.Add(_searchBox);
         _root.Children.Add(_modeComboBox);
@@ -237,13 +233,11 @@ public sealed class SearchWidget : IWidgetContent
 
         var index = -1;
         for (var i = 0; i < _searchModes.Count; i++)
-        {
             if (ReferenceEquals(_searchModes[i], _selectedMode))
             {
                 index = i;
                 break;
             }
-        }
 
         var next = _searchModes[(index + 1) % _searchModes.Count];
         _selectedMode = next;

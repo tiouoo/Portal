@@ -1,4 +1,3 @@
-using System.Threading;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;

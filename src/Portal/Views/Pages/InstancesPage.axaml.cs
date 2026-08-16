@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
@@ -7,8 +6,6 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
@@ -17,20 +14,15 @@ using Portal.Core.Module;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Operations.OpenFile;
 using Portal.Core.Services;
-using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
-using Portal.Services;
 using Portal.Views.Pages.DownloadPages;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
-using Handler = Portal.Module.DragDrop.Handler;
 
 namespace Portal.Views.Pages;
 
@@ -57,15 +49,6 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         };
     }
 
-    public void Refresh()
-    {
-        var stopwatch = Stopwatch.StartNew();
-        Logger.Info($"[Instances] Refreshing instances in {Data.ConfigEntry.MinecraftFolders.Count} configured folder(s).");
-        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-        InstancesPageViewModel.ApplyFilterAndSort();
-        Logger.Info($"[Instances] Refreshed {InstanceManager.Instance.Instances.Count} instance(s) in {stopwatch.Elapsed}.");
-    }
-
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = "实例",
@@ -80,6 +63,17 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         Logger.Info("[Instances] Page closing.");
         InstancesPageViewModel.Dispose();
         DataContext = null;
+    }
+
+    public void Refresh()
+    {
+        var stopwatch = Stopwatch.StartNew();
+        Logger.Info(
+            $"[Instances] Refreshing instances in {Data.ConfigEntry.MinecraftFolders.Count} configured folder(s).");
+        InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
+        InstancesPageViewModel.ApplyFilterAndSort();
+        Logger.Info(
+            $"[Instances] Refreshed {InstanceManager.Instance.Instances.Count} instance(s) in {stopwatch.Elapsed}.");
     }
 
     private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -104,7 +98,8 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
         instance.Config.IsFavorite = !instance.Config.IsFavorite;
         instance.SaveConfig();
-        Logger.Info($"[Instances] {(instance.Config.IsFavorite ? "Added" : "Removed")} favorite for {instance.InstanceName} at {instance.FolderPath}.");
+        Logger.Info(
+            $"[Instances] {(instance.Config.IsFavorite ? "Added" : "Removed")} favorite for {instance.InstanceName} at {instance.FolderPath}.");
         InstancesPageViewModel.ApplyFilterAndSort();
     }
 
@@ -115,7 +110,8 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
 
         Logger.Info($"[Instances] Starting instance {instance.InstanceName} at {instance.FolderPath}.");
         _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
-            MinecraftLaunchOptionsFactory.Create(instance, logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
+            MinecraftLaunchOptionsFactory.Create(instance,
+                logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
     }
 
     private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)
@@ -174,7 +170,7 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
         var result = await OverlayDialog
             .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
                 new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders.Select(x
-                    => x.FolderPath).ToList()), hostId: this.TryGetHostId(), options: options);
+                    => x.FolderPath).ToList()), this.TryGetHostId(), options);
 
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
@@ -196,13 +192,13 @@ public partial class InstancesPage : DataUserControl, ITioTabPage
     }
 }
 
-public partial class InstancesPageViewModel : ViewModels.InstanceListViewModelBase
+public class InstancesPageViewModel : InstanceListViewModelBase
 {
-    protected override bool FolderFilterEnabled => true;
-
     public InstancesPageViewModel()
     {
         SelectedSortOption = SortOptions.FirstOrDefault(o => o.SortType == Data.ConfigEntry.DefaultInstanceSortType);
         RefreshFolderFilterOptions();
     }
+
+    protected override bool FolderFilterEnabled => true;
 }

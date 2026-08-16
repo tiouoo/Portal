@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -22,14 +21,25 @@ public partial class ScaleInputDialog : UserControl
 
 public partial class ScaleInputDialogViewModel(double currentScale) : ObservableObject, IDialogContext
 {
-    [ObservableProperty] public partial string PercentText { get; set; } =
+    [ObservableProperty]
+    public partial string PercentText { get; set; } =
         ((int)Math.Round(currentScale * 100)).ToString(CultureInfo.InvariantCulture);
 
     [ObservableProperty] public partial string? ErrorText { get; set; }
 
     public bool HasError => ErrorText != null;
 
-    partial void OnErrorTextChanged(string? value) => OnPropertyChanged(nameof(HasError));
+    public void Close()
+    {
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    partial void OnErrorTextChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasError));
+    }
 
     [RelayCommand]
     private void Confirm()
@@ -46,9 +56,8 @@ public partial class ScaleInputDialogViewModel(double currentScale) : Observable
     }
 
     [RelayCommand]
-    private void Cancel() => RequestClose?.Invoke(this, null);
-
-    public void Close() => Cancel();
-
-    public event EventHandler<object?>? RequestClose;
+    private void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 }

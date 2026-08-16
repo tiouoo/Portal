@@ -1,13 +1,9 @@
-using System;
-using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
-using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.StaticPages;
@@ -15,9 +11,6 @@ namespace Portal.Views.StaticPages;
 public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
 {
     private bool _isDisposed;
-    public string FilePath { get; }
-    public string FileName { get; }
-    public Bitmap? Image { get; }
 
     public ImageViewer() : this(string.Empty)
     {
@@ -29,16 +22,13 @@ public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
         FileName = Path.GetFileName(filePath);
 
         if (File.Exists(filePath))
-        {
             try
             {
                 Image = new Bitmap(filePath);
             }
             catch (ArgumentException)
             {
-                
             }
-        }
 
         PageInfo = new PageInfo
         {
@@ -51,8 +41,27 @@ public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
         DataContext = this;
     }
 
+    public string FilePath { get; }
+    public string FileName { get; }
+    public Bitmap? Image { get; }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        Image?.Dispose();
+    }
+
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
+
+    public void OnClose()
+    {
+        DataContext = null;
+        Dispatcher.UIThread.Post(Dispose, DispatcherPriority.Background);
+    }
 
     public static void Open(string filePath, TopLevel sender)
     {
@@ -64,24 +73,13 @@ public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
         window.SelectTab(tab);
     }
 
-    private void ZoomIn_OnClick(object? sender, RoutedEventArgs e) =>
-        ImageScrollView.ZoomTo(Math.Clamp(ImageScrollView.ZoomFactor + 0.1, 0.1, 100));
-
-    private void ZoomOut_OnClick(object? sender, RoutedEventArgs e) =>
-        ImageScrollView.ZoomTo(Math.Clamp(ImageScrollView.ZoomFactor - 0.1, 0.1, 100));
-
-    public void OnClose()
+    private void ZoomIn_OnClick(object? sender, RoutedEventArgs e)
     {
-        DataContext = null;
-        Dispatcher.UIThread.Post(Dispose, DispatcherPriority.Background);
+        ImageScrollView.ZoomTo(Math.Clamp(ImageScrollView.ZoomFactor + 0.1, 0.1, 100));
     }
 
-    public void Dispose()
+    private void ZoomOut_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        Image?.Dispose();
+        ImageScrollView.ZoomTo(Math.Clamp(ImageScrollView.ZoomFactor - 0.1, 0.1, 100));
     }
 }

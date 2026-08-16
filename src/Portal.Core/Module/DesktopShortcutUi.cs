@@ -15,12 +15,12 @@ public static class DesktopShortcutUi
         try
         {
             var shortcutPath = await create();
-            NotificationGateway.Notice(topLevel, $"桌面快捷方式已创建：{shortcutPath}", NotificationType.Success);
+            topLevel.Notice($"桌面快捷方式已创建：{shortcutPath}", NotificationType.Success);
         }
         catch (Exception ex)
         {
             Logger.Error(ex);
-            NotificationGateway.Notice(topLevel, $"创建桌面快捷方式失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"创建桌面快捷方式失败：{ex.Message}", NotificationType.Error);
         }
     }
 }

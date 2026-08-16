@@ -18,10 +18,11 @@ public sealed class BedrockServerPingService
 {
     private const int DefaultTimeoutMs = 4000;
 
-    
-    private static readonly byte[] Magic = [0x00, 0xff, 0xff, 0x00, 0xfe, 0xfe, 0xfe, 0xfe, 0xfd, 0xfd, 0xfd, 0xfd, 0x12, 0x34, 0x56, 0x78];
 
-        public async Task<BedrockServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
+    private static readonly byte[] Magic =
+        [0x00, 0xff, 0xff, 0x00, 0xfe, 0xfe, 0xfe, 0xfe, 0xfd, 0xfd, 0xfd, 0xfd, 0x12, 0x34, 0x56, 0x78];
+
+    public async Task<BedrockServerStatus?> PingAsync(string address, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(address))
             return null;
@@ -37,7 +38,8 @@ public sealed class BedrockServerPingService
         return await PingAsync(endpoint, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<BedrockServerStatus?> PingAsync(IPEndPoint endpoint, CancellationToken cancellationToken = default)
+    public async Task<BedrockServerStatus?> PingAsync(IPEndPoint endpoint,
+        CancellationToken cancellationToken = default)
     {
         using var timeoutCts = new CancellationTokenSource(DefaultTimeoutMs);
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
@@ -104,10 +106,10 @@ public sealed class BedrockServerPingService
     private static byte[] BuildUnconnectedPing(long timestamp)
     {
         var buffer = new byte[33];
-        buffer[0] = 0x01; 
+        buffer[0] = 0x01;
         BinaryPrimitives.WriteInt64BigEndian(buffer.AsSpan(1, 8), timestamp);
         Magic.CopyTo(buffer.AsSpan(9));
-        
+
         BinaryPrimitives.WriteInt64BigEndian(buffer.AsSpan(25, 8), 0);
         return buffer;
     }

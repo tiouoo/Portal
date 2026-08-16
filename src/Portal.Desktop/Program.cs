@@ -1,5 +1,5 @@
-﻿using Avalonia;
-using Portal.Core.App.Service;
+﻿using System.Text;
+using Avalonia;
 using Portal.Core.App.Service.SystemResources;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 #if DEBUG
@@ -13,9 +13,9 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.OutputEncoding = Encoding.UTF8;
 
-        Logger.Info($"Portal MC");
+        Logger.Info("Portal MC");
         Logger.Info(@"  ____                   _             _     __  __    ____ ");
         Logger.Info(@" |  _ \    ___    _ __  | |_    __ _  | |   |  \/  |  / ___|");
         Logger.Info(@" | |_) |  / _ \  | '__| | __|  / _` | | |   | |\/| | | |    ");

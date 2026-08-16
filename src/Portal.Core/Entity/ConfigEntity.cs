@@ -1,5 +1,3 @@
-
-
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
@@ -7,6 +5,13 @@ namespace Portal.Core.Entity;
 
 public class ConfigEntity<T> where T : new()
 {
+    public static JsonSerializerOptions Options = new()
+    {
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+        WriteIndented = true
+    };
+
     private readonly JsonTypeInfo<T>? TypeInfo;
 
     public ConfigEntity(string configFile, bool isSave = true, JsonTypeInfo<T>? typeInfo = default)
@@ -20,12 +25,6 @@ public class ConfigEntity<T> where T : new()
     public T Data { get; set; }
     public string Path { get; }
     public bool IsSave { get; set; } = true;
-    public static JsonSerializerOptions Options = new()
-    {
-        ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true,
-        WriteIndented = true
-    };
 
     public void Load()
     {
@@ -50,7 +49,6 @@ public class ConfigEntity<T> where T : new()
             }
             catch
             {
-                
                 try
                 {
                     File.Copy(Path, Path + ".bak", true);
@@ -62,7 +60,7 @@ public class ConfigEntity<T> where T : new()
                 Save();
             }
 
-        
+
         Data ??= new T();
     }
 

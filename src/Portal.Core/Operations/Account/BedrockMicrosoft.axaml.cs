@@ -1,10 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Interactivity;
 using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Core.Minecraft.Classes;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
 
@@ -29,7 +28,7 @@ public partial class BedrockMicrosoft : UserControl
     {
         var viewModel = (BedrockMicrosoftViewModel)DataContext!;
         _ = TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(viewModel.Code);
-        NotificationGateway.Notice(TopLevel.GetTopLevel(this)!, "已复制到剪贴板", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice("已复制到剪贴板", NotificationType.Success);
     }
 
     private void OpenBrowser(object? sender, RoutedEventArgs e)
@@ -49,6 +48,14 @@ public partial class BedrockMicrosoftViewModel : ObservableObject, IDialogContex
     [ObservableProperty] public partial string Code { get; set; } = string.Empty;
     [ObservableProperty] public partial string Url { get; set; } = string.Empty;
     public RelayCommand Cancel => new(Close);
+
+    public void Close()
+    {
+        _cancellation.Cancel();
+        RequestClose?.Invoke(this, null);
+    }
+
+    public event EventHandler<object?>? RequestClose;
 
     public async Task AuthenticateAsync()
     {
@@ -72,12 +79,4 @@ public partial class BedrockMicrosoftViewModel : ObservableObject, IDialogContex
             Error = exception.Message;
         }
     }
-
-    public void Close()
-    {
-        _cancellation.Cancel();
-        RequestClose?.Invoke(this, null);
-    }
-
-    public event EventHandler<object?>? RequestClose;
 }

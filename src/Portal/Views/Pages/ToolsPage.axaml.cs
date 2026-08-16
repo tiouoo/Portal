@@ -3,7 +3,6 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using Portal.Views.Pages.ToolsPages;
@@ -42,15 +41,24 @@ public partial class ToolsPageViewModel : ObservableObject, IDisposable
 {
     private readonly Dictionary<Type, UserControl> _pageCache = new();
 
-    [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
-
     public ToolsPageViewModel()
     {
         if (IsWindows)
             NavigateType(typeof(BedrockToolsPage));
     }
 
+    [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
+
     public bool IsWindows => OperatingSystem.IsWindows();
+
+    public void Dispose()
+    {
+        CurrentPage = null;
+        foreach (var page in _pageCache.Values)
+            if (page is IDisposable disposable)
+                disposable.Dispose();
+        _pageCache.Clear();
+    }
 
     [RelayCommand]
     private void NavigateType(object? parameter)
@@ -60,14 +68,5 @@ public partial class ToolsPageViewModel : ObservableObject, IDisposable
             Activator.CreateInstance(pageType) is UserControl newPage)
             _pageCache[pageType] = page = newPage;
         CurrentPage = page;
-    }
-
-    public void Dispose()
-    {
-        CurrentPage = null;
-        foreach (var page in _pageCache.Values)
-            if (page is IDisposable disposable)
-                disposable.Dispose();
-        _pageCache.Clear();
     }
 }

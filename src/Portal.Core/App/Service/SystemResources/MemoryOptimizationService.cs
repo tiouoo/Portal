@@ -164,7 +164,7 @@ public static class MemoryOptimizationService
 
             process.Refresh();
             Logger.Debug($"进程工作集修剪完成：{before / 1024d / 1024d:F1} MiB -> " +
-                        $"{process.WorkingSet64 / 1024d / 1024d:F1} MiB。");
+                         $"{process.WorkingSet64 / 1024d / 1024d:F1} MiB。");
         }
         catch (Exception exception)
         {
@@ -183,6 +183,48 @@ public static class MemoryOptimizationService
             ? new UnauthorizedAccessException("当前进程没有内存优化所需的权限。")
             : new Win32Exception(error);
     }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool K32EmptyWorkingSet(IntPtr process);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx buffer);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool LookupPrivilegeValue(string? systemName, string name, out Luid luid);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool AdjustTokenPrivileges(IntPtr token, [MarshalAs(UnmanagedType.Bool)] bool disableAll,
+        ref TokenPrivileges newState, uint bufferLength, IntPtr previousState, IntPtr returnLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, ref int information, int informationLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, ref SystemFileCacheInformation information,
+        int informationLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, ref MemoryCombineInformationEx information,
+        int informationLength);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSetSystemInformation(int informationClass, IntPtr information, int informationLength);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Luid
@@ -239,46 +281,4 @@ public static class MemoryOptimizationService
             AvailableVirtual,
             AvailableExtendedVirtual;
     }
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GetCurrentProcess();
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool K32EmptyWorkingSet(IntPtr process);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool CloseHandle(IntPtr handle);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx buffer);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
-
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool LookupPrivilegeValue(string? systemName, string name, out Luid luid);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool AdjustTokenPrivileges(IntPtr token, [MarshalAs(UnmanagedType.Bool)] bool disableAll,
-        ref TokenPrivileges newState, uint bufferLength, IntPtr previousState, IntPtr returnLength);
-
-    [DllImport("ntdll.dll")]
-    private static extern int NtSetSystemInformation(int informationClass, ref int information, int informationLength);
-
-    [DllImport("ntdll.dll")]
-    private static extern int NtSetSystemInformation(int informationClass, ref SystemFileCacheInformation information,
-        int informationLength);
-
-    [DllImport("ntdll.dll")]
-    private static extern int NtSetSystemInformation(int informationClass, ref MemoryCombineInformationEx information,
-        int informationLength);
-
-    [DllImport("ntdll.dll")]
-    private static extern int NtSetSystemInformation(int informationClass, IntPtr information, int informationLength);
 }

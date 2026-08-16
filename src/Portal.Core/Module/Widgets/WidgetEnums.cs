@@ -36,5 +36,8 @@ public readonly record struct WidgetCellSize(int Columns, int Rows)
         return new WidgetCellSize(1, 1);
     }
 
-    public override string ToString() => $"{Columns}×{Rows}";
+    public override string ToString()
+    {
+        return $"{Columns}×{Rows}";
+    }
 }

@@ -5,21 +5,15 @@
     x:Class="Portal.Views.Pages.NewTabPage"
     x:DataType="pages:NewTabViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:converters="clr-namespace:Tio.Avalonia.Standard.Modules.Converters;assembly=Tio.Avalonia.Standard"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:entries="clr-namespace:Portal.Classes.Entries;assembly=Portal"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:portalConverters="clr-namespace:Portal.Module.Converter;assembly=Portal"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <UserControl.Resources>
-        <converters:CharacterWrapConverter x:Key="CharWrapConv" />
-        <portalConverters:WidthToColumnsConverter x:Key="WidthToColumnsConv" />
-        <portalConverters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
-    </UserControl.Resources>
+    <UserControl.Resources />
     <tio:ScrollView Classes="Flat" Margin="12,2,5,10">
         <StackPanel Margin="0,0,7,0" Spacing="0">
             <DockPanel VerticalAlignment="Top">
@@ -59,8 +53,8 @@
                                     Margin="12,10"
                                     PointerPressed="RecentInstanceCard_OnPointerPressed"
                                     Tag="{Binding RecentInstance}">
-                                    
-                                    
+
+
                                     <StackPanel
                                         DockPanel.Dock="Top"
                                         Orientation="Horizontal"
@@ -190,8 +184,8 @@
                                         <TextBlock
                                             FontSize="12"
                                             Foreground="{DynamicResource InnerForegroundColor}"
-                                            MaxLines="1"
                                             IsVisible="{Binding !RecentPlayTargetItem.IsServer}"
+                                            MaxLines="1"
                                             Text="{Binding RecentPlayTargetItem.Details}"
                                             TextTrimming="CharacterEllipsis" />
                                         <StackPanel

@@ -1,4 +1,3 @@
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -27,7 +26,7 @@ public partial class App
     {
         Data.ConfigEntry.Theme = Theme.System;
     }
-    
+
     private void OpenSetting_OnClick(object? sender, EventArgs e)
     {
         if (UiProperty.TabWindow is not { } window) return;

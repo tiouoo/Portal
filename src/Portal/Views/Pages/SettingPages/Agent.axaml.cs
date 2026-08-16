@@ -1,9 +1,5 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Portal.Core.App.Service;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;

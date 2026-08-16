@@ -27,8 +27,8 @@
         <DockPanel Margin="10,10,10,8">
             <Border
                 ClipToBounds="True"
-                DockPanel.Dock="Top"
                 CornerRadius="8"
+                DockPanel.Dock="Top"
                 Height="56"
                 HorizontalAlignment="Center"
                 Margin="0,2,0,6"

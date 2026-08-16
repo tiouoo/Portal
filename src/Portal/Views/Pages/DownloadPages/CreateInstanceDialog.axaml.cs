@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Interfaces;
@@ -12,16 +11,14 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
-using Portal.Services;
 using Portal.Views.Pages.InstancePages;
-using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Common.Interfaces;
@@ -34,8 +31,8 @@ public partial class CreateInstanceDialog : UserControl
     public CreateInstanceDialog()
     {
         InitializeComponent();
-        
-        
+
+
         if (VersionCombo is { } combo)
             combo.PropertyChanged += (_, e) =>
             {
@@ -48,7 +45,6 @@ public partial class CreateInstanceDialog : UserControl
 
     private void VersionCombo_OnTextInput(object? sender, TextInputEventArgs e)
     {
-        
         if (DataContext is CreateInstanceDialogViewModel viewModel)
             viewModel.NotifyVersionTextInput();
     }
@@ -74,14 +70,20 @@ public partial class CreateInstanceDialog : UserControl
         await viewModel.SetPendingIconAsync(result);
     }
 
-    private void ResetIcon_Click(object? sender, RoutedEventArgs e) =>
+    private void ResetIcon_Click(object? sender, RoutedEventArgs e)
+    {
         (DataContext as CreateInstanceDialogViewModel)?.ResetIcon();
+    }
 
-    private void Create_Click(object? sender, RoutedEventArgs e) =>
+    private void Create_Click(object? sender, RoutedEventArgs e)
+    {
         (DataContext as CreateInstanceDialogViewModel)?.Create();
+    }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) =>
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
+    {
         (DataContext as CreateInstanceDialogViewModel)?.Cancel();
+    }
 }
 
 public enum InstancePlatform
@@ -115,10 +117,10 @@ public enum VersionFilterKind
 
 public sealed record VersionOption(string DisplayText, object Value)
 {
-    
-    
-    
-    public override string ToString() => DisplayText;
+    public override string ToString()
+    {
+        return DisplayText;
+    }
 }
 
 public sealed record LoaderOption(string DisplayText, LoaderKind? Kind);
@@ -134,45 +136,18 @@ public enum LoaderVersionFilterKind
 
 public sealed record LoaderVersionOption(string DisplayText, IInstallEntry Entry)
 {
-    
-    public override string ToString() => DisplayText;
+    public override string ToString()
+    {
+        return DisplayText;
+    }
 }
 
 public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogContext, IDisposable
 {
+    private const string StableFallbackNotice = "该加载器当前没有稳定版，已选用最新版。";
     private static readonly string DefaultIconResource = "Portal.Core.Assets.McIcons.01_grass_block_side.png";
 
-    private readonly CancellationTokenSource _disposeCancellation = new();
-    private readonly Dictionary<(string Version, LoaderKind Kind), IReadOnlyList<LoaderVersionOption>>
-        _loaderOptionsCache = [];
-    private bool _disposed;
-    private bool _javaVersionsLoaded;
-    private bool _bedrockVersionsLoaded;
-    private bool _userTyping;
-    private bool _isSyncingVersionText;
-    private List<MinecraftVersionListItem> _javaVersions = [];
-    private List<BedrockVersion> _bedrockVersions = [];
-    private readonly List<VersionOption> _categoryVersions = [];
-    private int _versionLoadGeneration;
-    private bool _isCreating;
-    private string _lastRecommendedInstanceId = string.Empty;
-    private IconPickerResult? _pendingIcon;
-    private byte[]? _pendingIconData;
-    private string _currentMcVersion = string.Empty;
-    private LoaderSelectionState _primaryState = new();
-    private readonly LoaderSelectionState _optifineState = new();
 
-    public ObservableCollection<VersionOption> Versions { get; } = [];
-    public ObservableCollection<LoaderVersionOption> CustomLoaderVersions { get; } = [];
-    public ObservableCollection<LoaderVersionOption> CustomOptiFineVersions { get; } = [];
-
-    public IReadOnlyList<PlatformOption> Platforms { get; } =
-    [
-        new("Java", InstancePlatform.Java),
-        new("基岩", InstancePlatform.Bedrock)
-    ];
-
-    
     private static readonly IReadOnlyList<VersionFilterOption> JavaVersionFilters =
     [
         new("正式版", VersionFilterKind.JavaRelease),
@@ -184,9 +159,58 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     ];
 
     private static readonly IReadOnlyList<VersionFilterOption> BedrockVersionFilters = BuildBedrockVersionFilters();
+    private readonly List<VersionOption> _categoryVersions = [];
+
+    private readonly CancellationTokenSource _disposeCancellation = new();
+
+    private readonly Dictionary<(string Version, LoaderKind Kind), IReadOnlyList<LoaderVersionOption>>
+        _loaderOptionsCache = [];
+
+    private readonly LoaderSelectionState _optifineState = new();
+    private List<BedrockVersion> _bedrockVersions = [];
+    private bool _bedrockVersionsLoaded;
+    private string _currentMcVersion = string.Empty;
+    private bool _disposed;
+    private bool _isCreating;
+    private bool _isSyncingVersionText;
+    private List<MinecraftVersionListItem> _javaVersions = [];
+    private bool _javaVersionsLoaded;
+    private string _lastRecommendedInstanceId = string.Empty;
+    private IconPickerResult? _pendingIcon;
+    private byte[]? _pendingIconData;
+    private LoaderSelectionState _primaryState = new();
+    private bool _userTyping;
+    private int _versionLoadGeneration;
+
+    private bool _versionRefreshQueued;
+
+    public CreateInstanceDialogViewModel()
+    {
+        MinecraftFolders = Data.ConfigEntry.InstallableMinecraftFolders.ToList();
+        SelectedMinecraftFolder = Data.ConfigEntry.DefaultMinecraftFolder is { SupportsInstallation: true } folder &&
+                                  MinecraftFolders.Contains(folder)
+            ? folder
+            : MinecraftFolders.FirstOrDefault();
+        SelectedPlatform = Platforms[0];
+        SelectedLoader = LoaderOptions[0];
+        SelectedLoaderVersionFilter = LoaderVersionFilters[0];
+        SelectedOptiFineVersionFilter = LoaderVersionFilters[0];
+        UpdateLoaderIcon();
+    }
+
+    public ObservableCollection<VersionOption> Versions { get; } = [];
+    public ObservableCollection<LoaderVersionOption> CustomLoaderVersions { get; } = [];
+    public ObservableCollection<LoaderVersionOption> CustomOptiFineVersions { get; } = [];
+
+    public IReadOnlyList<PlatformOption> Platforms { get; } =
+    [
+        new("Java", InstancePlatform.Java),
+        new("基岩", InstancePlatform.Bedrock)
+    ];
 
     public IReadOnlyList<VersionFilterOption> VersionFilters =>
         SelectedPlatform?.Platform == InstancePlatform.Bedrock ? BedrockVersionFilters : JavaVersionFilters;
+
     public IReadOnlyList<LoaderOption> LoaderOptions { get; } =
     [
         new("不安装", null),
@@ -195,6 +219,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         new("Forge", LoaderKind.Forge),
         new("Quilt", LoaderKind.Quilt)
     ];
+
     public IReadOnlyList<LoaderVersionFilterOption> LoaderVersionFilters { get; } =
     [
         new("稳定版", LoaderVersionFilterKind.Stable),
@@ -236,22 +261,42 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     public bool IsVersionComboEnabled => !IsVersionsLoading;
     public bool IsCustomLoaderVersionComboEnabled => !IsCustomLoaderVersionsLoading && CustomLoaderVersions.Count > 0;
 
-        public bool IsCustomLoaderVersionVisible =>
+    public bool IsCustomLoaderVersionVisible =>
         SelectedLoader?.Kind is not null && SelectedLoaderVersionFilter?.Kind == LoaderVersionFilterKind.Other;
+
     public bool IsCustomOptiFineVersionVisible =>
         IsOptiFineSelected && SelectedOptiFineVersionFilter?.Kind == LoaderVersionFilterKind.Other;
-    public bool IsCustomOptiFineVersionComboEnabled => !IsCustomOptiFineVersionsLoading && CustomOptiFineVersions.Count > 0;
-        public bool IsOptiFineToggleVisible => SelectedLoader?.Kind is null or LoaderKind.Forge;
+
+    public bool IsCustomOptiFineVersionComboEnabled =>
+        !IsCustomOptiFineVersionsLoading && CustomOptiFineVersions.Count > 0;
+
+    public bool IsOptiFineToggleVisible => SelectedLoader?.Kind is null or LoaderKind.Forge;
     public bool HasLoaderStatus => !string.IsNullOrEmpty(LoaderStatus);
     public bool HasOptiFineStatus => !string.IsNullOrEmpty(OptiFineStatus);
     public bool HasErrorText => !string.IsNullOrEmpty(ErrorText);
+
     public bool CanCreate => !_isCreating && SelectedVersion is not null && !IsVersionsLoading &&
                              SelectedLoadersReady() &&
                              string.IsNullOrEmpty(ErrorText);
 
     private bool IsBedrockFilter => SelectedPlatform?.Platform == InstancePlatform.Bedrock;
 
-        private bool SelectedLoadersReady()
+    public void Close()
+    {
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        Logger.Info("[CreateInstance] Dialog disposed; cancelling pending version and loader requests.");
+        _disposed = true;
+        _disposeCancellation.Cancel();
+    }
+
+    private bool SelectedLoadersReady()
     {
         if (_primaryState.Kind is not null)
         {
@@ -268,7 +313,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         return true;
     }
 
-        private Dictionary<LoaderKind, IInstallEntry> EffectiveLoaderEntries()
+    private Dictionary<LoaderKind, IInstallEntry> EffectiveLoaderEntries()
     {
         var result = new Dictionary<LoaderKind, IInstallEntry>();
         if (_primaryState.Kind is { } primaryKind)
@@ -286,37 +331,24 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         return result;
     }
 
-    private static IInstallEntry? ResolveEffectiveEntry(LoaderSelectionState state, LoaderVersionFilterKind? filter) =>
-        filter switch
+    private static IInstallEntry? ResolveEffectiveEntry(LoaderSelectionState state, LoaderVersionFilterKind? filter)
+    {
+        return filter switch
         {
             LoaderVersionFilterKind.Stable => state.StableEntry,
             LoaderVersionFilterKind.Latest => state.LatestEntry,
             LoaderVersionFilterKind.Other => state.CustomVersion?.Entry,
             _ => null
         };
-    public CreateInstanceDialogViewModel()
-    {
-        MinecraftFolders = Data.ConfigEntry.InstallableMinecraftFolders.ToList();
-        SelectedMinecraftFolder = Data.ConfigEntry.DefaultMinecraftFolder is { SupportsInstallation: true } folder &&
-                                  MinecraftFolders.Contains(folder)
-            ? folder
-            : MinecraftFolders.FirstOrDefault();
-        SelectedPlatform = Platforms[0];
-        SelectedLoader = LoaderOptions[0];
-        SelectedLoaderVersionFilter = LoaderVersionFilters[0];
-        SelectedOptiFineVersionFilter = LoaderVersionFilters[0];
-        UpdateLoaderIcon();
     }
 
     partial void OnSelectedPlatformChanged(PlatformOption? value)
     {
-        
         OnPropertyChanged(nameof(VersionFilters));
         IsLoaderVisible = value?.Platform == InstancePlatform.Java;
         CanCustomizeInstanceId = value?.Platform == InstancePlatform.Java;
         if (IsLoaderVisible)
         {
-            
             SyncPrimaryLoaderState();
         }
         else
@@ -344,28 +376,28 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     partial void OnVersionSearchTextChanged(string value)
     {
-        
-        
-        
         if (IsVersionDropDownOpen && !_isSyncingVersionText)
             _userTyping = true;
         QueueVersionRefresh();
     }
 
-    partial void OnInstanceIdChanged(string value) => UpdateVersionState();
+    partial void OnInstanceIdChanged(string value)
+    {
+        UpdateVersionState();
+    }
 
     partial void OnIsVersionDropDownOpenChanged(bool value)
     {
-        
         if (!value)
             _userTyping = false;
         QueueVersionRefresh();
         UpdateVersionState();
     }
 
-        public void NotifyVersionTextInput() => _userTyping = true;
-
-    private bool _versionRefreshQueued;
+    public void NotifyVersionTextInput()
+    {
+        _userTyping = true;
+    }
 
     private void QueueVersionRefresh()
     {
@@ -383,7 +415,6 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     {
         if (value is not null)
         {
-            
             _isSyncingVersionText = true;
             try
             {
@@ -403,6 +434,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             if (IsOptiFineSelected)
                 _ = EnsureOptifineLoaderVersionsAsync(LoaderKind.OptiFine, vanilla.Id);
         }
+
         UpdateLoaderIcon();
         UpdateRecommendedInstanceId();
         UpdateVersionState();
@@ -414,14 +446,14 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         UpdateLoaderIcon();
     }
 
-        private void SyncPrimaryLoaderState()
+    private void SyncPrimaryLoaderState()
     {
         var kind = SelectedLoader?.Kind;
         if (kind != _primaryState.Kind)
         {
             var incompatibleOptiFine = IsOptiFineSelected && kind is not null && kind != LoaderKind.Forge;
             _primaryState = new LoaderSelectionState { Kind = kind, McVersion = _currentMcVersion };
-            
+
             if (incompatibleOptiFine)
                 IsOptiFineSelected = false;
             SelectedCustomLoaderVersion = null;
@@ -490,7 +522,6 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
         else
         {
-            
             _optifineState.LoadGeneration++;
             _optifineState.Kind = null;
             _optifineState.Options = [];
@@ -510,16 +541,40 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         UpdateVersionState();
     }
 
-    partial void OnSelectedMinecraftFolderChanged(MinecraftFolderEntry? value) => UpdateVersionState();
+    partial void OnSelectedMinecraftFolderChanged(MinecraftFolderEntry? value)
+    {
+        UpdateVersionState();
+    }
 
-    partial void OnIsVersionsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsVersionComboEnabled));
-    partial void OnIsCustomLoaderVersionsLoadingChanged(bool value) =>
+    partial void OnIsVersionsLoadingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsVersionComboEnabled));
+    }
+
+    partial void OnIsCustomLoaderVersionsLoadingChanged(bool value)
+    {
         OnPropertyChanged(nameof(IsCustomLoaderVersionComboEnabled));
-    partial void OnIsCustomOptiFineVersionsLoadingChanged(bool value) =>
+    }
+
+    partial void OnIsCustomOptiFineVersionsLoadingChanged(bool value)
+    {
         OnPropertyChanged(nameof(IsCustomOptiFineVersionComboEnabled));
-    partial void OnErrorTextChanged(string value) => OnPropertyChanged(nameof(HasErrorText));
-    partial void OnLoaderStatusChanged(string value) => OnPropertyChanged(nameof(HasLoaderStatus));
-    partial void OnOptiFineStatusChanged(string value) => OnPropertyChanged(nameof(HasOptiFineStatus));
+    }
+
+    partial void OnErrorTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasErrorText));
+    }
+
+    partial void OnLoaderStatusChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasLoaderStatus));
+    }
+
+    partial void OnOptiFineStatusChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasOptiFineStatus));
+    }
 
     public async Task SetPendingIconAsync(IconPickerResult result)
     {
@@ -530,8 +585,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                 ? await result.CustomImageFile.OpenReadAsync()
                 : typeof(MinecraftInstance).Assembly.GetManifestResourceStream(result.BuiltInResourceName!);
             if (stream is null) return;
-            
-            
+
+
             using var memory = new MemoryStream();
             await stream.CopyToAsync(memory);
             _pendingIconData = memory.ToArray();
@@ -552,13 +607,12 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         UpdateLoaderIcon();
     }
 
-        private string GetSuggestedIconResource()
+    private string GetSuggestedIconResource()
     {
         if (IsBedrockFilter)
             return DefaultIconResource;
 
         if (SelectedLoader?.Kind is { } kind)
-        {
             return kind switch
             {
                 LoaderKind.Fabric => "Portal.Core.Assets.McIcons.05_FabricIcon.png",
@@ -567,7 +621,6 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                 LoaderKind.Quilt => "Portal.Core.Assets.McIcons.09_QuiltIcon.png",
                 _ => DefaultIconResource
             };
-        }
 
         if (IsOptiFineSelected)
             return "Portal.Core.Assets.McIcons.08_OptiFineIcon.png";
@@ -579,7 +632,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         return DefaultIconResource;
     }
 
-        private void UpdateLoaderIcon()
+    private void UpdateLoaderIcon()
     {
         if (_pendingIconData is not null) return;
         IconPreview?.Dispose();
@@ -598,7 +651,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         if (!CanCreate || _isCreating || SelectedVersion?.Value is not { } selected) return;
         _isCreating = true;
         OnPropertyChanged(nameof(CanCreate));
-        Logger.Info($"[CreateInstance] Creating {SelectedPlatform?.Platform} instance {InstanceId.Trim()} in {SelectedMinecraftFolder?.FolderPath} from version {SelectedVersion.DisplayText}.");
+        Logger.Info(
+            $"[CreateInstance] Creating {SelectedPlatform?.Platform} instance {InstanceId.Trim()} in {SelectedMinecraftFolder?.FolderPath} from version {SelectedVersion.DisplayText}.");
 
         if (selected is VersionManifestEntry vanilla)
             CreateJava(vanilla);
@@ -606,17 +660,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             CreateBedrock(bedrock);
     }
 
-    public void Cancel() => RequestClose?.Invoke(this, null);
-    public void Close() => Cancel();
-
-    public event EventHandler<object?>? RequestClose;
-
-    public void Dispose()
+    public void Cancel()
     {
-        if (_disposed) return;
-        Logger.Info("[CreateInstance] Dialog disposed; cancelling pending version and loader requests.");
-        _disposed = true;
-        _disposeCancellation.Cancel();
+        RequestClose?.Invoke(this, null);
     }
 
     private static IReadOnlyList<VersionFilterOption> BuildBedrockVersionFilters()
@@ -657,11 +703,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                 await EnsureBedrockVersionsLoadedAsync();
             if (generation != _versionLoadGeneration || _disposed) return;
             PopulateVersions(filter);
-            Logger.Info($"[CreateInstance] Loaded {_categoryVersions.Count} {filter.Kind} version(s) in {stopwatch.Elapsed}.");
+            Logger.Info(
+                $"[CreateInstance] Loaded {_categoryVersions.Count} {filter.Kind} version(s) in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
-            Logger.Debug($"[CreateInstance] Loading {filter.Kind} version list was cancelled after {stopwatch.Elapsed}.");
+            Logger.Debug(
+                $"[CreateInstance] Loading {filter.Kind} version list was cancelled after {stopwatch.Elapsed}.");
         }
         catch (Exception exception)
         {
@@ -764,28 +812,21 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         var query = VersionSearchText.Trim();
         var selected = SelectedVersion;
 
-        
-        
+
         var isFiltering = IsVersionDropDownOpen && _userTyping && query.Length > 0;
 
-        
-        
-        
+
         var keep = new HashSet<VersionOption>(_categoryVersions.Where(version =>
             !isFiltering || version.DisplayText.Contains(query, StringComparison.OrdinalIgnoreCase)));
         if (selected is not null) keep.Add(selected);
 
         for (var i = Versions.Count - 1; i >= 0; i--)
-        {
             if (!keep.Contains(Versions[i]))
                 Versions.RemoveAt(i);
-        }
 
         foreach (var item in keep)
-        {
             if (!Versions.Contains(item))
                 Versions.Add(item);
-        }
 
         VersionsPlaceholder = IsVersionsLoading
             ? "加载中..."
@@ -833,7 +874,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             return;
         }
 
-        
+
         ClearPrimaryLoaderState();
         IsCustomLoaderVersionsLoading = true;
         var stopwatch = Stopwatch.StartNew();
@@ -843,16 +884,19 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         try
         {
             var entries = await FetchLoaderVersionsAsync(kind, mcVersion);
-            var options = entries.Select(entry => new LoaderVersionOption(GetLoaderVersion(kind, entry), entry)).ToList();
+            var options = entries.Select(entry => new LoaderVersionOption(GetLoaderVersion(kind, entry), entry))
+                .ToList();
             _loaderOptionsCache[(mcVersion, kind)] = options;
             if (generation != _primaryState.LoadGeneration || _disposed) return;
             _primaryState.Options = options;
             ApplyPrimaryLoaderOptions();
-            Logger.Info($"[CreateInstance] Loaded {options.Count} {kind} version(s) for Minecraft {mcVersion} in {stopwatch.Elapsed}.");
+            Logger.Info(
+                $"[CreateInstance] Loaded {options.Count} {kind} version(s) for Minecraft {mcVersion} in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
-            Logger.Debug($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion} was cancelled after {stopwatch.Elapsed}.");
+            Logger.Debug(
+                $"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion} was cancelled after {stopwatch.Elapsed}.");
         }
         catch (Exception exception)
         {
@@ -892,16 +936,19 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         try
         {
             var entries = await FetchLoaderVersionsAsync(kind, mcVersion);
-            var options = entries.Select(entry => new LoaderVersionOption(GetLoaderVersion(kind, entry), entry)).ToList();
+            var options = entries.Select(entry => new LoaderVersionOption(GetLoaderVersion(kind, entry), entry))
+                .ToList();
             _loaderOptionsCache[(mcVersion, kind)] = options;
             if (generation != _optifineState.LoadGeneration || _disposed) return;
             _optifineState.Options = options;
             ApplyOptiFineOptions();
-            Logger.Info($"[CreateInstance] Loaded {options.Count} {kind} version(s) for Minecraft {mcVersion} in {stopwatch.Elapsed}.");
+            Logger.Info(
+                $"[CreateInstance] Loaded {options.Count} {kind} version(s) for Minecraft {mcVersion} in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
         {
-            Logger.Debug($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion} was cancelled after {stopwatch.Elapsed}.");
+            Logger.Debug(
+                $"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion} was cancelled after {stopwatch.Elapsed}.");
         }
         catch (Exception exception)
         {
@@ -919,29 +966,34 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
     }
 
-    private static async Task<IReadOnlyList<IInstallEntry>> FetchLoaderVersionsAsync(LoaderKind kind, string mcVersion) =>
-        kind switch
+    private static async Task<IReadOnlyList<IInstallEntry>> FetchLoaderVersionsAsync(LoaderKind kind, string mcVersion)
+    {
+        return kind switch
         {
-            LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(mcVersion)).Cast<IInstallEntry>().ToList(),
+            LoaderKind.Fabric => (await FabricInstaller.EnumerableFabricAsync(mcVersion)).Cast<IInstallEntry>()
+                .ToList(),
             LoaderKind.Forge => (await ForgeInstaller.EnumerableForgeAsync(mcVersion)).Cast<IInstallEntry>().ToList(),
-            LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(mcVersion, true)).Cast<IInstallEntry>().ToList(),
+            LoaderKind.NeoForge => (await ForgeInstaller.EnumerableForgeAsync(mcVersion, true)).Cast<IInstallEntry>()
+                .ToList(),
             LoaderKind.Quilt => (await QuiltInstaller.EnumerableQuiltAsync(mcVersion)).Cast<IInstallEntry>().ToList(),
-            LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(mcVersion)).Cast<IInstallEntry>().ToList(),
+            LoaderKind.OptiFine => (await OptifineInstaller.EnumerableOptifineAsync(mcVersion)).Cast<IInstallEntry>()
+                .ToList(),
             _ => []
         };
+    }
 
     private void ApplyPrimaryLoaderOptions()
     {
         var state = _primaryState;
         state.LatestEntry = state.Options.FirstOrDefault()?.Entry;
         state.HasStable = state.Kind is { } kind && state.Options.Any(option => IsStableLoader(kind, option.Entry));
-        
+
         state.StableEntry = state.HasStable
             ? state.Options.First(option => IsStableLoader(state.Kind!.Value, option.Entry)).Entry
             : state.LatestEntry;
         CustomLoaderVersions.Clear();
         foreach (var option in state.Options) CustomLoaderVersions.Add(option);
-        
+
         if (state.CustomVersion is { } custom && state.Options.Contains(custom))
             SelectedCustomLoaderVersion = custom;
         else
@@ -958,13 +1010,13 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         var state = _optifineState;
         state.LatestEntry = state.Options.FirstOrDefault()?.Entry;
         state.HasStable = state.Kind is { } kind && state.Options.Any(option => IsStableLoader(kind, option.Entry));
-        
+
         state.StableEntry = state.HasStable
             ? state.Options.First(option => IsStableLoader(state.Kind!.Value, option.Entry)).Entry
             : state.LatestEntry;
         CustomOptiFineVersions.Clear();
         foreach (var option in state.Options) CustomOptiFineVersions.Add(option);
-        
+
         if (state.CustomVersion is { } custom && state.Options.Contains(custom))
             SelectedCustomOptiFineVersion = custom;
         else
@@ -998,9 +1050,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         CustomOptiFineVersions.Clear();
     }
 
-    private const string StableFallbackNotice = "该加载器当前没有稳定版，已选用最新版。";
-
-        private void UpdateLoaderVersionStatus()
+    private void UpdateLoaderVersionStatus()
     {
         var showFallback = SelectedLoaderVersionFilter?.Kind == LoaderVersionFilterKind.Stable &&
                            _primaryState.Options.Count > 0 && !_primaryState.HasStable;
@@ -1015,7 +1065,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
     }
 
-        private void UpdateOptiFineVersionStatus()
+    private void UpdateOptiFineVersionStatus()
     {
         var showFallback = SelectedOptiFineVersionFilter?.Kind == LoaderVersionFilterKind.Stable &&
                            _optifineState.Options.Count > 0 && !_optifineState.HasStable;
@@ -1033,7 +1083,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     private void ResetLoaderState()
     {
         _primaryState = new LoaderSelectionState();
-        
+
         _optifineState.LoadGeneration++;
         IsOptiFineSelected = false;
         IsLoaderVersionAreaVisible = false;
@@ -1048,26 +1098,34 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         OptiFineStatus = string.Empty;
     }
 
-    private static bool IsStableLoader(LoaderKind kind, IInstallEntry entry) => kind switch
+    private static bool IsStableLoader(LoaderKind kind, IInstallEntry entry)
     {
-        LoaderKind.Fabric => entry is FabricInstallEntry { Loader.IsStable: true },
-        LoaderKind.Quilt => entry is QuiltInstallEntry { Loader.IsStable: true },
-        LoaderKind.Forge or LoaderKind.NeoForge => entry is ForgeInstallEntry forge &&
-            !forge.ForgeVersion.Contains("beta", StringComparison.OrdinalIgnoreCase) &&
-            (string.IsNullOrEmpty(forge.Branch) || !forge.Branch.Contains("beta", StringComparison.OrdinalIgnoreCase)),
-        LoaderKind.OptiFine => entry is OptifineInstallEntry optifine &&
-            !optifine.Patch.Contains("pre", StringComparison.OrdinalIgnoreCase),
-        _ => false
-    };
+        return kind switch
+        {
+            LoaderKind.Fabric => entry is FabricInstallEntry { Loader.IsStable: true },
+            LoaderKind.Quilt => entry is QuiltInstallEntry { Loader.IsStable: true },
+            LoaderKind.Forge or LoaderKind.NeoForge => entry is ForgeInstallEntry forge &&
+                                                       !forge.ForgeVersion.Contains("beta",
+                                                           StringComparison.OrdinalIgnoreCase) &&
+                                                       (string.IsNullOrEmpty(forge.Branch) ||
+                                                        !forge.Branch.Contains("beta",
+                                                            StringComparison.OrdinalIgnoreCase)),
+            LoaderKind.OptiFine => entry is OptifineInstallEntry optifine &&
+                                   !optifine.Patch.Contains("pre", StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
+    }
 
-    private static string GetLoaderVersion(LoaderKind kind, IInstallEntry entry) =>
-        MinecraftInstallationViewModel.GetLoaderVersion(kind, entry);
+    private static string GetLoaderVersion(LoaderKind kind, IInstallEntry entry)
+    {
+        return MinecraftInstallationViewModel.GetLoaderVersion(kind, entry);
+    }
 
     private void UpdateRecommendedInstanceId()
     {
         Title = $"{(IsBedrockFilter ? "基岩" : "Java")} {SelectedVersion?.DisplayText}";
         if (IsBedrockFilter) return;
-        
+
         if (SelectedVersion?.Value is not VersionManifestEntry) return;
         var recommended = CreateRecommendedInstanceId();
         if (string.IsNullOrEmpty(InstanceId) || InstanceId == _lastRecommendedInstanceId)
@@ -1123,7 +1181,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         if (string.IsNullOrWhiteSpace(versionId)) versionId = vanilla.Id;
         var entries = EffectiveLoaderEntries();
         var javaPath = MinecraftInstallationViewModel.GetJavaPath();
-        Logger.Info($"[CreateInstance] Queuing Java installation {versionId} in {folder.FolderPath} with {entries.Count} loader(s).");
+        Logger.Info(
+            $"[CreateInstance] Queuing Java installation {versionId} in {folder.FolderPath} with {entries.Count} loader(s).");
         var task = MinecraftInstallationViewModel.CreateInstallationTask(vanilla, folder, versionId, entries, javaPath);
         task.Start();
         if (_pendingIconData is not null)
@@ -1172,8 +1231,8 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         byte[] iconData)
     {
         var instance = await WaitForInstanceAsync(candidate =>
-            candidate.IsBedrock &&
-            string.Equals(candidate.BedrockConfig?.Name, instanceName, StringComparison.OrdinalIgnoreCase),
+                candidate.IsBedrock &&
+                string.Equals(candidate.BedrockConfig?.Name, instanceName, StringComparison.OrdinalIgnoreCase),
             TimeSpan.FromMinutes(6));
         if (instance is not null) await ApplyIconAsync(instance, iconData);
     }
@@ -1206,15 +1265,15 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         }
     }
 
-        private sealed class LoaderSelectionState
+    private sealed class LoaderSelectionState
     {
+        public LoaderVersionOption? CustomVersion;
+        public bool HasStable;
         public LoaderKind? Kind;
+        public IInstallEntry? LatestEntry;
+        public int LoadGeneration;
         public string McVersion = string.Empty;
         public IReadOnlyList<LoaderVersionOption> Options = [];
-        public IInstallEntry? LatestEntry;
         public IInstallEntry? StableEntry;
-        public bool HasStable;
-        public LoaderVersionOption? CustomVersion;
-        public int LoadGeneration;
     }
 }

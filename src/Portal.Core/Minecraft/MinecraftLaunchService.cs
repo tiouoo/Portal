@@ -1,33 +1,28 @@
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Base.Models.Game;
-using MinecraftLaunch.Components.Parser;
 using MinecraftLaunch.Components.Downloader;
+using MinecraftLaunch.Components.Parser;
 using MinecraftLaunch.Extensions;
 using MinecraftLaunch.Launch;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Core.App.Service.SystemResources;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Operations.Account;
 using Portal.Core.Operations.Java;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
-using TioUi.Common;
-using Avalonia.Controls.Notifications;
-using Portal.Core.App.Service.SystemResources;
-using Tio.Avalonia.Standard.Standard.Ui;
-using Tio.Avalonia.Standard.Modules.DiskIO;
 using ModLoaderType = MinecraftLaunch.Base.Enums.ModLoaderType;
 
 namespace Portal.Core.Minecraft;
@@ -35,6 +30,7 @@ namespace Portal.Core.Minecraft;
 public static class MinecraftLaunchService
 {
     public static Func<BedrockInstanceConfig, IBedrockLaunch>? DefaultBedrockLauncherFactory { get; set; }
+
     public static Task LaunchAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options,
         RecentPlayTarget? target = null)
     {
@@ -71,7 +67,7 @@ public static class MinecraftLaunchService
                         if (process == null)
                             throw new InvalidOperationException("Minecraft 进程尚未创建或已无法访问。");
                         if (!process.HasExited)
-                            process.Kill(entireProcessTree: true);
+                            process.Kill(true);
                         return Task.CompletedTask;
                     },
                     IsVisible = managedTask => launchCompleted && !managedTask.IsTerminal &&
@@ -113,6 +109,7 @@ public static class MinecraftLaunchService
                 Name = "补全游戏资源", Description = "等待启动参数构建完成", Progress = 0
             });
         }
+
         var startGame = task.CreateChild(new TaskOptions
         {
             Name = instance.Type == MinecraftInstanceType.Bedrock ? "启动基岩版" : "启动 Minecraft",
@@ -120,22 +117,27 @@ public static class MinecraftLaunchService
             Progress = 0
         });
         task.Start();
-        RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments, completeResources,
+        RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments,
+            completeResources,
             startGame, logSession,
             launchedProcess =>
             {
                 process = launchedProcess;
                 launchCompleted = true;
                 task.RefreshActions();
-            }).ContinueWith(completedTask => Logger.Error($"启动 Minecraft 实例工作流异常结束：{instance.InstanceName}", completedTask.Exception!),
-                CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
+            }).ContinueWith(
+            completedTask => Logger.Error($"启动 Minecraft 实例工作流异常结束：{instance.InstanceName}", completedTask.Exception!),
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
         return task.Completion;
     }
 
-    private static async Task RunWorkflowAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options,
+    private static async Task RunWorkflowAsync(MinecraftInstance instance, TopLevel? topLevel,
+        MinecraftLaunchOptions options,
         RecentPlayTarget? target, ManagedTask task,
-        ManagedTask? verifyAccount, ManagedTask? selectJava, ManagedTask? buildArguments, ManagedTask? completeResources,
+        ManagedTask? verifyAccount, ManagedTask? selectJava, ManagedTask? buildArguments,
+        ManagedTask? completeResources,
         ManagedTask startGame,
         MinecraftLogSession logSession, Action<Process> processStarted)
     {
@@ -185,6 +187,7 @@ public static class MinecraftLaunchService
                             await HighPerformanceGpuService.ResolveLinuxHighPerformanceGpuEnvironmentAsync();
                     }
                 }
+
                 context.ReportProgress(1);
             });
             await selectJava.Completion;
@@ -202,6 +205,7 @@ public static class MinecraftLaunchService
                         merged[key] = value;
                     config.EnvironmentVariables = merged;
                 }
+
                 context.ReportProgress(1);
                 return Task.CompletedTask;
             });
@@ -260,6 +264,7 @@ public static class MinecraftLaunchService
                 Notice(topLevel, $"内存优化未完成，将继续启动游戏：{exception.Message}", NotificationType.Warning);
             }
         }
+
         context.SetRunning("正在启动 Minecraft 进程");
         await PrepareGraphicsBeforeLaunchAsync(instance, config, context.CancellationToken);
         if (options.SetChineseLanguageOnLaunch && instance.MinecraftEntry != null)
@@ -268,6 +273,7 @@ public static class MinecraftLaunchService
             var entry = instance.MinecraftEntry;
             GameOptionsService.SetChineseLanguage(entry.ToWorkingPath(config.IsEnableIndependency), entry.ReleaseTime);
         }
+
         WriteStartupLog(logSession, instance, config);
         var mcProcess = await Task.Run(async () =>
         {
@@ -279,7 +285,7 @@ public static class MinecraftLaunchService
             throw new InvalidOperationException("Minecraft 启动器未返回进程信息。");
         ObserveProcess(instance, topLevel, mcProcess, task, context, logSession, options);
         processStarted(mcProcess.Process);
-        OnGameProcessStarted(mcProcess.Process, options, placeholders, overrideWindowTitle: true, instance);
+        OnGameProcessStarted(mcProcess.Process, options, placeholders, true, instance);
         context.ReportProgress(1);
     }
 
@@ -290,7 +296,7 @@ public static class MinecraftLaunchService
         if (entry == null || instance.JavaConfig == null)
             return;
 
-        string? versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
+        var versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
             ? modified.InheritedMinecraft.Version.VersionId
             : entry.Version.VersionId;
         var graphics = instance.JavaConfig.GraphicsBackend;
@@ -305,13 +311,14 @@ public static class MinecraftLaunchService
         if (platform.Os != OperatingSystemKind.Windows)
             return;
 
-        string nativeDir = Path.Combine(entry.NativesDirectoryPath ??
-            Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives"), "mesa-loader");
+        var nativeDir = Path.Combine(entry.NativesDirectoryPath ??
+                                     Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives"),
+            "mesa-loader");
         Directory.CreateDirectory(nativeDir);
 
-        string jarPath = await MesaLoaderService.EnsureMesaLoaderAsync(cancellationToken);
+        var jarPath = await MesaLoaderService.EnsureMesaLoaderAsync(cancellationToken);
 
-        string agent = GraphicsLaunchArgumentsBuilder.BuildJavaAgent(jarPath, mesaDriverName);
+        var agent = GraphicsLaunchArgumentsBuilder.BuildJavaAgent(jarPath, mesaDriverName);
         config.JvmArguments = config.JvmArguments.Append("-javaagent:" + agent);
     }
 
@@ -335,9 +342,7 @@ public static class MinecraftLaunchService
         placeholders["{process_id}"] = process.Id.ToString();
 
         if (OperatingSystem.IsWindows() && options.EnableGameOverlay && options.ShowGameOverlay != null)
-        {
             Dispatcher.UIThread.Post(() => options.ShowGameOverlay(process, instance));
-        }
 
         if (overrideWindowTitle && placeholders.GetValueOrDefault("{title}") is { Length: > 0 } title)
             LaunchCustomization.WatchWindowTitle(process, title);
@@ -359,12 +364,12 @@ public static class MinecraftLaunchService
             SourceRootDirectories = options.ResourceSourceRoots
         };
 
-        
+
         await RunStepAsync(context, "检查资源文件", "正在验证本地资源文件完整性", async step =>
         {
             await Task.Factory.StartNew(
-                    () => downloader.VerifyDependenciesAsync(fileVerificationParallelism: 2,
-                        cancellationToken: step.CancellationToken),
+                    () => downloader.VerifyDependenciesAsync(2,
+                        step.CancellationToken),
                     CancellationToken.None,
                     TaskCreationOptions.LongRunning,
                     TaskScheduler.Default)
@@ -378,20 +383,17 @@ public static class MinecraftLaunchService
             step.ReportProgress(1);
         });
 
-        
+
         if (downloader.CopyItems.Count > 0)
-        {
             await RunStepAsync(context, "复制本地资源文件", "正在复制本地资源文件", step =>
             {
                 AttachCopyProgressReporter(step, downloader);
-                return Task.Run(() => downloader.CopyDependencies(fileVerificationParallelism: 4,
+                return Task.Run(() => downloader.CopyDependencies(4,
                     step.CancellationToken), step.CancellationToken);
             });
-        }
 
-        
+
         if (downloader.DependenciesToDownload.Count > 0)
-        {
             await RunStepAsync(context, "下载资源文件", "正在下载资源文件", async step =>
             {
                 AttachDownloadProgressReporter(step, downloader);
@@ -405,7 +407,6 @@ public static class MinecraftLaunchService
                     throw new IOException($"资源补全失败：{result.Failed.Count()} 个文件下载失败。");
                 step.ReportProgress(1);
             });
-        }
 
         context.ReportProgress(1);
         context.SetDescription("资源补全完成");
@@ -436,7 +437,8 @@ public static class MinecraftLaunchService
         };
     }
 
-    private static void AttachDownloadProgressReporter(TaskExecutionContext context, MinecraftResourceDownloader downloader)
+    private static void AttachDownloadProgressReporter(TaskExecutionContext context,
+        MinecraftResourceDownloader downloader)
     {
         ResourceDownloadProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
@@ -478,14 +480,16 @@ public static class MinecraftLaunchService
         Func<TaskExecutionContext, Task> operation)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
-        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 }, operation);
+        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 },
+            operation);
         step.Start();
         await step.Completion;
         if (step.Exception is not null) throw new InvalidOperationException(step.Exception.Message, step.Exception);
         context.CancellationToken.ThrowIfCancellationRequested();
     }
 
-    private static string FormatResourceProgress(int completedCount, int totalCount, long downloadedBytes, long totalBytes,
+    private static string FormatResourceProgress(int completedCount, int totalCount, long downloadedBytes,
+        long totalBytes,
         double speed, TimeSpan estimatedRemaining)
     {
         var files = totalCount > 0 ? $"{completedCount}/{totalCount} 个文件" : "正在准备下载";
@@ -493,7 +497,7 @@ public static class MinecraftLaunchService
             ? $"，{DefaultDownloader.FormatSize(downloadedBytes)} / {DefaultDownloader.FormatSize(totalBytes)}"
             : string.Empty;
         var speedText = speed > 0 ? $"，{DefaultDownloader.FormatSize(speed, true)}" : string.Empty;
-        
+
         return $"正在补全资源：{files}{transferred}{speedText}";
     }
 
@@ -507,11 +511,13 @@ public static class MinecraftLaunchService
         switch (account.AccountType)
         {
             case AccountType.Offline:
-                return new OfflineAccount(account.Name, account.Uuid ?? MinecraftAccount.GetMinecraftOfflineUuid(account.Name),
+                return new OfflineAccount(account.Name,
+                    account.Uuid ?? MinecraftAccount.GetMinecraftOfflineUuid(account.Name),
                     account.AccessToken ?? Guid.NewGuid().ToString("N"));
             case AccountType.Yggdrasil:
                 if (!account.Uuid.HasValue || string.IsNullOrWhiteSpace(account.AccessToken) ||
-                    string.IsNullOrWhiteSpace(account.ClientToken) || string.IsNullOrWhiteSpace(account.YggdrasilServerUrl))
+                    string.IsNullOrWhiteSpace(account.ClientToken) ||
+                    string.IsNullOrWhiteSpace(account.YggdrasilServerUrl))
                     throw new InvalidOperationException("外置登录账户信息不完整，请重新登录。");
                 return new YggdrasilAccount(account.Name, account.Uuid.Value, account.AccessToken, account.ClientToken,
                     account.YggdrasilServerUrl) { MetaData = account.MetaData };
@@ -548,14 +554,16 @@ public static class MinecraftLaunchService
                 progress => ReportJavaInstallProgress(context, progress), cancellationToken);
             if (installed is not null)
             {
-                var usable = await JavaRuntimeVerifier.IsUsableAsync(installed.JavaPath, installed.MajorVersion, cancellationToken);
+                var usable =
+                    await JavaRuntimeVerifier.IsUsableAsync(installed.JavaPath, installed.MajorVersion,
+                        cancellationToken);
                 if (usable) return ToJavaEntry(installed);
                 throw new InvalidOperationException(
                     $"自动安装的 Java {installed.JavaVersion} 模块不完整（缺少 jdk.zipfs / jdk.unsupported），无法启动 Minecraft。请更换完整的 Java 运行时。");
             }
         }
 
-        
+
         if (candidates.Count == 0)
             candidates = (await JavaRuntimeManager.ScanAsync(cancellationToken)).ToList();
         selected = await SelectViableJavaAsync(instance, preferred, candidates, cancellationToken);
@@ -564,7 +572,7 @@ public static class MinecraftLaunchService
         throw new InvalidOperationException(
             "没有可用的 Java 运行时，或已添加的 Java 运行时均模块不完整（缺少 jdk.zipfs / jdk.unsupported），无法启动 Minecraft。请在设置中重新添加完整的 Java 运行时。");
     }
-    
+
     private static async Task<JavaEntry?> SelectViableJavaAsync(MinecraftInstance instance, JavaRuntimeEntry? preferred,
         IReadOnlyList<JavaRuntimeEntry> candidates, CancellationToken cancellationToken)
     {
@@ -580,6 +588,7 @@ public static class MinecraftLaunchService
                 continue;
             return candidate;
         }
+
         return null;
     }
 
@@ -587,16 +596,20 @@ public static class MinecraftLaunchService
     {
         var requiredVersion = minecraft.GetAppropriateJavaVersion();
         var requiresExactVersion = minecraft is ModifiedMinecraftEntry modified &&
-            modified.ModLoaders.Any(loader => loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
+                                   modified.ModLoaders.Any(loader =>
+                                       loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
 
         var compatible = javaEntries.Where(IsCompatible).ToList();
         var incompatible = javaEntries.Where(candidate => !IsCompatible(candidate)).ToList();
         compatible.Sort((a, b) => a.MajorVersion.CompareTo(b.MajorVersion));
         return [.. compatible, .. incompatible];
 
-        bool IsCompatible(JavaEntry candidate) => requiredVersion is 0 or -1 || (requiresExactVersion
-            ? candidate.MajorVersion == requiredVersion
-            : candidate.MajorVersion >= requiredVersion);
+        bool IsCompatible(JavaEntry candidate)
+        {
+            return requiredVersion is 0 or -1 || (requiresExactVersion
+                ? candidate.MajorVersion == requiredVersion
+                : candidate.MajorVersion >= requiredVersion);
+        }
     }
 
     private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
@@ -614,16 +627,18 @@ public static class MinecraftLaunchService
             }
             catch (InvalidOperationException)
             {
-                
             }
         });
     }
 
-    private static JavaEntry ToJavaEntry(JavaRuntimeEntry java) => new()
+    private static JavaEntry ToJavaEntry(JavaRuntimeEntry java)
     {
-        JavaPath = java.JavaPath, JavaType = java.JavaType, JavaVersion = java.JavaVersion,
-        MajorVersion = java.MajorVersion, Is64bit = java.Is64Bit
-    };
+        return new JavaEntry
+        {
+            JavaPath = java.JavaPath, JavaType = java.JavaType, JavaVersion = java.JavaVersion,
+            MajorVersion = java.MajorVersion, Is64bit = java.Is64Bit
+        };
+    }
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
         MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders)
@@ -645,7 +660,8 @@ public static class MinecraftLaunchService
                 ? instance.JavaConfig.MinecraftMaxMemory
                 : options.MaxMemory,
             SaveName = target is { Type: RecentPlayTargetType.World } ? target.Id : null,
-            ServerInfo = target is { Type: RecentPlayTargetType.Server, ServerPort: { } port, ServerAddress: { } address }
+            ServerInfo = target is
+                { Type: RecentPlayTargetType.Server, ServerPort: { } port, ServerAddress: { } address }
                 ? new ServerInfo { Address = address, Port = port }
                 : null
         };
@@ -661,7 +677,7 @@ public static class MinecraftLaunchService
 
         return config;
     }
-    
+
     private static void ApplyGraphicsLaunchConfiguration(MinecraftInstance instance, LaunchConfig config,
         Dictionary<string, string> placeholders)
     {
@@ -669,7 +685,7 @@ public static class MinecraftLaunchService
         if (entry == null)
             return;
 
-        string? versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
+        var versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
             ? modified.InheritedMinecraft.Version.VersionId
             : entry.Version.VersionId;
 
@@ -678,7 +694,7 @@ public static class MinecraftLaunchService
         var effective = GraphicsEnvironmentResolver.Resolve(graphics,
             instance.JavaConfig?.OpenGlRenderer, instance.JavaConfig?.VulkanRenderer, version);
 
-        string? nativesFolder = string.IsNullOrEmpty(config.NativesFolder)
+        var nativesFolder = string.IsNullOrEmpty(config.NativesFolder)
             ? entry.NativesDirectoryPath ?? Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives")
             : config.NativesFolder;
 
@@ -693,7 +709,7 @@ public static class MinecraftLaunchService
         if (launch.NeedsMesaAgent)
             config.JvmArguments = config.JvmArguments.Concat(launch.JvmArguments);
     }
-    
+
     private static void WriteStartupLog(MinecraftLogSession logSession, MinecraftInstance instance, LaunchConfig config)
     {
         var jvmArguments = string.Join(" ", config.JvmArguments);
@@ -843,11 +859,12 @@ public static class MinecraftLaunchService
             authentication = new BedrockAuthentication(refreshedAccount.Gamertag, refreshedAccount.Xuid,
                 refreshedAccount.AccessToken, refreshedAccount.RefreshToken, refreshedAccount.ExpiresAt);
         }
+
         await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
         context.SetRunning("正在启动基岩版游戏");
 
         var factory = options.BedrockLauncherFactory ?? DefaultBedrockLauncherFactory
-                       ?? throw new PlatformNotSupportedException("当前平台不支持启动基岩版。");
+            ?? throw new PlatformNotSupportedException("当前平台不支持启动基岩版。");
 
         var launcher = factory(instance.BedrockConfig);
         launcher.Authentication = authentication;
@@ -882,11 +899,13 @@ public static class MinecraftLaunchService
             });
         };
         var processReported = 0;
+
         void ReportProcess(Process launchedProcess)
         {
             if (Interlocked.Exchange(ref processReported, 1) == 0)
                 processStarted(launchedProcess);
         }
+
         launcher.ProcessStarted = ReportProcess;
 
         await launcher.Launch(context.CancellationToken);
@@ -896,7 +915,7 @@ public static class MinecraftLaunchService
 
         ObserveBedrockProcess(instance, topLevel, process, task, context, options);
         ReportProcess(process);
-        OnGameProcessStarted(process, options, placeholders, overrideWindowTitle: false, instance);
+        OnGameProcessStarted(process, options, placeholders, false, instance);
         context.ReportProgress(1);
     }
 
@@ -945,26 +964,32 @@ public static class MinecraftLaunchService
         return MinecraftLogLevel.Other;
     }
 
-    private static string GetEditionName(MinecraftInstance instance) => instance.Type switch
+    private static string GetEditionName(MinecraftInstance instance)
     {
-        MinecraftInstanceType.Java => "Java 版",
-        MinecraftInstanceType.Bedrock => "基岩版",
-        _ => "Minecraft"
-    };
+        return instance.Type switch
+        {
+            MinecraftInstanceType.Java => "Java 版",
+            MinecraftInstanceType.Bedrock => "基岩版",
+            _ => "Minecraft"
+        };
+    }
 
     private static void Notice(TopLevel? topLevel, string message, NotificationType type)
     {
         if (topLevel == null)
             return;
-        Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel, message, type));
+        Dispatcher.UIThread.Post(() => topLevel.Notice(message, type));
     }
 
-    private static string GetFailureReason(Exception exception) => exception switch
+    private static string GetFailureReason(Exception exception)
     {
-        FileNotFoundException => "缺少游戏或 Java 文件。",
-        UnauthorizedAccessException => "没有访问游戏目录或 Java 文件的权限。",
-        _ => exception.Message
-    };
+        return exception switch
+        {
+            FileNotFoundException => "缺少游戏或 Java 文件。",
+            UnauthorizedAccessException => "没有访问游戏目录或 Java 文件的权限。",
+            _ => exception.Message
+        };
+    }
 }
 
 public enum MinecraftLogLevel
@@ -982,16 +1007,16 @@ public sealed record MinecraftLogEntry(string Text, MinecraftLogLevel Level);
 public sealed class MinecraftLogSession
 {
     private const int MaximumBufferedLogLines = 10_000;
-    private readonly object _syncRoot = new();
     private readonly Queue<MinecraftLogEntry> _entries = new();
-
-    public MinecraftInstance Instance { get; }
-    public event Action<MinecraftLogEntry>? LogReceived;
+    private readonly object _syncRoot = new();
 
     public MinecraftLogSession(MinecraftInstance instance)
     {
         Instance = instance;
     }
+
+    public MinecraftInstance Instance { get; }
+    public event Action<MinecraftLogEntry>? LogReceived;
 
     internal void Add(MinecraftLogEntry entry)
     {
@@ -1001,13 +1026,16 @@ public sealed class MinecraftLogSession
             if (_entries.Count > MaximumBufferedLogLines)
                 _entries.Dequeue();
         }
+
         LogReceived?.Invoke(entry);
     }
 
     public IReadOnlyList<MinecraftLogEntry> GetEntries()
     {
         lock (_syncRoot)
+        {
             return _entries.ToArray();
+        }
     }
 }
 
@@ -1037,7 +1065,13 @@ public sealed class MinecraftLaunchOptions
     public Action<MinecraftAccount, MinecraftAccount>? AccountRefreshed { get; init; }
     public Action<BedrockAccount, BedrockAccount>? BedrockAccountRefreshed { get; init; }
     public Action<MinecraftLogSession>? OpenLog { get; init; }
-    public Func<int, JavaInstallProgressHandler, CancellationToken, Task<JavaRuntimeEntry?>>? InstallMissingJava { get; init; }
+
+    public Func<int, JavaInstallProgressHandler, CancellationToken, Task<JavaRuntimeEntry?>>? InstallMissingJava
+    {
+        get;
+        init;
+    }
+
     public Func<BedrockInstanceConfig, IBedrockLaunch>? BedrockLauncherFactory { get; init; }
     public IReadOnlyList<string> ResourceSourceRoots { get; init; } = [];
 }

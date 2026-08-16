@@ -7,11 +7,15 @@ public sealed class WorldGameRuleService
 {
     private const string ModernGameRulesRelativePath = "data/minecraft/game_rules.dat";
 
-    public Task<WorldGameRules?> LoadAsync(string worldPath, CancellationToken cancellationToken = default) =>
-        Task.Run(() => Load(worldPath, cancellationToken), cancellationToken);
+    public Task<WorldGameRules?> LoadAsync(string worldPath, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Load(worldPath, cancellationToken), cancellationToken);
+    }
 
-    public Task SaveAsync(string worldPath, WorldGameRules rules, CancellationToken cancellationToken = default) =>
-        Task.Run(() => Save(worldPath, rules, cancellationToken), cancellationToken);
+    public Task SaveAsync(string worldPath, WorldGameRules rules, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Save(worldPath, rules, cancellationToken), cancellationToken);
+    }
 
     private static WorldGameRules? Load(string worldPath, CancellationToken cancellationToken)
     {
@@ -57,21 +61,20 @@ public sealed class WorldGameRuleService
         var isModern = File.Exists(path);
         var file = new NbtFile();
         file.LoadFromFile(isModern ? path : Path.Combine(worldPath, "level.dat"));
-        var data = isModern ? file.RootTag["data"] as NbtCompound : (file.RootTag["Data"] as NbtCompound ?? file.RootTag)["GameRules"] as NbtCompound;
+        var data = isModern
+            ? file.RootTag["data"] as NbtCompound
+            : (file.RootTag["Data"] as NbtCompound ?? file.RootTag)["GameRules"] as NbtCompound;
         if (data == null) throw new InvalidDataException("游戏规则文件不包含可编辑的数据。");
 
         foreach (var (name, value) in rules.BooleanRules)
-        {
             if (data[name] is NbtByte tag) tag.Value = value ? (byte)1 : (byte)0;
             else if (data[name] is NbtString stringTag) stringTag.Value = value ? "true" : "false";
-        }
         foreach (var (name, value) in rules.IntegerRules)
-        {
             if (data[name] is NbtInt tag) tag.Value = value;
             else if (data[name] is NbtString stringTag) stringTag.Value = value.ToString();
-        }
 
-        file.SaveToFile(isModern ? path : Path.Combine(worldPath, "level.dat"), isModern ? NbtCompression.None : NbtCompression.GZip);
+        file.SaveToFile(isModern ? path : Path.Combine(worldPath, "level.dat"),
+            isModern ? NbtCompression.None : NbtCompression.GZip);
     }
 
     private static NbtCompound? LoadModern(string path)

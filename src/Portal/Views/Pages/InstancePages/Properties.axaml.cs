@@ -1,23 +1,37 @@
-using System.IO;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using MinecraftLaunch.Base.Models.Game;
+using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.ViewModels;
-using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class Properties : DataUserControl, System.ComponentModel.INotifyPropertyChanged
+public partial class Properties : DataUserControl, INotifyPropertyChanged
 {
+    public Properties(MinecraftInstance instance)
+    {
+        Instance = instance;
+        InitializeComponent();
+        DataContext = this;
+    }
+
+    public Properties()
+    {
+        InitializeComponent();
+        DataContext = this;
+    }
+
     public MinecraftInstance Instance { get; }
     public bool IsWindows => OperatingSystem.IsWindows();
-    public bool IsUwpBedrock => Instance?.BedrockConfig?.BuildType == Bedrock.Standard.Manifest.BedrockBuildType.UWP;
-    public bool IsGdkBedrock => Instance?.BedrockConfig?.BuildType == Bedrock.Standard.Manifest.BedrockBuildType.GDK;
+    public bool IsUwpBedrock => Instance?.BedrockConfig?.BuildType == BedrockBuildType.UWP;
+    public bool IsGdkBedrock => Instance?.BedrockConfig?.BuildType == BedrockBuildType.GDK;
     public bool SupportsBedrockDataIsolation => Instance?.IsBedrock == true && !IsUwpBedrock;
 
     public bool EnableMouseLock
@@ -57,40 +71,6 @@ public partial class Properties : DataUserControl, System.ComponentModel.INotify
         set => UpdateBedrockConfig(config => config.EnableCreatorEditor = value);
     }
 
-    public Properties(MinecraftInstance instance)
-    {
-        Instance = instance;
-        InitializeComponent();
-        DataContext = this;
-    }
-    public Properties()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
-
-    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null) =>
-        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
-
-    private void Save_Click(object? sender, RoutedEventArgs e) => Instance.SaveConfig();
-
-    private void OpenFolder_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is Control control)
-            _ = (sender as Control)!.GetTopLevel().Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(Instance.InstanceFolderPath));
-    }
-
-    private void UpdateBedrockConfig(Action<Bedrock.Standard.Manifest.BedrockInstanceConfig> update)
-    {
-        if (Instance?.BedrockConfig == null)
-            return;
-
-        update(Instance.BedrockConfig);
-        BedrockHelper.SaveInstanceConfig(Instance.BedrockConfig);
-    }
-
     private string InstanceVersionId
     {
         get
@@ -98,7 +78,7 @@ public partial class Properties : DataUserControl, System.ComponentModel.INotify
             var entry = Instance?.MinecraftEntry;
             if (entry is null)
                 return string.Empty;
-            return entry is MinecraftLaunch.Base.Models.Game.ModifiedMinecraftEntry { HasInheritance: true } modified
+            return entry is ModifiedMinecraftEntry { HasInheritance: true } modified
                 ? modified.InheritedMinecraft.Version.VersionId
                 : entry.Version.VersionId;
         }
@@ -124,16 +104,11 @@ public partial class Properties : DataUserControl, System.ComponentModel.INotify
         }
     }
 
-    public sealed record GraphicsApiOption(GraphicsApi Value, string DisplayName)
-    {
-        public override string ToString() => DisplayName;
-    }
-
     public IReadOnlyList<GraphicsApiOption> GraphicsApiOptions { get; } = new[]
     {
         new GraphicsApiOption(GraphicsApi.Default, "默认"),
         new GraphicsApiOption(GraphicsApi.OpenGL, "OpenGL"),
-        new GraphicsApiOption(GraphicsApi.Vulkan, "Vulkan"),
+        new GraphicsApiOption(GraphicsApi.Vulkan, "Vulkan")
     };
 
     public GraphicsApiOption? SelectedGraphicsApi
@@ -147,7 +122,7 @@ public partial class Properties : DataUserControl, System.ComponentModel.INotify
             {
                 Instance.JavaConfig.GraphicsBackend = value.Value;
                 Instance.SaveConfig();
-                OnPropertyChanged(nameof(SelectedGraphicsApi));
+                OnPropertyChanged();
             }
         }
     }
@@ -172,7 +147,7 @@ public partial class Properties : DataUserControl, System.ComponentModel.INotify
             {
                 Instance.JavaConfig.OpenGlRenderer = value.Name;
                 Instance.SaveConfig();
-                OnPropertyChanged(nameof(SelectedOpenGlRenderer));
+                OnPropertyChanged();
             }
         }
     }
@@ -188,7 +163,7 @@ public partial class Properties : DataUserControl, System.ComponentModel.INotify
             {
                 Instance.JavaConfig.VulkanRenderer = value.Name;
                 Instance.SaveConfig();
-                OnPropertyChanged(nameof(SelectedVulkanRenderer));
+                OnPropertyChanged();
             }
         }
     }
@@ -196,4 +171,40 @@ public partial class Properties : DataUserControl, System.ComponentModel.INotify
     public bool IsVulkanRendererVisible => CanChooseVulkan;
 
     public bool IsOpenGlRendererVisible => true;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private void Save_Click(object? sender, RoutedEventArgs e)
+    {
+        Instance.SaveConfig();
+    }
+
+    private void OpenFolder_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control control)
+            _ = (sender as Control)!.GetTopLevel().Launcher
+                .LaunchDirectoryInfoAsync(new DirectoryInfo(Instance.InstanceFolderPath));
+    }
+
+    private void UpdateBedrockConfig(Action<BedrockInstanceConfig> update)
+    {
+        if (Instance?.BedrockConfig == null)
+            return;
+
+        update(Instance.BedrockConfig);
+        BedrockHelper.SaveInstanceConfig(Instance.BedrockConfig);
+    }
+
+    public sealed record GraphicsApiOption(GraphicsApi Value, string DisplayName)
+    {
+        public override string ToString()
+        {
+            return DisplayName;
+        }
+    }
 }

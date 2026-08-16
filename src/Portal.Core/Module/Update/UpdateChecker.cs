@@ -35,7 +35,8 @@ public static class UpdateChecker
         catch (FlurlHttpException e)
         {
             if (!noreply && sender is not null)
-                Dispatcher.UIThread.Post(() => sender.Notice($"网络请求错误: {e.StatusCode}\n{e.Message}", NotificationType.Error));
+                Dispatcher.UIThread.Post(() =>
+                    sender.Notice($"网络请求错误: {e.StatusCode}\n{e.Message}", NotificationType.Error));
         }
         catch (Exception e)
         {
@@ -46,19 +47,21 @@ public static class UpdateChecker
         return null;
     }
 
-    public static Task<UpdateRelease> GetRelease() => Data.ConfigEntry.UpdateSource switch
+    public static Task<UpdateRelease> GetRelease()
     {
-        UpdateSource.Github => GetGithubRelease(),
-        UpdateSource.Cnb => GetCnbRelease(),
-        _ => throw new NotSupportedException($"不支持更新源“{Data.ConfigEntry.UpdateSource}”。")
-    };
+        return Data.ConfigEntry.UpdateSource switch
+        {
+            UpdateSource.Github => GetGithubRelease(),
+            UpdateSource.Cnb => GetCnbRelease(),
+            _ => throw new NotSupportedException($"不支持更新源“{Data.ConfigEntry.UpdateSource}”。")
+        };
+    }
 
     public static async Task<UpdateAsset> ResolveDownloadMetadata(UpdateAsset asset)
     {
         if (asset.Size > 0) return asset;
 
-        
-        
+
         using var response = await HttpUtil.Client.GetAsync(asset.DownloadUrl,
             HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
@@ -70,8 +73,10 @@ public static class UpdateChecker
 
     public static bool IsNewer(UpdateRelease release)
     {
-        if (release.Title.Equals(AppVersionService.Instance.Version.VersionTitle.Trim(), StringComparison.Ordinal)) return false;
-        if (!long.TryParse(AppVersionService.Instance.Version.Action, NumberStyles.None, CultureInfo.InvariantCulture, out var current))
+        if (release.Title.Equals(AppVersionService.Instance.Version.VersionTitle.Trim(), StringComparison.Ordinal))
+            return false;
+        if (!long.TryParse(AppVersionService.Instance.Version.Action, NumberStyles.None, CultureInfo.InvariantCulture,
+                out var current))
             return true;
         return release.Sequence == 0 || release.Sequence > current;
     }
@@ -87,16 +92,12 @@ public static class UpdateChecker
         var text = await HttpUtil.Request(apiUrl).GetStringAsync();
         JToken release;
         if (channel == "release")
-        {
             release = LatestStableRelease(JArray.Parse(text));
-        }
         else
-        {
             release = JObject.Parse(text);
-        }
 
         return CreateRelease(release, asset => IsHttpsUrl(asset["browser_download_url"]?.ToString())
-                                              && IsGithubUrl(asset["browser_download_url"]!.ToString()),
+                                               && IsGithubUrl(asset["browser_download_url"]!.ToString()),
             asset => new UpdateAsset(
                 asset["name"]?.ToString() ?? string.Empty,
                 asset["browser_download_url"]?.ToString() ?? string.Empty,
@@ -139,16 +140,19 @@ public static class UpdateChecker
         return new UpdateRelease(title, ParseSequence(title), assets);
     }
 
-    private static JToken LatestStableRelease(IEnumerable<JToken> releases) => releases
-        .Where(release => release["draft"]?.Value<bool>() != true)
-        .Where(release => release["prerelease"]?.Value<bool>() != true)
-        .Select(release => new { Release = release, Version = ParseStableTag(release["tag_name"]?.ToString()) })
-        .Where(item => item.Version is not null)
-        .OrderByDescending(item => item.Version!.Value.Major)
-        .ThenByDescending(item => item.Version!.Value.Minor)
-        .ThenByDescending(item => item.Version!.Value.Patch)
-        .Select(item => item.Release)
-        .FirstOrDefault() ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+    private static JToken LatestStableRelease(IEnumerable<JToken> releases)
+    {
+        return releases
+            .Where(release => release["draft"]?.Value<bool>() != true)
+            .Where(release => release["prerelease"]?.Value<bool>() != true)
+            .Select(release => new { Release = release, Version = ParseStableTag(release["tag_name"]?.ToString()) })
+            .Where(item => item.Version is not null)
+            .OrderByDescending(item => item.Version!.Value.Major)
+            .ThenByDescending(item => item.Version!.Value.Minor)
+            .ThenByDescending(item => item.Version!.Value.Patch)
+            .Select(item => item.Release)
+            .FirstOrDefault() ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+    }
 
     private static (long Major, long Minor, long Patch)? ParseStableTag(string? tag)
     {
@@ -159,8 +163,11 @@ public static class UpdateChecker
             long.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture));
     }
 
-    private static bool IsHttpsUrl(string? value) => Uri.TryCreate(value, UriKind.Absolute, out var uri)
-                                                      && uri.Scheme == Uri.UriSchemeHttps;
+    private static bool IsHttpsUrl(string? value)
+    {
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+               && uri.Scheme == Uri.UriSchemeHttps;
+    }
 
     private static bool IsGithubUrl(string value)
     {
@@ -169,13 +176,16 @@ public static class UpdateChecker
                || host.EndsWith(".github.com", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string NormalizeChannel(string channel) => channel.Trim().ToLowerInvariant() switch
+    private static string NormalizeChannel(string channel)
     {
-        "release" or "stable" => "release",
-        "nightly" => "nightly",
-        "commit" => "commit",
-        _ => throw new NotSupportedException($"不支持更新通道“{channel}”。")
-    };
+        return channel.Trim().ToLowerInvariant() switch
+        {
+            "release" or "stable" => "release",
+            "nightly" => "nightly",
+            "commit" => "commit",
+            _ => throw new NotSupportedException($"不支持更新通道“{channel}”。")
+        };
+    }
 
     private static long ParseSequence(string title)
     {

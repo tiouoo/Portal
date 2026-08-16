@@ -7,7 +7,7 @@
             <Setter Property="ZIndex" Value="20" />
         </Style>
     </Style>
-    
+
     <Style Selector="tio|CustomDialogControl.undrag">
         <Style Selector="^ ScrollViewer">
             <Setter Property="ZIndex" Value="20" />

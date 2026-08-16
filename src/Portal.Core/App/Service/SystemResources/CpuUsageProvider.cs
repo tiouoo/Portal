@@ -7,7 +7,7 @@ internal static partial class CpuUsageProvider
     private static ulong _lastIdle;
     private static ulong _lastTotal;
     private static bool _initialized;
-    
+
     public static float? GetUsage()
     {
         try
@@ -19,24 +19,19 @@ internal static partial class CpuUsageProvider
         }
         catch
         {
-            
         }
 
         return null;
-    }
-    
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Filetime
-    {
-        public uint Low;
-        public uint High;
     }
 
     [LibraryImport("kernel32.dll", SetLastError = false)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool GetSystemTimes(out Filetime idleTime, out Filetime kernelTime, out Filetime userTime);
 
-    private static ulong ToUInt64(Filetime ft) => ((ulong)ft.High << 32) | ft.Low;
+    private static ulong ToUInt64(Filetime ft)
+    {
+        return ((ulong)ft.High << 32) | ft.Low;
+    }
 
     private static float? GetWindowsUsage()
     {
@@ -62,10 +57,10 @@ internal static partial class CpuUsageProvider
         if (totalDelta == 0)
             return null;
 
-        var usage = (1.0 - (double)idleDelta / (double)totalDelta) * 100.0;
+        var usage = (1.0 - idleDelta / (double)totalDelta) * 100.0;
         return (float)Math.Clamp(usage, 0, 100);
     }
-    
+
     private static float? GetLinuxUsage()
     {
         var firstLine = File.ReadAllLines("/proc/stat").FirstOrDefault();
@@ -106,5 +101,12 @@ internal static partial class CpuUsageProvider
 
         var usage = (1.0 - (double)idleDelta / totalDelta) * 100.0;
         return (float)Math.Clamp(usage, 0, 100);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Filetime
+    {
+        public uint Low;
+        public uint High;
     }
 }

@@ -15,6 +15,9 @@ public partial class BedrockBehaviorPacks : UserControl, IDisposable
         BehaviorPacksContent.Content = new BehaviorPacks(instance);
     }
 
-    
-    public void Dispose() => (BehaviorPacksContent.Content as IDisposable)?.Dispose();
+
+    public void Dispose()
+    {
+        (BehaviorPacksContent.Content as IDisposable)?.Dispose();
+    }
 }

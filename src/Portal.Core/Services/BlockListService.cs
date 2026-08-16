@@ -16,14 +16,20 @@ public sealed class BlockListService
     private const string FileName = "BlockList.portal";
     private readonly string _path = Path.Combine(ConfigPath.UserDataRootPath, FileName);
 
+    private bool _areRecentPlaysExpanded;
+
+    private bool _showBlockedInstances;
+
+    private bool _showBlockedRecentPlays;
+
+    private BlockListService()
+    {
+        Document = Load();
+    }
+
     public static BlockListService Instance { get; } = new();
 
-    public BlockListDocument Document { get; private set; }
-
-    public event EventHandler? Changed;
-    public event EventHandler? UiStateChanged;
-
-    private bool _areRecentPlaysExpanded;
+    public BlockListDocument Document { get; }
 
     public bool AreRecentPlaysExpanded
     {
@@ -36,8 +42,6 @@ public sealed class BlockListService
         }
     }
 
-    private bool _showBlockedInstances;
-
     public bool ShowBlockedInstances
     {
         get => _showBlockedInstances;
@@ -48,8 +52,6 @@ public sealed class BlockListService
             UiStateChanged?.Invoke(this, EventArgs.Empty);
         }
     }
-
-    private bool _showBlockedRecentPlays;
 
     public bool ShowBlockedRecentPlays
     {
@@ -62,27 +64,34 @@ public sealed class BlockListService
         }
     }
 
-    private BlockListService()
-    {
-        Document = Load();
-    }
+    public event EventHandler? Changed;
+    public event EventHandler? UiStateChanged;
 
     public static void Initialize()
     {
         _ = Instance;
     }
 
-    public static string GetInstanceKey(MinecraftInstance instance) => instance.InstanceFolderPath;
+    public static string GetInstanceKey(MinecraftInstance instance)
+    {
+        return instance.InstanceFolderPath;
+    }
 
-    public static string GetRecentPlayKey(RecentPlayTarget target) =>
-        $"{GetInstanceKey(target.Instance)}|{(int)target.Type}|{target.Id}";
+    public static string GetRecentPlayKey(RecentPlayTarget target)
+    {
+        return $"{GetInstanceKey(target.Instance)}|{(int)target.Type}|{target.Id}";
+    }
 
-    public bool IsInstanceBlocked(MinecraftInstance instance) =>
-        Document.BlockedInstances.Contains(GetInstanceKey(instance));
+    public bool IsInstanceBlocked(MinecraftInstance instance)
+    {
+        return Document.BlockedInstances.Contains(GetInstanceKey(instance));
+    }
 
-    public bool IsRecentPlayBlocked(RecentPlayTarget target) =>
-        IsInstanceBlocked(target.Instance) ||
-        Document.BlockedRecentPlays.Contains(GetRecentPlayKey(target));
+    public bool IsRecentPlayBlocked(RecentPlayTarget target)
+    {
+        return IsInstanceBlocked(target.Instance) ||
+               Document.BlockedRecentPlays.Contains(GetRecentPlayKey(target));
+    }
 
     public void BlockInstance(MinecraftInstance instance)
     {
@@ -143,11 +152,15 @@ public sealed class BlockListService
         }
     }
 
-    public bool HasBlockedInstances(IEnumerable<MinecraftInstance> instances) =>
-        instances.Any(IsInstanceBlocked);
+    public bool HasBlockedInstances(IEnumerable<MinecraftInstance> instances)
+    {
+        return instances.Any(IsInstanceBlocked);
+    }
 
-    public bool HasBlockedRecentPlays(IEnumerable<RecentPlayTarget> targets) =>
-        targets.Any(IsRecentPlayBlocked);
+    public bool HasBlockedRecentPlays(IEnumerable<RecentPlayTarget> targets)
+    {
+        return targets.Any(IsRecentPlayBlocked);
+    }
 
     private void Save()
     {

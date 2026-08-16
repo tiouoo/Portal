@@ -4,14 +4,12 @@ using System.Globalization;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Const;
 using Portal.Core.App.Helpers;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Services;
-using Portal.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.ViewModels;
@@ -44,14 +42,20 @@ internal class InstancePinyinCache
 
 public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 {
-    public Data Data => Data.Instance;
-    public ObservableCollection<MinecraftInstance> FilteredMinecraftInstances { get; set; } = [];
-
     private readonly ConcurrentDictionary<MinecraftInstance, InstancePinyinCache> _pinyinCache = new();
     private bool _isDisposed;
 
-    [ObservableProperty] public partial bool HasFilter { get; set; }
-    [ObservableProperty] public partial bool HasFilteredInstances { get; set; }
+    private MinecraftInstance? _recentInstance;
+
+    private string _searchText = string.Empty;
+
+    private FolderFilterOption? _selectedFolderFilter;
+
+    private SortOption? _selectedSortOption;
+
+    private int _totalPlaySessions;
+
+    private long _totalPlayTimeSeconds;
 
     protected InstanceListViewModelBase()
     {
@@ -59,6 +63,128 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         InstanceManager.Instance.InstancesChanged += OnInstancesChanged;
         BlockListService.Instance.Changed += OnBlockListChanged;
         BlockListService.Instance.UiStateChanged += OnBlockListUiStateChanged;
+    }
+
+    public Data Data => Data.Instance;
+    public ObservableCollection<MinecraftInstance> FilteredMinecraftInstances { get; set; } = [];
+
+    [ObservableProperty] public partial bool HasFilter { get; set; }
+    [ObservableProperty] public partial bool HasFilteredInstances { get; set; }
+
+    public bool HasBlockedInstancesOnly =>
+        BlockListService.Instance.HasBlockedInstances(InstanceManager.Instance.Instances);
+
+    public string ToggleBlockedInstancesText =>
+        BlockListService.Instance.ShowBlockedInstances ? "隐藏屏蔽项" : "显示屏蔽项";
+
+    public bool HasBlockedRecentPlaysOnly =>
+        BlockListService.Instance.HasBlockedRecentPlays(GetRecentPlayTargets());
+
+    public string ToggleBlockedRecentPlaysText =>
+        BlockListService.Instance.ShowBlockedRecentPlays ? "隐藏屏蔽项" : "显示屏蔽项";
+
+    public long TotalPlayTimeSeconds
+    {
+        get => _totalPlayTimeSeconds;
+        private set
+        {
+            if (SetProperty(ref _totalPlayTimeSeconds, value))
+            {
+                OnPropertyChanged(nameof(DisplayTotalPlayTime));
+                OnPropertyChanged(nameof(PlayTimeUnit));
+            }
+        }
+    }
+
+    public int TotalPlaySessions
+    {
+        get => _totalPlaySessions;
+        private set
+        {
+            if (SetProperty(ref _totalPlaySessions, value)) OnPropertyChanged(nameof(DisplayTotalPlaySessions));
+        }
+    }
+
+    public string DisplayTotalPlayTime => FormatPlayTime(TotalPlayTimeSeconds);
+    public string DisplayTotalPlaySessions => TotalPlaySessions.ToString();
+    public string PlayTimeUnit => GetPlayTimeUnit(TotalPlayTimeSeconds);
+
+    public List<SortOption> SortOptions { get; } =
+    [
+        new() { DisplayText = "名称", SortType = InstanceSortType.Name },
+        new() { DisplayText = "最近游玩", SortType = InstanceSortType.PlayTime },
+        new() { DisplayText = "文件夹名称", SortType = InstanceSortType.FolderName },
+        new() { DisplayText = "加载器", SortType = InstanceSortType.Loader },
+        new() { DisplayText = "版本", SortType = InstanceSortType.Version }
+    ];
+
+    public List<FolderFilterOption> FolderFilterOptions { get; set; } = [];
+
+    public FolderFilterOption? SelectedFolderFilter
+    {
+        get => _selectedFolderFilter;
+        set
+        {
+            if (SetProperty(ref _selectedFolderFilter, value)) ApplyFilterAndSort();
+        }
+    }
+
+    public SortOption? SelectedSortOption
+    {
+        get => _selectedSortOption;
+        set
+        {
+            if (SetProperty(ref _selectedSortOption, value))
+            {
+                if (value != null) Data.ConfigEntry.DefaultInstanceSortType = value.SortType;
+
+                ApplyFilterAndSort();
+            }
+        }
+    }
+
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (SetProperty(ref _searchText, value)) ApplyFilterAndSort();
+        }
+    }
+
+    public string SummaryText
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    } = string.Empty;
+
+    public MinecraftInstance? RecentInstance
+    {
+        get => _recentInstance;
+        private set
+        {
+            if (SetProperty(ref _recentInstance, value)) OnPropertyChanged(nameof(HasRecentInstance));
+        }
+    }
+
+    public bool HasRecentInstance => RecentInstance != null;
+
+    protected virtual bool FolderFilterEnabled => false;
+
+    public virtual void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
+        InstanceManager.Instance.InstancesChanged -= OnInstancesChanged;
+        BlockListService.Instance.Changed -= OnBlockListChanged;
+        BlockListService.Instance.UiStateChanged -= OnBlockListUiStateChanged;
+        FilteredMinecraftInstances.Clear();
+        _pinyinCache.Clear();
+        FolderFilterOptions.Clear();
+        RecentInstance = null;
     }
 
     private void OnInstancesChanged(object? sender, EventArgs e)
@@ -129,13 +255,10 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     {
     }
 
-    protected virtual IEnumerable<RecentPlayTarget> GetRecentPlayTargets() => [];
-
-    public bool HasBlockedInstancesOnly =>
-        BlockListService.Instance.HasBlockedInstances(InstanceManager.Instance.Instances);
-
-    public string ToggleBlockedInstancesText =>
-        BlockListService.Instance.ShowBlockedInstances ? "隐藏屏蔽项" : "显示屏蔽项";
+    protected virtual IEnumerable<RecentPlayTarget> GetRecentPlayTargets()
+    {
+        return [];
+    }
 
     [RelayCommand]
     private void ToggleBlockedInstances()
@@ -143,132 +266,11 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         BlockListService.Instance.ShowBlockedInstances = !BlockListService.Instance.ShowBlockedInstances;
     }
 
-    public bool HasBlockedRecentPlaysOnly =>
-        BlockListService.Instance.HasBlockedRecentPlays(GetRecentPlayTargets());
-
-    public string ToggleBlockedRecentPlaysText =>
-        BlockListService.Instance.ShowBlockedRecentPlays ? "隐藏屏蔽项" : "显示屏蔽项";
-
     [RelayCommand]
     private void ToggleBlockedRecentPlays()
     {
         BlockListService.Instance.ShowBlockedRecentPlays = !BlockListService.Instance.ShowBlockedRecentPlays;
     }
-
-    private long _totalPlayTimeSeconds;
-
-    public long TotalPlayTimeSeconds
-    {
-        get => _totalPlayTimeSeconds;
-        private set
-        {
-            if (SetProperty(ref _totalPlayTimeSeconds, value))
-            {
-                OnPropertyChanged(nameof(DisplayTotalPlayTime));
-                OnPropertyChanged(nameof(PlayTimeUnit));
-            }
-        }
-    }
-
-    private int _totalPlaySessions;
-
-    public int TotalPlaySessions
-    {
-        get => _totalPlaySessions;
-        private set
-        {
-            if (SetProperty(ref _totalPlaySessions, value))
-            {
-                OnPropertyChanged(nameof(DisplayTotalPlaySessions));
-            }
-        }
-    }
-
-    public string DisplayTotalPlayTime => FormatPlayTime(TotalPlayTimeSeconds);
-    public string DisplayTotalPlaySessions => TotalPlaySessions.ToString();
-    public string PlayTimeUnit => GetPlayTimeUnit(TotalPlayTimeSeconds);
-
-    public List<SortOption> SortOptions { get; } =
-    [
-        new() { DisplayText = "名称", SortType = InstanceSortType.Name },
-        new() { DisplayText = "最近游玩", SortType = InstanceSortType.PlayTime },
-        new() { DisplayText = "文件夹名称", SortType = InstanceSortType.FolderName },
-        new() { DisplayText = "加载器", SortType = InstanceSortType.Loader },
-        new() { DisplayText = "版本", SortType = InstanceSortType.Version },
-    ];
-
-    public List<FolderFilterOption> FolderFilterOptions { get; set; } = [];
-
-    private FolderFilterOption? _selectedFolderFilter;
-
-    public FolderFilterOption? SelectedFolderFilter
-    {
-        get => _selectedFolderFilter;
-        set
-        {
-            if (SetProperty(ref _selectedFolderFilter, value))
-            {
-                ApplyFilterAndSort();
-            }
-        }
-    }
-
-    private SortOption? _selectedSortOption;
-
-    public SortOption? SelectedSortOption
-    {
-        get => _selectedSortOption;
-        set
-        {
-            if (SetProperty(ref _selectedSortOption, value))
-            {
-                if (value != null)
-                {
-                    Data.ConfigEntry.DefaultInstanceSortType = value.SortType;
-                }
-
-                ApplyFilterAndSort();
-            }
-        }
-    }
-
-    private string _searchText = string.Empty;
-
-    public string SearchText
-    {
-        get => _searchText;
-        set
-        {
-            if (SetProperty(ref _searchText, value))
-            {
-                ApplyFilterAndSort();
-            }
-        }
-    }
-
-    public string SummaryText
-    {
-        get;
-        private set => SetProperty(ref field, value);
-    } = string.Empty;
-
-    private MinecraftInstance? _recentInstance;
-
-    public MinecraftInstance? RecentInstance
-    {
-        get => _recentInstance;
-        private set
-        {
-            if (SetProperty(ref _recentInstance, value))
-            {
-                OnPropertyChanged(nameof(HasRecentInstance));
-            }
-        }
-    }
-
-    public bool HasRecentInstance => RecentInstance != null;
-
-    protected virtual bool FolderFilterEnabled => false;
 
     public void RefreshFolderFilterOptions()
     {
@@ -276,10 +278,8 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         FolderFilterOptions.Clear();
         FolderFilterOptions.Add(new FolderFilterOption { DisplayText = "所有文件夹", FolderName = null });
         foreach (var folder in Data.ConfigEntry.MinecraftFolders)
-        {
             FolderFilterOptions.Add(new FolderFilterOption
                 { DisplayText = folder.FolderName, FolderName = folder.FolderName });
-        }
 
         _selectedFolderFilter = currentSelection != null
             ? FolderFilterOptions.FirstOrDefault(o => o.FolderName == currentSelection.FolderName)
@@ -301,12 +301,9 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         if (FolderFilterEnabled)
         {
             var selectedFolder = _selectedFolderFilter?.FolderName;
-            if (!string.IsNullOrEmpty(selectedFolder))
-            {
-                query = query.Where(x => x.FolderName == selectedFolder);
-            }
+            if (!string.IsNullOrEmpty(selectedFolder)) query = query.Where(x => x.FolderName == selectedFolder);
         }
-        
+
         HasFilter = !string.IsNullOrWhiteSpace(SearchText);
 
         if (!BlockListService.Instance.ShowBlockedInstances)
@@ -349,7 +346,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
         var sortType = SelectedSortOption?.SortType ?? InstanceSortType.Name;
 
-        IOrderedEnumerable<MinecraftInstance> sortedResult = sortType switch
+        var sortedResult = sortType switch
         {
             InstanceSortType.Name => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
@@ -380,31 +377,15 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
             _ => query
                 .OrderByDescending(x => x.Config?.IsFavorite ?? false)
                 .ThenBy(x => x.InstanceName ?? string.Empty, stringComparer)
-                .ThenBy(x => x.IsVanilla),
+                .ThenBy(x => x.IsVanilla)
         };
 
         FilteredMinecraftInstances.AddRange(sortedResult);
         UpdateSummaryText(sortedResult);
-        
+
         HasFilteredInstances = FilteredMinecraftInstances.Count > 0;
         OnPropertyChanged(nameof(HasBlockedInstancesOnly));
         OnPropertyChanged(nameof(ToggleBlockedInstancesText));
-    }
-
-    public virtual void Dispose()
-    {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        InstanceManager.Instance.InstanceIconChanged -= OnInstanceIconChanged;
-        InstanceManager.Instance.InstancesChanged -= OnInstancesChanged;
-        BlockListService.Instance.Changed -= OnBlockListChanged;
-        BlockListService.Instance.UiStateChanged -= OnBlockListUiStateChanged;
-        FilteredMinecraftInstances.Clear();
-        _pinyinCache.Clear();
-        FolderFilterOptions.Clear();
-        RecentInstance = null;
     }
 
     private void UpdateRecentInstance()
@@ -419,7 +400,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     private void UpdatePlayStatistics()
     {
         long totalTime = 0;
-        int totalSessions = 0;
+        var totalSessions = 0;
 
         foreach (var instance in InstanceManager.Instance.Instances)
         {
@@ -431,7 +412,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         TotalPlaySessions = totalSessions;
     }
 
-        public void UpdateStatistics()
+    public void UpdateStatistics()
     {
         if (_isDisposed)
             return;
@@ -440,7 +421,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         UpdateRecentInstance();
     }
 
-        private static string GetPlayTimeUnit(long seconds)
+    private static string GetPlayTimeUnit(long seconds)
     {
         if (seconds < 60)
             return "s";
@@ -449,36 +430,25 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         return "h";
     }
 
-        private static string FormatPlayTime(long seconds)
+    private static string FormatPlayTime(long seconds)
     {
         double value;
 
         if (seconds < 60)
-        {
             value = seconds;
-        }
         else if (seconds < 3600)
-        {
             value = seconds / 60.0;
-        }
         else
-        {
             value = seconds / 3600.0;
-        }
 
         return FormatNumber(value);
     }
 
-        private static string FormatNumber(double value)
+    private static string FormatNumber(double value)
     {
-        if (value < 1000)
-        {
-            return value.ToString("F1", CultureInfo.InvariantCulture);
-        }
-        else
-        {
-            return ((long)value).ToString();
-        }
+        if (value < 1000) return value.ToString("F1", CultureInfo.InvariantCulture);
+
+        return ((long)value).ToString();
     }
 
     private void UpdateSummaryText(IEnumerable<MinecraftInstance> instances)
@@ -513,10 +483,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         if (string.IsNullOrEmpty(versionId)) return null;
 
         var versionPart = versionId.Split('-')[0];
-        if (Version.TryParse(versionPart, out var version))
-        {
-            return version;
-        }
+        if (Version.TryParse(versionPart, out var version)) return version;
 
         if (versionPart.StartsWith("1."))
         {
@@ -547,7 +514,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
                 DescriptionFirstLetters = PinyinHelper.GetAllFirstLetters(instance.Description ?? string.Empty),
                 LoaderDescriptionPinyins = PinyinHelper.GetAllPinyins(instance.LoaderDescription ?? string.Empty),
                 LoaderDescriptionFirstLetters =
-                    PinyinHelper.GetAllFirstLetters(instance.LoaderDescription ?? string.Empty),
+                    PinyinHelper.GetAllFirstLetters(instance.LoaderDescription ?? string.Empty)
             };
             return cache;
         });

@@ -114,7 +114,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ModsDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ModsDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"
@@ -162,7 +163,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ResourcePacksDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ResourcePacksDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"
@@ -214,7 +216,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ShaderPacksDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ShaderPacksDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"
@@ -262,7 +265,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.SavesDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.SavesDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"
@@ -310,7 +314,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ScreenshotsDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ScreenshotsDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"
@@ -362,7 +367,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.LogsDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.LogsDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"
@@ -410,7 +416,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ConfigDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.ConfigDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"
@@ -455,7 +462,8 @@
                                         Margin="4,0,0,0"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
-                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.CrashReportsDisplayText}" /></TextBlock>
+                                        <Run FontSize="13" Text="{Binding Instance.StorageUsage.CrashReportsDisplayText}" />
+                                    </TextBlock>
                                 </DockPanel>
                                 <TextBlock
                                     Margin="4,4,0,0"

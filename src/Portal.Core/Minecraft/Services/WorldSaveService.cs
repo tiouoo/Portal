@@ -11,7 +11,10 @@ public sealed class WorldSaveService
         return Task.Run(() => Scan(instance, cancellationToken), cancellationToken);
     }
 
-    public Task<bool> IsWorldLockedAsync(string worldPath) => Task.Run(() => IsWorldLocked(worldPath));
+    public Task<bool> IsWorldLockedAsync(string worldPath)
+    {
+        return Task.Run(() => IsWorldLocked(worldPath));
+    }
 
     public Task<WorldSaveInfo?> ReadAsync(MinecraftInstance instance, string folderName,
         CancellationToken cancellationToken = default)
@@ -73,11 +76,12 @@ public sealed class WorldSaveService
                 ? DateTimeOffset.FromUnixTimeMilliseconds(ticks).LocalDateTime
                 : null;
             version = data["Version"] is NbtCompound versionTag ? GetString(versionTag, "Name") : null;
-            seed = data["WorldGenSettings"] is NbtCompound settings ? GetLong(settings, "seed") : GetLong(data, "RandomSeed");
+            seed = data["WorldGenSettings"] is NbtCompound settings
+                ? GetLong(settings, "seed")
+                : GetLong(data, "RandomSeed");
         }
         catch (Exception)
         {
-            
         }
 
         version ??= string.IsNullOrWhiteSpace(fallbackVersion) ? null : fallbackVersion;
@@ -115,8 +119,6 @@ public sealed class WorldSaveService
         }
         catch (PlatformNotSupportedException)
         {
-            
-            
             return IsLockFileHeld(lockPath);
         }
         catch (FileNotFoundException)
@@ -160,26 +162,47 @@ public sealed class WorldSaveService
         {
             return Directory.Exists(path) ? Directory.EnumerateFiles(path, searchPattern).Count() : 0;
         }
-        catch (IOException) { return 0; }
-        catch (UnauthorizedAccessException) { return 0; }
+        catch (IOException)
+        {
+            return 0;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return 0;
+        }
     }
 
-    private static string? GetString(NbtCompound parent, string name) => (parent[name] as NbtString)?.Value;
-    private static long? GetLong(NbtCompound parent, string name) => parent[name] switch
+    private static string? GetString(NbtCompound parent, string name)
     {
-        NbtLong tag => tag.Value,
-        NbtInt tag => tag.Value,
-        _ => null
-    };
-    private static int? GetInt(NbtCompound parent, string name) => parent[name] switch
+        return (parent[name] as NbtString)?.Value;
+    }
+
+    private static long? GetLong(NbtCompound parent, string name)
     {
-        NbtInt tag => tag.Value,
-        NbtByte tag => tag.Value,
-        _ => null
-    };
-    private static bool? GetBool(NbtCompound parent, string name) => parent[name] switch
+        return parent[name] switch
+        {
+            NbtLong tag => tag.Value,
+            NbtInt tag => tag.Value,
+            _ => null
+        };
+    }
+
+    private static int? GetInt(NbtCompound parent, string name)
     {
-        NbtByte tag => tag.Value != 0,
-        _ => null
-    };
+        return parent[name] switch
+        {
+            NbtInt tag => tag.Value,
+            NbtByte tag => tag.Value,
+            _ => null
+        };
+    }
+
+    private static bool? GetBool(NbtCompound parent, string name)
+    {
+        return parent[name] switch
+        {
+            NbtByte tag => tag.Value != 0,
+            _ => null
+        };
+    }
 }

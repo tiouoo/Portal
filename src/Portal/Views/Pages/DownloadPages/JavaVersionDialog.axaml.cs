@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Operations.Java;
 using TioUi.Common.Interfaces;
@@ -11,40 +10,40 @@ namespace Portal.Views.Pages.DownloadPages;
 
 public partial class JavaVersionDialog : UserControl
 {
-    public JavaVersionDialog() => InitializeComponent();
+    public JavaVersionDialog()
+    {
+        InitializeComponent();
+    }
 
-    private void Confirm_OnClick(object? sender, RoutedEventArgs e) =>
+    private void Confirm_OnClick(object? sender, RoutedEventArgs e)
+    {
         (DataContext as JavaVersionDialogViewModel)?.Confirm();
+    }
 
-    private void Cancel_OnClick(object? sender, RoutedEventArgs e) =>
+    private void Cancel_OnClick(object? sender, RoutedEventArgs e)
+    {
         (DataContext as JavaVersionDialogViewModel)?.Cancel();
+    }
 }
 
 public partial class JavaVersionOption : ObservableObject
 {
+    public JavaVersionOption(JavaDistributionVersion version, bool isInstalled)
+    {
+        Version = version;
+        IsInstalled = isInstalled;
+    }
+
     public JavaDistributionVersion Version { get; }
     public string DisplayName => $"Java {Version.MajorVersion}";
     public string DetailText => $"{Version.FullVersion} · {Version.Vendor}";
     public bool IsInstalled { get; }
 
     [ObservableProperty] public partial bool IsSelected { get; set; }
-
-    public JavaVersionOption(JavaDistributionVersion version, bool isInstalled)
-    {
-        Version = version;
-        IsInstalled = isInstalled;
-    }
 }
 
 public partial class JavaVersionDialogViewModel : ObservableObject, IDialogContext
 {
-    public ObservableCollection<JavaVersionOption> Versions { get; } = [];
-    public string HeaderText { get; }
-
-    [ObservableProperty] public partial JavaVersionOption? SelectedOption { get; set; }
-
-    public bool CanConfirm => SelectedOption is not null;
-
     public JavaVersionDialogViewModel(JavaDistributionItem distribution)
     {
         HeaderText = $"选择要安装的 {distribution.DisplayName} 版本";
@@ -57,10 +56,32 @@ public partial class JavaVersionDialogViewModel : ObservableObject, IDialogConte
         SelectedOption = Versions.FirstOrDefault();
     }
 
-    partial void OnSelectedOptionChanged(JavaVersionOption? value) => OnPropertyChanged(nameof(CanConfirm));
+    public ObservableCollection<JavaVersionOption> Versions { get; } = [];
+    public string HeaderText { get; }
 
-    public void Confirm() => RequestClose?.Invoke(this, SelectedOption?.Version);
-    public void Cancel() => RequestClose?.Invoke(this, null);
-    public void Close() => Cancel();
+    [ObservableProperty] public partial JavaVersionOption? SelectedOption { get; set; }
+
+    public bool CanConfirm => SelectedOption is not null;
+
+    public void Close()
+    {
+        Cancel();
+    }
+
     public event EventHandler<object?>? RequestClose;
+
+    partial void OnSelectedOptionChanged(JavaVersionOption? value)
+    {
+        OnPropertyChanged(nameof(CanConfirm));
+    }
+
+    public void Confirm()
+    {
+        RequestClose?.Invoke(this, SelectedOption?.Version);
+    }
+
+    public void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 }

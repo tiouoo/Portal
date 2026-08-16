@@ -1,18 +1,17 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using MinecraftLaunch.Base.Models.Game;
-using Newtonsoft.Json;
-using System.IO;
-using System.Reflection;
 using System.Globalization;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
-using Portal.Core.Minecraft.Graphics;
+using MinecraftLaunch.Base.Models.Game;
+using Newtonsoft.Json;
 using Portal.Bedrock.Standard.Manifest;
-using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance;
+using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance.Java;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -24,9 +23,44 @@ public class MinecraftInstance : ObservableObject
 
     public const string PortablePortalIconFileName = "Portal.Icon.png";
 
-    public MinecraftInstanceType Type { get; init; }
+    private readonly Dictionary<int, Bitmap> _iconsByWidth = [];
+    private readonly object _timerLock = new();
+    private readonly Dictionary<string, long> _unsavedPlayTimeByDate = [];
+    private Bitmap? _icon;
 
     private bool _isBlocked;
+
+    private Timer? _playTimer;
+    private Bitmap? _sourceIcon;
+
+    public MinecraftInstance(MinecraftEntry e)
+        : this(e, null)
+    {
+    }
+
+    public MinecraftInstance(MinecraftEntry e, MinecraftInstanceLayout? layout)
+    {
+        Type = MinecraftInstanceType.Java;
+        MinecraftEntry = e;
+        Layout = layout;
+        InstanceFolderPath = layout?.InstanceRoot ?? e.VersionDirectoryPath ??
+            Path.Combine(e.MinecraftFolderPath, "versions", e.Id);
+        Config = GetInstanceConfig();
+        EnsureRequiredIndependentInstance();
+        ObserveConfigChanges();
+    }
+
+    public MinecraftInstance(BedrockInstanceConfig bedrockConfig, string folderName, string folderPath)
+    {
+        Type = MinecraftInstanceType.Bedrock;
+        BedrockConfig = bedrockConfig;
+        FolderName = folderName;
+        FolderPath = folderPath;
+        InstanceFolderPath = bedrockConfig.InstancePath;
+        ObserveConfigChanges();
+    }
+
+    public MinecraftInstanceType Type { get; init; }
 
     [JsonIgnore]
     public bool IsBlocked
@@ -54,14 +88,16 @@ public class MinecraftInstance : ObservableObject
     public string? ExternalDisplayName { get; init; }
     public string FolderTypeDescription => Layout?.KindDisplayName ?? "传统 .minecraft";
     public bool IsExternallyManaged => Layout != null;
+
     public bool RequiresIndependentInstance => Layout?.Kind is
         MinecraftFolderKind.Modrinth or MinecraftFolderKind.ModrinthInstance or
         MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance or
         MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance or
         MinecraftFolderKind.PortalMc;
+
     public bool CanDisableIndependentInstance => !RequiresIndependentInstance;
 
-        public bool CanModifyVersion =>
+    public bool CanModifyVersion =>
         Type == MinecraftInstanceType.Java && MinecraftEntry is not null &&
         Layout?.Kind == MinecraftFolderKind.PortalMc;
 
@@ -168,33 +204,26 @@ public class MinecraftInstance : ObservableObject
 
     public MinecraftInstanceConfig Config => field ??= GetInstanceConfig();
 
-    [JsonIgnore]
-    public JavaInstanceConfig? JavaConfig => Config as JavaInstanceConfig;
+    [JsonIgnore] public JavaInstanceConfig? JavaConfig => Config as JavaInstanceConfig;
 
     [JsonIgnore] public InstanceStorageUsage StorageUsage => field ??= new InstanceStorageUsage(this);
 
     public Bitmap Icon => _icon ??= GetInstanceIcon(48);
-    private Bitmap? _icon;
 
     public Bitmap sourceIcon => _sourceIcon ??= GetSourceIcon();
-    private Bitmap? _sourceIcon;
 
     public string LoaderDescription
     {
         get
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-            {
                 return MinecraftEntry.IsVanilla ||
                        (MinecraftEntry as ModifiedMinecraftEntry)?.ModLoaders.Any() == false
                     ? "原版"
                     : string.Join(", ", (MinecraftEntry as ModifiedMinecraftEntry)?
-                        .ModLoaders.Select(x => x.Type.ToString()) ?? []);            }
+                        .ModLoaders.Select(x => x.Type.ToString()) ?? []);
 
-            if (Type == MinecraftInstanceType.Bedrock)
-            {
-                return "基岩版";
-            }
+            if (Type == MinecraftInstanceType.Bedrock) return "基岩版";
 
             return string.Empty;
         }
@@ -261,23 +290,6 @@ public class MinecraftInstance : ObservableObject
         }
     }
 
-    public MinecraftInstance(MinecraftEntry e)
-        : this(e, null)
-    {
-    }
-
-    public MinecraftInstance(MinecraftEntry e, MinecraftInstanceLayout? layout)
-    {
-        Type = MinecraftInstanceType.Java;
-        MinecraftEntry = e;
-        Layout = layout;
-        InstanceFolderPath = layout?.InstanceRoot ?? e.VersionDirectoryPath ??
-                             Path.Combine(e.MinecraftFolderPath, "versions", e.Id);
-        Config = GetInstanceConfig();
-        EnsureRequiredIndependentInstance();
-        ObserveConfigChanges();
-    }
-
     public string Description
     {
         get
@@ -300,15 +312,9 @@ public class MinecraftInstance : ObservableObject
         }
     }
 
-    public MinecraftInstance(BedrockInstanceConfig bedrockConfig, string folderName, string folderPath)
-    {
-        Type = MinecraftInstanceType.Bedrock;
-        BedrockConfig = bedrockConfig;
-        FolderName = folderName;
-        FolderPath = folderPath;
-        InstanceFolderPath = bedrockConfig.InstancePath;
-        ObserveConfigChanges();
-    }
+    [JsonIgnore] public IconSizeProxy Icons => field ??= new IconSizeProxy(this);
+
+    public Bitmap this[int width] => GetInstanceIcon(width);
 
     private void ObserveConfigChanges()
     {
@@ -337,9 +343,7 @@ public class MinecraftInstance : ObservableObject
             }
 
             if (e.PropertyName == nameof(MinecraftInstanceConfig.IsFavorite))
-            {
                 OnPropertyChanged(nameof(FavoriteHeaderText));
-            }
         };
     }
 
@@ -360,10 +364,9 @@ public class MinecraftInstance : ObservableObject
     {
         var configPath = GetConfigPath();
         if (File.Exists(configPath))
-        {
             try
             {
-                MinecraftInstanceConfig? loadedConfig = Type == MinecraftInstanceType.Java
+                var loadedConfig = Type == MinecraftInstanceType.Java
                     ? JsonConvert.DeserializeObject<JavaInstanceConfig>(File.ReadAllText(configPath))
                     : JsonConvert.DeserializeObject<MinecraftInstanceConfig>(File.ReadAllText(configPath));
                 if (loadedConfig != null)
@@ -371,7 +374,6 @@ public class MinecraftInstance : ObservableObject
             }
             catch (Exception e)
             {
-                
                 Logger.Error($"读取实例配置失败，已回退默认配置：{configPath}", e);
                 try
                 {
@@ -382,9 +384,8 @@ public class MinecraftInstance : ObservableObject
                     Logger.Error("备份损坏的实例配置失败。", backupException);
                 }
             }
-        }
 
-        MinecraftInstanceConfig config = Type == MinecraftInstanceType.Java
+        var config = Type == MinecraftInstanceType.Java
             ? new JavaInstanceConfig()
             : new MinecraftInstanceConfig();
         Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
@@ -418,7 +419,7 @@ public class MinecraftInstance : ObservableObject
         return GetExternalConfigPath(Layout.Kind, Layout.InstanceRoot);
     }
 
-        public static string GetExternalConfigPath(MinecraftFolderKind kind, string instanceRoot)
+    public static string GetExternalConfigPath(MinecraftFolderKind kind, string instanceRoot)
     {
         var identity = $"{kind}|{Path.GetFullPath(instanceRoot)}";
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
@@ -426,7 +427,7 @@ public class MinecraftInstance : ObservableObject
             "cc.tiouo.Portal", "Instances", $"{hash}.json");
     }
 
-        public IReadOnlyList<string> GetDeletionPaths()
+    public IReadOnlyList<string> GetDeletionPaths()
     {
         var paths = new List<string> { InstanceFolderPath };
 
@@ -457,10 +458,7 @@ public class MinecraftInstance : ObservableObject
         lock (_timerLock)
         {
             AddPlayTimeForDate(DateTime.Today, seconds);
-            if (saveImmediately)
-            {
-                SaveConfig();
-            }
+            if (saveImmediately) SaveConfig();
         }
 
         NotifyPlayTimeChanged();
@@ -482,10 +480,6 @@ public class MinecraftInstance : ObservableObject
         });
     }
 
-    private System.Threading.Timer? _playTimer;
-    private readonly object _timerLock = new();
-    private readonly Dictionary<string, long> _unsavedPlayTimeByDate = [];
-    
     public void StartPlayTimer()
     {
         lock (_timerLock)
@@ -546,7 +540,7 @@ public class MinecraftInstance : ObservableObject
                    + _unsavedPlayTimeByDate.Values.Sum();
         }
     }
-    
+
     public IReadOnlyList<(DateTime Date, long Seconds)> GetRecentDailyPlayTime(int days)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(days, 1);
@@ -597,7 +591,7 @@ public class MinecraftInstance : ObservableObject
     {
         return Config.PlayTimeByDate ??= [];
     }
-    
+
     private void FormatPlayTimeData()
     {
         if (Config.LegacyPlayTimeSeconds > 0)
@@ -609,31 +603,24 @@ public class MinecraftInstance : ObservableObject
         var cutoffDate = DateTime.Today.AddMonths(-1);
         var playTimeByDate = GetDailyPlayTimeByDate();
         foreach (var (date, seconds) in playTimeByDate.ToArray())
-        {
             if (DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture,
                     DateTimeStyles.None, out var day) && day < cutoffDate)
             {
                 Config.ArchivedPlayTimeSeconds += seconds;
                 playTimeByDate.Remove(date);
             }
-        }
     }
 
-    [JsonIgnore] public IconSizeProxy Icons => field ??= new IconSizeProxy(this);
-
-    public class IconSizeProxy(MinecraftInstance instance)
-    {
-        public Bitmap this[int width] => instance.GetInstanceIcon(width);
-    }
-
-        public string GetJavaGameDirectory()
+    public string GetJavaGameDirectory()
     {
         if (Type != MinecraftInstanceType.Java || MinecraftEntry == null)
             return InstanceFolderPath;
 
         return Layout?.GameDirectory is { Length: > 0 } gameDirectory
             ? gameDirectory
-            : JavaConfig?.EnableIndependentInstance == true ? GetJavaInstanceFolder() : MinecraftEntry.MinecraftFolderPath;
+            : JavaConfig?.EnableIndependentInstance == true
+                ? GetJavaInstanceFolder()
+                : MinecraftEntry.MinecraftFolderPath;
     }
 
     private string GetJavaInstanceFolder()
@@ -663,10 +650,7 @@ public class MinecraftInstance : ObservableObject
                 _ => GetJavaGameDirectory()
             };
 
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
             return path;
         }
@@ -697,10 +681,8 @@ public class MinecraftInstance : ObservableObject
     public void ResetIcon()
     {
         foreach (var iconPath in GetIconOverridePaths())
-        {
             if (File.Exists(iconPath))
                 File.Delete(iconPath);
-        }
 
         RefreshIcon();
     }
@@ -743,10 +725,6 @@ public class MinecraftInstance : ObservableObject
         return LoadBitmapFromAssembly(iconName);
     }
 
-    public Bitmap this[int width] => GetInstanceIcon(width);
-    
-    private readonly Dictionary<int, Bitmap> _iconsByWidth = [];
-
     private Bitmap GetInstanceIcon(int width)
     {
         lock (_iconsByWidth)
@@ -787,10 +765,7 @@ public class MinecraftInstance : ObservableObject
             return Bitmap.DecodeToWidth(s, width);
         }
 
-        if (Type == MinecraftInstanceType.Bedrock)
-        {
-            return LoadBitmapFromAssembly("01_grass_block_side.png", width);
-        }
+        if (Type == MinecraftInstanceType.Bedrock) return LoadBitmapFromAssembly("01_grass_block_side.png", width);
 
         var pclIcon = Path.Combine(instanceFolder, "PCL", "Logo.png");
         if (File.Exists(pclIcon))
@@ -803,7 +778,10 @@ public class MinecraftInstance : ObservableObject
         return LoadBitmapFromAssembly(iconName, width);
     }
 
-    private string? GetCustomIconPath() => GetIconOverridePaths().FirstOrDefault(File.Exists);
+    private string? GetCustomIconPath()
+    {
+        return GetIconOverridePaths().FirstOrDefault(File.Exists);
+    }
 
     public string? GetExportIconPath()
     {
@@ -828,7 +806,8 @@ public class MinecraftInstance : ObservableObject
         yield return GetIconOverridePath();
 
         if (Layout != null)
-            yield return Path.Combine(Path.GetDirectoryName(GetConfigPath())!, Path.GetFileNameWithoutExtension(GetConfigPath()),
+            yield return Path.Combine(Path.GetDirectoryName(GetConfigPath())!,
+                Path.GetFileNameWithoutExtension(GetConfigPath()),
                 "Icon.png");
         else
             yield return Path.Combine(GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder), "Icon.png");
@@ -874,10 +853,7 @@ public class MinecraftInstance : ObservableObject
 
     private string GetEmbeddedIconName()
     {
-        if (Type == MinecraftInstanceType.Bedrock)
-        {
-            return "01_grass_block_side.png";
-        }
+        if (Type == MinecraftInstanceType.Bedrock) return "01_grass_block_side.png";
 
         if (MinecraftEntry == null) return "01_grass_block_side.png";
 
@@ -912,6 +888,11 @@ public class MinecraftInstance : ObservableObject
 
         return Bitmap.DecodeToWidth(stream, 48);
     }
+
+    public class IconSizeProxy(MinecraftInstance instance)
+    {
+        public Bitmap this[int width] => instance.GetInstanceIcon(width);
+    }
 }
 
 public partial class MinecraftInstanceConfig : ObservableObject
@@ -921,18 +902,24 @@ public partial class MinecraftInstanceConfig : ObservableObject
     [ObservableProperty] public partial DateTime LastPlayTime { get; set; } = DateTime.MinValue;
     [ObservableProperty] public partial Dictionary<string, bool> RecentPlayFavorites { get; set; } = [];
 
-    public bool ShouldSerializeRecentPlayFavorites() => RecentPlayFavorites?.Count > 0;
+    [ObservableProperty] public partial Dictionary<string, long> PlayTimeByDate { get; set; } = [];
 
-    [ObservableProperty]
-    public partial Dictionary<string, long> PlayTimeByDate { get; set; } = []; 
-
-    public bool ShouldSerializePlayTimeByDate() => PlayTimeByDate?.Count > 0;
     public long ArchivedPlayTimeSeconds { get; set; }
 
     [JsonProperty("PlayTimeSeconds", DefaultValueHandling = DefaultValueHandling.Ignore)]
     public long LegacyPlayTimeSeconds { get; set; }
 
     [ObservableProperty] public partial int PlaySessions { get; set; }
+
+    public bool ShouldSerializeRecentPlayFavorites()
+    {
+        return RecentPlayFavorites?.Count > 0;
+    }
+
+    public bool ShouldSerializePlayTimeByDate()
+    {
+        return PlayTimeByDate?.Count > 0;
+    }
 }
 
 public partial class JavaInstanceConfig : MinecraftInstanceConfig

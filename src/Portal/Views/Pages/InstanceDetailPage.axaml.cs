@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
-using Portal.Bedrock.Standard.Manifest;
 using Portal.Services;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Controls;
 
@@ -20,8 +14,6 @@ namespace Portal.Views.Pages;
 
 public partial class InstanceDetailPage : UserControl, ITioTabPage
 {
-    public InstanceDetailPageViewModel ViewModel { get; }
-
     public InstanceDetailPage(MinecraftInstance instance)
     {
         InitializeComponent();
@@ -46,19 +38,11 @@ public partial class InstanceDetailPage : UserControl, ITioTabPage
     {
     }
 
+    public InstanceDetailPageViewModel ViewModel { get; }
+
     public PageInfo PageInfo { get; init; }
 
     public TabEntry HostTab { get; set; }
-
-    private void Instance_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(MinecraftInstance.InstanceName))
-            return;
-
-        PageInfo.Title = ViewModel.Instance.InstanceName;
-        if (HostTab != null)
-            HostTab.Title = PageInfo.Title;
-    }
 
     public void OnClose()
     {
@@ -69,6 +53,16 @@ public partial class InstanceDetailPage : UserControl, ITioTabPage
     public Task<bool> RequestCloseAsync()
     {
         return ViewModel.RequestCloseAsync();
+    }
+
+    private void Instance_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MinecraftInstance.InstanceName))
+            return;
+
+        PageInfo.Title = ViewModel.Instance.InstanceName;
+        if (HostTab != null)
+            HostTab.Title = PageInfo.Title;
     }
 
     public static void Open(MinecraftInstance instance, TopLevel sender)
@@ -98,17 +92,8 @@ public partial class InstanceDetailPage : UserControl, ITioTabPage
 
 public partial class InstanceDetailPageViewModel : ObservableObject
 {
-    public MinecraftInstance Instance { get; }
-    private readonly InstanceDetailPage _parent;
-
-    [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
-
-    public bool IsJava => Instance.IsJava;
-    public bool IsBedrock => Instance.IsBedrock;
-    public bool SupportsBedrockMods => OperatingSystem.IsWindows() && Instance.IsBedrock;
-    public bool IsGdkBedrock => SupportsBedrockMods;
-
     private readonly Dictionary<Type, UserControl> _pageCache = new();
+    private readonly InstanceDetailPage _parent;
 
     public InstanceDetailPageViewModel(MinecraftInstance instance, InstanceDetailPage parent)
     {
@@ -116,6 +101,15 @@ public partial class InstanceDetailPageViewModel : ObservableObject
         _parent = parent;
         NavigateType(typeof(Dashboard));
     }
+
+    public MinecraftInstance Instance { get; }
+
+    [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
+
+    public bool IsJava => Instance.IsJava;
+    public bool IsBedrock => Instance.IsBedrock;
+    public bool SupportsBedrockMods => OperatingSystem.IsWindows() && Instance.IsBedrock;
+    public bool IsGdkBedrock => SupportsBedrockMods;
 
     [RelayCommand]
     public void NavigateType(object? parameter)

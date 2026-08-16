@@ -10,10 +10,13 @@ public static class BedrockServerManager
     public const int DefaultPort = 19132;
     private static readonly object FileLock = new();
 
-    public static string GetExternalServersPath(BedrockInstanceConfig config, string userId = "Shared") =>
-        Path.Combine(BedrockDataPathResolver.GetMojangDataRoot(config, userId), "minecraftpe", "external_servers.txt");
+    public static string GetExternalServersPath(BedrockInstanceConfig config, string userId = "Shared")
+    {
+        return Path.Combine(BedrockDataPathResolver.GetMojangDataRoot(config, userId), "minecraftpe",
+            "external_servers.txt");
+    }
 
-        public static IReadOnlyList<BedrockServerEntry> Read(BedrockInstanceConfig config, string userId)
+    public static IReadOnlyList<BedrockServerEntry> Read(BedrockInstanceConfig config, string userId)
     {
         lock (FileLock)
         {
@@ -37,7 +40,7 @@ public static class BedrockServerManager
         }
     }
 
-        public static bool Add(BedrockInstanceConfig config, string userId, string name, string address)
+    public static bool Add(BedrockInstanceConfig config, string userId, string name, string address)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return false;
@@ -63,7 +66,7 @@ public static class BedrockServerManager
         }
     }
 
-        public static bool Update(BedrockInstanceConfig config, string userId, int lineIndex, string name, string address)
+    public static bool Update(BedrockInstanceConfig config, string userId, int lineIndex, string name, string address)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return false;
@@ -99,7 +102,7 @@ public static class BedrockServerManager
         }
     }
 
-        public static bool Remove(BedrockInstanceConfig config, string userId, int lineIndex)
+    public static bool Remove(BedrockInstanceConfig config, string userId, int lineIndex)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return false;
@@ -128,7 +131,7 @@ public static class BedrockServerManager
         }
     }
 
-        public static (string Host, int Port) ParseAddress(string address)
+    public static (string Host, int Port) ParseAddress(string address)
     {
         if (address.StartsWith('['))
         {
@@ -155,11 +158,11 @@ public static class BedrockServerManager
         if (string.IsNullOrWhiteSpace(line))
             return null;
 
-        
+
         return line.Contains(';') ? ParseLegacyLine(line) : ParseColonLine(line);
     }
 
-        private static BedrockServerEntry? ParseColonLine(string line)
+    private static BedrockServerEntry? ParseColonLine(string line)
     {
         var parts = line.Split(':');
         if (parts.Length < 4)
@@ -194,7 +197,7 @@ public static class BedrockServerManager
         };
     }
 
-        private static BedrockServerEntry? ParseLegacyLine(string line)
+    private static BedrockServerEntry? ParseLegacyLine(string line)
     {
         var parts = line.Split(';');
         if (parts.Length < 2)
@@ -239,13 +242,17 @@ public static class BedrockServerManager
         }
     }
 
-    private static string BuildLine(int index, string name, string host, int port, long timestamp) =>
-        $"{index}:{name}:{host}:{port}:{timestamp}";
+    private static string BuildLine(int index, string name, string host, int port, long timestamp)
+    {
+        return $"{index}:{name}:{host}:{port}:{timestamp}";
+    }
 
-    private static string BuildLegacyLine(string name, string address, string iconText, bool hidden) =>
-        $"{name};{address};{iconText};{(hidden ? 1 : 0)}";
+    private static string BuildLegacyLine(string name, string address, string iconText, bool hidden)
+    {
+        return $"{name};{address};{iconText};{(hidden ? 1 : 0)}";
+    }
 
-        private static int GetNextIndex(IReadOnlyList<string> lines)
+    private static int GetNextIndex(IReadOnlyList<string> lines)
     {
         var maxIndex = 0;
         foreach (var line in lines)
@@ -261,30 +268,32 @@ public static class BedrockServerManager
         return maxIndex + 1;
     }
 
-    private static void WriteLines(string path, IReadOnlyList<string> lines) =>
+    private static void WriteLines(string path, IReadOnlyList<string> lines)
+    {
         File.WriteAllLines(path, lines, new UTF8Encoding(false));
+    }
 }
 
 public sealed class BedrockServerEntry
 {
     public int LineIndex { get; set; }
 
-        public int Index { get; init; } = -1;
+    public int Index { get; init; } = -1;
 
     public required string Name { get; set; }
     public required string Address { get; set; }
     public string Host { get; init; } = string.Empty;
     public int Port { get; init; } = 19132;
 
-        public long Timestamp { get; init; }
+    public long Timestamp { get; init; }
 
-        public bool IsNewFormat { get; init; }
+    public bool IsNewFormat { get; init; }
 
     public string IconText { get; init; } = string.Empty;
     public byte[]? IconData { get; init; }
     public bool Hidden { get; init; }
 
-        public string DisplayAddress
+    public string DisplayAddress
     {
         get
         {
@@ -297,5 +306,6 @@ public sealed class BedrockServerEntry
             return $"{address}·{formattedTime}";
         }
     }
-        public string CopyAddress => Port == 19132 ? Host : $"{Host}:{Port}";
+
+    public string CopyAddress => Port == 19132 ? Host : $"{Host}:{Port}";
 }

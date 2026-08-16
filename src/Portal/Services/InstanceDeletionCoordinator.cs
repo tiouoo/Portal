@@ -11,19 +11,25 @@ public static class InstanceDeletionCoordinator
     public static bool TryBegin(MinecraftInstance instance)
     {
         lock (DeletingPaths)
+        {
             return DeletingPaths.Add(NormalizePath(instance.InstanceFolderPath));
+        }
     }
 
     public static void Complete(MinecraftInstance instance)
     {
         lock (DeletingPaths)
+        {
             DeletingPaths.Remove(NormalizePath(instance.InstanceFolderPath));
+        }
     }
 
     public static bool IsDeleting(MinecraftInstance instance)
     {
         lock (DeletingPaths)
+        {
             return DeletingPaths.Contains(NormalizePath(instance.InstanceFolderPath));
+        }
     }
 
     public static void CloseRelatedPages(MinecraftInstance instance)
@@ -32,23 +38,27 @@ public static class InstanceDeletionCoordinator
                      .SelectMany(window => window.Tabs)
                      .Where(tab => IsRelatedPage(tab.Content, instance))
                      .ToArray())
-        {
-            
             tab.CloseImmediately();
-        }
     }
 
-    private static bool IsRelatedPage(object page, MinecraftInstance instance) => page switch
+    private static bool IsRelatedPage(object page, MinecraftInstance instance)
     {
-        InstanceDetailPage detail => Matches(detail.ViewModel.Instance, instance),
-        MinecraftLogPage { Instance: { } logInstance } => Matches(logInstance, instance),
-        _ => false
-    };
+        return page switch
+        {
+            InstanceDetailPage detail => Matches(detail.ViewModel.Instance, instance),
+            MinecraftLogPage { Instance: { } logInstance } => Matches(logInstance, instance),
+            _ => false
+        };
+    }
 
-    private static bool Matches(MinecraftInstance left, MinecraftInstance right) =>
-        string.Equals(NormalizePath(left.InstanceFolderPath), NormalizePath(right.InstanceFolderPath),
+    private static bool Matches(MinecraftInstance left, MinecraftInstance right)
+    {
+        return string.Equals(NormalizePath(left.InstanceFolderPath), NormalizePath(right.InstanceFolderPath),
             StringComparison.OrdinalIgnoreCase);
+    }
 
-    private static string NormalizePath(string path) =>
-        Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    private static string NormalizePath(string path)
+    {
+        return Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
 }

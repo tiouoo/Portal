@@ -4,8 +4,6 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Module.Widgets;
@@ -15,33 +13,15 @@ namespace Portal.Views.Widgets;
 
 public partial class WidgetHost : UserControl
 {
-    public event Action<WidgetHost>? Resized;
-    public event EventHandler<PointerPressedEventArgs>? RightButtonPressed;
-
-    public WidgetLayoutData Layout { get; set; } = new();
-
-    private IWidgetContent? _widgetContent;
-
-    public IWidgetContent? WidgetContent
-    {
-        get => _widgetContent;
-        set
-        {
-            _widgetContent = value;
-            if (_widgetContent != null)
-                _widgetContent.Initialize(Layout);
-            if (ContentHost != null)
-                ContentHost.Content = value;
-        }
-    }
-
-    private Border? _card;
-    private Border? _resizeHandle;
-    private PathIcon? _resizeIcon;
+    private readonly Border? _card;
+    private readonly Border? _resizeHandle;
+    private readonly PathIcon? _resizeIcon;
+    private IPointer? _activePointer;
+    private bool _isResizing;
     private Point _startMousePoint;
     private Size _startSize;
-    private bool _isResizing;
-    private IPointer? _activePointer;
+
+    private IWidgetContent? _widgetContent;
 
     public WidgetHost()
     {
@@ -71,14 +51,34 @@ public partial class WidgetHost : UserControl
         };
     }
 
+    public WidgetLayoutData Layout { get; set; } = new();
+
+    public IWidgetContent? WidgetContent
+    {
+        get => _widgetContent;
+        set
+        {
+            _widgetContent = value;
+            if (_widgetContent != null)
+                _widgetContent.Initialize(Layout);
+            if (ContentHost != null)
+                ContentHost.Content = value;
+        }
+    }
+
+    public event Action<WidgetHost>? Resized;
+    public event EventHandler<PointerPressedEventArgs>? RightButtonPressed;
+
     private void SetResizeIcon(bool visible)
     {
         if (_resizeIcon != null)
             _resizeIcon.Opacity = visible ? 1 : 0;
     }
 
-    public bool IsResizeHandleArea(Visual visual) =>
-        _resizeHandle != null && (_resizeHandle == visual || _resizeHandle.IsVisualAncestorOf(visual));
+    public bool IsResizeHandleArea(Visual visual)
+    {
+        return _resizeHandle != null && (_resizeHandle == visual || _resizeHandle.IsVisualAncestorOf(visual));
+    }
 
     public void UpdateSizeConstraints()
     {
@@ -86,9 +86,7 @@ public partial class WidgetHost : UserControl
         if (definition?.SupportedSizes.Count is not > 0)
             return;
 
-        
-        
-        
+
         double minWidth = double.MaxValue, minHeight = double.MaxValue;
         double maxWidth = 0, maxHeight = 0;
         foreach (var size in definition.SupportedSizes)
@@ -105,7 +103,7 @@ public partial class WidgetHost : UserControl
         MaxWidth = maxWidth;
         MaxHeight = maxHeight;
     }
-    
+
     public void SetSize(WidgetCellSize target)
     {
         var definition = WidgetRegistry.Get(Layout.Kind);
@@ -133,8 +131,8 @@ public partial class WidgetHost : UserControl
         if (definition == null)
             return;
 
-        double currentW = double.IsNaN(Width) ? Bounds.Width : Width;
-        double currentH = double.IsNaN(Height) ? Bounds.Height : Height;
+        var currentW = double.IsNaN(Width) ? Bounds.Width : Width;
+        var currentH = double.IsNaN(Height) ? Bounds.Height : Height;
         var nearest = definition.NearestSize(currentW, currentH);
         SetSize(nearest);
     }
@@ -194,11 +192,11 @@ public partial class WidgetHost : UserControl
             return;
 
         var currentMousePoint = e.GetPosition(this);
-        double deltaX = currentMousePoint.X - _startMousePoint.X;
-        double deltaY = currentMousePoint.Y - _startMousePoint.Y;
+        var deltaX = currentMousePoint.X - _startMousePoint.X;
+        var deltaY = currentMousePoint.Y - _startMousePoint.Y;
 
-        double newWidth = Math.Clamp(_startSize.Width + deltaX, MinWidth, MaxWidth);
-        double newHeight = Math.Clamp(_startSize.Height + deltaY, MinHeight, MaxHeight);
+        var newWidth = Math.Clamp(_startSize.Width + deltaX, MinWidth, MaxWidth);
+        var newHeight = Math.Clamp(_startSize.Height + deltaY, MinHeight, MaxHeight);
 
         Width = newWidth;
         Height = newHeight;

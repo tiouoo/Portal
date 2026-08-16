@@ -5,7 +5,6 @@
     x:Class="Portal.Views.Pages.SettingPages.Appearance"
     x:DataType="settingPages:Appearance"
     xmlns="https://github.com/avaloniaui"
-    xmlns:const="clr-namespace:Portal.Const;assembly=Portal.Core"
     xmlns:const1="clr-namespace:Portal.Core.Const;assembly=Portal.Core"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"

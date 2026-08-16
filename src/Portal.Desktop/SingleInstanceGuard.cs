@@ -1,6 +1,4 @@
-using System.Threading;
 using Portal.Core.Module.Ipc;
-using Portal.Module.Ipc;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;
@@ -8,10 +6,10 @@ namespace Portal.Desktop;
 internal static class SingleInstanceGuard
 {
     private const string MutexName = "cc.tiouo.Portal.Singleton";
-    private static Mutex? _mutex;
 
     private const int ForwardAttempts = 4;
-    
+    private static Mutex? _mutex;
+
     public static bool TryAcquire()
     {
         _mutex = new Mutex(true, MutexName, out var createdNew);
@@ -38,7 +36,7 @@ internal static class SingleInstanceGuard
         Logger.Info("检测到 Portal 正在运行，本进程将只转发外部命令或请求显示窗口后退出。");
         return false;
     }
-    
+
     public static void HandleSecondaryLaunch(string[] args)
     {
         if (PackagePathResolver.TryGetBedrockPackagePath(args, out var bedrockPath))
@@ -64,7 +62,8 @@ internal static class SingleInstanceGuard
                 PortalCommandService.WriteConsole(PortalCommandParser.GetUsageText());
                 return;
             case PortalCliParseStatus.Error:
-                PortalCommandService.WriteConsole($"参数错误：{error}{Environment.NewLine}{Environment.NewLine}{PortalCommandParser.GetUsageText()}");
+                PortalCommandService.WriteConsole(
+                    $"参数错误：{error}{Environment.NewLine}{Environment.NewLine}{PortalCommandParser.GetUsageText()}");
                 return;
             case PortalCliParseStatus.Command when command is not null:
                 ForwardCommand(command);

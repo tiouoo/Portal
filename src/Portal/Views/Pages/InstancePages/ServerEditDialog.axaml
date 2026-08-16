@@ -35,9 +35,7 @@
             <tio:FormItem Label="服务器地址">
                 <StackPanel Spacing="4">
                     <DataValidationErrors>
-                        <TextBox
-                            PlaceholderText="{Binding AddressPlaceholder}"
-                            Text="{Binding Address}" />
+                        <TextBox PlaceholderText="{Binding AddressPlaceholder}" Text="{Binding Address}" />
                     </DataValidationErrors>
                     <TextBlock
                         FontSize="12"

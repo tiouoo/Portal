@@ -43,6 +43,7 @@ public sealed record MinecraftFolderLayout(
                 return $"{brand} 实例";
             parent = parent.Parent;
         }
+
         return "MultiMC / Prism Launcher 实例";
     }
 
@@ -66,8 +67,10 @@ public sealed record MinecraftFolderLayout(
                 root = current.FullName;
                 return true;
             }
+
             current = current.Parent;
         }
+
         root = string.Empty;
         return false;
     }
@@ -75,77 +78,84 @@ public sealed record MinecraftFolderLayout(
     public static MinecraftFolderLayout Detect(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            return new(MinecraftFolderKind.Unknown, string.Empty, string.Empty, "未识别的 Minecraft 文件夹");
+            return new MinecraftFolderLayout(MinecraftFolderKind.Unknown, string.Empty, string.Empty,
+                "未识别的 Minecraft 文件夹");
         var selected = Path.GetFullPath(path.Trim());
 
-        
+
         if (Directory.Exists(Path.Combine(selected, "instances")) &&
             Directory.Exists(Path.Combine(selected, "libraries")) &&
             Directory.Exists(Path.Combine(selected, "assets")) &&
             Directory.Exists(Path.Combine(selected, "meta", "net.minecraft")))
-            return new(MinecraftFolderKind.MultiMc, selected, selected, GetMultiMcBrand(selected));
+            return new MinecraftFolderLayout(MinecraftFolderKind.MultiMc, selected, selected,
+                GetMultiMcBrand(selected));
 
-        
+
         if (File.Exists(Path.Combine(selected, "package.info")) &&
             TryFindMultiMcRoot(selected, out var multiMcRoot))
-            return new(MinecraftFolderKind.MultiMcInstance, selected, multiMcRoot, GetMultiMcInstanceBrand(selected));
+            return new MinecraftFolderLayout(MinecraftFolderKind.MultiMcInstance, selected, multiMcRoot,
+                GetMultiMcInstanceBrand(selected));
 
-        
+
         if (IsPortalMcRoot(selected))
-            return new(MinecraftFolderKind.PortalMc, selected, selected, "Portal MC");
+            return new MinecraftFolderLayout(MinecraftFolderKind.PortalMc, selected, selected, "Portal MC");
         if (TryFindPortalMcRoot(selected, out var portalMcRoot))
-            return new(MinecraftFolderKind.PortalMc, portalMcRoot, portalMcRoot, "Portal MC");
+            return new MinecraftFolderLayout(MinecraftFolderKind.PortalMc, portalMcRoot, portalMcRoot, "Portal MC");
 
-        
+
         if (Directory.Exists(Path.Combine(selected, "Install", "versions")) &&
             Directory.Exists(Path.Combine(selected, "Instances")))
-            return new(MinecraftFolderKind.CurseForge, selected, selected, "CurseForge");
+            return new MinecraftFolderLayout(MinecraftFolderKind.CurseForge, selected, selected, "CurseForge");
 
         if (Path.GetFileName(selected).Equals("Instances", StringComparison.OrdinalIgnoreCase) &&
-            Directory.Exists(Path.Combine(Directory.GetParent(selected)?.FullName ?? string.Empty, "Install", "versions")))
+            Directory.Exists(Path.Combine(Directory.GetParent(selected)?.FullName ?? string.Empty, "Install",
+                "versions")))
         {
             var root = Directory.GetParent(selected)!.FullName;
-            return new(MinecraftFolderKind.CurseForge, selected, root, "CurseForge");
+            return new MinecraftFolderLayout(MinecraftFolderKind.CurseForge, selected, root, "CurseForge");
         }
 
-        
+
         if (File.Exists(Path.Combine(selected, "minecraftinstance.json")) &&
             TryFindParentDirectory(selected, "Install", "Instances", out var curseForgeRoot))
-            return new(MinecraftFolderKind.CurseForgeInstance, selected, curseForgeRoot, "CurseForge 实例");
+            return new MinecraftFolderLayout(MinecraftFolderKind.CurseForgeInstance, selected, curseForgeRoot,
+                "CurseForge 实例");
 
-        
+
         if (Directory.Exists(Path.Combine(selected, "Install")) &&
             Path.GetFileName(selected).Equals("minecraft", StringComparison.OrdinalIgnoreCase) &&
             Path.GetFileName(Directory.GetParent(selected)?.FullName ?? string.Empty)
                 .Equals("curseforge", StringComparison.OrdinalIgnoreCase))
-            return new(MinecraftFolderKind.CurseForge, selected, selected, "CurseForge");
+            return new MinecraftFolderLayout(MinecraftFolderKind.CurseForge, selected, selected, "CurseForge");
 
-        
+
         if (Directory.Exists(Path.Combine(selected, "profiles")) &&
             Directory.Exists(Path.Combine(selected, "meta")) &&
             Directory.Exists(Path.Combine(selected, "caches")))
-            return new(MinecraftFolderKind.Modrinth, selected, selected, "Modrinth");
+            return new MinecraftFolderLayout(MinecraftFolderKind.Modrinth, selected, selected, "Modrinth");
 
-        
+
         if (File.Exists(Path.Combine(selected, "app.db")) &&
             Directory.Exists(Path.Combine(selected, "profiles")) &&
             Directory.Exists(Path.Combine(selected, "meta")))
-            return new(MinecraftFolderKind.Modrinth, selected, selected, "Modrinth");
+            return new MinecraftFolderLayout(MinecraftFolderKind.Modrinth, selected, selected, "Modrinth");
 
-        
+
         if (TryFindModrinthRoot(selected, out var modrinthRoot) &&
             IsUnder(selected, Path.Combine(modrinthRoot, "profiles")))
-            return new(MinecraftFolderKind.ModrinthInstance, selected, modrinthRoot, "Modrinth 实例");
+            return new MinecraftFolderLayout(MinecraftFolderKind.ModrinthInstance, selected, modrinthRoot,
+                "Modrinth 实例");
 
-        
+
         if (Directory.Exists(Path.Combine(selected, "instances")) &&
             Directory.Exists(Path.Combine(selected, "libraries")) &&
             Directory.Exists(Path.Combine(selected, "assets")))
-            return new(MinecraftFolderKind.MultiMc, selected, selected, GetMultiMcBrand(selected));
+            return new MinecraftFolderLayout(MinecraftFolderKind.MultiMc, selected, selected,
+                GetMultiMcBrand(selected));
 
-        
+
         if (File.Exists(Path.Combine(selected, "instance.cfg")) && File.Exists(Path.Combine(selected, "mmc-pack.json")))
-            return new(MinecraftFolderKind.MultiMcInstance, selected,
+            return new MinecraftFolderLayout(MinecraftFolderKind.MultiMcInstance, selected,
                 Directory.GetParent(Directory.GetParent(selected)?.FullName ?? selected)?.FullName ?? selected,
                 GetMultiMcInstanceBrand(selected));
 
@@ -153,28 +163,31 @@ public sealed record MinecraftFolderLayout(
             File.Exists(Path.Combine(Directory.GetParent(selected)?.FullName ?? string.Empty, "instance.cfg")))
         {
             var instanceRoot = Directory.GetParent(selected)!.FullName;
-            return new(MinecraftFolderKind.MultiMcInstance, instanceRoot,
-                Directory.GetParent(Directory.GetParent(instanceRoot)?.FullName ?? instanceRoot)?.FullName ?? instanceRoot,
+            return new MinecraftFolderLayout(MinecraftFolderKind.MultiMcInstance, instanceRoot,
+                Directory.GetParent(Directory.GetParent(instanceRoot)?.FullName ?? instanceRoot)?.FullName ??
+                instanceRoot,
                 GetMultiMcInstanceBrand(instanceRoot));
         }
 
-        
+
         if (Directory.Exists(Path.Combine(selected, "versions")) ||
             Directory.Exists(Path.Combine(selected, "bedrock_versions")) ||
             Path.GetFileName(selected).Equals(".minecraft", StringComparison.OrdinalIgnoreCase))
-            return new(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
+            return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
 
         if (Directory.Exists(Path.Combine(selected, ".minecraft")))
-            return new(MinecraftFolderKind.Standard, selected, Path.Combine(selected, ".minecraft"),
+            return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected,
+                Path.Combine(selected, ".minecraft"),
                 "传统 .minecraft 文件夹");
 
-        return new(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
+        return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
     }
 
     public static MinecraftFolderLayout FromFolderKind(MinecraftFolderKind kind, string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            return new(MinecraftFolderKind.Unknown, string.Empty, string.Empty, "未识别的 Minecraft 文件夹");
+            return new MinecraftFolderLayout(MinecraftFolderKind.Unknown, string.Empty, string.Empty,
+                "未识别的 Minecraft 文件夹");
         var selected = Path.GetFullPath(path.Trim());
         var displayName = kind switch
         {
@@ -185,7 +198,7 @@ public sealed record MinecraftFolderLayout(
             MinecraftFolderKind.Standard => "传统 .minecraft 文件夹",
             _ => "未识别的 Minecraft 文件夹"
         };
-        return new(kind, selected, selected, displayName);
+        return new MinecraftFolderLayout(kind, selected, selected, displayName);
     }
 
     public static string ResolveGameFolder(string path)
@@ -242,8 +255,10 @@ public sealed record MinecraftFolderLayout(
                 root = current.FullName;
                 return true;
             }
+
             current = current.Parent;
         }
+
         root = string.Empty;
         return false;
     }
@@ -266,8 +281,10 @@ public sealed record MinecraftFolderLayout(
                 root = current.FullName;
                 return true;
             }
+
             current = current.Parent;
         }
+
         root = string.Empty;
         return false;
     }
@@ -285,8 +302,10 @@ public sealed record MinecraftFolderLayout(
                 root = current.FullName;
                 return true;
             }
+
             current = current.Parent;
         }
+
         root = string.Empty;
         return false;
     }
@@ -304,8 +323,10 @@ public sealed record MinecraftFolderLayout(
                 root = current.FullName;
                 return true;
             }
+
             current = current.Parent;
         }
+
         root = string.Empty;
         return false;
     }

@@ -1,18 +1,14 @@
-using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Portal.Const;
 using Portal.Core.App.Service;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Update;
-using Portal.Module.AggregatedSearch;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -48,10 +44,7 @@ public partial class About : DataUserControl
         Data.UiProperty.IsLatestVersion = false;
         Data.UiProperty.FoundNewVersion = false;
         var channel = Data.UiProperty.OverrideUpdateChannel;
-        if (channel != "release" && channel != "nightly" && channel != "commit" && channel != "dev")
-        {
-            return;
-        }
+        if (channel != "release" && channel != "nightly" && channel != "commit" && channel != "dev") return;
 
         HyperlinkButton.Content = "检查更新中";
         HyperlinkButton.IsEnabled = false;
@@ -139,7 +132,7 @@ public partial class About : DataUserControl
     }
 }
 
-public partial class AboutViewModel : ObservableObject
+public class AboutViewModel : ObservableObject
 {
     public Data Data => Data.Instance;
     public string Info => $"{AppVersionService.Instance.Version.Type}.{Data.PackageType}";
@@ -175,7 +168,7 @@ public partial class AboutViewModel : ObservableObject
         new("Uwp.Injector", "Apache License 2.0", "https://github.com/Round-Studio/Uwp.Injector"),
         new("GravityCone", "MIT License", "https://github.com/Tianpao/GravityCone"),
         new("EasyTier", "GNU LGPL v3.0", "https://github.com/EasyTier/EasyTier"),
-        new("GDK-Proton", "未声明许可证", "https://github.com/Weather-OS/GDK-Proton"),
+        new("GDK-Proton", "未声明许可证", "https://github.com/Weather-OS/GDK-Proton")
     ];
 }
 

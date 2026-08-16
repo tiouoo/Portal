@@ -1,5 +1,6 @@
-using Avalonia.Controls;
 using System.Diagnostics;
+using System.Text.Json;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -14,10 +15,7 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Installer.Modpack;
-using MinecraftLaunch.Components.Provider;
 using MinecraftLaunch.Utilities;
-using Portal.Const;
-using Portal.Classes;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
@@ -25,12 +23,11 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Operations.Java;
 using Portal.Core.Services;
-using Portal.Services;
-using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Interface;
-using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
+using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -39,12 +36,19 @@ namespace Portal.Views.Pages.DownloadPages;
 
 public partial class ModpackDetailsPage : UserControl, ITioTabPage
 {
-    private JavaResourceVersionGroup? _targetVersionGroup;
     private bool _isWaitingForTargetVersionGroup;
-    public ModpackDetailsPage() : this(new JavaResourceDetailsTarget(JavaResourceDefinitions.Modpack, ModDetailsSource.Modrinth, string.Empty)) { }
+    private JavaResourceVersionGroup? _targetVersionGroup;
+
+    public ModpackDetailsPage() : this(new JavaResourceDetailsTarget(JavaResourceDefinitions.Modpack,
+        ModDetailsSource.Modrinth, string.Empty))
+    {
+    }
+
     public ModpackDetailsPage(JavaResourceDetailsTarget target)
     {
-        InitializeComponent(); ViewModel = new ModpackDetailsPageViewModel(target); DataContext = ViewModel;
+        InitializeComponent();
+        ViewModel = new ModpackDetailsPageViewModel(target);
+        DataContext = ViewModel;
         ViewModel.TargetVersionGroupReady += ScrollToTargetVersionGroup;
         PageInfo = new PageInfo { Title = "整合包详情", Icon = StreamGeometry.Parse(JavaResourceDetailsIcon.Data) };
         Loaded += async (_, _) =>
@@ -53,9 +57,11 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             await ViewModel.LoadAsync();
         };
     }
+
     public ModpackDetailsPageViewModel ViewModel { get; }
     public PageInfo PageInfo { get; init; }
     public TabEntry HostTab { get; set; }
+
     public void OnClose()
     {
         Logger.Info($"[Modpack] Details page closing for {ViewModel.Name}.");
@@ -66,6 +72,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         ViewModel.Dispose();
         DataContext = null;
     }
+
     private async void VersionFile_OnClick(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control { DataContext: JavaResourceFileItem file } ||
@@ -84,9 +91,11 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             await SaveAsAsync(topLevel, file);
             return;
         }
+
         if (result.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
         StartInstallation(topLevel, ViewModel.Target.Source, file, ViewModel.IconUrl, result);
     }
+
     private void ScrollToTargetVersionGroup(JavaResourceVersionGroup group)
     {
         _targetVersionGroup = group;
@@ -94,6 +103,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         _isWaitingForTargetVersionGroup = true;
         LayoutUpdated += OnLayoutUpdated;
     }
+
     private void OnLayoutUpdated(object? sender, EventArgs e)
     {
         if (_targetVersionGroup is null) return;
@@ -106,10 +116,13 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         expander.IsExpanded = true;
         Dispatcher.UIThread.Post(() => expander.BringIntoView(), DispatcherPriority.Render);
     }
+
     public static void Open(TopLevel sender, JavaResourceDetailsTarget target, string title)
     {
         if (sender is not TioTabWindowBase window || string.IsNullOrWhiteSpace(target.ProjectId)) return;
-        var tab = new TabEntry(window, new ModpackDetailsPage(target), title: title); window.CreateTab(tab); window.SelectTab(tab);
+        var tab = new TabEntry(window, new ModpackDetailsPage(target), title: title);
+        window.CreateTab(tab);
+        window.SelectTab(tab);
     }
 
     public static async Task InstallLocalAsync(TopLevel topLevel, string archivePath, ModDetailsSource source,
@@ -117,7 +130,9 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     {
         var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
             ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(
-                string.IsNullOrWhiteSpace(suggestedInstanceId) ? Path.GetFileNameWithoutExtension(archivePath) : suggestedInstanceId,
+                string.IsNullOrWhiteSpace(suggestedInstanceId)
+                    ? Path.GetFileNameWithoutExtension(archivePath)
+                    : suggestedInstanceId,
                 false),
             topLevel.TryGetHostId(), new OverlayDialogOptions
             {
@@ -126,21 +141,28 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
 
         var displayName = Path.GetFileName(archivePath);
-        Logger.Info($"[Modpack] Queuing local {source} modpack installation from {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
+        Logger.Info(
+            $"[Modpack] Queuing local {source} modpack installation from {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
         var task = TaskManager.Instance.CreateTask(new TaskOptions
-        {
-            Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
-            Actions =
-            [
-                new TaskActionDefinition
-                {
-                    Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
-                    ExecuteAsync = (managedTask, _) => { managedTask.RequestCancellation(); return Task.CompletedTask; },
-                    CanExecute = managedTask => managedTask.CanBeCancelled,
-                    IsVisible = managedTask => !managedTask.IsTerminal
-                }
-            ]
-        }, context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath, result.InstanceId!));
+            {
+                Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
+                Actions =
+                [
+                    new TaskActionDefinition
+                    {
+                        Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
+                        ExecuteAsync = (managedTask, _) =>
+                        {
+                            managedTask.RequestCancellation();
+                            return Task.CompletedTask;
+                        },
+                        CanExecute = managedTask => managedTask.CanBeCancelled,
+                        IsVisible = managedTask => !managedTask.IsTerminal
+                    }
+                ]
+            },
+            context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath,
+                result.InstanceId!));
         task.Start();
         _ = ObserveInstallationAsync(task, topLevel, displayName);
     }
@@ -153,10 +175,12 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             topLevel.Notice("无效整合包文件", NotificationType.Error);
             return;
         }
-        
+
         var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
             ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(
-                string.IsNullOrWhiteSpace(suggestedInstanceId) ? Path.GetFileNameWithoutExtension(archivePath) : suggestedInstanceId,
+                string.IsNullOrWhiteSpace(suggestedInstanceId)
+                    ? Path.GetFileNameWithoutExtension(archivePath)
+                    : suggestedInstanceId,
                 false),
             topLevel.TryGetHostId(), new OverlayDialogOptions
             {
@@ -165,21 +189,28 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
 
         var displayName = Path.GetFileName(archivePath);
-        Logger.Info($"[Modpack] Queuing imported {source} modpack {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
+        Logger.Info(
+            $"[Modpack] Queuing imported {source} modpack {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
         var task = TaskManager.Instance.CreateTask(new TaskOptions
-        {
-            Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
-            Actions =
-            [
-                new TaskActionDefinition
-                {
-                    Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
-                    ExecuteAsync = (managedTask, _) => { managedTask.RequestCancellation(); return Task.CompletedTask; },
-                    CanExecute = managedTask => managedTask.CanBeCancelled,
-                    IsVisible = managedTask => !managedTask.IsTerminal
-                }
-            ]
-        }, context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath, result.InstanceId!));
+            {
+                Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
+                Actions =
+                [
+                    new TaskActionDefinition
+                    {
+                        Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
+                        ExecuteAsync = (managedTask, _) =>
+                        {
+                            managedTask.RequestCancellation();
+                            return Task.CompletedTask;
+                        },
+                        CanExecute = managedTask => managedTask.CanBeCancelled,
+                        IsVisible = managedTask => !managedTask.IsTerminal
+                    }
+                ]
+            },
+            context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath,
+                result.InstanceId!));
         task.Start();
         _ = ObserveInstallationAsync(task, topLevel, displayName);
     }
@@ -198,7 +229,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         suggestedInstanceId = sniffedInstanceId ?? string.Empty;
         return true;
     }
-    
+
     private static async Task SaveAsAsync(TopLevel topLevel, JavaResourceFileItem file)
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -223,7 +254,11 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 new TaskActionDefinition
                 {
                     Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
-                    ExecuteAsync = (managedTask, _) => { managedTask.RequestCancellation(); return Task.CompletedTask; },
+                    ExecuteAsync = (managedTask, _) =>
+                    {
+                        managedTask.RequestCancellation();
+                        return Task.CompletedTask;
+                    },
                     CanExecute = managedTask => managedTask.CanBeCancelled,
                     IsVisible = managedTask => !managedTask.IsTerminal
                 }
@@ -233,7 +268,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         _ = ObserveInstallationAsync(task, topLevel, file.DisplayName);
     }
 
-    private static async Task InstallAsync(TaskExecutionContext context, ModDetailsSource source, JavaResourceFileItem file,
+    private static async Task InstallAsync(TaskExecutionContext context, ModDetailsSource source,
+        JavaResourceFileItem file,
         string? iconUrl, ModpackInstallDialogResult selection)
     {
         var folder = selection.Folder!.FolderPath;
@@ -252,11 +288,12 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             await Task.Run(() => Directory.CreateDirectory(temporaryFolder));
             await RunStepAsync(context, "下载整合包安装包", $"正在下载：{file.FileName}",
                 step => DownloadArchiveAsync(step, file, archivePath));
-            MinecraftEntry minecraft = source switch
+            var minecraft = source switch
             {
                 ModDetailsSource.Modrinth => await InstallModrinthAsync(context, installFolder, instanceId, archivePath,
                     GetForgeJavaPath(), instancesRoot),
-                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId, archivePath,
+                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId,
+                    archivePath,
                     GetForgeJavaPath(), instancesRoot),
                 _ => throw new NotSupportedException("不支持的整合包来源。")
             };
@@ -269,11 +306,13 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 return Task.CompletedTask;
             });
             context.SetDescription($"整合包 {instanceId} 安装完成");
-            Logger.Info($"[Modpack] Installed remote modpack {file.FileName} as {minecraft.Id} in {stopwatch.Elapsed}.");
+            Logger.Info(
+                $"[Modpack] Installed remote modpack {file.FileName} as {minecraft.Id} in {stopwatch.Elapsed}.");
         }
         catch (OperationCanceledException exception)
         {
-            Logger.Debug($"[Modpack] Remote installation of {file.FileName} was cancelled after {stopwatch.Elapsed}: {exception}");
+            Logger.Debug(
+                $"[Modpack] Remote installation of {file.FileName} was cancelled after {stopwatch.Elapsed}: {exception}");
             await DeleteDirectoryAsync(instancePath);
             await DeletePortalMcTemporaryLoaderAsync(instancesRoot, installFolder, instanceId);
             throw;
@@ -291,13 +330,15 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
     }
 
-        private static Task DeletePortalMcTemporaryLoaderAsync(string? instancesRoot, string installFolder, string instanceId)
+    private static Task DeletePortalMcTemporaryLoaderAsync(string? instancesRoot, string installFolder,
+        string instanceId)
     {
         if (instancesRoot is null) return Task.CompletedTask;
         return DeleteDirectoryAsync(Path.Combine(installFolder, "versions", $"{instanceId}.portal-tmp"));
     }
 
-    internal static async Task<string> InstallLocalArchiveAsync(TaskExecutionContext context, ModDetailsSource source, string archivePath,
+    internal static async Task<string> InstallLocalArchiveAsync(TaskExecutionContext context, ModDetailsSource source,
+        string archivePath,
         string folder, string instanceId)
     {
         var isPortalMc = MinecraftFolderLayout.TryFindPortalMcRoot(folder, out var portalMcRoot);
@@ -312,8 +353,10 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         {
             var minecraft = source switch
             {
-                ModDetailsSource.Modrinth => await InstallModrinthAsync(context, installFolder, instanceId, archivePath, GetForgeJavaPath(), instancesRoot),
-                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId, archivePath, GetForgeJavaPath(), instancesRoot),
+                ModDetailsSource.Modrinth => await InstallModrinthAsync(context, installFolder, instanceId, archivePath,
+                    GetForgeJavaPath(), instancesRoot),
+                ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId,
+                    archivePath, GetForgeJavaPath(), instancesRoot),
                 _ => throw new NotSupportedException("不支持的整合包来源。")
             };
             await RunStepAsync(context, "导入实例设置", "正在恢复整合包附带的 Portal 实例设置", step =>
@@ -335,7 +378,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
         catch (OperationCanceledException exception)
         {
-            Logger.Debug($"[Modpack] Local installation of {archivePath} was cancelled after {stopwatch.Elapsed}: {exception}");
+            Logger.Debug(
+                $"[Modpack] Local installation of {archivePath} was cancelled after {stopwatch.Elapsed}: {exception}");
             await DeleteDirectoryAsync(instancePath);
             await DeletePortalMcTemporaryLoaderAsync(instancesRoot, installFolder, instanceId);
             throw;
@@ -349,17 +393,24 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
     }
 
-    private static Task DeleteDirectoryAsync(string directory) => Task.Run(() =>
+    private static Task DeleteDirectoryAsync(string directory)
     {
-        try
+        return Task.Run(() =>
         {
-            if (Directory.Exists(directory)) Directory.Delete(directory, true);
-        }
-        
-        catch (Exception exception) { Logger.Warning($"[Modpack] Failed to clean up {directory}: {exception}"); }
-    });
+            try
+            {
+                if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            }
 
-    private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file, string destination)
+            catch (Exception exception)
+            {
+                Logger.Warning($"[Modpack] Failed to clean up {directory}: {exception}");
+            }
+        });
+    }
+
+    private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file,
+        string destination)
     {
         context.SetRunning($"正在下载：{file.FileName}");
         var reportProgress = CreateDownloadProgressReporter(context);
@@ -368,25 +419,31 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             ProgressChanged = reportProgress
         };
         var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
-        if (result.Type == DownloadResultType.Cancelled) throw new OperationCanceledException(context.CancellationToken);
+        if (result.Type == DownloadResultType.Cancelled)
+            throw new OperationCanceledException(context.CancellationToken);
         if (result.Type != DownloadResultType.Successful) throw result.Exception ?? new IOException("整合包下载失败。");
     }
 
-    internal static async Task TrySaveProjectIconAsync(string? iconUrl, string instancePath, CancellationToken cancellationToken)
+    internal static async Task TrySaveProjectIconAsync(string? iconUrl, string instancePath,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(iconUrl)) return;
 
         try
         {
             Logger.Info($"[Modpack] Downloading optional project icon from {iconUrl} to {instancePath}.");
-            using var response = await HttpUtil.Client.GetAsync(iconUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response =
+                await HttpUtil.Client.GetAsync(iconUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
             Directory.CreateDirectory(instancePath);
             var iconPath = Path.Combine(instancePath, "icon.png");
             var temporaryPath = iconPath + ".tmp";
             await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
             await using (var output = File.Create(temporaryPath))
+            {
                 await source.CopyToAsync(output, cancellationToken);
+            }
+
             File.Move(temporaryPath, iconPath, true);
         }
         catch (OperationCanceledException exception)
@@ -394,11 +451,15 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             Logger.Debug($"[Modpack] Optional project icon download was cancelled: {exception}");
             throw;
         }
-        
-        catch (Exception exception) { Logger.Warning($"[Modpack] Failed to save optional project icon to {instancePath}: {exception}"); }
+
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Modpack] Failed to save optional project icon to {instancePath}: {exception}");
+        }
     }
 
-    private static async Task<MinecraftEntry> InstallModrinthAsync(TaskExecutionContext context, string folder, string id,
+    private static async Task<MinecraftEntry> InstallModrinthAsync(TaskExecutionContext context, string folder,
+        string id,
         string archivePath, string? javaPath, string? instancesRoot)
     {
         var entry = await RunStepAsync(context, "解析整合包", "正在读取 Modrinth 整合包清单", step =>
@@ -419,7 +480,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var hasLoader = loader is not null;
         var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder);
         if (loader is not null)
-            javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
+            javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context,
+                context.CancellationToken);
         var effectiveLoaderId = instancesRoot is not null && id.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
             ? $"{id}.portal-tmp"
             : id;
@@ -456,6 +518,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             else
                 WritePortalMcVanillaInstanceAsync(context, instancesRoot, id, id);
         }
+
         return minecraft;
     }
 
@@ -467,7 +530,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         Directory.CreateDirectory(instanceDirectory);
         var jsonPath = Path.Combine(instanceDirectory, $"{instanceId}.json");
         using var stream = File.Create(jsonPath);
-        using var writer = new System.Text.Json.Utf8JsonWriter(stream);
+        using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
         writer.WriteString("id", instanceId);
         writer.WriteString("inheritsFrom", vanillaId);
@@ -478,7 +541,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         writer.WriteEndObject();
     }
 
-    private static async Task<MinecraftEntry> InstallCurseForgeAsync(TaskExecutionContext context, string folder, string id,
+    private static async Task<MinecraftEntry> InstallCurseForgeAsync(TaskExecutionContext context, string folder,
+        string id,
         string archivePath, string? javaPath, string? instancesRoot)
     {
         var entry = await RunStepAsync(context, "解析整合包", "正在读取 CurseForge 整合包清单", step =>
@@ -493,7 +557,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var loadersTask = RunStepAsync(context, "准备模组加载器", "正在获取整合包指定的加载器", async step =>
         {
             var result = new List<IInstallEntry>();
-            await foreach (var loader in CurseforgeModpackInstaller.ParseModLoaderEntryByManifestAsync(entry, step.CancellationToken))
+            await foreach (var loader in CurseforgeModpackInstaller.ParseModLoaderEntryByManifestAsync(entry,
+                               step.CancellationToken))
                 result.Add(loader);
             step.ReportProgress(1);
             return result;
@@ -504,8 +569,9 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         var vanilla = await vanillaTask;
         var sourceRoots = MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder);
         foreach (var loader in loaders)
-            javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context, context.CancellationToken);
-        
+            javaPath = await EnsureJavaRuntimeAsync(loader, javaPath, entry.McVersion, context,
+                context.CancellationToken);
+
         var effectiveLoaderId = instancesRoot is not null && id.Equals(vanilla.Id, StringComparison.OrdinalIgnoreCase)
             ? $"{id}.portal-tmp"
             : id;
@@ -543,6 +609,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             else
                 WritePortalMcVanillaInstanceAsync(context, instancesRoot, id, id);
         }
+
         return minecraft;
     }
 
@@ -591,10 +658,11 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             Logger.Warning($"[Modpack] Failed to import Portal settings from {portalFolder}: {exception}");
         }
     }
-    
+
     private static Task MovePortalMcInstanceAsync(TaskExecutionContext context, string metadataRoot,
-        string effectiveLoaderId, string instanceId, string instancesRoot) =>
-        RunStepAsync(context, "创建游戏实例", "正在生成实例配置", step =>
+        string effectiveLoaderId, string instanceId, string instancesRoot)
+    {
+        return RunStepAsync(context, "创建游戏实例", "正在生成实例配置", step =>
         {
             var loaderVersionDirectory = Path.Combine(metadataRoot, "versions", effectiveLoaderId);
             Directory.CreateDirectory(instancesRoot);
@@ -611,14 +679,16 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                         File.Move(jarFile, Path.Combine(instancesRoot, instanceId, $"{instanceId}.jar"));
                 }
             }
+
             step.ReportProgress(1);
             return Task.CompletedTask;
         });
+    }
 
     private static async Task<string?> EnsureJavaRuntimeAsync(IInstallEntry loader, string? javaPath,
         string minecraftVersion, TaskExecutionContext context, CancellationToken cancellationToken)
     {
-        if (loader is not ForgeInstallEntry || !string.IsNullOrWhiteSpace(javaPath) && File.Exists(javaPath))
+        if (loader is not ForgeInstallEntry || (!string.IsNullOrWhiteSpace(javaPath) && File.Exists(javaPath)))
             return javaPath;
         var runtime = await JavaAutoInstallCoordinator.EnsureAsync(
             MinecraftInstallationViewModel.GetRecommendedJavaVersion(minecraftVersion),
@@ -652,8 +722,10 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         return Data.ConfigEntry.JavaRuntimes.Select(runtime => runtime.JavaPath).FirstOrDefault(File.Exists);
     }
 
-    private static async Task<VersionManifestEntry> GetVanillaEntryAsync(TaskExecutionContext context, string minecraftVersion) =>
-        await RunStepAsync(context, "准备原版 Minecraft", $"正在查找 Minecraft {minecraftVersion}", async step =>
+    private static async Task<VersionManifestEntry> GetVanillaEntryAsync(TaskExecutionContext context,
+        string minecraftVersion)
+    {
+        return await RunStepAsync(context, "准备原版 Minecraft", $"正在查找 Minecraft {minecraftVersion}", async step =>
         {
             var version = (await VanillaInstaller.EnumerableMinecraftAsync(step.CancellationToken))
                 .FirstOrDefault(candidate => candidate.Id == minecraftVersion);
@@ -661,15 +733,18 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             step.ReportProgress(1);
             return version;
         });
+    }
 
-    private static InstallerBase CreateModLoaderInstaller(IInstallEntry entry, string folder, string id, string? javaPath,
+    private static InstallerBase CreateModLoaderInstaller(IInstallEntry entry, string folder, string id,
+        string? javaPath,
         MinecraftEntry inheritedMinecraft, IEnumerable<string> sourceRoots)
     {
         InstallerBase installer = entry switch
         {
             ForgeInstallEntry forge => new ForgeInstaller
             {
-                MinecraftFolder = folder, JavaPath = javaPath!, Entry = forge, CustomId = id, InheritedMinecraft = inheritedMinecraft
+                MinecraftFolder = folder, JavaPath = javaPath!, Entry = forge, CustomId = id,
+                InheritedMinecraft = inheritedMinecraft
             },
             FabricInstallEntry fabric => new FabricInstaller
             {
@@ -685,61 +760,80 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         return installer;
     }
 
-    private static string GetLoaderName(IInstallEntry entry) => entry switch
+    private static string GetLoaderName(IInstallEntry entry)
     {
-        ForgeInstallEntry forge => forge.IsNeoforge ? "NeoForge" : "Forge",
-        FabricInstallEntry => "Fabric",
-        QuiltInstallEntry => "Quilt",
-        _ => "模组加载器"
-    };
-
-    private static async Task<MinecraftEntry> RunInstallerStepAsync(TaskExecutionContext context, string name, string description,
-        InstallerBase installer) => await RunStepAsync(context, name, description, async step =>
-    {
-        Exception? installationFailure = null;
-        installer.ProgressChanged += CreateInstallerProgressReporter(step);
-        installer.Completed += (_, completed) =>
+        return entry switch
         {
-            if (!completed.IsSuccessful)
-                installationFailure ??= completed.Exception ?? new InvalidOperationException("MinecraftLaunch 安装器未返回失败原因。");
+            ForgeInstallEntry forge => forge.IsNeoforge ? "NeoForge" : "Forge",
+            FabricInstallEntry => "Fabric",
+            QuiltInstallEntry => "Quilt",
+            _ => "模组加载器"
         };
-        try
+    }
+
+    private static async Task<MinecraftEntry> RunInstallerStepAsync(TaskExecutionContext context, string name,
+        string description,
+        InstallerBase installer)
+    {
+        return await RunStepAsync(context, name, description, async step =>
         {
-            var minecraft = await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
-            if (installationFailure is not null) throw new InvalidOperationException($"{name}失败。", installationFailure);
-            return minecraft;
-        }
-        catch when (installationFailure is not null)
-        {
-            throw new InvalidOperationException($"{name}失败。", installationFailure);
-        }
-    });
+            Exception? installationFailure = null;
+            installer.ProgressChanged += CreateInstallerProgressReporter(step);
+            installer.Completed += (_, completed) =>
+            {
+                if (!completed.IsSuccessful)
+                    installationFailure ??= completed.Exception ??
+                                            new InvalidOperationException("MinecraftLaunch 安装器未返回失败原因。");
+            };
+            try
+            {
+                var minecraft = await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
+                if (installationFailure is not null)
+                    throw new InvalidOperationException($"{name}失败。", installationFailure);
+                return minecraft;
+            }
+            catch when (installationFailure is not null)
+            {
+                throw new InvalidOperationException($"{name}失败。", installationFailure);
+            }
+        });
+    }
 
     private static Task RunModpackFilesStepAsync(TaskExecutionContext context, string name, string description,
-        InstallerBase installer) => RunStepAsync(context, name, description, async step =>
+        InstallerBase installer)
     {
-        installer.ProgressChanged += CreateInstallerProgressReporter(step);
-
-        switch (installer)
+        return RunStepAsync(context, name, description, async step =>
         {
-            case ModrinthModpackInstaller modrinth:
-                await RunInBackgroundAsync(modrinth.InstallFilesAsync, step.CancellationToken);
-                break;
-            case CurseforgeModpackInstaller curseforge:
-                await RunInBackgroundAsync(curseforge.InstallFilesAsync, step.CancellationToken);
-                break;
-            default:
-                throw new NotSupportedException($"不支持预下载的整合包安装器：{installer.GetType().Name}");
-        }
-    });
+            installer.ProgressChanged += CreateInstallerProgressReporter(step);
 
-    private static Task RunInBackgroundAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken) =>
-        Task.Run(() => operation(cancellationToken), cancellationToken);
+            switch (installer)
+            {
+                case ModrinthModpackInstaller modrinth:
+                    await RunInBackgroundAsync(modrinth.InstallFilesAsync, step.CancellationToken);
+                    break;
+                case CurseforgeModpackInstaller curseforge:
+                    await RunInBackgroundAsync(curseforge.InstallFilesAsync, step.CancellationToken);
+                    break;
+                default:
+                    throw new NotSupportedException($"不支持预下载的整合包安装器：{installer.GetType().Name}");
+            }
+        });
+    }
+
+    private static Task RunInBackgroundAsync(Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken)
+    {
+        return Task.Run(() => operation(cancellationToken), cancellationToken);
+    }
 
     private static Task<T> RunInBackgroundAsync<T>(Func<CancellationToken, Task<T>> operation,
-        CancellationToken cancellationToken) => Task.Run(() => operation(cancellationToken), cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        return Task.Run(() => operation(cancellationToken), cancellationToken);
+    }
 
-    private static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(TaskExecutionContext context)
+    private static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(
+        TaskExecutionContext context)
     {
         ResourceDownloadProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
@@ -764,7 +858,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         };
     }
 
-    private static EventHandler<InstallProgressChangedEventArgs> CreateInstallerProgressReporter(TaskExecutionContext context)
+    private static EventHandler<InstallProgressChangedEventArgs> CreateInstallerProgressReporter(
+        TaskExecutionContext context)
     {
         InstallProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
@@ -777,7 +872,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             Dispatcher.UIThread.Post(() =>
             {
                 Interlocked.Exchange(ref dispatchQueued, 0);
-                
+
                 if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
                 if (Volatile.Read(ref latestProgress) is { } current)
                     ReportInstallerProgress(context, current);
@@ -788,7 +883,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
     private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
         Func<TaskExecutionContext, Task> operation)
     {
-        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 }, operation);
+        var step = context.CreateChild(new TaskOptions { Name = name, Description = description, Progress = 0 },
+            operation);
         step.Start();
         await step.Completion;
         if (step.Exception is null) return;
@@ -800,55 +896,71 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         Func<TaskExecutionContext, Task<T>> operation)
     {
         T? result = default;
-        await RunStepAsync(context, name, description, async step =>
-        {
-            result = await operation(step);
-        });
+        await RunStepAsync(context, name, description, async step => { result = await operation(step); });
         return result!;
     }
 
     private static void ReportInstallerProgress(TaskExecutionContext context, InstallProgressChangedEventArgs progress)
     {
         context.ReportProgress(progress.Progress);
-        var count = progress.TotalStepTaskCount > 0 ? $" {progress.FinishedStepTaskCount}/{progress.TotalStepTaskCount}" : string.Empty;
+        var count = progress.TotalStepTaskCount > 0
+            ? $" {progress.FinishedStepTaskCount}/{progress.TotalStepTaskCount}"
+            : string.Empty;
         var speed = progress.IsStepSupportSpeed && progress.Speed >= 0
-            ? $"，{DefaultDownloader.FormatSize(progress.Speed, true)}" : string.Empty;
+            ? $"，{DefaultDownloader.FormatSize(progress.Speed, true)}"
+            : string.Empty;
         context.SetDescription($"{GetInstallStepDescription(progress.StepName)}{count}{speed}");
     }
 
-    private static string GetInstallStepDescription(InstallStep step, InstallStep primaryStep = InstallStep.Undefined) => step switch
+    private static string GetInstallStepDescription(InstallStep step, InstallStep primaryStep = InstallStep.Undefined)
     {
-        InstallStep.DownloadVersionJson => "正在下载版本元数据",
-        InstallStep.ParseMinecraft => "正在解析 Minecraft 版本",
-        InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
-        InstallStep.DownloadLibraries => "正在下载游戏依赖",
-        InstallStep.CopyLibraries => "正在复制本地资源",
-        InstallStep.DownloadPackage => "正在下载加载器安装包",
-        InstallStep.ParsePackage => "正在解析加载器安装包",
-        InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入加载器配置",
-        InstallStep.RunInstallProcessor => "正在运行加载器安装处理器",
-        InstallStep.ParseDownloadUrls => "正在解析模组下载地址",
-        InstallStep.RedirectInvalidMod => "正在处理模组下载地址",
-        InstallStep.DownloadMods => "正在下载整合包模组",
-        InstallStep.ExtractModpack => "正在释放整合包文件",
-        _ when primaryStep != InstallStep.Undefined => GetInstallStepDescription(primaryStep),
-        _ => "正在安装整合包"
-    };
+        return step switch
+        {
+            InstallStep.DownloadVersionJson => "正在下载版本元数据",
+            InstallStep.ParseMinecraft => "正在解析 Minecraft 版本",
+            InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
+            InstallStep.DownloadLibraries => "正在下载游戏依赖",
+            InstallStep.CopyLibraries => "正在复制本地资源",
+            InstallStep.DownloadPackage => "正在下载加载器安装包",
+            InstallStep.ParsePackage => "正在解析加载器安装包",
+            InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入加载器配置",
+            InstallStep.RunInstallProcessor => "正在运行加载器安装处理器",
+            InstallStep.ParseDownloadUrls => "正在解析模组下载地址",
+            InstallStep.RedirectInvalidMod => "正在处理模组下载地址",
+            InstallStep.DownloadMods => "正在下载整合包模组",
+            InstallStep.ExtractModpack => "正在释放整合包文件",
+            _ when primaryStep != InstallStep.Undefined => GetInstallStepDescription(primaryStep),
+            _ => "正在安装整合包"
+        };
+    }
 
     internal static async Task ObserveInstallationAsync(ManagedTask task, TopLevel topLevel, string name)
     {
         var stopwatch = Stopwatch.StartNew();
-        try { await task.Completion; }
-        catch (OperationCanceledException exception) { Logger.Debug($"[Modpack] Installation {name} was cancelled after {stopwatch.Elapsed}: {exception}"); }
-        catch (Exception exception) { Logger.Error(exception); }
+        try
+        {
+            await task.Completion;
+        }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[Modpack] Installation {name} was cancelled after {stopwatch.Elapsed}: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+        }
+
         if (task.Status == ManagedTaskStatus.Completed)
         {
             Logger.Info($"[Modpack] Installation {name} completed in {stopwatch.Elapsed}.");
-            Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel, $"{name} 安装完成", NotificationType.Success));
+            Dispatcher.UIThread.Post(() => topLevel.Notice($"{name} 安装完成", NotificationType.Success));
         }
         else if (task.Status == ManagedTaskStatus.Faulted)
-            Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel,
-                $"{name} 安装失败：{GetRootCauseMessage(task.Exception) ?? task.ErrorMessage ?? "请查看任务日志"}", NotificationType.Error));
+        {
+            Dispatcher.UIThread.Post(() =>
+                topLevel.Notice($"{name} 安装失败：{GetRootCauseMessage(task.Exception) ?? task.ErrorMessage ?? "请查看任务日志"}",
+                    NotificationType.Error));
+        }
     }
 
     private static string? GetRootCauseMessage(Exception? exception)

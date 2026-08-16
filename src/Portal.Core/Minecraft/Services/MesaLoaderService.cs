@@ -1,8 +1,7 @@
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Base.Models.Network;
+using MinecraftLaunch.Components.Downloader;
 using Portal.Core.Minecraft.Graphics;
 
 namespace Portal.Core.Minecraft.Services;
@@ -12,7 +11,8 @@ public static class MesaLoaderService
     private static readonly SemaphoreSlim DownloadLock = new(1, 1);
 
     private static string CacheRoot => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "cc.tiouo.Portal", "Cache", "mesa-loader");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "cc.tiouo.Portal", "Cache",
+        "mesa-loader");
 
     public static string? GetCachedPath()
     {
@@ -27,14 +27,16 @@ public static class MesaLoaderService
         var artifact = MesaLoaderArtifact.ForCurrentPlatform(os)
                        ?? throw new InvalidOperationException("当前平台不支持 Mesa 软件渲染。");
 
-        string jarPath = Path.Combine(CacheRoot, artifact.Sha1, "mesa-loader.jar");
-        if (File.Exists(jarPath) && await VerifySha1Async(jarPath, artifact.Sha1, cancellationToken).ConfigureAwait(false))
+        var jarPath = Path.Combine(CacheRoot, artifact.Sha1, "mesa-loader.jar");
+        if (File.Exists(jarPath) &&
+            await VerifySha1Async(jarPath, artifact.Sha1, cancellationToken).ConfigureAwait(false))
             return jarPath;
 
         await DownloadLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (File.Exists(jarPath) && await VerifySha1Async(jarPath, artifact.Sha1, cancellationToken).ConfigureAwait(false))
+            if (File.Exists(jarPath) &&
+                await VerifySha1Async(jarPath, artifact.Sha1, cancellationToken).ConfigureAwait(false))
                 return jarPath;
 
             Directory.CreateDirectory(Path.GetDirectoryName(jarPath)!);
@@ -42,7 +44,7 @@ public static class MesaLoaderService
                 File.Delete(jarPath);
 
             var request = new DownloadRequest(artifact.Url, jarPath, artifact.Size);
-            var result = await new MinecraftLaunch.Components.Downloader.DefaultDownloader()
+            var result = await new DefaultDownloader()
                 .DownloadAsync(request, cancellationToken)
                 .ConfigureAwait(false);
             if (result.Type == DownloadResultType.Cancelled)
@@ -61,7 +63,8 @@ public static class MesaLoaderService
         }
     }
 
-    private static async Task<bool> VerifySha1Async(string path, string expectedSha1, CancellationToken cancellationToken)
+    private static async Task<bool> VerifySha1Async(string path, string expectedSha1,
+        CancellationToken cancellationToken)
     {
         try
         {

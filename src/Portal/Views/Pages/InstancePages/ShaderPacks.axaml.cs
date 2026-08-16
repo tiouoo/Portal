@@ -6,25 +6,54 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
+using AutoCompleteBox = Avalonia.Controls.AutoCompleteBox;
 
 namespace Portal.Views.Pages.InstancePages;
 
 public partial class ShaderPacks : UserControl, INotifyPropertyChanged
 {
     private readonly MinecraftInstance? _instance;
+    private string _filter = string.Empty;
+    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
     private bool _hasLoaded;
     private bool _isLoading;
-    private string _filter = string.Empty;
     private ResourceSortMode _sortMode = ResourceSortMode.FileName;
-    private ResourceFilterMode _filterMode = ResourceFilterMode.All;
+
+    public ShaderPacks()
+    {
+        InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
+        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
+        SelectAllCommand = new RelayCommand(() => SetSelection(item => true));
+        ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
+        InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
+        DataContext = this;
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
+
+        KeyBindings.Add(new KeyBinding
+        {
+            Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),
+            Gesture = KeyGesture.Parse("ctrl+A")
+        });
+        KeyBindings.Add(new KeyBinding { Command = ClearSelectionCommand, Gesture = KeyGesture.Parse("ctrl+Shift+A") });
+        KeyBindings.Add(new KeyBinding { Command = InvertSelectionCommand, Gesture = KeyGesture.Parse("ctrl+I") });
+    }
+
+    public ShaderPacks(MinecraftInstance instance) : this()
+    {
+        _instance = instance;
+    }
 
     public ObservableCollection<ShaderPackItem> Items { get; } = [];
     public ObservableCollection<ShaderPackItem> FilteredItems { get; } = [];
@@ -52,30 +81,7 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     public string SelectedCountText => $"批量操作{SelectedCount}个";
     public bool HasMultipleSelection => SelectedCount >= 1;
 
-    public ShaderPacks()
-    {
-        InitializeComponent();
-        DragDrop.SetAllowDrop(this, true);
-        AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
-        AddHandler(DragDrop.DropEvent, Resource_OnDrop);
-        SelectAllCommand = new RelayCommand(() => SetSelection(item => true));
-        ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
-        InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
-        DataContext = this;
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
-        
-        KeyBindings.Add(new KeyBinding
-        {
-            Command = new RelayCommand(() => SetSelection(item => true), () => !IsTextInputFocused()),
-            Gesture = KeyGesture.Parse("ctrl+A")
-        });
-        KeyBindings.Add(new KeyBinding { Command = ClearSelectionCommand, Gesture = KeyGesture.Parse("ctrl+Shift+A") });
-        KeyBindings.Add(new KeyBinding { Command = InvertSelectionCommand, Gesture = KeyGesture.Parse("ctrl+I") });
-    }
-
-    public ShaderPacks(MinecraftInstance instance) : this() => _instance = instance;
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -129,8 +135,9 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         RaiseListProperties();
         var folder = _instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder);
         var files = await Task.Run(() => Directory.Exists(folder)
-             ? Directory.EnumerateFiles(folder).Where(IsShaderPackFile).OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray()
-             : []);
+            ? Directory.EnumerateFiles(folder).Where(IsShaderPackFile)
+                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray()
+            : []);
         Items.Clear();
         RaiseSelectionProperties();
         foreach (var file in files)
@@ -152,20 +159,26 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         RaiseListProperties();
     }
 
-    private bool MatchesStateFilter(ShaderPackItem item) => _filterMode switch
+    private bool MatchesStateFilter(ShaderPackItem item)
     {
-        ResourceFilterMode.Enabled => item.IsEnabled,
-        ResourceFilterMode.Disabled => item.IsDisabled,
-        _ => true
-    };
+        return _filterMode switch
+        {
+            ResourceFilterMode.Enabled => item.IsEnabled,
+            ResourceFilterMode.Disabled => item.IsDisabled,
+            _ => true
+        };
+    }
 
-    private IEnumerable<ShaderPackItem> SortItems(IEnumerable<ShaderPackItem> source) => _sortMode switch
+    private IEnumerable<ShaderPackItem> SortItems(IEnumerable<ShaderPackItem> source)
     {
-        ResourceSortMode.Name => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase),
-        ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.LastWriteTime),
-        ResourceSortMode.FileSize => source.OrderByDescending(item => item.FileSize),
-        _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
-    };
+        return _sortMode switch
+        {
+            ResourceSortMode.Name => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase),
+            ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.LastWriteTime),
+            ResourceSortMode.FileSize => source.OrderByDescending(item => item.FileSize),
+            _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
+        };
+    }
 
     private void RefreshFilterOptions()
     {
@@ -181,18 +194,36 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
             new DirectoryInfo(_instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder)));
     }
 
-    private async void Import_OnClick(object? sender, RoutedEventArgs e) => await ImportAsync(null);
+    private async void Import_OnClick(object? sender, RoutedEventArgs e)
+    {
+        await ImportAsync(null);
+    }
+
     private void Resource_OnDragOver(object? sender, DragEventArgs e)
     {
-        if (JavaResourceImport.Accepts(e.DataTransfer, ".zip")) { e.DragEffects = DragDropEffects.Copy; e.Handled = true; }
+        if (JavaResourceImport.Accepts(e.DataTransfer, ".zip"))
+        {
+            e.DragEffects = DragDropEffects.Copy;
+            e.Handled = true;
+        }
     }
-    private async void Resource_OnDrop(object? sender, DragEventArgs e) => await ImportAsync(e);
+
+    private async void Resource_OnDrop(object? sender, DragEventArgs e)
+    {
+        await ImportAsync(e);
+    }
+
     private async Task ImportAsync(DragEventArgs? drop)
     {
         if (_instance == null) return;
-        var refresh = async () => { _hasLoaded = false; await LoadAsync(); };
+        var refresh = async () =>
+        {
+            _hasLoaded = false;
+            await LoadAsync();
+        };
         var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder);
-        if (drop == null) await JavaResourceImport.SelectAndImportAsync(this, "选择光影包", destination, "光影包", [".zip"], false, refresh);
+        if (drop == null)
+            await JavaResourceImport.SelectAndImportAsync(this, "选择光影包", destination, "光影包", [".zip"], false, refresh);
         else await JavaResourceImport.ImportDropAsync(this, drop, destination, "光影包", [".zip"], false, refresh);
     }
 
@@ -218,12 +249,27 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         RaiseSelectionProperties();
     }
 
-    private bool IsTextInputFocused() =>
-        TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox or Avalonia.Controls.AutoCompleteBox or TioUi.Controls.AutoCompleteBox;
+    private bool IsTextInputFocused()
+    {
+        return TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox
+            or AutoCompleteBox or TioUi.Controls.AutoCompleteBox;
+    }
 
-    private void SelectAll_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => true);
-    private void ClearSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => false);
-    private void InvertSelection_OnClick(object? sender, RoutedEventArgs e) => SetSelection(item => !item.IsSelected);
+    private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => true);
+    }
+
+    private void ClearSelection_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => false);
+    }
+
+    private void InvertSelection_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetSelection(item => !item.IsSelected);
+    }
+
     private async void DeleteSelected_OnClick(object? sender, RoutedEventArgs e)
     {
         var selected = GetSelectedItems();
@@ -232,23 +278,31 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
             Margin = new Thickness(24), Text = $"确定要永久删除选中的 {selected.Length} 个光影包吗？此操作无法撤销。",
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
             await RunSelectedFileActionAsync(selected, item => File.Delete(item.FilePath), "删除");
     }
 
-    private async void EnableSelected_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void EnableSelected_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetDisabledAsync(GetSelectedItems(), false);
+    }
 
-    private async void DisableSelected_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void DisableSelected_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetDisabledAsync(GetSelectedItems(), true);
+    }
 
-    private async void EnableShaderPack_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void EnableShaderPack_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetDisabledAsync(GetShaderPackItem(sender) is { } item ? [item] : [], false);
+    }
 
-    private async void DisableShaderPack_OnClick(object? sender, RoutedEventArgs e) =>
+    private async void DisableShaderPack_OnClick(object? sender, RoutedEventArgs e)
+    {
         await SetDisabledAsync(GetShaderPackItem(sender) is { } item ? [item] : [], true);
+    }
 
     private async Task SetDisabledAsync(IEnumerable<ShaderPackItem> items, bool disabled)
     {
@@ -267,10 +321,10 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         if (GetShaderPackItem(sender) is not { } item) return;
 
         await OverlayDialog.ShowStandardAsync(new TextBlock
-        {
-            Margin = new Thickness(24), Text = $"文件名：{item.FileName}",
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap
-        }, null, this.TryGetHostId(),
+            {
+                Margin = new Thickness(24), Text = $"文件名：{item.FileName}",
+                TextWrapping = TextWrapping.Wrap
+            }, null, this.TryGetHostId(),
             new OverlayDialogOptions { Title = "光影包详情", Buttons = DialogButton.OK, CanResize = false });
     }
 
@@ -281,7 +335,7 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
             Margin = new Thickness(24), Text = $"确定要永久删除光影包“{item.FileName}”吗？此操作无法撤销。",
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
             await RunSelectedFileActionAsync([item], shaderPack => File.Delete(shaderPack.FilePath), "删除");
@@ -292,22 +346,31 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         if (GetShaderPackItem(sender) is not { } item || TopLevel.GetTopLevel(this) is not { } topLevel) return;
         if (OperatingSystem.IsWindows())
         {
-            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.FilePath}\"") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.FilePath}\"")
+                { UseShellExecute = true });
             return;
         }
 
         await topLevel.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(Path.GetDirectoryName(item.FilePath)!));
     }
 
-    private async Task RunSelectedFileActionAsync(IEnumerable<ShaderPackItem> selected, Action<ShaderPackItem> action, string actionName)
+    private async Task RunSelectedFileActionAsync(IEnumerable<ShaderPackItem> selected, Action<ShaderPackItem> action,
+        string actionName)
     {
         var failed = 0;
         foreach (var item in selected)
-        {
-            try { action(item); }
-            catch (IOException) { failed++; }
-            catch (UnauthorizedAccessException) { failed++; }
-        }
+            try
+            {
+                action(item);
+            }
+            catch (IOException)
+            {
+                failed++;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                failed++;
+            }
 
         _hasLoaded = false;
         await LoadAsync();
@@ -315,16 +378,30 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
             failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }
 
-    private ShaderPackItem[] GetSelectedItems() => Items.Where(item => item.IsSelected).ToArray();
-    private static bool IsShaderPackFile(string path) =>
-        path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
-        path.EndsWith(".zip.disabled", StringComparison.OrdinalIgnoreCase);
-    private static ShaderPackItem? GetShaderPackItem(object? sender) => (sender as Control)?.Tag as ShaderPackItem;
-    private static OverlayDialogOptions CreateDeleteConfirmationOptions() => new()
+    private ShaderPackItem[] GetSelectedItems()
     {
-        Title = "删除光影包", Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
-        OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
-    };
+        return Items.Where(item => item.IsSelected).ToArray();
+    }
+
+    private static bool IsShaderPackFile(string path)
+    {
+        return path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
+               path.EndsWith(".zip.disabled", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static ShaderPackItem? GetShaderPackItem(object? sender)
+    {
+        return (sender as Control)?.Tag as ShaderPackItem;
+    }
+
+    private static OverlayDialogOptions CreateDeleteConfirmationOptions()
+    {
+        return new OverlayDialogOptions
+        {
+            Title = "删除光影包", Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
+            OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
+        };
+    }
 
     private void SetSelection(Func<ShaderPackItem, bool> selection)
     {
@@ -349,12 +426,13 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     private void ShowNotice(string message, NotificationType type)
     {
         if (TopLevel.GetTopLevel(this) is { } topLevel)
-            NotificationGateway.Notice(topLevel, message, type);
+            topLevel.Notice(message, type);
     }
 
-    public new event PropertyChangedEventHandler? PropertyChanged;
-    private void RaisePropertyChanged(string propertyName) =>
+    private void RaisePropertyChanged(string propertyName)
+    {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }
 
 public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
@@ -368,18 +446,6 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
     public bool IsDisabled => FilePath.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase);
     public bool IsEnabled => !IsDisabled;
 
-    private static long ReadFileSize(string path)
-    {
-        try { return new FileInfo(path).Length; }
-        catch { return 0; }
-    }
-
-    private static DateTime ReadLastWriteTime(string path)
-    {
-        try { return new FileInfo(path).LastWriteTime; }
-        catch { return DateTime.MinValue; }
-    }
-
     public bool IsSelected
     {
         get => _isSelected;
@@ -392,4 +458,28 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    private static long ReadFileSize(string path)
+    {
+        try
+        {
+            return new FileInfo(path).Length;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static DateTime ReadLastWriteTime(string path)
+    {
+        try
+        {
+            return new FileInfo(path).LastWriteTime;
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
+    }
 }

@@ -9,6 +9,11 @@ namespace Portal.Views.Pages.InstancePages;
 
 public sealed class RecentPlayTimeChart : Control
 {
+    private const double LeftPadding = 52;
+    private const double RightPadding = 14;
+    private const double TopPadding = 14;
+    private const double BottomPadding = 30;
+
     public static readonly StyledProperty<MinecraftInstance?> InstanceProperty =
         AvaloniaProperty.Register<RecentPlayTimeChart, MinecraftInstance?>(nameof(Instance));
 
@@ -33,11 +38,12 @@ public sealed class RecentPlayTimeChart : Control
     public static readonly StyledProperty<int> DaysProperty =
         AvaloniaProperty.Register<RecentPlayTimeChart, int>(nameof(Days), 7);
 
-    private const double LeftPadding = 52;
-    private const double RightPadding = 14;
-    private const double TopPadding = 14;
-    private const double BottomPadding = 30;
     private int? _hoveredPoint;
+
+    public RecentPlayTimeChart()
+    {
+        ClipToBounds = true;
+    }
 
     public MinecraftInstance? Instance
     {
@@ -87,11 +93,6 @@ public sealed class RecentPlayTimeChart : Control
         set => SetValue(DaysProperty, value);
     }
 
-    public RecentPlayTimeChart()
-    {
-        ClipToBounds = true;
-    }
-
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -104,7 +105,7 @@ public sealed class RecentPlayTimeChart : Control
         base.Render(context);
 
         var bounds = Bounds;
-        
+
         context.DrawRectangle(Brushes.Transparent, null, bounds);
         var graphWidth = bounds.Width - LeftPadding - RightPadding;
         var graphHeight = bounds.Height - TopPadding - BottomPadding;
@@ -168,7 +169,8 @@ public sealed class RecentPlayTimeChart : Control
             new Point(hoveredPosition.X, TopPadding), new Point(hoveredPosition.X, TopPadding + graphHeight));
         context.DrawEllipse(lineBrush, null, hoveredPosition, 5, 5);
 
-        var tooltip = CreateText($"{hoveredEntry.Date:yyyy-MM-dd}\n游玩时长: {FormatDuration(hoveredEntry.Seconds)}", 14, TooltipForeground);
+        var tooltip = CreateText($"{hoveredEntry.Date:yyyy-MM-dd}\n游玩时长: {FormatDuration(hoveredEntry.Seconds)}", 14,
+            TooltipForeground);
         var tooltipX = Math.Clamp(hoveredPosition.X + 12, 4, bounds.Width - tooltip.Width - 12);
         var tooltipY = Math.Max(4, hoveredPosition.Y - tooltip.Height - 14);
         var tooltipBounds = new Rect(tooltipX - 7, tooltipY - 5, tooltip.Width + 14, tooltip.Height + 10);
@@ -202,8 +204,10 @@ public sealed class RecentPlayTimeChart : Control
         }
     }
 
-    private static Color GetColor(IBrush brush, Color fallback) =>
-        brush is SolidColorBrush solidBrush ? solidBrush.Color : fallback;
+    private static Color GetColor(IBrush brush, Color fallback)
+    {
+        return brush is SolidColorBrush solidBrush ? solidBrush.Color : fallback;
+    }
 
     private static long GetAxisMaximum(long maximum)
     {
@@ -222,9 +226,14 @@ public sealed class RecentPlayTimeChart : Control
             seconds < 86400 ? $"{seconds / 3600:F1} 小时" : $"{seconds / 86400:F1} 天";
     }
 
-    private FormattedText CreateText(string text, double size, IBrush brush) =>
-        new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(FontFamily), size, brush);
+    private FormattedText CreateText(string text, double size, IBrush brush)
+    {
+        return new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(FontFamily),
+            size, brush);
+    }
 
-    private void DrawText(DrawingContext context, string text, Point point, double size, IBrush brush) =>
+    private void DrawText(DrawingContext context, string text, Point point, double size, IBrush brush)
+    {
         context.DrawText(CreateText(text, size, brush), point);
+    }
 }

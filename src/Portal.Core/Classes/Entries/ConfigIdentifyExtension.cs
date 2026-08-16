@@ -20,18 +20,16 @@ public class ConfigIdentifyExtension
         if (entry.DefaultMinecraftFolder == null ||
             !entry.MinecraftFolders.Contains(entry.DefaultMinecraftFolder) ||
             !IsInstallableFolder(entry.DefaultMinecraftFolder))
-        {
             entry.DefaultMinecraftFolder = installableFolders[0];
-        }
     }
-    
+
     public static void Window(ConfigEntry entry)
     {
-        if(entry.TabWindowHeight < 379)
+        if (entry.TabWindowHeight < 379)
             entry.TabWindowHeight = 710;
-        if(entry.TabWindowWidth < 709)
+        if (entry.TabWindowWidth < 709)
             entry.TabWindowWidth = 1200;
-        if(entry.AppScale < 0.49)
+        if (entry.AppScale < 0.49)
             entry.AppScale = 1;
     }
 
@@ -44,7 +42,7 @@ public class ConfigIdentifyExtension
     {
         var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "cc.tiouo.portal.minecraft");
-        
+
         foreach (var directory in new[]
                  {
                      Path.Combine(path, "meta", "assets"),

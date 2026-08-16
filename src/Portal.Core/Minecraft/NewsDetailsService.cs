@@ -1,6 +1,5 @@
 using Newtonsoft.Json;
 using Portal.Core.App.Helpers;
-using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -10,19 +9,19 @@ namespace Portal.Core.Minecraft;
 public static class NewsDetailsService
 {
     private const string BaseContentUrl = "https://mcnews.tiouo.cc/v2/";
-    
+
     private const string BaseImageUrl = "https://launchercontent.mojang.com";
 
-    
+
     private static readonly LruCache<string, NewsDetail?> MemoryCache = new(32, StringComparer.Ordinal);
 
-    
+
     private static readonly HashSet<string> RefreshingIds = new(StringComparer.Ordinal);
     private static readonly object RefreshLock = new();
 
-        public static event Action<NewsDetail>? NewsDetailUpdated;
+    public static event Action<NewsDetail>? NewsDetailUpdated;
 
-        public static async Task<NewsDetail?> GetAsync(NewsEntry entry)
+    public static async Task<NewsDetail?> GetAsync(NewsEntry entry)
     {
         if (string.IsNullOrEmpty(entry.Id)) return null;
 
@@ -45,13 +44,14 @@ public static class NewsDetailsService
         {
             CacheDatabase.WriteNewsDetail(fetched);
             MemoryCache.Set(entry.Id, fetched);
-            
+
             TryBackgroundRefreshIfNeedsTranslation(entry, fetched);
         }
+
         return fetched;
     }
 
-        public static async Task<NewsDetail?> RefreshAsync(NewsEntry entry)
+    public static async Task<NewsDetail?> RefreshAsync(NewsEntry entry)
     {
         if (string.IsNullOrEmpty(entry.Id)) return null;
         var fetched = await FetchAsync(entry);
@@ -59,13 +59,14 @@ public static class NewsDetailsService
         {
             CacheDatabase.WriteNewsDetail(fetched);
             MemoryCache.Set(entry.Id, fetched);
-            
+
             TryBackgroundRefreshIfNeedsTranslation(entry, fetched);
         }
+
         return fetched;
     }
 
-        private static void TryBackgroundRefreshIfNeedsTranslation(NewsEntry entry, NewsDetail? cached)
+    private static void TryBackgroundRefreshIfNeedsTranslation(NewsEntry entry, NewsDetail? cached)
     {
         if (cached?.NeedsTranslation != true) return;
 
@@ -81,10 +82,10 @@ public static class NewsDetailsService
                 var fetched = await FetchAsync(entry);
                 if (fetched == null) return;
 
-                
+
                 if (fetched.NeedsTranslation == true) return;
 
-                
+
                 CacheDatabase.WriteNewsDetail(fetched);
                 MemoryCache.Set(entry.Id, fetched);
                 NewsDetailUpdated?.Invoke(fetched);
@@ -115,11 +116,9 @@ public static class NewsDetailsService
 
             var imageUrl = entry.ImageUrl;
             if (string.IsNullOrEmpty(imageUrl) && !string.IsNullOrEmpty(content.Image?.Url))
-            {
                 imageUrl = content.Image.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase)
                     ? content.Image.Url
                     : BaseImageUrl + content.Image.Url;
-            }
 
             return new NewsDetail
             {

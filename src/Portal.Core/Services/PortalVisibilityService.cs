@@ -15,54 +15,62 @@ public static class PortalVisibilityService
     private static readonly List<Window> _hiddenWindows = [];
     private static readonly List<(Window Window, WindowState State)> _minimizedWindows = [];
 
-    public static void OnGameStarted() => Dispatcher.UIThread.Post(() =>
+    public static void OnGameStarted()
     {
-        _runningGames++;
-        if (_runningGames > 1)
-            return;
-
-        _appliedMode = Data.ConfigEntry.PortalVisibleMode;
-        switch (_appliedMode)
+        Dispatcher.UIThread.Post(() =>
         {
-            case PortalVisibleMode.QuitAfterLaunch:
-                Shutdown();
-                break;
-            case PortalVisibleMode.HiddenAfterLaunchAndReopen:
-                HideAllWindows();
-                break;
-            case PortalVisibleMode.MinimizedAfterLaunch:
-            case PortalVisibleMode.MinimizedAfterLaunchAndRestore:
-                MinimizeAllWindows();
-                break;
-        }
-    });
+            _runningGames++;
+            if (_runningGames > 1)
+                return;
 
-    public static void OnGameExited() => Dispatcher.UIThread.Post(() =>
+            _appliedMode = Data.ConfigEntry.PortalVisibleMode;
+            switch (_appliedMode)
+            {
+                case PortalVisibleMode.QuitAfterLaunch:
+                    Shutdown();
+                    break;
+                case PortalVisibleMode.HiddenAfterLaunchAndReopen:
+                    HideAllWindows();
+                    break;
+                case PortalVisibleMode.MinimizedAfterLaunch:
+                case PortalVisibleMode.MinimizedAfterLaunchAndRestore:
+                    MinimizeAllWindows();
+                    break;
+            }
+        });
+    }
+
+    public static void OnGameExited()
     {
-        _runningGames = Math.Max(0, _runningGames - 1);
-        if (_runningGames > 0)
-            return;
-
-        switch (_appliedMode)
+        Dispatcher.UIThread.Post(() =>
         {
-            case PortalVisibleMode.HiddenAfterLaunchAndReopen:
-                ShowHiddenWindows();
-                break;
-            case PortalVisibleMode.MinimizedAfterLaunchAndRestore:
-                RestoreMinimizedWindows();
-                break;
-            case PortalVisibleMode.MinimizedAfterLaunch:
-                _minimizedWindows.Clear();
-                break;
-        }
+            _runningGames = Math.Max(0, _runningGames - 1);
+            if (_runningGames > 0)
+                return;
 
-        _appliedMode = PortalVisibleMode.NoOperation;
-    });
+            switch (_appliedMode)
+            {
+                case PortalVisibleMode.HiddenAfterLaunchAndReopen:
+                    ShowHiddenWindows();
+                    break;
+                case PortalVisibleMode.MinimizedAfterLaunchAndRestore:
+                    RestoreMinimizedWindows();
+                    break;
+                case PortalVisibleMode.MinimizedAfterLaunch:
+                    _minimizedWindows.Clear();
+                    break;
+            }
 
-    private static IEnumerable<Window> GetWindows() =>
-        Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
+            _appliedMode = PortalVisibleMode.NoOperation;
+        });
+    }
+
+    private static IEnumerable<Window> GetWindows()
+    {
+        return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
             ? desktop.Windows
             : [];
+    }
 
     private static void HideAllWindows()
     {
@@ -79,7 +87,6 @@ public static class PortalVisibilityService
     private static void ShowHiddenWindows()
     {
         foreach (var window in _hiddenWindows)
-        {
             try
             {
                 window.Show();
@@ -87,9 +94,8 @@ public static class PortalVisibilityService
             }
             catch
             {
-                
             }
-        }
+
         _hiddenWindows.Clear();
     }
 
@@ -108,7 +114,6 @@ public static class PortalVisibilityService
     private static void RestoreMinimizedWindows()
     {
         foreach (var (window, state) in _minimizedWindows)
-        {
             try
             {
                 window.WindowState = state;
@@ -116,9 +121,8 @@ public static class PortalVisibilityService
             }
             catch
             {
-                
             }
-        }
+
         _minimizedWindows.Clear();
     }
 
@@ -126,7 +130,6 @@ public static class PortalVisibilityService
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            
             ConfigSaver.FlushConfig();
             desktop.Shutdown();
         }

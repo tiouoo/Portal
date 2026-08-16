@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.ViewModels;
@@ -30,7 +27,7 @@ public partial class DebugPage : DataUserControl, ITioTabPage
     private void Click1(object? sender, RoutedEventArgs e)
     {
         var a = 0;
-        
+
         _ = 1 / a;
     }
 
@@ -205,7 +202,6 @@ public partial class DebugPage : DataUserControl, ITioTabPage
                     ExecuteAsync = async (managedTask, cancellationToken) =>
                     {
                         await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-                        
                     }
                 }
             ]

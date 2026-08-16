@@ -21,8 +21,6 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:common="clr-namespace:Tio.Avalonia.Standard.Tab.Common;assembly=Tio.Avalonia.Standard.Tab"
     xmlns:components="clr-namespace:Portal.Views.Components"
-    xmlns:const="clr-namespace:Portal.Const"
-    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entries="clr-namespace:Tio.Avalonia.Standard.Tab.Entries;assembly=Tio.Avalonia.Standard.Tab"
@@ -31,7 +29,6 @@
     xmlns:views="clr-namespace:Portal.Views"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <tio:TioWindow.Resources>
-        <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <common:NavScrollOpacityMaskConverter x:Key="NavScrollOpacityMaskConverter" />
         <converter:IntCompareConverter x:Key="IntCompareConverter" />
     </tio:TioWindow.Resources>
@@ -39,9 +36,7 @@
         <NativeMenu>
             <NativeMenuItem Header="标签页">
                 <NativeMenu>
-                    <NativeMenuItem
-                        Click="NM_NewTab"
-                        Header="新建标签页" />
+                    <NativeMenuItem Click="NM_NewTab" Header="新建标签页" />
                     <NativeMenuItem
                         Click="NM_CloseTab"
                         Header="关闭当前标签页"
@@ -136,7 +131,7 @@
         </DockPanel>
     </tio:TioWindow.TitleBarRightContent>
     <Grid Background="Transparent">
-        
+
         <ScrollViewer
             Background="Transparent"
             Classes="Flat"
@@ -254,25 +249,11 @@
             <TransitioningContentControl.PageTransition>
                 <CompositePageTransition>
                     <CrossFade Duration="0:0:0.2" />
-                    
+
                 </CompositePageTransition>
             </TransitioningContentControl.PageTransition>
         </TransitioningContentControl>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
     </Grid>
 </tio:TioWindow>

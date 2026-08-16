@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -6,7 +5,7 @@ namespace Portal.Core.Minecraft.Services;
 
 public static class GameOptionsService
 {
-        public static void SetChineseLanguage(string gameDirectory, DateTime? releaseTime)
+    public static void SetChineseLanguage(string gameDirectory, DateTime? releaseTime)
     {
         try
         {
@@ -22,8 +21,7 @@ public static class GameOptionsService
     {
         var optionsPath = Path.Combine(gameDirectory, "options.txt");
 
-        
-        
+
         if (!File.Exists(optionsPath))
         {
             var yosbrPath = Path.Combine(gameDirectory, "config", "yosbr", "options.txt");
@@ -34,19 +32,17 @@ public static class GameOptionsService
             }
         }
 
-        
-        
-        
+
         var currentLang = ReadOption(optionsPath, "lang", "none");
         var requiredLang = ResolveChineseLanguageCode(releaseTime);
         if (string.Equals(currentLang, requiredLang, StringComparison.Ordinal))
             return;
 
-        
+
         WriteOption(optionsPath, "lang", "-");
         WriteOption(optionsPath, "lang", requiredLang);
 
-        
+
         var isLanguageUnconfigured = string.Equals(currentLang, "none", StringComparison.OrdinalIgnoreCase);
         var hasExistingSaves = Directory.Exists(Path.Combine(gameDirectory, "saves"));
         if (isLanguageUnconfigured || !hasExistingSaves)
@@ -58,14 +54,14 @@ public static class GameOptionsService
         if (releaseTime.HasValue)
         {
             var time = releaseTime.Value;
-            
+
             if (time > new DateTime(2000, 1, 1) && time <= new DateTime(2011, 11, 18))
                 return "none";
-            
+
             if (time >= new DateTime(2012, 1, 12) && time <= new DateTime(2016, 6, 8))
                 return "zh_CN";
         }
-        
+
         return "zh_cn";
     }
 
@@ -80,6 +76,7 @@ public static class GameOptionsService
             if (!line.AsSpan(0, separatorIndex).Equals(key, StringComparison.OrdinalIgnoreCase)) continue;
             value = line[(separatorIndex + 1)..];
         }
+
         return value ?? defaultValue;
     }
 
@@ -93,14 +90,15 @@ public static class GameOptionsService
             var separatorIndex = line.IndexOf(':');
             if (separatorIndex > 0 && line.AsSpan(0, separatorIndex).Equals(key, StringComparison.OrdinalIgnoreCase))
             {
-                
                 if (!replaced)
                 {
                     updated.Add($"{key}:{value}");
                     replaced = true;
                 }
+
                 continue;
             }
+
             updated.Add(line);
         }
 
@@ -120,7 +118,7 @@ public static class GameOptionsService
         var bytes = File.ReadAllBytes(path);
         var encoding = DetectEncoding(bytes);
         var text = encoding.GetString(bytes);
-        
+
         if (text.Length > 0 && text[0] == '\uFEFF')
             text = text[1..];
         var lines = text.Split(["\r\n", "\n", "\r"], StringSplitOptions.None);
@@ -131,12 +129,11 @@ public static class GameOptionsService
 
     private static Encoding DetectEncoding(byte[] bytes)
     {
-        
         if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
             return new UTF8Encoding(true);
         try
         {
-            _ = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes);
+            _ = new UTF8Encoding(false, true).GetString(bytes);
             return new UTF8Encoding(false);
         }
         catch (DecoderFallbackException)

@@ -20,29 +20,29 @@ public partial class RandomMinecraft : UserControl
     }
 }
 
-public partial class RandomMinecraftViewModle: ObservableObject, IDialogContext
+public class RandomMinecraftViewModle : ObservableObject, IDialogContext
 {
-    public MinecraftInstance Instance { get; set; }
-    
     public RandomMinecraftViewModle(MinecraftInstance instance)
     {
         Instance = instance;
     }
-    
-    public void Complete()
-    {
-        RequestClose?.Invoke(this, "yes");
-    }
-    
-    public void Again()
-    {
-        RequestClose?.Invoke(this, "again");
-    }
-    
+
+    public MinecraftInstance Instance { get; set; }
+
     public void Close()
     {
         RequestClose?.Invoke(this, null);
     }
 
     public event EventHandler<object?>? RequestClose;
+
+    public void Complete()
+    {
+        RequestClose?.Invoke(this, "yes");
+    }
+
+    public void Again()
+    {
+        RequestClose?.Invoke(this, "again");
+    }
 }

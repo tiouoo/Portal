@@ -1,8 +1,4 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
 
@@ -18,36 +14,38 @@ public sealed class XboxAvatarImageLoader() : DiskCachedImageLoader("#xbox-avata
 
 public sealed class ResourceImageLoader(int decodeWidth) : IAsyncImageLoader
 {
-    public Task<Bitmap?> ProvideImageAsync(string url) => Task.Run<Bitmap?>(() =>
+    public Task<Bitmap?> ProvideImageAsync(string url)
     {
-        
-        if (!url.StartsWith("resm:", StringComparison.OrdinalIgnoreCase))
-            return null;
+        return Task.Run(() =>
+        {
+            if (!url.StartsWith("resm:", StringComparison.OrdinalIgnoreCase))
+                return null;
 
-        var separator = url.IndexOf("?assembly=", StringComparison.OrdinalIgnoreCase);
-        var resourceName = separator < 0 ? url["resm:".Length..] : url["resm:".Length..separator];
-        var assemblyName = separator < 0 ? null : url[(separator + "?assembly=".Length)..];
-        var assembly = assemblyName == null
-            ? Assembly.GetExecutingAssembly()
-            : AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(candidate => candidate.GetName().Name == assemblyName);
-        if (assembly == null)
-            return null;
+            var separator = url.IndexOf("?assembly=", StringComparison.OrdinalIgnoreCase);
+            var resourceName = separator < 0 ? url["resm:".Length..] : url["resm:".Length..separator];
+            var assemblyName = separator < 0 ? null : url[(separator + "?assembly=".Length)..];
+            var assembly = assemblyName == null
+                ? Assembly.GetExecutingAssembly()
+                : AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(candidate => candidate.GetName().Name == assemblyName);
+            if (assembly == null)
+                return null;
 
-        try
-        {
-            using var stream = assembly.GetManifestResourceStream(resourceName);
-            return stream == null ? null : Bitmap.DecodeToWidth(stream, decodeWidth);
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (ArgumentException)
-        {
-            return null;
-        }
-    });
+            try
+            {
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                return stream == null ? null : Bitmap.DecodeToWidth(stream, decodeWidth);
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        });
+    }
 
     public void Dispose()
     {
@@ -56,26 +54,29 @@ public sealed class ResourceImageLoader(int decodeWidth) : IAsyncImageLoader
 
 public sealed class LocalImageLoader(int decodeWidth) : IAsyncImageLoader
 {
-    public Task<Bitmap?> ProvideImageAsync(string url) => Task.Run<Bitmap?>(() =>
+    public Task<Bitmap?> ProvideImageAsync(string url)
     {
-        try
+        return Task.Run<Bitmap?>(() =>
         {
-            using var stream = File.OpenRead(url);
-            return Bitmap.DecodeToWidth(stream, decodeWidth);
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return null;
-        }
-        catch (ArgumentException)
-        {
-            return null;
-        }
-    });
+            try
+            {
+                using var stream = File.OpenRead(url);
+                return Bitmap.DecodeToWidth(stream, decodeWidth);
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return null;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        });
+    }
 
     public void Dispose()
     {

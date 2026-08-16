@@ -1,10 +1,11 @@
-using TioUi.Common.Interfaces;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.InstancePages;
 
-public partial class UnsavedFilesDialog : Avalonia.Controls.UserControl
+public partial class UnsavedFilesDialog : UserControl
 {
     public UnsavedFilesDialog()
     {
@@ -23,16 +24,28 @@ public partial class UnsavedFilesDialogViewModel(string message) : ObservableObj
 {
     public string Message { get; } = message;
 
-    [RelayCommand]
-    private void Save() => RequestClose?.Invoke(this, UnsavedFilesAction.Save);
-
-    [RelayCommand]
-    private void Discard() => RequestClose?.Invoke(this, UnsavedFilesAction.Discard);
-
-    [RelayCommand]
-    private void Cancel() => RequestClose?.Invoke(this, UnsavedFilesAction.Cancel);
-
-    public void Close() => Cancel();
+    public void Close()
+    {
+        Cancel();
+    }
 
     public event EventHandler<object?>? RequestClose;
+
+    [RelayCommand]
+    private void Save()
+    {
+        RequestClose?.Invoke(this, UnsavedFilesAction.Save);
+    }
+
+    [RelayCommand]
+    private void Discard()
+    {
+        RequestClose?.Invoke(this, UnsavedFilesAction.Discard);
+    }
+
+    [RelayCommand]
+    private void Cancel()
+    {
+        RequestClose?.Invoke(this, UnsavedFilesAction.Cancel);
+    }
 }

@@ -26,7 +26,6 @@
     xmlns:views="clr-namespace:Portal.Views"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <tio:TioWindow.Resources>
-        <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
     </tio:TioWindow.Resources>
     <tio:TioWindow.Styles>
@@ -120,7 +119,7 @@
                 </PageSlide>
             </Carousel.PageTransition>
 
-            
+
             <StackPanel Margin="25,5,25,10" Spacing="15">
                 <StackPanel Spacing="6">
                     <TextBlock FontSize="26" Text="欢迎使用" />
@@ -210,7 +209,7 @@
                 </StackPanel>
             </StackPanel>
 
-            
+
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
@@ -287,7 +286,7 @@
                 </controls:ScrollView>
             </DockPanel>
 
-            
+
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
@@ -365,7 +364,7 @@
                 </controls:ScrollView>
             </DockPanel>
 
-            
+
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="4">

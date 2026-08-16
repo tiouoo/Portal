@@ -7,7 +7,6 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:entries="clr-namespace:Portal.Classes.Entries;assembly=Portal.Core"
     xmlns:entries1="clr-namespace:Portal.Core.Classes.Entries;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
@@ -451,10 +450,6 @@
                                 Click="ButtonOpenInstance_OnClick"
                                 Theme="{StaticResource TransparentButton}">
                                 <StackPanel Orientation="Horizontal">
-
-
-
-
 
 
                                     <TextBlock

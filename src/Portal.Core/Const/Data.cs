@@ -15,16 +15,16 @@ public partial class Data : ObservableObject
     private static Data? _instance;
     private static ConfigEntry? _configEntry;
 
-    public static Data Instance
-    {
-        get { return _instance ??= new Data(); }
-    }
-
     private Data()
     {
         PropertyChanged += OnPropertyChanged;
         if (_configEntry is not null)
             _configEntry.PropertyChanged += OnPropertyChanged;
+    }
+
+    public static Data Instance
+    {
+        get { return _instance ??= new Data(); }
     }
 
     public static ConfigEntry ConfigEntry
@@ -42,11 +42,15 @@ public partial class Data : ObservableObject
                 _configEntry.PropertyChanged += _instance.OnPropertyChanged;
         }
     }
-    public static DesktopType DesktopType => DesktopTypeDetector.CurrentPlatform; 
+
+    public static DesktopType DesktopType => DesktopTypeDetector.CurrentPlatform;
     public static UiProperty UiProperty { get; } = UiProperty.Instance;
     public CiVersionInfo Version => AppVersionService.Instance.Version;
     [ObservableProperty] public partial string PackageType { get; set; }
-    public string UserAgent => ConfigEntry.EnableCustomUserAgent && !string.IsNullOrEmpty(ConfigEntry.CustomUserAgent) ? ConfigEntry.CustomUserAgent : $"Portal/{Version.VersionTitle}";
+
+    public string UserAgent => ConfigEntry.EnableCustomUserAgent && !string.IsNullOrEmpty(ConfigEntry.CustomUserAgent)
+        ? ConfigEntry.CustomUserAgent
+        : $"Portal/{Version.VersionTitle}";
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

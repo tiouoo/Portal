@@ -1,17 +1,14 @@
-using Avalonia.Controls;
 using Avalonia.Threading;
-using Portal.Classes.Entries;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Module.Widgets;
 
 namespace Portal.Views.Widgets;
 
 public abstract class InstanceBoundWidgetBase : IWidgetContent
 {
-    protected WidgetLayoutData? LayoutData;
     protected MinecraftInstance? Instance;
+    protected WidgetLayoutData? LayoutData;
 
     public override void Initialize(WidgetLayoutData layout)
     {
@@ -39,7 +36,10 @@ public abstract class InstanceBoundWidgetBase : IWidgetContent
             : null;
     }
 
-        protected T? GetData<T>() where T : class => LayoutData?.Data as T;
+    protected T? GetData<T>() where T : class
+    {
+        return LayoutData?.Data as T;
+    }
 
     private void OnInstancesChanged(object? sender, EventArgs e)
     {
@@ -55,7 +55,12 @@ public abstract class InstanceBoundWidgetBase : IWidgetContent
             Dispatcher.UIThread.Post(OnInstanceIconRefreshed);
     }
 
-        protected virtual void OnInstanceResolved() { }
+    protected virtual void OnInstanceResolved()
+    {
+    }
 
-        protected virtual void OnInstanceIconRefreshed() => OnInstanceResolved();
+    protected virtual void OnInstanceIconRefreshed()
+    {
+        OnInstanceResolved();
+    }
 }

@@ -5,6 +5,11 @@ namespace Portal.Core.Minecraft.Instance.Java;
 
 public partial class JavaRuntimeEntry : ObservableObject, IEquatable<JavaRuntimeEntry>
 {
+    public JavaRuntimeEntry()
+    {
+        PropertyChanged += (_, _) => Events.RaiseSaveSettings();
+    }
+
     [ObservableProperty] public partial string JavaPath { get; set; } = string.Empty;
     [ObservableProperty] public partial string JavaType { get; set; } = string.Empty;
     [ObservableProperty] public partial string JavaVersion { get; set; } = string.Empty;
@@ -13,17 +18,18 @@ public partial class JavaRuntimeEntry : ObservableObject, IEquatable<JavaRuntime
 
     public string DisplayName => $"Java {JavaVersion} ({JavaType})";
 
-    public JavaRuntimeEntry()
-    {
-        PropertyChanged += (_, _) => Events.RaiseSaveSettings();
-    }
-
     public bool Equals(JavaRuntimeEntry? other)
     {
         return other != null && string.Equals(JavaPath, other.JavaPath, StringComparison.OrdinalIgnoreCase);
     }
 
-    public override bool Equals(object? obj) => Equals(obj as JavaRuntimeEntry);
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as JavaRuntimeEntry);
+    }
 
-    public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(JavaPath);
+    public override int GetHashCode()
+    {
+        return StringComparer.OrdinalIgnoreCase.GetHashCode(JavaPath);
+    }
 }

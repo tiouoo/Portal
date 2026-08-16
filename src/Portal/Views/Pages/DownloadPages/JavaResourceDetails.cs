@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using AsyncImageLoader;
-using Portal.Module.Imaging;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
@@ -18,9 +17,9 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
-using Portal.Views.Pages.InstancePages;
-using Tio.Avalonia.Standard.Modules.Tasks;
+using Portal.Module.Imaging;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -34,23 +33,26 @@ public static class JavaResourceDetailsIcon
         "F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58 308.6,58 289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L27.7,282.7C15.1,306.1,23.9,335.2,47.3,347.8L80.3,365.5 80.3,418.8C80.3,441.8,92.7,463.1,112.7,474.5L288.7,574.2C308.3,585.3,332.2,585.3,351.8,574.2L527.8,474.5C547.9,463.1,560.2,441.9,560.2,418.8L560.2,301.3z M320.3,291.4L170.2,208 320.3,124.6 470.4,208 320.3,291.4z M278.8,341.6L257.5,387.8 91.7,299 117.1,251.8 278.8,341.6z";
 }
 
-public sealed record JavaResourceDetailsTarget(JavaResourceDefinition Definition, ModDetailsSource Source,
-    string ProjectId, string GameVersion = "", ModLoaderType Loader = ModLoaderType.Any);
+public sealed record JavaResourceDetailsTarget(
+    JavaResourceDefinition Definition,
+    ModDetailsSource Source,
+    string ProjectId,
+    string GameVersion = "",
+    ModLoaderType Loader = ModLoaderType.Any);
 
-public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTarget target) : ObservableObject, IDisposable
+public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTarget target)
+    : ObservableObject, IDisposable
 {
-    private readonly ModrinthProvider _modrinth = new();
     private readonly CurseforgeProvider _curseforge = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
-    private bool _loaded;
+    private readonly ModrinthProvider _modrinth = new();
+    private IReadOnlyList<JavaResourceVersionGroup> _allVersionGroups = [];
     private bool _buildingFilters;
-    private bool _hasLocatedTargetVersionGroup;
     private bool _disposed;
     private CancellationTokenSource? _filterCancellation;
-    private IReadOnlyList<JavaResourceVersionGroup> _allVersionGroups = [];
+    private bool _hasLocatedTargetVersionGroup;
+    private bool _loaded;
     private int _nextVersionGroupIndex;
-
-    public event Action<JavaResourceVersionGroup>? TargetVersionGroupReady;
     public JavaResourceDetailsTarget Target { get; } = target;
     public ObservableCollection<JavaResourceVersionFilter> VersionFilters { get; } = [];
     public ObservableCollection<string> Screenshots { get; } = [];
@@ -76,6 +78,26 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     public string LoadMoreVersionGroupsText => $"显示更多版本（剩余 {_allVersionGroups.Count - _nextVersionGroupIndex} 个）";
     private IReadOnlyList<JavaResourceFileItem> AllFiles { get; set; } = [];
 
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        _buildingFilters = true;
+        _filterCancellation = null;
+        CancelInBackground(_disposeCancellation);
+        TargetVersionGroupReady = null;
+        VersionGroups = [];
+        VersionFilters.Clear();
+        Screenshots.Clear();
+        ScreenshotIndices.Clear();
+        SelectedVersionFilter = null;
+        AllFiles = [];
+        _allVersionGroups = [];
+    }
+
+    public event Action<JavaResourceVersionGroup>? TargetVersionGroupReady;
+
     public async Task LoadAsync()
     {
         if (_loaded) return;
@@ -87,12 +109,14 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
             if (Target.Source == ModDetailsSource.Modrinth)
             {
                 var project = await _modrinth.SearchByProjectIdAsync(Target.ProjectId, cancellationToken);
-                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
+                var translations = await ProjectTranslationService.GetTranslationsAsync(
+                    ProjectTranslationSource.Modrinth,
                     [project.ProjectId], cancellationToken);
                 Name = project.Name;
                 Summary = translations.GetValueOrDefault(project.ProjectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
-                Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.Updated)}·{project.DownloadCount:N0} 下载";
+                Metadata =
+                    $"{JavaResourceSearchResultItem.FormatRelativeTime(project.Updated)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
                 AllFiles = await Task.Run(async () => (await _modrinth.GetModFilesByProjectIdAsync(Target.ProjectId,
                     cancellationToken)).Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
@@ -102,16 +126,20 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 var project = (await _curseforge.GetResourcesByModIdsAsync([long.Parse(Target.ProjectId)],
                     cancellationToken)).First();
                 var projectId = project.Id.ToString();
-                var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.CurseForge,
+                var translations = await ProjectTranslationService.GetTranslationsAsync(
+                    ProjectTranslationSource.CurseForge,
                     [projectId], cancellationToken);
                 Name = project.Name;
                 Summary = translations.GetValueOrDefault(projectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
-                Metadata = $"{JavaResourceSearchResultItem.FormatRelativeTime(project.DateModified)}·{project.DownloadCount:N0} 下载";
+                Metadata =
+                    $"{JavaResourceSearchResultItem.FormatRelativeTime(project.DateModified)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
-                AllFiles = await Task.Run(async () => (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
+                AllFiles = await Task.Run(async () =>
+                    (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
                     .Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
             }
+
             await BuildVersionGroupsAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
@@ -133,15 +161,17 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     private async Task BuildVersionGroupsAsync(CancellationToken cancellationToken)
     {
         var families = await Task.Run(() => AllFiles.SelectMany(file => file.MinecraftVersions).Select(GetVersionFamily)
-            .Where(family => family is not null).Distinct().OrderByDescending(family => MinecraftVersionKey.Parse(family!))
+            .Where(family => family is not null).Distinct()
+            .OrderByDescending(family => MinecraftVersionKey.Parse(family!))
             .Select(family => family!).ToArray(), cancellationToken);
         if (_disposed || cancellationToken.IsCancellationRequested) return;
         _buildingFilters = true;
         VersionFilters.Clear();
         VersionFilters.Add(new JavaResourceVersionFilter("全部", null));
         foreach (var family in families) VersionFilters.Add(new JavaResourceVersionFilter(family, family));
-        SelectedVersionFilter = VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(Target.GameVersion)) ??
-                                VersionFilters[0];
+        SelectedVersionFilter =
+            VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(Target.GameVersion)) ??
+            VersionFilters[0];
         _buildingFilters = false;
         await ApplyVersionFilterAsync();
         OnPropertyChanged(nameof(HasVersions));
@@ -162,15 +192,17 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         try
         {
             var groups = await Task.Run(() => AllFiles.Where(file => selectedFamily is null ||
-                file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
-            .SelectMany(file => file.MinecraftVersions.DefaultIfEmpty("未知版本")
-                .Where(version => selectedFamily is null || GetVersionFamily(version) == selectedFamily)
-                .Select(version => (Version: version, File: file)))
-            .GroupBy(item => item.Version)
-            .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key))
-            .Select(group => new JavaResourceVersionGroup(group.Key,
-                group.Select(item => item.File).DistinctBy(file => file.Id).OrderByDescending(file => file.Published)
-                    .ToArray()))
+                                                                     file.MinecraftVersions.Any(version =>
+                                                                         GetVersionFamily(version) == selectedFamily))
+                .SelectMany(file => file.MinecraftVersions.DefaultIfEmpty("未知版本")
+                    .Where(version => selectedFamily is null || GetVersionFamily(version) == selectedFamily)
+                    .Select(version => (Version: version, File: file)))
+                .GroupBy(item => item.Version)
+                .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key))
+                .Select(group => new JavaResourceVersionGroup(group.Key,
+                    group.Select(item => item.File).DistinctBy(file => file.Id)
+                        .OrderByDescending(file => file.Published)
+                        .ToArray()))
                 .ToArray(), cancellation.Token);
             if (cancellation.IsCancellationRequested || _disposed) return;
             _allVersionGroups = groups;
@@ -184,6 +216,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 targetGroup.IsExpanded = true;
                 TargetVersionGroupReady?.Invoke(targetGroup);
             }
+
             OnPropertyChanged(nameof(IsEmpty));
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -220,25 +253,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
             Screenshots.Add(url);
             ScreenshotIndices.Add(ScreenshotIndices.Count);
         }
-        OnPropertyChanged(nameof(HasScreenshots));
-    }
 
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        
-        _buildingFilters = true;
-        _filterCancellation = null;
-        CancelInBackground(_disposeCancellation);
-        TargetVersionGroupReady = null;
-        VersionGroups = [];
-        VersionFilters.Clear();
-        Screenshots.Clear();
-        ScreenshotIndices.Clear();
-        SelectedVersionFilter = null;
-        AllFiles = [];
-        _allVersionGroups = [];
+        OnPropertyChanged(nameof(HasScreenshots));
     }
 
     private static void CancelInBackground(CancellationTokenSource cancellation)
@@ -252,8 +268,14 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         {
             await cancellation.CancelAsync();
         }
-        catch (ObjectDisposedException exception) { Logger.Debug($"[Download] Cancellation source was already disposed: {exception}"); }
-        finally { cancellation.Dispose(); }
+        catch (ObjectDisposedException exception)
+        {
+            Logger.Debug($"[Download] Cancellation source was already disposed: {exception}");
+        }
+        finally
+        {
+            cancellation.Dispose();
+        }
     }
 }
 
@@ -261,13 +283,6 @@ public sealed partial class JavaResourceVersionGroup : ObservableObject
 {
     private const int PageSize = 20;
     private readonly IReadOnlyList<JavaResourceFileItem> _files;
-    public string Title { get; }
-    public string MinecraftVersion { get; }
-    public ObservableCollection<JavaResourceFileItem> VisibleFiles { get; } = [];
-    public string FileCountText => $"{_files.Count} 个文件";
-    public bool HasMore => VisibleFiles.Count < _files.Count;
-    public string LoadMoreText => $"显示更多（剩余 {_files.Count - VisibleFiles.Count} 个）";
-    [ObservableProperty] public partial bool IsExpanded { get; set; }
 
     public JavaResourceVersionGroup(string minecraftVersion, IReadOnlyList<JavaResourceFileItem> files)
     {
@@ -276,6 +291,14 @@ public sealed partial class JavaResourceVersionGroup : ObservableObject
         _files = files;
         LoadMore();
     }
+
+    public string Title { get; }
+    public string MinecraftVersion { get; }
+    public ObservableCollection<JavaResourceFileItem> VisibleFiles { get; } = [];
+    public string FileCountText => $"{_files.Count} 个文件";
+    public bool HasMore => VisibleFiles.Count < _files.Count;
+    public string LoadMoreText => $"显示更多（剩余 {_files.Count - VisibleFiles.Count} 个）";
+    [ObservableProperty] public partial bool IsExpanded { get; set; }
 
     [RelayCommand]
     private void LoadMore()
@@ -288,32 +311,53 @@ public sealed partial class JavaResourceVersionGroup : ObservableObject
 
 public sealed record JavaResourceVersionFilter(string DisplayName, string? Family);
 
-public sealed record JavaResourceFileItem(string Id, string DisplayName, string Details, string FileName,
-    string DownloadUrl, long FileSize, DateTime Published, IReadOnlyList<string> MinecraftVersions)
+public sealed record JavaResourceFileItem(
+    string Id,
+    string DisplayName,
+    string Details,
+    string FileName,
+    string DownloadUrl,
+    long FileSize,
+    DateTime Published,
+    IReadOnlyList<string> MinecraftVersions)
 {
-    public static JavaResourceFileItem From(ModrinthResourceFile file) => new(file.VersionId,
-        string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-        FormatDetails(file.FileName, file.Published, file.ReleaseType), file.FileName, file.DownloadUrl,
-        file.FileSize, file.Published, file.MinecraftVersions.ToArray());
-
-    public static JavaResourceFileItem From(CurseforgeResourceFile file) => new(file.Id.ToString(),
-        string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-        FormatDetails(file.FileName, file.Published, file.ReleaseType), file.FileName, file.DownloadUrl,
-        file.FileLength, file.Published, file.GameVersions.Where(IsMinecraftVersion).ToArray());
-
-    private static string FormatDetails(string fileName, DateTime published, FileReleaseType releaseType) =>
-        $"{fileName}·{JavaResourceSearchResultItem.FormatRelativeTime(published)}·{ReleaseType(releaseType)}";
-
-    private static string ReleaseType(FileReleaseType type) => type switch
+    public static JavaResourceFileItem From(ModrinthResourceFile file)
     {
-        FileReleaseType.Release => "正式版",
-        FileReleaseType.Beta => "测试B版",
-        FileReleaseType.Alpha => "测试A版",
-        _ => "测试版"
-    };
+        return new JavaResourceFileItem(file.VersionId,
+            string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
+            FormatDetails(file.FileName, file.Published, file.ReleaseType), file.FileName, file.DownloadUrl,
+            file.FileSize, file.Published, file.MinecraftVersions.ToArray());
+    }
 
-    private static bool IsMinecraftVersion(string version) => Regex.IsMatch(version,
-        @"^\d+\.\d+(?:\.\d+)?(?:-(?:snapshot|pre-release|pre\d+|rc\d+))?$", RegexOptions.IgnoreCase);
+    public static JavaResourceFileItem From(CurseforgeResourceFile file)
+    {
+        return new JavaResourceFileItem(file.Id.ToString(),
+            string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
+            FormatDetails(file.FileName, file.Published, file.ReleaseType), file.FileName, file.DownloadUrl,
+            file.FileLength, file.Published, file.GameVersions.Where(IsMinecraftVersion).ToArray());
+    }
+
+    private static string FormatDetails(string fileName, DateTime published, FileReleaseType releaseType)
+    {
+        return $"{fileName}·{JavaResourceSearchResultItem.FormatRelativeTime(published)}·{ReleaseType(releaseType)}";
+    }
+
+    private static string ReleaseType(FileReleaseType type)
+    {
+        return type switch
+        {
+            FileReleaseType.Release => "正式版",
+            FileReleaseType.Beta => "测试B版",
+            FileReleaseType.Alpha => "测试A版",
+            _ => "测试版"
+        };
+    }
+
+    private static bool IsMinecraftVersion(string version)
+    {
+        return Regex.IsMatch(version,
+            @"^\d+\.\d+(?:\.\d+)?(?:-(?:snapshot|pre-release|pre\d+|rc\d+))?$", RegexOptions.IgnoreCase);
+    }
 }
 
 public static class JavaResourceDownload
@@ -321,20 +365,24 @@ public static class JavaResourceDownload
     public static async Task QuickDownloadAsync(TopLevel topLevel, JavaResourceDetailsTarget target)
     {
         var loading = new QuickDownloadLoadingDialogViewModel($"下载{target.Definition.DisplayName}");
-        var loadingDialog = OverlayDialog.ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
-            object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
+        var loadingDialog = OverlayDialog
+            .ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
+                object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
             {
                 Title = $"下载{target.Definition.DisplayName}", Buttons = DialogButton.None,
                 CanLightDismiss = false, CanResize = false
             });
         try
         {
-            Logger.Info($"[Download] Loading quick-download files for {target.Definition.DisplayName} project {target.ProjectId} from {target.Source}.");
+            Logger.Info(
+                $"[Download] Loading quick-download files for {target.Definition.DisplayName} project {target.ProjectId} from {target.Source}.");
             IReadOnlyList<JavaResourceFileItem> files = target.Source switch
             {
-                ModDetailsSource.Modrinth => (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
+                ModDetailsSource.Modrinth =>
+                    (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
                     .Select(JavaResourceFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(long.Parse(target.ProjectId)))
+                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(
+                        long.Parse(target.ProjectId)))
                     .Select(JavaResourceFileItem.From).ToArray(),
                 _ => []
             };
@@ -345,7 +393,8 @@ public static class JavaResourceDownload
             var result = await OverlayDialog
                 .ShowCustomAsync<JavaResourceInstallDialog, JavaResourceInstallDialogViewModel,
                     JavaResourceInstallDialogResult>(
-                    new JavaResourceInstallDialogViewModel(target.Definition, files, InstanceManager.Instance.Instances),
+                    new JavaResourceInstallDialogViewModel(target.Definition, files,
+                        InstanceManager.Instance.Instances),
                     topLevel.TryGetHostId(), new OverlayDialogOptions
                     {
                         Title = $"下载{target.Definition.DisplayName}", Buttons = DialogButton.None,
@@ -357,6 +406,7 @@ public static class JavaResourceDownload
                 await DownloadAsync(topLevel, target.Definition, file);
                 return;
             }
+
             if (result.Instance is null) return;
 
             await InstallFromDialogAsync(topLevel, target.Definition, file, result.Instance, result.World);
@@ -393,6 +443,7 @@ public static class JavaResourceDownload
             await DownloadAsync(topLevel, definition, selectedFile);
             return;
         }
+
         if (result.Instance is null) return;
 
         await InstallFromDialogAsync(topLevel, definition, selectedFile, result.Instance, result.World);
@@ -401,7 +452,6 @@ public static class JavaResourceDownload
     private static async Task InstallFromDialogAsync(TopLevel topLevel, JavaResourceDefinition definition,
         JavaResourceFileItem file, MinecraftInstance instance, WorldSaveInfo? world)
     {
-
         if (definition.Kind == JavaResourceKind.Save)
         {
             InstallSave(topLevel, definition, file, instance.GetSpecialFolder(MinecraftSpecialFolder.SavesFolder));
@@ -413,9 +463,10 @@ public static class JavaResourceDownload
         {
             if (world is null || await new WorldSaveService().IsWorldLockedAsync(world.FolderPath))
             {
-                NotificationGateway.Notice(topLevel, "存档正在使用，无法安装数据包", NotificationType.Warning);
+                topLevel.Notice("存档正在使用，无法安装数据包", NotificationType.Warning);
                 return;
             }
+
             folder = Path.Combine(world.FolderPath, "datapacks");
         }
         else
@@ -425,6 +476,7 @@ public static class JavaResourceDownload
                 : MinecraftSpecialFolder.ShaderPacksFolder;
             folder = instance.GetSpecialFolder(specialFolder);
         }
+
         Install(topLevel, definition, file, folder);
     }
 
@@ -494,23 +546,27 @@ public static class JavaResourceDownload
                 ProgressChanged = reportProgress
             };
             var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
-            if (result.Type == DownloadResultType.Cancelled) throw new OperationCanceledException(context.CancellationToken);
+            if (result.Type == DownloadResultType.Cancelled)
+                throw new OperationCanceledException(context.CancellationToken);
             if (result.Type != DownloadResultType.Successful) throw result.Exception ?? new IOException("下载失败。");
             if (extractSave)
             {
                 context.SetDescription("正在解压存档");
                 await ExtractSaveAsync(destination, file.FileName, context.CancellationToken);
             }
+
             context.ReportProgress(1);
             context.SetDescription(extractSave ? "存档已安装" : "下载完成");
         });
-        Logger.Info($"[Download] Starting {definition.DisplayName} download {file.FileName} from {file.DownloadUrl} to {destination}; extractSave={extractSave}.");
+        Logger.Info(
+            $"[Download] Starting {definition.DisplayName} download {file.FileName} from {file.DownloadUrl} to {destination}; extractSave={extractSave}.");
         task.Start();
         _ = ObserveAsync(task, topLevel, file.FileName);
         return task;
     }
 
-    internal static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(TaskExecutionContext context)
+    internal static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(
+        TaskExecutionContext context)
     {
         ResourceDownloadProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
@@ -535,14 +591,20 @@ public static class JavaResourceDownload
         };
     }
 
-    private static IReadOnlyList<string> Patterns(JavaResourceKind kind) => kind switch
+    private static IReadOnlyList<string> Patterns(JavaResourceKind kind)
     {
-        JavaResourceKind.ResourcePack or JavaResourceKind.ShaderPack or JavaResourceKind.DataPack or JavaResourceKind.Save => ["*.zip"],
-        _ => ["*.*"]
-    };
+        return kind switch
+        {
+            JavaResourceKind.ResourcePack or JavaResourceKind.ShaderPack or JavaResourceKind.DataPack
+                or JavaResourceKind.Save => ["*.zip"],
+            _ => ["*.*"]
+        };
+    }
 
-    private static Task ExtractSaveAsync(string archivePath, string fileName, CancellationToken cancellationToken) =>
-        Task.Run(() => ExtractSave(archivePath, fileName, cancellationToken), cancellationToken);
+    private static Task ExtractSaveAsync(string archivePath, string fileName, CancellationToken cancellationToken)
+    {
+        return Task.Run(() => ExtractSave(archivePath, fileName, cancellationToken), cancellationToken);
+    }
 
     private static void ExtractSave(string archivePath, string fileName, CancellationToken cancellationToken)
     {
@@ -565,11 +627,13 @@ public static class JavaResourceDownload
                     Directory.CreateDirectory(entryPath);
                     continue;
                 }
+
                 Directory.CreateDirectory(Path.GetDirectoryName(entryPath)!);
                 using var source = entry.Open();
                 using var target = File.Create(entryPath);
                 source.CopyToAsync(target, cancellationToken).GetAwaiter().GetResult();
             }
+
             cancellationToken.ThrowIfCancellationRequested();
             var worldFolder = File.Exists(Path.Combine(stagingFolder, "level.dat"))
                 ? stagingFolder
@@ -581,7 +645,8 @@ public static class JavaResourceDownload
             var baseName = Path.GetFileNameWithoutExtension(Path.GetFileName(fileName));
             if (string.IsNullOrWhiteSpace(baseName)) baseName = "World";
             var destination = Path.Combine(savesFolder, baseName);
-            for (var suffix = 2; Directory.Exists(destination); suffix++) destination = Path.Combine(savesFolder, $"{baseName} ({suffix})");
+            for (var suffix = 2; Directory.Exists(destination); suffix++)
+                destination = Path.Combine(savesFolder, $"{baseName} ({suffix})");
             Directory.Move(worldFolder, destination);
         }
         finally
@@ -593,27 +658,48 @@ public static class JavaResourceDownload
 
     private static async Task ObserveAsync(ManagedTask task, TopLevel topLevel, string fileName)
     {
-        try { await task.Completion; }
-        catch (OperationCanceledException exception) { Logger.Debug($"[Download] Download {fileName} was cancelled: {exception}"); }
-        catch (Exception exception) { Logger.Error(exception); }
+        try
+        {
+            await task.Completion;
+        }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[Download] Download {fileName} was cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+        }
+
         if (task.Status == ManagedTaskStatus.Completed)
         {
             Logger.Info($"[Download] Download completed for {fileName}.");
-            Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel, $"{fileName} 下载完成", NotificationType.Success));
+            Dispatcher.UIThread.Post(() => topLevel.Notice($"{fileName} 下载完成", NotificationType.Success));
         }
         else if (task.Status == ManagedTaskStatus.Faulted)
         {
             Logger.Warning($"[Download] Download failed for {fileName}: {task.Exception}");
-            Dispatcher.UIThread.Post(() => NotificationGateway.Notice(topLevel, $"{fileName} 下载失败", NotificationType.Error));
+            Dispatcher.UIThread.Post(() => topLevel.Notice($"{fileName} 下载失败", NotificationType.Error));
         }
+
         await Task.Delay(TimeSpan.FromSeconds(3));
         Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
     }
 }
 
-public sealed class ModpackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
-public sealed class ResourcePackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
-public sealed class ShaderPackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
-public sealed class DataPackDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
+public sealed class ModpackDetailsPageViewModel(JavaResourceDetailsTarget target)
+    : JavaResourceDetailsViewModel(target);
+
+public sealed class ResourcePackDetailsPageViewModel(JavaResourceDetailsTarget target)
+    : JavaResourceDetailsViewModel(target);
+
+public sealed class ShaderPackDetailsPageViewModel(JavaResourceDetailsTarget target)
+    : JavaResourceDetailsViewModel(target);
+
+public sealed class DataPackDetailsPageViewModel(JavaResourceDetailsTarget target)
+    : JavaResourceDetailsViewModel(target);
+
 public sealed class SaveDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
-public sealed class BedrockResourceDetailsPageViewModel(JavaResourceDetailsTarget target) : JavaResourceDetailsViewModel(target);
+
+public sealed class BedrockResourceDetailsPageViewModel(JavaResourceDetailsTarget target)
+    : JavaResourceDetailsViewModel(target);

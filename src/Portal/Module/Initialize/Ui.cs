@@ -1,11 +1,6 @@
 using System.Diagnostics;
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
 using Avalonia.Media;
-using Portal.Classes.Entries;
-using Portal.Const;
-using Portal.Core;
 using Portal.Core.App.Events;
 using Portal.Core.App.Service;
 using Portal.Core.App.Service.SystemResources;
@@ -52,10 +47,8 @@ public static partial class Initializer
         ThemeHelper.SetThemeColor(Data.ConfigEntry.ThemeColor);
         ThemeHelper.ToggleTheme(Data.ConfigEntry.Theme);
         if (Data.ConfigEntry.EnableCustomForegroundColor)
-        {
             ConfigEntry.SetForegroundColor(Data.ConfigEntry.ForegroundColor);
-        }
-        
+
         LoopGc.BeginLoop();
         MemoryOptimizationService.StartAutomaticWorkingSetTrim();
 

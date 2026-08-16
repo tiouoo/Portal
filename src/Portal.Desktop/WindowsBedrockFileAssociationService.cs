@@ -1,7 +1,8 @@
 #if WINDOWS
-using Microsoft.Win32;
 using System.Runtime.InteropServices;
+using Microsoft.Win32;
 using Portal.Core.Minecraft.Services;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;
 
@@ -65,7 +66,7 @@ internal static partial class WindowsBedrockFileAssociationService
         }
         catch (Exception exception)
         {
-            Tio.Avalonia.Standard.Modules.DiskIO.Logger.Error($"注册基岩版包文件关联失败：{exception}");
+            Logger.Error($"注册基岩版包文件关联失败：{exception}");
         }
     }
 

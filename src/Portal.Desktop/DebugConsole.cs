@@ -1,7 +1,7 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Portal.Const;
 using Portal.Core.Const;
 
 namespace Portal.Desktop;
@@ -51,30 +51,29 @@ internal static partial class DebugConsole
 
     private static void StartLinuxTerminal()
     {
-        var command = $"echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log"))}; exec bash";
+        var command =
+            $"echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log"))}; exec bash";
         foreach (var (fileName, arguments) in new[]
                  {
                      ("gnome-terminal", ["--", "bash", "-c", command]),
                      ("konsole", ["-e", "bash", "-c", command]),
                      ("xterm", new[] { "-e", "bash", "-c", command })
                  })
-        {
             try
             {
                 var startInfo = new ProcessStartInfo(fileName) { UseShellExecute = false };
                 foreach (var argument in arguments) startInfo.ArgumentList.Add(argument);
                 if (Process.Start(startInfo) is not null) return;
             }
-            catch (System.ComponentModel.Win32Exception)
+            catch (Win32Exception)
             {
-                
             }
-        }
     }
 
     private static void StartMacOsTerminal()
     {
-        var command = $"echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log"))}";
+        var command =
+            $"echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log"))}";
         try
         {
             var startInfo = new ProcessStartInfo("osascript") { UseShellExecute = false };
@@ -82,15 +81,20 @@ internal static partial class DebugConsole
             startInfo.ArgumentList.Add($"tell application \"Terminal\" to do script {QuoteForAppleScript(command)}");
             Process.Start(startInfo);
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (Win32Exception)
         {
-            
         }
     }
 
-    private static string QuoteForShell(string value) => $"'{value.Replace("'", "'\\\"'\\\"'")}'";
+    private static string QuoteForShell(string value)
+    {
+        return $"'{value.Replace("'", "'\\\"'\\\"'")}'";
+    }
 
-    private static string QuoteForAppleScript(string value) => $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+    private static string QuoteForAppleScript(string value)
+    {
+        return $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+    }
 
     [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

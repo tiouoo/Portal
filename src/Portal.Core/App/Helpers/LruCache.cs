@@ -4,8 +4,19 @@ public sealed class LruCache<TKey, TValue>(int capacity, IEqualityComparer<TKey>
     where TKey : notnull
 {
     private readonly Dictionary<TKey, LinkedListNode<(TKey Key, TValue Value)>> _entries = new(comparer);
-    private readonly LinkedList<(TKey Key, TValue Value)> _usage = new();
     private readonly Lock _lock = new();
+    private readonly LinkedList<(TKey Key, TValue Value)> _usage = new();
+
+    public int Count
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _entries.Count;
+            }
+        }
+    }
 
     public bool TryGetValue(TKey key, out TValue? value)
     {
@@ -28,10 +39,7 @@ public sealed class LruCache<TKey, TValue>(int capacity, IEqualityComparer<TKey>
     {
         lock (_lock)
         {
-            if (_entries.Remove(key, out var existing))
-            {
-                _usage.Remove(existing);
-            }
+            if (_entries.Remove(key, out var existing)) _usage.Remove(existing);
 
             var newNode = _usage.AddFirst((key, value));
             _entries[key] = newNode;
@@ -49,17 +57,6 @@ public sealed class LruCache<TKey, TValue>(int capacity, IEqualityComparer<TKey>
         {
             _entries.Clear();
             _usage.Clear();
-        }
-    }
-    
-    public int Count
-    {
-        get
-        {
-            lock (_lock)
-            {
-                return _entries.Count;
-            }
         }
     }
 }

@@ -12,8 +12,8 @@ namespace Portal.ViewModels;
 public partial class NewsDetailsPageViewModel : ObservableObject
 {
     private readonly NewsEntry _entry;
-    private bool _loaded;
     private bool _disposed;
+    private bool _loaded;
 
     public NewsDetailsPageViewModel(NewsEntry entry)
     {
@@ -28,8 +28,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         NewsDetailsService.NewsDetailUpdated += OnNewsDetailUpdated;
     }
 
-    [ObservableProperty]
-    public partial ObservableCollection<Control> BodyControls { get; set; } = [];
+    [ObservableProperty] public partial ObservableCollection<Control> BodyControls { get; set; } = [];
 
     [ObservableProperty] public partial string Title { get; set; }
     [ObservableProperty] public partial string Version { get; set; }
@@ -66,7 +65,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
                 return;
             }
 
-            
+
             Title = detail.Title;
             Version = detail.Version;
             Type = detail.Type;
@@ -104,6 +103,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
                 ErrorText = "刷新失败，请稍后重试。";
                 return;
             }
+
             Title = detail.Title;
             Version = detail.Version;
             Type = detail.Type;
@@ -130,11 +130,10 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         var doc = await Task.Run(() => NewsHtmlRenderer.Parse(html));
         if (_disposed) return;
 
-        
+
         BodyControls = new ObservableCollection<Control>();
 
-        
-        
+
         const int batchSize = 8;
         var batch = new List<Control>(batchSize);
         foreach (var control in NewsHtmlRenderer.RenderEnumerable(doc))
@@ -148,6 +147,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
                 await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
             }
         }
+
         if (_disposed) return;
         foreach (var c in batch) BodyControls.Add(c);
     }
@@ -159,7 +159,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         BodyControls.Clear();
     }
 
-        private void OnNewsDetailUpdated(NewsDetail detail)
+    private void OnNewsDetailUpdated(NewsDetail detail)
     {
         if (_disposed || detail.Id != _entry.Id) return;
         Dispatcher.UIThread.Post(async () =>

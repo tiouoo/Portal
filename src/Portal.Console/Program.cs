@@ -1,9 +1,10 @@
 using MinecraftLaunch;
+using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
-using MinecraftLaunch.Base.Enums;
 
-InitializeHelper.Initialize(settings => {
+InitializeHelper.Initialize(settings =>
+{
     settings.MaxThread = 256;
     settings.MaxFragment = 128;
     settings.MaxRetryCount = 4;
@@ -19,7 +20,8 @@ var entry = (await VanillaInstaller.EnumerableMinecraftAsync())
 
 var installer = VanillaInstaller.Create(@"D:\Temp\mc", entry);
 installer.ProgressChanged += (_, arg) =>
-    Console.WriteLine($"{arg.StepName} - {arg.FinishedStepTaskCount}/{arg.TotalStepTaskCount} - {(arg.IsStepSupportSpeed ? $"{DefaultDownloader.FormatSize(arg.Speed, true)} - {arg.Progress * 100:F2}%" : $"{arg.Progress * 100:F2}%")}");
+    Console.WriteLine(
+        $"{arg.StepName} - {arg.FinishedStepTaskCount}/{arg.TotalStepTaskCount} - {(arg.IsStepSupportSpeed ? $"{DefaultDownloader.FormatSize(arg.Speed, true)} - {arg.Progress * 100:F2}%" : $"{arg.Progress * 100:F2}%")}");
 
 var minecraft = await installer.InstallAsync();
 Console.WriteLine(minecraft.Id);
@@ -27,9 +29,11 @@ Console.WriteLine(minecraft.Id);
 var entry1 = (await OptifineInstaller.EnumerableOptifineAsync("1.21.8"))
     .First();
 
-var installer1 = OptifineInstaller.Create(@"D:\Temp\mc",@"D:\Minecraft\jdk\openjdk-25_windows-x64_bin\jdk-25\bin\java.exe", entry1);
+var installer1 = OptifineInstaller.Create(@"D:\Temp\mc",
+    @"D:\Minecraft\jdk\openjdk-25_windows-x64_bin\jdk-25\bin\java.exe", entry1);
 installer1.ProgressChanged += (_, arg) =>
-    Console.WriteLine($"{arg.StepName} - {arg.FinishedStepTaskCount}/{arg.TotalStepTaskCount} - {(arg.IsStepSupportSpeed ? $"{DefaultDownloader.FormatSize(arg.Speed, true)} - {arg.Progress * 100:0.00}%" : $"{arg.Progress * 100:0.00}%")}");
+    Console.WriteLine(
+        $"{arg.StepName} - {arg.FinishedStepTaskCount}/{arg.TotalStepTaskCount} - {(arg.IsStepSupportSpeed ? $"{DefaultDownloader.FormatSize(arg.Speed, true)} - {arg.Progress * 100:0.00}%" : $"{arg.Progress * 100:0.00}%")}");
 
 var minecraft1 = await installer1.InstallAsync();
 Console.WriteLine(minecraft1.Id);

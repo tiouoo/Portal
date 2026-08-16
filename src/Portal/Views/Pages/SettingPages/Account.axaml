@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -88,18 +88,8 @@
                                             Width="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
+
+
                                 <MenuItem
                                     Click="RefreshInfo_Click"
                                     CommandParameter="{Binding}"

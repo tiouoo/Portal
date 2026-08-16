@@ -1,21 +1,16 @@
 using System.Collections.ObjectModel;
-using System.IO;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
-using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.InstancePages;
 
 public partial class Files : UserControl
 {
-    private InstanceDetailPage _parent;
-    public MinecraftInstance Instance { get; }
-    public ObservableCollection<InstanceFolderItem> Folders { get; } = [];
+    private readonly InstanceDetailPage _parent;
 
     public Files(MinecraftInstance instance, InstanceDetailPage parent)
     {
@@ -27,7 +22,7 @@ public partial class Files : UserControl
                      ("存档", MinecraftSpecialFolder.SavesFolder),
                      ("资源包", MinecraftSpecialFolder.ResourcePacksFolder),
                      ("光影包", MinecraftSpecialFolder.ShaderPacksFolder),
-                     ("截图", MinecraftSpecialFolder.ScreenshotsFolder),
+                     ("截图", MinecraftSpecialFolder.ScreenshotsFolder)
                  })
             Folders.Add(new InstanceFolderItem(name, Instance.GetSpecialFolder(folder)));
 
@@ -40,6 +35,9 @@ public partial class Files : UserControl
         InitializeComponent();
         DataContext = this;
     }
+
+    public MinecraftInstance Instance { get; }
+    public ObservableCollection<InstanceFolderItem> Folders { get; } = [];
 
     private void OpenPath(string path)
     {
@@ -83,42 +81,25 @@ public partial class Files : UserControl
                 break;
         }
     }
-    
+
     private void JumpPage(object? sender, PointerPressedEventArgs e)
     {
-        var tag = (sender as Control).Tag as  string;
+        var tag = (sender as Control).Tag as string;
         if (tag == "mods")
-        {
             _parent.NavigateTo(typeof(Mods));
-        }
         else if (tag == "resource")
-        {
             _parent.NavigateTo(typeof(ResourcePacks));
-        }
         else if (tag == "shader")
-        {
             _parent.NavigateTo(typeof(ShaderPacks));
-        }
         else if (tag == "saves")
-        {
             _parent.NavigateTo(typeof(Saves));
-        }
         else if (tag == "screenshot")
-        {
             _parent.NavigateTo(typeof(Screenshots));
-        }
         else if (tag == "logs")
-        {
             _parent.NavigateTo(typeof(Logs));
-        }
         else if (tag == "crashreports")
-        {
             _parent.NavigateTo(typeof(CrashReports));
-        }
-        else if (tag == "config")
-        {
-            _parent.NavigateTo(typeof(ConfigFiles));
-        }
+        else if (tag == "config") _parent.NavigateTo(typeof(ConfigFiles));
     }
 }
 

@@ -78,10 +78,8 @@ public static class HighPerformanceGpuService
 
             var result = new Dictionary<string, string>();
             for (var index = 0; index < list.Count; index += 2)
-            {
                 if (!string.IsNullOrEmpty(list[index]))
                     result[list[index]] = list[index + 1] ?? string.Empty;
-            }
 
             if (result.Count > 0)
                 return result;
@@ -90,14 +88,16 @@ public static class HighPerformanceGpuService
         return null;
     }
 
-    private static IReadOnlyDictionary<string, string> CreatePrimeFallbackEnvironment() =>
-        new Dictionary<string, string>
+    private static IReadOnlyDictionary<string, string> CreatePrimeFallbackEnvironment()
+    {
+        return new Dictionary<string, string>
         {
             ["DRI_PRIME"] = "1",
             ["__NV_PRIME_RENDER_OFFLOAD"] = "1",
             ["__VK_LAYER_NV_optimus"] = "NVIDIA_only",
-            ["__GLX_VENDOR_LIBRARY_NAME"] = "nvidia",
+            ["__GLX_VENDOR_LIBRARY_NAME"] = "nvidia"
         };
+    }
 
     [DBusInterface(SwitcherooInterface)]
     public interface ISwitcherooControl : IDBusObject

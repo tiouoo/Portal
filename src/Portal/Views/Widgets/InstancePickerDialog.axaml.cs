@@ -11,7 +11,10 @@ namespace Portal.Views.Widgets;
 
 public partial class InstancePickerDialog : UserControl
 {
-    public InstancePickerDialog() => InitializeComponent();
+    public InstancePickerDialog()
+    {
+        InitializeComponent();
+    }
 
     private void InstanceItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -26,14 +29,24 @@ public partial class InstancePickerDialogViewModel : ObservableObject, IDialogCo
 {
     [ObservableProperty] private string _searchText = string.Empty;
 
-    public ObservableCollection<MinecraftInstance> FilteredInstances { get; } = [];
-
     public InstancePickerDialogViewModel()
     {
         ApplyFilter();
     }
 
-    partial void OnSearchTextChanged(string value) => ApplyFilter();
+    public ObservableCollection<MinecraftInstance> FilteredInstances { get; } = [];
+
+    public void Close()
+    {
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
+
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
 
     private void ApplyFilter()
     {
@@ -50,11 +63,13 @@ public partial class InstancePickerDialogViewModel : ObservableObject, IDialogCo
     }
 
     [RelayCommand]
-    private void Cancel() => RequestClose?.Invoke(this, null);
+    private void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 
-    public void Confirm(MinecraftInstance instance) =>
+    public void Confirm(MinecraftInstance instance)
+    {
         RequestClose?.Invoke(this, instance);
-
-    public void Close() => Cancel();
-    public event EventHandler<object?>? RequestClose;
+    }
 }

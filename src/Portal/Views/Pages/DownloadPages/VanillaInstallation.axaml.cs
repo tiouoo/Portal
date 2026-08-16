@@ -4,10 +4,8 @@ using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Services;
-using Portal.Services;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -33,12 +31,12 @@ public partial class VanillaInstallation : UserControl
         var page = new MinecraftInstallationPage(item.Entry);
         await OverlayDialog.ShowCustomAsync<MinecraftInstallationDialogResult>(page, page.DataContext,
             this.GetTopLevel().TryGetHostId(), new OverlayDialogOptions
-        {
-            Buttons = DialogButton.None,
-            CanLightDismiss = false,
-            CanResize = false,
-            IsCloseButtonVisible = false
-        });
+            {
+                Buttons = DialogButton.None,
+                CanLightDismiss = false,
+                CanResize = false,
+                IsCloseButtonVisible = false
+            });
     }
 }
 
@@ -46,6 +44,12 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
 {
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _disposed;
+
+    public VanillaInstallationViewModel()
+    {
+        SelectedFilter = FilterOptions[1];
+    }
+
     public ObservableCollection<MinecraftVersionListItem> FilteredVersions { get; } = [];
 
     public IReadOnlyList<MinecraftVersionFilterOption> FilterOptions { get; } =
@@ -59,7 +63,13 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
     [ObservableProperty] public partial MinecraftVersionFilterOption? SelectedFilter { get; set; }
     [ObservableProperty] public partial string StatusText { get; set; } = "正在获取版本列表...";
 
-    public VanillaInstallationViewModel() => SelectedFilter = FilterOptions[1];
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _disposeCancellation.Cancel();
+        FilteredVersions.Clear();
+    }
 
     public async Task LoadVersionsAsync()
     {
@@ -69,7 +79,7 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
             if (entries.Count == 0)
             {
                 var loaded = await VanillaInstaller.EnumerableMinecraftAsync(_disposeCancellation.Token);
-                
+
                 if (entries.Count == 0)
                 {
                     entries.AddRange(loaded);
@@ -89,23 +99,22 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
         }
     }
 
-    public void Dispose()
+    partial void OnSearchTextChanged(string value)
     {
-        if (_disposed) return;
-        _disposed = true;
-        _disposeCancellation.Cancel();
-        FilteredVersions.Clear();
+        ApplyFilter();
     }
 
-    partial void OnSearchTextChanged(string value) => ApplyFilter();
-    partial void OnSelectedFilterChanged(MinecraftVersionFilterOption? value) => ApplyFilter();
+    partial void OnSelectedFilterChanged(MinecraftVersionFilterOption? value)
+    {
+        ApplyFilter();
+    }
 
     private void ApplyFilter()
     {
-        if(Data.UiProperty.MinecraftVersionManifestEntries.Count == 0)
+        if (Data.UiProperty.MinecraftVersionManifestEntries.Count == 0)
             return;
-        
-        IEnumerable<MinecraftVersionListItem> versions = Data.UiProperty.MinecraftVersionManifestEntries
+
+        var versions = Data.UiProperty.MinecraftVersionManifestEntries
             .Select(MinecraftVersionListItem.FromEntry);
         if (!string.IsNullOrWhiteSpace(SearchText))
             versions = versions.Where(x => x.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
@@ -125,7 +134,11 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
 
 public sealed record MinecraftVersionFilterOption(string DisplayText, string? Type);
 
-public sealed record MinecraftVersionListItem(string Name, string RawType, string Type, DateTime ReleaseTime,
+public sealed record MinecraftVersionListItem(
+    string Name,
+    string RawType,
+    string Type,
+    DateTime ReleaseTime,
     VersionManifestEntry? Entry = null)
 {
     public const string AprilFoolsType = "april_fools";
@@ -151,8 +164,9 @@ public sealed record MinecraftVersionListItem(string Name, string RawType, strin
     public string? UnlistedTag => UnlistedVersions.IsUnlistedSource(Entry) ? "UVMC" : null;
     public bool ShowUnlistedTag => UnlistedTag is not null;
 
-    public static MinecraftVersionListItem FromEntry(VersionManifestEntry entry) =>
-        new(entry.Id, entry.Type, IsAprilFoolsVersion(entry.Id)
+    public static MinecraftVersionListItem FromEntry(VersionManifestEntry entry)
+    {
+        return new MinecraftVersionListItem(entry.Id, entry.Type, IsAprilFoolsVersion(entry.Id)
             ? "愚人节版"
             : entry.Type switch
             {
@@ -160,8 +174,12 @@ public sealed record MinecraftVersionListItem(string Name, string RawType, strin
                 "pending" => "快照版", "old_beta" => "旧 Beta", "old_alpha" => "旧 Alpha",
                 _ => entry.Type
             }, entry.ReleaseTime, entry);
+    }
 
-    public static bool IsAprilFoolsVersion(string versionId) => AprilFoolsVersionIds.Contains(versionId);
+    public static bool IsAprilFoolsVersion(string versionId)
+    {
+        return AprilFoolsVersionIds.Contains(versionId);
+    }
 
     private static string FormatRelativeReleaseTime(DateTime releaseTime)
     {

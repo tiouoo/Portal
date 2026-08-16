@@ -17,7 +17,7 @@ public static class GraphicsLaunchArgumentsBuilder
         var env = new Dictionary<string, string>();
         var jvm = new List<string>();
         var game = new List<string>();
-        bool mesaAgent = false;
+        var mesaAgent = false;
 
         var renderer = effective.Renderer;
 
@@ -32,19 +32,17 @@ public static class GraphicsLaunchArgumentsBuilder
 
                 if (renderer.Api == GraphicsApi.Vulkan && renderer.IcdName is { } icdName)
                 {
-                    string icdFile = BuildMesaLoaderPath(nativeFolder, $"{icdName}_icd.json");
+                    var icdFile = BuildMesaLoaderPath(nativeFolder, $"{icdName}_icd.json");
                     env["VK_ICD_FILENAMES"] = icdFile;
                     env["VK_DRIVER_FILES"] = icdFile;
                 }
 
                 if (nativeFolder is { Length: > 0 })
-                {
                     jvm.Add("-Dorg.glavo.mesa.loader.nativeDir=" + BuildMesaLoaderPath(nativeFolder, string.Empty));
-                }
             }
             else if (renderer.Api == GraphicsApi.Vulkan && renderer.IcdName is { } icdName)
             {
-                string icdFile = FindSystemVulkanIcd(icdName, platform);
+                var icdFile = FindSystemVulkanIcd(icdName, platform);
                 if (icdFile is not null)
                 {
                     env["VK_ICD_FILENAMES"] = icdFile;
@@ -65,13 +63,13 @@ public static class GraphicsLaunchArgumentsBuilder
                 {
                     env["__GLX_VENDOR_LIBRARY_NAME"] = "mesa";
                     env["MESA_LOADER_DRIVER_OVERRIDE"] = "zink";
-                    
+
                     env["LIBGL_KOPPER_DRI2"] = "1";
                 }
             }
             else if (renderer.Api == GraphicsApi.Vulkan && renderer.IcdName is { } icdName)
             {
-                string icdFile = FindSystemVulkanIcd(icdName, platform);
+                var icdFile = FindSystemVulkanIcd(icdName, platform);
                 if (icdFile is not null)
                 {
                     env["VK_ICD_FILENAMES"] = icdFile;
@@ -85,7 +83,7 @@ public static class GraphicsLaunchArgumentsBuilder
                 && renderer.Name != "MOLTENVK"
                 && renderer.IcdName is { } icdName)
             {
-                string icdFile = FindSystemVulkanIcd(icdName, platform);
+                var icdFile = FindSystemVulkanIcd(icdName, platform);
                 if (icdFile is not null)
                 {
                     env["VK_ICD_FILENAMES"] = icdFile;
@@ -105,7 +103,7 @@ public static class GraphicsLaunchArgumentsBuilder
             EnvironmentVariables = env,
             JvmArguments = jvm,
             GameArguments = game,
-            NeedsMesaAgent = mesaAgent,
+            NeedsMesaAgent = mesaAgent
         };
     }
 
@@ -116,12 +114,14 @@ public static class GraphicsLaunchArgumentsBuilder
         return $"{jarPath}={mesaDriverName}";
     }
 
-    private static string BuildMesaLoaderPath(string? nativeFolder, string fileName) =>
-        Path.Combine(Path.GetFullPath(nativeFolder ?? string.Empty), "mesa-loader", fileName);
+    private static string BuildMesaLoaderPath(string? nativeFolder, string fileName)
+    {
+        return Path.Combine(Path.GetFullPath(nativeFolder ?? string.Empty), "mesa-loader", fileName);
+    }
 
     private static string FindSystemVulkanIcd(string icdName, PlatformInfo platform)
     {
-        string arch = platform.IsArm ? "aarch64" : platform.Is64Bit ? "x86_64" : "i686";
+        var arch = platform.IsArm ? "aarch64" : platform.Is64Bit ? "x86_64" : "i686";
         return platform.Os switch
         {
             OperatingSystemKind.Windows => FindWindowsVulkanIcd(icdName),
@@ -135,13 +135,13 @@ public static class GraphicsLaunchArgumentsBuilder
             OperatingSystemKind.MacOS => FindFirstExisting(
                 $"/usr/local/share/vulkan/icd.d/{icdName}_icd.{arch}.json",
                 $"/opt/homebrew/share/vulkan/icd.d/{icdName}_icd.{arch}.json"),
-            _ => null,
+            _ => null
         };
     }
 
     private static string FindWindowsVulkanIcd(string icdName)
     {
-        string sysRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+        var sysRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
         return FindFirstExisting(
             $"{sysRoot}\\System32\\{icdName}_icd.json",
             $"{sysRoot}\\System32\\DriverStore\\FileRepository\\{icdName}_icd.json",
@@ -151,10 +151,8 @@ public static class GraphicsLaunchArgumentsBuilder
     private static string FindFirstExisting(params string[] paths)
     {
         foreach (var path in paths)
-        {
             if (File.Exists(path))
                 return Path.GetFullPath(path);
-        }
         return null;
     }
 }

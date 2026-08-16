@@ -7,11 +7,15 @@ public sealed class WorldScoreboardService
 {
     private static readonly string[] ScoreboardRelativePaths = ["data/minecraft/scoreboard.dat", "data/scoreboard.dat"];
 
-    public Task<WorldScoreboard?> LoadAsync(string worldPath, CancellationToken cancellationToken = default) =>
-        Task.Run(() => Load(worldPath, cancellationToken), cancellationToken);
+    public Task<WorldScoreboard?> LoadAsync(string worldPath, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Load(worldPath, cancellationToken), cancellationToken);
+    }
 
-    public Task SaveAsync(string worldPath, WorldScoreboard scoreboard, CancellationToken cancellationToken = default) =>
-        Task.Run(() => Save(worldPath, scoreboard, cancellationToken), cancellationToken);
+    public Task SaveAsync(string worldPath, WorldScoreboard scoreboard, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Save(worldPath, scoreboard, cancellationToken), cancellationToken);
+    }
 
     private static WorldScoreboard? Load(string worldPath, CancellationToken cancellationToken)
     {
@@ -25,10 +29,13 @@ public sealed class WorldScoreboardService
         if (data == null) return null;
 
         var objectives = (data["Objectives"] as NbtList)?.OfType<NbtCompound>()
-            .Select(x => new WorldScoreboardObjective(GetString(x, "Name"), GetString(x, "CriteriaName"), GetString(x, "DisplayName")))
+            .Select(x =>
+                new WorldScoreboardObjective(GetString(x, "Name"), GetString(x, "CriteriaName"),
+                    GetString(x, "DisplayName")))
             .Where(x => !string.IsNullOrWhiteSpace(x.Name)).ToArray() ?? [];
         var scores = (data["PlayerScores"] as NbtList)?.OfType<NbtCompound>()
-            .Select(x => new WorldScoreboardScore(GetString(x, "Objective"), GetString(x, "Name"), GetString(x, "display"),
+            .Select(x => new WorldScoreboardScore(GetString(x, "Objective"), GetString(x, "Name"),
+                GetString(x, "display"),
                 (x["Score"] as NbtInt)?.Value ?? 0, x["Locked"] is NbtByte locked && locked.Value != 0))
             .Where(x => !string.IsNullOrWhiteSpace(x.Objective) && !string.IsNullOrWhiteSpace(x.Name)).ToArray() ?? [];
         return new WorldScoreboard(objectives, scores);
@@ -72,7 +79,14 @@ public sealed class WorldScoreboardService
         data.Add(list);
     }
 
-    private static string GetString(NbtCompound parent, string name) => (parent[name] as NbtString)?.Value ?? string.Empty;
-    private static string FindPath(string worldPath) => ScoreboardRelativePaths.Select(path => Path.Combine(worldPath, path)).FirstOrDefault(File.Exists)
-        ?? Path.Combine(worldPath, ScoreboardRelativePaths[0]);
+    private static string GetString(NbtCompound parent, string name)
+    {
+        return (parent[name] as NbtString)?.Value ?? string.Empty;
+    }
+
+    private static string FindPath(string worldPath)
+    {
+        return ScoreboardRelativePaths.Select(path => Path.Combine(worldPath, path)).FirstOrDefault(File.Exists)
+               ?? Path.Combine(worldPath, ScoreboardRelativePaths[0]);
+    }
 }

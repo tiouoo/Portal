@@ -5,31 +5,29 @@ namespace Portal.Core.Module.AggregatedSearch;
 
 public class Searcher
 {
+    private static readonly StringComparer ChineseStringComparer = StringComparer.Create(
+        CultureInfo.GetCultureInfo("zh-CN"), CompareOptions.None);
+
     public static List<AggregatedSearchEntryType> DisplayOrder { get; } =
     [
         AggregatedSearchEntryType.RecentPlay,
         AggregatedSearchEntryType.Instance,
         AggregatedSearchEntryType.Account,
         AggregatedSearchEntryType.AuthServer,
-        AggregatedSearchEntryType.Page,
+        AggregatedSearchEntryType.Page
     ];
-
-    private static readonly StringComparer ChineseStringComparer = StringComparer.Create(
-        CultureInfo.GetCultureInfo("zh-CN"), CompareOptions.None);
 
     public static List<AggregatedSearchEntry> Search(string query, AggregatedSearchEntryType? type = null)
     {
         Index.Build();
         IEnumerable<AggregatedSearchEntry> entries = Index.IndexedAggregatedSearchEntries;
 
-        if (type.HasValue)
-        {
-            entries = entries.Where(e => type.Value.HasFlag(e.Type));
-        }
+        if (type.HasValue) entries = entries.Where(e => type.Value.HasFlag(e.Type));
 
         if (!string.IsNullOrWhiteSpace(query))
         {
-            var keywords = query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            var keywords = query.Split((char[]?)null,
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(keyword => keyword.ToLowerInvariant());
             entries = entries.Where(entry => keywords.All(keyword =>
                 entry.Title.ToLowerInvariant().Contains(keyword) ||

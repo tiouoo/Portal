@@ -153,27 +153,8 @@
                                 Padding="10">
                                 <DockPanel>
                                     <DockPanel Dock="Top">
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
+
+
                                         <StackPanel Margin="5,1,0,0" VerticalAlignment="Center">
                                             <TextBlock
                                                 FontSize="16"

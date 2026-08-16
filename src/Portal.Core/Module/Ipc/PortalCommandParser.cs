@@ -2,7 +2,7 @@ namespace Portal.Core.Module.Ipc;
 
 public enum PortalCliParseStatus
 {
-        NotACommand,
+    NotACommand,
     Help,
     Error,
     Command
@@ -33,34 +33,36 @@ public static class PortalCommandParser
         };
     }
 
-    public static string GetUsageText() =>
-        """
-        Portal 命令行用法：
-          Portal.Desktop.exe install vanilla <版本> [--folder <文件夹>] [--id <实例ID>]
-          Portal.Desktop.exe install loader <版本> --loader <加载器[@版本]> [--loader ...] [--folder <文件夹>] [--id <实例ID>]
-          Portal.Desktop.exe install modpack <路径|链接|项目名或ID> [--from modrinth|curseforge] [--version <版本或fileId>] [--folder <文件夹>] [--id <实例ID>]
-          Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--world <世界文件夹>]
-          Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--server <服务器地址>] [--port <端口>]
-          Portal.Desktop.exe help
+    public static string GetUsageText()
+    {
+        return """
+               Portal 命令行用法：
+                 Portal.Desktop.exe install vanilla <版本> [--folder <文件夹>] [--id <实例ID>]
+                 Portal.Desktop.exe install loader <版本> --loader <加载器[@版本]> [--loader ...] [--folder <文件夹>] [--id <实例ID>]
+                 Portal.Desktop.exe install modpack <路径|链接|项目名或ID> [--from modrinth|curseforge] [--version <版本或fileId>] [--folder <文件夹>] [--id <实例ID>]
+                 Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--world <世界文件夹>]
+                 Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--server <服务器地址>] [--port <端口>]
+                 Portal.Desktop.exe help
 
-        加载器：fabric / forge / neoforge / quilt / optifine（可用 @ 指定版本，如 fabric@0.16.9）
-        整合包：可传本地文件、直链，或 Modrinth / CurseForge 的项目名称、slug、项目 ID；
-                不指定 --version 时安装最新版本（--version 为 Modrinth 版本 ID/版本号或 CurseForge fileId，--file 等价）。
-        文件夹：启动器内已添加的 Minecraft 文件夹名称或路径；不传时使用默认（第一个）文件夹。
-        启动时未指定文件夹则启动第一个匹配该实例 ID 的实例。
-        世界：--world 传世界在 saves 目录下的文件夹名，启动后直接进入该世界（同名世界以文件夹名区分）。
-        服务器：--server 传服务器地址，--port 传端口（缺省 25565），启动后直接进入该服务器。
-        --world 与 --server 互斥。
+               加载器：fabric / forge / neoforge / quilt / optifine（可用 @ 指定版本，如 fabric@0.16.9）
+               整合包：可传本地文件、直链，或 Modrinth / CurseForge 的项目名称、slug、项目 ID；
+                       不指定 --version 时安装最新版本（--version 为 Modrinth 版本 ID/版本号或 CurseForge fileId，--file 等价）。
+               文件夹：启动器内已添加的 Minecraft 文件夹名称或路径；不传时使用默认（第一个）文件夹。
+               启动时未指定文件夹则启动第一个匹配该实例 ID 的实例。
+               世界：--world 传世界在 saves 目录下的文件夹名，启动后直接进入该世界（同名世界以文件夹名区分）。
+               服务器：--server 传服务器地址，--port 传端口（缺省 25565），启动后直接进入该服务器。
+               --world 与 --server 互斥。
 
-        等价的 portal:// 协议形式（注册协议后浏览器可直接调用）：
-          portal://install/vanilla?version=1.21.8&folder=B&id=my-1.21.8
-          portal://install/loader?version=1.21.8&loader=fabric&loader=optifine
-          portal://install/modpack?source=fabulously-optimized&from=modrinth&version=cZY3Bvs9
-          portal://install/modpack?source=https%3A%2F%2Fexample.com%2Fpack.mrpack&folder=B
-          portal://launch?id=26.2&folder=B
-          portal://launch?id=26.2&folder=B&world=New%20World
-          portal://launch?id=26.2&folder=B&server=play.example.com&port=25565
-        """;
+               等价的 portal:// 协议形式（注册协议后浏览器可直接调用）：
+                 portal://install/vanilla?version=1.21.8&folder=B&id=my-1.21.8
+                 portal://install/loader?version=1.21.8&loader=fabric&loader=optifine
+                 portal://install/modpack?source=fabulously-optimized&from=modrinth&version=cZY3Bvs9
+                 portal://install/modpack?source=https%3A%2F%2Fexample.com%2Fpack.mrpack&folder=B
+                 portal://launch?id=26.2&folder=B
+                 portal://launch?id=26.2&folder=B&world=New%20World
+                 portal://launch?id=26.2&folder=B&server=play.example.com&port=25565
+               """;
+    }
 
     private static PortalCliParseStatus ParseInstallCli(string[] args, out PortalCommand? command, out string? error)
     {
@@ -96,6 +98,7 @@ public static class PortalCommandParser
                 error = "install modpack 不支持 --loader 参数。";
                 return PortalCliParseStatus.Error;
             }
+
             if (!TryValidateProvider(options.Provider, out error)) return PortalCliParseStatus.Error;
             command = new PortalCommand
             {
@@ -111,9 +114,10 @@ public static class PortalCommandParser
 
         if (options.Provider is not null || options.PackVersion is not null)
         {
-            error = $"--from / --version 仅用于 install modpack。";
+            error = "--from / --version 仅用于 install modpack。";
             return PortalCliParseStatus.Error;
         }
+
         if (sub == "loader" && options.Loaders.Count == 0)
         {
             error = "install loader 至少需要一个 --loader 参数。";
@@ -155,6 +159,7 @@ public static class PortalCommandParser
             error = "--world 与 --server 不能同时指定。";
             return PortalCliParseStatus.Error;
         }
+
         if (options.ServerPort != null && string.IsNullOrWhiteSpace(options.ServerAddress))
         {
             error = "--port 需要配合 --server 使用。";
@@ -172,9 +177,6 @@ public static class PortalCommandParser
         };
         return PortalCliParseStatus.Command;
     }
-
-    private sealed record CliOptions(string? Folder, string? InstanceId, List<PortalLoaderSpec> Loaders,
-        string? Provider, string? PackVersion, string? WorldFolder, string? ServerAddress, int? ServerPort);
 
     private static bool TryParseOptions(string[] args, int start, out List<string> positionals, out CliOptions options,
         out string? error)
@@ -237,6 +239,7 @@ public static class PortalCommandParser
                         error = $"参数 {name} 需要 1-65535 之间的端口号。";
                         return false;
                     }
+
                     serverPort = parsedPort;
                     break;
                 default:
@@ -245,12 +248,14 @@ public static class PortalCommandParser
                         error = $"未知参数“{token}”。";
                         return false;
                     }
+
                     positionals.Add(token);
                     break;
             }
         }
 
-        options = new CliOptions(folder, instanceId, loaders, provider, packVersion, worldFolder, serverAddress, serverPort);
+        options = new CliOptions(folder, instanceId, loaders, provider, packVersion, worldFolder, serverAddress,
+            serverPort);
         return true;
     }
 
@@ -263,12 +268,14 @@ public static class PortalCommandParser
             value = inlineValue;
             return true;
         }
+
         if (index + 1 >= args.Length)
         {
             value = null;
             error = $"参数 {name} 缺少值。";
             return false;
         }
+
         value = args[++index];
         return true;
     }
@@ -281,14 +288,14 @@ public static class PortalCommandParser
             : new PortalLoaderSpec(value.Trim(), null);
     }
 
-        private static PortalCliParseStatus ParseUri(string raw, out PortalCommand? command, out string? error)
+    private static PortalCliParseStatus ParseUri(string raw, out PortalCommand? command, out string? error)
     {
         command = null;
         error = null;
 
         var rest = raw[(UriScheme.Length + 1)..];
         if (rest.StartsWith("//")) rest = rest[2..];
-        string query = string.Empty;
+        var query = string.Empty;
         var queryIndex = rest.IndexOf('?');
         if (queryIndex >= 0)
         {
@@ -316,6 +323,7 @@ public static class PortalCommandParser
                     error = "portal://launch 缺少实例 ID，例如 portal://launch?id=xxx。";
                     return PortalCliParseStatus.Error;
                 }
+
                 var worldFolder = GetValue(parameters, "world");
                 var serverAddress = GetValue(parameters, "server", "address");
                 var serverPort = ParsePort(GetValue(parameters, "port"), out var portError);
@@ -324,16 +332,19 @@ public static class PortalCommandParser
                     error = portError;
                     return PortalCliParseStatus.Error;
                 }
+
                 if (!string.IsNullOrWhiteSpace(worldFolder) && !string.IsNullOrWhiteSpace(serverAddress))
                 {
                     error = "world 与 server 不能同时指定。";
                     return PortalCliParseStatus.Error;
                 }
+
                 if (serverPort != null && string.IsNullOrWhiteSpace(serverAddress))
                 {
                     error = "port 需要配合 server 使用。";
                     return PortalCliParseStatus.Error;
                 }
+
                 command = new PortalCommand
                 {
                     Kind = PortalCommandKind.Launch,
@@ -347,7 +358,9 @@ public static class PortalCommandParser
             }
             case "install" or "download":
             {
-                var sub = segments.Length > 1 ? segments[1].ToLowerInvariant() : GetValue(parameters, "type")?.ToLowerInvariant();
+                var sub = segments.Length > 1
+                    ? segments[1].ToLowerInvariant()
+                    : GetValue(parameters, "type")?.ToLowerInvariant();
                 switch (sub)
                 {
                     case "vanilla" or "loader":
@@ -358,17 +371,22 @@ public static class PortalCommandParser
                             error = $"portal://install/{sub} 缺少 version 参数。";
                             return PortalCliParseStatus.Error;
                         }
+
                         var loaders = GetValues(parameters, "loader")
-                            .SelectMany(value => value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                            .SelectMany(value => value.Split(',',
+                                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                             .Select(ParseLoaderSpec).ToList();
                         if (sub == "loader" && loaders.Count == 0)
                         {
                             error = "portal://install/loader 至少需要一个 loader 参数。";
                             return PortalCliParseStatus.Error;
                         }
+
                         command = new PortalCommand
                         {
-                            Kind = loaders.Count > 0 ? PortalCommandKind.DownloadLoader : PortalCommandKind.DownloadVanilla,
+                            Kind = loaders.Count > 0
+                                ? PortalCommandKind.DownloadLoader
+                                : PortalCommandKind.DownloadVanilla,
                             Version = version,
                             Loaders = loaders,
                             Folder = GetValue(parameters, "folder", "dir"),
@@ -384,6 +402,7 @@ public static class PortalCommandParser
                             error = "portal://install/modpack 缺少 source（整合包路径、链接或项目名称/ID）参数。";
                             return PortalCliParseStatus.Error;
                         }
+
                         var provider = GetValue(parameters, "from", "platform");
                         if (!TryValidateProvider(provider, out error)) return PortalCliParseStatus.Error;
                         command = new PortalCommand
@@ -416,23 +435,28 @@ public static class PortalCommandParser
             var separator = pair.IndexOf('=');
             var key = separator >= 0 ? pair[..separator] : pair;
             var value = separator >= 0 ? pair[(separator + 1)..] : string.Empty;
-            
+
             result.Add(new KeyValuePair<string, string>(
                 Uri.UnescapeDataString(key).Trim(),
                 Uri.UnescapeDataString(value)));
         }
+
         return result;
     }
 
-    private static string? GetValue(List<KeyValuePair<string, string>> parameters, params string[] names) =>
-        parameters.FirstOrDefault(pair => names.Contains(pair.Key, StringComparer.OrdinalIgnoreCase)).Value is
+    private static string? GetValue(List<KeyValuePair<string, string>> parameters, params string[] names)
+    {
+        return parameters.FirstOrDefault(pair => names.Contains(pair.Key, StringComparer.OrdinalIgnoreCase)).Value is
             { Length: > 0 } value
             ? value
             : null;
+    }
 
-    private static IEnumerable<string> GetValues(List<KeyValuePair<string, string>> parameters, string name) =>
-        parameters.Where(pair => string.Equals(pair.Key, name, StringComparison.OrdinalIgnoreCase))
+    private static IEnumerable<string> GetValues(List<KeyValuePair<string, string>> parameters, string name)
+    {
+        return parameters.Where(pair => string.Equals(pair.Key, name, StringComparison.OrdinalIgnoreCase))
             .Select(pair => pair.Value).Where(value => value.Length > 0);
+    }
 
     private static int? ParsePort(string? value, out string? error)
     {
@@ -444,4 +468,14 @@ public static class PortalCommandParser
         error = $"port 需要 1-65535 之间的端口号，收到“{value}”。";
         return null;
     }
+
+    private sealed record CliOptions(
+        string? Folder,
+        string? InstanceId,
+        List<PortalLoaderSpec> Loaders,
+        string? Provider,
+        string? PackVersion,
+        string? WorldFolder,
+        string? ServerAddress,
+        int? ServerPort);
 }

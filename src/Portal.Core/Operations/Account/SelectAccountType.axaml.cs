@@ -1,13 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
-using TioUi.Common;
-using TioUi.Controls;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Core.Operations.Account;
@@ -20,23 +16,9 @@ public partial class SelectAccountType : UserControl
     }
 }
 
-public partial class SelectAccountTypeViewModel : ObservableObject, IDialogContext
+public class SelectAccountTypeViewModel : ObservableObject, IDialogContext
 {
-    public ObservableCollection<Minecraft.Classes.AuthServer> AuthServers { get; } = [];
-
     private Minecraft.Classes.AuthServer? _selectedServer;
-    public Minecraft.Classes.AuthServer? SelectedServer
-    {
-        get => _selectedServer;
-        set
-        {
-            SetProperty(ref _selectedServer, value);
-            (NextCommand as RelayCommand)?.NotifyCanExecuteChanged();
-        }
-    }
-
-    public ICommand NextCommand { get; }
-    public ICommand CancelCommand { get; }
 
 
     public SelectAccountTypeViewModel()
@@ -53,6 +35,27 @@ public partial class SelectAccountTypeViewModel : ObservableObject, IDialogConte
         SelectedServer = AuthServers.FirstOrDefault();
     }
 
+    public ObservableCollection<Minecraft.Classes.AuthServer> AuthServers { get; } = [];
+
+    public Minecraft.Classes.AuthServer? SelectedServer
+    {
+        get => _selectedServer;
+        set
+        {
+            SetProperty(ref _selectedServer, value);
+            (NextCommand as RelayCommand)?.NotifyCanExecuteChanged();
+        }
+    }
+
+    public ICommand NextCommand { get; }
+    public ICommand CancelCommand { get; }
+
+    public void Close()
+    {
+        RequestClose?.Invoke(this, new SelectAccountTypeResult(SelectAccountTypeAction.Cancel));
+    }
+
+    public event EventHandler<object?>? RequestClose;
 
 
     private bool CanNext()
@@ -69,13 +72,6 @@ public partial class SelectAccountTypeViewModel : ObservableObject, IDialogConte
     {
         RequestClose?.Invoke(this, new SelectAccountTypeResult(SelectAccountTypeAction.Cancel));
     }
-
-    public void Close()
-    {
-        RequestClose?.Invoke(this, new SelectAccountTypeResult(SelectAccountTypeAction.Cancel));
-    }
-
-    public event EventHandler<object?>? RequestClose;
 }
 
 public enum SelectAccountTypeAction
@@ -86,12 +82,12 @@ public enum SelectAccountTypeAction
 
 public class SelectAccountTypeResult
 {
-    public SelectAccountTypeAction Action { get; }
-    public Minecraft.Classes.AuthServer? SelectedServer { get; }
-
     public SelectAccountTypeResult(SelectAccountTypeAction action, Minecraft.Classes.AuthServer? selectedServer = null)
     {
         Action = action;
         SelectedServer = selectedServer;
     }
+
+    public SelectAccountTypeAction Action { get; }
+    public Minecraft.Classes.AuthServer? SelectedServer { get; }
 }

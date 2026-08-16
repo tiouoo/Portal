@@ -12,13 +12,33 @@ public sealed class GravityConeClient : IAsyncDisposable
 {
     private readonly ConcurrentDictionary<int, PendingRequest> _pending = new();
     private readonly SemaphoreSlim _writeLock = new(1, 1);
-    private Process? _process;
     private int _nextId;
+    private Process? _process;
+
+    public bool IsRunning => _process is { HasExited: false };
+
+    public async ValueTask DisposeAsync()
+    {
+        var process = _process;
+        if (process is null) return;
+        if (!process.HasExited)
+            try
+            {
+                await RequestAsync("system.shutdown", timeout: TimeSpan.FromSeconds(3));
+                await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(4));
+            }
+            catch
+            {
+                if (!process.HasExited) process.Kill(true);
+            }
+
+        _process = null;
+        process.Dispose();
+        _writeLock.Dispose();
+    }
 
     public event EventHandler<GravityConeEvent>? EventReceived;
     public event EventHandler<string>? ProcessError;
-
-    public bool IsRunning => _process is { HasExited: false };
 
     public async Task StartAsync(GravityConeInstallation installation, CancellationToken cancellationToken)
     {
@@ -50,8 +70,7 @@ public sealed class GravityConeClient : IAsyncDisposable
             startInfo.ArgumentList.Add(peer);
         }
 
-        
-        
+
         _process = await Task.Run(() =>
         {
             var p = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
@@ -65,7 +84,6 @@ public sealed class GravityConeClient : IAsyncDisposable
         using var ready = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ready.Token);
         while (!linked.IsCancellationRequested)
-        {
             try
             {
                 var response = await RequestAsync("system.ping", null, null, TimeSpan.FromSeconds(2), linked.Token);
@@ -75,7 +93,7 @@ public sealed class GravityConeClient : IAsyncDisposable
             {
                 await Task.Delay(150, linked.Token);
             }
-        }
+
         throw new TimeoutException("GravityCone CLI 启动超时。");
     }
 
@@ -83,7 +101,6 @@ public sealed class GravityConeClient : IAsyncDisposable
     {
         var process = _process;
         if (process is { HasExited: false })
-        {
             try
             {
                 await RequestAsync("system.shutdown", timeout: TimeSpan.FromSeconds(3),
@@ -92,9 +109,8 @@ public sealed class GravityConeClient : IAsyncDisposable
             }
             catch
             {
-                if (!process.HasExited) process.Kill(entireProcessTree: true);
+                if (!process.HasExited) process.Kill(true);
             }
-        }
 
         _process = null;
         process?.Dispose();
@@ -109,16 +125,13 @@ public sealed class GravityConeClient : IAsyncDisposable
         try
         {
             if (GravityConeNodeClient.IsUptimeConfigured)
-            {
                 peers.AddRange(await GravityConeNodeClient.Instance.FetchPeerUrlsAsync(cancellationToken));
-            }
             else if (await GravityConeNodeClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedUptime)
-            {
                 peers.AddRange(cachedUptime);
-            }
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
-                                   ex is HttpRequestException or JsonException or InvalidOperationException or IOException)
+                                   ex is HttpRequestException or JsonException or InvalidOperationException
+                                       or IOException)
         {
             Logger.Warning($"获取 1TMC 联机节点失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
             if (await GravityConeNodeClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedUptime)
@@ -128,16 +141,13 @@ public sealed class GravityConeClient : IAsyncDisposable
         try
         {
             if (await GravityConeRelayClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedRelays)
-            {
                 peers.AddRange(cachedRelays);
-            }
             else
-            {
                 peers.AddRange(await GravityConeRelayClient.Instance.FetchRelaysAsync(cancellationToken));
-            }
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
-                                   ex is HttpRequestException or JsonException or InvalidOperationException or IOException)
+                                   ex is HttpRequestException or JsonException or InvalidOperationException
+                                       or IOException)
         {
             Logger.Warning($"获取 Portal 中继节点失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
             if (await GravityConeRelayClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedRelays)
@@ -159,7 +169,8 @@ public sealed class GravityConeClient : IAsyncDisposable
             throw new InvalidOperationException("GravityCone CLI 尚未启动。");
 
         var id = Interlocked.Increment(ref _nextId);
-        var completion = new TaskCompletionSource<GravityConeResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion =
+            new TaskCompletionSource<GravityConeResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (!_pending.TryAdd(id, new PendingRequest(completion, progress)))
             throw new InvalidOperationException("无法创建 CLI 请求。");
 
@@ -208,6 +219,7 @@ public sealed class GravityConeClient : IAsyncDisposable
                         root.TryGetProperty("data", out var eventData) ? eventData.Clone() : default));
                     continue;
                 }
+
                 if (!root.TryGetProperty("id", out var idElement) ||
                     !_pending.TryGetValue(idElement.GetInt32(), out var pending)) continue;
 
@@ -217,12 +229,14 @@ public sealed class GravityConeClient : IAsyncDisposable
                     pending.Progress?.Report(new GravityConeProgress(response.Data));
                     continue;
                 }
+
                 if (response.Status == "error")
                 {
                     pending.Completion.TrySetException(new GravityConeException(
                         response.Error?.Code ?? "UNKNOWN", response.Error?.Message ?? "联机操作失败。"));
                     continue;
                 }
+
                 pending.Completion.TrySetResult(response);
             }
         }
@@ -258,7 +272,6 @@ public sealed class GravityConeClient : IAsyncDisposable
         var process = _process;
         if (process is null) return;
         if (!process.HasExited)
-        {
             try
             {
                 await RequestAsync("system.shutdown", timeout: TimeSpan.FromSeconds(3));
@@ -266,9 +279,9 @@ public sealed class GravityConeClient : IAsyncDisposable
             }
             catch
             {
-                if (!process.HasExited) process.Kill(entireProcessTree: true);
+                if (!process.HasExited) process.Kill(true);
             }
-        }
+
         _process = null;
         process.Dispose();
         FailAllPending("GravityCone CLI 已停止。");
@@ -280,28 +293,8 @@ public sealed class GravityConeClient : IAsyncDisposable
         Logger.Debug(message);
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        var process = _process;
-        if (process is null) return;
-        if (!process.HasExited)
-        {
-            try
-            {
-                await RequestAsync("system.shutdown", timeout: TimeSpan.FromSeconds(3));
-                await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(4));
-            }
-            catch
-            {
-                if (!process.HasExited) process.Kill(true);
-            }
-        }
-        _process = null;
-        process.Dispose();
-        _writeLock.Dispose();
-    }
-
-    private sealed record PendingRequest(TaskCompletionSource<GravityConeResponse> Completion,
+    private sealed record PendingRequest(
+        TaskCompletionSource<GravityConeResponse> Completion,
         IProgress<GravityConeProgress>? Progress);
 }
 
@@ -320,7 +313,9 @@ public sealed class GravityConeError
 }
 
 public sealed record GravityConeEvent(string Name, JsonElement Data);
+
 public sealed record GravityConeProgress(JsonElement Data);
+
 public sealed class GravityConeException(string code, string message) : Exception(message)
 {
     public string Code { get; } = code;

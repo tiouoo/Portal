@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using HtmlAgilityPack;
 
 namespace Portal.Core.Module.News;
@@ -16,33 +17,33 @@ public static class NewsHtmlRenderer
     private static readonly FontFamily MonospaceFamily =
         new("Cascadia Code,Consolas,Menlo,Monaco,monospace");
 
-    
-    private static Avalonia.Styling.ControlTheme? s_hyperlinkTheme;
 
-        public static HtmlDocument Parse(string html)
+    private static ControlTheme? s_hyperlinkTheme;
+
+    public static HtmlDocument Parse(string html)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(html ?? string.Empty);
         return doc;
     }
 
-        public static IReadOnlyList<Control> Render(string html)
+    public static IReadOnlyList<Control> Render(string html)
     {
         return Render(Parse(html));
     }
 
-        public static IReadOnlyList<Control> Render(HtmlDocument doc)
+    public static IReadOnlyList<Control> Render(HtmlDocument doc)
     {
         return RenderEnumerable(doc).ToList();
     }
 
-        public static IEnumerable<Control> RenderEnumerable(HtmlDocument doc)
+    public static IEnumerable<Control> RenderEnumerable(HtmlDocument doc)
     {
         var root = doc.DocumentNode;
         var container = root.SelectSingleNode("//body") ?? root;
         foreach (var node in container.ChildNodes)
         {
-            var controls = RenderBlockNode(node, indentLevel: 0);
+            var controls = RenderBlockNode(node, 0);
             foreach (var c in controls) yield return c;
         }
     }
@@ -53,7 +54,7 @@ public static class NewsHtmlRenderer
         {
             var text = node.InnerText?.Trim();
             if (string.IsNullOrEmpty(text)) return [];
-            
+
             return [CreateParagraph([new Run(text) { FontWeight = BodyWeight }], indentLevel)];
         }
 
@@ -75,9 +76,9 @@ public static class NewsHtmlRenderer
             case "h5": return [CreateHeading(BuildInlines(node), 14, indentLevel)];
             case "h6": return [CreateHeading(BuildInlines(node), 13, indentLevel)];
             case "ul":
-                return [RenderList(node, indentLevel, isOrdered: false)];
+                return [RenderList(node, indentLevel, false)];
             case "ol":
-                return [RenderList(node, indentLevel, isOrdered: true)];
+                return [RenderList(node, indentLevel, true)];
             case "li":
                 return [CreateParagraph(BuildInlines(node), indentLevel)];
             case "a":
@@ -93,10 +94,7 @@ public static class NewsHtmlRenderer
             case "main":
             {
                 var output = new List<Control>();
-                foreach (var child in node.ChildNodes)
-                {
-                    output.AddRange(RenderBlockNode(child, indentLevel));
-                }
+                foreach (var child in node.ChildNodes) output.AddRange(RenderBlockNode(child, indentLevel));
                 return output;
             }
             default:
@@ -139,12 +137,11 @@ public static class NewsHtmlRenderer
             panel.Children.Add(itemText);
 
             foreach (var nested in nestedLists)
-            {
                 panel.Children.Add(RenderList(nested, indentLevel + 1, nested.Name.ToLowerInvariant() == "ol"));
-            }
 
             index++;
         }
+
         return panel;
     }
 
@@ -179,16 +176,16 @@ public static class NewsHtmlRenderer
         return collection;
     }
 
-    private static IReadOnlyList<Inline> BuildInlines(HtmlNode node) => BuildInlines(node, out _);
+    private static IReadOnlyList<Inline> BuildInlines(HtmlNode node)
+    {
+        return BuildInlines(node, out _);
+    }
 
     private static IReadOnlyList<Inline> BuildInlines(HtmlNode node, out List<HtmlNode> nestedLists)
     {
         nestedLists = [];
         var inlines = new List<Inline>();
-        foreach (var child in node.ChildNodes)
-        {
-            AppendInline(child, inlines, nestedLists);
-        }
+        foreach (var child in node.ChildNodes) AppendInline(child, inlines, nestedLists);
         return inlines;
     }
 
@@ -200,8 +197,8 @@ public static class NewsHtmlRenderer
             {
                 var text = node.InnerText;
                 if (string.IsNullOrEmpty(text)) return;
-                
-                
+
+
                 text = text.Replace("\r\n", " ").Replace('\r', ' ').Replace('\n', ' ');
                 output.Add(new Run(text) { FontWeight = BodyWeight });
                 return;
@@ -251,13 +248,11 @@ public static class NewsHtmlRenderer
             {
                 var btn = CreateHyperlinkButton(node);
                 if (btn != null)
-                {
                     output.Add(new InlineUIContainer
                     {
                         Child = btn,
                         BaselineAlignment = BaselineAlignment.TextBottom
                     });
-                }
                 return;
             }
             case "br":
@@ -276,17 +271,13 @@ public static class NewsHtmlRenderer
                 return;
             default:
             {
-                
-                foreach (var child in node.ChildNodes)
-                {
-                    AppendInline(child, output, nestedLists);
-                }
+                foreach (var child in node.ChildNodes) AppendInline(child, output, nestedLists);
                 return;
             }
         }
     }
 
-        private static void FillSpan(InlineCollection target, HtmlNode parent, List<HtmlNode> nestedLists)
+    private static void FillSpan(InlineCollection target, HtmlNode parent, List<HtmlNode> nestedLists)
     {
         foreach (var child in parent.ChildNodes)
         {
@@ -309,29 +300,20 @@ public static class NewsHtmlRenderer
             FontWeight = BodyWeight,
             Padding = new Thickness(0),
             Margin = new Thickness(0),
-            VerticalAlignment = VerticalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
         };
         if (s_hyperlinkTheme is null
-            && Application.Current?.FindResource("UnderlineHyperlinkButton") is Avalonia.Styling.ControlTheme theme)
-        {
+            && Application.Current?.FindResource("UnderlineHyperlinkButton") is ControlTheme theme)
             s_hyperlinkTheme = theme;
-        }
-        if (s_hyperlinkTheme is not null)
-        {
-            button.Theme = s_hyperlinkTheme;
-        }
+        if (s_hyperlinkTheme is not null) button.Theme = s_hyperlinkTheme;
 
         if (!string.IsNullOrWhiteSpace(href) && Uri.TryCreate(href, UriKind.Absolute, out var uri))
-        {
             button.NavigateUri = uri;
-        }
         else
-        {
             button.Click += (_, _) =>
             {
                 if (!string.IsNullOrEmpty(href)) TryOpenUrl(href);
             };
-        }
         return button;
     }
 
@@ -343,7 +325,6 @@ public static class NewsHtmlRenderer
         }
         catch
         {
-            
         }
     }
 }

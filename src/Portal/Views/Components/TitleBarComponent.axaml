@@ -8,11 +8,9 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:components="clr-namespace:Portal.Views.Components"
-    xmlns:const="clr-namespace:Portal.Const"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid.Styles>
         <Style Selector="Button.custom-title-bar-button">
@@ -64,8 +62,6 @@
     <StackPanel Orientation="Horizontal">
         <StackPanel.Resources>
             <converter:StringIsNotWriteSpaceOrNullConverter x:Key="StringIsNotWriteSpaceOrNullConverter" />
-            <converter:ThemeCompareConverter x:Key="ThemeCompareConverter" />
-            <converter:IntCompareConverter x:Key="IntCompareConverter" />
             <converter:ManagedTaskStatusToBrushConverter x:Key="TaskStatusBrush" />
         </StackPanel.Resources>
         <Border IsVisible="{Binding DropMsg, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}" Margin="3,0">
@@ -371,23 +367,8 @@
                                             Margin="5,0"
                                             Orientation="Horizontal"
                                             Spacing="8">
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
+
+
                                             <Button
                                                 Classes="delete-btn"
                                                 Command="{Binding #Root.DeleteAccount}"
@@ -458,77 +439,5 @@
         Name="AccountFlyoutPoint"
         VerticalAlignment="Center" />
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
 </Grid>

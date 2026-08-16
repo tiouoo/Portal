@@ -32,25 +32,21 @@
                 Content="服务器地址"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <TextBox
-                PlaceholderText="例如 127.0.0.1 或 play.example.net"
-                Text="{Binding Address}" />
+            <TextBox PlaceholderText="例如 127.0.0.1 或 play.example.net" Text="{Binding Address}" />
         </StackPanel>
         <StackPanel Grid.Row="2" Spacing="6">
             <Label
                 Content="端口"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <TextBox
-                PlaceholderText="默认 25565"
-                Text="{Binding PortText}" />
+            <TextBox PlaceholderText="默认 25565" Text="{Binding PortText}" />
         </StackPanel>
         <TextBlock
             FontSize="12"
             Foreground="{DynamicResource InnerForegroundColor}"
             Grid.Row="3"
-            TextWrapping="Wrap"
-            Text="连接后会通过所选实例启动游戏，并自动加入该服务器。" />
+            Text="连接后会通过所选实例启动游戏，并自动加入该服务器。"
+            TextWrapping="Wrap" />
         <StackPanel
             Grid.Row="4"
             HorizontalAlignment="Right"

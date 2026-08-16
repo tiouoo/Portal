@@ -12,7 +12,7 @@ namespace Portal.Views.Components;
 
 public partial class MultiplayerContentPage : UserControl
 {
-    private MultiplayerPageViewModel _viewModel = null!;
+    private readonly MultiplayerPageViewModel _viewModel = null!;
 
     public MultiplayerContentPage()
     {
@@ -32,7 +32,7 @@ public partial class MultiplayerContentPage : UserControl
             return;
 
         await clipboard.SetTextAsync(_viewModel.CurrentRoomCode);
-        NotificationGateway.Notice(topLevel, "房间码已复制", NotificationType.Success);
+        topLevel.Notice("房间码已复制", NotificationType.Success);
     }
 
     private async void PasteJoinCode_OnClick(object? sender, RoutedEventArgs e)

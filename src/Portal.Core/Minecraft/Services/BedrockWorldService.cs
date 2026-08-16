@@ -8,8 +8,10 @@ namespace Portal.Core.Minecraft.Services;
 public sealed class BedrockWorldService
 {
     public Task<IReadOnlyList<BedrockWorldInfo>> ScanAsync(BedrockInstanceConfig config, string userId,
-        CancellationToken cancellationToken = default) =>
-        Task.Run(() => Scan(config, userId, cancellationToken), cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Scan(config, userId, cancellationToken), cancellationToken);
+    }
 
     private static IReadOnlyList<BedrockWorldInfo> Scan(BedrockInstanceConfig config, string userId,
         CancellationToken cancellationToken)
@@ -28,8 +30,16 @@ public sealed class BedrockWorldService
             Logger.Debug($"基岩版世界扫描完成：{worldsPath}，发现 {worlds.Length} 个世界。");
             return worlds;
         }
-        catch (IOException exception) { Logger.Error("扫描基岩版世界失败。", exception); return []; }
-        catch (UnauthorizedAccessException exception) { Logger.Error("扫描基岩版世界被拒绝。", exception); return []; }
+        catch (IOException exception)
+        {
+            Logger.Error("扫描基岩版世界失败。", exception);
+            return [];
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.Error("扫描基岩版世界被拒绝。", exception);
+            return [];
+        }
     }
 
     private static BedrockWorldInfo? Read(string path, CancellationToken cancellationToken)
@@ -52,15 +62,34 @@ public sealed class BedrockWorldService
         {
             return File.Exists(path) ? File.ReadAllText(path).Trim() : null;
         }
-        catch (IOException exception) { Logger.Error($"读取基岩版世界名称失败：{path}", exception); return null; }
-        catch (UnauthorizedAccessException exception) { Logger.Error($"读取基岩版世界名称被拒绝：{path}", exception); return null; }
+        catch (IOException exception)
+        {
+            Logger.Error($"读取基岩版世界名称失败：{path}", exception);
+            return null;
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.Error($"读取基岩版世界名称被拒绝：{path}", exception);
+            return null;
+        }
     }
 
     private static byte[]? ReadFile(string path)
     {
-        try { return File.Exists(path) ? File.ReadAllBytes(path) : null; }
-        catch (IOException exception) { Logger.Error($"读取基岩版世界文件失败：{path}", exception); return null; }
-        catch (UnauthorizedAccessException exception) { Logger.Error($"读取基岩版世界文件被拒绝：{path}", exception); return null; }
+        try
+        {
+            return File.Exists(path) ? File.ReadAllBytes(path) : null;
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"读取基岩版世界文件失败：{path}", exception);
+            return null;
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.Error($"读取基岩版世界文件被拒绝：{path}", exception);
+            return null;
+        }
     }
 
     private static IReadOnlyList<BedrockWorldPackReference> ReadPackReferences(string path)
@@ -79,13 +108,30 @@ public sealed class BedrockWorldService
                 .Where(reference => !string.IsNullOrWhiteSpace(reference.PackId))
                 .ToArray();
         }
-        catch (IOException exception) { Logger.Error($"读取基岩版世界资源包引用失败：{path}", exception); return []; }
-        catch (UnauthorizedAccessException exception) { Logger.Error($"读取基岩版世界资源包引用被拒绝：{path}", exception); return []; }
-        catch (JsonException exception) { Logger.Error($"解析基岩版世界资源包引用失败：{path}", exception); return []; }
+        catch (IOException exception)
+        {
+            Logger.Error($"读取基岩版世界资源包引用失败：{path}", exception);
+            return [];
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.Error($"读取基岩版世界资源包引用被拒绝：{path}", exception);
+            return [];
+        }
+        catch (JsonException exception)
+        {
+            Logger.Error($"解析基岩版世界资源包引用失败：{path}", exception);
+            return [];
+        }
     }
 
-    private static string? GetString(JsonElement element, string property) => element.TryGetProperty(property, out var value) &&
-        value.ValueKind == JsonValueKind.String ? value.GetString()?.Trim() : null;
+    private static string? GetString(JsonElement element, string property)
+    {
+        return element.TryGetProperty(property, out var value) &&
+               value.ValueKind == JsonValueKind.String
+            ? value.GetString()?.Trim()
+            : null;
+    }
 
     private static string? GetVersion(JsonElement element, string property)
     {
@@ -98,8 +144,14 @@ public sealed class BedrockWorldService
     }
 }
 
-public sealed record BedrockWorldInfo(string FolderPath, string FolderName, string DisplayName, DateTime CreationTime,
-    DateTime LastWriteTime, byte[]? IconData, IReadOnlyList<BedrockWorldPackReference> BehaviorPacks,
+public sealed record BedrockWorldInfo(
+    string FolderPath,
+    string FolderName,
+    string DisplayName,
+    DateTime CreationTime,
+    DateTime LastWriteTime,
+    byte[]? IconData,
+    IReadOnlyList<BedrockWorldPackReference> BehaviorPacks,
     IReadOnlyList<BedrockWorldPackReference> ResourcePacks);
 
 public sealed record BedrockWorldPackReference(string? PackId, string? Subpack, string? Version);

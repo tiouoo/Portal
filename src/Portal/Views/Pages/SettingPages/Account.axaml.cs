@@ -1,20 +1,14 @@
-using System;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using Portal.Const;
+using Avalonia.Platform.Storage;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Operations.Account;
-using Portal.Module.AggregatedSearch;
-using Portal.Module.Initialize;
 using Portal.ViewModels;
-using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Classes;
@@ -45,14 +39,14 @@ public partial class Account : DataUserControl
         if (topLevel == null) return;
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(
-            new Avalonia.Platform.Storage.FilePickerSaveOptions
+            new FilePickerSaveOptions
             {
                 Title = "保存皮肤",
                 SuggestedFileName = $"{account.Name}.png",
                 FileTypeChoices =
                 [
-                    new Avalonia.Platform.Storage.FilePickerFileType("PNG 图片") { Patterns = ["*.png"] }
-                ],
+                    new FilePickerFileType("PNG 图片") { Patterns = ["*.png"] }
+                ]
             });
 
         if (file == null) return;
@@ -62,11 +56,11 @@ public partial class Account : DataUserControl
             var skinBytes = Convert.FromBase64String(account.Skin);
             await using var stream = await file.OpenWriteAsync();
             await stream.WriteAsync(skinBytes);
-            NotificationGateway.Notice(topLevel, "皮肤已保存", NotificationType.Success);
+            topLevel.Notice("皮肤已保存", NotificationType.Success);
         }
         catch (Exception ex)
         {
-            NotificationGateway.Notice(topLevel, $"保存失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice($"保存失败：{ex.Message}", NotificationType.Error);
         }
     }
 
@@ -97,10 +91,7 @@ public partial class Account : DataUserControl
                 }
 
                 var index = Data.ConfigEntry.MinecraftAccounts.IndexOf(account);
-                if (index >= 0)
-                {
-                    Data.ConfigEntry.MinecraftAccounts[index] = refreshed;
-                }
+                if (index >= 0) Data.ConfigEntry.MinecraftAccounts[index] = refreshed;
 
                 Data.ConfigEntry.UsingMinecraftMinecraftAccount = refreshed;
                 topLevel.Notice("账户信息已更新", NotificationType.Success);
@@ -116,22 +107,14 @@ public partial class Account : DataUserControl
 
                 var usingAccount = Data.ConfigEntry.UsingMinecraftMinecraftAccount;
                 var usingAccountUuid = usingAccount?.Uuid;
-                foreach (var existing in result.Existing)
-                {
-                    Data.ConfigEntry.MinecraftAccounts.Remove(existing);
-                }
+                foreach (var existing in result.Existing) Data.ConfigEntry.MinecraftAccounts.Remove(existing);
 
-                foreach (var refreshed in result.Refreshed)
-                {
-                    Data.ConfigEntry.MinecraftAccounts.Add(refreshed);
-                }
+                foreach (var refreshed in result.Refreshed) Data.ConfigEntry.MinecraftAccounts.Add(refreshed);
 
                 if (result.Existing.Contains(usingAccount))
-                {
                     Data.ConfigEntry.UsingMinecraftMinecraftAccount = usingAccountUuid.HasValue
                         ? result.Refreshed.FirstOrDefault(refreshed => refreshed.Uuid == usingAccountUuid)
                         : null;
-                }
 
                 var changes = new List<string>();
                 if (result.Added.Count > 0)
@@ -211,7 +194,7 @@ public partial class Account : DataUserControl
             Data.ConfigEntry.MinecraftAccounts.Remove(account);
         }
 
-        this.AsTopLevel().Notice(new NotificationOptions()
+        this.AsTopLevel().Notice(new NotificationOptions
         {
             Content = $"已移除账户：{account.Name} ({account.DisplayAccountNote})",
             Type = NotificationType.Success,
@@ -222,7 +205,7 @@ public partial class Account : DataUserControl
                 {
                     Data.ConfigEntry.MinecraftAccounts.Add(account);
                     Data.ConfigEntry.UsingMinecraftMinecraftAccount = account;
-                }, true),
+                }, true)
             ]
         });
     }
@@ -232,10 +215,7 @@ public partial class Account : DataUserControl
         var tryGetHostId = this.TryGetHostId()!;
         var result = await AddAccount.Main(tryGetHostId, Data.ConfigEntry.AuthServers);
         if (result == null) return;
-        foreach (var minecraftAccount in result.JavaAccounts)
-        {
-            Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
-        }
+        foreach (var minecraftAccount in result.JavaAccounts) Data.ConfigEntry.MinecraftAccounts.Add(minecraftAccount);
         if (result.JavaAccounts.Count > 0)
             Data.ConfigEntry.UsingMinecraftMinecraftAccount = result.JavaAccounts[^1];
         if (result.BedrockAccount is { } bedrockAccount)
@@ -288,10 +268,7 @@ public partial class Account : DataUserControl
         var hostId = this.TryGetHostId()!;
         var result = await EditAccountNoteDialog.Show(hostId, account.AccountNote ?? string.Empty);
 
-        if (result != null)
-        {
-            account.AccountNote = result;
-        }
+        if (result != null) account.AccountNote = result;
     }
 
     private async void PreviewSkin_Click(object? sender, RoutedEventArgs e)
@@ -320,9 +297,9 @@ public partial class Account : DataUserControl
         var hostId = this.TryGetHostId()!;
         var newSkinPath = await ChangeSkinDialog.Show(hostId, null);
 
-        if (!string.IsNullOrEmpty(newSkinPath) && System.IO.File.Exists(newSkinPath))
+        if (!string.IsNullOrEmpty(newSkinPath) && File.Exists(newSkinPath))
         {
-            account.Skin = Convert.ToBase64String(await System.IO.File.ReadAllBytesAsync(newSkinPath));
+            account.Skin = Convert.ToBase64String(await File.ReadAllBytesAsync(newSkinPath));
             this.AsTopLevel().Notice("皮肤已更新", NotificationType.Success);
         }
     }

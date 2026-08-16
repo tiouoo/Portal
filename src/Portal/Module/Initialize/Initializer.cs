@@ -1,25 +1,11 @@
-using System.Diagnostics;
-using System.IO;
-using Avalonia;
-using Avalonia.Controls.Notifications;
-using Portal.Classes.Entries;
-using Portal.Const;
-using Portal.Core;
-using Portal.Core.App.Service;
-using Portal.Core.Minecraft;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Classes.Config;
+using Portal.Core.App.Service;
 using Portal.Core.Classes;
 using Portal.Core.Const;
+using Portal.Core.Minecraft;
 using Portal.Core.Module.Initialize;
-using Portal.Views;
-using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Extensions;
-using Tio.Avalonia.Standard.Modules.Platform;
-using Tio.Avalonia.Standard.Tab.Common;
-using Tio.Avalonia.Standard.Tab.Gateway;
-using TioUi.Common.Helpers;
 
 namespace Portal.Module.Initialize;
 
@@ -44,7 +30,7 @@ public static partial class Initializer
             Data.ConfigEntry.GithubMirrorMode == GithubMirrorMode.Direct,
             Data.ConfigEntry.EnableFragmentDownload, Data.ConfigEntry.DownloadMaxFragmentCount,
             Data.ConfigEntry.DownloadMaxRetryCount);
-        MinecraftCoreInitializer.Initialize(new MinecraftCoreInitializeOptions()
+        MinecraftCoreInitializer.Initialize(new MinecraftCoreInitializeOptions
         {
             AppVersion = AppVersionService.Instance.Version.VersionTitle,
             EnableCustomUserAgent = Data.ConfigEntry.EnableCustomUserAgent,

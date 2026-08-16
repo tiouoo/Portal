@@ -11,7 +11,7 @@ namespace Portal.Core.Minecraft;
 
 public static class LaunchCustomization
 {
-        public static Dictionary<string, string> BuildPlaceholders(MinecraftInstance instance, Account? account,
+    public static Dictionary<string, string> BuildPlaceholders(MinecraftInstance instance, Account? account,
         JavaEntry? java, MinecraftLaunchOptions options)
     {
         var entry = instance.MinecraftEntry;
@@ -49,14 +49,14 @@ public static class LaunchCustomization
             ["{height}"] = options.WindowHeight.ToString(),
             ["{max_memory}"] = options.MaxMemory.ToString(),
             ["{launcher_dir}"] = AppContext.BaseDirectory,
-            ["{launcher_path}"] = Environment.ProcessPath ?? string.Empty,
+            ["{launcher_path}"] = Environment.ProcessPath ?? string.Empty
         };
 
         placeholders["{title}"] = Apply(options.WindowTitle, placeholders) ?? string.Empty;
         return placeholders;
     }
 
-        public static string? Apply(string? template, IReadOnlyDictionary<string, string> placeholders)
+    public static string? Apply(string? template, IReadOnlyDictionary<string, string> placeholders)
     {
         if (string.IsNullOrWhiteSpace(template))
             return null;
@@ -67,7 +67,7 @@ public static class LaunchCustomization
         return builder.ToString();
     }
 
-        public static IReadOnlyList<string> SplitArguments(string? commandLine)
+    public static IReadOnlyList<string> SplitArguments(string? commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine))
             return [];
@@ -76,7 +76,6 @@ public static class LaunchCustomization
         var current = new StringBuilder();
         var inQuotes = false;
         foreach (var character in commandLine)
-        {
             switch (character)
             {
                 case '"':
@@ -93,22 +92,23 @@ public static class LaunchCustomization
                             arguments.Add(current.ToString());
                             current.Clear();
                         }
+
                         break;
                     }
+
                     current.Append(character);
                     break;
                 default:
                     current.Append(character);
                     break;
             }
-        }
 
         if (current.Length > 0)
             arguments.Add(current.ToString());
         return arguments;
     }
 
-        public static async Task<int> RunShellCommandAsync(string command, string? workingDirectory,
+    public static async Task<int> RunShellCommandAsync(string command, string? workingDirectory,
         CancellationToken cancellationToken)
     {
         Logger.Info($"执行启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
@@ -132,19 +132,21 @@ public static class LaunchCustomization
             try
             {
                 if (!process.HasExited)
-                    process.Kill(entireProcessTree: true);
+                    process.Kill(true);
             }
             catch (Exception exception)
             {
                 Logger.Debug($"取消自定义命令后终止进程失败，进程可能已退出。{Environment.NewLine}{exception}");
             }
+
             throw;
         }
+
         Logger.Info($"启动自定义命令已结束，退出代码：{process.ExitCode}");
         return process.ExitCode;
     }
 
-        public static void RunShellCommandDetached(string command, string? workingDirectory)
+    public static void RunShellCommandDetached(string command, string? workingDirectory)
     {
         Logger.Info($"已安排后台启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
         Task.Run(async () =>
@@ -155,15 +157,15 @@ public static class LaunchCustomization
             }
             catch (Exception exception)
             {
-                
                 Logger.Warning($"后台启动自定义命令失败。{Environment.NewLine}{exception}");
             }
         }).ContinueWith(completedTask => Logger.Error($"后台启动自定义命令异常结束：{command}", completedTask.Exception!),
-            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
     }
 
-        public static void WatchWindowTitle(Process process, string title)
+    public static void WatchWindowTitle(Process process, string title)
     {
         if (!OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(title))
             return;
@@ -190,11 +192,11 @@ public static class LaunchCustomization
             }
             catch (Exception exception)
             {
-                
                 Logger.Debug($"停止监视游戏窗口标题，进程：{process.Id}。{Environment.NewLine}{exception}");
             }
         }).ContinueWith(completedTask => Logger.Error($"游戏窗口标题监视异常结束，进程：{process.Id}", completedTask.Exception!),
-            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
     }
 

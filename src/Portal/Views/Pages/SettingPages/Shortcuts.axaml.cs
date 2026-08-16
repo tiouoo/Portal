@@ -1,23 +1,15 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes.Config;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.App.Helpers;
 using Portal.Core.Classes.Config;
 using Portal.Core.Const;
-using Portal.Core.Helpers;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Initialize;
-using Portal.Module.AggregatedSearch;
-using Portal.Module.Initialize;
 using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
@@ -29,7 +21,7 @@ public partial class Shortcuts : DataUserControl
     {
         InitializeComponent();
         DataContext = new ShortcutsViewModel();
-        
+
         Loaded += (_, _) => ViewModel.RefreshAllFromConfig();
     }
 
@@ -54,19 +46,20 @@ public partial class ShortcutsViewModel : ObservableObject
 
     public Data Data => Data.Instance;
 
-        public ObservableCollection<ShortcutCategoryViewModel> Categories { get; } = [];
+    public ObservableCollection<ShortcutCategoryViewModel> Categories { get; } = [];
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
 
-    partial void OnSearchTextChanged(string value) => ApplyFilter();
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
 
-        public void RefreshAllFromConfig()
+    public void RefreshAllFromConfig()
     {
         foreach (var category in Categories)
-        {
-            foreach (var item in category.AllItems)
-                item.RefreshFromConfig();
-        }
+        foreach (var item in category.AllItems)
+            item.RefreshFromConfig();
 
         ApplyFilter();
     }
@@ -87,9 +80,9 @@ public partial class ShortcutsViewModel : ObservableObject
 
 public partial class ShortcutItemViewModel : ObservableObject
 {
-    private bool _suppressWriteBack;
-    private readonly List<string> _pinyins;
     private readonly List<string> _firstLetters;
+    private readonly List<string> _pinyins;
+    private bool _suppressWriteBack;
 
     public ShortcutItemViewModel(ShortcutAction action)
     {
@@ -106,11 +99,12 @@ public partial class ShortcutItemViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     public partial KeyGesture? Gesture { get; set; }
+
     [ObservableProperty] public partial bool IsNotDefault { get; set; }
 
-        public bool IsEmpty => Gesture is null;
+    public bool IsEmpty => Gesture is null;
 
-        partial void OnGestureChanged(KeyGesture? value)
+    partial void OnGestureChanged(KeyGesture? value)
     {
         if (_suppressWriteBack) return;
         Data.ConfigEntry.Shortcuts.SetGesture(Action,
@@ -118,21 +112,23 @@ public partial class ShortcutItemViewModel : ObservableObject
         ConfigSaver.SaveConfig();
     }
 
-        public bool Matches(string query)
+    public bool Matches(string query)
     {
         if (string.IsNullOrWhiteSpace(query)) return true;
         var gestureText = Gesture?.ToString("g", null) ?? "未设置";
         var text = $"{DisplayName} {gestureText}";
         if (MatchesToken(query, text)) return true;
-        
-        return query.Split(' ', System.StringSplitOptions.RemoveEmptyEntries)
+
+        return query.Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Any(token => MatchesToken(token, text));
     }
 
-    private bool MatchesToken(string token, string text) =>
-        text.Contains(token, System.StringComparison.OrdinalIgnoreCase) ||
-        _pinyins.Any(pinyin => pinyin.Contains(token, System.StringComparison.OrdinalIgnoreCase)) ||
-        _firstLetters.Any(pinyin => pinyin.Contains(token, System.StringComparison.OrdinalIgnoreCase));
+    private bool MatchesToken(string token, string text)
+    {
+        return text.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+               _pinyins.Any(pinyin => pinyin.Contains(token, StringComparison.OrdinalIgnoreCase)) ||
+               _firstLetters.Any(pinyin => pinyin.Contains(token, StringComparison.OrdinalIgnoreCase));
+    }
 
     public void RefreshFromConfig()
     {

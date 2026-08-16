@@ -1,28 +1,25 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Portal.Classes.Entries;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Widgets;
 using Portal.Core.Services;
-using Portal.Module.Widgets;
-using Portal.Services;
 using Portal.Views.Pages;
 using Portal.Views.Pages.InstancePages;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
-using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Widgets;
 
 public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
 {
-    private WorldSaveInfo? _world;
     private bool _loading;
+    private WorldSaveInfo? _world;
 
     public QuickWorldWidget1x1()
     {
@@ -36,7 +33,10 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
         _ = LoadWorldAsync();
     }
 
-    protected override void OnInstanceIconRefreshed() => RefreshInstanceDisplay();
+    protected override void OnInstanceIconRefreshed()
+    {
+        RefreshInstanceDisplay();
+    }
 
     private void RefreshInstanceDisplay()
     {
@@ -46,7 +46,8 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
 
         var instance = Instance;
         if (launchButton != null)
-            launchButton.IsVisible = instance is { MinecraftEntry: { } entry } && entry.ReleaseTime > new DateTime(2023, 4, 4);
+            launchButton.IsVisible =
+                instance is { MinecraftEntry: { } entry } && entry.ReleaseTime > new DateTime(2023, 4, 4);
 
         if (instance == null)
         {
@@ -99,7 +100,7 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
         if (world == null)
         {
             if (titleText != null)
-                titleText.Text = _loading ? "加载中…" : (folderName ?? "未选择存档");
+                titleText.Text = _loading ? "加载中…" : folderName ?? "未选择存档";
             return;
         }
 
@@ -158,9 +159,12 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
             world?.IconPath);
 
         _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)),
+            target);
     }
 
-    private static string GetGameModeText(int? gameMode) =>
-        gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+    private static string GetGameModeText(int? gameMode)
+    {
+        return gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+    }
 }

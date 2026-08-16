@@ -7,7 +7,7 @@ namespace Portal.Core.Classes;
 
 public static class ModDependencyFilter
 {
-        public static async Task<IReadOnlyList<ModVersionFileItem>> FilterInstalledAsync(
+    public static async Task<IReadOnlyList<ModVersionFileItem>> FilterInstalledAsync(
         MinecraftInstance instance, IReadOnlyList<ModVersionFileItem> dependencies)
     {
         if (dependencies.Count == 0) return dependencies;

@@ -1,11 +1,11 @@
+using System.Diagnostics;
 using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Portal.Const;
 using Portal.Core.Const;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Module.Ipc;
@@ -18,12 +18,11 @@ namespace Portal;
 
 public partial class App : Application
 {
-    public static string? BedrockPackagePath { get; set; }
-    public static string? JavaPackagePath { get; set; }
-    
     public delegate void UiLoadedEventHandler(TabWindow ui);
 
     private TabWindow _win;
+    public static string? BedrockPackagePath { get; set; }
+    public static string? JavaPackagePath { get; set; }
 
     public static TabWindow? MainWindow => (Current!.ApplicationLifetime
         as IClassicDesktopStyleApplicationLifetime).MainWindow as TabWindow;
@@ -85,12 +84,13 @@ public partial class App : Application
 
             Logger.Info("UI配置完成");
         }
-        
+
         if (BedrockPackagePath == null)
         {
             PortalCommandQueue.ExecutionHandler = PortalCommandExecutor.ExecuteAsync;
             PortalCommandQueue.Initialize();
         }
+
         if (BedrockPackagePath == null && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
             activatableLifetime.Activated += OnActivated;
 
@@ -114,11 +114,8 @@ public partial class App : Application
         TextOptions.SetTextRenderingMode(_win, TextRenderingMode.Antialias);
         TextOptions.SetTextHintingMode(_win, TextHintingMode.Light);
         TextOptions.SetBaselinePixelAlignment(_win, BaselinePixelAlignment.Aligned);
-        
-        
-        
-        
-        
+
+
         desktop.MainWindow = _win;
         _win.Loaded += Function;
     }
@@ -128,7 +125,7 @@ public partial class App : Application
         Logger.Info("UI加载完成");
         _win.Loaded -= Function;
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             await Initializer.UiAsync();

@@ -1,14 +1,15 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Bedrock.Standard.Interface;
-using Portal.Const;
 using Portal.Core.Const;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -44,7 +45,7 @@ public partial class BedrockToolsPage : UserControl
         if (topLevel is null) return;
         if (BedrockToolsService.Default is null)
         {
-            NotificationGateway.Notice(topLevel, "SDK 1.8 检测仅支持 Windows", NotificationType.Warning);
+            topLevel.Notice("SDK 1.8 检测仅支持 Windows", NotificationType.Warning);
             return;
         }
 
@@ -59,9 +60,9 @@ public partial class BedrockToolsPage : UserControl
 
             var result = await OverlayDialog.ShowStandardAsync(new TextBlock
             {
-                Margin = new Avalonia.Thickness(24),
+                Margin = new Thickness(24),
                 Text = "当前系统未检测到完整的 Windows App SDK 1.8 (8000.x)。\n缺少 Main、Singleton 或 DDLM 组件可能导致游戏无法启动，是否立即下载安装？",
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap
             }, null, this.TryGetHostId(), new OverlayDialogOptions
             {
                 Title = "未安装 SDK 1.8",
@@ -77,7 +78,7 @@ public partial class BedrockToolsPage : UserControl
         catch (Exception exception)
         {
             Logger.Error(exception);
-            NotificationGateway.Notice(topLevel, "SDK 1.8 检测失败", NotificationType.Error);
+            topLevel.Notice("SDK 1.8 检测失败", NotificationType.Error);
         }
     }
 
@@ -186,9 +187,9 @@ public partial class BedrockToolsPage : UserControl
         Dispatcher.UIThread.Post(() =>
         {
             if (task.Status == ManagedTaskStatus.Completed)
-                NotificationGateway.Notice(topLevel, "Windows App SDK 1.8 安装完成", NotificationType.Success);
+                topLevel.Notice("Windows App SDK 1.8 安装完成", NotificationType.Success);
             else if (task.Status == ManagedTaskStatus.Faulted)
-                NotificationGateway.Notice(topLevel, "Windows App SDK 1.8 安装失败", NotificationType.Error);
+                topLevel.Notice("Windows App SDK 1.8 安装失败", NotificationType.Error);
         });
     }
 
@@ -198,15 +199,15 @@ public partial class BedrockToolsPage : UserControl
         if (topLevel is null) return;
         if (BedrockToolsService.Default is null)
         {
-            NotificationGateway.Notice(topLevel, "卸载 Microsoft Store Minecraft 仅支持 Windows", NotificationType.Warning);
+            topLevel.Notice("卸载 Microsoft Store Minecraft 仅支持 Windows", NotificationType.Warning);
             return;
         }
 
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
-            Margin = new Avalonia.Thickness(24),
+            Margin = new Thickness(24),
             Text = "确定要卸载本机从 Microsoft Store 安装的 Minecraft 基岩版吗？\n此操作不会删除 Portal 管理的独立实例。",
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), new OverlayDialogOptions
         {
             Title = "卸载 Minecraft",
@@ -222,12 +223,12 @@ public partial class BedrockToolsPage : UserControl
         try
         {
             await BedrockToolsService.Default.UninstallMinecraftAsync();
-            NotificationGateway.Notice(topLevel, "Minecraft 卸载完成", NotificationType.Success);
+            topLevel.Notice("Minecraft 卸载完成", NotificationType.Success);
         }
         catch (Exception exception)
         {
             Logger.Error(exception);
-            NotificationGateway.Notice(topLevel, "Minecraft 卸载失败", NotificationType.Error);
+            topLevel.Notice("Minecraft 卸载失败", NotificationType.Error);
         }
     }
 }

@@ -1,23 +1,16 @@
-using System;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using Portal.Classes.Config;
-#if DEBUG
-using HotAvalonia;
-#endif
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.Classes;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
@@ -26,7 +19,6 @@ using Portal.Core.Module.Initialize;
 using Portal.Core.Operations.OpenFile;
 using Portal.Module.DefaultPage;
 using Portal.Module.DragDrop;
-using Portal.Module.Initialize;
 using Portal.Views.Components;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
@@ -38,24 +30,39 @@ using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
+using TioUi.Common.Helpers;
 using TioUi.Controls;
+using AutoCompleteBox = Avalonia.Controls.AutoCompleteBox;
+#if DEBUG
+using HotAvalonia;
+#endif
 
 namespace Portal.Views;
 
 public partial class TabWindow : TioTabWindowBase
 {
-    private bool _isConfigEntrySubscribed;
-    private IntPtr _macOsWindowHandle;
     private Image? _backgroundImageLayer;
     private Border? _backgroundMaskLayer;
-    private Bitmap? _cachedOriginalBackground;
     private string? _cachedBackgroundPath;
-    private string? _lastDragMessage;
-
-    
-    
-    private bool _hideDropTipScheduled;
+    private Bitmap? _cachedOriginalBackground;
     private Debouncer _hideDropTipDebouncer;
+
+
+    private bool _hideDropTipScheduled;
+    private bool _isConfigEntrySubscribed;
+    private string? _lastDragMessage;
+    private IntPtr _macOsWindowHandle;
+
+    public TabWindow()
+    {
+        Build();
+    }
+
+    public TabWindow(bool isMainWindow)
+    {
+        IsMainWindow = isMainWindow;
+        Build();
+    }
 
     public bool IsTabMaskVisible
     {
@@ -63,7 +70,13 @@ public partial class TabWindow : TioTabWindowBase
         set => SetField(ref field, value);
     }
 
-        public override bool OnClose()
+    public bool IsUiLoading
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public override bool OnClose()
     {
         if (AllWindows.Count == 1)
         {
@@ -75,23 +88,12 @@ public partial class TabWindow : TioTabWindowBase
         return false;
     }
 
-    public bool IsUiLoading
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public TabWindow()
-    {
-        Build();
-    }
-
     private void Build()
     {
         _hideDropTipDebouncer = new Debouncer(OnHideDropTipDebounce, 300);
         InitializeComponent();
 
-        
+
         if (Data.ConfigEntry.HasTabWindowSize)
         {
             Width = Math.Max(Data.ConfigEntry.TabWindowWidth, MinWidth);
@@ -143,17 +145,13 @@ public partial class TabWindow : TioTabWindowBase
         }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
             TabSelectionList.EnableTabDragDrop(this);
-        }
         else
-        {
             TabSelectionList.PointerPressed += (_, e) =>
             {
                 if (!e.Properties.IsLeftButtonPressed) return;
                 BeginMoveDrag(e);
             };
-        }
 
         Loaded += (_, _) => ApplyBackground();
     }
@@ -163,16 +161,7 @@ public partial class TabWindow : TioTabWindowBase
 #endif
     public void Hot()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            TabSelectionList.EnableTabDragDrop(this);
-        }
-    }
-
-    public TabWindow(bool isMainWindow)
-    {
-        IsMainWindow = isMainWindow;
-        Build();
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) TabSelectionList.EnableTabDragDrop(this);
     }
 
     private void Events()
@@ -219,9 +208,8 @@ public partial class TabWindow : TioTabWindowBase
         {
             try
             {
-                TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, x: 16, y: -3,
-                    spacing: 23);
-                
+                TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(nsWindow, 16, -3,
+                    23);
             }
             catch (Exception exception)
             {
@@ -237,9 +225,8 @@ public partial class TabWindow : TioTabWindowBase
 
         try
         {
-            TioUi.Common.Helpers.MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, x: 16, y: -3,
-                spacing: 23);
-            
+            MacOsWindowHandler.RefreshTitleBarButtonPosition(_macOsWindowHandle, 16, -3,
+                23);
         }
         catch (Exception exception)
         {
@@ -257,12 +244,12 @@ public partial class TabWindow : TioTabWindowBase
 
         _macOsWindowHandle = IntPtr.Zero;
 
-        
+
         TabSelectionList.DisableTabDragDrop();
 
-        this.RemoveHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
-        this.RemoveHandler(DragDrop.DragOverEvent, OnDragHandler);
-        this.RemoveHandler(DragDrop.DropEvent, OnDropHandler);
+        RemoveHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
+        RemoveHandler(DragDrop.DragOverEvent, OnDragHandler);
+        RemoveHandler(DragDrop.DropEvent, OnDropHandler);
 
         SizeChanged -= TabWindow_OnSizeChanged;
         Resized -= TabWindow_OnResized;
@@ -289,7 +276,7 @@ public partial class TabWindow : TioTabWindowBase
         }
     }
 
-        private void TabWindow_OnResized(object? sender, WindowResizedEventArgs e)
+    private void TabWindow_OnResized(object? sender, WindowResizedEventArgs e)
     {
         if (WindowState == WindowState.Maximized || WindowState == WindowState.Minimized) return;
         if (e.Reason != WindowResizeReason.User) return;
@@ -305,8 +292,7 @@ public partial class TabWindow : TioTabWindowBase
 
     public void OpenAggregatedSearchDialog()
     {
-        
-        if (FocusManager?.GetFocusedElement() is TextBox or Avalonia.Controls.AutoCompleteBox
+        if (FocusManager?.GetFocusedElement() is TextBox or AutoCompleteBox
             or TioUi.Controls.AutoCompleteBox)
             return;
 
@@ -332,13 +318,11 @@ public partial class TabWindow : TioTabWindowBase
 
     private void Keys()
     {
-        
-        
         RemoveDefaultWindowKeyBindings();
         ShortcutManager.Apply(this);
     }
 
-        private void RemoveDefaultWindowKeyBindings()
+    private void RemoveDefaultWindowKeyBindings()
     {
         var toRemove = KeyBindings
             .Where(binding => binding.Gesture is KeyGesture gesture && IsDefaultWindowGesture(gesture))
@@ -347,19 +331,24 @@ public partial class TabWindow : TioTabWindowBase
             KeyBindings.Remove(binding);
     }
 
-    private static bool IsDefaultWindowGesture(KeyGesture gesture) =>
-        (gesture.Key == Key.T && gesture.KeyModifiers == KeyModifiers.Control) ||
-        (gesture.Key == Key.W && gesture.KeyModifiers == KeyModifiers.Control) ||
-        (gesture.Key == Key.W && gesture.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift));
+    private static bool IsDefaultWindowGesture(KeyGesture gesture)
+    {
+        return (gesture.Key == Key.T && gesture.KeyModifiers == KeyModifiers.Control) ||
+               (gesture.Key == Key.W && gesture.KeyModifiers == KeyModifiers.Control) ||
+               (gesture.Key == Key.W && gesture.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift));
+    }
 
-        public void OpenPage(ITioTabPage page)
+    public void OpenPage(ITioTabPage page)
     {
         var tab = new TabEntry(this, page);
         CreateTab(tab);
         SelectTab(tab);
     }
 
-    public void OpenDebugPage() => OpenPage(new DebugPage());
+    public void OpenDebugPage()
+    {
+        OpenPage(new DebugPage());
+    }
 
     public void OpenCreateInstanceDialog()
     {
@@ -375,7 +364,7 @@ public partial class TabWindow : TioTabWindowBase
             new CreateInstanceDialogViewModel(), this.TryGetHostId(), options);
     }
 
-        public async void OpenAddMinecraftFolderDialog()
+    public async void OpenAddMinecraftFolderDialog()
     {
         var options = new OverlayDialogOptions
         {
@@ -392,7 +381,7 @@ public partial class TabWindow : TioTabWindowBase
         var result = await OverlayDialog
             .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
                 new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders
-                    .Select(folder => folder.FolderPath).ToList()), hostId: this.TryGetHostId(), options: options);
+                    .Select(folder => folder.FolderPath).ToList()), this.TryGetHostId(), options);
 
         if (result == null) return;
         Data.ConfigEntry.MinecraftFolders.Add(result);
@@ -456,20 +445,19 @@ public partial class TabWindow : TioTabWindowBase
     {
         DragDrop.SetAllowDrop(this, true);
 
-        
-        this.AddHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
-        this.AddHandler(DragDrop.DragOverEvent, OnDragHandler);
-        this.AddHandler(DragDrop.DropEvent, OnDropHandler);
+
+        AddHandler(DragDrop.DragLeaveEvent, OnLeaveHandler);
+        AddHandler(DragDrop.DragOverEvent, OnDragHandler);
+        AddHandler(DragDrop.DropEvent, OnDropHandler);
     }
 
     private void OnDragHandler(object? sender, DragEventArgs e)
     {
-        
         _hideDropTipScheduled = false;
 
         var msg = Handler.GetMsg(e);
-        
-        
+
+
         if (string.IsNullOrEmpty(msg) || msg == _lastDragMessage) return;
         _lastDragMessage = msg;
         BarComponent.DropMsg = msg;
@@ -478,15 +466,14 @@ public partial class TabWindow : TioTabWindowBase
     private void OnLeaveHandler(object? sender, DragEventArgs e)
     {
         e.DragEffects = DragDropEffects.None;
-        
-        
+
+
         _hideDropTipScheduled = true;
         _hideDropTipDebouncer.Invoke();
     }
 
-        private void OnHideDropTipDebounce()
+    private void OnHideDropTipDebounce()
     {
-        
         Dispatcher.UIThread.Post(() =>
         {
             if (!_hideDropTipScheduled) return;
@@ -508,19 +495,15 @@ public partial class TabWindow : TioTabWindowBase
     public static void ApplyBackgroundToAllWindows()
     {
         foreach (var windowBase in AllWindows)
-        {
             if (windowBase is TabWindow tabWin)
                 tabWin.ApplyBackground();
-        }
     }
 
     public static void ApplyImageMaskToAllWindows()
     {
         foreach (var windowBase in AllWindows)
-        {
             if (windowBase is TabWindow tabWin)
                 tabWin.ApplyImageMaskOverlay();
-        }
     }
 
     public void ApplyBackground()
@@ -619,19 +602,6 @@ public partial class TabWindow : TioTabWindowBase
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
                 break;
 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
 
             case BackgroundMode.Mica:
                 ClearOriginalBackgroundCache();
@@ -668,20 +638,20 @@ public partial class TabWindow : TioTabWindowBase
         }
     }
 
-        private void EnsureBackgroundLayers()
+    private void EnsureBackgroundLayers()
     {
         if (RootBorder == null) return;
         if (_backgroundImageLayer != null) return;
 
-        LayoutTransformControl? layoutTransformControl = RootBorder.Child as LayoutTransformControl;
+        var layoutTransformControl = RootBorder.Child as LayoutTransformControl;
         var content = layoutTransformControl?.Child ?? RootBorder.Child;
         if (content is not DockPanel dockPanel) return;
 
         _backgroundImageLayer = new Image
         {
             Stretch = Stretch.UniformToFill,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
             IsHitTestVisible = false
         };
 

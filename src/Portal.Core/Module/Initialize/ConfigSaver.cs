@@ -36,6 +36,7 @@ public static class ConfigSaver
                     payload.ManagedDialogs);
                 WriteAtomic(ConfigPath.DebugConsoleDataPath, payload.DebugConsole);
             }
+
             Logger.Info($"应用配置保存完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
         }
         catch (Exception ex)
@@ -56,6 +57,7 @@ public static class ConfigSaver
             Data.ConfigEntry.FilePicker == FilePicker.Managed ? "true" : "false",
             Data.ConfigEntry.EnableDebugConsole ? "true" : "false");
     }
+
     private static void WriteAtomic(string path, string content)
     {
         var temp = path + ".tmp";

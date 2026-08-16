@@ -5,15 +5,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Provider;
-using Portal.Classes;
-using Portal.Const;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
-using Portal.Views.Pages.InstancePages;
-using TioUi.Common.Interfaces;
 using Tio.Avalonia.Standard.Modules.DiskIO;
+using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -24,21 +21,30 @@ public partial class ModInstallDialog : UserControl
         InitializeComponent();
     }
 
-    private void Install_Click(object? sender, RoutedEventArgs e) =>
-        (DataContext as ModInstallDialogViewModel)?.Install(includeDependencies: true);
+    private void Install_Click(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as ModInstallDialogViewModel)?.Install(true);
+    }
 
-    private void SkipDependencies_Click(object? sender, RoutedEventArgs e) =>
-        (DataContext as ModInstallDialogViewModel)?.Install(includeDependencies: false);
+    private void SkipDependencies_Click(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as ModInstallDialogViewModel)?.Install(false);
+    }
 
-    private void SaveAs_Click(object? sender, RoutedEventArgs e) =>
+    private void SaveAs_Click(object? sender, RoutedEventArgs e)
+    {
         (DataContext as ModInstallDialogViewModel)?.SaveAs();
+    }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) =>
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
+    {
         (DataContext as ModInstallDialogViewModel)?.Cancel();
+    }
 
     private void Dependency_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Control { DataContext: ModInstallDependencyItem item } || TopLevel.GetTopLevel(this) is not { } topLevel)
+        if (sender is not Control { DataContext: ModInstallDependencyItem item } ||
+            TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
         ModDetailsPage.Open(topLevel, item.Target, item.Name);
@@ -51,24 +57,29 @@ public enum ModDownloadDestination
     SaveAs
 }
 
-public sealed record ModInstallDialogResult(ModDownloadDestination Destination, MinecraftInstance? Instance,
-    IReadOnlyList<ModVersionFileItem> Dependencies, ModVersionFileItem File);
+public sealed record ModInstallDialogResult(
+    ModDownloadDestination Destination,
+    MinecraftInstance? Instance,
+    IReadOnlyList<ModVersionFileItem> Dependencies,
+    ModVersionFileItem File);
 
 public sealed record ModInstallInstanceItem(MinecraftInstance Instance, string Name, string Description);
+
 public sealed record ModInstallDependencyItem(ModVersionFileItem File, ModDetailsTarget Target, string Name);
 
 public partial class ModInstallDialogViewModel : ObservableObject, IDialogContext
 {
+    private static readonly TimeSpan DependencyLoadTimeout = TimeSpan.FromSeconds(90);
     private readonly IReadOnlyList<ModInstallInstanceItem> _allInstances;
+    private readonly CurseforgeProvider _curseforge = new();
     private readonly IReadOnlyList<ModVersionFileItem> _files;
     private readonly ModrinthProvider _modrinth = new();
-    private readonly CurseforgeProvider _curseforge = new();
-    private static readonly TimeSpan DependencyLoadTimeout = TimeSpan.FromSeconds(90);
-    private int _dependencyLoadGeneration;
-    private int _dependencyFilterGeneration;
     private ModInstallDependencyItem[] _allDependencies = [];
+    private int _dependencyFilterGeneration;
+    private int _dependencyLoadGeneration;
 
-    public ModInstallDialogViewModel(ModVersionFileItem file, IEnumerable<MinecraftInstance> instances) : this([file], instances)
+    public ModInstallDialogViewModel(ModVersionFileItem file, IEnumerable<MinecraftInstance> instances) : this([file],
+        instances)
     {
     }
 
@@ -114,17 +125,27 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     public bool CanInstallWithDependencies => CanInstall && !IsLoadingDependencies && !HasDependencyLoadError;
     public bool HasDependencies => Dependencies.Count > 0;
     public bool HasSkippedDependencies => SkippedDependenciesCount > 0;
+
     public string SkippedDependenciesText => HasSkippedDependencies
         ? $"已检测到 {SkippedDependenciesCount} 个依赖已存在于目标实例，将自动跳过下载"
         : string.Empty;
+
     public bool ShowDependencyActions =>
         IsLoadingDependencies || Dependencies.Count > 0 || HasDependencyLoadError || HasSkippedDependencies;
+
     [ObservableProperty] public partial bool ShowAllInstances { get; set; }
     [ObservableProperty] public partial ModInstallInstanceItem? SelectedInstance { get; set; }
     [ObservableProperty] public partial bool HasCompatibleFile { get; set; } = true;
     [ObservableProperty] public partial bool IsLoadingDependencies { get; set; } = true;
     [ObservableProperty] public partial bool HasDependencyLoadError { get; set; }
     [ObservableProperty] public partial int SkippedDependenciesCount { get; set; }
+
+    public void Close()
+    {
+        Cancel();
+    }
+
+    public event EventHandler<object?>? RequestClose;
 
     partial void OnSkippedDependenciesCountChanged(int value)
     {
@@ -167,7 +188,10 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         OnPropertyChanged(nameof(ShowDependencyActions));
     }
 
-    partial void OnShowAllInstancesChanged(bool value) => RefreshInstances();
+    partial void OnShowAllInstancesChanged(bool value)
+    {
+        RefreshInstances();
+    }
 
     private void RefreshInstances()
     {
@@ -185,25 +209,32 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         OnPropertyChanged(nameof(HasNoInstances));
     }
 
-    private ModVersionFileItem? FindLatestCompatibleFile(MinecraftInstance instance) => _files.FirstOrDefault(file =>
-        IsCompatible(file, instance));
+    private ModVersionFileItem? FindLatestCompatibleFile(MinecraftInstance instance)
+    {
+        return _files.FirstOrDefault(file =>
+            IsCompatible(file, instance));
+    }
 
     private static bool IsCompatible(ModVersionFileItem file, MinecraftInstance instance)
     {
         if (!file.MinecraftVersions.Contains(instance.VersionId, StringComparer.OrdinalIgnoreCase)) return false;
         var compatibleLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != "通用").ToHashSet();
-        return compatibleLoaders.Count == 0 || instance.MinecraftEntry is ModifiedMinecraftEntry entry &&
-            entry.ModLoaders.Any(loader => compatibleLoaders.Contains(LoaderName(loader.Type)));
+        return compatibleLoaders.Count == 0 || (instance.MinecraftEntry is ModifiedMinecraftEntry entry &&
+                                                entry.ModLoaders.Any(loader =>
+                                                    compatibleLoaders.Contains(LoaderName(loader.Type))));
     }
 
-    private static string LoaderName(MinecraftLaunch.Base.Enums.ModLoaderType loader) => loader switch
+    private static string LoaderName(ModLoaderType loader)
     {
-        MinecraftLaunch.Base.Enums.ModLoaderType.NeoForge => "NeoForge",
-        MinecraftLaunch.Base.Enums.ModLoaderType.Forge => "Forge",
-        MinecraftLaunch.Base.Enums.ModLoaderType.Fabric => "Fabric",
-        MinecraftLaunch.Base.Enums.ModLoaderType.Quilt => "Quilt",
-        _ => string.Empty
-    };
+        return loader switch
+        {
+            ModLoaderType.NeoForge => "NeoForge",
+            ModLoaderType.Forge => "Forge",
+            ModLoaderType.Fabric => "Fabric",
+            ModLoaderType.Quilt => "Quilt",
+            _ => string.Empty
+        };
+    }
 
     private async Task LoadDependenciesAsync()
     {
@@ -217,21 +248,20 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         HasDependencyLoadError = false;
         try
         {
-            
-            
             var loadTask = Task.Run(async () =>
             {
-                IReadOnlyList<ModVersionFileItem> dependencies = file.Source switch
+                var dependencies = file.Source switch
                 {
                     ModDetailsSource.Modrinth => await LoadModrinthDependenciesAsync(file),
                     ModDetailsSource.CurseForge => await LoadCurseForgeDependenciesAsync(file),
                     _ => []
                 };
-                return await Task.WhenAll(dependencies.Select(async dependency => new ModInstallDependencyItem(dependency,
+                return await Task.WhenAll(dependencies.Select(async dependency => new ModInstallDependencyItem(
+                    dependency,
                     CreateDetailsTarget(file, dependency), await GetDependencyNameAsync(dependency))));
             });
 
-            
+
             if (await Task.WhenAny(loadTask, Task.Delay(DependencyLoadTimeout)) != loadTask)
             {
                 if (generation == _dependencyLoadGeneration) HasDependencyLoadError = true;
@@ -258,7 +288,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         }
     }
 
-        private async Task RefreshDependencyVisibilityAsync()
+    private async Task RefreshDependencyVisibilityAsync()
     {
         var filterGeneration = Interlocked.Increment(ref _dependencyFilterGeneration);
         var instance = SelectedInstance?.Instance;
@@ -287,22 +317,26 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     private async Task<IReadOnlyList<ModVersionFileItem>> LoadModrinthDependenciesAsync(ModVersionFileItem file)
     {
         var dependencies = file.Dependencies.ToList();
-        var files = await Task.WhenAll(dependencies.Select(dependency => LoadModrinthDependencyAsync(file, dependency)));
+        var files = await Task.WhenAll(dependencies.Select(dependency =>
+            LoadModrinthDependencyAsync(file, dependency)));
         return files.OfType<ModVersionFileItem>().DistinctBy(file => file.Id).ToArray();
     }
 
-    private async Task<ModVersionFileItem?> LoadModrinthDependencyAsync(ModVersionFileItem file, ModFileDependency dependency)
+    private async Task<ModVersionFileItem?> LoadModrinthDependencyAsync(ModVersionFileItem file,
+        ModFileDependency dependency)
     {
         if (!string.IsNullOrWhiteSpace(dependency.VersionId))
         {
-            var fixedVersion = ModVersionFileItem.From(await _modrinth.GetModFileByVersionIdAsync(dependency.VersionId));
+            var fixedVersion =
+                ModVersionFileItem.From(await _modrinth.GetModFileByVersionIdAsync(dependency.VersionId));
             if (IsCompatible(file, fixedVersion)) return fixedVersion;
         }
 
         if (string.IsNullOrWhiteSpace(dependency.ProjectId)) return null;
         var files = await _modrinth.GetModFilesByProjectIdAsync(dependency.ProjectId);
         return files.Select(ModVersionFileItem.From).Where(candidate => IsCompatible(file, candidate))
-            .OrderByDescending(candidate => candidate.MinecraftVersions.Count(version => file.MinecraftVersions.Contains(version)))
+            .OrderByDescending(candidate =>
+                candidate.MinecraftVersions.Count(version => file.MinecraftVersions.Contains(version)))
             .ThenByDescending(candidate => candidate.Id).FirstOrDefault();
     }
 
@@ -325,14 +359,16 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     {
         if (!candidate.MinecraftVersions.Intersect(file.MinecraftVersions).Any()) return false;
 
-        var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != "通用").Distinct().ToArray();
+        var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != "通用").Distinct()
+            .ToArray();
         return selectedLoaders.Length == 0 || candidate.GroupKeys.Any(key =>
             key.Loader == "通用" || selectedLoaders.Contains(key.Loader));
     }
 
     private static ModDetailsTarget CreateDetailsTarget(ModVersionFileItem file, ModVersionFileItem dependency)
     {
-        var gameVersion = file.MinecraftVersions.Intersect(dependency.MinecraftVersions).FirstOrDefault() ?? string.Empty;
+        var gameVersion = file.MinecraftVersions.Intersect(dependency.MinecraftVersions).FirstOrDefault() ??
+                          string.Empty;
         var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != "通用").ToHashSet();
         var loader = dependency.GroupKeys.Select(key => key.Loader)
             .FirstOrDefault(selectedLoaders.Contains) ?? dependency.GroupKeys.FirstOrDefault()?.Loader;
@@ -347,30 +383,40 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
             return modrinthProject.Name;
         }
 
-        var curseForgeProject = (await _curseforge.GetResourcesByModIdsAsync([long.Parse(dependency.ProjectId)])).First();
+        var curseForgeProject =
+            (await _curseforge.GetResourcesByModIdsAsync([long.Parse(dependency.ProjectId)])).First();
         return curseForgeProject.Name;
     }
 
-    private static ModLoaderType ToModLoaderType(string? loader) => loader switch
+    private static ModLoaderType ToModLoaderType(string? loader)
     {
-        "NeoForge" => ModLoaderType.NeoForge,
-        "Forge" => ModLoaderType.Forge,
-        "Fabric" => ModLoaderType.Fabric,
-        "Quilt" => ModLoaderType.Quilt,
-        _ => ModLoaderType.Any
-    };
+        return loader switch
+        {
+            "NeoForge" => ModLoaderType.NeoForge,
+            "Forge" => ModLoaderType.Forge,
+            "Fabric" => ModLoaderType.Fabric,
+            "Quilt" => ModLoaderType.Quilt,
+            _ => ModLoaderType.Any
+        };
+    }
 
     public void Install(bool includeDependencies)
     {
         if (SelectedInstance is not null)
             Data.UiProperty.LastModInstallInstancePath = SelectedInstance.Instance.InstanceFolderPath;
-        RequestClose?.Invoke(this, new ModInstallDialogResult(ModDownloadDestination.Install, SelectedInstance?.Instance,
+        RequestClose?.Invoke(this, new ModInstallDialogResult(ModDownloadDestination.Install,
+            SelectedInstance?.Instance,
             includeDependencies ? Dependencies.Select(dependency => dependency.File).ToArray() : [], File));
     }
 
-    public void SaveAs() => RequestClose?.Invoke(this, new ModInstallDialogResult(ModDownloadDestination.SaveAs, null, [],
-        _files.First()));
-    public void Cancel() => RequestClose?.Invoke(this, null);
-    public void Close() => Cancel();
-    public event EventHandler<object?>? RequestClose;
+    public void SaveAs()
+    {
+        RequestClose?.Invoke(this, new ModInstallDialogResult(ModDownloadDestination.SaveAs, null, [],
+            _files.First()));
+    }
+
+    public void Cancel()
+    {
+        RequestClose?.Invoke(this, null);
+    }
 }

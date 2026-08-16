@@ -1,22 +1,13 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Classes.Entries;
-using Portal.Const;
 using Portal.Core.Const;
-using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Module.AggregatedSearch;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
@@ -27,8 +18,6 @@ namespace Portal.Views.Pages.SettingPages;
 [AggregatedSearchPage("存储空间", "设置/存储空间", "Storage")]
 public partial class Storage : UserControl
 {
-    public StorageViewModel ViewModel { get; }
-
     public Storage()
     {
         InitializeComponent();
@@ -36,15 +25,27 @@ public partial class Storage : UserControl
         DataContext = ViewModel;
     }
 
+    public StorageViewModel ViewModel { get; }
+
     public void TriggerRefresh()
     {
         _ = ViewModel.RefreshStorageDataAsync();
     }
-
 }
 
 public partial class StorageViewModel : ObservableObject
 {
+    private readonly string _bedrockDataPath = ConfigPath.BedrockDataRootPath;
+    private readonly string _cachePath = ConfigPath.CacheFolderPath;
+    private readonly string _javaRuntimesPath = ConfigPath.JavaRuntimesPath;
+
+    private readonly string _portalDataPath = ConfigPath.UserDataRootPath;
+
+    public StorageViewModel()
+    {
+        _ = RefreshStorageDataAsync();
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PortalSizeString))]
     [NotifyPropertyChangedFor(nameof(TotalSizeString))]
@@ -66,26 +67,17 @@ public partial class StorageViewModel : ObservableObject
     public ObservableCollection<GameFolderStorageItem> GameFolders { get; } = [];
     public ObservableCollection<GameFolderStorageItem> PortalFolders { get; } = [];
 
-    private readonly string _portalDataPath = ConfigPath.UserDataRootPath;
-    private readonly string _cachePath = ConfigPath.CacheFolderPath;
-    private readonly string _bedrockDataPath = ConfigPath.BedrockDataRootPath;
-    private readonly string _javaRuntimesPath = ConfigPath.JavaRuntimesPath;
-
-    public StorageViewModel()
-    {
-        _ = RefreshStorageDataAsync();
-    }
-
     [RelayCommand]
     public async Task RefreshStorageDataAsync()
     {
         var stopwatch = Stopwatch.StartNew();
-        string portalPath = _portalDataPath;
+        var portalPath = _portalDataPath;
         PortalBytesRaw = 0;
         GameBytesRaw = 0;
         TotalBytesRaw = 0;
         var folders = Data.ConfigEntry.MinecraftFolders.ToList();
-        Logger.Info($"[Storage] Refreshing storage usage for {folders.Count} Minecraft folder(s), Portal data at {portalPath}.");
+        Logger.Info(
+            $"[Storage] Refreshing storage usage for {folders.Count} Minecraft folder(s), Portal data at {portalPath}.");
 
         PortalFolders.Clear();
         PortalFolders.Add(new GameFolderStorageItem(
@@ -103,50 +95,46 @@ public partial class StorageViewModel : ObservableObject
             "Portal 管理的 Java 运行时，不计入游戏或 Portal 分类。",
             _javaRuntimesPath,
             0));
-        
+
         GameFolders.Clear();
 
         if (OperatingSystem.IsWindows())
-        {
             GameFolders.Add(new GameFolderStorageItem(
                 "基岩版数据共享文件夹",
                 "基岩版实例共享的游戏数据，包括世界、资源包和行为包等。",
                 _bedrockDataPath,
                 0));
-        }
-        
+
         foreach (var folder in folders)
-        {
             GameFolders.Add(new GameFolderStorageItem(folder.FolderName, folder.FolderPath, folder.FolderPath, 0));
-        }
 
         await Task.Run(() =>
         {
             try
             {
-                long dataBytes = GetDirectorySize(portalPath, [_cachePath, _bedrockDataPath, _javaRuntimesPath]);
-                long cacheBytes = GetDirectorySize(_cachePath);
-                long portalBytes = dataBytes + cacheBytes;
-                long javaBytes = GetDirectorySize(_javaRuntimesPath);
+                var dataBytes = GetDirectorySize(portalPath, [_cachePath, _bedrockDataPath, _javaRuntimesPath]);
+                var cacheBytes = GetDirectorySize(_cachePath);
+                var portalBytes = dataBytes + cacheBytes;
+                var javaBytes = GetDirectorySize(_javaRuntimesPath);
 
                 long totalGameBytes = 0;
                 var gameSizes = new List<(string FolderPath, long Size)>();
                 foreach (var folder in folders)
                 {
-                    long size = GetDirectorySize(folder.FolderPath);
+                    var size = GetDirectorySize(folder.FolderPath);
                     totalGameBytes += size;
                     gameSizes.Add((folder.FolderPath, size));
                 }
 
                 if (OperatingSystem.IsWindows())
                 {
-                    long bedrockBytes = GetDirectorySize(_bedrockDataPath);
+                    var bedrockBytes = GetDirectorySize(_bedrockDataPath);
                     totalGameBytes += bedrockBytes;
                     gameSizes.Add((_bedrockDataPath, bedrockBytes));
                 }
 
                 var gameBytes = totalGameBytes;
-                
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     PortalBytesRaw = portalBytes;
@@ -159,9 +147,11 @@ public partial class StorageViewModel : ObservableObject
                         if (item != null)
                             item.SizeBytes = size;
                     }
+
                     GameBytesRaw = gameBytes;
                     TotalBytesRaw = portalBytes + gameBytes + javaBytes;
-                    Logger.Info($"[Storage] Storage usage refreshed in {stopwatch.Elapsed}: Portal={portalBytes} bytes, game={gameBytes} bytes.");
+                    Logger.Info(
+                        $"[Storage] Storage usage refreshed in {stopwatch.Elapsed}: Portal={portalBytes} bytes, game={gameBytes} bytes.");
                 });
             }
             catch (Exception ex)
@@ -183,7 +173,9 @@ public partial class StorageViewModel : ObservableObject
 
             var excludedPaths = excludedDirectories?
                 .Select(Path.GetFullPath)
-                .Select(x => x.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar)
+                .Select(x =>
+                    x.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
+                    Path.DirectorySeparatorChar)
                 .ToArray() ?? [];
 
             Parallel.ForEach(di.EnumerateFiles("*", SearchOption.AllDirectories)
@@ -218,6 +210,14 @@ public partial class StorageViewModel : ObservableObject
 
 public partial class GameFolderStorageItem : ObservableObject
 {
+    public GameFolderStorageItem(string folderName, string description, string folderPath, long sizeBytes)
+    {
+        FolderName = folderName;
+        Description = description;
+        FolderPath = folderPath;
+        SizeBytes = sizeBytes;
+    }
+
     public string FolderName { get; }
     public string Description { get; }
     public string FolderPath { get; }
@@ -227,14 +227,6 @@ public partial class GameFolderStorageItem : ObservableObject
     public partial long SizeBytes { get; set; }
 
     public string SizeString => SizeBytes.ToHumanReadableSize(1);
-
-    public GameFolderStorageItem(string folderName, string description, string folderPath, long sizeBytes)
-    {
-        FolderName = folderName;
-        Description = description;
-        FolderPath = folderPath;
-        SizeBytes = sizeBytes;
-    }
 
     [RelayCommand]
     public void OpenFolder(object? parameter)
