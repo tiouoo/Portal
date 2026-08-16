@@ -21,6 +21,7 @@ public partial class App : Application
     public delegate void UiLoadedEventHandler(TabWindow ui);
 
     private TabWindow _win;
+    public static long StartupTimestamp;
     public static string? BedrockPackagePath { get; set; }
     public static string? JavaPackagePath { get; set; }
 
@@ -58,7 +59,9 @@ public partial class App : Application
             {
                 Initializer.Oobe();
                 desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
-                desktop.MainWindow = new BedrockPackageImportWindow(packagePath);
+                var importWindow = new BedrockPackageImportWindow(packagePath);
+                LogWindowShowElapsed(importWindow);
+                desktop.MainWindow = importWindow;
             }
             else if (Data.ConfigEntry.IsInitialized)
             {
@@ -70,6 +73,7 @@ public partial class App : Application
                 Logger.Info("尚未完成初始化，进入初始化窗口");
                 Initializer.Oobe();
                 var oobe = new OobeWindow();
+                LogWindowShowElapsed(oobe);
                 desktop.MainWindow = oobe;
                 oobe.Completed += () =>
                 {
@@ -115,9 +119,15 @@ public partial class App : Application
         TextOptions.SetTextHintingMode(_win, TextHintingMode.Light);
         TextOptions.SetBaselinePixelAlignment(_win, BaselinePixelAlignment.Aligned);
 
-
+        LogWindowShowElapsed(_win);
         desktop.MainWindow = _win;
         _win.Loaded += Function;
+    }
+
+    private static void LogWindowShowElapsed(Window window)
+    {
+        window.Opened += (_, _) =>
+            Logger.Info($"窗口显示完成，从程序启动到窗口显示耗时 {Stopwatch.GetElapsedTime(StartupTimestamp).TotalMilliseconds:F0} ms。");
     }
 
     private async void Function(object? sender, RoutedEventArgs e)

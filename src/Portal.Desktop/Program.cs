@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using Avalonia;
 using Portal.Core.Services.SystemResources;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -13,6 +14,7 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        App.StartupTimestamp = Stopwatch.GetTimestamp();
         Console.OutputEncoding = Encoding.UTF8;
 
         Logger.Info("Portal MC");
