@@ -13,7 +13,7 @@ public static class ConfigSaver
 {
     private static readonly Lock SaveLock = new();
 
-    private static readonly Debouncer Debouncer = new(FlushConfig, 300);
+    private static readonly Debouncer Debouncer = new(async () => await FlushConfigAsync(), 300);
 
     public static void SaveConfig()
     {
@@ -22,20 +22,28 @@ public static class ConfigSaver
 
     public static void FlushConfig()
     {
+        FlushConfigAsync().GetAwaiter().GetResult();
+    }
+
+    private static async Task FlushConfigAsync()
+    {
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"开始保存应用配置：{ConfigPath.SettingDataPath}");
         try
         {
             var payload = Dispatcher.UIThread.CheckAccess()
                 ? CaptureConfig()
-                : Dispatcher.UIThread.InvokeAsync(CaptureConfig).GetAwaiter().GetResult();
-            lock (SaveLock)
+                : await Dispatcher.UIThread.InvokeAsync(CaptureConfig);
+            await Task.Run(() =>
             {
-                WriteAtomic(ConfigPath.SettingDataPath, payload.ConfigJson);
-                WriteAtomic(Path.Combine(ConfigPath.UserDataRootPath, "ManagedSystemDialogs.portal"),
-                    payload.ManagedDialogs);
-                WriteAtomic(ConfigPath.DebugConsoleDataPath, payload.DebugConsole);
-            }
+                lock (SaveLock)
+                {
+                    WriteAtomic(ConfigPath.SettingDataPath, payload.ConfigJson);
+                    WriteAtomic(Path.Combine(ConfigPath.UserDataRootPath, "ManagedSystemDialogs.portal"),
+                        payload.ManagedDialogs);
+                    WriteAtomic(ConfigPath.DebugConsoleDataPath, payload.DebugConsole);
+                }
+            }).ConfigureAwait(false);
 
             Logger.Info($"应用配置保存完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
         }

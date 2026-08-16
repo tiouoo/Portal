@@ -124,7 +124,7 @@ public partial class App : Application
     {
         Logger.Info("UI加载完成");
         _win.Loaded -= Function;
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        await Task.Yield();
         var stopwatch = Stopwatch.StartNew();
         try
         {

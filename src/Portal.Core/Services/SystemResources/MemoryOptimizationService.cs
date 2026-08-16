@@ -21,7 +21,7 @@ public static class MemoryOptimizationService
         {
             if (_workingSetTrimTimer is not null) return;
 
-            _workingSetTrimTimer = new Timer(_ => TrimWorkingSetOnTimer(), null, 0, 60000);
+            _workingSetTrimTimer = new Timer(_ => TrimWorkingSetOnTimer(), null, 60_000, 60_000);
         }
     }
 
