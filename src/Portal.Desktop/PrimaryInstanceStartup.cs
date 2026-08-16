@@ -38,10 +38,15 @@ internal static class PrimaryInstanceStartup
         switch (packagePath)
         {
             case null when javaPackagePath == null && PortalCommandService.TryHandleStartupArgs(args):
+                return false;
+#if WINDOWS
             case null when javaPackagePath == null && WindowsJumpListService.TryForwardToRunningInstance(args):
                 return false;
+#endif
             case null:
+#if WINDOWS
                 WindowsJumpListService.StartCommandServer();
+#endif
                 break;
         }
 
