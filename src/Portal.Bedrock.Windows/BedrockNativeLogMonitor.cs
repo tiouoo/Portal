@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -24,7 +24,7 @@ internal static class BedrockNativeLogMonitor
                 await Task.Delay(100).ConfigureAwait(false);
             if (!File.Exists(logPath))
             {
-                log("未找到 PreloadCpp 运行日志文件", BedrockLogLevel.Warning);
+                log("未找到 Portal 预加载运行日志文件", BedrockLogLevel.Warning);
                 return;
             }
 
@@ -37,7 +37,7 @@ internal static class BedrockNativeLogMonitor
                 var line = await reader.ReadLineAsync().ConfigureAwait(false);
                 if (line != null)
                 {
-                    log($"[PreloadCpp] {line}", GetLevel(line));
+                    log($"[Portal 预加载] {line}", GetLevel(line));
                     continue;
                 }
 
@@ -54,7 +54,7 @@ internal static class BedrockNativeLogMonitor
                 {
                     await Task.Delay(100).ConfigureAwait(false);
                     if (await reader.ReadLineAsync().ConfigureAwait(false) is not { } finalLine) break;
-                    log($"[PreloadCpp] {finalLine}", GetLevel(finalLine));
+                    log($"[Portal 预加载] {finalLine}", GetLevel(finalLine));
                     continue;
                 }
                 waitingForProcess = 0;
@@ -63,8 +63,8 @@ internal static class BedrockNativeLogMonitor
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"读取 PreloadCpp 日志失败：{logPath}{Environment.NewLine}{exception}");
-            log($"读取 PreloadCpp 日志失败：{exception}", BedrockLogLevel.Warning);
+            Trace.TraceError($"读取 Portal 预加载日志失败：{logPath}{Environment.NewLine}{exception}");
+            log($"读取 Portal 预加载日志失败：{exception}", BedrockLogLevel.Warning);
         }
     }
 
