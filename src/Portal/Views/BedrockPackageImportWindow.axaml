@@ -21,7 +21,9 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <tio:TioWindow.Resources />
+    <tio:TioWindow.Resources>
+        <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
+    </tio:TioWindow.Resources>
     <tio:TioWindow.TitleBarLeftContent>
         <TextBlock
             FontSize="16"

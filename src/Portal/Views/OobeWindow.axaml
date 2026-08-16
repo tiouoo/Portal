@@ -26,6 +26,7 @@
     xmlns:views="clr-namespace:Portal.Views"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <tio:TioWindow.Resources>
+        <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
     </tio:TioWindow.Resources>
     <tio:TioWindow.Styles>
