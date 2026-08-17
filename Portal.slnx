@@ -10,6 +10,7 @@
     <Project Path="src/Portal.Bedrock.Preload/Portal.Bedrock.Preload.csproj" />
     <Project Path="src/Portal.Bedrock.Standard/Portal.Bedrock.Standard.csproj" />
     <Project Path="src/Portal.Bedrock.Windows/Portal.Bedrock.Windows.csproj" />
+    <Project Path="src/Portal.Bedrock.Injector/Portal.Bedrock.Injector.vcxproj" />
   </Folder>
   <Folder Name="/Module/LiteSkinViewer/">
     <Project Path="module/LiteSkinViewer/LiteSkinViewer.2D/LiteSkinViewer.2D.csproj" />

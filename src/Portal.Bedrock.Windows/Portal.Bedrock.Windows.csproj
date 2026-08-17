@@ -4,7 +4,7 @@
         <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
         <RootNamespace>Portal.Bedrock</RootNamespace>
         <PlatformTarget>x64</PlatformTarget>
-        <NativeInjectorResource>$(MSBuildThisFileDirectory)..\Portal.Bedrock.Uwp.Injector\Inject.dll</NativeInjectorResource>
+        <NativeInjectorResource>$(MSBuildThisFileDirectory)..\Portal.Bedrock.Injector\Portal.Inject.Cpp.dll</NativeInjectorResource>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,7 +21,7 @@
       <EmbeddedResource Include="..\Portal.Bedrock.Preload\Portal.Preload.Net.dll"
                         LogicalName="Portal.Preload.Net.dll" />
       <EmbeddedResource Include="$(NativeInjectorResource)"
-                        LogicalName="Inject.dll" />
+                        LogicalName="Portal.Inject.Cpp.dll" />
     </ItemGroup>
 
 </Project>

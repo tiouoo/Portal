@@ -13,8 +13,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{af5ed5a9-77a9-46aa-8de9-8051ba1ae3aa}</ProjectGuid>
-    <RootNamespace>PortalInjector</RootNamespace>
+    <ProjectGuid>{0866E12E-5721-4C8A-BC26-53A584ADB4E0}</ProjectGuid>
+    <RootNamespace>Portal.Bedrock.Injector</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -42,7 +42,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <TargetName>Inject</TargetName>
+    <TargetName>Portal.Inject.Cpp</TargetName>
     <OutDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
     <Deterministic>true</Deterministic>

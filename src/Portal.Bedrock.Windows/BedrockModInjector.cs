@@ -14,8 +14,8 @@ namespace Portal.Bedrock;
 
 internal static class BedrockModInjector
 {
-    private const string ResourceName = "Inject.dll";
-    private const string DllName = "Inject.dll";
+    private const string ResourceName = "Portal.Inject.Cpp.dll";
+    private const string DllName = "Portal.Inject.Cpp.dll";
     private static readonly object SyncRoot = new();
     private static InjectDelegate? _inject;
     private static nint _module;
@@ -144,7 +144,7 @@ internal static class BedrockModInjector
             }
 
             var nativePath = Path.Combine(nativeFolder,
-                $"Inject-{Convert.ToHexString(SHA256.HashData(bytes))[..16]}.dll");
+                $"Portal.Inject.Cpp-{Convert.ToHexString(SHA256.HashData(bytes))[..16]}.dll");
             if (!File.Exists(nativePath))
                 File.WriteAllBytes(nativePath, bytes);
 
