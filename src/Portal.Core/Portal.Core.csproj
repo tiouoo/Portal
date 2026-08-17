@@ -41,11 +41,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="App\Service\"/>
-        <Folder Include="Minecraft\Instance\Java\"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <EmbeddedResource Include="..\..\assets\conf\package-type.txt">
             <Link>Assets\package-type.txt</Link>
         </EmbeddedResource>
