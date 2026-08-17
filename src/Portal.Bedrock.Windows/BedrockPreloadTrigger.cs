@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Portal.Bedrock.Standard.Interface;
 
 namespace Portal.Bedrock;
@@ -59,66 +60,81 @@ internal static class BedrockPreloadTrigger
         public static extern uint GetModuleFileNameExW(nint process, nint module, char[] fileName, uint size);
     }
 
+    private const int MaxAttempts = 12;
+    private const int RetryDelayMs = 250;
+
+    /// <summary>
+    /// 远程触发预加载组件的 <c>Load</c> 导出。可能被调用于进程刚恢复的时刻
+    /// （加载器尚未完成预加载 DLL 的装载），因此带短暂重试。
+    /// </summary>
     public static void Trigger(Process process, Action<string, BedrockLogLevel>? log = null)
     {
-        try
-        {
-            nint processHandle = NativeMethods.OpenProcess(ProcessAccess, inheritHandle: false, process.Id);
-            if (processHandle == 0)
-            {
-                string message = $"打开游戏进程失败（{Marshal.GetLastWin32Error()}），跳过预加载触发";
-                log?.Invoke(message, BedrockLogLevel.Warning);
-                Trace.TraceWarning(message);
-                return;
-            }
+        string? lastWarning = null;
 
+        for (int attempt = 0; attempt < MaxAttempts; attempt++)
+        {
             try
             {
-                foreach (string dllName in CandidateDllNames)
+                if (process.HasExited)
                 {
-                    nint moduleBase = FindModuleBase(processHandle, dllName);
-                    if (moduleBase == 0)
-                        continue;
-
-                    string dllPath = GetModulePath(processHandle, moduleBase);
-                    if (string.IsNullOrEmpty(dllPath))
-                        continue;
-
-                    nint loadRva = ReadLoadExportRva(dllPath);
-                    if (loadRva == 0)
-                    {
-                        string message = $"未能解析 {dllName} 的 Load 导出，跳过预加载触发";
-                        log?.Invoke(message, BedrockLogLevel.Warning);
-                        Trace.TraceWarning(message);
-                        return;
-                    }
-
-                    if (CallRemote(processHandle, moduleBase + loadRva))
-                    {
-                        log?.Invoke($"已触发预加载组件初始化（{dllName} @ 0x{moduleBase:X}）", BedrockLogLevel.Information);
-                    }
-                    else
-                    {
-                        string message = $"远程调用 Load 失败（{Marshal.GetLastWin32Error()}）";
-                        log?.Invoke(message, BedrockLogLevel.Warning);
-                        Trace.TraceWarning(message);
-                    }
-                    return;
+                    lastWarning = $"游戏进程已退出（{process.Id}），跳过预加载触发";
+                    break;
                 }
 
-                const string notFound = "游戏进程中未找到预加载组件，跳过触发";
-                log?.Invoke(notFound, BedrockLogLevel.Warning);
-                Trace.TraceWarning(notFound);
+                nint processHandle = NativeMethods.OpenProcess(ProcessAccess, inheritHandle: false, process.Id);
+                if (processHandle == 0)
+                {
+                    lastWarning = $"打开游戏进程失败（{Marshal.GetLastWin32Error()}），跳过预加载触发";
+                    break;
+                }
+
+                try
+                {
+                    foreach (string dllName in CandidateDllNames)
+                    {
+                        nint moduleBase = FindModuleBase(processHandle, dllName);
+                        if (moduleBase == 0)
+                            continue;
+
+                        string dllPath = GetModulePath(processHandle, moduleBase);
+                        if (string.IsNullOrEmpty(dllPath))
+                            continue;
+
+                        nint loadRva = ReadLoadExportRva(dllPath);
+                        if (loadRva == 0)
+                        {
+                            lastWarning = $"未能解析 {dllName} 的 Load 导出，跳过预加载触发";
+                            break;
+                        }
+
+                        if (CallRemote(processHandle, moduleBase + loadRva))
+                        {
+                            log?.Invoke($"已触发预加载组件初始化（{dllName} @ 0x{moduleBase:X}）", BedrockLogLevel.Information);
+                            return;
+                        }
+
+                        lastWarning = $"远程调用 Load 失败（{Marshal.GetLastWin32Error()}）";
+                        break;
+                    }
+                }
+                finally
+                {
+                    NativeMethods.CloseHandle(processHandle);
+                }
             }
-            finally
+            catch (Exception exception)
             {
-                NativeMethods.CloseHandle(processHandle);
+                lastWarning = $"触发预加载初始化失败：{exception.Message}";
             }
+
+            if (attempt + 1 < MaxAttempts)
+                Thread.Sleep(RetryDelayMs);
         }
-        catch (Exception exception)
+
+        if (lastWarning != null)
         {
-            log?.Invoke($"触发预加载初始化失败：{exception.Message}", BedrockLogLevel.Warning);
-            Trace.TraceWarning($"触发预加载初始化失败：{exception}");
+            log?.Invoke(lastWarning, BedrockLogLevel.Warning);
+            Trace.TraceWarning(lastWarning);
         }
     }
 

@@ -129,6 +129,7 @@ public class BedrockLaunch : IBedrockLaunch
             authentication, TimeSpan.FromSeconds(60), processId =>
             {
                 MinecraftProcess = Process.GetProcessById((int)processId);
+                BedrockPreloadTrigger.Trigger(MinecraftProcess, LogReceived);
                 ProcessStarted?.Invoke(MinecraftProcess);
             });
         var process = Process.GetProcessById((int)result.ProcessId);
