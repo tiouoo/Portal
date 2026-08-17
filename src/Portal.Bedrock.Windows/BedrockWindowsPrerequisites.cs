@@ -6,11 +6,8 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using BedrockLauncher.Core;
-using BedrockLauncher.Core.CoreOption;
-using BedrockLauncher.Core.DependsComplete;
-using BedrockLauncher.Core.UwpRegister;
-using BedrockLauncher.Core.Utils;
+using Portal.Bedrock.Core;
+using Portal.Bedrock.Core.Windows;
 using Microsoft.Win32;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
@@ -51,7 +48,7 @@ internal static class BedrockWindowsPrerequisites
         var state = LoadState();
         log?.Invoke($"开始检查基岩版依赖：实例 {instancePath}，构建类型 {buildType}", BedrockLogLevel.Information);
         var architecture = RuntimeInformation.OSArchitecture;
-        var core = new BedrockCore();
+        var core = new BedrockWindowsCore();
         var (hasVcUwp, hasVcWin32) = core.IsHasVCRuntime(architecture);
 
         if (!hasVcWin32)

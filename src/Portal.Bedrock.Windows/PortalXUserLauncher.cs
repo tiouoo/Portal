@@ -1,19 +1,19 @@
-using XUserLauncher.Core;
+using Portal.Bedrock.Xbox;
 
 namespace Portal.Bedrock;
 
 internal sealed class PortalXUserLauncher(string instancePath)
 {
+    private const string HookResourceName = "Portal.Bedrock.XUserHook.dll";
     private readonly string _instancePath = Path.GetFullPath(instancePath);
 
     public void DeployHook()
     {
-        const string resourceName = "XUserLauncher.Core.Dlls.XUserHook.dll";
         var preloadDirectory = Path.Combine(_instancePath, "preload");
         Directory.CreateDirectory(preloadDirectory);
         var hookPath = Path.Combine(preloadDirectory, "XUserHook.dll");
-        using var input = typeof(XboxAuthClient).Assembly.GetManifestResourceStream(resourceName)
-                          ?? throw new InvalidOperationException("XUserLauncher.Core 未包含 XUserHook.dll。 ");
+        using var input = typeof(PortalXUserLauncher).Assembly.GetManifestResourceStream(HookResourceName)
+                          ?? throw new InvalidOperationException("Portal.Bedrock.Windows 未包含 XUserHook.dll。");
         using var output = new FileStream(hookPath, FileMode.Create, FileAccess.Write, FileShare.Read);
         input.CopyTo(output);
     }

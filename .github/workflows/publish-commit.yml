@@ -46,6 +46,8 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
       CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
+      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
+      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
     strategy:
       matrix:
         include:
@@ -98,6 +100,8 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
       CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
+      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
+      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -141,6 +145,8 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
       CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
+      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
+      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -188,6 +194,8 @@ jobs:
       MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
       CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
+      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
+      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
     strategy:
       matrix:
         rid: [osx-x64, osx-arm64]

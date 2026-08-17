@@ -6,10 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BedrockLauncher.Core.Linux" VersionOverride="1.0.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\Portal.Bedrock.Core\Portal.Bedrock.Core.csproj" />
     <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj" />
   </ItemGroup>
 

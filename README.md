@@ -89,13 +89,7 @@ cd Portal
 ./update.bat
 ```
 
-环境变量 [`[root]/.env.example`](.env.example) :
-
-```env
-CURSEFORGE_API_KEY=
-MICROSOFT_CLIENT_ID=
-GRAVITYCONE_UPTIME_API_KEY=
-```
+环境变量 [`[root]/.env.example`](.env.example)
 
 官网 [`[root]/web`](web) :
 
@@ -116,7 +110,7 @@ Portal 建立在许多优秀的 [开源项目](src/Directory.Packages.props) 之
 
 在交互设计、功能取舍与跨平台体验的探索中，Portal 也从下列开源项目的实践中获得了许多启发。感谢所有维护者与贡献者持续丰富 Minecraft 启动器生态；Portal 以独立的产品定位、架构与实现持续开发。
 
-- [BedrockBoot](https://github.com/Round-Studio/BedrockBoot)：基岩版相关功能  ([PreLoadCpp](https://github.com/Round-Studio/PreLoadCpp)，[Uwp.Injector](https://github.com/Round-Studio/Uwp.Injector))
+- [BedrockBoot](https://github.com/Round-Studio/BedrockBoot)：基岩版相关功能
 - [LauncherX](https://github.com/Corona-Studio/LXIT)：部分外观设计与功能
 - [Axolotl](https://github.com/Mystic-Stars/Axolotl)：部分功能
 - [PCL-CE](https://github.com/PCL-Community/PCL-CE)：部分功能

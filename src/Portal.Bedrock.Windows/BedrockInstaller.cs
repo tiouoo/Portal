@@ -5,10 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using BedrockLauncher.Core;
-using BedrockLauncher.Core.CoreOption;
-using BedrockLauncher.Core.Utils;
-using BedrockLauncher.Core.VersionJsons;
+using Portal.Bedrock.Core;
+using Portal.Bedrock.Core.Windows;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 using System.Net;
@@ -91,7 +89,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         if (Directory.Exists(destination))
             throw new InvalidOperationException("目标实例目录已存在。");
 
-        var core = new BedrockCore();
+        var core = new BedrockWindowsCore();
         await core.InitAsync();
         await core.AutoCompleteGameInput();
         var build = await FindBuildAsync(request.Version, request.CancellationToken);

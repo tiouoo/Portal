@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <AssemblyName>XUserHook</AssemblyName>
+    <RootNamespace>Portal.Bedrock.Hook</RootNamespace>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <IsAotCompatible>true</IsAotCompatible>
+    <StripSymbols>true</StripSymbols>
+    <NoWarn>$(NoWarn);CA2255;CS0649;CS8909</NoWarn>
+  </PropertyGroup>
+
+  <Target Name="CopyNativeDllToRepo" AfterTargets="Publish">
+    <Copy SourceFiles="$(PublishDir)$(AssemblyName).dll"
+          DestinationFolder="$(MSBuildProjectDirectory)"
+          SkipUnchangedFiles="false" />
+    <Message Importance="high"
+             Text="[Portal.Bedrock.Hook] 已复制原生 dll 到 $(MSBuildProjectDirectory)\$(AssemblyName).dll" />
+  </Target>
+
+</Project>

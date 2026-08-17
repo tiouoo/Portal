@@ -8,11 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="BedrockLauncher.Core" />
-      <PackageReference Include="XUserLauncher.Core" />
-    </ItemGroup>
-
-    <ItemGroup>
+      <ProjectReference Include="..\Portal.Bedrock.Core\Portal.Bedrock.Core.csproj" />
+      <ProjectReference Include="..\Portal.Bedrock.Core.Windows\Portal.Bedrock.Core.Windows.csproj" />
+      <ProjectReference Include="..\Portal.Bedrock.Xbox\Portal.Bedrock.Xbox.csproj" />
       <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj" />
       <ProjectReference Include="..\Portal.Bedrock.PeNet\src\PeNet\Portal.Bedrock.PeNet.csproj" />
     </ItemGroup>
@@ -20,6 +18,8 @@
     <ItemGroup>
       <EmbeddedResource Include="..\Portal.Bedrock.Preload\Portal.Preload.Net.dll"
                         LogicalName="Portal.Preload.Net.dll" />
+      <EmbeddedResource Include="..\Portal.Bedrock.Hook\XUserHook.dll"
+                        LogicalName="Portal.Bedrock.XUserHook.dll" />
       <EmbeddedResource Include="$(NativeInjectorResource)"
                         LogicalName="Portal.Inject.Cpp.dll" />
     </ItemGroup>

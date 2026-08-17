@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text;
-using BedrockLauncher.Core;
+using Portal.Bedrock.Core;
+using Portal.Bedrock.Core.Windows;
 using Portal.Bedrock.Standard.Interface;
 
 namespace Portal.Bedrock;
@@ -38,7 +39,7 @@ public sealed class BedrockWindowsToolsService : IBedrockToolsService
     public async Task UninstallMinecraftAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var core = new BedrockCore();
+        var core = new BedrockWindowsCore();
         await core.RemoveUWPGameAsync(MinecraftGameTypeVersion.Release).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         await core.RemoveUWPGameAsync(MinecraftGameTypeVersion.Preview).ConfigureAwait(false);

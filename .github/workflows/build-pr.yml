@@ -51,6 +51,9 @@ jobs:
   win-x64-build:
     runs-on: windows-latest
     needs: prepare
+    env:
+      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
+      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -89,6 +92,9 @@ jobs:
   linux-x64-build:
     runs-on: ubuntu-22.04
     needs: prepare
+    env:
+      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
+      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7

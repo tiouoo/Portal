@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Management.Deployment;
-using BedrockLauncher.Core;
-using BedrockLauncher.Core.CoreOption;
+using Portal.Bedrock.Core;
+using Portal.Bedrock.Core.Windows;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 
@@ -82,11 +82,11 @@ public class BedrockLaunch : IBedrockLaunch
         }
         else
         {
-            launchedProcess = await Task.Run(() => new BedrockCore().LaunchGameAsync(options)).ConfigureAwait(false);
+            launchedProcess = await Task.Run(() => new BedrockWindowsCore().LaunchGameAsync(options)).ConfigureAwait(false);
         }
         if (launchedProcess == null)
         {
-            Log(BedrockLogLevel.Warning, "BedrockLauncher.Core 未在 5 秒内返回 Minecraft 进程，继续等待进程启动");
+            Log(BedrockLogLevel.Warning, "Portal.Bedrock.Core 未在 5 秒内返回 Minecraft 进程，继续等待进程启动");
             launchedProcess = await FindLaunchedProcessAsync(existingProcessIds, launchStarted).ConfigureAwait(false);
         }
         MinecraftProcess = launchedProcess ?? throw new InvalidOperationException(

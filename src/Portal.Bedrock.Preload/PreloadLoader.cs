@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace Portal.Bedrock.Preload;
 
 /// <summary>按预加载清单加载 preload 目录下的第三方 DLL。</summary>
-internal static class PreloadLoader
+internal static unsafe class PreloadLoader
 {
     private const string XUserHook = "XUserHook.dll";
 
@@ -59,13 +59,33 @@ internal static class PreloadLoader
 
         string name = Path.GetFileName(path);
         Logger.Info($"Loading DLL: {name}...");
-        if (NativeMethods.LoadLibraryW(path) != 0)
+        nint module = NativeMethods.LoadLibraryW(path);
+        if (module == 0)
         {
-            Logger.Success($"Success for loading DLL: {name}");
-            return true;
+            Logger.Error($"FAILED Error: {Marshal.GetLastWin32Error()}");
+            return false;
         }
 
-        Logger.Error($"FAILED Error: {Marshal.GetLastWin32Error()}");
-        return false;
+        Logger.Success($"Success for loading DLL: {name}");
+        if (name.Equals(XUserHook, StringComparison.OrdinalIgnoreCase))
+            TriggerXUserHook(module);
+        return true;
+    }
+
+    /// <summary>
+    /// NativeAOT 共享库经 LoadLibraryW 加载后，模块初始化会延迟到首次进入该模块。
+    /// 调用其 HookInit 导出以触发 XUser 会话接收与 QueryApiImpl Hook 装配。
+    /// </summary>
+    private static void TriggerXUserHook(nint module)
+    {
+        nint hookInit = NativeMethods.GetProcAddress(module, "HookInit");
+        if (hookInit == 0)
+        {
+            Logger.Warning($"XUserHook.dll 未导出 HookInit；跳过触发");
+            return;
+        }
+
+        Logger.Info("Calling XUserHook!HookInit");
+        ((delegate* unmanaged<int>)hookInit)();
     }
 }

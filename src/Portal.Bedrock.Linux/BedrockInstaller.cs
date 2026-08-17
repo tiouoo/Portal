@@ -3,10 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using BedrockLauncher.Core;
-using BedrockLauncher.Core.CoreOption;
-using BedrockLauncher.Core.Utils;
-using BedrockLauncher.Core.VersionJsons;
+using Portal.Bedrock.Core;
 using Portal.Bedrock.Standard.Interface;
 
 namespace Portal.Bedrock.Linux;
@@ -96,8 +93,8 @@ public sealed class BedrockInstaller : IBedrockInstaller
                     extraction.FileName, InstallStates.Extracting.ToString())))
         }).ConfigureAwait(false);
 
-        if (!installed || !File.Exists(Path.Combine(destination, "Minecraft.Windows.exe")))
-            throw new InvalidOperationException("BedrockLauncher.Core.Linux 未能生成有效的 GDK 实例。");
+        if (installed is null || !File.Exists(Path.Combine(destination, "Minecraft.Windows.exe")))
+            throw new InvalidOperationException("Portal.Bedrock.Core 未能生成有效的 GDK 实例。");
         Trace.TraceInformation($"Linux 基岩版 GDK 安装完成：版本 {request.Version.Id}，目标 {destination}。");
     }
 

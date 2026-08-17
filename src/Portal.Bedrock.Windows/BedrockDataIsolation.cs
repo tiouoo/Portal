@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Reflection;
 using System.Security.Cryptography;
-using BedrockLauncher.Core.CoreOption;
 using PeNet;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Bedrock.Standard.Interface;
