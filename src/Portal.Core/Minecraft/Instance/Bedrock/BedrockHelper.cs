@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Xml;
 using Portal.Bedrock.Standard.Manifest;
-using Portal.Core.Entity;
 using Portal.Core.Minecraft.Classes;
 
 namespace Portal.Core.Minecraft.Instance.Bedrock;
@@ -46,32 +45,18 @@ public class BedrockHelper
 
         MigrateLegacyConfigFolder(instanceFolder);
         MigrateInstanceConfig(instanceFolder);
+
         var configFile = Path.Combine(instanceFolder, ConfigFolder, InstanceConfigFileName);
-        ConfigEntity<BedrockInstanceConfig> configEntity;
+        var configEntry = new JsonConfigEntry<BedrockInstanceConfig>(configFile);
 
-        if (!File.Exists(configFile))
+        if (configEntry.Data.Name is null)
         {
-            configEntity = new ConfigEntity<BedrockInstanceConfig>(configFile);
-            configEntity.Data = new BedrockInstanceConfig
-            {
-                Name = Path.GetFileName(instanceFolder),
-                Version = GetInstanceVersion(instanceFolder).Version,
-                Description = string.Empty,
-                BuildType = File.Exists(Path.Combine(instanceFolder, "MicrosoftGame.Config"))
-                    ? BedrockBuildType.GDK
-                    : BedrockBuildType.UWP,
-                Type = GetVersionTypeWithPackName(GetInstanceVersion(instanceFolder).PackName)
-            };
-            configEntity.Save();
-        }
-        else
-        {
-            configEntity = new ConfigEntity<BedrockInstanceConfig>(configFile);
+            configEntry.Data = CreateDefaultConfig(instanceFolder);
+            configEntry.Save();
         }
 
-        var result = configEntity.Data;
-        result.InstancePath = instanceFolder;
-        return result;
+        configEntry.Data.InstancePath = instanceFolder;
+        return configEntry.Data;
     }
 
     public static void SaveInstanceConfig(BedrockInstanceConfig config)
@@ -80,7 +65,22 @@ public class BedrockHelper
         MigrateLegacyConfigFolder(config.InstancePath);
         MigrateInstanceConfig(config.InstancePath);
         var configFile = Path.Combine(config.InstancePath, ConfigFolder, InstanceConfigFileName);
-        new ConfigEntity<BedrockInstanceConfig>(configFile) { Data = config }.Save();
+        new JsonConfigEntry<BedrockInstanceConfig>(configFile) { Data = config }.Save();
+    }
+
+    private static BedrockInstanceConfig CreateDefaultConfig(string instanceFolder)
+    {
+        var (version, packName) = GetInstanceVersion(instanceFolder);
+        return new BedrockInstanceConfig
+        {
+            Name = Path.GetFileName(instanceFolder),
+            Version = version,
+            Description = string.Empty,
+            BuildType = File.Exists(Path.Combine(instanceFolder, "MicrosoftGame.Config"))
+                ? BedrockBuildType.GDK
+                : BedrockBuildType.UWP,
+            Type = GetVersionTypeWithPackName(packName)
+        };
     }
 
     private static void MigrateLegacyConfigFolder(string instanceFolder)

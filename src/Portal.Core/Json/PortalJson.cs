@@ -25,6 +25,7 @@ public static class PortalJson
         {
             WriteIndented = true,
             IndentSize = 2,
+            PropertyNameCaseInsensitive = true,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver
             {

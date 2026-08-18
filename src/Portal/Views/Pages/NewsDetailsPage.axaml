@@ -79,7 +79,7 @@
 
         <Grid Margin="0,10,0,0">
             <controls:ScrollView>
-                <ItemsControl ItemsSource="{Binding BodyControls}">
+                <ItemsControl ItemsSource="{Binding BodyControls}" Margin="16,0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Vertical" />
