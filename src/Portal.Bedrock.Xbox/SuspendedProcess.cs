@@ -91,7 +91,7 @@ public sealed class SuspendedProcess : IDisposable
 		{
 			Cb = (uint)sizeof(StartupInfo)
 		};
-		uint creationFlags = (uint)(4 | (newConsole ? 16 : 0));
+		uint creationFlags = (uint)(CreateSuspended | (newConsole ? CreateNewConsole : 0));
 		ProcessInformation information = default(ProcessInformation);
 		fixed (char* commandLine = array)
 		{

@@ -77,7 +77,7 @@ public class MsiXVDStream : IDisposable
 		Resiliency = Header.Volumes.HasFlag(MsiXVDVolumeAttributes.ResiliencyEnabled);
 		DataIntegrity = !Header.Volumes.HasFlag(MsiXVDVolumeAttributes.DataIntegrityDisabled);
 		HashTreePageCount = CalculateNumberHashPages(out HashTreeLevels, Header.NumberOfHashedPages, Resiliency);
-		MutableDataOffset = Extensions.PageToOffset(Header.EmbeddedXvdPageCount) + 12288;
+		MutableDataOffset = Extensions.PageToOffset(Header.EmbeddedXvdPageCount) + XVD_HEADER_INCL_SIGNATURE_SIZE;
 		HashTreePageOffset = Header.MutableDataLength + MutableDataOffset;
 		XvdUserDataOffset = (DataIntegrity ? Extensions.PageToOffset(HashTreePageCount) : 0) + HashTreePageOffset;
 		ParaseUserData();

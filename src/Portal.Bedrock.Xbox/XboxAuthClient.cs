@@ -48,7 +48,7 @@ public sealed class XboxAuthClient : IDisposable
 	public async Task<XboxPreauth> AuthenticateAsync(string msaAccessToken, DeviceIdentity identity, CancellationToken cancellationToken)
 	{
 		Dictionary<string, string> proofKey = identity.CreateProofKey();
-		XboxToken device = TokenFromResponse(await PostSignedJsonAsync<XboxTokenResponse>(identity, "https://device.auth.xboxlive.com/device/authenticate", string.Empty, new
+		XboxToken device = TokenFromResponse(await PostSignedJsonAsync<XboxTokenResponse>(identity, DeviceAuthEndpoint, string.Empty, new
 		{
 			RelyingParty = "http://auth.xboxlive.com",
 			TokenType = "JWT",
@@ -61,7 +61,7 @@ public sealed class XboxAuthClient : IDisposable
 				ProofKey = proofKey
 			}
 		}, "device-auth", cancellationToken));
-		XboxToken user = TokenFromResponse(await PostSignedJsonAsync<XboxTokenResponse>(identity, "https://user.auth.xboxlive.com/user/authenticate", string.Empty, new
+		XboxToken user = TokenFromResponse(await PostSignedJsonAsync<XboxTokenResponse>(identity, UserAuthEndpoint, string.Empty, new
 		{
 			RelyingParty = "http://auth.xboxlive.com",
 			TokenType = "JWT",
@@ -81,7 +81,7 @@ public sealed class XboxAuthClient : IDisposable
 		{
 			Console.Error.WriteLine("警告：Achievements token 不可用：" + ex.Message);
 		}
-		XboxTokenWithClaims profileToken = await SisuAsync(identity, msaAccessToken, device, proofKey, "http://xboxlive.com", "sisu-profile", cancellationToken);
+		XboxTokenWithClaims profileToken = await SisuAsync(identity, msaAccessToken, device, proofKey, ProfileRelyingParty, "sisu-profile", cancellationToken);
 		XboxTokenWithClaims playFab = await SisuAsync(identity, msaAccessToken, device, proofKey, "https://b980a380.minecraft.playfabapi.com/", "sisu-playfab", cancellationToken);
 		XboxTokenWithClaims multiplayer = await SisuAsync(identity, msaAccessToken, device, proofKey, "https://multiplayer.minecraft.net/", "sisu-multiplayer", cancellationToken);
 		XboxTokenWithClaims realms = await SisuAsync(identity, msaAccessToken, device, proofKey, "https://pocket.realms.minecraft.net/", "sisu-realms", cancellationToken);
@@ -100,7 +100,7 @@ public sealed class XboxAuthClient : IDisposable
 
 	private async Task<XboxTokenWithClaims> XstsAsync(DeviceIdentity identity, XboxToken user, string relyingParty, string stage, CancellationToken cancellationToken)
 	{
-		return TokenWithClaims(await PostSignedJsonAsync<XboxTokenResponse>(identity, "https://xsts.auth.xboxlive.com/xsts/authorize", string.Empty, new
+		return TokenWithClaims(await PostSignedJsonAsync<XboxTokenResponse>(identity, XstsEndpoint, string.Empty, new
 		{
 			RelyingParty = relyingParty,
 			TokenType = "JWT",
@@ -114,7 +114,7 @@ public sealed class XboxAuthClient : IDisposable
 
 	private async Task<XboxTokenWithClaims> SisuAsync(DeviceIdentity identity, string msaAccessToken, XboxToken device, Dictionary<string, string> proofKey, string relyingParty, string stage, CancellationToken cancellationToken)
 	{
-		return TokenWithClaims((await PostSignedJsonAsync<XboxSisuResponse>(identity, "https://sisu.xboxlive.com/authorize", string.Empty, new
+		return TokenWithClaims((await PostSignedJsonAsync<XboxSisuResponse>(identity, SisuEndpoint, string.Empty, new
 		{
 			AccessToken = "t=" + msaAccessToken,
 			AppId = "0000000048183522",
@@ -133,7 +133,7 @@ public sealed class XboxAuthClient : IDisposable
 	{
 		string text = Required(token.Claims.UserHash, "profile token user hash");
 		string authorization = "XBL3.0 x=" + text + ";" + token.Token.Value;
-		Dictionary<string, string> dictionary = (await PostSignedJsonAsync<XboxProfileResponse>(identity, "https://profile.xboxlive.com/users/batch/profile/settings", authorization, new
+		Dictionary<string, string> dictionary = (await PostSignedJsonAsync<XboxProfileResponse>(identity, ProfileEndpoint, authorization, new
 		{
 			userIds = new string[1] { xuid },
 			settings = new string[4] { "GameDisplayName", "GameDisplayPicRaw", "Gamerscore", "Gamertag" }
@@ -202,7 +202,7 @@ public sealed class XboxAuthClient : IDisposable
 		checked
 		{
 			num = (ulong)Math.Max(0L, DateTimeOffset.UtcNow.ToUnixTimeSeconds()) * 10000000;
-			num += 116444736000000000L;
+			num += WindowsFileTimeEpochOffsetSeconds * 10000000;
 			bytes = Encoding.ASCII.GetBytes(method);
 			bytes2 = Encoding.ASCII.GetBytes(target);
 			bytes3 = Encoding.ASCII.GetBytes(authorization);

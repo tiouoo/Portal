@@ -27,7 +27,7 @@ internal sealed class XUserSigningKey : IDisposable
 
 	public static XUserSigningKey? ImportPrivateBlob(byte[] blob)
 	{
-		if (blob.Length != 104 || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(0, 4)) != 844317509 || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(4, 4)) != 32)
+		if (blob.Length != 104 || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(0, 4)) != BcryptEcdsaPrivateP256Magic || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(4, 4)) != 32)
 		{
 			return null;
 		}
@@ -81,7 +81,7 @@ internal sealed class XUserSigningKey : IDisposable
 		Span<byte> span = stackalloc byte[4];
 		Span<byte> span2 = stackalloc byte[8];
 		Span<byte> span3 = stackalloc byte[1];
-		BinaryPrimitives.WriteUInt32BigEndian(span, 1u);
+		BinaryPrimitives.WriteUInt32BigEndian(span, SignaturePolicyVersion);
 		BinaryPrimitives.WriteUInt64BigEndian(span2, value);
 		incrementalHash.AppendData(span);
 		incrementalHash.AppendData(span3);
@@ -108,7 +108,7 @@ internal sealed class XUserSigningKey : IDisposable
 			{
 				throw new CryptographicException("invalid signature size");
 			}
-			byte[] array2 = new byte[76];
+			byte[] array2 = new byte[SignatureHeaderSize];
 			try
 			{
 				BinaryPrimitives.WriteUInt32BigEndian(array2.AsSpan(0, 4), 1u);
@@ -130,7 +130,7 @@ internal sealed class XUserSigningKey : IDisposable
 	private static ulong CurrentFileTime()
 	{
 		DateTimeOffset utcNow = DateTimeOffset.UtcNow;
-		return (ulong)((11644473600L + Math.Max(0L, utcNow.ToUnixTimeSeconds())) * 10000000) + (ulong)utcNow.Microsecond / 10uL;
+		return (ulong)((WindowsToUnixEpochSeconds + (ulong)Math.Max(0L, utcNow.ToUnixTimeSeconds())) * FileTimeTicksPerSecond) + (ulong)utcNow.Microsecond / 10uL;
 	}
 
 	private static bool IsAscii(string value)

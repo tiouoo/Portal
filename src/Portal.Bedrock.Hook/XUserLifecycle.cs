@@ -94,7 +94,7 @@ internal static class XUserLifecycle
 				_signoutDeferrals = 0;
 				_signoutCallbacksComplete = true;
 				XUserBridge.Info("XUser 生命周期已恢复为 SignedIn；正在发送 SignedInAgain 事件");
-				DispatchChangeEvent(0u);
+				DispatchChangeEvent(XUserChangeEventSignedInAgain);
 				return 0;
 			case 1u:
 				return -1994108671;
@@ -162,7 +162,7 @@ internal static class XUserLifecycle
 		}
 		if (flag)
 		{
-			DispatchChangeEvent(0u);
+			DispatchChangeEvent(XUserChangeEventSignedInAgain);
 		}
 		return 0;
 	}
@@ -211,7 +211,7 @@ internal static class XUserLifecycle
 			}
 			_signoutDeferrals++;
 			nint num = Marshal.AllocHGlobal(8);
-			*(long*)num = 4777280446470115925L;
+			*(long*)num = (long)SignOutDeferralMarker;
 			*deferral = num;
 			return 0;
 		}
@@ -273,7 +273,7 @@ internal static class XUserLifecycle
 			_userState = 1u;
 			_signoutCallbacksComplete = false;
 			XUserBridge.Info($"XUser 状态进入 SigningOut | trigger={trigger} | diagnostic_handles={_userHandleCount}");
-			DispatchChangeEvent(1u);
+			DispatchChangeEvent(XUserChangeEventSigningOut);
 			_signoutCallbacksComplete = true;
 			TryCompleteSignOutLocked();
 		}
@@ -285,7 +285,7 @@ internal static class XUserLifecycle
 		{
 			_userState = 2u;
 			XUserBridge.Info("XUser 注销回调与延迟已完成；XUser 状态进入 SignedOut");
-			DispatchChangeEvent(2u);
+			DispatchChangeEvent(XUserChangeEventSignedOut);
 		}
 	}
 
@@ -302,7 +302,7 @@ internal static class XUserLifecycle
 		{
 			BeginSignOutLocked("process-exit");
 		}
-		long num = Environment.TickCount64 + 2000;
+		long num = Environment.TickCount64 + ProcessSignOutWaitMs;
 		while (true)
 		{
 			lock (Lock)
@@ -324,7 +324,7 @@ internal static class XUserLifecycle
 			{
 				_userState = 2u;
 				XUserBridge.Warn("XUser 注销等待超时；进程即将退出，强制进入 SignedOut");
-				DispatchChangeEvent(2u);
+				DispatchChangeEvent(XUserChangeEventSignedOut);
 			}
 		}
 	}

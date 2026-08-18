@@ -48,7 +48,7 @@ internal static class InlineHook
 		if (!PatchJump(target, detour))
 		{
 			XUserBridge.Warn($"InlineHook 写入跳转失败 @0x{target:X}");
-			NativeMethods.VirtualFree((nint)ptr, 0u, 32768u);
+			NativeMethods.VirtualFree((nint)ptr, 0u, MemRelease);
 			return false;
 		}
 		trampoline = (nint)ptr;
@@ -72,19 +72,19 @@ internal static class InlineHook
 	private unsafe static byte* BuildTrampoline(byte* target, out int patchLength)
 	{
 		patchLength = 0;
-		while (patchLength < 14)
+		while (patchLength < MinPatchLength)
 		{
-			if (!X64Decoder.TryDecode(target + patchLength, 16 - patchLength, out var length, out var _))
+			if (!X64Decoder.TryDecode(target + patchLength, MaxDecodeBytes - patchLength, out var length, out var _))
 			{
 				return null;
 			}
-			if (length <= 0 || patchLength + length > 16)
+			if (length <= 0 || patchLength + length > MaxDecodeBytes)
 			{
 				return null;
 			}
 			patchLength += length;
 		}
-		byte* ptr = (byte*)NativeMethods.VirtualAlloc(IntPtr.Zero, (nuint)(patchLength + 14), 4096u, 64u);
+		byte* ptr = (byte*)NativeMethods.VirtualAlloc(IntPtr.Zero, (nuint)(patchLength + JumpSize), MemCommit, PageExecuteReadWrite);
 		if (ptr == null)
 		{
 			return null;
@@ -114,7 +114,7 @@ internal static class InlineHook
 
 	private unsafe static bool PatchJump(nint location, nint destination)
 	{
-		if (!NativeMethods.VirtualProtect(location, 14u, 64u, out var oldProtect))
+		if (!NativeMethods.VirtualProtect(location, (nuint)JumpSize, PageExecuteReadWrite, out var oldProtect))
 		{
 			return false;
 		}
@@ -122,7 +122,7 @@ internal static class InlineHook
 		*(sbyte*)(location + 1) = 37;
 		*(int*)(location + 2) = 0;
 		*(long*)(location + 6) = destination;
-		NativeMethods.VirtualProtect(location, 14u, oldProtect, out var _);
+		NativeMethods.VirtualProtect(location, (nuint)JumpSize, oldProtect, out var _);
 		return true;
 	}
 }

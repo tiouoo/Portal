@@ -188,7 +188,7 @@ internal static class WinSock2Hook
 
 	private unsafe static ushort ReadPort(byte* sockaddr)
 	{
-		if (*sockaddr != 2)
+		if (*sockaddr != AF_INET)
 		{
 			return 0;
 		}
@@ -197,7 +197,7 @@ internal static class WinSock2Hook
 
 	private unsafe static bool IsLoopback(byte* sockaddr)
 	{
-		if (*sockaddr == 2)
+		if (*sockaddr == AF_INET)
 		{
 			return sockaddr[4] == 127;
 		}
@@ -236,7 +236,7 @@ internal static class WinSock2Hook
 
 	private unsafe static string FormatAddress(byte* sockaddr)
 	{
-		if (*sockaddr != 2)
+		if (*sockaddr != AF_INET)
 		{
 			return string.Empty;
 		}

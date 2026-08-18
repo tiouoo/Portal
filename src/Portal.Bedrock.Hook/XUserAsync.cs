@@ -11,12 +11,6 @@ internal static class XUserAsync
 		public nint Vtable;
 	}
 
-	private const int SlotQueryInterface = 0;
-
-	private const int SlotAddRef = 1;
-
-	private const int SlotRelease = 2;
-
 	private const int SlotAsyncGetResultSize = 4;
 
 	private const int SlotAsyncBegin = 7;

@@ -49,9 +49,9 @@ internal static class XUserObject
 
 	static XUserObject()
 	{
-		UserVtable = new nint[50];
+		UserVtable = new nint[VtableSlotCount];
 		UserVtablePin = GCHandle.Alloc(UserVtable, GCHandleType.Pinned);
-		GamertagVtable = new nint[4];
+		GamertagVtable = new nint[GamertagVtableSlotCount];
 		GamertagVtablePin = GCHandle.Alloc(GamertagVtable, GCHandleType.Pinned);
 		FillUserVtable();
 		FillGamertagVtable();

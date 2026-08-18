@@ -89,7 +89,7 @@ internal static class BlHost
 	[UnmanagedCallersOnly(EntryPoint = "BlHostGetHostVersion")]
 	private unsafe static nuint HostGetHostVersion(byte* outBuffer, nuint outLen)
 	{
-		return WriteUtf8("0.1.0", outBuffer, outLen);
+		return WriteUtf8(HostVersion, outBuffer, outLen);
 	}
 
 	[UnmanagedCallersOnly(EntryPoint = "BlHostGetPath")]

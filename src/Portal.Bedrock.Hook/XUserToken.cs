@@ -44,12 +44,12 @@ internal static class XUserToken
 	{
 		public static SigningPolicy XboxDefault()
 		{
-			return new SigningPolicy(8192L, new List<string>());
+			return new SigningPolicy(DefaultXboxMaxBodyBytes, new List<string>());
 		}
 
 		public static SigningPolicy XboxFullBody()
 		{
-			return new SigningPolicy(2147483647L, new List<string>());
+			return new SigningPolicy(FullBodyMaxBytes, new List<string>());
 		}
 
 		public static SigningPolicy CallerHeaders(List<RequestHeader> headers)
@@ -62,7 +62,7 @@ internal static class XUserToken
 					list.Add(header.Name);
 				}
 			}
-			return new SigningPolicy(2147483647L, list);
+			return new SigningPolicy(FullBodyMaxBytes, list);
 		}
 	}
 
@@ -285,7 +285,7 @@ internal static class XUserToken
 		{
 			return -2147467261;
 		}
-		if ((options & 0xFFFFFFFCu) != 0 || method.Length == 0 || method.Length > 32 || !IsAscii(method) || url.Length == 0 || url.Length > 32768 || !IsAscii(url) || bodySize > 67108864)
+		if ((options & ~TokenOptionsMask) != 0 || method.Length == 0 || method.Length > MaxMethodLength || !IsAscii(method) || url.Length == 0 || url.Length > MaxUrlLength || !IsAscii(url) || bodySize > MaxRequestBodySize)
 		{
 			return -2147024809;
 		}
@@ -308,7 +308,7 @@ internal static class XUserToken
 	public unsafe static int GetTokenAndSignatureAsync(nint self, nint user, uint options, byte* method, byte* url, nuint headerCount, TokenHeader* headers, nuint bodySize, void* body, XAsyncBlock* asyncBlock)
 	{
 		XUserBridge.Info("XUserGetTokenAndSignatureAsync called");
-		if (method == null || url == null || headerCount > 128 || (headerCount != 0 && headers == null))
+		if (method == null || url == null || headerCount > MaxHeaderCount || (headerCount != 0 && headers == null))
 		{
 			return -2147467261;
 		}
@@ -316,11 +316,11 @@ internal static class XUserToken
 		{
 			return -2147467261;
 		}
-		if (!ReadAnsiStringBounded(method, 32, out string result))
+		if (!ReadAnsiStringBounded(method, MaxMethodLength, out string result))
 		{
 			return -2147024809;
 		}
-		if (!ReadAnsiStringBounded(url, 32768, out string result2))
+		if (!ReadAnsiStringBounded(url, MaxUrlLength, out string result2))
 		{
 			return -2147024809;
 		}
@@ -352,7 +352,7 @@ internal static class XUserToken
 	public unsafe static int GetTokenAndSignatureUtf16Async(nint self, nint user, uint options, ushort* method, ushort* url, nuint headerCount, TokenUtf16Header* headers, nuint bodySize, void* body, XAsyncBlock* asyncBlock)
 	{
 		XUserBridge.Info("XUserGetTokenAndSignatureUtf16Async called");
-		if (headerCount > 128 || (headerCount != 0 && headers == null))
+		if (headerCount > MaxHeaderCount || (headerCount != 0 && headers == null))
 		{
 			return -2147467261;
 		}
@@ -360,11 +360,11 @@ internal static class XUserToken
 		{
 			return -2147467261;
 		}
-		if (!ReadUtf16StringBounded(method, 32, out string result))
+		if (!ReadUtf16StringBounded(method, MaxMethodLength, out string result))
 		{
 			return -2147024809;
 		}
-		if (!ReadUtf16StringBounded(url, 32768, out string result2))
+		if (!ReadUtf16StringBounded(url, MaxUrlLength, out string result2))
 		{
 			return -2147024809;
 		}
@@ -439,11 +439,11 @@ internal static class XUserToken
 		for (nuint num = 0u; num < count; num++)
 		{
 			TokenUtf16Header* ptr = headers + num;
-			if (!ReadUtf16StringBounded((ushort*)ptr->Name, 256, out string result))
+			if (!ReadUtf16StringBounded((ushort*)ptr->Name, MaxHeaderNameLength, out string result))
 			{
 				return false;
 			}
-			if (!ReadUtf16StringBounded((ushort*)ptr->Value, 32768, out string result2))
+			if (!ReadUtf16StringBounded((ushort*)ptr->Value, MaxHeaderValueLength, out string result2))
 			{
 				return false;
 			}
@@ -459,7 +459,7 @@ internal static class XUserToken
 	private static bool ValidateHeader(string name, string value, out RequestHeader header)
 	{
 		header = new RequestHeader();
-		if (name.Length == 0 || name.Length > 256 || value.Length > 32768 || !IsAscii(name) || !IsAscii(value) || !IsHttpTokenBytes(name))
+		if (name.Length == 0 || name.Length > MaxHeaderNameLength || value.Length > MaxHeaderValueLength || !IsAscii(name) || !IsAscii(value) || !IsHttpTokenBytes(name))
 		{
 			return false;
 		}
@@ -714,7 +714,7 @@ internal static class XUserToken
 			return false;
 		}
 		int i;
-		for (i = 0; i <= maxUnits && i < 32768 && value[i] != 0; i++)
+		for (i = 0; i <= maxUnits && i < MaxUtf16InputUnits && value[i] != 0; i++)
 		{
 		}
 		if (i > maxUnits)

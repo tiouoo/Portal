@@ -47,9 +47,17 @@ internal static class XUserPipeClient
 
 	private const uint Th32csSnapprocess = 2u;
 
-	private const uint ErrorNoData = 232u;
+	private const int ErrorFileNotFound = 2;
+
+	private const int ErrorPipeBusy = 231;
+
+	private const int ErrorNoData = 232;
 
 	private const int ReadTimeoutMs = 15000;
+
+	private const int OpenSessionTimeoutMs = 20000;
+
+	private const ulong MaxSessionWindowSeconds = 120uL;
 
 	private static ReadOnlySpan<byte> PipeMagic => "BMCBLXU1"u8;
 
@@ -75,7 +83,7 @@ internal static class XUserPipeClient
 				XUserBridge.Warn($"管道服务进程校验失败：server={serverProcessId} parent={num2}；拒绝会话");
 				return null;
 			}
-			byte[] array = new byte[80];
+			byte[] array = new byte[PipeHeaderSize];
 			if (!ReadExactly(num, array))
 			{
 				XUserBridge.Warn("读取 XUser 管道头失败");
@@ -93,13 +101,13 @@ internal static class XUserPipeClient
 			ulong num7 = ReadUInt64Le(array, 32);
 			uint num8 = ReadUInt32Le(array, 40);
 			byte[] array2 = array.AsSpan(48, 32).ToArray();
-			if (num3 != 1 || num4 != currentProcessId || num5 != serverProcessId || num8 == 0 || num8 > 262144)
+			if (num3 != PipeVersion || num4 != currentProcessId || num5 != serverProcessId || num8 == 0 || num8 > MaxPayloadSize)
 			{
 				XUserBridge.Warn($"XUser 管道头字段校验失败：version={num3} target={num4} self={currentProcessId} server={num5} len={num8}");
 				return null;
 			}
 			ulong num9 = NowEpoch();
-			if (num6 > num9 + 30 || num7 <= num9 || num7 - num6 > 120)
+			if (num6 > num9 + MinTokenRemainingSeconds || num7 <= num9 || num7 - num6 > MaxSessionWindowSeconds)
 			{
 				XUserBridge.Warn($"XUser 会话时间窗校验失败：issued={num6} expires={num7} now={num9}");
 				return null;
@@ -132,17 +140,17 @@ internal static class XUserPipeClient
 	private static nint OpenSessionPipe(uint currentProcessId)
 	{
 		string name = $"\\\\.\\pipe\\BMCBL.XUser.{currentProcessId}";
-		long deadline = Environment.TickCount64 + 20000;
+		long deadline = Environment.TickCount64 + OpenSessionTimeoutMs;
 		int lastError = 0;
 		while (Environment.TickCount64 < deadline)
 		{
-			nint handle = CreateFileW(name, 2147483648u, 0u, IntPtr.Zero, 3u, 128u, IntPtr.Zero);
+			nint handle = CreateFileW(name, GenericRead, 0u, IntPtr.Zero, OpenExisting, FileAttributeNormal, IntPtr.Zero);
 			if (handle != IntPtr.Zero && handle != new IntPtr(-1))
 			{
 				return handle;
 			}
 			lastError = Marshal.GetLastWin32Error();
-			if (lastError is not (2 or 231 or 232))
+			if (lastError is not (ErrorFileNotFound or ErrorPipeBusy or ErrorNoData))
 			{
 				XUserBridge.Warn($"CreateFileW 打开 XUser 管道失败 error=0x{lastError:X8}");
 				return 0;
@@ -156,7 +164,7 @@ internal static class XUserPipeClient
 	private unsafe static bool ReadExactly(nint handle, byte[] output)
 	{
 		int num = 0;
-		long num2 = Environment.TickCount64 + 15000;
+		long num2 = Environment.TickCount64 + ReadTimeoutMs;
 		while (num < output.Length)
 		{
 			int bytesToRead = Math.Min(output.Length - num, int.MaxValue);
@@ -175,7 +183,7 @@ internal static class XUserPipeClient
 				num += (int)bytesRead;
 				continue;
 			}
-			if (Marshal.GetLastWin32Error() != 232)
+			if (Marshal.GetLastWin32Error() != ErrorNoData)
 			{
 				return false;
 			}
@@ -190,7 +198,7 @@ internal static class XUserPipeClient
 
 	private static uint ParentProcessId(uint currentPid)
 	{
-		nint num = CreateToolhelp32Snapshot(2u, 0u);
+		nint num = CreateToolhelp32Snapshot(Th32csSnapprocess, 0u);
 		if (num == IntPtr.Zero || num == new IntPtr(-1))
 		{
 			return 0u;

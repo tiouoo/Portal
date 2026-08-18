@@ -53,7 +53,7 @@ internal static class NetworkHookConfig
 	{
 		while (true)
 		{
-			await Task.Delay(2000);
+			await Task.Delay(PollIntervalMs);
 			try
 			{
 				if (File.Exists(_configPath) && File.GetLastWriteTimeUtc(_configPath).Ticks != Interlocked.Read(in _lastWriteUtc))

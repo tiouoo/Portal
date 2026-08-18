@@ -225,7 +225,7 @@ internal static class ModLoader
 			string id = (string.IsNullOrEmpty(modManifest.Id) ? modManifest.Name : modManifest.Id);
 			switch (modManifest.ModType)
 			{
-			case "BL":
+			case ModTypeBl:
 				discovered.Bl.Add(new BlMod
 				{
 					Id = id,
@@ -236,14 +236,14 @@ internal static class ModLoader
 					RequiredSymbols = modManifest.RequiredSymbols
 				});
 				break;
-			case "hot-native":
-			case "hot-inject":
+			case ModTypeHotNative:
+			case ModTypeHotInject:
 				discovered.Hot.Add(new HotMod
 				{
 					Id = id,
 					Name = modManifest.Name,
 					DllPath = text3,
-					InjectDelayMs = (modManifest.InjectDelayMs ?? 15000),
+					InjectDelayMs = (modManifest.InjectDelayMs ?? HotInjectDefaultDelayMs),
 					ReadyLevel = ResolveHotReadyLevel(modManifest),
 					Required = modManifest.Required,
 					VerifyExports = modManifest.VerifyExports,
@@ -269,7 +269,7 @@ internal static class ModLoader
 
 	private static ReadyLevel ResolveHotReadyLevel(ModManifest manifest)
 	{
-		ReadyLevel readyLevel = ((manifest.ModType == "hot-native") ? ReadyLevel.Window : ReadyLevel.StableWindow);
+		ReadyLevel readyLevel = ((manifest.ModType == ModTypeHotNative) ? ReadyLevel.Window : ReadyLevel.StableWindow);
 		return manifest.InjectReady switch
 		{
 			"process" => ReadyLevel.Process, 
@@ -327,7 +327,7 @@ internal static class ModLoader
 				Id = fileNameWithoutExtension,
 				Name = fileNameWithoutExtension,
 				Entry = fileName,
-				ModType = "preload-native"
+				ModType = ModTypePreloadNative
 			};
 			try
 			{
@@ -491,10 +491,10 @@ internal static class ModLoader
 		case ReadyLevel.Process:
 			return true;
 		case ReadyLevel.Window:
-			return WaitUntil(FindVisibleWindow, 120000);
+			return WaitUntil(FindVisibleWindow, HotInjectWaitTimeoutMs);
 		case ReadyLevel.StableWindow:
 		{
-			long num = Environment.TickCount64 + 120000;
+			long num = Environment.TickCount64 + HotInjectWaitTimeoutMs;
 			nint num2 = 0;
 			while (Environment.TickCount64 < num)
 			{
@@ -508,7 +508,7 @@ internal static class ModLoader
 				if (num2 == 0)
 				{
 					num2 = num3;
-					Thread.Sleep(750);
+					Thread.Sleep(StableWindowMs);
 					continue;
 				}
 				if (FindVisibleWindow() == num2)

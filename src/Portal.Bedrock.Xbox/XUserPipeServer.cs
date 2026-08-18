@@ -26,10 +26,6 @@ public class XUserPipeServer : IDisposable
 
 	private const uint FileFlagFirstPipeInstance = 524288u;
 
-	private const uint PipeTypeByte = 0u;
-
-	private const uint PipeReadModeByte = 0u;
-
 	private const uint PipeNowait = 1u;
 
 	private const uint PipeRejectRemoteClients = 8u;
@@ -39,6 +35,8 @@ public class XUserPipeServer : IDisposable
 	private const uint ErrorPipeConnected = 535u;
 
 	private const uint ErrorPipeListening = 536u;
+
+	private const uint ErrorBrokenPipe = 109u;
 
 	private const uint SddlRevision1 = 1u;
 
@@ -65,7 +63,7 @@ public class XUserPipeServer : IDisposable
 			throw new ArgumentNullException("payload");
 		}
 		int num = payload.Length;
-		if ((num > 262144 || num == 0) ? true : false)
+		if (num > MaxPayloadSize || num == 0)
 		{
 			throw new ArgumentOutOfRangeException("payload");
 		}
@@ -118,8 +116,8 @@ public class XUserPipeServer : IDisposable
 			uint lastPInvokeError = (uint)Marshal.GetLastPInvokeError();
 			switch (lastPInvokeError)
 			{
-			case 232u:
-			case 536u:
+			case ErrorNoData:
+			case ErrorPipeListening:
 				if (cancellationToken.WaitHandle.WaitOne(5))
 				{
 					cancellationToken.ThrowIfCancellationRequested();
@@ -127,7 +125,7 @@ public class XUserPipeServer : IDisposable
 				continue;
 			default:
 				throw new Win32Exception((int)lastPInvokeError, "等待 XUser 管道客户端失败。");
-			case 535u:
+			case ErrorPipeConnected:
 				break;
 			}
 			flag = true;
@@ -143,14 +141,14 @@ public class XUserPipeServer : IDisposable
 			throw new InvalidOperationException("XUser 会话管道连接者不是目标进程。");
 		}
 		ulong num2 = (ulong)Math.Max(0L, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-		ulong value = num2 + 60;
+		ulong value = num2 + SessionLifetimeSeconds;
 		byte[] payload = _payload!;
 		byte[] array = SHA256.HashData(payload);
-		byte[] array2 = new byte[80];
+		byte[] array2 = new byte[HeaderSize];
 		try
 		{
 			PipeMagic.CopyTo(array2.AsSpan(0, 8));
-			WriteUInt32Le(array2, 8, 1u);
+			WriteUInt32Le(array2, 8, PipeVersion);
 			WriteUInt32Le(array2, 12, _targetPid);
 			WriteUInt32Le(array2, 16, GetCurrentProcessId());
 			WriteUInt64Le(array2, 24, num2);
@@ -162,7 +160,7 @@ public class XUserPipeServer : IDisposable
 			if (FlushFileBuffers(_pipe) == 0)
 			{
 				uint lastWin32Error = (uint)Marshal.GetLastWin32Error();
-				if (lastWin32Error != 109)
+				if (lastWin32Error != ErrorBrokenPipe)
 				{
 					throw new Win32Exception((int)lastWin32Error, "刷新 XUser 管道失败。");
 				}
@@ -184,7 +182,7 @@ public class XUserPipeServer : IDisposable
 	private unsafe void CreatePipe()
 	{
 		nint num = 0;
-		if (ConvertStringSecurityDescriptorToSecurityDescriptorW("D:P(A;;GA;;;SY)(A;;GA;;;OW)", 1u, &num, null) == 0 || num == 0)
+		if (ConvertStringSecurityDescriptorToSecurityDescriptorW("D:P(A;;GA;;;SY)(A;;GA;;;OW)", SddlRevision1, &num, null) == 0 || num == 0)
 		{
 			throw new Win32Exception(Marshal.GetLastPInvokeError(), "创建 XUser 管道安全描述符失败。");
 		}
@@ -196,14 +194,14 @@ public class XUserPipeServer : IDisposable
 				SecurityDescriptor = num,
 				InheritHandle = 0
 			};
-			_pipe = CreateNamedPipeW($"\\\\.\\pipe\\BMCBL.XUser.{_targetPid}", 524290u, 9u, 1u, (uint)(80 + _payload.Length), 0u, 0u, &securityAttributes);
+			_pipe = CreateNamedPipeW($"\\\\.\\pipe\\BMCBL.XUser.{_targetPid}", PipeAccessOutbound | FileFlagFirstPipeInstance, PipeRejectRemoteClients | PipeNowait, 1u, (uint)(HeaderSize + _payload.Length), 0u, 0u, &securityAttributes);
 		}
 		finally
 		{
 			LocalFree(num);
 		}
 		long num2 = _pipe;
-		if (((ulong)(num2 - -1) <= 1uL) ? true : false)
+		if (num2 == 0 || num2 == -1)
 		{
 			_pipe = 0;
 			throw new Win32Exception(Marshal.GetLastPInvokeError(), "创建 XUser 一次性命名管道失败。");

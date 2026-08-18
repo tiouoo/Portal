@@ -73,8 +73,6 @@ internal static class CrashReporter
 
 	private static ulong _lastSignature;
 
-	private const uint MiniDumpNormal = 0u;
-
 	private const uint MiniDumpWithIndirectlyReferencedMemory = 128u;
 
 	private const uint MiniDumpWithThreadInfo = 4096u;
@@ -106,15 +104,15 @@ internal static class CrashReporter
 	{
 		if (pointers == 0)
 		{
-			return 0L;
+			return ExceptionContinueSearch;
 		}
 		uint value = ReadExceptionCode(pointers);
 		if (Array.IndexOf(FatalCodes, value) < 0)
 		{
-			return 0L;
+			return ExceptionContinueSearch;
 		}
 		Capture(pointers, "first-chance");
-		return 0L;
+		return ExceptionContinueSearch;
 	}
 
 	[UnmanagedCallersOnly(EntryPoint = "CrashUnhandledFilter")]
@@ -124,7 +122,7 @@ internal static class CrashReporter
 		{
 			Capture(pointers, "unhandled", writeMinidump: true);
 		}
-		return 0L;
+		return ExceptionContinueSearch;
 	}
 
 	private unsafe static uint ReadExceptionCode(nint exceptionPointers)
@@ -328,7 +326,7 @@ internal static class CrashReporter
 				ClientPointers = 1
 			};
 			using FileStream fileStream = File.Create(path);
-			XUserBridge.Info((NativeMethods.MiniDumpWriteDump(NativeMethods.GetCurrentProcess(), NativeMethods.GetCurrentProcessId(), fileStream.SafeFileHandle.DangerousGetHandle(), 4224u, &miniDumpExceptionInformation, IntPtr.Zero, IntPtr.Zero) != 0) ? ("minidump 已写入: " + path) : $"minidump 写入失败: {Marshal.GetLastWin32Error()}");
+			XUserBridge.Info((NativeMethods.MiniDumpWriteDump(NativeMethods.GetCurrentProcess(), NativeMethods.GetCurrentProcessId(), fileStream.SafeFileHandle.DangerousGetHandle(), MiniDumpWithIndirectlyReferencedMemory | MiniDumpWithThreadInfo, &miniDumpExceptionInformation, IntPtr.Zero, IntPtr.Zero) != 0) ? ("minidump 已写入: " + path) : $"minidump 写入失败: {Marshal.GetLastWin32Error()}");
 		}
 		catch (Exception ex)
 		{

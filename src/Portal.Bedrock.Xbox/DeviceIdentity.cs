@@ -27,7 +27,7 @@ public sealed class DeviceIdentity : IDisposable
 
 	private static ECDsa ImportPrivateBlob(byte[] blob)
 	{
-		if (blob.Length != 104 || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(0, 4)) != 844317509 || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(4, 4)) != 32)
+		if (blob.Length != 104 || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(0, 4)) != BcryptEcdsaPrivateP256Magic || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(4, 4)) != 32)
 		{
 			throw new InvalidDataException("保存的 Xbox P-256 私钥 blob 无效。");
 		}
