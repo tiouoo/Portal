@@ -80,30 +80,31 @@ public sealed class ModService
         CancellationToken cancellationToken = default)
     {
         using var hashSemaphore = new SemaphoreSlim(MaximumConcurrentHashes);
-        var fingerprintedMods = await Task.WhenAll(mods.Select(async mod =>
-        {
-            if (mod.Sha1 != null)
-                return (Mod: mod, mod.Sha1, mod.Fingerprint);
+        var fingerprintedMods = await Task.WhenAll(
+            mods.Select<ModInfo, Task<(ModInfo Mod, string? Sha1, uint? Fingerprint)>>(async mod =>
+            {
+                if (mod.Sha1 != null)
+                    return (Mod: mod, mod.Sha1, mod.Fingerprint);
 
-            await hashSemaphore.WaitAsync(cancellationToken);
-            try
-            {
-                var hashes = await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken), cancellationToken);
-                return (Mod: mod, Sha1: (string?)hashes.Sha1, hashes.Fingerprint);
-            }
-            catch (IOException)
-            {
-                return (Mod: mod, Sha1: null, Fingerprint: null);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return (Mod: mod, Sha1: null, Fingerprint: null);
-            }
-            finally
-            {
-                hashSemaphore.Release();
-            }
-        }));
+                await hashSemaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    var hashes = await Task.Run(() => ComputeHashes(mod.FilePath, cancellationToken), cancellationToken);
+                    return (Mod: mod, Sha1: (string?)hashes.Sha1, hashes.Fingerprint);
+                }
+                catch (IOException)
+                {
+                    return (Mod: mod, Sha1: null, Fingerprint: null);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return (Mod: mod, Sha1: null, Fingerprint: null);
+                }
+                finally
+                {
+                    hashSemaphore.Release();
+                }
+            }));
 
         var pending = new List<(ModInfo Mod, string Sha1, uint? Fingerprint)>();
         var translationPending = new List<(ModInfo Mod, string Sha1, uint? Fingerprint, ModCacheEntry Entry)>();

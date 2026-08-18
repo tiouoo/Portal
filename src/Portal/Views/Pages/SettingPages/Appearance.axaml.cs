@@ -57,7 +57,7 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
 
     public object IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     private void SubscribeRenderScaling()
     {

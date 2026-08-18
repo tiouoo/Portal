@@ -252,7 +252,9 @@ internal static partial class WindowsJumpListService
     private static void BuildJumpList(
         IEnumerable<(string Category, string Title, string Description, JumpListCommand Command)> items)
     {
+#pragma warning disable SYSLIB1099
         var destinationList = (ICustomDestinationList)new CDestinationList();
+#pragma warning restore SYSLIB1099
         destinationList.SetAppId(AppUserModelId);
         var objectArrayGuid = typeof(IObjectArray).GUID;
         destinationList.BeginList(out _, ref objectArrayGuid, out _);

@@ -218,10 +218,6 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
 public partial class AddWidgetDialog : UserControl
 {
-    private CustomDialogControl? _dialogControl;
-    private Point _dragStart;
-    private bool _dragging;
-
     public AddWidgetDialog()
     {
         InitializeComponent();

@@ -13,6 +13,11 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class RenameInstance : UserControl
 {
+    public RenameInstance()
+    {
+        InitializeComponent();
+    }
+
     public RenameInstance(MinecraftInstance instance)
     {
         InitializeComponent();

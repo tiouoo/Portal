@@ -313,7 +313,7 @@ public sealed class NewsWidget : IWidgetContent
     {
         if (_current != null)
         {
-            NewsDetailsPage.Open(TopLevel.GetTopLevel(this), _current);
+            NewsDetailsPage.Open(TopLevel.GetTopLevel(this)!, _current);
             return;
         }
 

@@ -172,7 +172,7 @@ public partial class Properties : Dsc, INotifyPropertyChanged
 
     public bool IsOpenGlRendererVisible => true;
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {

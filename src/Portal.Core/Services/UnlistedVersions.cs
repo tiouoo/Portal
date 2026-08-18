@@ -55,7 +55,7 @@ public static class UnlistedVersions
             var versions = new List<VersionManifestEntry>();
             foreach (var item in document.RootElement.GetProperty("versions").EnumerateArray())
                 if (TryParseEntry(item, out var entry))
-                    versions.Add(entry);
+                    versions.Add(entry!);
             return versions.OrderByDescending(x => x.ReleaseTime).ToList();
         }
         catch (Exception)

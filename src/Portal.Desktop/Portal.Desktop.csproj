@@ -15,6 +15,7 @@
     <PropertyGroup Condition="'$(TargetsWindows)' == 'true'">
         <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
         <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+        <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     </PropertyGroup>
 
     <PropertyGroup>

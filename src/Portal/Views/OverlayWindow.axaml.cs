@@ -85,6 +85,11 @@ public partial class OverlayWindow : Window
     private DispatcherTimer? _syncTimer;
     private IntPtr _targetHwnd = IntPtr.Zero;
 
+    public OverlayWindow()
+    {
+        InitializeComponent();
+    }
+
     public OverlayWindow(Process targetProcess, MinecraftInstance instance)
     {
         InitializeComponent();

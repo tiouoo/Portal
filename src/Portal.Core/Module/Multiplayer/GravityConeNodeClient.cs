@@ -39,7 +39,7 @@ public sealed class GravityConeNodeClient
 
         var urlTasks = p2pNodes.Select(node => FetchNodeUrlSafelyAsync(apiKey, node, cancellationToken)).ToArray();
         var urls = await Task.WhenAll(urlTasks);
-        var peers = urls.Where(url => !string.IsNullOrWhiteSpace(url)).Distinct(StringComparer.Ordinal).ToList();
+        var peers = urls.OfType<string>().Where(url => !string.IsNullOrWhiteSpace(url)).Distinct(StringComparer.Ordinal).ToList();
 
         if (peers.Count == 0)
             throw new InvalidOperationException("Uptime 中继节点地址获取失败。");

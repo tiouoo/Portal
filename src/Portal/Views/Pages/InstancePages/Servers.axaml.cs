@@ -603,8 +603,9 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
         }
     }
 
-    private static Bitmap? DecodeBitmap(byte[] data)
+    private static Bitmap? DecodeBitmap(byte[]? data)
     {
+        if (data is null || data.Length == 0) return null;
         try
         {
             using var stream = new MemoryStream(data);

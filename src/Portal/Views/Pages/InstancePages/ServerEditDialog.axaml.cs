@@ -13,6 +13,11 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class ServerEditDialog : UserControl
 {
+    public ServerEditDialog()
+    {
+        InitializeComponent();
+    }
+
     public ServerEditDialog(string title, string name, string address, int defaultPort = 25565)
     {
         InitializeComponent();
