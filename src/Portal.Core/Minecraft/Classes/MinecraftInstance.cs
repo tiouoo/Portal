@@ -2,13 +2,15 @@ using System.Globalization;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
-using Newtonsoft.Json;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Core.Json;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
@@ -367,8 +369,8 @@ public class MinecraftInstance : ObservableObject
             try
             {
                 var loadedConfig = Type == MinecraftInstanceType.Java
-                    ? JsonConvert.DeserializeObject<JavaInstanceConfig>(File.ReadAllText(configPath))
-                    : JsonConvert.DeserializeObject<MinecraftInstanceConfig>(File.ReadAllText(configPath));
+                    ? JsonSerializer.Deserialize<JavaInstanceConfig>(File.ReadAllText(configPath), PortalJson.Options)
+                    : JsonSerializer.Deserialize<MinecraftInstanceConfig>(File.ReadAllText(configPath), PortalJson.Options);
                 if (loadedConfig != null)
                     return loadedConfig;
             }
@@ -389,7 +391,7 @@ public class MinecraftInstance : ObservableObject
             ? new JavaInstanceConfig()
             : new MinecraftInstanceConfig();
         Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
-        File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
+        File.WriteAllText(configPath, JsonSerializer.Serialize(config, config.GetType(), PortalJson.Options));
         return config;
     }
 
@@ -401,7 +403,7 @@ public class MinecraftInstance : ObservableObject
             FormatPlayTimeData();
             var configPath = GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
-            File.WriteAllText(configPath, JsonConvert.SerializeObject(Config, Formatting.Indented));
+            File.WriteAllText(configPath, JsonSerializer.Serialize(Config, Config.GetType(), PortalJson.Options));
         }
     }
 
@@ -906,20 +908,11 @@ public partial class MinecraftInstanceConfig : ObservableObject
 
     public long ArchivedPlayTimeSeconds { get; set; }
 
-    [JsonProperty("PlayTimeSeconds", DefaultValueHandling = DefaultValueHandling.Ignore)]
+    [JsonPropertyName("PlayTimeSeconds")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long LegacyPlayTimeSeconds { get; set; }
 
     [ObservableProperty] public partial int PlaySessions { get; set; }
-
-    public bool ShouldSerializeRecentPlayFavorites()
-    {
-        return RecentPlayFavorites?.Count > 0;
-    }
-
-    public bool ShouldSerializePlayTimeByDate()
-    {
-        return PlayTimeByDate?.Count > 0;
-    }
 }
 
 public partial class JavaInstanceConfig : MinecraftInstanceConfig

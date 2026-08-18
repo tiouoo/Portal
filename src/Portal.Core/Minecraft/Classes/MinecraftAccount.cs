@@ -1,10 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiteSkinViewer2D;
 using LiteSkinViewer2D.Extensions;
-using Newtonsoft.Json;
 using SkiaSharp;
 
 namespace Portal.Core.Minecraft.Classes;
@@ -71,7 +71,6 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
     [ObservableProperty]
     public partial string Skin { get; set; } = SteveSkin;
 
-    [JsonProperty]
     [NotifyPropertyChangedFor(nameof(Cover))]
     [ObservableProperty]
     public partial bool UseSimpleAvatar { get; set; }

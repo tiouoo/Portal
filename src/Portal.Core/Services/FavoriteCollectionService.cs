@@ -1,5 +1,6 @@
-using Newtonsoft.Json;
+using System.Text.Json;
 using Portal.Core.Const;
+using Portal.Core.Json;
 using Portal.Core.Minecraft.Models;
 
 namespace Portal.Core.Services;
@@ -82,14 +83,14 @@ public sealed class FavoriteCollectionService
     {
         Directory.CreateDirectory(ConfigPath.UserDataRootPath);
         var temporaryPath = _path + ".tmp";
-        File.WriteAllText(temporaryPath, JsonConvert.SerializeObject(Document, Formatting.Indented));
+        File.WriteAllText(temporaryPath, JsonSerializer.Serialize(Document, PortalJson.Options));
         File.Move(temporaryPath, _path, true);
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
     public void Import(string path)
     {
-        var imported = JsonConvert.DeserializeObject<FavoriteCollectionDocument>(File.ReadAllText(path));
+        var imported = JsonSerializer.Deserialize<FavoriteCollectionDocument>(File.ReadAllText(path), PortalJson.Options);
         if (imported?.Collections is null)
             throw new InvalidDataException("收藏夹文件格式无效。");
         foreach (var collection in
@@ -107,7 +108,7 @@ public sealed class FavoriteCollectionService
     public void Export(FavoriteCollection collection, string path)
     {
         var document = new FavoriteCollectionDocument { Collections = [collection] };
-        File.WriteAllText(path, JsonConvert.SerializeObject(document, Formatting.Indented));
+        File.WriteAllText(path, JsonSerializer.Serialize(document, PortalJson.Options));
     }
 
     private FavoriteCollectionDocument Load()
@@ -115,7 +116,7 @@ public sealed class FavoriteCollectionService
         try
         {
             return File.Exists(_path)
-                ? JsonConvert.DeserializeObject<FavoriteCollectionDocument>(File.ReadAllText(_path)) ??
+                ? JsonSerializer.Deserialize<FavoriteCollectionDocument>(File.ReadAllText(_path), PortalJson.Options) ??
                   new FavoriteCollectionDocument()
                 : new FavoriteCollectionDocument();
         }

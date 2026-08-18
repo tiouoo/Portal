@@ -1,31 +1,31 @@
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Newtonsoft.Json;
 
 namespace Portal.Core.Classes.Entries;
 
 public partial class CiVersionInfo : ObservableObject
 {
-    [JsonProperty("type")]
+    [JsonPropertyName("type")]
     [ObservableProperty]
     public partial string Type { get; set; } = string.Empty;
 
-    [JsonProperty("build-time")]
+    [JsonPropertyName("build-time")]
     [ObservableProperty]
     public partial DateTime BuildTime { get; set; }
 
-    [JsonProperty("action")]
+    [JsonPropertyName("action")]
     [ObservableProperty]
     public partial string Action { get; set; } = string.Empty;
 
-    [JsonProperty("commit")]
+    [JsonPropertyName("commit")]
     [ObservableProperty]
     public partial string Commit { get; set; } = string.Empty;
 
-    [JsonProperty("version")]
+    [JsonPropertyName("version")]
     [ObservableProperty]
     public partial string Version { get; set; } = string.Empty;
 
-    [JsonProperty("version_title")]
+    [JsonPropertyName("version_title")]
     [ObservableProperty]
     public partial string VersionTitle { get; set; } = string.Empty;
 }

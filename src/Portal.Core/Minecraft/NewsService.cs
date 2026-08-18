@@ -1,5 +1,6 @@
 using System.Diagnostics;
-using Newtonsoft.Json;
+using System.Text.Json;
+using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -95,7 +96,7 @@ public static class NewsService
 
     private static List<NewsEntry> ParseJson(string json, NewsEdition edition)
     {
-        var response = JsonConvert.DeserializeObject<PatchNotesResponse>(json);
+        var response = JsonSerializer.Deserialize<PatchNotesResponse>(json, PortalJson.Options);
         return response?.Entries?.Select(e => MapToNewsEntry(e, edition)).ToList() ?? [];
     }
 

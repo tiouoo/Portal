@@ -1,6 +1,7 @@
 using System.Reflection;
-using Newtonsoft.Json;
+using System.Text.Json;
 using Portal.Core.Classes.Entries;
+using Portal.Core.Json;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Services;
@@ -31,9 +32,12 @@ public sealed class AppVersionService
         }
 
         using var reader = new StreamReader(stream);
-        var versionInfo = JsonConvert.DeserializeObject<CiVersionInfo>(reader.ReadToEnd()) ?? CreateLocalVersionInfo();
-        Logger.Info($"应用版本信息加载完成：{versionInfo.VersionTitle} ({versionInfo.Type})。");
-        return versionInfo;
+        var text = reader.ReadToEnd();
+        var versionInfo = string.IsNullOrWhiteSpace(text)
+            ? null
+            : JsonSerializer.Deserialize<CiVersionInfo>(text, PortalJson.Options);
+        Logger.Info($"应用版本信息加载完成：{versionInfo?.VersionTitle ?? "local-build"} ({versionInfo?.Type ?? "dev"})。");
+        return versionInfo ?? CreateLocalVersionInfo();
     }
 
     private static CiVersionInfo CreateLocalVersionInfo()

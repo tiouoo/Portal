@@ -1,11 +1,11 @@
 using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Flurl.Http;
 using MinecraftLaunch.Utilities;
-using Newtonsoft.Json.Linq;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Services;
@@ -90,19 +90,18 @@ public static class UpdateChecker
         Logger.Info($"Checking update from GitHub: {apiUrl}");
 
         var text = await HttpUtil.Request(apiUrl).GetStringAsync();
-        JToken release;
-        if (channel == "release")
-            release = LatestStableRelease(JArray.Parse(text));
-        else
-            release = JObject.Parse(text);
+        using var document = JsonDocument.Parse(text);
+        var release = channel == "release"
+            ? LatestStableRelease(document.RootElement)
+            : document.RootElement;
 
-        return CreateRelease(release, asset => IsHttpsUrl(asset["browser_download_url"]?.ToString())
-                                               && IsGithubUrl(asset["browser_download_url"]!.ToString()),
+        return CreateRelease(release, asset => IsHttpsUrl(GetString(asset, "browser_download_url"))
+                                               && IsGithubUrl(GetString(asset, "browser_download_url")!),
             asset => new UpdateAsset(
-                asset["name"]?.ToString() ?? string.Empty,
-                asset["browser_download_url"]?.ToString() ?? string.Empty,
-                asset["size"]?.Value<long>() ?? 0,
-                ParseSha256(asset["digest"]?.ToString())));
+                GetString(asset, "name") ?? string.Empty,
+                GetString(asset, "browser_download_url") ?? string.Empty,
+                GetInt64(asset, "size") ?? 0,
+                ParseSha256(GetString(asset, "digest"))));
     }
 
     private static async Task<UpdateRelease> GetCnbRelease()
@@ -117,41 +116,95 @@ public static class UpdateChecker
             .WithHeader("Authorization", $"Bearer {token}")
             .WithHeader("Accept", "application/vnd.cnb.api+json")
             .GetStringAsync();
-        var release = LatestStableRelease(JArray.Parse(text));
-        return CreateRelease(release, asset => IsHttpsUrl(asset["browser_download_url"]?.ToString()),
+        using var document = JsonDocument.Parse(text);
+        var release = LatestStableRelease(document.RootElement);
+        return CreateRelease(release, asset => IsHttpsUrl(GetString(asset, "browser_download_url")),
             asset => new UpdateAsset(
-                asset["name"]?.ToString() ?? string.Empty,
-                asset["browser_download_url"]?.ToString() ?? string.Empty,
-                asset["size"]?.Value<long>() ?? 0,
-                ParseSha256(asset["hash_algo"]?.ToString(), asset["hash_value"]?.ToString())));
+                GetString(asset, "name") ?? string.Empty,
+                GetString(asset, "browser_download_url") ?? string.Empty,
+                GetInt64(asset, "size") ?? 0,
+                ParseSha256(GetString(asset, "hash_algo"), GetString(asset, "hash_value"))));
     }
 
-    private static UpdateRelease CreateRelease(JToken release, Func<JToken, bool> assetFilter,
-        Func<JToken, UpdateAsset> toAsset)
+    private static UpdateRelease CreateRelease(JsonElement release, Func<JsonElement, bool> assetFilter,
+        Func<JsonElement, UpdateAsset> toAsset)
     {
-        var title = release["name"]?.ToString().Trim();
+        var title = GetString(release, "name")?.Trim();
         if (string.IsNullOrEmpty(title)) throw new InvalidOperationException("更新发布缺少版本名称。");
 
-        var assets = release["assets"]?.Children()
-            .Where(assetFilter)
-            .Select(toAsset)
-            .Where(asset => !string.IsNullOrWhiteSpace(asset.Name))
-            .ToArray() ?? [];
+        var assets = release.TryGetProperty("assets", out var assetsElement) &&
+                     assetsElement.ValueKind == JsonValueKind.Array
+            ? assetsElement.EnumerateArray()
+                .Where(assetFilter)
+                .Select(toAsset)
+                .Where(asset => !string.IsNullOrWhiteSpace(asset.Name))
+                .ToArray()
+            : [];
         return new UpdateRelease(title, ParseSequence(title), assets);
     }
 
-    private static JToken LatestStableRelease(IEnumerable<JToken> releases)
+    private static JsonElement LatestStableRelease(JsonElement releases)
     {
-        return releases
-            .Where(release => release["draft"]?.Value<bool>() != true)
-            .Where(release => release["prerelease"]?.Value<bool>() != true)
-            .Select(release => new { Release = release, Version = ParseStableTag(release["tag_name"]?.ToString()) })
-            .Where(item => item.Version is not null)
-            .OrderByDescending(item => item.Version!.Value.Major)
-            .ThenByDescending(item => item.Version!.Value.Minor)
-            .ThenByDescending(item => item.Version!.Value.Patch)
-            .Select(item => item.Release)
-            .FirstOrDefault() ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+        if (releases.ValueKind != JsonValueKind.Array)
+            throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+
+        JsonElement? best = null;
+        (long Major, long Minor, long Patch)? bestVersion = null;
+        foreach (var release in releases.EnumerateArray())
+        {
+            if (GetBool(release, "draft") == true) continue;
+            if (GetBool(release, "prerelease") == true) continue;
+            var version = ParseStableTag(GetString(release, "tag_name"));
+            if (version is null) continue;
+            if (bestVersion is null || IsNewerVersion(version.Value, bestVersion.Value))
+            {
+                bestVersion = version;
+                best = release;
+            }
+        }
+
+        return best ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+    }
+
+    private static bool IsNewerVersion((long Major, long Minor, long Patch) candidate,
+        (long Major, long Minor, long Patch) current)
+    {
+        if (candidate.Major != current.Major) return candidate.Major > current.Major;
+        if (candidate.Minor != current.Minor) return candidate.Minor > current.Minor;
+        return candidate.Patch > current.Patch;
+    }
+
+    private static string? GetString(JsonElement element, string property)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var value))
+            return null;
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => value.ToString(),
+            _ => null
+        };
+    }
+
+    private static long? GetInt64(JsonElement element, string property)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var value))
+            return null;
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out var number)) return number;
+        if (value.ValueKind == JsonValueKind.String && long.TryParse(value.GetString(), out var parsed)) return parsed;
+        return null;
+    }
+
+    private static bool? GetBool(JsonElement element, string property)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var value))
+            return null;
+        return value.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => null
+        };
     }
 
     private static (long Major, long Minor, long Patch)? ParseStableTag(string? tag)

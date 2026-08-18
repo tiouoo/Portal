@@ -22,7 +22,6 @@
     <PackageVersion Include="HotAvalonia" Version="3.1.4" />
     <PackageVersion Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.11" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.5-beta1" />
     <PackageVersion Include="SkiaSharp" Version="4.151.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.151.1" />
     <PackageVersion Include="SharpCompress" Version="0.50.4" />

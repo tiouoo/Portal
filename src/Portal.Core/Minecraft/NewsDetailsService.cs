@@ -1,5 +1,6 @@
-using Newtonsoft.Json;
+using System.Text.Json;
 using Portal.Core.App.Helpers;
+using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -111,7 +112,7 @@ public static class NewsDetailsService
         {
             var url = BaseContentUrl + entry.ContentPath;
             var json = await NewsHttp.Client.GetStringAsync(url);
-            var content = JsonConvert.DeserializeObject<NewsContentResponse>(json);
+            var content = JsonSerializer.Deserialize<NewsContentResponse>(json, PortalJson.Options);
             if (content == null) return null;
 
             var imageUrl = entry.ImageUrl;

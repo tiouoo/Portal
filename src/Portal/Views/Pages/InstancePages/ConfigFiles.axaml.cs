@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Xml;
 using Avalonia;
 using Avalonia.Controls;
@@ -14,14 +16,12 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Newtonsoft.Json;
 using Portal.Core.Minecraft.Classes;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 using Tomlyn;
 using Tomlyn.Model;
-using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Portal.Views.Pages.InstancePages;
 
@@ -370,16 +370,63 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
 
     private static string FormatJson(string text)
     {
-        using var reader = new JsonTextReader(new StringReader(text));
-        using var stringWriter = new StringWriter();
-        using var writer = new JsonTextWriter(stringWriter)
+        var bytes = Encoding.UTF8.GetBytes(text);
+        var readerOptions = new JsonReaderOptions
         {
-            Formatting = Formatting.Indented,
-            Indentation = 2
+            AllowTrailingCommas = true,
+            CommentHandling = JsonCommentHandling.Allow
         };
-        while (reader.Read())
-            writer.WriteToken(reader, true);
-        return stringWriter.ToString();
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+        {
+            Indented = true,
+            IndentSize = 2,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        }))
+        {
+            var reader = new Utf8JsonReader(bytes, readerOptions);
+            while (reader.Read())
+            {
+                switch (reader.TokenType)
+                {
+                    case JsonTokenType.StartObject:
+                        writer.WriteStartObject();
+                        break;
+                    case JsonTokenType.EndObject:
+                        writer.WriteEndObject();
+                        break;
+                    case JsonTokenType.StartArray:
+                        writer.WriteStartArray();
+                        break;
+                    case JsonTokenType.EndArray:
+                        writer.WriteEndArray();
+                        break;
+                    case JsonTokenType.PropertyName:
+                        writer.WritePropertyName(reader.GetString()!);
+                        break;
+                    case JsonTokenType.String:
+                        writer.WriteStringValue(reader.GetString());
+                        break;
+                    case JsonTokenType.Number:
+                        writer.WriteRawValue(Encoding.UTF8.GetString(reader.ValueSpan), skipInputValidation: true);
+                        break;
+                    case JsonTokenType.True:
+                        writer.WriteBooleanValue(true);
+                        break;
+                    case JsonTokenType.False:
+                        writer.WriteBooleanValue(false);
+                        break;
+                    case JsonTokenType.Null:
+                        writer.WriteNullValue();
+                        break;
+                    case JsonTokenType.Comment:
+                        writer.WriteCommentValue(reader.GetComment());
+                        break;
+                }
+            }
+        }
+
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     private async Task<bool> SaveAsync(ConfigEditorTab tab)

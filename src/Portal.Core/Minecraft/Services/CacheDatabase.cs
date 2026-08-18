@@ -1,6 +1,7 @@
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
-using Newtonsoft.Json;
 using Portal.Core.App.Helpers;
+using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
 using SQLitePCL;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -553,7 +554,7 @@ internal static class CacheDatabase
                 PatchNotesResponse? response;
                 try
                 {
-                    response = JsonConvert.DeserializeObject<PatchNotesResponse>(reader.GetString(1));
+                    response = JsonSerializer.Deserialize<PatchNotesResponse>(reader.GetString(1), PortalJson.Options);
                 }
                 catch (JsonException exception)
                 {

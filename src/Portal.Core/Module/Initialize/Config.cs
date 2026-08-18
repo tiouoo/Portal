@@ -1,9 +1,10 @@
 using System.Reflection;
-using Newtonsoft.Json;
+using System.Text.Json;
 using Portal.Core.Classes;
 using Portal.Core.Classes.Config;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
+using Portal.Core.Json;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -38,26 +39,15 @@ public class Config
 
         try
         {
-            var settings = new JsonSerializerSettings
-            {
-                Error = (_, item) =>
-                {
-                    FailedSettingKeys.Add(item);
-                    Logger.Error($"配置项反序列化失败：{item.ErrorContext.Path}", item.ErrorContext.Error);
-                    item.ErrorContext.Handled = true;
-                },
-                MissingMemberHandling = MissingMemberHandling.Ignore,
-                TypeNameHandling = TypeNameHandling.Auto
-            };
-
-            Data.ConfigEntry = JsonConvert.DeserializeObject<ConfigEntry>(
-                File.ReadAllText(ConfigPath.SettingDataPath), settings
-            ) ?? new ConfigEntry();
+            var configText = File.ReadAllText(ConfigPath.SettingDataPath);
+            Data.ConfigEntry = string.IsNullOrWhiteSpace(configText)
+                ? new ConfigEntry()
+                : JsonSerializer.Deserialize<ConfigEntry>(configText, PortalJson.Options) ?? new ConfigEntry();
         }
-        catch (Exception ex)
+        catch (JsonException exception)
         {
-            Logger.Error($"读取或解析配置文件失败：{ConfigPath.SettingDataPath}", ex);
-            FailedSettingKeys.Add($"Setting completely load failed: {ex.Message}");
+            FailedSettingKeys.Add($"Setting load failed at: {exception.Path}");
+            Logger.Error($"读取或解析配置文件失败：{ConfigPath.SettingDataPath}", exception);
             try
             {
                 var backupPath = ConfigPath.SettingDataPath + ".bak";

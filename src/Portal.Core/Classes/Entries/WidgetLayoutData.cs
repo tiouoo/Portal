@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using Portal.Core.Module.Widgets;
 
 namespace Portal.Core.Classes.Entries;
@@ -13,7 +13,7 @@ public sealed class WidgetLayoutData
     public int Rows { get; set; } = 1;
     public bool? ShowBackground { get; set; }
 
-    public object? Data { get; set; }
+    public WidgetData? Data { get; set; }
 
     [JsonIgnore]
     public WidgetCellSize Size
@@ -27,7 +27,11 @@ public sealed class WidgetLayoutData
     }
 }
 
-public class InstanceBoundWidgetData
+public class WidgetData
+{
+}
+
+public class InstanceBoundWidgetData : WidgetData
 {
     public string? InstanceFolderPath { get; set; }
 }
@@ -47,18 +51,18 @@ public sealed class QuickServerWidgetData : InstanceBoundWidgetData
     public int? ServerPort { get; set; }
 }
 
-public sealed class MemoryWidgetData
+public sealed class MemoryWidgetData : WidgetData
 {
     public bool? ShowPercentage { get; set; }
 }
 
-public sealed class ImageWidgetData
+public sealed class ImageWidgetData : WidgetData
 {
     public string? ImagePath { get; set; }
     public bool? StretchFill { get; set; }
 }
 
-public sealed class NewsWidgetData
+public sealed class NewsWidgetData : WidgetData
 {
     public string? Filter { get; set; }
 }

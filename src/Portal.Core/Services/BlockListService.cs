@@ -1,5 +1,6 @@
-using Newtonsoft.Json;
+using System.Text.Json;
 using Portal.Core.Const;
+using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
 
 namespace Portal.Core.Services;
@@ -166,7 +167,7 @@ public sealed class BlockListService
     {
         Directory.CreateDirectory(ConfigPath.UserDataRootPath);
         var tempPath = _path + ".tmp";
-        File.WriteAllText(tempPath, JsonConvert.SerializeObject(Document, Formatting.Indented));
+        File.WriteAllText(tempPath, JsonSerializer.Serialize(Document, PortalJson.Options));
         File.Move(tempPath, _path, true);
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -176,7 +177,8 @@ public sealed class BlockListService
         try
         {
             return File.Exists(_path)
-                ? JsonConvert.DeserializeObject<BlockListDocument>(File.ReadAllText(_path)) ?? new BlockListDocument()
+                ? JsonSerializer.Deserialize<BlockListDocument>(File.ReadAllText(_path), PortalJson.Options) ??
+                  new BlockListDocument()
                 : new BlockListDocument();
         }
         catch

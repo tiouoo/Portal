@@ -1,8 +1,9 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Avalonia.Threading;
-using Newtonsoft.Json;
 using Portal.Core.Classes;
 using Portal.Core.Const;
+using Portal.Core.Json;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Helper;
@@ -56,12 +57,7 @@ public static class ConfigSaver
     private static (string ConfigJson, string ManagedDialogs, string DebugConsole) CaptureConfig()
     {
         ApplicationEvents.RaiseSaveSettings();
-        var settings = new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.Auto,
-            Formatting = Formatting.Indented
-        };
-        return (JsonConvert.SerializeObject(Data.ConfigEntry, settings),
+        return (JsonSerializer.Serialize(Data.ConfigEntry, PortalJson.Options),
             Data.ConfigEntry.FilePicker == FilePicker.Managed ? "true" : "false",
             Data.ConfigEntry.EnableDebugConsole ? "true" : "false");
     }

@@ -150,7 +150,6 @@ public class AboutViewModel : ObservableObject
         new("Html Agility Pack", "MIT License", "https://github.com/zzzprojects/html-agility-pack"),
         new("Microsoft.Data.Sqlite", "MIT License", "https://github.com/dotnet/efcore"),
         new("SQLitePCLRaw", "Apache License 2.0", "https://github.com/ericsink/SQLitePCL.raw"),
-        new("Newtonsoft.Json", "MIT License", "https://www.newtonsoft.com/json"),
         new("NbtToolkit", "MIT License", "https://github.com/gaviny82/NbtToolkit"),
         new("PeNet", "Apache License 2.0", "https://github.com/secana/PeNet"),
         new("PinYinConverterCore", "MIT License", "https://github.com/netcorepal/PinYinConverterCore"),
