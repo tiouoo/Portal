@@ -201,11 +201,9 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
             return;
 
         OnPropertyChanged(nameof(RecentInstance));
-        foreach (var item in FilteredMinecraftInstances.Where(item => ReferenceEquals(item, instance)).ToArray())
-        {
-            var index = FilteredMinecraftInstances.IndexOf(item);
-            FilteredMinecraftInstances[index] = item;
-        }
+        var index = FilteredMinecraftInstances.IndexOf(instance);
+        if (index >= 0)
+            FilteredMinecraftInstances[index] = instance;
     }
 
     private void OnBlockListChanged(object? sender, EventArgs e)

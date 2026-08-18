@@ -1,35 +1,18 @@
 using System.Diagnostics;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Platform.Storage;
-using Avalonia.VisualTree;
 using Portal.Core.Const;
-using Portal.Core.Minecraft;
-using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.Module;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Core.Services;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
-using Portal.Views.Components.Operations.OpenFile;
-using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Interface;
-using TioUi.Common;
-using TioUi.Common.Extensions;
-using TioUi.Controls;
-using NewMinecraftFolderViewModel = Portal.Views.Components.Operations.OpenFile.NewMinecraftFolderViewModel;
 
 namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("实例", "实例", "Instances")]
 [DefaultPage("实例")]
-public partial class InstancesPage : Dsc, ITioTabPage
+public partial class InstancesPage : InstanceListPageBase
 {
     public InstancesPageViewModel InstancesPageViewModel;
     private bool _isInitialized;
@@ -50,21 +33,14 @@ public partial class InstancesPage : Dsc, ITioTabPage
         };
     }
 
-    public PageInfo PageInfo { get; init; } = new()
+    public override PageInfo PageInfo { get; init; } = new()
     {
         Title = "实例",
         Icon = StreamGeometry.Parse(
             "F1 M640,640z M0,0z M480,576L192,576C139,576,96,533,96,480L96,160C96,107,139,64,192,64L496,64C522.5,64,544,85.5,544,112L544,400C544,420.9,530.6,438.7,512,445.3L512,512C529.7,512 544,526.3 544,544 544,561.7 529.7,576 512,576L480,576z M192,448C174.3,448 160,462.3 160,480 160,497.7 174.3,512 192,512L448,512 448,448 192,448z M224,216C224,229.3,234.7,240,248,240L424,240C437.3,240 448,229.3 448,216 448,202.7 437.3,192 424,192L248,192C234.7,192,224,202.7,224,216z M248,288C234.7,288 224,298.7 224,312 224,325.3 234.7,336 248,336L424,336C437.3,336 448,325.3 448,312 448,298.7 437.3,288 424,288L248,288z")
     };
 
-    public TabEntry HostTab { get; set; }
-
-    public void OnClose()
-    {
-        Logger.Info("[Instances] Page closing.");
-        InstancesPageViewModel.Dispose();
-        DataContext = null;
-    }
+    protected override InstanceListViewModelBase PageViewModel => InstancesPageViewModel;
 
     public void Refresh()
     {
@@ -77,119 +53,10 @@ public partial class InstancesPage : Dsc, ITioTabPage
             $"[Instances] Refreshed {InstanceManager.Instance.Instances.Count} instance(s) in {stopwatch.Elapsed}.");
     }
 
-    private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            return;
-        if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() != null))
-            return;
-
-        if (sender is Control { DataContext: MinecraftInstance instance } &&
-            TopLevel.GetTopLevel(this) is { } topLevel)
-        {
-            Logger.Info($"[Instances] Opening instance details for {instance.InstanceName} at {instance.FolderPath}.");
-            InstanceDetailPage.Open(instance, topLevel);
-        }
-    }
-
-    private void FavoritedButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var instance = (sender as Control)?.Tag as MinecraftInstance;
-        if (instance == null || instance.Config == null) return;
-
-        instance.Config.IsFavorite = !instance.Config.IsFavorite;
-        instance.SaveConfig();
-        Logger.Info(
-            $"[Instances] {(instance.Config.IsFavorite ? "Added" : "Removed")} favorite for {instance.InstanceName} at {instance.FolderPath}.");
-        InstancesPageViewModel.ApplyFilterAndSort();
-    }
-
-    private void LaunchInstance_Click(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is not MinecraftInstance instance)
-            return;
-
-        Logger.Info($"[Instances] Starting instance {instance.InstanceName} at {instance.FolderPath}.");
-        _ = MinecraftLaunchService.LaunchAsync(instance, TopLevel.GetTopLevel(this),
-            MinecraftLaunchOptionsFactory.Create(instance,
-                logSession => MinecraftLogPage.Open(logSession, this.GetTopLevel())));
-    }
-
-    private async void CreateShortcut_Click(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is not MinecraftInstance instance)
-            return;
-
-        await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
-            () => DesktopShortcutService.CreateAsync(instance));
-    }
-
-    private void BlockInstance_Click(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is not MinecraftInstance instance)
-            return;
-
-        BlockListService.Instance.ToggleInstanceBlock(instance);
-    }
-
-    private void RefreshInstance_Click(object? sender, RoutedEventArgs e)
+    protected override Task RefreshInstancesAndRecentPlaysAsync()
     {
         Refresh();
-    }
-
-    private async void ImportModpack_Click(object? sender, RoutedEventArgs e)
-    {
-        var topLevel = this.GetTopLevel();
-        var file = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "导入整合包",
-            AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("整合包") { Patterns = ["*.mrpack", "*.zip"] }]
-        });
-        var archivePath = file.FirstOrDefault()?.TryGetLocalPath();
-        if (string.IsNullOrWhiteSpace(archivePath))
-            return;
-
-        Logger.Info($"[Instances] Importing modpack archive {archivePath}.");
-        _ = ModpackDetailsPage.TryInstallFromPath(topLevel, archivePath);
-    }
-
-    private async void AddFolder_Click(object? sender, RoutedEventArgs e)
-    {
-        var options = new OverlayDialogOptions
-        {
-            Mode = DialogMode.None,
-            Buttons = DialogButton.None,
-            CanLightDismiss = false,
-            CanDragMove = true,
-            IsCloseButtonVisible = false,
-            CanResize = false,
-            VerticalOffset = 110,
-            VerticalAnchor = VerticalPosition.Top
-        };
-
-        var result = await OverlayDialog
-            .ShowCustomAsync<NewMinecraftFolder, NewMinecraftFolderViewModel, MinecraftFolderEntry>(
-                new NewMinecraftFolderViewModel(Data.ConfigEntry.MinecraftFolders.Select(x
-                    => x.FolderPath).ToList()), this.TryGetHostId(), options);
-
-        if (result == null) return;
-        Data.ConfigEntry.MinecraftFolders.Add(result);
-        Logger.Info($"[Instances] Added Minecraft folder {result.FolderPath}.");
-    }
-
-    private async void ToDownload_Click(object? sender, RoutedEventArgs e)
-    {
-        var options = new OverlayDialogOptions
-        {
-            Buttons = DialogButton.None,
-            CanLightDismiss = false,
-            CanDragMove = true,
-            CanResize = false,
-            IsCloseButtonVisible = false
-        };
-        await OverlayDialog.ShowCustomAsync<CreateInstanceDialog, CreateInstanceDialogViewModel, bool>(
-            new CreateInstanceDialogViewModel(), this.TryGetHostId(), options);
+        return Task.CompletedTask;
     }
 }
 
