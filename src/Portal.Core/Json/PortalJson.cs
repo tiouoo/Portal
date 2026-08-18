@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -27,7 +28,7 @@ public static class PortalJson
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver
             {
-                Modifiers = { ConfigureWidgetPolymorphism, ConfigureInstanceConfigShouldSerialize }
+                Modifiers = { ConfigureWidgetPolymorphism, ConfigureInstanceConfigShouldSerialize, ConfigureGetterOnlyCollections }
             }
         };
         options.Converters.Add(new LenientEnumConverterFactory());
@@ -60,6 +61,39 @@ public static class PortalJson
             else if (property.Name == nameof(MinecraftInstanceConfig.PlayTimeByDate))
                 property.ShouldSerialize = (_, value) => (value as Dictionary<string, long>)?.Count > 0;
         }
+    }
+
+    private static void ConfigureGetterOnlyCollections(JsonTypeInfo typeInfo)
+    {
+        if (typeInfo.Kind != JsonTypeInfoKind.Object) return;
+
+        foreach (var property in typeInfo.Properties)
+        {
+            if (property.Set is not null || property.Get is null) continue;
+            if (!IsPopulatableCollection(property.PropertyType)) continue;
+
+            property.ObjectCreationHandling = JsonObjectCreationHandling.Populate;
+        }
+    }
+
+    private static bool IsPopulatableCollection(Type type)
+    {
+        if (type == typeof(string) || type.IsArray) return false;
+
+        if (typeof(ICollection).IsAssignableFrom(type) || typeof(IDictionary).IsAssignableFrom(type))
+            return true;
+
+        return HasPopulatableContract(type) || type.GetInterfaces().Any(HasPopulatableContract);
+    }
+
+    private static bool HasPopulatableContract(Type type)
+    {
+        if (!type.IsGenericType) return false;
+
+        var definition = type.GetGenericTypeDefinition();
+        return definition == typeof(ICollection<>)
+               || definition == typeof(IDictionary<,>)
+               || definition == typeof(IList<>);
     }
 }
 
