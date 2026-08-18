@@ -97,7 +97,6 @@ public class MsiXVDDecoder : IDisposable
 			Vector128<byte> vector6 = Gf128Mul(vector5, mask);
 			Vector128<byte> vector7 = Gf128Mul(vector6, mask);
 			Vector128<byte> vector8 = Gf128Mul(vector7, mask);
-			Vector128<byte> iv = Gf128Mul(vector8, mask);
 			Vector128<byte> @in = Sse2.Xor(vector, Unsafe.Add(ref reference, 0));
 			Vector128<byte> in2 = Sse2.Xor(vector2, Unsafe.Add(ref reference, 1));
 			Vector128<byte> in3 = Sse2.Xor(vector3, Unsafe.Add(ref reference, 2));
@@ -115,7 +114,7 @@ public class MsiXVDDecoder : IDisposable
 			Unsafe.Add(ref reference2, 5) = Sse2.Xor(vector6, out6);
 			Unsafe.Add(ref reference2, 6) = Sse2.Xor(vector7, out7);
 			Unsafe.Add(ref reference2, 7) = Sse2.Xor(vector8, out8);
-			vector = Gf128Mul(iv, mask);
+			vector = Gf128Mul(vector8, mask);
 			reference = ref Unsafe.Add(ref reference, 8);
 			reference2 = ref Unsafe.Add(ref reference2, 8);
 			num2 -= 8;

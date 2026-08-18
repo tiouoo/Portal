@@ -14,8 +14,10 @@ namespace Portal.Bedrock;
 internal static class BedrockDataIsolation
 {
     private const string PreloadDllName = "Portal.Preload.dll";
+    private const string PreviousPreloadDllName = "Portal.Preload.Net.dll";
     private const string PreloadResourceName = "Portal.Preload.dll";
     private const string FallbackPreloadDllPrefix = "P";
+    private const string LegacyPreloadHookName = "XUserHook.dll";
 
     public static string Prepare(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log = null)
     {
@@ -23,21 +25,18 @@ internal static class BedrockDataIsolation
         if (!File.Exists(gameExecutable))
             throw new FileNotFoundException("未找到用于启用数据隔离的基岩版主程序。", gameExecutable);
 
-        var currentDllName = GetPreloadImportName(gameExecutable) ?? PreloadDllName;
         log?.Invoke($"准备基岩版数据隔离：{gameExecutable}", BedrockLogLevel.Information);
         SyncPreloadMods(config, log);
-        CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
-        var preloadDllName = DeployPreloadDll(config.InstancePath, currentDllName);
+        var preloadDllName = DeployPreloadDll(config.InstancePath);
         var nativeLogPath = WritePreloadConfiguration(config);
         try
         {
             AddPreloadImport(gameExecutable, preloadDllName);
-            CleanupUnusedFallbackDlls(config.InstancePath, preloadDllName);
+            CleanupStalePreloadArtifacts(config.InstancePath, preloadDllName, log);
         }
         catch
         {
-            
-            CleanupUnusedFallbackDlls(config.InstancePath, currentDllName);
+            CleanupStalePreloadArtifacts(config.InstancePath, preloadDllName, log);
             throw;
         }
         return nativeLogPath;
@@ -74,14 +73,14 @@ internal static class BedrockDataIsolation
         }
     }
 
-    private static string DeployPreloadDll(string instancePath, string currentDllName)
+    private static string DeployPreloadDll(string instancePath)
     {
         var sourcePath = ExtractPreloadDll();
 
         try
         {
-            File.Copy(sourcePath, Path.Combine(instancePath, currentDllName), true);
-            return currentDllName;
+            File.Copy(sourcePath, Path.Combine(instancePath, PreloadDllName), true);
+            return PreloadDllName;
         }
         catch (IOException)
         {
@@ -162,39 +161,50 @@ internal static class BedrockDataIsolation
 
     private static void AddPreloadImport(string gameExecutable, string preloadDllName)
     {
-        using var stream = new FileStream(gameExecutable, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-        var peFile = new PeFile(stream);
-
-        var currentDllName = peFile.ImportedFunctions?
-            .Select(import => import.DLL)
-            .FirstOrDefault(IsPreloadDllName);
-
-        if (currentDllName == null)
+        try
         {
-            peFile.AddImport(preloadDllName, "Load");
+            using var stream = new FileStream(gameExecutable, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
+            var peFile = new PeFile(stream);
+
+            var currentDllName = peFile.ImportedFunctions?
+                .Select(import => import.DLL)
+                .FirstOrDefault(IsPreloadDllName);
+
+            if (currentDllName == null)
+            {
+                peFile.AddImport(preloadDllName, "Load");
+                peFile.Flush();
+                return;
+            }
+
+            if (string.Equals(currentDllName, preloadDllName, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var descriptor = peFile.ImageImportDescriptors?
+                .FirstOrDefault(item =>
+                    item.Name != 0 &&
+                    string.Equals(
+                        peFile.RawFile.ReadAsciiString(item.Name.RvaToOffset(peFile.ImageSectionHeaders!)),
+                        currentDllName, StringComparison.OrdinalIgnoreCase));
+            if (descriptor == null)
+                throw new InvalidDataException("无法更新基岩版数据隔离组件的 DLL 导入项。");
+
+            var originalNameLength = currentDllName.Length;
+            if (preloadDllName.Length > originalNameLength)
+                throw new InvalidOperationException(
+                    $"无法将预加载组件导入名改为 {preloadDllName}：超出 PE 导入项可用长度。");
+
+            var nameBuffer = new byte[originalNameLength + 1];
+            var nameBytes = System.Text.Encoding.ASCII.GetBytes(preloadDllName);
+            Array.Copy(nameBytes, nameBuffer, nameBytes.Length);
+            peFile.RawFile.WriteBytes(descriptor.Name.RvaToOffset(peFile.ImageSectionHeaders!), nameBuffer);
             peFile.Flush();
-            return;
         }
-
-        if (string.Equals(currentDllName, preloadDllName, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        var descriptor = peFile.ImageImportDescriptors?
-            .FirstOrDefault(item => string.Equals(
-                peFile.RawFile.ReadAsciiString(item.Name.RvaToOffset(peFile.ImageSectionHeaders!)),
-                currentDllName, StringComparison.OrdinalIgnoreCase));
-        if (descriptor == null)
-            throw new InvalidDataException("无法更新基岩版数据隔离组件的 DLL 导入项。");
-
-        var originalNameLength = currentDllName.Length;
-        if (preloadDllName.Length > originalNameLength)
-            throw new InvalidOperationException("备用数据隔离组件名称超过 PE 导入项可用长度。");
-
-        var nameBuffer = new byte[originalNameLength + 1];
-        var nameBytes = System.Text.Encoding.ASCII.GetBytes(preloadDllName);
-        Array.Copy(nameBytes, nameBuffer, nameBytes.Length);
-        peFile.RawFile.WriteBytes(descriptor.Name.RvaToOffset(peFile.ImageSectionHeaders!), nameBuffer);
-        peFile.Flush();
+        catch (Exception exception) when (exception is not InvalidOperationException and not InvalidDataException)
+        {
+            throw new InvalidOperationException(
+                $"无法修补基岩版游戏导入表（{preloadDllName}）。游戏可能已损坏，请重新安装该版本。", exception);
+        }
     }
 
     private static string CreateFallbackDllName(string instancePath)
@@ -239,7 +249,41 @@ internal static class BedrockDataIsolation
 
     private static bool IsPreloadDllName(string name) =>
         string.Equals(name, PreloadDllName, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(name, PreviousPreloadDllName, StringComparison.OrdinalIgnoreCase) ||
         name.Length == 13 && name.StartsWith(FallbackPreloadDllPrefix, StringComparison.OrdinalIgnoreCase) &&
         name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) &&
         name[1..9].All(Uri.IsHexDigit);
+
+    private static void CleanupStalePreloadArtifacts(string instancePath, string activePreloadName,
+        Action<string, BedrockLogLevel>? log = null)
+    {
+        CleanupUnusedFallbackDlls(instancePath, activePreloadName);
+
+        foreach (var stale in new[] { PreviousPreloadDllName, "PreloadCpp.dll" })
+        {
+            if (string.Equals(stale, activePreloadName, StringComparison.OrdinalIgnoreCase))
+                continue;
+            var stalePath = Path.Combine(instancePath, stale);
+            try
+            {
+                if (File.Exists(stalePath))
+                    File.Delete(stalePath);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                log?.Invoke($"删除过期的预加载组件失败：{stalePath}，{exception}", BedrockLogLevel.Warning);
+            }
+        }
+
+        var staleHookPath = Path.Combine(instancePath, "preload", LegacyPreloadHookName);
+        try
+        {
+            if (File.Exists(staleHookPath))
+                File.Delete(staleHookPath);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            log?.Invoke($"删除过期的 Xbox 账户 Hook 失败：{staleHookPath}，{exception}", BedrockLogLevel.Warning);
+        }
+    }
 }

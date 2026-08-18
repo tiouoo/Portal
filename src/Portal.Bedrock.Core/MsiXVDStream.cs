@@ -292,7 +292,8 @@ public class MsiXVDStream : IDisposable
 				if (flag)
 				{
 					XvdFileStream.Position = num;
-					XvdFileStream.ReadExactly(buffer);
+					long num9 = Math.Min((long)buffer.Length, (long)(pageOffset - num6) * 4096);
+					XvdFileStream.ReadExactly(buffer.Slice(0, (int)num9));
 					flag = false;
 				}
 				Span<byte> span2 = buffer.Slice(num2, 4096);
