@@ -12,6 +12,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <converter:UpdateChannelToIndexConverter x:Key="UpdateChannelToIndexConverter" />
+        <converter:UpdateSourceCompareConverter x:Key="UpdateSourceCompareConverter" />
         <converter:UpdateSourceToIndexConverter x:Key="UpdateSourceToIndexConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
@@ -128,6 +129,7 @@
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Github}"
                 Text=" *前往 设置-网络代理 开启 GitHub 镜像加速可加快更新速度" />
         </StackPanel>
         <StackPanel Spacing="5">
@@ -144,6 +146,11 @@
                 <ComboBoxItem Content="每日构建版本" />
                 <ComboBoxItem Content="提交构建版本" />
             </ComboBox>
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Cnb}"
+                Text=" * Cnb 通道仅提供正式版" />
         </StackPanel>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
         <StackPanel Margin="5,0,0,0" Spacing="5">
