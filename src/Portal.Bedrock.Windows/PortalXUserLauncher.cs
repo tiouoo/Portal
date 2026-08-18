@@ -11,9 +11,9 @@ internal sealed class PortalXUserLauncher(string instancePath)
     {
         var preloadDirectory = Path.Combine(_instancePath, "preload");
         Directory.CreateDirectory(preloadDirectory);
-        var hookPath = Path.Combine(preloadDirectory, "XUserHook.dll");
+        var hookPath = Path.Combine(preloadDirectory, "Portal.XUserHook.dll");
         using var input = typeof(PortalXUserLauncher).Assembly.GetManifestResourceStream(HookResourceName)
-                          ?? throw new InvalidOperationException("Portal.Bedrock.Windows 未包含 XUserHook.dll。");
+                          ?? throw new InvalidOperationException("Portal.Bedrock.Windows 未包含 Portal.XUserHook.dll。");
         using var output = new FileStream(hookPath, FileMode.Create, FileAccess.Write, FileShare.Read);
         input.CopyTo(output);
     }

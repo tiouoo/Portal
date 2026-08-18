@@ -26,7 +26,7 @@ internal static class BedrockPreloadTrigger
         QueryLimitedInformation = 0x1000,
     }
 
-    private static readonly string[] CandidateDllNames = { "Portal.Preload.Net.dll", "PreloadCpp.dll" };
+    private static readonly string[] CandidateDllNames = { "Portal.Preload.dll" };
 
     private const uint ProcessAccess = (uint)(ProcessAccessFlags.CreateThread | ProcessAccessFlags.VmOperation |
                                               ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite |

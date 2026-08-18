@@ -308,7 +308,7 @@ internal static class CrashReporter
 		{
 			return "mod(" + fileName + ")";
 		}
-		if (fileName.StartsWith("Portal.Preload", StringComparison.OrdinalIgnoreCase) || fileName.StartsWith("XUserHook", StringComparison.OrdinalIgnoreCase))
+		if (fileName.StartsWith("Portal.Preload", StringComparison.OrdinalIgnoreCase) || fileName.StartsWith("Portal.XUserHook", StringComparison.OrdinalIgnoreCase))
 		{
 			return "loader(" + fileName + ")";
 		}

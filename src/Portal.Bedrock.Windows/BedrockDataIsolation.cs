@@ -13,9 +13,8 @@ namespace Portal.Bedrock;
 
 internal static class BedrockDataIsolation
 {
-    private const string PreloadDllName = "Portal.Preload.Net.dll";
-    private const string LegacyPreloadDllName = "PreloadCpp.dll";
-    private const string PreloadResourceName = "Portal.Preload.Net.dll";
+    private const string PreloadDllName = "Portal.Preload.dll";
+    private const string PreloadResourceName = "Portal.Preload.dll";
     private const string FallbackPreloadDllPrefix = "P";
 
     public static string Prepare(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log = null)
@@ -240,7 +239,6 @@ internal static class BedrockDataIsolation
 
     private static bool IsPreloadDllName(string name) =>
         string.Equals(name, PreloadDllName, StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(name, LegacyPreloadDllName, StringComparison.OrdinalIgnoreCase) ||
         name.Length == 13 && name.StartsWith(FallbackPreloadDllPrefix, StringComparison.OrdinalIgnoreCase) &&
         name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) &&
         name[1..9].All(Uri.IsHexDigit);

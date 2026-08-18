@@ -9,7 +9,7 @@ namespace Portal.Bedrock.Preload;
 /// <summary>按预加载清单加载 preload 目录下的第三方 DLL。</summary>
 internal static unsafe class PreloadLoader
 {
-    private const string XUserHook = "XUserHook.dll";
+    private const string XUserHook = "Portal.XUserHook.dll";
 
     public static void Run()
     {
@@ -81,11 +81,11 @@ internal static unsafe class PreloadLoader
         nint hookInit = NativeMethods.GetProcAddress(module, "HookInit");
         if (hookInit == 0)
         {
-            Logger.Warning($"XUserHook.dll 未导出 HookInit；跳过触发");
+            Logger.Warning($"Portal.XUserHook.dll 未导出 HookInit；跳过触发");
             return;
         }
 
-        Logger.Info("Calling XUserHook!HookInit");
+        Logger.Info("Calling Portal.XUserHook!HookInit");
         ((delegate* unmanaged<int>)hookInit)();
     }
 }
