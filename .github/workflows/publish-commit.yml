@@ -27,9 +27,10 @@ jobs:
           START_EPOCH=$(TZ='Asia/Shanghai' date -d "2026-07-10 00:00:00" +%s)
           NOW_EPOCH=$(date +%s)
           TOTAL_MINUTES=$(( (NOW_EPOCH - START_EPOCH) / 60 ))
-          TOTAL_HOURS=$(( TOTAL_MINUTES / 60 ))
+          TOTAL_DAYS=$(( TOTAL_MINUTES / 1440 ))
+          ELAPSED_HOURS=$(( (TOTAL_MINUTES % 1440) / 60 ))
           ELAPSED_MINUTES=$(( TOTAL_MINUTES % 60 ))
-          APP_VERSION="0.0.${TOTAL_HOURS}.${ELAPSED_MINUTES}"
+          APP_VERSION="0.${TOTAL_DAYS}.${ELAPSED_HOURS}.${ELAPSED_MINUTES}"
           COMMIT_HASH=$(git rev-parse --short=6 HEAD)
           BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
           VERSION_TITLE="build-commit-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
