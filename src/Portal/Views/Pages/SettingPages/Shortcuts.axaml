@@ -16,7 +16,7 @@
         </Style>
     </UserControl.Styles>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="快捷键" />
+        <TextBlock FontSize="26" Text="按键绑定" />
         <TextBox
             HorizontalAlignment="Stretch"
             Margin="0,0,0,-10"

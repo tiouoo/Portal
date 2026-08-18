@@ -14,7 +14,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("快捷键", "设置/快捷键", "Shortcuts")]
+[AggregatedSearchPage("按键绑定", "设置/按键绑定", "Shortcuts")]
 public partial class Shortcuts : Dsc
 {
     public Shortcuts()

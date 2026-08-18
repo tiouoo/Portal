@@ -36,7 +36,7 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Shortcuts}"
-                        Header="快捷键" />
+                        Header="按键绑定" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
