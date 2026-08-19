@@ -355,7 +355,7 @@ jobs:
     needs: [prepare, publish]
     uses: ./.github/workflows/publish-aur.yml
     with:
-      pkgname: portal-mc-commit-bin
+      pkgname: portal-commit-bin
       tag: publish-commit
       app_version: ${{ needs.prepare.outputs.app_version }}
       moving_tag: true
