@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Portal.Core.App.Events;
@@ -14,6 +15,7 @@ using Portal.Core.Module.Update;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Services;
 using Portal.Core.Services.SystemResources;
+using Portal.Localization;
 using Portal.Services;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -31,6 +33,13 @@ public static partial class Initializer
 {
     public static void Oobe()
     {
+        LocalizationService.Register(CommonLanguageManager.Instance);
+        LocalizationService.Register(LogLanguageManager.Instance);
+        LocalizationService.Register(AppLanguageManager.Instance);
+        LocalizationService.Register(PagesLanguageManager.Instance);
+        LocalizationService.Register(WidgetsLanguageManager.Instance);
+        LocalizationService.SetCulture(CultureInfo.GetCultureInfo(Data.ConfigEntry.Language));
+
         ThemeHelper.SetThemeColor(Data.ConfigEntry.ThemeColor);
         ThemeHelper.ToggleTheme(Data.ConfigEntry.Theme);
         NotificationGateway.IsToastFunc = () => Data.ConfigEntry.NoticeWay == NoticeWay.Toast;
@@ -39,7 +48,7 @@ public static partial class Initializer
     public static async Task UiAsync()
     {
         var stopwatch = Stopwatch.StartNew();
-        Logger.Info("开始初始化主界面数据和后台服务。");
+        Logger.Info(LogLanguageManager.Instance.ui_initStart.CurrentValue());
         Logger.Info($"正在写入当前应用程序路径：{ConfigPath.AppPathDataPath}");
         File.WriteAllText(ConfigPath.AppPathDataPath,
             Process.GetCurrentProcess().MainModule.FileName);
@@ -95,7 +104,7 @@ public static partial class Initializer
         await LoadUiDataAsync();
 
         InitializationEvents.RaiseAfterUiLoaded();
-        Logger.Info($"主界面数据和后台服务初始化完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ui_initComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
     }
 
     public static async Task LoadBedrockPackageImportDataAsync()
@@ -112,13 +121,13 @@ public static partial class Initializer
     {
         var stopwatch = Stopwatch.StartNew();
         var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
-        Logger.Info($"开始扫描全部 Minecraft 实例，目标文件夹数量：{folders.Length}。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ui_scanInstances.CurrentValue(), folders.Length));
         var instancesTask = Task.Run(() => InstanceManager.Instance.ScanAll(folders));
         var newsTask = Task.Run(NewsService.InitializeFromCache);
 
         var instances = await instancesTask;
         InstanceManager.Instance.ApplyInstances(instances);
-        Logger.Info($"实例数据加载完成，共加载 {instances.Count} 个实例，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ui_instancesLoaded.CurrentValue(), instances.Count, stopwatch.ElapsedMilliseconds));
 
         await newsTask;
         Logger.Info("新闻缓存加载完成，正在通知界面刷新并后台获取最新新闻。");

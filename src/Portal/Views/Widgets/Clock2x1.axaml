@@ -5,13 +5,14 @@
     x:Class="Portal.Views.Widgets.Clock2x1"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="6">
         <StackPanel Spacing="8">
             <StackPanel Orientation="Horizontal" Spacing="5">
                 <PathIcon Data="F1 M640,640z M0,0z M320,64C461.4,64 576,178.6 576,320 576,461.4 461.4,576 320,576 178.6,576 64,461.4 64,320 64,178.6 178.6,64 320,64z M296,184L296,320C296,328,300,335.5,306.7,340L402.7,404C413.7,411.4 428.6,408.4 436,397.3 443.4,386.2 440.4,371.4 429.3,364L344,307.2 344,184C344,170.7 333.3,160 320,160 306.7,160 296,170.7 296,184z" Width="17" />
-                <TextBlock Text="当前时间" />
+                <TextBlock Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.widgets_clock_currentTime}}" />
             </StackPanel>
             <TextBlock
                 FontSize="46"

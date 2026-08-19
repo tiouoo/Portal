@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Irihi.Lingua"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="Localization\**\*.json"/>
+    </ItemGroup>
+
+</Project>

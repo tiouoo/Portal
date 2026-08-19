@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Module.Ipc;
+using Portal.Localization;
 using Portal.Module;
 using Portal.Module.Initialize;
 using Portal.Views;
@@ -33,13 +34,13 @@ public partial class App : Application
 
     public override void Initialize()
     {
-        Logger.Info("开始初始化");
+        Logger.Info(LogLanguageManager.Instance.app_initStart.CurrentValue());
         if (BedrockPackagePath == null)
             Initializer.App();
         else
             Initializer.BedrockPackageImport();
         AvaloniaXamlLoader.Load(this);
-        Logger.Info("完成初始化");
+        Logger.Info(LogLanguageManager.Instance.app_initComplete.CurrentValue());
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -132,18 +133,18 @@ public partial class App : Application
 
     private async void Function(object? sender, RoutedEventArgs e)
     {
-        Logger.Info("UI加载完成");
+        Logger.Info(LogLanguageManager.Instance.app_uiLoadComplete.CurrentValue());
         _win.Loaded -= Function;
         await Task.Yield();
         var stopwatch = Stopwatch.StartNew();
         try
         {
             await Initializer.UiAsync();
-            Logger.Info($"后台 UI 数据加载完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+            Logger.Info(string.Format(LogLanguageManager.Instance.app_uiDataLoadComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
         }
         catch (Exception exception)
         {
-            Logger.Error("后台加载 UI 数据失败。", exception);
+            Logger.Error(LogLanguageManager.Instance.app_uiDataLoadFailed.CurrentValue(), exception);
         }
         finally
         {

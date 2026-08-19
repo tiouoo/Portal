@@ -8,6 +8,8 @@
     xmlns:const1="clr-namespace:Portal.Core.Const;assembly=Portal.Core"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lingua="https://irihi.tech/lingua"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
@@ -16,10 +18,20 @@
         <converter:BackgroundModeCompareConverter x:Key="BackgroundModeCompareConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="界面外观" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_title}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="主题样式"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_language}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <lingua:CulturePicker
+                CultureChanged="OnCultureChanged"
+                Cultures="{Binding Cultures}"
+                Managers="{Binding Managers}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeStyle}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ListBox Name="ListBox" Theme="{DynamicResource BorderListBox}">
@@ -32,7 +44,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="系统" />
+                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeSystem}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -44,7 +56,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="浅色" />
+                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeLight}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -56,7 +68,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="深色" />
+                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeDark}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -68,7 +80,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="幻影" />
+                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeMirage}}" />
                     </StackPanel>
                 </ListBoxItem>
             </ListBox>
@@ -76,7 +88,7 @@
         <StackPanel Spacing="5">
             <Panel>
                 <Label
-                    Content="主题色"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeColor}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
                     HorizontalAlignment="Left" />
@@ -100,7 +112,7 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                     <Label
-                        Content="应用缩放"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_appScale}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         HorizontalAlignment="Left" />
@@ -138,13 +150,13 @@
                     VerticalAlignment="Center">
                     <HyperlinkButton
                         Click="ApplyScale_OnClick"
-                        Content="应用更改"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_applyChanges}}"
                         FontSize="13"
                         Name="ApplyScaleButton"
                         Theme="{StaticResource TransparentHyperlinkButton}" />
                     <HyperlinkButton
                         Click="CustomScale_OnClick"
-                        Content="自定义缩放"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_customScale}}"
                         FontSize="13"
                         Theme="{StaticResource TransparentHyperlinkButton}" />
                 </StackPanel>
@@ -169,17 +181,17 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="背景风格"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundStyle}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}}">
-                <ComboBoxItem>默认主题</ComboBoxItem>
-                <ComboBoxItem>图片</ComboBoxItem>
-                <ComboBoxItem>纯色</ComboBoxItem>
-                <ComboBoxItem>亚克力</ComboBoxItem>
+                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundDefault}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundImage}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundSolidColor}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundAcrylic}}" />
 
-                <ComboBoxItem>云母</ComboBoxItem>
-                <ComboBoxItem>透明</ComboBoxItem>
+                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundMica}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundTransparent}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='SolidColor'}" Spacing="5">

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia;
@@ -6,8 +7,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Irihi.Lingua;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Components;
 using TioUi.Common.Extensions;
@@ -22,6 +25,14 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
     private double _currentRenderScaling = 1.0;
     private DispatcherTimer? _monitorTimer;
     private TopLevel? _topLevel;
+
+    public IList<ILinguaManager> Managers { get; } = LocalizationService.RegisteredManagers.ToList();
+
+    public IList<LinguaCulture> Cultures { get; } =
+    [
+        new() { Culture = new CultureInfo("zh-CN"), DisplayName = "简体中文", ShortDisplayName = "中文" },
+        new() { Culture = new CultureInfo("en-US"), DisplayName = "English", ShortDisplayName = "EN" }
+    ];
 
     public Appearance()
     {
@@ -157,5 +168,11 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
+    private void OnCultureChanged(object? sender, CultureChangedEventArgs e)
+    {
+        if (e.Culture?.CultureName is { } name)
+            Data.ConfigEntry.Language = name;
     }
 }

@@ -41,5 +41,6 @@
   <Project Path="src/Portal.Console/Portal.Console.csproj" />
   <Project Path="src/Portal.Core/Portal.Core.csproj" />
   <Project Path="src/Portal.Desktop/Portal.Desktop.csproj" />
+  <Project Path="src/Portal.Localization/Portal.Localization.csproj" />
   <Project Path="src/Portal/Portal.csproj" />
 </Solution>

@@ -1,0 +1,17 @@
+{
+  "app": {
+    "initStart": "Initializing...",
+    "initComplete": "Initialization complete",
+    "frameworkInitComplete": "OnFrameworkInitializationCompleted",
+    "uiConfigComplete": "UI configuration complete",
+    "uiLoadComplete": "UI loaded",
+    "uiDataLoadComplete": "Background UI data loaded in {0} ms.",
+    "uiDataLoadFailed": "Failed to load background UI data."
+  },
+  "ui": {
+    "initStart": "Initializing main UI data and background services.",
+    "initComplete": "Main UI data and background services initialized in {0} ms.",
+    "scanInstances": "Scanning all Minecraft instances. Target folder count: {0}.",
+    "instancesLoaded": "Instance data loaded. Total: {0} instances, elapsed {1} ms."
+  }
+}

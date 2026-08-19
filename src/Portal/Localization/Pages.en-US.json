@@ -1,0 +1,24 @@
+{
+  "pages": {
+    "appearance": {
+      "title": "Appearance",
+      "themeStyle": "Theme style",
+      "themeSystem": "System",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeMirage": "Mirage",
+      "themeColor": "Theme color",
+      "appScale": "App scale",
+      "applyChanges": "Apply changes",
+      "customScale": "Custom scale",
+      "backgroundStyle": "Background style",
+      "backgroundDefault": "Default theme",
+      "backgroundImage": "Image",
+      "backgroundSolidColor": "Solid color",
+      "backgroundAcrylic": "Acrylic",
+      "backgroundMica": "Mica",
+      "backgroundTransparent": "Transparent",
+      "language": "Language"
+    }
+  }
+}

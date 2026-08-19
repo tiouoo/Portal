@@ -26,6 +26,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool AutoSetChineseLanguage { get; set; } = true;
     [ObservableProperty] public partial bool EnableManagedWindowDecorationsOnWindows { get; set; }
     [ObservableProperty] public partial bool EnableManagedWindowBorderOnWindows { get; set; } = true;
+    [ObservableProperty] public partial string Language { get; set; } = "zh-CN";
     [ObservableProperty] public partial bool EnableCustomUserAgent { get; set; }
     [ObservableProperty] public partial bool EnableProxyServer { get; set; }
     [ObservableProperty] public partial bool DisableSystemProxy { get; set; }

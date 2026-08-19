@@ -1,0 +1,17 @@
+{
+  "app": {
+    "initStart": "开始初始化",
+    "initComplete": "完成初始化",
+    "frameworkInitComplete": "OnFrameworkInitializationCompleted",
+    "uiConfigComplete": "UI配置完成",
+    "uiLoadComplete": "UI加载完成",
+    "uiDataLoadComplete": "后台 UI 数据加载完成，耗时 {0} ms。",
+    "uiDataLoadFailed": "后台加载 UI 数据失败。"
+  },
+  "ui": {
+    "initStart": "开始初始化主界面数据和后台服务。",
+    "initComplete": "主界面数据和后台服务初始化完成，耗时 {0} ms。",
+    "scanInstances": "开始扫描全部 Minecraft 实例，目标文件夹数量：{0}。",
+    "instancesLoaded": "实例数据加载完成，共加载 {0} 个实例，耗时 {1} ms。"
+  }
+}

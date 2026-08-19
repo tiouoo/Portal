@@ -1,0 +1,11 @@
+{
+  "common": {
+    "ok": "确定",
+    "cancel": "取消",
+    "search": "搜索",
+    "save": "保存",
+    "close": "关闭",
+    "language": "语言",
+    "loading": "加载中..."
+  }
+}

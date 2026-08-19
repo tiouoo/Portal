@@ -17,6 +17,7 @@
     </Application.Resources>
     <Application.Styles>
         <tio:TioUiTheme Language="zh_cn" />
+        <StyleInclude Source="avares://Irihi.Lingua.Core/Themes/Generic.axaml" />
         <StyleInclude Source="/Styles/AvaloniaEdit.axaml" />
         <StyleInclude Source="/Styles/Tab.axaml" />
         <StyleInclude Source="/Styles/Style.axaml" />
