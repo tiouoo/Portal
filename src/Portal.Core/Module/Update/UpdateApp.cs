@@ -76,11 +76,16 @@ public static class UpdateApp
 
             var path = Environment.ProcessPath
                        ?? throw new InvalidOperationException("无法确定当前程序路径。");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType == "appimage")
+            {
+                var appImageUpdate = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
+                CompletePreparation(taskHandle, appImageUpdate);
+                return appImageUpdate;
+            }
+
             ProcessStartInfo updater;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "portable")
                 updater = await Task.Run(() => PrepareWindowsPortable(packagePath, updateDirectory, path));
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType == "appimage")
-                updater = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && packageType is "app" or "dmg")
                 updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, path));
             else
@@ -466,13 +471,94 @@ public static class UpdateApp
         return new ProcessStartInfo(installer) { UseShellExecute = true };
     }
 
-    private static ProcessStartInfo PrepareAppImage(string packagePath, string updateDirectory)
+    private static PreparedUpdate PrepareAppImage(string packagePath, string updateDirectory)
     {
         var target = Environment.GetEnvironmentVariable("APPIMAGE");
         if (string.IsNullOrWhiteSpace(target) || !File.Exists(target))
             throw new InvalidOperationException("无法定位当前 AppImage；请从 AppImage 文件启动后重试。");
-        var script = WriteUnixScript(updateDirectory, target, packagePath, false);
-        return UnixScript(script, !CanWriteDirectory(Path.GetDirectoryName(target)!));
+        var workerScript = Path.Combine(updateDirectory, "apply-appimage-update.sh");
+        var launcherScript = Path.Combine(updateDirectory, "start-appimage-update.sh");
+        var log = Path.Combine(updateDirectory, "apply-appimage-update.log");
+        File.WriteAllText(workerScript, $$"""
+                                          #!/bin/sh
+                                          set -eu
+                                          log={{Sh(log)}}
+                                          exec >>"$log" 2>&1
+                                          echo "Portal AppImage update started: $(date -Is)"
+                                          pid='{{Environment.ProcessId}}'
+                                          target={{Sh(target)}}
+                                          source={{Sh(packagePath)}}
+                                          backup="${target}.portal-update-old"
+                                          cleanup_new="${target}.portal-update-new"
+                                          i=0
+                                          while kill -0 "$pid" 2>/dev/null; do
+                                            i=$((i + 1)); [ "$i" -gt 120 ] && exit 1
+                                            sleep 0.5
+                                          done
+                                          rm -rf "$cleanup_new" "$backup"
+                                          cp -R "$source" "$cleanup_new"
+                                          chmod --reference="$target" "$cleanup_new" 2>/dev/null || chmod +x "$cleanup_new"
+                                          if ! mv "$target" "$backup"; then
+                                            rm -rf "$cleanup_new"
+                                            echo "Failed to move the current AppImage aside; update aborted."
+                                            exit 1
+                                          fi
+                                          if ! mv "$cleanup_new" "$target"; then
+                                            mv "$backup" "$target"
+                                            echo "Failed to install the updated AppImage; rolled back."
+                                            exit 1
+                                          fi
+                                          if [ -n "${PKEXEC_UID:-}" ]; then
+                                            passwd_entry="$(getent passwd "$PKEXEC_UID")"
+                                            user="$(printf '%s' "$passwd_entry" | cut -d: -f1)"
+                                            home="$(printf '%s' "$passwd_entry" | cut -d: -f6)"
+                                            if [ -z "$user" ]; then
+                                              echo "Unable to resolve the original user ID: $PKEXEC_UID"
+                                              exit 1
+                                            fi
+                                            if [ -z "$home" ]; then
+                                              echo "Unable to resolve the home directory for user: $user"
+                                              exit 1
+                                            fi
+                                            display={{Sh(Environment.GetEnvironmentVariable("DISPLAY") ?? "")}}
+                                            wayland_display={{Sh(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY") ?? "")}}
+                                            xauthority={{Sh(Environment.GetEnvironmentVariable("XAUTHORITY") ?? "")}}
+                                            dbus_address={{Sh(Environment.GetEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS") ?? "")}}
+                                            xdg_runtime_dir={{Sh(Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR") ?? "")}}
+                                            [ -n "$xdg_runtime_dir" ] || xdg_runtime_dir="/run/user/$PKEXEC_UID"
+                                            if ! command -v runuser >/dev/null 2>&1; then
+                                              echo "The system does not provide runuser; Portal was replaced but not restarted."
+                                              exit 1
+                                            fi
+                                            runuser -u "$user" -- env \
+                                              HOME="$home" \
+                                              USER="$user" \
+                                              LOGNAME="$user" \
+                                              DISPLAY="$display" \
+                                              WAYLAND_DISPLAY="$wayland_display" \
+                                              XAUTHORITY="$xauthority" \
+                                              DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
+                                              XDG_RUNTIME_DIR="$xdg_runtime_dir" \
+                                              nohup "$target" >/dev/null 2>&1 &
+                                          else
+                                            nohup "$target" >/dev/null 2>&1 &
+                                          fi
+                                          sleep 5
+                                          rm -rf "$backup"
+                                          echo "Portal AppImage update completed: $(date -Is)"
+                                          """);
+        File.WriteAllText(launcherScript, $$"""
+                                              #!/bin/sh
+                                              set -eu
+                                              worker={{Sh(workerScript)}}
+                                              log={{Sh(log)}}
+                                              echo "Portal update authentication accepted: $(date -Is)" >>"$log"
+                                              nohup "$worker" >>"$log" 2>&1 </dev/null &
+                                              exit 0
+                                              """);
+        RunAndWait("/bin/chmod", "+x", workerScript, launcherScript);
+        return new PreparedUpdate(
+            UnixScript(launcherScript, !CanWriteDirectory(Path.GetDirectoryName(target)!)), false, true);
     }
 
     private static ProcessStartInfo PrepareLinuxPackage(
