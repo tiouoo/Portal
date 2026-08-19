@@ -2,5 +2,5 @@ using Irihi.Lingua;
 
 namespace Portal.Localization;
 
-[LinguaManager("./Localization/Logs.json")]
+[LinguaManager("./Localization/zh-CN/Logs.json")]
 public partial class LogLanguageManager;

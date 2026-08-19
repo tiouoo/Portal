@@ -2,5 +2,5 @@ using Irihi.Lingua;
 
 namespace Portal.Localization;
 
-[LinguaManager("./Localization/Pages.json")]
+[LinguaManager("./Localization/zh-CN/Pages.json")]
 public partial class PagesLanguageManager;
