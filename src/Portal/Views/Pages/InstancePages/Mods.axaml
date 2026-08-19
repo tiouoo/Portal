@@ -179,6 +179,7 @@
                                     <MenuItem
                                         Click="ShowModDetails_OnClick"
                                         Header="查看详情"
+                                        IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

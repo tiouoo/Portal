@@ -170,6 +170,7 @@
                                     <MenuItem
                                         Click="ShowShaderPackDetails_OnClick"
                                         Header="查看详情"
+                                        IsVisible="{Binding HasDetails}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

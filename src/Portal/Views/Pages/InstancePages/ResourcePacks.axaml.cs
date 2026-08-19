@@ -336,13 +336,23 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     private async void ShowResourcePackDetails_OnClick(object? sender, RoutedEventArgs e)
     {
         if (GetItem(sender) is not { } item) return;
-        await OverlayDialog.ShowStandardAsync(new TextBlock
-            {
-                Margin = new Thickness(24),
-                Text = item.DetailsText,
-                TextWrapping = TextWrapping.Wrap
-            }, null, this.TryGetHostId(),
-            new OverlayDialogOptions { Title = $"{PackName}详情", Buttons = DialogButton.OK, CanResize = false });
+        if (item.Info.IsBedrock)
+        {
+            await OverlayDialog.ShowStandardAsync(new TextBlock
+                {
+                    Margin = new Thickness(24),
+                    Text = item.DetailsText,
+                    TextWrapping = TextWrapping.Wrap
+                }, null, this.TryGetHostId(),
+                new OverlayDialogOptions { Title = $"{PackName}详情", Buttons = DialogButton.OK, CanResize = false });
+            return;
+        }
+
+        if (TopLevel.GetTopLevel(this) is not { } topLevel) return;
+        var result = item.UpdateResult;
+        if (result?.HasIdentity != true || result.Source is not { } source ||
+            string.IsNullOrEmpty(result.ProjectId)) return;
+        ModDetailsPage.Open(topLevel, new ModDetailsTarget(source, result.ProjectId), item.DisplayName);
     }
 
     private async void OpenResourcePackFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -630,6 +640,7 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
     public bool HasUpdate => _updateResult?.HasUpdate == true;
     public bool IsUpdatable => HasUpdate;
     public bool HasIdentity => _updateResult?.HasIdentity == true;
+    public bool HasDetails => Info.IsBedrock || HasIdentity;
     public ModVersionFileItem? UpdateFile => _updateResult?.TargetFile;
     public bool HasRollback => _hasRollback;
     public bool IsUpdating => _isUpdating;
@@ -680,6 +691,7 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
         Raise(nameof(HasUpdate));
         Raise(nameof(IsUpdatable));
         Raise(nameof(HasIdentity));
+        Raise(nameof(HasDetails));
         Raise(nameof(UpdateFile));
         Raise(nameof(UpdateResult));
     }

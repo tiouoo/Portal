@@ -334,16 +334,13 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         }, disabled ? "禁用" : "启用");
     }
 
-    private async void ShowShaderPackDetails_OnClick(object? sender, RoutedEventArgs e)
+    private void ShowShaderPackDetails_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (GetShaderPackItem(sender) is not { } item) return;
-
-        await OverlayDialog.ShowStandardAsync(new TextBlock
-            {
-                Margin = new Thickness(24), Text = $"文件名：{item.FileName}",
-                TextWrapping = TextWrapping.Wrap
-            }, null, this.TryGetHostId(),
-            new OverlayDialogOptions { Title = "光影包详情", Buttons = DialogButton.OK, CanResize = false });
+        if (GetShaderPackItem(sender) is not { } item || TopLevel.GetTopLevel(this) is not { } topLevel) return;
+        var result = item.UpdateResult;
+        if (result?.HasIdentity != true || result.Source is not { } source ||
+            string.IsNullOrEmpty(result.ProjectId)) return;
+        ModDetailsPage.Open(topLevel, new ModDetailsTarget(source, result.ProjectId), item.FileName);
     }
 
     private async void DeleteShaderPack_OnClick(object? sender, RoutedEventArgs e)
@@ -624,6 +621,7 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
     public bool HasUpdate => _updateResult?.HasUpdate == true;
     public bool IsUpdatable => HasUpdate;
     public bool HasIdentity => _updateResult?.HasIdentity == true;
+    public bool HasDetails => HasIdentity;
     public ModVersionFileItem? UpdateFile => _updateResult?.TargetFile;
     public bool HasRollback => _hasRollback;
     public bool IsUpdating => _isUpdating;
@@ -648,6 +646,7 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
         Raise(nameof(HasUpdate));
         Raise(nameof(IsUpdatable));
         Raise(nameof(HasIdentity));
+        Raise(nameof(HasDetails));
         Raise(nameof(UpdateFile));
         Raise(nameof(UpdateResult));
     }
