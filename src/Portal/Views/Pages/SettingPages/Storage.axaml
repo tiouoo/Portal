@@ -11,7 +11,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel>
         <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-            <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_0}}" />
+            <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_title}}" />
             <Button
                 Command="{Binding RefreshStorageDataAsync}"
                 Margin="5,0,0,3"
@@ -37,7 +37,7 @@
                     <TextBlock
                         FontSize="11"
                         Foreground="#1890ff"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_1}}" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_total}}" />
                 </Border>
                 <StackPanel Orientation="Horizontal">
                     <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding TotalBytesRaw}" />
@@ -84,7 +84,7 @@
                         <TextBlock
                             FontSize="11"
                             Foreground="#953ea3"
-                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_2}}" />
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_games}}" />
                     </Border>
                     <StackPanel Orientation="Horizontal">
                         <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding GameBytesRaw}" />
@@ -131,7 +131,7 @@
                                     <HyperlinkButton
                                         Command="{Binding OpenFolderCommand}"
                                         CommandParameter="{Binding $self}"
-                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_3}}"
+                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_openFolder}}"
                                         FontSize="12"
                                         HorizontalAlignment="Right"
                                         Margin="0,0,5,0"
@@ -179,7 +179,7 @@
                                     <HyperlinkButton
                                         Command="{Binding OpenFolderCommand}"
                                         CommandParameter="{Binding $self}"
-                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_3}}"
+                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_openFolder}}"
                                         FontSize="12"
                                         HorizontalAlignment="Right"
                                         Margin="0,0,5,0"

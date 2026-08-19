@@ -14,17 +14,17 @@
         RowDefinitions="Auto,Auto,Auto,Auto"
         Width="480">
         <StackPanel Spacing="4">
-            <TextBlock FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_0}}" />
+            <TextBlock FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_title}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_1}}"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_description}}"
                 TextWrapping="Wrap" />
         </StackPanel>
         <StackPanel
             Grid.Row="1"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_2}}" />
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_minecraftFolderLabel}}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 ItemsSource="{Binding MinecraftFolders}"
@@ -45,22 +45,22 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoMinecraftFolders}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_3}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_noMinecraftFoldersText}}" />
         </StackPanel>
         <StackPanel
             Grid.Row="2"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_4}}" />
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_instanceIdLabel}}" />
             <TextBox Text="{Binding InstanceId}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding InstanceIdExists}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_5}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_instanceIdExistsText}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasInvalidInstanceId}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_6}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_invalidInstanceIdText}}" />
         </StackPanel>
         <DockPanel
             Grid.Row="3"
@@ -68,17 +68,17 @@
             Margin="0,22,0,0">
             <Button
                 Click="SaveAs_Click"
-                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_7}}"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_saveAs}}"
                 DockPanel.Dock="Left"
                 IsVisible="{Binding ShowSaveAs}" />
             <StackPanel
                 DockPanel.Dock="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_8}}" />
+                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_cancel}}" />
                 <Button
                     Click="Install_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_9}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modpackinstalldialog_install}}"
                     IsEnabled="{Binding CanInstall}" />
             </StackPanel>
         </DockPanel>

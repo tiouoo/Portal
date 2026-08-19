@@ -26,12 +26,12 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_0}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_openFolder}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="CheckUpdates_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_1}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
@@ -76,7 +76,7 @@
                 VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_select}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top">
@@ -85,15 +85,15 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_3}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_selectAll}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="ClearSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_4}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_clearSelection}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="InvertSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_5}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_invertSelection}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -107,7 +107,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_6}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_deleteSelected}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -160,7 +160,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowResourcePackDetails_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_7}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_showDetails}}"
                                         IsVisible="{Binding HasDetails}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -172,7 +172,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="UpdateResourcePack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_8}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_update}}"
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -184,7 +184,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="SwitchVersionResourcePack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_9}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_switchVersion}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -196,7 +196,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RollbackResourcePack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_10}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates0}}"
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -209,7 +209,7 @@
                                     <Separator IsVisible="{Binding HasDetails}" />
                                     <MenuItem
                                         Click="OpenResourcePackFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_11}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates1}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -220,7 +220,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteResourcePack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_12}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates2}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -273,7 +273,7 @@
                                                     IsVisible="{Binding HasUpdate}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_13}}"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates3}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     FontSize="16"

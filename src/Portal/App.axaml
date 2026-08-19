@@ -29,14 +29,14 @@
     </Application.Styles>
     <NativeMenu.Menu>
         <NativeMenu>
-            <NativeMenuItem Click="OpenSetting_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_0}}" />
-            <NativeMenuItem Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_1}}">
+            <NativeMenuItem Click="OpenSetting_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_settings}}" />
+            <NativeMenuItem Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_theme}}">
                 <NativeMenuItem.Menu>
                     <NativeMenu>
-                        <NativeMenuItem Click="ThemeDefault_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_2}}" />
-                        <NativeMenuItem Click="ThemeLight_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_3}}" />
-                        <NativeMenuItem Click="ThemeDark_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_4}}" />
-                        <NativeMenuItem Click="ThemeMirage_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_5}}" />
+                        <NativeMenuItem Click="ThemeDefault_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_themeSystem}}" />
+                        <NativeMenuItem Click="ThemeLight_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_themeLight}}" />
+                        <NativeMenuItem Click="ThemeDark_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_themeDark}}" />
+                        <NativeMenuItem Click="ThemeMirage_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_themeMirage}}" />
                     </NativeMenu>
                 </NativeMenuItem.Menu>
             </NativeMenuItem>

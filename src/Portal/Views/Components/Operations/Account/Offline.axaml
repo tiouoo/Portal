@@ -18,27 +18,27 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_0}}" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_title}}" />
         <tio:Form
             Grid.Row="1"
             HorizontalAlignment="Stretch"
             LabelPosition="Top"
             Margin="0,10,0,15">
-            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_8}}">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_roleNameLabel}}">
                 <StackPanel Spacing="4">
                     <DataValidationErrors>
                         <TextBox
-                            PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_1}}"
+                            PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_roleNamePlaceholder}}"
                             Text="{Binding RoleName}"
                             tio:FocusHelper.DialogFocusHint="True" />
                     </DataValidationErrors>
-                    <CheckBox Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_2}}" IsChecked="{Binding IgnoreStandard}" />
+                    <CheckBox Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_ignoreStandardCheckBox}}" IsChecked="{Binding IgnoreStandard}" />
                 </StackPanel>
             </tio:FormItem>
             <Expander
                 BorderBrush="{DynamicResource PopupBorderBrush}"
                 BorderThickness="1"
-                Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_3}}">
+                Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_advancedSettingsExpander}}">
                 <StackPanel>
                     <tio:FormItem Label="Uuid" Margin="15,5,15,15">
                         <DataValidationErrors>
@@ -47,12 +47,12 @@
                     </tio:FormItem>
                     <tio:Banner
                         Classes="Bordered"
-                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_4}}"
+                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_uuidWarning}}"
                         CornerRadius="10"
                         Margin="15,0,15,15"
                         Type="Warning">
                         <tio:Banner.Header>
-                            <TextBlock FontSize="15" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_5}}" />
+                            <TextBlock FontSize="15" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_warningHeader}}" />
                         </tio:Banner.Header>
                     </tio:Banner>
                 </StackPanel>
@@ -63,8 +63,8 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_6}}" />
-            <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_7}}" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_cancelButton}}" />
+            <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.offline_addAccountButton}}" />
         </StackPanel>
     </Grid>
 </UserControl>

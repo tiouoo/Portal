@@ -44,7 +44,7 @@
                         Foreground="{DynamicResource InnerForegroundColor}"
                         Margin="5,0,0,0"
                         Name="TextBlock"
-                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newspage_0}}"
+                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newspage_MinecraftNews}}"
                         VerticalAlignment="Center" />
                 </StackPanel>
             </Button>

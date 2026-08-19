@@ -18,7 +18,7 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_0}}" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_title}}" />
         <StackPanel
             Grid.Row="1"
             HorizontalAlignment="Stretch"
@@ -62,8 +62,8 @@
             <TextBlock
                 Foreground="Red"
                 IsVisible="{Binding IsError}"
-                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_1}}" />
-            <TextBlock IsVisible="{Binding IsError}" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_2}}" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_errorMessage}}" />
+            <TextBlock IsVisible="{Binding IsError}" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_errorInfoPrefix}}" />
             <TextBlock IsVisible="{Binding IsError}" Text="{Binding Error}" />
         </StackPanel>
         <StackPanel
@@ -71,24 +71,24 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding Cancel}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_3}}" />
+            <Button Command="{Binding Cancel}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_cancelButton}}" />
             <Button
                 Command="{Binding Retry}"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_4}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_retryButton}}"
                 IsVisible="{Binding IsError}" />
             <Button
                 Click="CopyUrl"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_5}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_copyUrlButton}}"
                 IsEnabled="{Binding IsReady}"
                 IsVisible="{Binding !IsError}" />
             <Button
                 Click="CopyCode"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_6}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_copyCodeButton}}"
                 IsEnabled="{Binding IsReady}"
                 IsVisible="{Binding !IsError}" />
             <Button
                 Click="OpenBrowser"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_7}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_openBrowserButton}}"
                 IsEnabled="{Binding IsReady}"
                 IsVisible="{Binding !IsError}" />
         </StackPanel>

@@ -43,12 +43,12 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Margin="12,0,0,0"
-                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_0}}"
+                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_title}}"
                 VerticalAlignment="Center" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="10,0,0,0"
-                PlaceholderText="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_1}}"
+                PlaceholderText="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_searchPlaceholder}}"
                 Text="{Binding SearchText}"
                 Width="300">
                 <TextBox.InnerRightContent>
@@ -69,16 +69,16 @@
                     <tio:NavMenuItem
                         Command="{Binding SelectCategoryCommand}"
                         CommandParameter="{x:Static modulecore1:WidgetCategory.Game}"
-                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_2}}"
+                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_categoryGame}}"
                         IsSelected="True" />
                     <tio:NavMenuItem
                         Command="{Binding SelectCategoryCommand}"
                         CommandParameter="{x:Static modulecore1:WidgetCategory.Resource}"
-                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_3}}" />
+                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_categoryResource}}" />
                     <tio:NavMenuItem
                         Command="{Binding SelectCategoryCommand}"
                         CommandParameter="{x:Static modulecore1:WidgetCategory.Utility}"
-                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_4}}" />
+                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_categoryUtility}}" />
                 </tio:NavMenu>
             </controls:ScrollView>
             <Rectangle
@@ -126,7 +126,7 @@
                                     </StackPanel>
                                     <Button
                                         Click="Add_OnClick"
-                                        Content="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_5}}"
+                                        Content="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_add}}"
                                         FontSize="12"
                                         HorizontalAlignment="Right"
                                         Margin="0,0,-10,0"

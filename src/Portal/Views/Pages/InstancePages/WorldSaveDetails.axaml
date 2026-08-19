@@ -24,7 +24,7 @@
                 HorizontalAlignment="Right"
                 IsVisible="False"
                 Theme="{DynamicResource TransparentButton}"
-                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_0}}"
+                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_close}}"
                 VerticalAlignment="Center"
                 Width="36">
                 <PathIcon
@@ -44,14 +44,14 @@
                 SelectionChanged="NavMenu_OnSelectionChanged"
                 Theme="{StaticResource FlatScrollBarTheme}">
                 <tio:NavMenuItem
-                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_1}}"
+                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_overview}}"
                     IsSelected="True"
                     Tag="{x:Static local:WorldSaveDetailsPage.Overview}" />
-                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_2}}" Tag="{x:Static local:WorldSaveDetailsPage.GameRules}" />
-                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_3}}" Tag="{x:Static local:WorldSaveDetailsPage.Weather}" />
-                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_4}}" Tag="{x:Static local:WorldSaveDetailsPage.Clocks}" />
-                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_5}}" Tag="{x:Static local:WorldSaveDetailsPage.Players}" />
-                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_6}}" Tag="{x:Static local:WorldSaveDetailsPage.Scoreboard}" />
+                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_gameRules}}" Tag="{x:Static local:WorldSaveDetailsPage.GameRules}" />
+                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_weather}}" Tag="{x:Static local:WorldSaveDetailsPage.Weather}" />
+                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_clocks}}" Tag="{x:Static local:WorldSaveDetailsPage.Clocks}" />
+                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_players}}" Tag="{x:Static local:WorldSaveDetailsPage.Players}" />
+                <tio:NavMenuItem Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_scoreboard}}" Tag="{x:Static local:WorldSaveDetailsPage.Scoreboard}" />
             </tio:NavMenu>
         </controls:ScrollView>
         <Rectangle
@@ -71,10 +71,10 @@
                 Orientation="Horizontal"
                 Spacing="8"
                 VerticalAlignment="Top">
-                <Button Command="{Binding CreateShortcutCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_7}}" />
+                <Button Command="{Binding CreateShortcutCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_createShortcut}}" />
                 <Button
                     Command="{Binding QuickEnterCommand}"
-                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_8}}"
+                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavedetails_quickEnter}}"
                     IsVisible="{Binding CanQuickEnter}" />
             </StackPanel>
         </Panel>

@@ -17,7 +17,7 @@
         <TextBlock
             FontSize="20"
             FontWeight="SemiBold"
-            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.aianalysisdialog_0}}" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.aianalysisdialog_title}}" />
         <Border
             Background="{DynamicResource PureCardBackground}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -47,11 +47,11 @@
                 VerticalAlignment="Center" />
             <Button
                 Click="Close_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.aianalysisdialog_1}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.aianalysisdialog_close}}"
                 DockPanel.Dock="Right" />
             <Button
                 Click="Copy_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.aianalysisdialog_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.aianalysisdialog_copyResult}}"
                 DockPanel.Dock="Right"
                 IsEnabled="{Binding IsComplete}"
                 Margin="0,0,8,0" />

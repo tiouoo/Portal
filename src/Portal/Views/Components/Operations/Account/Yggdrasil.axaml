@@ -18,7 +18,7 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_0}}" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_title}}" />
         <TextBlock
             Grid.Row="1"
             IsVisible="{Binding IsAuthing}"
@@ -29,7 +29,7 @@
             IsVisible="{Binding IsError}"
             Margin="0,10,0,15">
             <StackPanel>
-                <TextBlock Margin="0,0,0,5" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_1}}" />
+                <TextBlock Margin="0,0,0,5" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_verifyFailedMessage}}" />
                 <TextBlock Text="{Binding ErrMsg}" />
             </StackPanel>
         </Border>
@@ -42,7 +42,7 @@
                 HorizontalAlignment="Stretch"
                 IsVisible="{Binding !IsAuthing}"
                 LabelPosition="Top">
-                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_9}}">
+                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_builtInServerLabel}}">
                     <StackPanel Spacing="4">
                         <ComboBox
                             HorizontalAlignment="Stretch"
@@ -56,29 +56,29 @@
                         </ComboBox>
                     </StackPanel>
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_10}}">
+                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_verifyFailedMessage0}}">
                     <StackPanel Spacing="4">
                         <DataValidationErrors>
                             <TextBox
-                                PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_2}}"
+                                PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_serverUrlPlaceholder}}"
                                 Text="{Binding ServerUrl}"
                                 tio:FocusHelper.DialogFocusHint="True" />
                         </DataValidationErrors>
                     </StackPanel>
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_11}}">
+                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_verifyFailedMessage1}}">
                     <StackPanel Spacing="4">
                         <DataValidationErrors>
-                            <TextBox PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_3}}" Text="{Binding Username}" />
+                            <TextBox PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_usernamePlaceholder}}" Text="{Binding Username}" />
                         </DataValidationErrors>
                     </StackPanel>
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_12}}">
+                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_verifyFailedMessage2}}">
                     <StackPanel Spacing="4">
                         <DataValidationErrors>
                             <TextBox
                                 PasswordChar="•"
-                                PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_4}}"
+                                PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_passwordPlaceholder}}"
                                 Text="{Binding Password}" />
                         </DataValidationErrors>
                     </StackPanel>
@@ -90,21 +90,21 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_5}}" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_cancelButton}}" />
             <Button
                 Command="{Binding RetryCommand}"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_6}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_retryButton}}"
                 IsVisible="{Binding IsError}" />
             <Border IsVisible="{Binding !IsError}">
                 <Button
                     Command="{Binding AuthServerCommand}"
-                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_7}}"
+                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_authServerButton}}"
                     IsVisible="{Binding !IsAuthing}" />
             </Border>
             <Border IsVisible="{Binding !IsError}">
                 <Button
                     Command="{Binding NextCommand}"
-                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_8}}"
+                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_addAccountButton}}"
                     IsVisible="{Binding !IsAuthing}" />
             </Border>
         </StackPanel>

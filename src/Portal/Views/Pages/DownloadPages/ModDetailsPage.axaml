@@ -213,14 +213,14 @@
                 HorizontalAlignment="Left"
                 IsVisible="{Binding IsLoading}"
                 Margin="2,2,0,0"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_0}}"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_loadingText}}"
                 VerticalAlignment="Top" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left"
                 IsVisible="{Binding HasError}"
                 Margin="2,2,0,0"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_1}}"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_loadErrorText}}"
                 VerticalAlignment="Top" />
             <Border
                 HorizontalAlignment="Left"
@@ -231,7 +231,7 @@
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding IsEmpty}"
                         Margin="2,2,0,0"
-                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_2}}" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_emptyText}}" />
                 </Border>
             </Border>
         </Grid>

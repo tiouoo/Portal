@@ -9,37 +9,37 @@
         <TextBlock
             FontSize="22"
             FontWeight="SemiBold"
-            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_0}}" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_title}}" />
         <controls:ScrollView Grid.Row="1" Margin="0,5,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="12">
                 <Grid
                     ColumnDefinitions="120,*"
                     RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                     RowSpacing="9">
-                    <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_1}}" />
+                    <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName}}" />
                     <TextBlock Grid.Column="1" Text="{Binding FolderName}" />
-                    <TextBlock Grid.Row="1" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_2}}" />
+                    <TextBlock Grid.Row="1" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_creationTime}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="1"
                         Text="{Binding CreationTime}" />
-                    <TextBlock Grid.Row="2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_3}}" />
+                    <TextBlock Grid.Row="2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_lastPlayed}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="2"
                         Text="{Binding LastPlayedTime}" />
-                    <TextBlock Grid.Row="3" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_4}}" />
+                    <TextBlock Grid.Row="3" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_gameVersion}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="3"
                         Text="{Binding Version}" />
-                    <TextBlock Grid.Row="4" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_5}}" />
+                    <TextBlock Grid.Row="4" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_worldSeed}}" />
                     <TextBox
                         Grid.Column="1"
                         Grid.Row="4"
                         IsEnabled="{Binding IsUnlocked}"
                         Text="{Binding WorldSeed}" />
-                    <TextBlock Grid.Row="5" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_6}}" />
+                    <TextBlock Grid.Row="5" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_gameMode}}" />
                     <ComboBox
                         Grid.Column="1"
                         Grid.Row="5"
@@ -53,7 +53,7 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <TextBlock Grid.Row="6" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_7}}" />
+                    <TextBlock Grid.Row="6" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_difficulty}}" />
                     <ComboBox
                         Grid.Column="1"
                         Grid.Row="6"
@@ -67,16 +67,16 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <TextBlock Grid.Row="7" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_8}}" />
+                    <TextBlock Grid.Row="7" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_allowCheats}}" />
                     <ToggleSwitch
                         Grid.Column="1"
                         Grid.Row="7"
                         HorizontalAlignment="Left"
                         IsChecked="{Binding AllowCheats}"
                         IsEnabled="{Binding IsUnlocked}"
-                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_13}}"
-                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_14}}" />
-                    <TextBlock Grid.Row="8" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_9}}" />
+                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName3}}"
+                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName4}}" />
+                    <TextBlock Grid.Row="8" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_playersAndDatapacks}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="8"
@@ -85,17 +85,17 @@
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLoading}"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_10}}" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName0}}" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLocked}"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_11}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName1}}"
                     TextWrapping="Wrap" />
             </StackPanel>
         </controls:ScrollView>
         <Button
             Command="{Binding SaveLevelSettingsCommand}"
-            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_12}}"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName2}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasLevelSettings}"

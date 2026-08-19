@@ -17,7 +17,7 @@
             DockPanel.Dock="Top"
             FontSize="24"
             Margin="0,0,0,5"
-            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_0}}" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_title}}" />
         <controls:ScrollView>
             <Border
                 Background="Transparent"
@@ -29,33 +29,33 @@
                 <StackPanel Spacing="15">
                     <StackPanel Spacing="5">
                         <Label
-                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_1}}"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
-                        <TextBox PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_2}}" Text="{Binding Instance.Config.Note}" />
+                        <TextBox PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder}}" Text="{Binding Instance.Config.Note}" />
                     </StackPanel>
                     <StackPanel IsVisible="{Binding IsUwpBedrock}" Spacing="5">
                         <Label
-                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_3}}"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLock}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
                         <ToggleSwitch IsChecked="{Binding EnableMouseLock}" />
                         <TextBlock
                             FontSize="11"
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_4}}" />
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLockHint}}" />
                     </StackPanel>
                     <StackPanel IsVisible="{Binding IsGdkBedrock}" Spacing="12">
                         <StackPanel Spacing="5">
                             <Label
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_5}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_independentData}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.EnableIndependentBedrockVersion}" />
                         </StackPanel>
                         <StackPanel Spacing="5">
                             <Label
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_6}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_sharedData}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.EnableLauncherSharedBedrockData}" />
@@ -64,7 +64,7 @@
                     <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
                         <StackPanel Spacing="5">
                             <Label
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_7}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_independentInstance}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableIndependentInstance}" IsEnabled="{Binding Instance.CanDisableIndependentInstance}" />
@@ -72,18 +72,18 @@
                                 FontSize="11"
                                 Foreground="{DynamicResource InnerForegroundColor}"
                                 IsVisible="{Binding Instance.RequiresIndependentInstance}"
-                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_8}}" />
+                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_independentInstanceHint}}" />
                         </StackPanel>
                         <StackPanel Spacing="5">
                             <Label
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_9}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_useSpecificJava}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableSpecificJava}" />
                         </StackPanel>
                         <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableSpecificJava}" Spacing="5">
                             <Label
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_10}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel0}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ComboBox
@@ -107,14 +107,14 @@
                         </StackPanel>
                         <StackPanel Spacing="5">
                             <Label
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_11}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel1}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" />
                         </StackPanel>
                         <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" Spacing="5">
                             <Label
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_12}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel2}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <Grid ColumnDefinitions="*,Auto">
@@ -139,7 +139,7 @@
                         <StackPanel Spacing="12">
                             <StackPanel IsVisible="{Binding CanChooseGraphicsBackend}" Spacing="5">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_13}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel3}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ComboBox
@@ -149,7 +149,7 @@
                             </StackPanel>
                             <StackPanel IsVisible="{Binding IsOpenGlRendererVisible}" Spacing="5">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_14}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel4}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ComboBox
@@ -165,7 +165,7 @@
                             </StackPanel>
                             <StackPanel IsVisible="{Binding IsVulkanRendererVisible}" Spacing="5">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_15}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel5}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ComboBox
@@ -184,10 +184,10 @@
                             <TextBlock
                                 FontSize="16"
                                 Margin="0,5,0,0"
-                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_16}}" />
+                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel6}}" />
                             <StackPanel Spacing="5">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_17}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel7}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" />
@@ -195,12 +195,12 @@
                                     FontSize="11"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     Margin="0,-3,0,0"
-                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_18}}" />
+                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel8}}" />
                             </StackPanel>
                             <StackPanel IsEnabled="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" Spacing="12">
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_19}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_noteLabel9}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.AutoSetChineseLanguage}" />
@@ -208,11 +208,11 @@
                                         FontSize="11"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Margin="0,-3,0,0"
-                                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_20}}" />
+                                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder0}}" />
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsWindows}" Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_21}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder1}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableGameOverlay}" />
@@ -220,29 +220,29 @@
                                         FontSize="11"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Margin="0,-3,0,0"
-                                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_22}}" />
+                                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder2}}" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_23}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder3}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableFullscreen}" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_24}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder4}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_25}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder5}}"
                                         Text="{Binding Instance.JavaConfig.OverrideMinecraftWindowTitle}"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_26}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder6}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <Grid
@@ -252,7 +252,7 @@
                                         <TextBox
                                             AcceptsReturn="True"
                                             Grid.Column="0"
-                                            InnerLeftContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_34}}"
+                                            InnerLeftContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLock4}}"
                                             Margin="0,0,10,0"
                                             Text="{Binding Instance.JavaConfig.MinecraftWindowWidth}"
                                             TextWrapping="Wrap"
@@ -260,7 +260,7 @@
                                         <TextBox
                                             AcceptsReturn="True"
                                             Grid.Column="1"
-                                            InnerLeftContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_35}}"
+                                            InnerLeftContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLock5}}"
                                             Margin="10,0,0,0"
                                             Text="{Binding Instance.JavaConfig.MinecraftWindowHeight}"
                                             TextWrapping="Wrap"
@@ -269,43 +269,43 @@
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_27}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder7}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_28}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder8}}"
                                         Text="{Binding Instance.JavaConfig.JvmArgs}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Top" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_29}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_notePlaceholder9}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_30}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLock0}}"
                                         Text="{Binding Instance.JavaConfig.BeforeLaunchCommand}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Top" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_31}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLock1}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_32}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLock2}}"
                                         Text="{Binding Instance.JavaConfig.AfterLaunchCommand}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Top" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_33}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLock3}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox

@@ -10,12 +10,12 @@
             <TextBlock
                 FontSize="22"
                 FontWeight="SemiBold"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_0}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_title}}" />
         </StackPanel>
         <controls:ScrollView Grid.Row="1" Margin="0,2,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="8">
-                <TextBlock IsVisible="{Binding IsLoading}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_1}}" />
-                <TextBlock IsVisible="{Binding !HasGameRules}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_2}}" />
+                <TextBlock IsVisible="{Binding IsLoading}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_loading}}" />
+                <TextBlock IsVisible="{Binding !HasGameRules}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_noGameRules}}" />
                 <ItemsRepeater ItemsSource="{Binding BooleanRules}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="local:WorldBooleanSetting">
@@ -37,7 +37,7 @@
                                 <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
                                 <TextBox
                                     Grid.Column="1"
-                                    PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_3}}"
+                                    PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_nonNegativeInteger}}"
                                     Text="{Binding Value}"
                                     Width="130" />
                             </Grid>
@@ -48,7 +48,7 @@
         </controls:ScrollView>
         <Button
             Command="{Binding SaveGameRulesCommand}"
-            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_4}}"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_save}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasGameRules}"

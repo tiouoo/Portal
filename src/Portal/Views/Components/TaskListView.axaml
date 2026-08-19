@@ -111,7 +111,7 @@
                                         VerticalAlignment="Center" />
                                     <HyperlinkButton
                                         Click="RemoveTerminalTask"
-                                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.tasklistview_0}}"
+                                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.tasklistview_removeTerminalTask}}"
                                         FontSize="12"
                                         Foreground="{DynamicResource SystemAccentColor}"
                                         Grid.Column="3"

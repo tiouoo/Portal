@@ -18,16 +18,16 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_0}}" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_title}}" />
         <tio:Form
             Grid.Row="1"
             HorizontalAlignment="Stretch"
             LabelPosition="Top"
             Margin="0,10,0,15">
-            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_7}}">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_roleNameLabel}}">
                 <DataValidationErrors>
                     <TextBox
-                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_1}}"
+                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_roleNamePlaceholder}}"
                         Text="{Binding RoleName}"
                         tio:FocusHelper.DialogFocusHint="True" />
                 </DataValidationErrors>
@@ -37,17 +37,17 @@
                     <DataValidationErrors>
                         <TextBox PlaceholderText="uuid" Text="{Binding Uuid}" />
                     </DataValidationErrors>
-                    <CheckBox Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_2}}" IsChecked="{Binding SyncUuid}" />
+                    <CheckBox Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_syncUuidCheckBox}}" IsChecked="{Binding SyncUuid}" />
                 </StackPanel>
             </tio:FormItem>
             <tio:Banner
                 Classes="Bordered"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_3}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_uuidWarning}}"
                 CornerRadius="10"
                 Margin="0,0,0,0"
                 Type="Warning">
                 <tio:Banner.Header>
-                    <TextBlock FontSize="15" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_4}}" />
+                    <TextBlock FontSize="15" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_warningHeader}}" />
                 </tio:Banner.Header>
             </tio:Banner>
         </tio:Form>
@@ -56,8 +56,8 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_5}}" />
-            <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_6}}" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_cancelButton}}" />
+            <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_completeButton}}" />
         </StackPanel>
     </Grid>
 </UserControl>

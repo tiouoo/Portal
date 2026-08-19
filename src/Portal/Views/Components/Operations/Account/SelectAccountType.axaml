@@ -15,7 +15,7 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_0}}" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_title}}" />
         <tio:Form
             Grid.Row="1"
             HorizontalAlignment="Center"
@@ -44,9 +44,9 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_1}}" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_cancelButton}}" />
 
-            <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_2}}" />
+            <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_nextButton}}" />
         </StackPanel>
     </Grid>
 </UserControl>

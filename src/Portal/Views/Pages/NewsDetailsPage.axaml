@@ -105,7 +105,7 @@
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         HorizontalAlignment="Center"
-                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newsdetailspage_0}}" />
+                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newsdetailspage_LoadingNewsContent}}" />
                 </StackPanel>
             </Border>
 
@@ -124,7 +124,7 @@
                     TextWrapping="Wrap" />
                 <Button
                     Command="{Binding RefreshCommand}"
-                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.newsdetailspage_1}}"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.newsdetailspage_Retry}}"
                     HorizontalAlignment="Center" />
             </StackPanel>
         </Grid>

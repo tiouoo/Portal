@@ -16,7 +16,7 @@
         <converter:UpdateSourceToIndexConverter x:Key="UpdateSourceToIndexConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_0}}" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_title}}" />
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -41,7 +41,7 @@
                                 <TextBlock
                                     FontSize="11"
                                     Foreground="#17be74"
-                                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_1}}" />
+                                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion}}" />
                                 <Border.Background>
                                     <SolidColorBrush Color="#18e086" Opacity="0.3" />
                                 </Border.Background>
@@ -74,7 +74,7 @@
                     </StackPanel>
                     <HyperlinkButton
                         Click="Button_OnClick"
-                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_2}}"
+                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_checkForUpdates}}"
                         FontSize="12"
                         HorizontalAlignment="Right"
                         Margin="0,2,5,0"
@@ -88,10 +88,10 @@
                         <TextBlock
                             FontSize="13"
                             Margin="5,0,0,0"
-                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_3}}" />
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_newVersionFound}}" />
                         <HyperlinkButton
                             Click="UpdateHyperlinkButton_OnClickButton_OnClick"
-                            Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_4}}"
+                            Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_downloadNewVersion}}"
                             FontSize="12"
                             HorizontalAlignment="Right"
                             Margin="0,2,5,0"
@@ -108,14 +108,14 @@
         </Border>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_5}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_autoCheckForUpdates}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch HorizontalAlignment="Stretch" IsChecked="{Binding Data.ConfigEntry.EnableCheckAutoUpdate}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_6}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_updateSource}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -130,11 +130,11 @@
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Github}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_7}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_githubMirrorHint}}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_8}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_updateChannel}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -142,15 +142,15 @@
                 Name="UpdateChannel"
                 SelectedIndex="{Binding Data.UiProperty.OverrideUpdateChannel, Converter={StaticResource UpdateChannelToIndexConverter}, Mode=TwoWay}"
                 SelectionChanged="UpdateChannel_OnSelectionChanged">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_9}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_10}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_11}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_channelRelease}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion0}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion1}}" />
             </ComboBox>
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Cnb}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_12}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion2}}" />
         </StackPanel>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
         <StackPanel Margin="5,0,0,0" Spacing="5">
@@ -197,7 +197,7 @@
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
             BorderThickness="1"
-            Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_13}}"
+            Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion3}}"
             HorizontalAlignment="Stretch">
             <StackPanel>
                 <ItemsRepeater ItemsSource="{Binding OpenSourceProjects}" Margin="16,0,12,16">

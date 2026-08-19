@@ -18,7 +18,7 @@
         <TextBlock
             FontSize="20"
             FontWeight="SemiBold"
-            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_0}}" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_title}}" />
         <ScrollViewer
             Grid.Row="2"
             Margin="0,14,0,0"
@@ -74,7 +74,7 @@
                                         <TextBlock
                                             FontSize="13"
                                             Foreground="{DynamicResource SystemAccentColor}"
-                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_1}}" />
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_copyLink}}" />
                                     </Button>
                                     <Button
                                         Background="Transparent"
@@ -84,7 +84,7 @@
                                         <TextBlock
                                             FontSize="13"
                                             Foreground="{DynamicResource SystemAccentColor}"
-                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_2}}" />
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_openLink}}" />
                                     </Button>
                                 </StackPanel>
                             </StackPanel>
@@ -99,11 +99,11 @@
             Margin="0,14,0,0">
             <Button
                 Click="Close_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_3}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_close}}"
                 DockPanel.Dock="Right" />
             <Button
                 Click="CopyAll_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_4}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_copyAllLinks}}"
                 DockPanel.Dock="Right"
                 IsEnabled="{Binding HasAnyUrl}"
                 Margin="0,0,8,0" />

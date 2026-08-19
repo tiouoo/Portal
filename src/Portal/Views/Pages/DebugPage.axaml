@@ -13,32 +13,32 @@
     <WrapPanel ItemSpacing="20" Margin="10,5,10,10">
         <StackPanel>
             <Label
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_0}}"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_Operations}}"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left"
                 Margin="0,0,0,10" />
-            <Button Click="Click1" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_1}}" />
+            <Button Click="Click1" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero}}" />
         </StackPanel>
         <StackPanel MaxWidth="260" Spacing="8">
             <Label
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_2}}"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TaskManagementTest}}"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left" />
             <TextBlock
                 FontSize="12"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_3}}"
+                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TaskManagementTestHint}}"
                 TextWrapping="Wrap" />
-            <Button Click="StartWorkflowTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_4}}" />
-            <Button Click="StartNestedWorkflowTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_5}}" />
-            <Button Click="StartWaitingTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_6}}" />
-            <Button Click="StartFaultedTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_7}}" />
-            <Button Click="StartCancellableTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_8}}" />
-            <Button Click="StartActionTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_9}}" />
+            <Button Click="StartWorkflowTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_StartFullDownloadFlow}}" />
+            <Button Click="StartNestedWorkflowTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_StartNestedSubTaskFlow}}" />
+            <Button Click="StartWaitingTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_CreateWaitingTask}}" />
+            <Button Click="StartFaultedTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_CreateFailedTask}}" />
+            <Button Click="StartCancellableTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_CreateCancellableTask}}" />
+            <Button Click="StartActionTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_CreateActionButtonTask}}" />
         </StackPanel>
         <StackPanel>
             <Label
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_10}}"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero0}}"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left" />
             <tio:Form HorizontalAlignment="Stretch" LabelPosition="Top">
@@ -47,19 +47,19 @@
                         <StackPanel Spacing="-4" />
                     </ItemsPanelTemplate>
                 </tio:Form.ItemsPanel>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_11}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero1}}">
                     <TextBox Text="{Binding Data.Version.Type}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_12}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero2}}">
                     <TextBox Text="{Binding Data.Version.BuildTime}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_13}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero3}}">
                     <TextBox Text="{Binding Data.Version.Version}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_14}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero4}}">
                     <TextBox Text="{Binding Data.Version.Action}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_15}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero5}}">
                     <TextBox Text="{Binding Data.Version.Commit}" />
                 </tio:FormItem>
                 <tio:FormItem Label="OverrideUpdateChannel">

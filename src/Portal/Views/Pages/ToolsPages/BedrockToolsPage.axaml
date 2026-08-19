@@ -18,7 +18,7 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Margin="4,4,0,6"
-                Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_0}}" />
+                Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_pageTitle}}" />
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -39,11 +39,11 @@
                                 DockPanel.Dock="Right"
                                 Height="20" />
                             <StackPanel Spacing="3">
-                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_1}}" />
+                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_downloadFrameworkTitle}}" />
                                 <TextBlock
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_2}}"
+                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_downloadFrameworkDescription}}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>
@@ -62,11 +62,11 @@
                                 DockPanel.Dock="Right"
                                 Height="20" />
                             <StackPanel Spacing="3">
-                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_3}}" />
+                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_checkSdkTitle}}" />
                                 <TextBlock
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_4}}"
+                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_checkSdkDescription}}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>
@@ -85,11 +85,11 @@
                                 DockPanel.Dock="Right"
                                 Height="20" />
                             <StackPanel Spacing="3">
-                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_5}}" />
+                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_uninstallMinecraftTitle}}" />
                                 <TextBlock
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_6}}"
+                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_uninstallMinecraftDescription}}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>

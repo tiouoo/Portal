@@ -75,7 +75,7 @@
             DockPanel.Dock="Top"
             Margin="10,8,10,5"
             Name="SearchBox"
-            PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.aggregatedsearchdialog_0}}"
+            PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.aggregatedsearchdialog_searchBoxPlaceholder}}"
             Text="{Binding Data.UiProperty.AggregatedSearchQuery}" />
         <controls:ScrollView Classes="Flat" Margin="10,0,5,10">
             <ListBox

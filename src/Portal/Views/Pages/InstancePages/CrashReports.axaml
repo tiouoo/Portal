@@ -16,7 +16,7 @@
                 Cursor="Hand"
                 FontSize="24"
                 PointerPressed="Title_OnPointerPressed"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_0}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_title}}" />
         </DockPanel>
         <StackPanel
             HorizontalAlignment="Right"
@@ -29,24 +29,24 @@
                 MinWidth="220"
                 Name="LogFileSelector"
                 SelectionChanged="LogFileSelector_OnSelectionChanged"
-                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_1}}"
+                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_selectLogFile}}"
                 VerticalAlignment="Center" />
             <Button
                 Click="AnalyseAi_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_aiAnalysis}}"
                 IsVisible="False"
                 VerticalAlignment="Center" />
             <Button
                 Click="Share_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_3}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_share}}"
                 VerticalAlignment="Center" />
             <Button
                 Click="Export_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_4}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_export}}"
                 VerticalAlignment="Center" />
             <Button
                 Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_5}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_openFolder}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Center" />
         </StackPanel>
@@ -73,27 +73,27 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_6}}"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_selectAll}}"
                             InputGesture="ctrl+a" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Copy_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_7}}"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_copy}}"
                             InputGesture="ctrl+c" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Share_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_3}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_share}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="AnalyseAi_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_2}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_aiAnalysis}}" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Export_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_4}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_export}}" />
                     </MenuFlyout>
                 </avaloniaEdit:TextEditor.ContextFlyout>
             </avaloniaEdit:TextEditor>

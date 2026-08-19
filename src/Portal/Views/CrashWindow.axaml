@@ -6,7 +6,7 @@
                               macOS=False}"
     IsMinBtnShow="{OnPlatform Default=True,
                               macOS=False}"
-    Title="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_0}}"
+    Title="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_windowTitle}}"
     Topmost="True"
     Width="880"
     d:DesignHeight="524"
@@ -33,11 +33,11 @@
             DockPanel.Dock="Top"
             FontSize="24"
             Margin="25,0,0,0"
-            Text="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_1}}" />
+            Text="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_crashTitle}}" />
         <TextBlock
             DockPanel.Dock="Top"
             Margin="25,2,0,0"
-            Text="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_2}}" />
+            Text="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_unhandledExceptionDescription}}" />
         <StackPanel
             DockPanel.Dock="Bottom"
             Margin="10"
@@ -47,7 +47,7 @@
                 <tio:IconButton
                     Classes="Float"
                     Click="Button_OnClick"
-                    Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_3}}"
+                    Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_copyToClipboard}}"
                     HorizontalAlignment="Left">
                     <tio:IconButton.Icon>
                         <PathIcon
@@ -64,7 +64,7 @@
                     <tio:IconButton
                         Classes="Float"
                         Click="Continue_OnClick"
-                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_4}}"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_continueRunning}}"
                         Name="Continue">
                         <tio:IconButton.Icon>
                             <PathIcon
@@ -76,7 +76,7 @@
                     <tio:IconButton
                         Classes="Float"
                         Click="Exit_OnClick"
-                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_5}}"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_exit}}"
                         Name="Exit">
                         <tio:IconButton.Icon>
                             <PathIcon
@@ -90,7 +90,7 @@
                         Background="{DynamicResource SystemAccentColor}"
                         Classes="Float"
                         Click="Restart_OnClick"
-                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_6}}"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_reopen}}"
                         Foreground="White"
                         Name="Restart">
                         <tio:IconButton.Icon>

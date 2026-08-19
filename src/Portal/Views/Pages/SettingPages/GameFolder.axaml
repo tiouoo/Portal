@@ -13,10 +13,10 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_0}}" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_title}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_1}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_defaultFolder}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -38,14 +38,14 @@
         <StackPanel Spacing="5">
             <DockPanel Margin="0,4,0,0">
                 <Label
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_2}}"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_folderManagement}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
                     HorizontalAlignment="Left"
                     Margin="5,0,0,0" />
                 <HyperlinkButton
                     Click="Button_OnClick"
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_3}}"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_addFolder}}"
                     FontSize="13"
                     HorizontalAlignment="Right"
                     Margin="0,0,5,5"
@@ -101,7 +101,7 @@
                                         <StackPanel Margin="5,0,0,0" Spacing="5">
                                             <Panel>
                                                 <Label
-                                                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_4}}"
+                                                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_folderName}}"
                                                     FontSize="13"
                                                     Foreground="{DynamicResource InnerForegroundColor}"
                                                     HorizontalAlignment="Left" />
@@ -113,7 +113,7 @@
                                                     VerticalAlignment="Bottom">
                                                     <HyperlinkButton
                                                         Click="Button1_OnClick"
-                                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_5}}"
+                                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_removeFolder}}"
                                                         FontSize="13"
                                                         Foreground="Red"
                                                         Tag="{Binding}"
@@ -121,7 +121,7 @@
                                                     <HyperlinkButton
                                                         Command="{Binding OpenFolder}"
                                                         CommandParameter="{Binding ElementName=Root}"
-                                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_6}}"
+                                                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_openFolder}}"
                                                         FontSize="13"
                                                         Theme="{StaticResource TransparentHyperlinkButton}" />
                                                 </StackPanel>
@@ -130,10 +130,10 @@
                                         </StackPanel>
                                         <Panel Margin="10,0">
                                             <tio:Descriptions HorizontalAlignment="Left" LabelPosition="Top">
-                                                <tio:DescriptionsItem Label="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_8}}">
+                                                <tio:DescriptionsItem Label="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_instanceCount}}">
                                                     <TextBlock>
                                                         <Run FontSize="32" Text="{Binding InstanceCount}" />
-                                                        <Run Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_7}}" />
+                                                        <Run Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_countSuffix}}" />
                                                     </TextBlock>
                                                 </tio:DescriptionsItem>
                                             </tio:Descriptions>
@@ -141,7 +141,7 @@
                                                 HorizontalAlignment="Right"
                                                 LabelPosition="Top"
                                                 Margin="0,0,-60,0">
-                                                <tio:DescriptionsItem Label="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_9}}">
+                                                <tio:DescriptionsItem Label="{Translate {x:Static loc:SettingsLanguageManager+Keys.gamefolder_folderSize}}">
                                                     <TextBlock>
                                                         <Run FontSize="32" Text="{Binding FolderSize}" />
                                                         <Run Text="{Binding SizeUnit}" />

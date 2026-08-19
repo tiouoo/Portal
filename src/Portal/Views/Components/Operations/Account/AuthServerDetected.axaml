@@ -17,7 +17,7 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_0}}" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_title}}" />
         <StackPanel
             Grid.Row="1"
             Margin="0,10,0,15"
@@ -29,9 +29,9 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_1}}" />
-            <Button Command="{Binding AddServerCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_2}}" />
-            <Button Command="{Binding LoginCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_3}}" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_cancelButton}}" />
+            <Button Command="{Binding AddServerCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_addServerButton}}" />
+            <Button Command="{Binding LoginCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.authserverdetected_loginButton}}" />
         </StackPanel>
     </Grid>
 </UserControl>

@@ -22,7 +22,7 @@
                     FontWeight="600"
                     HorizontalAlignment="Left"
                     Margin="0,2,0,0">
-                    <Run Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_0}}" />
+                    <Run Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_installJavaPrefix}}" />
                     <Run Text="{Binding VanillaVersion}" />
                 </TextBlock>
             </DockPanel>
@@ -32,7 +32,7 @@
                     HorizontalAlignment="Right"
                     Margin="10,0,0,0"
                     MinWidth="200">
-                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_1}}" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_installDirectoryLabel}}" />
                     <ComboBox
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding MinecraftFolders}"
@@ -45,10 +45,10 @@
                     </ComboBox>
                 </StackPanel>
                 <StackPanel>
-                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_2}}" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_instanceIdLabel}}" />
                     <TextBox
                         IsEnabled="{Binding CanCustomizeVersionId}"
-                        PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_3}}"
+                        PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_instanceIdPlaceholder}}"
                         Text="{Binding CustomVersionId}" />
                 </StackPanel>
             </DockPanel>
@@ -61,7 +61,7 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Margin="5,0,0,0"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_4}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_selectLoaderHeading}}" />
             <WrapPanel>
                 <CheckBox
                     IsChecked="{Binding IsForgeSelected, Mode=TwoWay}"
@@ -132,7 +132,7 @@
             <Panel>
                 <Button
                     Click="SelectLoaderVersion_OnClick"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_5}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_selectVersion}}"
                     DockPanel.Dock="Left"
                     HorizontalAlignment="Left"
                     IsEnabled="{Binding CanSelectLoaderVersion}" />
@@ -141,10 +141,10 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal"
                     Spacing="8">
-                    <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_6}}" />
+                    <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_cancel}}" />
                     <Button
                         Click="Install_OnClick"
-                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_7}}"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_startInstall}}"
                         IsEnabled="{Binding CanInstall}" />
                 </StackPanel>
             </Panel>

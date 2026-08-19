@@ -15,7 +15,7 @@
         Width="480">
         <StackPanel Spacing="4">
             <TextBlock>
-                <Run FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_0}}" />
+                <Run FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_installPrefix}}" />
                 <Run FontSize="16" Text="{Binding File.DisplayName}" />
             </TextBlock>
             <TextBlock
@@ -31,10 +31,10 @@
             Spacing="6">
             <DockPanel LastChildFill="False">
                 <CheckBox
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_1}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_showAllInstances}}"
                     DockPanel.Dock="Right"
                     IsChecked="{Binding ShowAllInstances}" />
-                <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_2}}" VerticalAlignment="Center" />
+                <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_targetInstanceLabel}}" VerticalAlignment="Center" />
             </DockPanel>
             <ComboBox
                 HorizontalAlignment="Stretch"
@@ -56,11 +56,11 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoInstances}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_3}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_noInstancesText}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding !HasCompatibleFile}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_4}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_noCompatibleFileText}}" />
         </StackPanel>
         <StackPanel
             Grid.Row="2"
@@ -70,12 +70,12 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoadingDependencies}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_5}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_loadingDependenciesText}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasDependencyLoadError}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_6}}" />
-            <TextBlock IsVisible="{Binding HasDependencies}" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_7}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_dependencyLoadErrorText}}" />
+            <TextBlock IsVisible="{Binding HasDependencies}" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_dependenciesHeading}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasSkippedDependencies}"
@@ -105,21 +105,21 @@
             Margin="0,22,0,0">
             <Button
                 Click="SaveAs_Click"
-                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_8}}"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_saveAs}}"
                 DockPanel.Dock="Left" />
             <StackPanel
                 DockPanel.Dock="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_9}}" />
+                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_cancel}}" />
                 <Button
                     Click="SkipDependencies_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_10}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_showAllInstances0}}"
                     IsEnabled="{Binding CanInstall}"
                     IsVisible="{Binding ShowDependencyActions}" />
                 <Button
                     Click="Install_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_11}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_showAllInstances1}}"
                     IsEnabled="{Binding CanInstallWithDependencies}" />
             </StackPanel>
         </DockPanel>

@@ -15,10 +15,10 @@
             <TextBlock
                 FontSize="17"
                 FontWeight="SemiBold"
-                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_0}}"
+                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_MinecraftLog}}"
                 VerticalAlignment="Center" />
             <CheckBox
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_1}}"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_AutoScrollToBottom}}"
                 Grid.Column="1"
                 IsChecked="True"
                 Name="AutoScrollCheckBox"
@@ -38,35 +38,35 @@
                     LineSpacing="8">
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_2}}"
+                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_ShowLevels}}"
                         VerticalAlignment="Center" />
                     <CheckBox
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_3}}"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Information}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="InformationFilter" />
                     <CheckBox
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_4}}"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Warning}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="WarningFilter" />
                     <CheckBox
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_5}}"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Error}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="ErrorFilter" />
                     <CheckBox
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_6}}"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Debug}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="DebugFilter" />
                     <CheckBox
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_7}}"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Trace}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="TraceFilter" />
                     <CheckBox
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_8}}"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Other}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="OtherFilter" />
@@ -77,7 +77,7 @@
                     Foreground="{DynamicResource SystemAccentColor}"
                     HorizontalAlignment="Right"
                     PointerPressed="InputElement_OnPointerPressed"
-                    Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_9}}"
+                    Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Export}}"
                     VerticalAlignment="Center" />
             </DockPanel>
         </Border>
@@ -106,18 +106,18 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_10}}"
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_AutoScrollToBottom0}}"
                             InputGesture="ctrl+a" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Copy_OnClick"
-                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_11}}"
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_AutoScrollToBottom1}}"
                             InputGesture="ctrl+c" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Export_OnClick"
-                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_9}}" />
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Export}}" />
                     </MenuFlyout>
                 </avaloniaEdit:TextEditor.ContextFlyout>
             </avaloniaEdit:TextEditor>

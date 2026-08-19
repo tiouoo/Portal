@@ -142,26 +142,26 @@
                             IsVisible="{Binding !HasFilter}"
                             Orientation="Horizontal"
                             Spacing="5">
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_0}}" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_NoInstancesGoTo}}" />
                             <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_1}}" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_AddFolder}}" />
                             </Button>
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_2}}" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_Or}}" />
                             <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_3}}" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_CreateNewInstance}}" />
                             </Button>
                         </StackPanel>
                         <StackPanel
                             IsVisible="{Binding HasFilter}"
                             Orientation="Horizontal"
                             Spacing="5">
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_4}}" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_NoMatchingInstancesGoTo}}" />
                             <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_1}}" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_AddFolder}}" />
                             </Button>
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_2}}" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_Or}}" />
                             <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_3}}" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_CreateNewInstance}}" />
                             </Button>
                         </StackPanel>
                     </Panel>

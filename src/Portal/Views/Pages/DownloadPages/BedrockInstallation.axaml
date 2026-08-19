@@ -23,7 +23,7 @@
                 <TextBlock
                     FontSize="20"
                     FontWeight="SemiBold"
-                    Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_0}}" />
+                    Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_gameTitle}}" />
                 <TextBlock
                     FontSize="12"
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -38,17 +38,17 @@
                 Spacing="8"
                 VerticalAlignment="Top">
                 <ComboBox SelectedIndex="{Binding SelectedReleaseChannel}" Width="105">
-                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_1}}" />
-                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_2}}" />
-                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_3}}" />
+                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_releaseChannelAll}}" />
+                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_releaseChannelRelease}}" />
+                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_releaseChannelPreview}}" />
                 </ComboBox>
                 <ComboBox SelectedIndex="{Binding SelectedBuildType}" Width="110">
-                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_4}}" />
+                    <ComboBoxItem Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_buildTypeAll}}" />
                     <ComboBoxItem Content="UWP" />
                     <ComboBoxItem Content="GDK" />
                 </ComboBox>
                 <TextBox
-                    PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_5}}"
+                    PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstallation_searchPlaceholder}}"
                     Text="{Binding SearchText}"
                     Width="170" />
             </StackPanel>

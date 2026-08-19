@@ -102,7 +102,7 @@
                         <TextBlock
                             FontSize="18"
                             Foreground="#FFFFFF"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.overlaywindow_0}}" />
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.overlaywindow_instanceDetails}}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -124,7 +124,7 @@
                         <TextBlock
                             FontSize="18"
                             Foreground="#FFFFFF"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.overlaywindow_1}}" />
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.overlaywindow_multiplayerLobby}}" />
                     </StackPanel>
                 </StackPanel>
             </Border>

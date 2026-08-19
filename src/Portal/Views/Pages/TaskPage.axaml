@@ -16,7 +16,7 @@
             FontSize="18"
             FontWeight="SemiBold"
             Margin="0,0,0,12"
-            Text="{Translate {x:Static loc:PagesLanguageManager+Keys.taskpage_0}}" />
+            Text="{Translate {x:Static loc:PagesLanguageManager+Keys.taskpage_Tasks}}" />
         <components:TaskListView />
     </DockPanel>
 </UserControl>

@@ -18,27 +18,27 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_0}}" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_title}}" />
         <tio:Form
             Grid.Row="1"
             HorizontalAlignment="Stretch"
             LabelPosition="Top"
             Margin="0,10,0,15">
-            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_11}}">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder1}}">
                 <StackPanel Spacing="4">
                     <TextBox
-                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_1}}"
+                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder}}"
                         Text="{Binding FolderName}"
                         tio:FocusHelper.DialogFocusHint="True" />
                 </StackPanel>
             </tio:FormItem>
-            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_12}}">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder2}}">
                 <StackPanel Spacing="4">
                     <tio:PathPicker
                         Command="{Binding FolderPickedCommand}"
-                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_2}}"
+                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderPathPlaceholder}}"
                         SelectedPathsText="{Binding FolderPath}"
-                        Title="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_3}}"
+                        Title="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderPathPickerTitle}}"
                         UsePickerType="OpenFolder">
                         <tio:PathPicker.ButtonContent>
                             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -47,7 +47,7 @@
                                     Height="16"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_4}}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_browseButton}}" VerticalAlignment="Center" />
                             </StackPanel>
                         </tio:PathPicker.ButtonContent>
                     </tio:PathPicker>
@@ -61,19 +61,19 @@
                         Foreground="Red"
                         IsVisible="{Binding Warning}"
                         Margin="1,0,0,0"
-                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_5}}" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_missingVersionsWarning}}" />
                     <TextBlock
                         FontSize="12"
                         Foreground="Red"
                         IsVisible="{Binding NoExist}"
                         Margin="1,0,0,0"
-                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_6}}" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNotExistWarning}}" />
                     <TextBlock
                         FontSize="12"
                         Foreground="Red"
                         IsVisible="{Binding Contain}"
                         Margin="1,0,0,0"
-                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_7}}" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderAlreadyAddedWarning}}" />
                 </StackPanel>
             </tio:FormItem>
         </tio:Form>
@@ -83,11 +83,11 @@
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_8}}" />
-                <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_9}}" />
+                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_cancelButton}}" />
+                <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_addButton}}" />
             </StackPanel>
             <DropDownButton
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_10}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder0}}"
                 DockPanel.Dock="Left"
                 HorizontalAlignment="Left"
                 IsVisible="{Binding HasImports}"

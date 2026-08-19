@@ -18,7 +18,7 @@
         <TextBlock
             FontSize="15"
             FontWeight="600"
-            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_0}}"
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_title}}"
             VerticalAlignment="Center" />
         <controls:ScrollView
             Grid.Row="1"
@@ -57,11 +57,11 @@
         <DockPanel Grid.Row="2" LastChildFill="False">
             <Button
                 Click="Cancel_Click"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_1}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_cancel}}"
                 DockPanel.Dock="Left" />
             <Button
                 Click="ChooseFile_Click"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_chooseLocalImage}}"
                 DockPanel.Dock="Right"
                 HorizontalAlignment="Right" />
         </DockPanel>

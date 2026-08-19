@@ -10,10 +10,10 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_0}}" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_title}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_1}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_defaultPage}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -24,42 +24,42 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_2}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_newTabContent}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.NewTabContent}">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_3}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_4}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_5}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_newTab}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_homePage}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_widgets}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_6}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_launcherVisibility}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.PortalVisibleMode}">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_7}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_8}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_9}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_10}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_11}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_keepUnchanged}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_exitLauncher}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_hideAndRestore}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_defaultPage0}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_defaultPage1}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_12}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_defaultPage2}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.FilePicker}">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_13}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_14}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_defaultPage3}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_defaultPage4}}" />
 
             </ComboBox>
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_15}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_defaultPage5}}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

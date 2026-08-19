@@ -14,7 +14,7 @@
         Margin="24"
         RowDefinitions="Auto,*,Auto"
         Width="480">
-        <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_0}}" />
+        <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_title}}" />
         <controls:ScrollView
             Grid.Row="1"
             Margin="0,12,0,0"
@@ -33,10 +33,10 @@
             Margin="0,18,0,0"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_1}}" />
+            <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_cancel}}" />
             <Button
                 Click="Confirm_OnClick"
-                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_2}}"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_confirm}}"
                 IsEnabled="{Binding CanConfirm}" />
         </StackPanel>
     </Grid>

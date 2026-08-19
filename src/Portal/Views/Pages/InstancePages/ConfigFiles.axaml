@@ -38,7 +38,7 @@
             <DockPanel>
                 <TextBox
                     DockPanel.Dock="Right"
-                    PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_0}}"
+                    PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_searchFiles}}"
                     Text="{Binding SearchText}"
                     Width="170">
                     <TextBox.InnerRightContent>
@@ -55,7 +55,7 @@
                     FontWeight="SemiBold"
                     Name="Title"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_1}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title}}"
                     TextWrapping="NoWrap"
                     VerticalAlignment="Center" />
             </DockPanel>
@@ -156,7 +156,7 @@
                                         MinHeight="14"
                                         Tag="{Binding}"
                                         Theme="{StaticResource TransparentButton}"
-                                        ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_2}}"
+                                        ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_closeFile}}"
                                         Width="20">
                                         <PathIcon
                                             Data="M13.41 12l4.3-4.29a1 1 0 1 0-1.42-1.42L12 10.59l-4.29-4.3a1 1 0 0 0-1.42 1.42l4.3 4.29-4.3 4.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l4.29-4.3 4.29 4.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z"
@@ -182,7 +182,7 @@
                 Padding="10,5">
                 <DockPanel>
                     <CheckBox
-                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_3}}"
+                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_wordWrap}}"
                         DockPanel.Dock="Right"
                         IsChecked="{Binding IsWordWrap}"
                         VerticalAlignment="Center" />
@@ -208,12 +208,12 @@
                     <TextBlock
                         FontSize="16"
                         HorizontalAlignment="Center"
-                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_4}}" />
+                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_noFilesHint}}" />
                     <TextBlock
                         HorizontalAlignment="Center"
                         Margin="0,6,0,0"
                         Opacity="0.6"
-                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_5}}" />
+                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_saveShortcutHint}}" />
                 </StackPanel>
                 <Border
                     Background="{DynamicResource TranslucentBackgroundColor}"
@@ -235,44 +235,44 @@
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Undo_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_6}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_undo}}"
                                     InputGesture="Ctrl+Z" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Redo_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_7}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_redo}}"
                                     InputGesture="Ctrl+Y" />
                                 <Separator />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Cut_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_8}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_cut}}"
                                     InputGesture="Ctrl+X" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Copy_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_9}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_copy}}"
                                     InputGesture="Ctrl+C" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Paste_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_10}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title0}}"
                                     InputGesture="Ctrl+V" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="SelectAll_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_11}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title1}}"
                                     InputGesture="Ctrl+A" />
                                 <Separator />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Save_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_12}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title2}}"
                                     InputGesture="Ctrl+S" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Format_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_13}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title3}}"
                                     InputGesture="Shift+Alt+F" />
                             </ContextMenu>
                         </avaloniaEdit:TextEditor.ContextMenu>

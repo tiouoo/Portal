@@ -21,18 +21,18 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_0}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_openFolder}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_1}}"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_select}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top">
@@ -41,15 +41,15 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_3}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_selectAll}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="ClearSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_4}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_clearSelection}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="InvertSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_5}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_invertSelection}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -63,7 +63,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_6}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_deleteSelected}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -73,7 +73,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_7}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_title}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -85,13 +85,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_8}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_loading}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_9}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_empty}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -116,16 +116,16 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowWorldTemplateDetails_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_10}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates0}}"
                                         Tag="{Binding}" />
                                     <Separator />
                                     <MenuItem
                                         Click="OpenWorldTemplateFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_11}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates1}}"
                                         Tag="{Binding}" />
                                     <MenuItem
                                         Click="DeleteWorldTemplate_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_12}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates2}}"
                                         Tag="{Binding}" />
                                 </MenuFlyout>
                             </Border.ContextFlyout>
@@ -174,7 +174,7 @@
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Margin="3,1,3,0">
-                                        <Run Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_13}}" /><Run Text="{Binding BaseGameVersionText}" />
+                                        <Run Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates3}}" /><Run Text="{Binding BaseGameVersionText}" />
                                     </TextBlock>
                                     <TextBlock
                                         FontSize="13"

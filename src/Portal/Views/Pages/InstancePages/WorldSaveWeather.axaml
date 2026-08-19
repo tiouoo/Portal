@@ -9,13 +9,13 @@
             <TextBlock
                 FontSize="22"
                 FontWeight="SemiBold"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_0}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_title}}" />
         </StackPanel>
         <ScrollViewer Grid.Row="1" Margin="0,10,0,0">
             <StackPanel Spacing="8">
                 <StackPanel IsVisible="{Binding HasWeather}" Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_1}}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_raining}}" VerticalAlignment="Center" />
                         <ToggleSwitch
                             Grid.Column="1"
                             IsChecked="{Binding Raining}"
@@ -23,7 +23,7 @@
                             OnContent="true" />
                     </Grid>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_2}}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_thundering}}" VerticalAlignment="Center" />
                         <ToggleSwitch
                             Grid.Column="1"
                             IsChecked="{Binding Thundering}"
@@ -31,33 +31,33 @@
                             OnContent="true" />
                     </Grid>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_3}}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_rainTime}}" VerticalAlignment="Center" />
                         <TextBox
                             Grid.Column="1"
                             Text="{Binding RainTime}"
                             Width="130" />
                     </Grid>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_4}}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_thunderTime}}" VerticalAlignment="Center" />
                         <TextBox
                             Grid.Column="1"
                             Text="{Binding ThunderTime}"
                             Width="130" />
                     </Grid>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_5}}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_clearWeatherTime}}" VerticalAlignment="Center" />
                         <TextBox
                             Grid.Column="1"
                             Text="{Binding ClearWeatherTime}"
                             Width="130" />
                     </Grid>
                 </StackPanel>
-                <TextBlock IsVisible="{Binding !HasWeather}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_6}}" />
+                <TextBlock IsVisible="{Binding !HasWeather}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_noWeather}}" />
             </StackPanel>
         </ScrollViewer>
         <Button
             Command="{Binding SaveWeatherCommand}"
-            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_7}}"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveweather_save}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasWeather}"

@@ -15,7 +15,7 @@
         Width="480">
         <StackPanel Spacing="4">
             <TextBlock>
-                <Run FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_0}}" />
+                <Run FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_installPrefix}}" />
                 <Run FontSize="16" Text="{Binding Definition.DisplayName}" />
                 <Run FontSize="16" Text="：" />
                 <Run FontSize="16" Text="{Binding File.DisplayName}" />
@@ -33,10 +33,10 @@
             Spacing="6">
             <DockPanel LastChildFill="False">
                 <CheckBox
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_1}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_showAllInstances}}"
                     DockPanel.Dock="Right"
                     IsChecked="{Binding ShowAllInstances}" />
-                <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_2}}" VerticalAlignment="Center" />
+                <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_targetInstanceLabel}}" VerticalAlignment="Center" />
             </DockPanel>
             <ComboBox
                 HorizontalAlignment="Stretch"
@@ -58,14 +58,14 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoInstances}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_3}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_noCompatibleInstancesText}}" />
         </StackPanel>
         <StackPanel
             Grid.Row="2"
             IsVisible="{Binding IsDataPack}"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_4}}" />
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_targetWorldLabel}}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 IsEnabled="{Binding !IsLoadingWorlds}"
@@ -87,11 +87,11 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoadingWorlds}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_5}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_loadingWorldsText}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoWorlds}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_6}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_noWorldsText}}" />
         </StackPanel>
         <DockPanel
             Grid.Row="3"
@@ -99,16 +99,16 @@
             Margin="0,22,0,0">
             <Button
                 Click="SaveAs_Click"
-                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_7}}"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_saveAs}}"
                 DockPanel.Dock="Left" />
             <StackPanel
                 DockPanel.Dock="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_8}}" />
+                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_cancel}}" />
                 <Button
                     Click="Install_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_9}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_confirm}}"
                     IsEnabled="{Binding CanInstall}" />
             </StackPanel>
         </DockPanel>

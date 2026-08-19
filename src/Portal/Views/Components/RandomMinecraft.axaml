@@ -17,31 +17,31 @@
             <TextBlock
                 FontSize="16"
                 FontWeight="600"
-                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_0}}" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_title}}" />
             <StackPanel
                 Margin="0,5,0,0"
                 Orientation="Horizontal"
                 Spacing="5">
-                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_1}}" />
+                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_wonPrefix}}" />
                 <HyperlinkButton
                     Click="Button_OnClick"
                     Content="{Binding Instance.InstanceName}"
                     Tag="{Binding Instance}"
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
-                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_2}}" />
+                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_wonSuffix}}" />
             </StackPanel>
         </StackPanel>
         <Panel Grid.Row="2" Margin="0,30,0,0">
             <Button
                 Command="{Binding Close}"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_3}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_closeButton}}"
                 HorizontalAlignment="Left" />
             <StackPanel
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Command="{Binding Again}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_4}}" />
-                <Button Command="{Binding Complete}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_5}}" />
+                <Button Command="{Binding Again}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_againButton}}" />
+                <Button Command="{Binding Complete}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.randomminecraft_completeButton}}" />
             </StackPanel>
         </Panel>
     </Grid>

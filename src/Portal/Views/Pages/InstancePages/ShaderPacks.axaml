@@ -26,18 +26,18 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_0}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_openFolder}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="CheckUpdates_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_1}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <Button
                 Click="Import_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_importShaderPacks}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
@@ -66,12 +66,12 @@
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_3}}"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_searchShaderPacks}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_4}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_select}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top">
@@ -80,17 +80,17 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_5}}"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_selectAll}}"
                             InputGesture="ctrl+A" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="ClearSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_6}}"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_clearSelection}}"
                             InputGesture="ctrl+shift+A" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="InvertSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_7}}"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_invertSelection}}"
                             InputGesture="ctrl+I" />
                     </MenuFlyout>
                 </Button.Flyout>
@@ -105,7 +105,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_8}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_deleteSelected}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -115,7 +115,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_9}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_title}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -129,13 +129,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_10}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates0}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_11}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates1}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -160,7 +160,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowShaderPackDetails_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_12}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates2}}"
                                         IsVisible="{Binding HasDetails}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -172,7 +172,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="UpdateShaderPack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_13}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates3}}"
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -184,7 +184,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="SwitchVersionShaderPack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_14}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates4}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -196,7 +196,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RollbackShaderPack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_15}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates5}}"
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -209,7 +209,7 @@
                                     <Separator IsVisible="{Binding HasIdentity}" />
                                     <MenuItem
                                         Click="OpenShaderPackFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_16}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates6}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -220,7 +220,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteShaderPack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_17}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates7}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -251,7 +251,7 @@
                                         <TextBlock
                                             FontSize="11"
                                             Foreground="White"
-                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_18}}" />
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates8}}" />
                                     </Border>
                                     <TextBlock
                                         FontSize="16"

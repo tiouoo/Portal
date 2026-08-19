@@ -15,7 +15,7 @@
             Margin="8"
             MaxWidth="900"
             Spacing="15">
-            <TextBlock FontSize="22" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_0}}" />
+            <TextBlock FontSize="22" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_LitematicaProjectionAnalysis}}" />
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -26,11 +26,11 @@
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_1}}" />
+                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ProjectionFile}}" />
                     <DockPanel>
                         <Button
                             Command="{Binding LoadAndAnalyzeCommand}"
-                            Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_2}}"
+                            Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_Analyze}}"
                             DockPanel.Dock="Right"
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"
@@ -38,7 +38,7 @@
                         <tio:PathPicker
                             FileFilter="[Litematica, *.litematic]"
                             SelectedPathsText="{Binding FilePath}"
-                            Title="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_3}}"
+                            Title="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_SelectLitematicaProjectionFile}}"
                             UsePickerType="OpenFile" />
                     </DockPanel>
                     <ProgressBar
@@ -61,7 +61,7 @@
                             <Run
                                 FontSize="14"
                                 Foreground="{DynamicResource InnerForegroundColor}"
-                                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_4}}" />
+                                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_TotalBlocks}}" />
                             <Run
                                 FontSize="14"
                                 FontWeight="DemiBold"
@@ -71,7 +71,7 @@
                             <Run
                                 FontSize="14"
                                 Foreground="{DynamicResource InnerForegroundColor}"
-                                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_5}}" />
+                                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_BlockTypes}}" />
                             <Run
                                 FontSize="14"
                                 FontWeight="DemiBold"
@@ -106,23 +106,23 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn
                                     Binding="{Binding NameCn}"
-                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_6}}"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_BlockName}}"
                                     Width="180" />
                                 <DataGridTextColumn
                                     Binding="{Binding Count, StringFormat={}{0:N0}}"
-                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_7}}"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_Count}}"
                                     Width="100" />
                                 <DataGridTextColumn
                                     Binding="{Binding CategoryDisplay}"
-                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_8}}"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_Category}}"
                                     Width="100" />
                                 <DataGridTextColumn
                                     Binding="{Binding Percent, StringFormat={}{0:P1}}"
-                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_9}}"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_Percentage}}"
                                     Width="80" />
                                 <DataGridTextColumn
                                     Binding="{Binding Units}"
-                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_10}}"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ProjectionFile0}}"
                                     Width="250" />
                             </DataGrid.Columns>
                         </DataGrid>
@@ -132,11 +132,11 @@
             <WrapPanel HorizontalAlignment="Stretch" IsVisible="{Binding HasData}">
                 <Button
                     Click="ExportTxt_Click"
-                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_11}}"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ProjectionFile1}}"
                     Width="100" />
                 <Button
                     Click="ExportCsv_Click"
-                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_12}}"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ProjectionFile2}}"
                     Width="100" />
             </WrapPanel>
         </StackPanel>

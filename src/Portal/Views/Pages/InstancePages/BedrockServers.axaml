@@ -14,25 +14,25 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="AddServer_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_0}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_addServer}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="RefreshAll_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_1}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshAll}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <Button
                 Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_openFolder}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_3}}"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_searchServers}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
@@ -44,13 +44,13 @@
                 MinWidth="180"
                 Name="UserIdSelector"
                 SelectionChanged="UserIdSelector_OnSelectionChanged"
-                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_4}}"
+                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_selectUserId}}"
                 VerticalAlignment="Top" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     FontSize="24"
                     MaxLines="1"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_5}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_title}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -62,19 +62,19 @@
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsRefreshing}"
                     Margin="0,8,0,0"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_6}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshing}}"
                     TextWrapping="NoWrap" />
             </DockPanel>
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_7}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_loading}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_8}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_empty}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -99,7 +99,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="RefreshServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_9}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshServer}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -111,7 +111,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="CopyAddress_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_10}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshAll0}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -123,7 +123,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="EditServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_11}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshAll1}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -134,7 +134,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RemoveServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_12}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshAll2}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

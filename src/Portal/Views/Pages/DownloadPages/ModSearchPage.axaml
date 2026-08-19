@@ -22,7 +22,7 @@
                         Orientation="Horizontal">
                         <TextBlock
                             FontSize="24"
-                            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_0}}"
+                            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_pageTitle}}"
                             VerticalAlignment="Top" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
@@ -43,13 +43,13 @@
                 <DockPanel Margin="0,8,0,0">
                     <Button
                         Command="{Binding SearchCommand}"
-                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_1}}"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_search}}"
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right" />
                     <TextBox
                         KeyDown="SearchBox_OnKeyDown"
                         Margin="0,0,10,0"
-                        PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_2}}"
+                        PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_searchPlaceholder}}"
                         Text="{Binding SearchText}" />
                 </DockPanel>
             </DockPanel>
@@ -81,7 +81,7 @@
                     HorizontalAlignment="Stretch"
                     IsEditable="True"
                     ItemsSource="{Binding MinecraftVersions}"
-                    PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_3}}"
+                    PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_gameVersionPlaceholder}}"
                     Text="{Binding GameVersion, Mode=TwoWay}" />
                 <ComboBox
                     HorizontalAlignment="Stretch"
@@ -106,7 +106,7 @@
             </UniformGrid>
             <Button
                 Command="{Binding RetryCommand}"
-                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_4}}"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_retry}}"
                 HorizontalAlignment="Left"
                 IsVisible="{Binding HasError}" />
         </StackPanel>
@@ -165,7 +165,7 @@
                                             Click="Favorite_OnClick"
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
-                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_5}}">
+                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_unfavoriteToolTip}}">
                                             <Grid>
                                                 <PathIcon
                                                     Data="F1 M640,640z M0,0z M442.9,144C415.6,144,389.9,157.1,373.9,179.2L339.5,226.8C335,233 327.8,236.7 320.1,236.7 312.4,236.7 305.2,233 300.7,226.8L266.3,179.2C250.3,157.1 224.6,144 197.3,144 150.3,144 112.2,182.1 112.2,229.1 112.2,279 144.2,327.5 180.3,371.4 221.4,421.4 271.7,465.4 306.2,491.7 309.4,494.1 314.1,495.9 320.2,495.9 326.3,495.9 331,494.1 334.2,491.7 368.7,465.4 419,421.3 460.1,371.4 496.3,327.5 528.2,279 528.2,229.1 528.2,182.1 490.1,144 443.1,144z M335,151.1C360,116.5 400.2,96 442.9,96 516.4,96 576,155.6 576,229.1 576,297.7 533.1,358 496.9,401.9 452.8,455.5 399.6,502 363.1,529.8 350.8,539.2 335.6,543.9 320,543.9 304.4,543.9 289.2,539.2 276.9,529.8 240.4,502 187.2,455.5 143.1,402 106.9,358.1 64,297.7 64,229.1 64,155.6 123.6,96 197.1,96 239.8,96 280,116.5 305,151.1L320,171.8 335,151.1z"
@@ -184,7 +184,7 @@
                                             Click="Download_OnClick"
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
-                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_6}}">
+                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_downloadToolTip}}">
                                             <PathIcon
                                                 Data="{StaticResource DownloadGeometry}"
                                                 Height="12"

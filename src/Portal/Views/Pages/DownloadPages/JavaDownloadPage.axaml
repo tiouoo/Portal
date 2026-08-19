@@ -24,7 +24,7 @@
                     <TextBlock
                         FontSize="20"
                         FontWeight="SemiBold"
-                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javadownloadpage_0}}" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javadownloadpage_pageTitle}}" />
                     <TextBlock
                         FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -34,7 +34,7 @@
                 </StackPanel>
                 <Button
                     Command="{Binding ReloadCommand}"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javadownloadpage_1}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javadownloadpage_retry}}"
                     DockPanel.Dock="Right"
                     HorizontalAlignment="Right"
                     IsVisible="{Binding HasError}"
@@ -44,7 +44,7 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javadownloadpage_2}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javadownloadpage_loadingText}}" />
             <TextBlock
                 Foreground="#d4380d"
                 IsVisible="{Binding HasError}"

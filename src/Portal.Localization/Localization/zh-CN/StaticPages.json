@@ -1,6 +1,6 @@
 {
   "imageviewer": {
-    "0": "缩小 10%",
-    "1": "放大 10%"
+    "zoomOutTooltip": "缩小 10%",
+    "zoomInTooltip": "放大 10%"
   }
 }

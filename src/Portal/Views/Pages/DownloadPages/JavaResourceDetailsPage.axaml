@@ -188,7 +188,7 @@
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding IsEmpty}"
                         Margin="2,2,0,0"
-                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourcedetailspage_0}}" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourcedetailspage_emptyText}}" />
                 </Border>
             </Border>
         </Grid>

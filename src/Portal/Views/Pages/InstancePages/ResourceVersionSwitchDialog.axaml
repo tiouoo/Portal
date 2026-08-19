@@ -20,28 +20,28 @@
                     FontSize="16"
                     FontWeight="600"
                     HorizontalAlignment="Left"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_0}}" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_title}}" />
             </Panel>
             <TextBlock
                 DockPanel.Dock="Right"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_1}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_loading}}" />
             <TextBlock
                 DockPanel.Dock="Right"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasError}"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_2}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_loadError}}" />
         </DockPanel>
         <CheckBox
-            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_3}}"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_showAll}}"
             Grid.Row="1"
             IsChecked="{Binding ShowAll}"
             Margin="0,10,0,0" />
         <TextBox
             Grid.Row="2"
             Margin="0,8,0,0"
-            PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_4}}"
+            PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_searchPlaceholder}}"
             Text="{Binding SearchText}">
             <TextBox.InnerRightContent>
                 <PathIcon
@@ -84,7 +84,7 @@
                                         <TextBlock
                                             FontSize="11"
                                             Foreground="White"
-                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_5}}"
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_currentVersion}}"
                                             VerticalAlignment="Center" />
                                     </Border>
                                     <TextBlock
@@ -111,10 +111,10 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_6}}" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_cancel}}" />
             <Button
                 Command="{Binding ConfirmCommand}"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_7}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_switchToVersion}}"
                 IsEnabled="{Binding CanConfirm}" />
         </StackPanel>
     </Grid>

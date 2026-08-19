@@ -17,7 +17,7 @@
         <TextBlock
             FontSize="18"
             FontWeight="SemiBold"
-            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_0}}" />
+            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_title}}" />
 
         <ScrollViewer
             Grid.Row="1"
@@ -44,12 +44,12 @@
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <HyperlinkButton
                                     Click="ChangeIcon_Click"
-                                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_1}}"
+                                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_changeIcon}}"
                                     FontSize="13"
                                     Theme="{StaticResource TransparentHyperlinkButton}" />
                                 <HyperlinkButton
                                     Click="ResetIcon_Click"
-                                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_2}}"
+                                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_resetIcon}}"
                                     FontSize="13"
                                     Theme="{StaticResource TransparentHyperlinkButton}" />
                             </StackPanel>
@@ -58,7 +58,7 @@
                     <TextBox
                         IsEnabled="{Binding CanCustomizeInstanceId}"
                         IsVisible="{Binding CanCustomizeInstanceId}"
-                        PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_3}}"
+                        PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_instanceIdPlaceholder}}"
                         Text="{Binding InstanceId}" />
                 </StackPanel>
 
@@ -66,7 +66,7 @@
                     <TextBlock
                         FontSize="15"
                         FontWeight="SemiBold"
-                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_4}}" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_selectGameVersionHeading}}" />
                     <StackPanel Orientation="Horizontal">
                         <ListBox
                             ItemsSource="{Binding Platforms}"
@@ -111,7 +111,7 @@
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding MinecraftFolders}"
-                            PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_5}}"
+                            PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_minecraftFolderPlaceholder}}"
                             SelectedItem="{Binding SelectedMinecraftFolder}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate DataType="classes:MinecraftFolderEntry">
@@ -134,7 +134,7 @@
                     <TextBlock
                         FontSize="15"
                         FontWeight="SemiBold"
-                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_6}}" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_selectLoaderHeading}}" />
                     <ListBox
                         ItemsSource="{Binding LoaderOptions}"
                         SelectedItem="{Binding SelectedLoader}"
@@ -149,7 +149,7 @@
                         <TextBlock
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_7}}" />
+                            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_loaderVersionHeading}}" />
                         <ListBox
                             ItemsSource="{Binding LoaderVersionFilters}"
                             SelectedItem="{Binding SelectedLoaderVersionFilter}"
@@ -175,7 +175,7 @@
                         </ComboBox>
                     </StackPanel>
                     <CheckBox
-                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_8}}"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_installOptiFineCheckBox}}"
                         FontSize="13"
                         IsChecked="{Binding IsOptiFineSelected}"
                         IsVisible="{Binding IsOptiFineToggleVisible}" />
@@ -183,7 +183,7 @@
                         <TextBlock
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_9}}" />
+                            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_optiFineVersionHeading}}" />
                         <ListBox
                             ItemsSource="{Binding LoaderVersionFilters}"
                             SelectedItem="{Binding SelectedOptiFineVersionFilter}"
@@ -237,10 +237,10 @@
                 Margin="0,10,0,0"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_10}}" />
+                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_changeIcon0}}" />
                 <Button
                     Click="Create_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_11}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_changeIcon1}}"
                     IsEnabled="{Binding CanCreate}" />
             </StackPanel>
         </StackPanel>

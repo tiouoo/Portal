@@ -10,36 +10,36 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_0}}" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_title}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_1}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableGithubMirror}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableGithubMirror}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_2}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_mirrorMode}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.GithubMirrorMode}">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_3}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_4}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_prefixProxyMode}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_directAccessMode}}" />
             </ComboBox>
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_5}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_mirrorUrl}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox PlaceholderText="https://ghfast.top" Text="{Binding Data.ConfigEntry.GithubMirrorUrl}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_6}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_prefixProxyModeHint}}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_7}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_directAccessModeHint}}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
@@ -47,32 +47,32 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_8}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableProxyServer}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableProxyServer}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_9}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_disableSystemProxy}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.DisableSystemProxy}" IsEnabled="{Binding Data.ConfigEntry.CanDisableSystemProxy}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_10}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror0}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableProxyServer}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_11}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror1}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox PlaceholderText="http://127.0.0.1:7890" Text="{Binding Data.ConfigEntry.ProxyServer}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_12}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror2}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableCustomUserAgent}" />
@@ -87,7 +87,7 @@
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_13}}" />
+                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror3}}" />
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"

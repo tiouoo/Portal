@@ -18,11 +18,11 @@
             <TextBlock
                 FontSize="16"
                 FontWeight="600"
-                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_0}}" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_title}}" />
             <TextBlock
                 FontSize="13"
                 Foreground="{DynamicResource TextControlForegroundDisabled}"
-                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_1}}" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_subtitle}}" />
         </StackPanel>
         <Border
             BorderBrush="{DynamicResource PopupBorderBrush}"
@@ -59,7 +59,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="5">
                                     <TextBlock FontSize="11" VerticalAlignment="Bottom">
-                                        <Run Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_2}}" />
+                                        <Run Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_addTimeLabel}}" />
                                         <Run Text=": " />
                                         <Run Text="{Binding CreateAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" />
                                     </TextBlock>
@@ -75,7 +75,7 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CompleteCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_3}}" />
+            <Button Command="{Binding CompleteCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_completeButton}}" />
         </StackPanel>
     </Grid>
 </UserControl>

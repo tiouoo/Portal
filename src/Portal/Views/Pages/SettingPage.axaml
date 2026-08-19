@@ -23,65 +23,65 @@
                 Margin="0,0,10,0"
                 Name="NavMenu"
                 Theme="{StaticResource FlatScrollBarTheme}">
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_0}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_General}}">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Appearance}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_1}}"
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance}}"
                         IsSelected="True" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:DefaultBehavior}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_2}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_DefaultBehavior}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Shortcuts}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_3}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Shortcuts}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_4}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Notification}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Storage}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_5}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Storage}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:ApplicationDebug}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_6}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_OtherSettings}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:About}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_7}}"
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_About}}"
                         Name="AboutItem" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_8}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Game}}">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Account}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_9}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Account}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Java}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_10}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance0}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:GameFolder}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_11}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance1}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Advanced}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_12}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance2}}" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_13}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance3}}">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Download}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_14}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance4}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Agent}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_15}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance5}}" />
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>

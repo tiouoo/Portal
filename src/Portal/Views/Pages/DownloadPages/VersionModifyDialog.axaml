@@ -22,7 +22,7 @@
                     FontWeight="600"
                     HorizontalAlignment="Left"
                     Margin="0,2,0,0">
-                    <Run Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_0}}" />
+                    <Run Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_modifyInstancePrefix}}" />
                     <Run Text="{Binding InstanceName}" />
                 </TextBlock>
             </DockPanel>
@@ -32,7 +32,7 @@
                     HorizontalAlignment="Right"
                     Margin="10,0,0,0"
                     MinWidth="180">
-                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_1}}" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_versionTypeLabel}}" />
                     <ComboBox
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding VersionFilters}"
@@ -45,7 +45,7 @@
                     </ComboBox>
                 </StackPanel>
                 <StackPanel>
-                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_2}}" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_targetVersionLabel}}" />
                     <ComboBox
                         HorizontalAlignment="Stretch"
                         IsDropDownOpen="{Binding IsVersionDropDownOpen, Mode=TwoWay}"
@@ -93,7 +93,7 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Margin="5,0,0,0"
-                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_3}}" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_selectLoaderHeading}}" />
             <WrapPanel>
                 <CheckBox
                     IsChecked="{Binding IsForgeSelected, Mode=TwoWay}"
@@ -169,11 +169,11 @@
                     Spacing="8">
                     <Button
                         Click="SelectLoaderVersion_OnClick"
-                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_4}}"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_selectLoaderVersion}}"
                         IsEnabled="{Binding CanSelectLoaderVersion}" />
                     <Button
                         Click="UninstallAllLoaders_OnClick"
-                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_5}}"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_uninstallAllLoaders}}"
                         IsVisible="{Binding CanUninstallAllLoaders}" />
                 </StackPanel>
                 <StackPanel
@@ -181,10 +181,10 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal"
                     Spacing="8">
-                    <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_6}}" />
+                    <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_cancel}}" />
                     <Button
                         Click="Modify_OnClick"
-                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_7}}"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.versionmodifydialog_startModify}}"
                         IsEnabled="{Binding CanModify}" />
                 </StackPanel>
             </Panel>

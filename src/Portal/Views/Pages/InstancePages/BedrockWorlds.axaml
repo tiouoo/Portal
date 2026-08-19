@@ -9,19 +9,19 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_0}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_openFolder}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="Import_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_1}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_importWorlds}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_2}}"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_searchWorlds}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
@@ -33,14 +33,14 @@
                 MinWidth="180"
                 Name="WorldUserIdSelector"
                 SelectionChanged="WorldUserIdSelector_OnSelectionChanged"
-                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_3}}"
+                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_selectUserId}}"
                 VerticalAlignment="Top" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"
                     FontSize="24"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_4}}" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_title}}" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
@@ -51,13 +51,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_5}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_loading}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_6}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_empty}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -82,7 +82,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="OpenWorldFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_7}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_openInFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -94,7 +94,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="DeleteWorld_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_8}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_deleteWorld}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

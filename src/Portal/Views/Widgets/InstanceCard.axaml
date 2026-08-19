@@ -23,7 +23,7 @@
             <ContextMenu>
                 <MenuItem
                     Click="LaunchInstance_Click"
-                    Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_0}}"
+                    Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_play}}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
                         <PathIcon
@@ -34,7 +34,7 @@
                 </MenuItem>
                 <MenuItem
                     Click="CreateShortcut_Click"
-                    Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_1}}"
+                    Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_createShortcut}}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
                         <PathIcon
@@ -149,7 +149,7 @@
                             Cursor="Hand"
                             Padding="4,-2,2,0"
                             Theme="{StaticResource TransparentButton}"
-                            ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_2}}"
+                            ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_launchInstance}}"
                             x:Name="LaunchButton">
                             <PathIcon
                                 Data="F1 M640,640z M0,0z M541.9,139.5C546.4,127.7 543.6,114.3 534.7,105.4 525.8,96.5 512.4,93.6 500.6,98.2L84.6,258.2C71.9,263 63.7,275.2 64,288.7 64.3,302.2 73.1,314.1 85.9,318.3L262.7,377.2 321.6,554C325.9,566.8 337.7,575.6 351.2,575.9 364.7,576.2 376.9,568 381.8,555.4L541.8,139.4z"
@@ -215,7 +215,7 @@
                                     FontSize="{Binding ContentFontSize, ElementName=Root}"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     MaxLines="1"
-                                    Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_3}}"
+                                    Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_favorited}}"
                                     TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Button>
@@ -238,7 +238,7 @@
                                     FontSize="{Binding ContentFontSize, ElementName=Root}"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     MaxLines="1"
-                                    Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_4}}"
+                                    Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_blocked}}"
                                     TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Button>

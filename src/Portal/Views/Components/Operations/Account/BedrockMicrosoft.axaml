@@ -18,7 +18,7 @@
             <TextBlock
                 FontSize="16"
                 FontWeight="600"
-                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_0}}" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_title}}" />
         </StackPanel>
         <StackPanel Grid.Row="1" Margin="0,16,0,15">
             <TextBlock IsVisible="{Binding !IsError}" Text="{Binding Message}" />
@@ -51,14 +51,14 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding Cancel}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_1}}" />
+            <Button Command="{Binding Cancel}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_cancelButton}}" />
             <Button
                 Click="CopyCode"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_2}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_copyCodeButton}}"
                 IsEnabled="{Binding IsReady}" />
             <Button
                 Click="OpenBrowser"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_3}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.bedrockmicrosoft_openBrowserButton}}"
                 IsEnabled="{Binding IsReady}" />
         </StackPanel>
     </Grid>

@@ -21,7 +21,7 @@
             TextWrapping="Wrap" />
         <Button
             Click="Close_Click"
-            Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.quickdownloadloadingdialog_0}}"
+            Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.quickdownloadloadingdialog_close}}"
             HorizontalAlignment="Right" />
     </StackPanel>
 </UserControl>

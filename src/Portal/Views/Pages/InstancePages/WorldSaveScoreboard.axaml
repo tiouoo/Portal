@@ -10,21 +10,21 @@
             <TextBlock
                 FontSize="22"
                 FontWeight="SemiBold"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_0}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_title}}" />
         </StackPanel>
         <controls:ScrollView Grid.Row="1" Margin="0,7,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="12">
-                <TextBlock IsVisible="{Binding IsLoading}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_1}}" />
-                <TextBlock IsVisible="{Binding !HasScoreboard}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_2}}" />
+                <TextBlock IsVisible="{Binding IsLoading}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading}}" />
+                <TextBlock IsVisible="{Binding !HasScoreboard}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_noScoreboard}}" />
                 <StackPanel IsVisible="{Binding HasScoreboard}" Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_3}}" />
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_objectivesTitle}}" />
                         <Button
                             Command="{Binding AddObjectiveCommand}"
-                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_4}}"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_addObjective}}"
                             Grid.Column="1" />
                     </Grid>
                     <ItemsRepeater ItemsSource="{Binding ScoreboardObjectives}">
@@ -35,22 +35,22 @@
                                     ColumnSpacing="8"
                                     Margin="0,0,0,4">
                                     <TextBox
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_5}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_objectiveNamePlaceholder}}"
                                         Text="{Binding Name}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="1"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_6}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_objectiveCriteriaPlaceholder}}"
                                         Text="{Binding CriteriaName}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="2"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_7}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_displayNamePlaceholder}}"
                                         Text="{Binding DisplayName}"
                                         TextWrapping="NoWrap" />
                                     <Button
                                         Click="RemoveObjective_OnClick"
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_8}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_delete}}"
                                         Grid.Column="3" />
                                 </Grid>
                             </DataTemplate>
@@ -60,10 +60,10 @@
                         <TextBlock
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_9}}" />
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_scoresTitle}}" />
                         <Button
                             Command="{Binding AddScoreCommand}"
-                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_10}}"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading0}}"
                             Grid.Column="1" />
                     </Grid>
                     <ItemsRepeater ItemsSource="{Binding ScoreboardScores}">
@@ -74,32 +74,32 @@
                                     ColumnSpacing="8"
                                     Margin="0,0,0,4">
                                     <TextBox
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_11}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading1}}"
                                         Text="{Binding Objective}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="1"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_12}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading2}}"
                                         Text="{Binding Name}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="2"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_7}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_displayNamePlaceholder}}"
                                         Text="{Binding DisplayName}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="3"
-                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_13}}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading3}}"
                                         Text="{Binding Score}"
                                         TextWrapping="NoWrap" />
                                     <ToggleSwitch
                                         Grid.Column="4"
                                         IsChecked="{Binding Locked}"
-                                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_15}}"
-                                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_16}}" />
+                                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading5}}"
+                                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading6}}" />
                                     <Button
                                         Click="RemoveScore_OnClick"
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_8}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_delete}}"
                                         Grid.Column="5" />
                                 </Grid>
                             </DataTemplate>
@@ -110,7 +110,7 @@
         </controls:ScrollView>
         <Button
             Command="{Binding SaveScoreboardCommand}"
-            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_14}}"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_loading4}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasScoreboard}"

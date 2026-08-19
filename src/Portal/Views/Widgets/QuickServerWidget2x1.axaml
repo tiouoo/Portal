@@ -110,7 +110,7 @@
                         MinHeight="18"
                         Padding="4,-4,2,-4"
                         Theme="{StaticResource TransparentButton}"
-                        ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickserverwidget2x1_0}}"
+                        ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickserverwidget2x1_quickJoinServer}}"
                         VerticalAlignment="Center"
                         x:Name="LaunchButton">
                         <PathIcon

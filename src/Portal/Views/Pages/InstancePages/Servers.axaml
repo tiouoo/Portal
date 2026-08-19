@@ -15,12 +15,12 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="AddServer_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_0}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_addServer}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="Refresh_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_1}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshAll}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
@@ -30,7 +30,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_2}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_title}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -42,19 +42,19 @@
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsRefreshing}"
                     Margin="0,8,0,0"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_3}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshing}}"
                     TextWrapping="NoWrap" />
             </DockPanel>
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_4}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_loading}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_5}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_empty}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding Items}" Margin="0,0,10,0">
@@ -79,7 +79,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="RefreshServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_6}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshServer}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -90,7 +90,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="LaunchServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_7}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_quickPlay}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -102,7 +102,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="CopyAddress_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_8}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_copyAddress}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -113,7 +113,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="CreateShortcut_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_9}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_createShortcut}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -125,7 +125,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="EditServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_10}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshAll0}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -136,7 +136,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RemoveServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_11}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshAll1}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -233,7 +233,7 @@
                                             Padding="4,-2,2,0"
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
-                                            ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_12}}"
+                                            ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshAll2}}"
                                             VerticalAlignment="Bottom"
                                             VerticalContentAlignment="Bottom">
                                             <PathIcon

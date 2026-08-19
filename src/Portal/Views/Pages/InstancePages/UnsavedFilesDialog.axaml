@@ -16,22 +16,22 @@
         <TextBlock
             FontSize="17"
             FontWeight="SemiBold"
-            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_0}}" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_title}}" />
         <TextBlock
             Grid.Row="1"
             Margin="0,10,0,22"
             Text="{Binding Message}"
             TextWrapping="Wrap" />
         <Grid ColumnDefinitions="Auto,*,Auto,Auto" Grid.Row="2">
-            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_1}}" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_cancel}}" />
             <Button
                 Command="{Binding DiscardCommand}"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_2}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_discard}}"
                 Grid.Column="2"
                 Margin="0,0,8,0" />
             <Button
                 Command="{Binding SaveCommand}"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_3}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_save}}"
                 Grid.Column="3" />
         </Grid>
     </Grid>

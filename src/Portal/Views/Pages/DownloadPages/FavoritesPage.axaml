@@ -14,28 +14,28 @@
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top" Spacing="10">
             <DockPanel>
-                <TextBlock FontSize="24" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_0}}" />
+                <TextBlock FontSize="24" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_pageTitle}}" />
             </DockPanel>
             <DockPanel>
-                <DropDownButton Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_1}}" DockPanel.Dock="Left">
+                <DropDownButton Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_edit}}" DockPanel.Dock="Left">
                     <DropDownButton.Flyout>
                         <MenuFlyout>
                             <MenuItem
                                 Classes="hide-icon"
                                 Command="{Binding AddCollectionCommand}"
-                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_2}}" />
+                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_newCollection}}" />
                             <MenuItem
                                 Classes="hide-icon"
                                 Click="Import_OnClick"
-                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_3}}" />
+                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_importCollection}}" />
                             <MenuItem
                                 Classes="hide-icon"
                                 Click="Export_OnClick"
-                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_4}}" />
+                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_exportCurrentCollection}}" />
                             <MenuItem
                                 Classes="hide-icon"
                                 Click="Edit_OnClick"
-                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_5}}" />
+                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_editCurrentCollection}}" />
                         </MenuFlyout>
                     </DropDownButton.Flyout>
                 </DropDownButton>
@@ -66,7 +66,7 @@
                     Width="130" />
                 <TextBox
                     Margin="10,0"
-                    PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_6}}"
+                    PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_searchPlaceholder}}"
                     Text="{Binding SearchText}" />
             </DockPanel>
         </StackPanel>
@@ -166,7 +166,7 @@
                                             Click="Favorite_OnClick"
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
-                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_7}}">
+                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_unfavoriteToolTip}}">
                                             <PathIcon
                                                 Data="F1 M640,640z M0,0z M305,151.1L320,171.8 335,151.1C360,116.5 400.2,96 442.9,96 516.4,96 576,155.6 576,229.1L576,231.7C576,343.9 436.1,474.2 363.1,529.9 350.7,539.3 335.5,544 320,544 304.5,544 289.2,539.4 276.9,529.9 203.9,474.2 64,343.9 64,231.7L64,229.1C64,155.6 123.6,96 197.1,96 239.8,96 280,116.5 305,151.1z"
                                                 Height="16"
@@ -177,7 +177,7 @@
                                             Click="Download_OnClick"
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
-                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_8}}">
+                                            ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_downloadToolTip}}">
                                             <PathIcon
                                                 Data="{StaticResource DownloadGeometry}"
                                                 Height="12"

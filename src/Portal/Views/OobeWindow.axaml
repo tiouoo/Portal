@@ -6,7 +6,7 @@
     IsMaxBtnShow="False"
     IsMinBtnShow="{OnPlatform Default=True,
                               macOS=False}"
-    Title="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_0}}"
+    Title="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_windowTitle}}"
     Width="780"
     WindowStartupLocation="CenterScreen"
     d:DesignHeight="540"
@@ -89,19 +89,19 @@
                         Click="Back_OnClick"
                         Content="←"
                         Name="BackButton"
-                        ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_1}}"
+                        ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back}}"
                         Width="60" />
                     <Button
                         Classes="Float"
                         Click="Next_OnClick"
                         Content="→"
                         Name="NextButton"
-                        ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_2}}"
+                        ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next}}"
                         Width="60" />
                     <tio:IconButton
                         Background="{DynamicResource SystemAccentColor}"
                         Click="Finish_OnClick"
-                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_3}}"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_enterPortal}}"
                         Foreground="White"
                         IsVisible="False"
                         Name="FinishButton" />
@@ -123,15 +123,15 @@
 
             <StackPanel Margin="25,5,25,10" Spacing="15">
                 <StackPanel Spacing="6">
-                    <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_4}}" />
+                    <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_welcome}}" />
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_5}}"
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_welcomeDescription}}"
                         TextWrapping="Wrap" />
                 </StackPanel>
                 <StackPanel Spacing="5">
                     <Label
-                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_6}}"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeStyle}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <ListBox Name="ThemeListBox" Theme="{DynamicResource BorderListBox}">
@@ -144,7 +144,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_7}}" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeSystem}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -156,7 +156,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_8}}" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeLight}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -168,7 +168,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_9}}" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeDark}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -180,7 +180,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_10}}" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back0}}" />
                             </StackPanel>
                         </ListBoxItem>
                     </ListBox>
@@ -188,7 +188,7 @@
                 <StackPanel Spacing="5">
                     <Panel>
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_11}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back1}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             HorizontalAlignment="Left" />
@@ -214,22 +214,22 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
-                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_12}}" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back2}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_13}}"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back3}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_14}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back4}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center" />
                         <HyperlinkButton
                             Click="AddFolder_OnClick"
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_15}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back5}}"
                             FontSize="13"
                             HorizontalAlignment="Right"
                             Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -291,22 +291,22 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
-                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_16}}" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back6}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_17}}"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back7}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_18}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back8}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center" />
                         <HyperlinkButton
                             Click="AddAccount_OnClick"
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_16}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back6}}"
                             FontSize="13"
                             HorizontalAlignment="Right"
                             Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -317,7 +317,7 @@
                         HorizontalAlignment="Center"
                         IsVisible="{Binding !Data.ConfigEntry.MinecraftAccounts.Count}"
                         Margin="0,20,0,0"
-                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_19}}" />
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back9}}" />
                 </StackPanel>
                 <controls:ScrollView
                     Classes="Flat"
@@ -369,15 +369,15 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="4">
-                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_20}}" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next0}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_21}}"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next1}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_22}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next2}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
@@ -389,13 +389,13 @@
                             Spacing="10">
                             <HyperlinkButton
                                 Click="ScanJava_OnClick"
-                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_23}}"
+                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next3}}"
                                 FontSize="13"
                                 Name="ScanJavaButton"
                                 Theme="{StaticResource TransparentHyperlinkButton}" />
                             <HyperlinkButton
                                 Click="AddJava_OnClick"
-                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_24}}"
+                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next4}}"
                                 FontSize="13"
                                 Name="AddJavaButton"
                                 Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -413,7 +413,7 @@
                         HorizontalAlignment="Center"
                         IsVisible="{Binding !Data.ConfigEntry.JavaRuntimes.Count}"
                         Margin="0,20,0,0"
-                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_25}}" />
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next5}}" />
                 </StackPanel>
                 <controls:ScrollView
                     Classes="Flat"

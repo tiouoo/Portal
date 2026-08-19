@@ -23,7 +23,7 @@
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type toolsPages:BedrockToolsPage}"
-                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.toolspage_0}}"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.toolspage_BedrockEdition}}"
                     IsSelected="True"
                     IsVisible="{Binding IsWindows}">
                     <tio:NavMenuItem.Icon>

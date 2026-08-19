@@ -10,23 +10,23 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_0}}" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_title}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_1}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_notificationMethod}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 SelectedIndex="{Binding Data.ConfigEntry.NoticeWay}"
                 SelectionChanged="SelectingItemsControl_OnSelectionChanged">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_2}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_3}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_bubble}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_card}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="15">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_4}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_notificationPermission}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <StackPanel Spacing="10">
@@ -35,7 +35,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_5}}" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_showSelectedAccount}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -46,7 +46,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_6}}" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_showDragDropTip}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -57,7 +57,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_7}}" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_showUpdateTip}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -67,7 +67,7 @@
         </StackPanel>
         <StackPanel Spacing="15">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_8}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_optional}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <StackPanel Spacing="10">
@@ -76,7 +76,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_9}}" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_showMinecraftNews}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -87,7 +87,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_10}}" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_notificationMethod0}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"

@@ -35,20 +35,20 @@
     </tio:TioWindow.Resources>
     <NativeMenu.Menu>
         <NativeMenu>
-            <NativeMenuItem Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_0}}">
+            <NativeMenuItem Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_tabs}}">
                 <NativeMenu>
-                    <NativeMenuItem Click="NM_NewTab" Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_1}}" />
+                    <NativeMenuItem Click="NM_NewTab" Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_newTab}}" />
                     <NativeMenuItem
                         Click="NM_CloseTab"
-                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_2}}"
+                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_closeTab}}"
                         IsEnabled="{Binding SelectedTab.IsCloseable}" />
                     <NativeMenuItem
                         Click="NM_CloseOtherTab"
-                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_3}}"
+                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_closeOtherTabs}}"
                         IsEnabled="{Binding Tabs.Count, Converter={StaticResource IntCompareConverter}, ConverterParameter='> 1'}" />
                     <NativeMenuItem
                         Click="NM_OpenInNewWindow"
-                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_4}}"
+                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_openInNewWindow}}"
                         IsEnabled="{Binding Tabs.Count, Converter={StaticResource IntCompareConverter}, ConverterParameter='> 1'}" />
                 </NativeMenu>
             </NativeMenuItem>

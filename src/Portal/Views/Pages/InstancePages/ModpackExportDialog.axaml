@@ -18,13 +18,13 @@
             <TextBlock
                 FontSize="16"
                 FontWeight="600"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_0}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_title}}" />
             <DockPanel>
                 <StackPanel
                     DockPanel.Dock="Right"
                     Margin="0,0,0,0"
                     Width="160">
-                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_1}}" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_packVersionLabel}}" />
                     <TextBox
                         MaxLength="100"
                         PlaceholderText="1.0.0"
@@ -33,7 +33,7 @@
 
 
                 <StackPanel DockPanel.Dock="Left" Margin="0,0,16,0">
-                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_2}}" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_packNameLabel}}" />
                     <TextBox
                         MaxLength="100"
                         PlaceholderText="{Binding DefaultPackName}"
@@ -54,7 +54,7 @@
                 FontSize="15"
                 FontWeight="SemiBold"
                 Margin="5,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_3}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_includedContent}}" />
             <Border
                 Background="{DynamicResource PureCardBackground}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -107,19 +107,19 @@
                 FontSize="15"
                 FontWeight="SemiBold"
                 Margin="5,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_4}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_advancedOptions}}" />
             <StackPanel
                 Margin="5,0,0,0"
                 Orientation="Vertical"
                 Spacing="4">
-                <CheckBox Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_5}}" IsChecked="{Binding BundleAllFiles, Mode=TwoWay}" />
+                <CheckBox Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_bundleAllFiles}}" IsChecked="{Binding BundleAllFiles, Mode=TwoWay}" />
                 <CheckBox
-                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_6}}"
+                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_modrinthOnly}}"
                     IsChecked="{Binding ModrinthOnly, Mode=TwoWay}"
                     IsEnabled="{Binding CanUseModrinthMode}" />
-                <CheckBox Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_7}}" IsChecked="{Binding IncludePortalSettings, Mode=TwoWay}" />
+                <CheckBox Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_includePortalSettings}}" IsChecked="{Binding IncludePortalSettings, Mode=TwoWay}" />
                 <CheckBox
-                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_8}}"
+                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_includePortalIcon}}"
                     IsChecked="{Binding IncludePortalIcon, Mode=TwoWay}"
                     IsEnabled="{Binding CanExportPortalIcon}" />
             </StackPanel>
@@ -128,8 +128,8 @@
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_9}}" />
-                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_10}}" />
+                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_cancel}}" />
+                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_packVersionLabel0}}" />
             </StackPanel>
         </StackPanel>
     </Grid>

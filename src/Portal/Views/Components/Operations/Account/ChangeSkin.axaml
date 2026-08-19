@@ -29,11 +29,11 @@
             <TextBlock
                 FontSize="12"
                 Foreground="{DynamicResource SukiMuteText}"
-                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_0}}" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_selectSkinFileLabel}}" />
             <tio:PathPicker
-                FileFilter="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_6}}"
+                FileFilter="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_fileFilter}}"
                 SelectedPathsText="{Binding SkinPath}"
-                Title="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_1}}"
+                Title="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_pathPickerTitle}}"
                 UsePickerType="OpenFile" />
         </StackPanel>
         <Border
@@ -54,7 +54,7 @@
         </Border>
         <DockPanel Grid.Row="3">
             <CheckBox
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_2}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_lockViewCheckBox}}"
                 DockPanel.Dock="Left"
                 IsChecked="{Binding IsViewLocked}"
                 IsCheckedChanged="OnIsViewLockedChanged"
@@ -65,12 +65,12 @@
                 IsVisible="{Binding IsPreview, Converter={x:Static BoolConverters.Not}}"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_3}}" />
-                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_4}}" />
+                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_cancelButton}}" />
+                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_confirmButton}}" />
             </StackPanel>
             <Button
                 Command="{Binding CancelCommand}"
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_5}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_closeButton}}"
                 HorizontalAlignment="Right"
                 IsVisible="{Binding IsPreview}"
                 Width="80" />

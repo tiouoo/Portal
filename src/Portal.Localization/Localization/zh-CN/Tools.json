@@ -1,11 +1,11 @@
 {
   "bedrocktoolspage": {
-    "0": "基岩版工具",
-    "1": "下载UWP游戏框架",
-    "2": "打开 MC Appx 的游戏框架下载页面",
-    "3": "检测 SDK 1.8 的安装",
-    "4": "检查 Windows App SDK 1.8 (8000.x) 的 Main、Singleton 和 DDLM 组件",
-    "5": "卸载本机已安装的 Minecraft",
-    "6": "移除从 Microsoft Store 安装的 Minecraft 基岩版"
+    "pageTitle": "基岩版工具",
+    "downloadFrameworkTitle": "下载UWP游戏框架",
+    "downloadFrameworkDescription": "打开 MC Appx 的游戏框架下载页面",
+    "checkSdkTitle": "检测 SDK 1.8 的安装",
+    "checkSdkDescription": "检查 Windows App SDK 1.8 (8000.x) 的 Main、Singleton 和 DDLM 组件",
+    "uninstallMinecraftTitle": "卸载本机已安装的 Minecraft",
+    "uninstallMinecraftDescription": "移除从 Microsoft Store 安装的 Minecraft 基岩版"
   }
 }

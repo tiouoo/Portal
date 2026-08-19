@@ -102,14 +102,14 @@
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_0}}"
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_importLocation}}"
                         TextTrimming="CharacterEllipsis" />
                     <TextBlock
                         DockPanel.Dock="Right"
                         FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding ViewModel.HasNoInstances}"
-                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_1}}"
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_noAvailableInstances}}"
                         TextTrimming="CharacterEllipsis" />
                 </DockPanel>
                 <ComboBox
@@ -135,7 +135,7 @@
                 <TextBlock
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_2}}" />
+                    Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_importWorldUser}}" />
                 <ComboBox
                     HorizontalAlignment="Stretch"
                     IsEnabled="{Binding !IsBusy}"
@@ -159,7 +159,7 @@
             Spacing="10">
             <Button
                 Click="Cancel_OnClick"
-                Content="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_3}}"
+                Content="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_cancel}}"
                 IsEnabled="{Binding !IsBusy}" />
             <tio:IconButton
                 Background="{DynamicResource SystemAccentColor}"

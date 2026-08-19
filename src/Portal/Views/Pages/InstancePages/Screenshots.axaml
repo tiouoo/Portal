@@ -15,7 +15,7 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_0}}"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_openFolder}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
@@ -24,7 +24,7 @@
                     FontSize="24"
                     Name="Title"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_1}}" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_title}}" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
@@ -35,13 +35,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_2}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_loading}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_3}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_empty}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding ScreenshotList}" Margin="0,0,10,0">
@@ -73,7 +73,7 @@
                                     <MenuFlyout>
                                         <MenuItem
                                             Click="CopyScreenshot_OnClick"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_4}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_copyImage}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
@@ -86,7 +86,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="OpenScreenshot_OnClick"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_5}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_openImage}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
@@ -99,7 +99,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="SaveScreenshotAs_OnClick"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_6}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_saveAs}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
@@ -113,7 +113,7 @@
                                         <Separator />
                                         <MenuItem
                                             Click="DeleteScreenshot_OnClick"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_7}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_deleteImage}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon

@@ -29,7 +29,7 @@
                     <Image Name="InstanceIcon" Source="{Binding Instance.Icons[72]}" />
                     <Border.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Click="SaveIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_0}}">
+                            <MenuItem Click="SaveIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_saveIconAs}}">
                                 <MenuItem.Icon>
                                     <PathIcon
                                         Data="F1 M640,640z M0,0z M128,128C128,92.7,156.7,64,192,64L341.5,64C358.5,64,374.8,70.7,386.8,82.7L493.3,189.3C505.3,201.3,512,217.6,512,234.6L512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,128z M336,122.5L336,216C336,229.3,346.7,240,360,240L453.5,240 336,122.5z M256,320C256,302.3 241.7,288 224,288 206.3,288 192,302.3 192,320 192,337.7 206.3,352 224,352 241.7,352 256,337.7 256,320z M220.6,512L419.4,512C435.2,512 448,499.2 448,483.4 448,476.1 445.2,469 440.1,463.7L343.3,361.9C337.3,355.6,328.9,352,320.1,352L319.8,352C311,352,302.7,355.6,296.6,361.9L199.9,463.7C194.8,469 192,476.1 192,483.4 192,499.2 204.8,512 220.6,512z"
@@ -37,7 +37,7 @@
                                         Width="16" />
                                 </MenuItem.Icon>
                             </MenuItem>
-                            <MenuItem Click="ChangeIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_1}}">
+                            <MenuItem Click="ChangeIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon}}">
                                 <MenuItem.Icon>
                                     <PathIcon
                                         Data="F1 M640,640z M0,0z M416.9,85.2L372,130.1 509.9,268 554.8,223.1C568.4,209.6 576,191.2 576,172 576,152.8 568.4,134.4 554.8,120.9L519.1,85.2C505.6,71.6 487.2,64 468,64 448.8,64 430.4,71.6 416.9,85.2z M338.1,164L122.9,379.1C112.2,389.8,104.4,403.2,100.3,417.8L64.9,545.6C62.6,553.9 64.9,562.9 71.1,569 77.3,575.1 86.2,577.5 94.5,575.2L222.3,539.7C236.9,535.6,250.2,527.9,261,517.1L476,301.9 338.1,164z"
@@ -45,7 +45,7 @@
                                         Width="16" />
                                 </MenuItem.Icon>
                             </MenuItem>
-                            <MenuItem Click="ResetIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_2}}">
+                            <MenuItem Click="ResetIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon}}">
                                 <MenuItem.Icon>
                                     <PathIcon
                                         Data="F1 M640,640z M0,0z M500.7,138.7L512,149.4 512,96C512,78.3 526.3,64 544,64 561.7,64 576,78.3 576,96L576,224C576,241.7,561.7,256,544,256L416,256C398.3,256 384,241.7 384,224 384,206.3 398.3,192 416,192L463.9,192 456.3,184.8C456.1,184.6 455.9,184.4 455.7,184.2 380.7,109.2 259.2,109.2 184.2,184.2 109.2,259.2 109.2,380.7 184.2,455.7 259.2,530.7 380.7,530.7 455.7,455.7 463.9,447.5 471.2,438.8 477.6,429.6 487.7,415.1 507.7,411.6 522.2,421.7 536.7,431.8 540.2,451.8 530.1,466.3 521.6,478.5 511.9,490.1 501,501 401,601 238.9,601 139,501 39.1,401 39,239 139,139 238.9,39.1 400.7,39 500.7,138.7z"
@@ -69,14 +69,14 @@
                             TextWrapping="NoWrap" />
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <DropDownButton
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_3}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_edit}}"
                                 Margin="0,0,10,0"
                                 x:Name="EditButton">
                                 <DropDownButton.Flyout>
                                     <MenuFlyout>
                                         <MenuItem
                                             Click="OpenInstanceFolder_Click"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_4}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_openInstanceFolder}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
@@ -87,7 +87,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="CreateLink_Click"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_5}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_createShortcut}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
@@ -98,7 +98,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="ModifyVersion_Click"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_6}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_modifyVersion}}"
                                             IsEnabled="{Binding Instance.CanModifyVersion}"
                                             IsVisible="{Binding Instance.CanModifyVersion}"
                                             Tag="{Binding}">
@@ -111,7 +111,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="RenameInstance_Click"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_7}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_renameInstance}}"
                                             IsEnabled="{Binding Instance.CanModifyVersion}"
                                             IsVisible="{Binding Instance.CanModifyVersion}"
                                             Tag="{Binding}">
@@ -124,7 +124,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="ExportModpack_Click"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_8}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_exportModpack}}"
                                             IsVisible="{Binding Instance.IsJava}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
@@ -136,7 +136,7 @@
                                         </MenuItem>
                                         <MenuItem
                                             Click="DeleteInstance_Click"
-                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_9}}"
+                                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_deleteInstance}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
                                                 <PathIcon
@@ -152,7 +152,7 @@
 
                             <Button
                                 Click="LaunchInstance_Click"
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_10}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon0}}"
                                 Margin="0,0,10,0"
                                 Width="97"
                                 x:Name="LaunchButton" />
@@ -191,22 +191,22 @@
                     ColumnSpacing="36"
                     Margin="12,0,12,0">
                     <tio:Descriptions LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_20}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon0}}">
                             <TextBlock TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
                                 <Run FontSize="24" Text="{Binding TotalPlayTime}" />
                             </TextBlock>
                         </tio:DescriptionsItem>
                     </tio:Descriptions>
                     <tio:Descriptions Grid.Column="1" LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_21}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon1}}">
                             <TextBlock TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
                                 <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
-                                <Run FontSize="24" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_11}}" />
+                                <Run FontSize="24" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon1}}" />
                             </TextBlock>
                         </tio:DescriptionsItem>
                     </tio:Descriptions>
                     <tio:Descriptions Grid.Column="2" LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_22}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon2}}">
                             <TextBlock
                                 FontSize="24"
                                 Text="{Binding Instance.DisplayLastPlayTime}"
@@ -215,7 +215,7 @@
                         </tio:DescriptionsItem>
                     </tio:Descriptions>
                     <tio:Descriptions Grid.Column="3" LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_23}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon3}}">
                             <TextBlock TextTrimming="LeadingCharacterEllipsis" TextWrapping="NoWrap">
                                 <Run FontSize="24" Text="{Binding Instance.ShortDisplay}" />
                             </TextBlock>
@@ -239,7 +239,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_12}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon2}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -288,7 +288,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_13}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon3}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -337,7 +337,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_14}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon4}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -386,7 +386,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_15}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon5}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -444,7 +444,7 @@
                             Tag="bedrock-resource-packs">
                             <StackPanel Margin="10" Spacing="4">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_13}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon3}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <TextBlock FontSize="24" Text="{Binding Instance.StorageUsage.ResourcePacksSizeText}" />
@@ -465,7 +465,7 @@
                             Tag="bedrock-behavior-packs">
                             <StackPanel Margin="10" Spacing="4">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_16}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon6}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <TextBlock FontSize="24" Text="{Binding Instance.StorageUsage.BehaviorPacksSizeText}" />
@@ -487,7 +487,7 @@
                             <StackPanel Margin="10" Spacing="4">
                                 <DockPanel LastChildFill="False">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_15}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon5}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
@@ -499,7 +499,7 @@
                                         MinWidth="96"
                                         Name="WorldUserIdSelector"
                                         SelectionChanged="WorldUserIdSelector_OnSelectionChanged"
-                                        ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_17}}" />
+                                        ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon7}}" />
                                 </DockPanel>
                                 <TextBlock FontSize="24" Text="{Binding Instance.StorageUsage.WorldsSizeText}" />
                                 <TextBlock
@@ -522,7 +522,7 @@
                             <TextBlock
                                 DockPanel.Dock="Left"
                                 FontSize="15"
-                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_18}}" />
+                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon8}}" />
                             <Button
                                 Click="ToggleChartDays_Click"
                                 DockPanel.Dock="Right"
@@ -534,7 +534,7 @@
                                 <TextBlock
                                     Foreground="{DynamicResource SystemAccentColor}"
                                     Name="Block"
-                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_19}}" />
+                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon9}}" />
                             </Button>
                         </DockPanel>
                         <instancePages:RecentPlayTimeChart

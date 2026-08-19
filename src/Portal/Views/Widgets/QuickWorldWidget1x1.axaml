@@ -56,7 +56,7 @@
                     HorizontalAlignment="Right"
                     Padding="2,-2,0,0"
                     Theme="{StaticResource TransparentButton}"
-                    ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickworldwidget1x1_0}}"
+                    ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickworldwidget1x1_quickJoinWorld}}"
                     VerticalAlignment="Bottom"
                     x:Name="LaunchButton">
                     <PathIcon

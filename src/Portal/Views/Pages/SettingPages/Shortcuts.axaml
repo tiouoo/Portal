@@ -16,12 +16,12 @@
         </Style>
     </UserControl.Styles>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_0}}" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_title}}" />
         <TextBox
             HorizontalAlignment="Stretch"
             Margin="0,0,0,-10"
             MaxWidth="560"
-            PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_1}}"
+            PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_searchPlaceholder}}"
             Text="{Binding SearchText}">
             <TextBox.InnerRightContent>
                 <PathIcon
@@ -36,7 +36,7 @@
             FontSize="12"
             Foreground="{DynamicResource InnerForegroundColor}"
             IsVisible="False"
-            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_2}}"
+            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_shortcutHint}}"
             TextWrapping="Wrap" />
         <ItemsControl ItemsSource="{Binding Categories}">
             <ItemsControl.ItemTemplate>
@@ -68,18 +68,18 @@
                                                     IsHitTestVisible="False"
                                                     IsVisible="{Binding IsEmpty}"
                                                     Margin="8,0,0,0"
-                                                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_3}}"
+                                                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_none}}"
                                                     VerticalAlignment="Center" />
                                             </Grid>
                                             <Button
                                                 Click="ResetOne_OnClick"
-                                                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_4}}"
+                                                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_resetToDefault}}"
                                                 Grid.Column="1"
                                                 IsVisible="{Binding IsNotDefault}"
                                                 Margin="6,0,0,0"
                                                 Padding="8,2"
                                                 Tag="{Binding}"
-                                                ToolTip.Tip="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_5}}"
+                                                ToolTip.Tip="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_resetToDefaultHint}}"
                                                 VerticalAlignment="Center" />
                                         </Grid>
                                     </Grid>
