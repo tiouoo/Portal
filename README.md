@@ -37,7 +37,7 @@
 | **Arch Linux / AUR**    | [portal-mc-bin](https://aur.archlinux.org/packages/portal-mc-bin)                                    | [portal-mc-commit-bin](https://aur.archlinux.org/packages/portal-mc-commit-bin)                                    | [portal-mc-nightly-bin](https://aur.archlinux.org/packages/portal-mc-nightly-bin)                                    |
 
 > [!NOTE]
-> Arch Linux 用户可以通过 [aur](https://aur.archlinux.org) 安装
+> 通过 [Aur](https://aur.archlinux.org) 安装
 >
 > ```bash
 > yay -S portal-mc-bin                  # 正式版
@@ -45,11 +45,7 @@
 > yay -S portal-mc-nightly-bin          # nightly 版本
 > ```
 >
-> 各版本相互冲突，同一时间只能安装其中一个
-
-> [!NOTE]
 > MacOS 首次打开 Portal 前，请先将 `Portal.app` 移动到“应用程序”文件夹，然后在终端运行以下命令：
->
 > ```bash
 > sudo xattr -rd com.apple.quarantine /Applications/Portal.app
 > ```
