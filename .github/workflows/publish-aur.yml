@@ -45,17 +45,16 @@ jobs:
         env:
           AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
-      - name: Download AppImage
+      - name: Download AppImage & compute sha256
         run: |
           cd "$GITHUB_WORKSPACE"
-          if [ "${{ inputs.moving_tag }}" = "true" ]; then
-            ASSET="Portal.linux.x64.${{ inputs.app_version }}.AppImage"
-          else
-            ASSET="Portal.linux.x64.AppImage"
-          fi
           curl -fL -o Portal.AppImage \
-            "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/${ASSET}"
-          echo "sha=$(sha256sum Portal.AppImage | cut -d' ' -f1)" >> $GITHUB_ENV
+            "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/Portal.linux.x64.AppImage"
+          if [ "${{ inputs.moving_tag }}" = "false" ]; then
+            echo "sha=$(sha256sum Portal.AppImage | cut -d' ' -f1)" >> $GITHUB_ENV
+          else
+            echo "sha=SKIP" >> $GITHUB_ENV
+          fi
 
       - name: Init / fetch AUR repo
         env:
@@ -80,9 +79,10 @@ jobs:
           sed -i "s|^pkgver=.*|pkgver=${{ inputs.app_version }}|" PKGBUILD
           if [ "${{ inputs.moving_tag }}" = "true" ]; then
             sed -i "s|^_appimg=\"Portal.AppImage\"|_appimg=\"Portal-${{ inputs.app_version }}.AppImage\"|" PKGBUILD
-            sed -i "s|Portal.linux.x64.AppImage|Portal.linux.x64.${{ inputs.app_version }}.AppImage|" PKGBUILD
           fi
-          sed -i "s|^sha256sums_x86_64=.*|sha256sums_x86_64=('${{ env.sha }}' 'SKIP')|" PKGBUILD
+          if [ "${{ inputs.moving_tag }}" = "false" ]; then
+            sed -i "s|^sha256sums_x86_64=.*|sha256sums_x86_64=('${{ env.sha }}' 'SKIP')|" PKGBUILD
+          fi
 
       - name: Generate .SRCINFO (non-root)
         run: |
