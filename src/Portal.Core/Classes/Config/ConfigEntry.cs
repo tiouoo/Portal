@@ -121,12 +121,6 @@ public partial class ConfigEntry : ObservableObject
             case nameof(MinecraftFileSource):
                 DownloadManager.MinecraftFileSource = MinecraftFileSource;
                 break;
-            case nameof(ModrinthSource):
-                DownloadManager.ModrinthSource = ModrinthSource;
-                break;
-            case nameof(CurseForgeSource):
-                DownloadManager.CurseForgeSource = CurseForgeSource;
-                break;
             case nameof(DownloadMaxThreadCount):
                 DownloadManager.MaxThread = DownloadMaxThreadCount;
                 break;

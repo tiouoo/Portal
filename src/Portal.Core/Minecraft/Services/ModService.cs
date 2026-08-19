@@ -215,21 +215,32 @@ public sealed class ModService
     private static async Task FetchBatchAsync((ModInfo Mod, string Sha1, uint? Fingerprint)[] batch,
         Func<string, string?>? findFriendlyName, Action<ModInfo> metadataUpdated, CancellationToken cancellationToken)
     {
-        var entries = await FetchModrinthMetadataBatchAsync(batch.Select(item => item.Sha1), cancellationToken);
-        var missing = batch.Where(item => !entries.ContainsKey(item.Sha1) && item.Fingerprint.HasValue)
+        var fingerprinted = batch.Where(item => item.Fingerprint.HasValue)
             .Select(item => item.Fingerprint!.Value).ToArray();
-        var curseForgeEntries = missing.Length == 0 || CredentialsService.CurseForgeApiKey is null
-            ? []
-            : await FetchMetadataBatchAsync(missing, cancellationToken);
+        var curseForgeEntries = fingerprinted.Length == 0 || CredentialsService.CurseForgeApiKey is null
+            ? new Dictionary<uint, ModCacheEntry?>()
+            : await FetchMetadataBatchAsync(fingerprinted, cancellationToken);
 
-        await TranslateEntriesAsync(entries.Values.Concat(curseForgeEntries.Values).OfType<ModCacheEntry>(),
+        var missingSha1 = batch.Where(item =>
+                !(item.Fingerprint is { } fingerprint &&
+                  curseForgeEntries.TryGetValue(fingerprint, out var matched) && matched is not null))
+            .Select(item => item.Sha1).ToArray();
+        var modrinthEntries = missingSha1.Length == 0
+            ? new Dictionary<string, ModCacheEntry>(StringComparer.OrdinalIgnoreCase)
+            : await FetchModrinthMetadataBatchAsync(missingSha1, cancellationToken);
+
+        await TranslateEntriesAsync(curseForgeEntries.Values.Concat(modrinthEntries.Values).OfType<ModCacheEntry>(),
             cancellationToken);
 
         foreach (var item in batch)
         {
-            entries.TryGetValue(item.Sha1, out var entry);
-            if (entry == null && item.Fingerprint is { } fingerprint)
-                curseForgeEntries.TryGetValue(fingerprint, out entry);
+            ModCacheEntry? entry = null;
+            if (item.Fingerprint is { } fingerprint &&
+                curseForgeEntries.TryGetValue(fingerprint, out var curseForgeEntry) &&
+                curseForgeEntry is not null)
+                entry = curseForgeEntry;
+            if (entry == null)
+                modrinthEntries.TryGetValue(item.Sha1, out entry);
             var cached = (entry ?? CreateLocalCacheEntry(item.Mod)) with
             {
                 FriendlyName = null,

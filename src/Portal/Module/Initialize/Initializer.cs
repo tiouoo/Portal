@@ -42,8 +42,6 @@ public static partial class Initializer
             MaxRetryCount = Data.ConfigEntry.DownloadMaxRetryCount,
             MinecraftMetadataSource = Data.ConfigEntry.MinecraftMetadataSource,
             MinecraftFileSource = Data.ConfigEntry.MinecraftFileSource,
-            ModrinthSource = Data.ConfigEntry.ModrinthSource,
-            CurseForgeSource = Data.ConfigEntry.CurseForgeSource,
             IsEnableFragment = Data.ConfigEntry.EnableFragmentDownload
         });
         Logger.Info("应用服务初始化完成");

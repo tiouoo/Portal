@@ -22,8 +22,6 @@ public static class MinecraftCoreInitializer
             settings.MaxRetryCount = options.MaxRetryCount;
             settings.MinecraftMetadataSource = options.MinecraftMetadataSource;
             settings.MinecraftFileSource = options.MinecraftFileSource;
-            settings.ModrinthSource = options.ModrinthSource;
-            settings.CurseForgeSource = options.CurseForgeSource;
             settings.IsEnableFragment = options.IsEnableFragment;
             settings.CurseForgeApiKey = CredentialsService.CurseForgeApiKey;
             settings.UserAgent = $"Portal/{options.AppVersion}";
@@ -56,7 +54,5 @@ public class MinecraftCoreInitializeOptions
     public int MaxRetryCount { get; set; } = 4;
     public DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
     public DownloadSourceMode MinecraftFileSource { get; set; } = DownloadSourceMode.Auto;
-    public DownloadSourceMode ModrinthSource { get; set; } = DownloadSourceMode.Auto;
-    public DownloadSourceMode CurseForgeSource { get; set; } = DownloadSourceMode.Auto;
     public bool IsEnableFragment { get; set; } = false;
 }

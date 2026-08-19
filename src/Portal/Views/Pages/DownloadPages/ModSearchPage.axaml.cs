@@ -80,7 +80,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     public ModSearchPageViewModel()
     {
-        SelectedSource = Sources[1];
+        SelectedSource = Sources[0];
         SelectedLoader = Loaders[0];
         SelectedSort = SortOptions[0];
     }
