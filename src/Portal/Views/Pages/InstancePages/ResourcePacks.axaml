@@ -201,7 +201,7 @@
                                                 Width="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <Separator />
+                                    <Separator IsVisible="{Binding HasDetails}" />
                                     <MenuItem
                                         Click="OpenResourcePackFolder_OnClick"
                                         Header="在文件夹中打开"

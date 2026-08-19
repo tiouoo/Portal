@@ -104,15 +104,6 @@
                     <MenuFlyout>
                         <MenuItem
                             Classes="hide-icon"
-                            Click="EnableSelected_OnClick"
-                            Header="启用所选光影包" />
-                        <MenuItem
-                            Classes="hide-icon"
-                            Click="DisableSelected_OnClick"
-                            Header="禁用所选光影包" />
-                        <Separator />
-                        <MenuItem
-                            Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
                             Header="删除所选光影包" />
                     </MenuFlyout>
@@ -180,30 +171,6 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
-                                        Click="EnableShaderPack_OnClick"
-                                        Header="启用光影包"
-                                        IsVisible="{Binding IsDisabled}"
-                                        Tag="{Binding}">
-                                        <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="F1 M640,640z M0,0z M431.2,476.5L163.5,208.8C141.1,240.2 128,278.6 128,320 128,426 214,512 320,512 361.5,512 399.9,498.9 431.2,476.5z M476.5,431.2C498.9,399.8 512,361.4 512,320 512,214 426,128 320,128 278.5,128 240.1,141.1 208.8,163.5L476.5,431.2z M64,320C64,178.6 178.6,64 320,64 461.4,64 576,178.6 576,320 576,461.4 461.4,576 320,576 178.6,576 64,461.4 64,320z"
-                                                Height="16"
-                                                Width="16" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem
-                                        Click="DisableShaderPack_OnClick"
-                                        Header="禁用光影包"
-                                        IsVisible="{Binding IsEnabled}"
-                                        Tag="{Binding}">
-                                        <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="F1 M640,640z M431.2,476.5L163.5,208.8C141.1,240.2 128,278.6 128,320 128,426 214,512 320,512 361.5,512 399.9,498.9 431.2,476.5z M476.5,431.2C498.9,399.8 512,361.4 512,320 512,214 426,128 320,128 278.5,128 240.1,141.1 208.8,163.5L476.5,431.2z M64,320C64,178.6 178.6,64 320,64 461.4,64 576,178.6 576,320 576,461.4 461.4,576 320,576 178.6,576 64,461.4 64,320z"
-                                                Height="16"
-                                                Width="16" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem
                                         Click="UpdateShaderPack_OnClick"
                                         Header="更新"
                                         IsVisible="{Binding IsUpdatable}"
@@ -239,7 +206,7 @@
                                                 Width="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <Separator />
+                                    <Separator IsVisible="{Binding HasIdentity}" />
                                     <MenuItem
                                         Click="OpenShaderPackFolder_OnClick"
                                         Header="在文件夹中打开"
@@ -273,19 +240,6 @@
                                 CornerRadius="10"
                                 Padding="14">
                                 <DockPanel>
-                                    <Border
-                                        Background="#A8643030"
-                                        CornerRadius="4"
-                                        DockPanel.Dock="Bottom"
-                                        HorizontalAlignment="Left"
-                                        IsVisible="{Binding IsDisabled}"
-                                        Margin="3,6,0,0"
-                                        Padding="6,1">
-                                        <TextBlock
-                                            FontSize="11"
-                                            Foreground="White"
-                                            Text="已禁用" />
-                                    </Border>
                                     <Border
                                         Background="{DynamicResource SystemAccentColor}"
                                         CornerRadius="4"

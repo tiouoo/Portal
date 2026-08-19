@@ -45,8 +45,6 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
         DataContext = this;
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("可更新", 0)));
 
         KeyBindings.Add(new KeyBinding
@@ -124,13 +122,7 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     {
         if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
             return;
-        _filterMode = combo.SelectedIndex switch
-        {
-            1 => ResourceFilterMode.Enabled,
-            2 => ResourceFilterMode.Disabled,
-            3 => ResourceFilterMode.CanUpdate,
-            _ => ResourceFilterMode.All
-        };
+        _filterMode = combo.SelectedIndex == 1 ? ResourceFilterMode.CanUpdate : ResourceFilterMode.All;
         ApplyFilter();
     }
 
@@ -172,8 +164,6 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     {
         return _filterMode switch
         {
-            ResourceFilterMode.Enabled => item.IsEnabled,
-            ResourceFilterMode.Disabled => item.IsDisabled,
             ResourceFilterMode.CanUpdate => item.HasUpdate,
             _ => true
         };
@@ -192,12 +182,10 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
 
     private void RefreshFilterOptions()
     {
-        while (FilterOptions.Count < 4)
+        while (FilterOptions.Count < 2)
             FilterOptions.Add(new ResourceFilterOption(""));
         FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
-        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("启用", Items.Count(item => item.IsEnabled));
-        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel("禁用", Items.Count(item => item.IsDisabled));
-        FilterOptions[3].Label = ResourceListUi.BuildFilterLabel("可更新", Items.Count(item => item.HasUpdate));
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("可更新", Items.Count(item => item.HasUpdate));
     }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -300,38 +288,6 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
             await RunSelectedFileActionAsync(selected, item => File.Delete(item.FilePath), "删除");
-    }
-
-    private async void EnableSelected_OnClick(object? sender, RoutedEventArgs e)
-    {
-        await SetDisabledAsync(GetSelectedItems(), false);
-    }
-
-    private async void DisableSelected_OnClick(object? sender, RoutedEventArgs e)
-    {
-        await SetDisabledAsync(GetSelectedItems(), true);
-    }
-
-    private async void EnableShaderPack_OnClick(object? sender, RoutedEventArgs e)
-    {
-        await SetDisabledAsync(GetShaderPackItem(sender) is { } item ? [item] : [], false);
-    }
-
-    private async void DisableShaderPack_OnClick(object? sender, RoutedEventArgs e)
-    {
-        await SetDisabledAsync(GetShaderPackItem(sender) is { } item ? [item] : [], true);
-    }
-
-    private async Task SetDisabledAsync(IEnumerable<ShaderPackItem> items, bool disabled)
-    {
-        var selected = items.Where(item => item.IsDisabled != disabled).ToArray();
-        if (selected.Length == 0) return;
-        await RunSelectedFileActionAsync(selected, item =>
-        {
-            var destination = disabled ? item.FilePath + ".disabled" : item.FilePath[..^".disabled".Length];
-            if (File.Exists(destination)) throw new IOException("目标光影包已存在。");
-            File.Move(item.FilePath, destination);
-        }, disabled ? "禁用" : "启用");
     }
 
     private void ShowShaderPackDetails_OnClick(object? sender, RoutedEventArgs e)
@@ -614,8 +570,6 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
     public long FileSize { get; } = ReadFileSize(filePath);
     public DateTime LastWriteTime { get; } = ReadLastWriteTime(filePath);
     public string SizeAndNameText => $"{ResourceListUi.FormatSize(FileSize)}·{FileName}";
-    public bool IsDisabled => FilePath.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase);
-    public bool IsEnabled => !IsDisabled;
 
     public ResourceUpdateResult? UpdateResult => _updateResult;
     public bool HasUpdate => _updateResult?.HasUpdate == true;

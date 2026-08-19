@@ -248,7 +248,7 @@
                                                 Width="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <Separator />
+                                    <Separator IsVisible="{Binding HasIdentity}" />
                                     <MenuItem
                                         Click="OpenModFolder_OnClick"
                                         Header="在文件夹中打开"
