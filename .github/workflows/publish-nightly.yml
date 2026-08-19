@@ -359,7 +359,7 @@ jobs:
     needs: [prepare, publish]
     uses: ./.github/workflows/publish-aur.yml
     with:
-      pkgname: portal-nightly-bin
+      pkgname: portal-mc-nightly-bin
       tag: publish-nightly
       app_version: ${{ needs.prepare.outputs.app_version }}
       moving_tag: true

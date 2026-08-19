@@ -400,7 +400,7 @@ jobs:
     needs: [prepare, publish]
     uses: ./.github/workflows/publish-aur.yml
     with:
-      pkgname: portal-bin
+      pkgname: portal-mc-bin
       tag: ${{ needs.prepare.outputs.tag }}
       app_version: ${{ needs.prepare.outputs.version }}
     secrets:

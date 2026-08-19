@@ -1,19 +1,19 @@
 # Maintainer: tiouoo <tiouo@qq.com>
 
-pkgname=portal-nightly-bin
+pkgname=portal-mc-commit-bin
 pkgver=0.0.0.0
 pkgrel=1
-pkgdesc="Portal - Minecraft launcher/manager (nightly build)"
+pkgdesc="Portal - Minecraft launcher/manager (commit build, prerelease)"
 arch=('x86_64')
 url="https://portal.tiouo.cc/"
 license=('GPL-3.0-or-later')
 depends=('fuse2' 'hicolor-icon-theme' 'xdg-utils')
-provides=("portal=$pkgver")
-conflicts=('portal' 'portal-commit-bin' 'portal-bin')
+provides=("portal-mc=$pkgver")
+conflicts=('portal-mc' 'portal-mc-nightly-bin' 'portal-mc-bin')
 options=('!strip' '!emptydirs')
 _appimg="Portal.AppImage"
 source_x86_64=(
-    "$_appimg::https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.AppImage"
+    "$_appimg::https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.AppImage"
     "portal.png::https://portal.tiouo.cc/portal-logo.png"
 )
 sha256sums_x86_64=('SKIP' 'SKIP')

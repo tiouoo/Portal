@@ -34,9 +34,21 @@
 | **macOS Apple Silicon** | [磁盘映像](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.arm64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.app.zip) |
 | **macOS Intel**         | [磁盘映像](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.x64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.app.zip) |
 | **Linux x64**           | [AppImage](https://github.com/tiouoo/Portal/releases/latest/download/Portal.linux.x64.AppImage) / [deb包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.linux.x64.deb) / [rpm包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.linux.x64.rpm) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.AppImage) / [deb包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.deb) / [rpm包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.rpm) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.AppImage) / [deb包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.deb) / [rpm包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.rpm) |
+| **Arch Linux / AUR**    | [portal-mc-bin](https://aur.archlinux.org/packages/portal-mc-bin)                                    | [portal-mc-commit-bin](https://aur.archlinux.org/packages/portal-mc-commit-bin)                                    | [portal-mc-nightly-bin](https://aur.archlinux.org/packages/portal-mc-nightly-bin)                                    |
 
 > [!NOTE]
-> macOS 首次打开 Portal 前，请先将 `Portal.app` 移动到“应用程序”文件夹，然后在终端运行以下命令：
+> Arch Linux 用户可以通过 [aur](https://aur.archlinux.org) 安装
+>
+> ```bash
+> yay -S portal-mc-bin                  # 正式版
+> yay -S portal-mc-commit-bin           # commit 版本
+> yay -S portal-mc-nightly-bin          # nightly 版本
+> ```
+>
+> 各版本相互冲突，同一时间只能安装其中一个
+
+> [!NOTE]
+> MacOS 首次打开 Portal 前，请先将 `Portal.app` 移动到“应用程序”文件夹，然后在终端运行以下命令：
 >
 > ```bash
 > sudo xattr -rd com.apple.quarantine /Applications/Portal.app
