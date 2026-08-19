@@ -219,22 +219,44 @@ public sealed class ResourceUpdateService
             if (resolvedPaths.Contains(item.Candidate.FilePath))
                 continue;
             if (item.Fingerprint is { } fingerprint && curseForgeIdentity.TryGetValue(fingerprint, out var identity))
+            {
+                CacheCurseForgeIdentity(fingerprint, item.Sha1, identity);
                 output.Add((item.Candidate, item.Sha1, item.Fingerprint, "CurseForge",
                     identity.ProjectId.ToString(), identity.FileId?.ToString()));
+            }
             else
                 output.Add((item.Candidate, item.Sha1, item.Fingerprint, null, null, null));
         }
 
         foreach (var item in pendingCurseForgeVersion)
         {
+            var fileId = item.Fingerprint is { } fingerprint &&
+                         curseForgeIdentity.TryGetValue(fingerprint, out var identity)
+                ? identity.FileId
+                : null;
+            if (item.Fingerprint is { } cacheFingerprint && curseForgeIdentity.TryGetValue(cacheFingerprint, out var curseForgeIdentityValue))
+                CacheCurseForgeIdentity(cacheFingerprint, item.Sha1, curseForgeIdentityValue);
             output.Add((item.Candidate, item.Sha1, item.Fingerprint, "CurseForge",
-                item.Candidate.ProjectId,
-                item.Fingerprint is { } fingerprint && curseForgeIdentity.TryGetValue(fingerprint, out var identity)
-                    ? identity.FileId?.ToString()
-                    : null));
+                item.Candidate.ProjectId, fileId?.ToString()));
         }
 
         return output.ToArray();
+    }
+
+    private static void CacheCurseForgeIdentity(uint fingerprint, string? sha1,
+        (int ProjectId, int? FileId) identity)
+    {
+        var entry = new ModCacheEntry
+        {
+            MetadataFetched = true,
+            Source = "CurseForge",
+            ProjectId = identity.ProjectId,
+            FileId = identity.FileId
+        };
+        if (sha1 is null)
+            CacheDatabase.WriteMod(fingerprint, entry);
+        else
+            CacheDatabase.WriteMod(fingerprint, sha1, entry);
     }
 
     private static async Task<Dictionary<string, (string ProjectId, string VersionId)>>
