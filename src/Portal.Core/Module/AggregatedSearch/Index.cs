@@ -5,7 +5,7 @@ using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 
 namespace Portal.Core.Module.AggregatedSearch;
 

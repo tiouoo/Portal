@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 

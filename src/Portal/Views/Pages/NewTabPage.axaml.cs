@@ -12,7 +12,6 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Core.Services;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using Portal.Views.Pages.InstancePages;

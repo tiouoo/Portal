@@ -3,7 +3,6 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Portal.Bedrock.Standard.Interface;
-using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;

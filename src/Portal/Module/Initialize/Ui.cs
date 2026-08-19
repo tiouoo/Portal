@@ -11,6 +11,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Module.Multiplayer;
 using Portal.Core.Module.Update;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Services;
 using Portal.Core.Services.SystemResources;
 using Portal.Services;

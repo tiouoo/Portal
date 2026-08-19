@@ -5,7 +5,7 @@ using Avalonia.Platform.Storage;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.ViewModels;
 using Portal.Views.Components.Operations.OpenFile;
 using Portal.Views.Pages.DownloadPages;

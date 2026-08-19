@@ -2,7 +2,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Modpack;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public static class InstanceModpackExportService
 {

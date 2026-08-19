@@ -7,7 +7,7 @@ using MinecraftLaunch.Base.Models.Network;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Module.AggregatedSearch;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Standard.Ui;
 using Tio.Avalonia.Standard.Tab.Interface;

@@ -9,7 +9,7 @@ using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Models;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Module.Imaging;
 using TioUi.Common;
 using TioUi.Common.Extensions;

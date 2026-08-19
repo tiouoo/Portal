@@ -17,7 +17,6 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Minecraft.Services;
-using Portal.Core.Services;
 using Portal.Core.Services.SystemResources;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;

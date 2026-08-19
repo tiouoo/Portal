@@ -5,11 +5,10 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.App.Helpers;
-using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.ViewModels;

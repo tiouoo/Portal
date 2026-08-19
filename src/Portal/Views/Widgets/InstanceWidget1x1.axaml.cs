@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Portal.Core.Minecraft;
 using Portal.Core.Module.Widgets;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Views.Pages;
 
 namespace Portal.Views.Widgets;

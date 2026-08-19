@@ -13,7 +13,6 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
-using Portal.Core.Services;
 using Portal.Module.Imaging;
 using SkiaSharp;
 using Tio.Avalonia.Standard.Tab.Gateway;

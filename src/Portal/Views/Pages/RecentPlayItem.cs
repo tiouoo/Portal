@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Portal.Core.Minecraft.Classes;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Views.Widgets;
 
 namespace Portal.Views.Pages;

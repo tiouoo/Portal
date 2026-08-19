@@ -1,10 +1,10 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
 

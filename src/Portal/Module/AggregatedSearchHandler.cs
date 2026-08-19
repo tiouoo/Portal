@@ -4,7 +4,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Views.Components.Operations.Account;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;

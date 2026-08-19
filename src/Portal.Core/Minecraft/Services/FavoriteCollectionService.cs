@@ -3,7 +3,7 @@ using Portal.Core.Const;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Models;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public enum FavoriteEdition
 {

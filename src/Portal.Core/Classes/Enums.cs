@@ -1,14 +1,5 @@
 namespace Portal.Core.Classes;
 
-public enum InstanceSortType
-{
-    Name,
-    PlayTime,
-    FolderName,
-    Loader,
-    Version
-}
-
 public enum FilePicker
 {
     System,

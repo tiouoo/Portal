@@ -6,7 +6,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public sealed class RecentPlayListService
 {

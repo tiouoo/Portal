@@ -1,12 +1,13 @@
-﻿using MinecraftLaunch.Base.Models.Authentication;
+using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Components.Provider;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public static class AccountRefresher
 {

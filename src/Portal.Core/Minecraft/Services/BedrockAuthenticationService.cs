@@ -1,9 +1,9 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Portal.Core.Minecraft.Classes;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public sealed class BedrockAuthenticationService
 {

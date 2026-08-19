@@ -6,7 +6,7 @@ using Portal.Core.Minecraft.Instance;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public static class InstanceRenameService
 {

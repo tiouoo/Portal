@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Views.Pages;
 
 namespace Portal.ViewModels;

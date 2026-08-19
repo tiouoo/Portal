@@ -7,7 +7,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Initialize;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.ViewModels;
 using Portal.Views.Components.Operations.Account;
 using Tio.Avalonia.Standard.Tab.Extensions;

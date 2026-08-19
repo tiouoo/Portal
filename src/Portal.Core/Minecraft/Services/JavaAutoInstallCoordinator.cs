@@ -9,7 +9,7 @@ using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public static class JavaAutoInstallCoordinator
 {

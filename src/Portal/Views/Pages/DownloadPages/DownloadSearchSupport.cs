@@ -5,7 +5,7 @@ using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Provider;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 

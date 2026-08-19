@@ -3,7 +3,7 @@ using System.Text.Json;
 using Avalonia.Platform;
 using MinecraftLaunch.Base.Models.Network;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public static class UnlistedVersions
 {

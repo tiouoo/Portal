@@ -6,7 +6,6 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Widgets;
-using Portal.Core.Services;
 using Portal.Views.Pages;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;

@@ -15,7 +15,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Module;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;

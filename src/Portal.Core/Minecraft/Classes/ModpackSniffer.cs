@@ -2,7 +2,7 @@ using MinecraftLaunch.Components.Installer.Modpack;
 using Portal.Core.Minecraft.Models;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.Classes;
+namespace Portal.Core.Minecraft.Classes;
 
 public static class ModpackSniffer
 {

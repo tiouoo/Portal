@@ -7,7 +7,7 @@ using Avalonia.VisualTree;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Views.Pages;
 using TioUi.Common.Extensions;
 

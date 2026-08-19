@@ -3,7 +3,7 @@ using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
-namespace Portal.Core.Classes;
+namespace Portal.Core.Minecraft.Classes;
 
 public static class ModDependencyFilter
 {

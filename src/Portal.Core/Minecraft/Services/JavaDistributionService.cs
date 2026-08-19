@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Net.Http.Headers;
@@ -13,7 +13,7 @@ using MinecraftLaunch.Utilities;
 using Portal.Core.Minecraft.Instance.Java;
 using SharpCompress.Compressors.Xz;
 
-namespace Portal.Core.Services;
+namespace Portal.Core.Minecraft.Services;
 
 public sealed record JavaDistribution(string Vendor, string Product, IReadOnlyList<JavaDistributionVersion> Versions)
 {

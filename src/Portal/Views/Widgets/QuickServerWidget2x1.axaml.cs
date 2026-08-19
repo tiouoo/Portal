@@ -5,7 +5,7 @@ using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
-using Portal.Core.Services;
+using Portal.Core.Minecraft.Services;
 using Portal.Views.Pages;
 
 namespace Portal.Views.Widgets;
