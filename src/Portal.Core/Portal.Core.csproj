@@ -30,6 +30,7 @@
     <ItemGroup>
         <PackageReference Include="Hardware.Info"/>
         <PackageReference Include="HtmlAgilityPack"/>
+        <PackageReference Include="Irihi.Lingua"/>
         <PackageReference Include="Microsoft.Data.Sqlite.Core"/>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
         <PackageReference Include="fNbt"/>
@@ -38,6 +39,10 @@
         <PackageReference Include="SharpCompress"/>
         <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3"/>
         <PackageReference Include="Tmds.DBus"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="Localization\**\*.json"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -60,13 +65,12 @@
         <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\module\TioUi.Avalonia\src\TioUi\TioUi.csproj"/>
         <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\src\Tio.Avalonia.Standard.Tab\Tio.Avalonia.Standard.Tab.csproj"/>
         <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj"/>
+        <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
+    </ItemGroup>    <ItemGroup>
 
         <None Remove="Assets\McIcons\**\*"/>
         <EmbeddedResource Include="Assets\McIcons\**\*"/>

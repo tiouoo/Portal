@@ -18,10 +18,10 @@
         <converter:BackgroundModeCompareConverter x:Key="BackgroundModeCompareConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_title}}" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_title}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_language}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_language}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <lingua:CulturePicker
@@ -31,7 +31,7 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeStyle}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeStyle}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ListBox Name="ListBox" Theme="{DynamicResource BorderListBox}">
@@ -44,7 +44,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeSystem}}" />
+                        <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeSystem}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -56,7 +56,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeLight}}" />
+                        <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeLight}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -68,7 +68,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeDark}}" />
+                        <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeDark}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -80,7 +80,7 @@
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Width="16" />
-                        <TextBlock Text="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeMirage}}" />
+                        <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeMirage}}" />
                     </StackPanel>
                 </ListBoxItem>
             </ListBox>
@@ -88,7 +88,7 @@
         <StackPanel Spacing="5">
             <Panel>
                 <Label
-                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_themeColor}}"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeColor}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
                     HorizontalAlignment="Left" />
@@ -112,7 +112,7 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                     <Label
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_appScale}}"
+                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_appScale}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         HorizontalAlignment="Left" />
@@ -150,13 +150,13 @@
                     VerticalAlignment="Center">
                     <HyperlinkButton
                         Click="ApplyScale_OnClick"
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_applyChanges}}"
+                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_applyChanges}}"
                         FontSize="13"
                         Name="ApplyScaleButton"
                         Theme="{StaticResource TransparentHyperlinkButton}" />
                     <HyperlinkButton
                         Click="CustomScale_OnClick"
-                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_customScale}}"
+                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_customScale}}"
                         FontSize="13"
                         Theme="{StaticResource TransparentHyperlinkButton}" />
                 </StackPanel>
@@ -181,17 +181,17 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundStyle}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundStyle}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}}">
-                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundDefault}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundImage}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundSolidColor}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundAcrylic}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundDefault}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundImage}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundSolidColor}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundAcrylic}}" />
 
-                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundMica}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:PagesLanguageManager+Keys.pages_appearance_backgroundTransparent}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundMica}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundTransparent}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='SolidColor'}" Spacing="5">

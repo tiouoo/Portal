@@ -1,0 +1,22 @@
+{
+  "appearance": {
+    "title": "界面外观",
+    "themeStyle": "主题样式",
+    "themeSystem": "系统",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeMirage": "幻影",
+    "themeColor": "主题色",
+    "appScale": "应用缩放",
+    "applyChanges": "应用更改",
+    "customScale": "自定义缩放",
+    "backgroundStyle": "背景风格",
+    "backgroundDefault": "默认主题",
+    "backgroundImage": "图片",
+    "backgroundSolidColor": "纯色",
+    "backgroundAcrylic": "亚克力",
+    "backgroundMica": "云母",
+    "backgroundTransparent": "透明",
+    "language": "语言"
+  }
+}

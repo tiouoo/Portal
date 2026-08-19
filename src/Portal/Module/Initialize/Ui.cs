@@ -25,6 +25,7 @@ using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Common;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Helpers;
+using TioUi.Common.Language;
 using OverlayWindow = Portal.Views.OverlayWindow;
 
 namespace Portal.Module.Initialize;
@@ -36,8 +37,16 @@ public static partial class Initializer
         LocalizationService.Register(CommonLanguageManager.Instance);
         LocalizationService.Register(LogLanguageManager.Instance);
         LocalizationService.Register(AppLanguageManager.Instance);
-        LocalizationService.Register(PagesLanguageManager.Instance);
         LocalizationService.Register(WidgetsLanguageManager.Instance);
+
+        LocalizationService.CultureChanged += culture =>
+        {
+            var language = culture.Name.StartsWith("en", StringComparison.OrdinalIgnoreCase)
+                ? Languages.en_us
+                : Languages.zh_cn;
+            LangManager.SetLanguage(language);
+        };
+
         LocalizationService.SetCulture(CultureInfo.GetCultureInfo(Data.ConfigEntry.Language));
 
         ThemeHelper.SetThemeColor(Data.ConfigEntry.ThemeColor);
