@@ -79,6 +79,7 @@ jobs:
           cp "$GITHUB_WORKSPACE/packaging/aur/${{ inputs.pkgname }}.PKGBUILD" PKGBUILD
           sed -i "s|^pkgver=.*|pkgver=${{ inputs.app_version }}|" PKGBUILD
           if [ "${{ inputs.moving_tag }}" = "true" ]; then
+            sed -i "s|^_appimg=\"Portal.AppImage\"|_appimg=\"Portal-${{ inputs.app_version }}.AppImage\"|" PKGBUILD
             sed -i "s|Portal.linux.x64.AppImage|Portal.linux.x64.${{ inputs.app_version }}.AppImage|" PKGBUILD
           fi
           sed -i "s|^sha256sums_x86_64=.*|sha256sums_x86_64=('${{ env.sha }}' 'SKIP')|" PKGBUILD
