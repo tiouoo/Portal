@@ -12,6 +12,11 @@ on:
       app_version:
         required: true
         type: string
+      moving_tag:
+        description: "标记 release 标签是否为移动标签（commit/nightly），移动标签的 AppImage 校验和无法固定，使用 SKIP"
+        required: false
+        type: boolean
+        default: false
     secrets:
       AUR_SSH_PRIVATE_KEY:
         required: true
@@ -40,12 +45,16 @@ jobs:
         env:
           AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
-      - name: Download AppImage & compute sha256
+      - name: Download AppImage
         run: |
           cd "$GITHUB_WORKSPACE"
           curl -fL -o Portal.AppImage \
             "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/Portal.linux.x64.AppImage"
-          echo "sha=$(sha256sum Portal.AppImage | cut -d' ' -f1)" >> $GITHUB_ENV
+          if [ "${{ inputs.moving_tag }}" = "false" ]; then
+            echo "sha=$(sha256sum Portal.AppImage | cut -d' ' -f1)" >> $GITHUB_ENV
+          else
+            echo "sha=SKIP" >> $GITHUB_ENV
+          fi
 
       - name: Init / fetch AUR repo
         env:
@@ -68,7 +77,9 @@ jobs:
           cd "$GITHUB_WORKSPACE/aur"
           cp "$GITHUB_WORKSPACE/packaging/aur/${{ inputs.pkgname }}.PKGBUILD" PKGBUILD
           sed -i "s|^pkgver=.*|pkgver=${{ inputs.app_version }}|" PKGBUILD
-          sed -i "s|^sha256sums_x86_64=.*|sha256sums_x86_64=('${{ env.sha }}' 'SKIP')|" PKGBUILD
+          if [ "${{ inputs.moving_tag }}" = "false" ]; then
+            sed -i "s|^sha256sums_x86_64=.*|sha256sums_x86_64=('${{ env.sha }}' 'SKIP')|" PKGBUILD
+          fi
 
       - name: Generate .SRCINFO (non-root)
         run: |
