@@ -396,13 +396,13 @@ jobs:
           CNB_BODY_FILE: RELEASE_BODY.md
         run: bash .github/scripts/publish-cnb.sh
 
-  # aur:
-  #   needs: [prepare, publish]
-  #   uses: ./.github/workflows/publish-aur.yml
-  #   with:
-  #     pkgname: portal-mc-bin
-  #     tag: ${{ needs.prepare.outputs.tag }}
-  #     app_version: ${{ needs.prepare.outputs.version }}
-  #   secrets:
-  #     AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-  #     AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+  aur:
+    needs: [prepare, publish]
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      pkgname: portal-mc-bin
+      tag: ${{ needs.prepare.outputs.tag }}
+      app_version: ${{ needs.prepare.outputs.version }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}

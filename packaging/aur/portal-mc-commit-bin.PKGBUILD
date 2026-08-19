@@ -14,7 +14,7 @@ options=('!strip' '!emptydirs')
 _appimg="Portal.AppImage"
 source_x86_64=(
     "$_appimg::https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.AppImage"
-    "portal-mc.svg::https://raw.githubusercontent.com/tiouoo/Portal/main/assets/Icon-Pattern.svg"
+    "portal-mc.svg::https://portal.tiouo.cc/portal-logo.svg"
 )
 sha256sums_x86_64=('SKIP' 'SKIP')
 noextract=("$_appimg")
