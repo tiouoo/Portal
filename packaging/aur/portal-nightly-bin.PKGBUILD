@@ -1,4 +1,4 @@
-﻿# Maintainer: tiouoo <tiouo@qq.com>
+# Maintainer: tiouoo <tiouo@qq.com>
 
 pkgname=portal-nightly-bin
 pkgver=0.0.0.0
