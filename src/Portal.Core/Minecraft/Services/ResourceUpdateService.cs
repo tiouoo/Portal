@@ -138,6 +138,7 @@ public sealed class ResourceUpdateService
         var needIdentity = new List<(ResourceUpdateCandidate Candidate, string? Sha1, uint? Fingerprint)>();
         var pendingModrinthVersion = new List<(ResourceUpdateCandidate Candidate, string? Sha1, uint? Fingerprint)>();
         var pendingCurseForgeVersion = new List<(ResourceUpdateCandidate Candidate, string? Sha1, uint? Fingerprint)>();
+        var kind = items.Length > 0 ? items[0].Candidate.Kind : ResourceKind.Mod;
         foreach (var item in items)
         {
             if (!string.IsNullOrEmpty(item.Candidate.Source) &&
@@ -155,7 +156,9 @@ public sealed class ResourceUpdateService
                 continue;
             }
 
-            var cached = item.Sha1 is null ? null : CacheDatabase.ReadMod(item.Sha1);
+            var cached = item.Sha1 is null ? null :
+                kind == ResourceKind.Mod ? CacheDatabase.ReadMod(item.Sha1)
+                                         : CacheDatabase.ReadResource(kind, item.Sha1);
             if (cached is { Source: "Modrinth" } && cached.ModrinthProjectId is { Length: > 0 } cachedProjectId)
             {
                 if (string.IsNullOrEmpty(cached.ModrinthVersionId) && item.Sha1 != null)
@@ -182,7 +185,7 @@ public sealed class ResourceUpdateService
         var modrinthHashes = needIdentity.Where(item => item.Sha1 != null).Select(item => item.Sha1!)
             .Concat(pendingModrinthVersion.Where(item => item.Sha1 != null).Select(item => item.Sha1!))
             .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var modrinthIdentity = await ResolveModrinthIdentitiesAsync(modrinthHashes, cancellationToken);
+        var modrinthIdentity = await ResolveModrinthIdentitiesAsync(modrinthHashes, kind, cancellationToken);
 
         var remaining = new List<(ResourceUpdateCandidate Candidate, string? Sha1, uint? Fingerprint)>();
         foreach (var item in needIdentity.Where(item => item.Sha1 != null))
@@ -220,7 +223,7 @@ public sealed class ResourceUpdateService
                 continue;
             if (item.Fingerprint is { } fingerprint && curseForgeIdentity.TryGetValue(fingerprint, out var identity))
             {
-                CacheCurseForgeIdentity(fingerprint, item.Sha1, identity);
+                CacheCurseForgeIdentity(kind, fingerprint, item.Sha1, identity);
                 output.Add((item.Candidate, item.Sha1, item.Fingerprint, "CurseForge",
                     identity.ProjectId.ToString(), identity.FileId?.ToString()));
             }
@@ -235,7 +238,7 @@ public sealed class ResourceUpdateService
                 ? identity.FileId
                 : null;
             if (item.Fingerprint is { } cacheFingerprint && curseForgeIdentity.TryGetValue(cacheFingerprint, out var curseForgeIdentityValue))
-                CacheCurseForgeIdentity(cacheFingerprint, item.Sha1, curseForgeIdentityValue);
+                CacheCurseForgeIdentity(kind, cacheFingerprint, item.Sha1, curseForgeIdentityValue);
             output.Add((item.Candidate, item.Sha1, item.Fingerprint, "CurseForge",
                 item.Candidate.ProjectId, fileId?.ToString()));
         }
@@ -243,15 +246,33 @@ public sealed class ResourceUpdateService
         return output.ToArray();
     }
 
-    private static void CacheCurseForgeIdentity(uint fingerprint, string? sha1,
+    private static void CacheCurseForgeIdentity(ResourceKind kind, uint fingerprint, string? sha1,
         (int ProjectId, int? FileId) identity)
     {
-        var entry = new ModCacheEntry
+        var identityEntry = new ModCacheEntry
         {
             MetadataFetched = true,
             Source = "CurseForge",
             ProjectId = identity.ProjectId,
             FileId = identity.FileId
+        };
+        if (kind != ResourceKind.Mod)
+        {
+            CacheDatabase.WriteResource(kind, fingerprint, sha1, identityEntry);
+            return;
+        }
+
+        var existing = sha1 != null ? CacheDatabase.ReadMod(sha1) : CacheDatabase.ReadMod(fingerprint);
+        var entry = existing == null ? identityEntry : identityEntry with
+        {
+            DisplayName = existing.DisplayName,
+            Description = existing.Description,
+            IconUrl = existing.IconUrl,
+            FriendlyName = existing.FriendlyName,
+            CurseForgeSlug = existing.CurseForgeSlug,
+            IsWikiFriendlyName = existing.IsWikiFriendlyName,
+            ModrinthSlug = existing.ModrinthSlug,
+            TranslatedDescription = existing.TranslatedDescription
         };
         if (sha1 is null)
             CacheDatabase.WriteMod(fingerprint, entry);
@@ -260,7 +281,7 @@ public sealed class ResourceUpdateService
     }
 
     private static async Task<Dictionary<string, (string ProjectId, string VersionId)>>
-        ResolveModrinthIdentitiesAsync(string[] hashes, CancellationToken cancellationToken)
+        ResolveModrinthIdentitiesAsync(string[] hashes, ResourceKind kind, CancellationToken cancellationToken)
     {
         var result = new Dictionary<string, (string, string)>(StringComparer.OrdinalIgnoreCase);
         if (hashes.Length == 0)
@@ -282,13 +303,17 @@ public sealed class ResourceUpdateService
                         if (response.TryGetValue(hash, out var version) && version is { Id: { Length: > 0 }, ProjectId: { Length: > 0 } })
                         {
                             result[hash] = (version.ProjectId, version.Id);
-                            CacheDatabase.WriteMod(hash, new ModCacheEntry
+                            var entry = new ModCacheEntry
                             {
                                 MetadataFetched = true,
                                 Source = "Modrinth",
                                 ModrinthProjectId = version.ProjectId,
                                 ModrinthVersionId = version.Id
-                            });
+                            };
+                            if (kind == ResourceKind.Mod)
+                                CacheDatabase.WriteMod(hash, entry);
+                            else
+                                CacheDatabase.WriteResource(kind, null, hash, entry);
                         }
                     }
                 }
@@ -332,13 +357,6 @@ public sealed class ResourceUpdateService
                         if (match.File is null)
                             continue;
                         result[match.File.Fingerprint] = (match.File.ModId, match.File.Id);
-                        CacheDatabase.WriteMod(match.File.Fingerprint, new ModCacheEntry
-                        {
-                            MetadataFetched = true,
-                            Source = "CurseForge",
-                            ProjectId = match.File.ModId,
-                            FileId = match.File.Id
-                        });
                     }
                 }
                 finally

@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using Portal.Core.App.Helpers;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Models;
 using SQLitePCL;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -15,6 +16,13 @@ internal static class CacheDatabase
     private static readonly LruCache<uint, ModCacheEntry?> ModCache = new(ModCacheCapacity);
 
     private static readonly LruCache<string, ModCacheEntry?> ModSha1Cache =
+        new(ModCacheCapacity, StringComparer.OrdinalIgnoreCase);
+
+    private static readonly LruCache<uint, ModCacheEntry?> ResourcePackCache = new(ModCacheCapacity);
+    private static readonly LruCache<string, ModCacheEntry?> ResourcePackSha1Cache =
+        new(ModCacheCapacity, StringComparer.OrdinalIgnoreCase);
+    private static readonly LruCache<uint, ModCacheEntry?> ShaderPackCache = new(ModCacheCapacity);
+    private static readonly LruCache<string, ModCacheEntry?> ShaderPackSha1Cache =
         new(ModCacheCapacity, StringComparer.OrdinalIgnoreCase);
 
     private static bool _initialized;
@@ -194,6 +202,144 @@ internal static class CacheDatabase
         {
             Logger.Error($"写入模组缓存文件失败（指纹：{fingerprint}，SHA-1：{sha1}）。", exception);
         }
+    }
+
+    public static ModCacheEntry? ReadResource(ResourceKind kind, string sha1)
+    {
+        var cache = kind == ResourceKind.ShaderPack ? ShaderPackSha1Cache : ResourcePackSha1Cache;
+        if (cache.TryGetValue(sha1, out var cached)) return cached;
+
+        ModCacheEntry? entry;
+        try
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = $"""
+                                   SELECT metadata_source, project_id, file_id, modrinth_project_id, modrinth_version_id, metadata_fetched
+                                   FROM {GetResourceTable(kind)} WHERE sha1 = $sha1;
+                                   """;
+            command.Parameters.AddWithValue("$sha1", sha1);
+            using var reader = command.ExecuteReader();
+            entry = reader.Read() ? ReadResourceEntry(reader) : null;
+        }
+        catch (SqliteException exception)
+        {
+            Logger.Warning($"读取资源缓存失败（{kind}：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
+        catch (IOException exception)
+        {
+            Logger.Warning($"读取资源缓存文件失败（{kind}：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            return null;
+        }
+
+        cache.Set(sha1, entry);
+        return entry;
+    }
+
+    public static void WriteResource(ResourceKind kind, uint? fingerprint, string? sha1, ModCacheEntry entry)
+    {
+        var table = GetResourceTable(kind);
+        var cache = kind == ResourceKind.ShaderPack ? ShaderPackCache : ResourcePackCache;
+        var sha1Cache = kind == ResourceKind.ShaderPack ? ShaderPackSha1Cache : ResourcePackSha1Cache;
+        try
+        {
+            if (fingerprint is { } fingerprintValue && sha1 != null)
+            {
+                using var connection = OpenConnection();
+                using var transaction = connection.BeginTransaction();
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = $"DELETE FROM {table} WHERE fingerprint = $fingerprint OR sha1 = $sha1;";
+                command.Parameters.AddWithValue("$fingerprint", (long)fingerprintValue);
+                command.Parameters.AddWithValue("$sha1", sha1);
+                command.ExecuteNonQuery();
+
+                command.Parameters.Clear();
+                command.CommandText = $"""
+                                       INSERT INTO {table} (fingerprint, sha1, metadata_source, project_id, file_id, modrinth_project_id, modrinth_version_id, metadata_fetched)
+                                       VALUES ($fingerprint, $sha1, $metadataSource, $projectId, $fileId, $modrinthProjectId, $modrinthVersionId, $metadataFetched);
+                                       """;
+                command.Parameters.AddWithValue("$fingerprint", (long)fingerprintValue);
+                command.Parameters.AddWithValue("$sha1", sha1);
+                AddResourceParameters(command, entry);
+                command.ExecuteNonQuery();
+                transaction.Commit();
+
+                cache.Set(fingerprintValue, entry);
+                sha1Cache.Set(sha1, entry);
+            }
+            else if (sha1 != null)
+            {
+                using var connection = OpenConnection();
+                using var command = connection.CreateCommand();
+                command.CommandText = $"""
+                                       INSERT INTO {table} (sha1, metadata_source, project_id, file_id, modrinth_project_id, modrinth_version_id, metadata_fetched)
+                                       VALUES ($sha1, $metadataSource, $projectId, $fileId, $modrinthProjectId, $modrinthVersionId, $metadataFetched)
+                                       ON CONFLICT(sha1) DO UPDATE SET
+                                           metadata_source = excluded.metadata_source, project_id = excluded.project_id, file_id = excluded.file_id,
+                                           modrinth_project_id = excluded.modrinth_project_id, modrinth_version_id = excluded.modrinth_version_id,
+                                           metadata_fetched = excluded.metadata_fetched;
+                                       """;
+                command.Parameters.AddWithValue("$sha1", sha1);
+                AddResourceParameters(command, entry);
+                command.ExecuteNonQuery();
+                sha1Cache.Set(sha1, entry);
+            }
+            else if (fingerprint is { } onlyFingerprint)
+            {
+                using var connection = OpenConnection();
+                using var command = connection.CreateCommand();
+                command.CommandText = $"""
+                                       INSERT INTO {table} (fingerprint, metadata_source, project_id, file_id, modrinth_project_id, modrinth_version_id, metadata_fetched)
+                                       VALUES ($fingerprint, $metadataSource, $projectId, $fileId, $modrinthProjectId, $modrinthVersionId, $metadataFetched)
+                                       ON CONFLICT(fingerprint) DO UPDATE SET
+                                           metadata_source = excluded.metadata_source, project_id = excluded.project_id, file_id = excluded.file_id,
+                                           modrinth_project_id = excluded.modrinth_project_id, modrinth_version_id = excluded.modrinth_version_id,
+                                           metadata_fetched = excluded.metadata_fetched;
+                                       """;
+                command.Parameters.AddWithValue("$fingerprint", (long)onlyFingerprint);
+                AddResourceParameters(command, entry);
+                command.ExecuteNonQuery();
+                cache.Set(onlyFingerprint, entry);
+            }
+        }
+        catch (SqliteException exception)
+        {
+            Logger.Error($"写入资源缓存失败（{kind}：{fingerprint} / {sha1}）。", exception);
+        }
+        catch (IOException exception)
+        {
+            Logger.Error($"写入资源缓存文件失败（{kind}：{fingerprint} / {sha1}）。", exception);
+        }
+    }
+
+    private static string GetResourceTable(ResourceKind kind)
+    {
+        return kind == ResourceKind.ShaderPack ? "shader_pack_cache" : "resource_pack_cache";
+    }
+
+    private static ModCacheEntry ReadResourceEntry(SqliteDataReader reader)
+    {
+        return new ModCacheEntry
+        {
+            Source = reader.IsDBNull(0) ? null : reader.GetString(0),
+            ProjectId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+            FileId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+            ModrinthProjectId = reader.IsDBNull(3) ? null : reader.GetString(3),
+            ModrinthVersionId = reader.IsDBNull(4) ? null : reader.GetString(4),
+            MetadataFetched = reader.GetInt64(5) != 0
+        };
+    }
+
+    private static void AddResourceParameters(SqliteCommand command, ModCacheEntry entry)
+    {
+        command.Parameters.AddWithValue("$metadataSource", (object?)entry.Source ?? DBNull.Value);
+        command.Parameters.AddWithValue("$projectId", (object?)entry.ProjectId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$fileId", (object?)entry.FileId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$modrinthProjectId", (object?)entry.ModrinthProjectId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$modrinthVersionId", (object?)entry.ModrinthVersionId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$metadataFetched", entry.MetadataFetched == true ? 1 : 0);
     }
 
     public static List<NewsEntry> ReadNews(NewsEdition edition)
@@ -398,6 +544,16 @@ internal static class CacheDatabase
                                       curseforge_slug TEXT NULL, friendly_name_is_wiki INTEGER NOT NULL DEFAULT 0,
                                       sha1 TEXT NULL UNIQUE, metadata_source TEXT NULL, modrinth_project_id TEXT NULL, modrinth_version_id TEXT NULL,
                                       modrinth_slug TEXT NULL, translated_description TEXT NULL
+                                  );
+                                  CREATE TABLE IF NOT EXISTS resource_pack_cache (
+                                      fingerprint INTEGER PRIMARY KEY, sha1 TEXT NULL UNIQUE, metadata_source TEXT NULL,
+                                      project_id INTEGER NULL, file_id INTEGER NULL, modrinth_project_id TEXT NULL,
+                                      modrinth_version_id TEXT NULL, metadata_fetched INTEGER NOT NULL
+                                  );
+                                  CREATE TABLE IF NOT EXISTS shader_pack_cache (
+                                      fingerprint INTEGER PRIMARY KEY, sha1 TEXT NULL UNIQUE, metadata_source TEXT NULL,
+                                      project_id INTEGER NULL, file_id INTEGER NULL, modrinth_project_id TEXT NULL,
+                                      modrinth_version_id TEXT NULL, metadata_fetched INTEGER NOT NULL
                                   );
                                   CREATE TABLE IF NOT EXISTS news_cache_entry (
                                       edition TEXT NOT NULL, id TEXT NOT NULL, title TEXT NOT NULL, version TEXT NOT NULL, type TEXT NOT NULL,
