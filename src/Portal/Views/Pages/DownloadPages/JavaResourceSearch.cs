@@ -64,7 +64,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
                 new JavaResourceSearchSource("Modrinth", SearchSource.Modrinth)
             ]
             : [new JavaResourceSearchSource("CurseForge", SearchSource.CurseForge)];
-        SelectedSource = Sources.First();
+        SelectedSource = Sources.Last();
         SelectedLoader = Loaders[0];
         SelectedSort = SortOptions[0];
     }
