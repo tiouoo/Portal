@@ -59,7 +59,9 @@ public partial class ResourceVersionSwitchDialog : UserControl
                     CanLightDismiss = false,
                     CanDragMove = true,
                     IsCloseButtonVisible = false,
-                    CanResize = false
+                    CanResize = false,
+                    VerticalAnchor = VerticalPosition.Top,
+                    VerticalOffset = 110
                 });
         return result;
     }
