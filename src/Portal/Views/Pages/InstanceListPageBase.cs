@@ -85,7 +85,7 @@ public abstract partial class InstanceListPageBase : Dsc, ITioTabPage
         if (string.IsNullOrWhiteSpace(archivePath))
             return;
 
-        _ = ModpackDetailsPage.TryInstallFromPath(topLevel, archivePath);
+        _ = ModpackInstallation.TryInstallFromPath(topLevel, archivePath);
     }
 
     private async void OnAddFolderRequested(object? sender, RoutedEventArgs e)

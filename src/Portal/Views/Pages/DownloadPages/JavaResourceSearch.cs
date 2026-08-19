@@ -1,12 +1,11 @@
 using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
 using AsyncImageLoader;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Provider;
+using Portal.Core.App.Helpers;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -24,12 +23,13 @@ public sealed record JavaResourceDefinition(
     bool SupportsDownload,
     bool SupportsLoaderFilter,
     bool SupportsModrinth = true,
-    int CurseForgeGameId = 432);
+    int CurseForgeGameId = 432,
+    bool ShowIconPlaceholder = false);
 
 public static class JavaResourceDefinitions
 {
     public static JavaResourceDefinition Modpack { get; } =
-        new(JavaResourceKind.Modpack, "整合包", "modpack", 4471, false, true);
+        new(JavaResourceKind.Modpack, "整合包", "modpack", 4471, false, true, ShowIconPlaceholder: true);
 
     public static JavaResourceDefinition ResourcePack { get; } =
         new(JavaResourceKind.ResourcePack, "材质包", "resourcepack", 12, true, false);
@@ -47,8 +47,6 @@ public static class JavaResourceDefinitions
 public abstract partial class JavaResourceSearchViewModel : ObservableObject, IDisposable, ISearchPageViewModel
 {
     private const int PageSize = 40;
-    private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
-    private static Task<IReadOnlyList<VersionManifestEntry>>? _versionLoadTask;
     private static readonly BoundedCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new(32);
     private readonly CurseforgeProvider _curseForge = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
@@ -112,6 +110,11 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     }
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
+
+    public void ExecuteSearch()
+    {
+        SearchCommand.Execute(null);
+    }
 
     public async Task InitializeAsync()
     {
@@ -220,7 +223,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         {
             var page = await _modrinth.SearchPageAsync(request.Query, request.GameVersion,
                 projectType: Definition.ProjectType, modLoader: request.Loader,
-                index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
+                index: MinecraftVersionParsing.ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
                 cancellationToken: cancellationToken);
             var items = page.Items.ToArray();
             var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
@@ -241,7 +244,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             SearchFilter = request.Query,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
             ModLoaderType = request.Loader,
-            SortField = ToCurseForgeSort(request.Sort),
+            SortField = MinecraftVersionParsing.ToCurseForgeSort(request.Sort),
             SortOrder = SortOrder.Desc,
             Index = offset,
             PageSize = PageSize
@@ -295,27 +298,8 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     {
         try
         {
-            await VersionLoadLock.WaitAsync(_disposeCancellation.Token);
-        }
-        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
-        {
-            return;
-        }
-
-        try
-        {
-            var entries = Data.UiProperty.MinecraftVersionManifestEntries;
-
-            if (_versionLoadTask is { IsCompleted: true, IsCompletedSuccessfully: false })
-                _versionLoadTask = null;
-            _versionLoadTask ??= entries.Count == 0
-                ? LoadReleaseManifestAsync()
-                : Task.FromResult<IReadOnlyList<VersionManifestEntry>>(entries);
-            var loadedEntries = await _versionLoadTask.WaitAsync(_disposeCancellation.Token);
+            var versions = await MinecraftVersionLoader.LoadReleaseVersionsAsync(_disposeCancellation.Token);
             if (_disposed) return;
-            if (entries.Count == 0) entries.AddRange(loadedEntries);
-            var versions = entries.Where(x => x.Type == "release").Select(x => x.Id).Distinct()
-                .OrderByDescending(ParseMinecraftVersion).ThenByDescending(x => x, StringComparer.Ordinal);
             MinecraftVersions.Clear();
             foreach (var version in versions) MinecraftVersions.Add(version);
         }
@@ -327,53 +311,6 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         {
             Logger.Error(exception);
         }
-        finally
-        {
-            VersionLoadLock.Release();
-        }
-    }
-
-    private static ModrinthSearchIndex ToModrinthSort(SearchSort sort)
-    {
-        return sort switch
-        {
-            SearchSort.Popularity => ModrinthSearchIndex.Downloads,
-            SearchSort.Updated => ModrinthSearchIndex.DateUpdated,
-            SearchSort.Newest => ModrinthSearchIndex.DatePublished,
-            _ => ModrinthSearchIndex.Relevance
-        };
-    }
-
-    private static SortField ToCurseForgeSort(SearchSort sort)
-    {
-        return sort switch
-        {
-            SearchSort.Popularity => SortField.Popularity,
-            SearchSort.Updated => SortField.LastUpdated,
-            SearchSort.Newest => SortField.ReleasedDate,
-            _ => SortField.Featured
-        };
-    }
-
-    private static async Task<IReadOnlyList<VersionManifestEntry>> LoadReleaseManifestAsync()
-    {
-        var entries = (await VanillaInstaller.EnumerableMinecraftAsync()).ToList();
-        UnlistedVersions.MergeInto(entries);
-        return entries;
-    }
-
-    private static MinecraftVersionSortKey ParseMinecraftVersion(string value)
-    {
-        var match = Regex.Match(value,
-            @"^(?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?(?<suffix>.*)$");
-        if (!match.Success) return new MinecraftVersionSortKey(-1, -1, -1, -1);
-        var suffix = match.Groups["suffix"].Value;
-        var stage = string.IsNullOrEmpty(suffix) ? 3 :
-            suffix.Contains("rc", StringComparison.OrdinalIgnoreCase) ? 2 :
-            suffix.Contains("pre", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
-        return new MinecraftVersionSortKey(int.Parse(match.Groups["major"].Value),
-            int.Parse(match.Groups["minor"].Value),
-            match.Groups["patch"].Success ? int.Parse(match.Groups["patch"].Value) : 0, stage);
     }
 }
 
@@ -385,7 +322,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Name = item.Name;
         Summary = item.Summary;
         IconUrl = item.IconUrl;
-        Metadata = $"{FormatRelativeTime(item.Updated)}·{item.DownloadCount:N0} 下载";
+        Metadata = $"{RelativeTime.Format(item.Updated)}·{item.DownloadCount:N0} 下载";
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.Modrinth, item.ProjectId,
             gameVersion, loader);
         IsFavorite =
@@ -398,7 +335,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Name = item.Name;
         Summary = item.Summary;
         IconUrl = item.IconUrl;
-        Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
+        Metadata = $"{RelativeTime.Format(item.DateModified)}·{item.DownloadCount:N0} 下载";
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.CurseForge, item.Id.ToString(),
             gameVersion, loader);
         IsFavorite =
@@ -413,6 +350,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
     [ObservableProperty] public partial bool IsFavorite { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
     public JavaResourceDetailsTarget Target { get; private set; }
+    public bool ShowIconPlaceholder => Target.Definition.ShowIconPlaceholder && !HasIcon;
 
     public void Update(JavaResourceSearchResultItem item)
     {
@@ -432,19 +370,6 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
             or JavaResourceKind.BedrockWorld or JavaResourceKind.BedrockWorldTemplate
             ? FavoriteEdition.Bedrock
             : FavoriteEdition.Java;
-    }
-
-    internal static string FormatRelativeTime(DateTime timestamp)
-    {
-        var localTime = timestamp.Kind == DateTimeKind.Utc ? timestamp.ToLocalTime() : timestamp;
-        var elapsed = DateTime.Now - localTime;
-        if (elapsed < TimeSpan.FromMinutes(1)) return "刚刚";
-        if (elapsed < TimeSpan.FromHours(1)) return $"{Math.Max(1, (int)elapsed.TotalMinutes)} 分钟前";
-        if (elapsed < TimeSpan.FromDays(1)) return $"{Math.Max(1, (int)elapsed.TotalHours)} 小时前";
-        if (elapsed < TimeSpan.FromDays(7)) return $"{Math.Max(1, (int)elapsed.TotalDays)} 天前";
-        if (elapsed < TimeSpan.FromDays(30)) return $"{Math.Max(1, (int)(elapsed.TotalDays / 7))} 周前";
-        if (elapsed < TimeSpan.FromDays(365)) return $"{Math.Max(1, (int)(elapsed.TotalDays / 30))} 个月前";
-        return $"{Math.Max(1, (int)(elapsed.TotalDays / 365))} 年前";
     }
 }
 

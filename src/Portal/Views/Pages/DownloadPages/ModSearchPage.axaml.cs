@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
 using AsyncImageLoader;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -8,8 +7,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Installer;
 using MinecraftLaunch.Components.Provider;
+using Portal.Core.App.Helpers;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -73,8 +72,6 @@ public partial class ModSearchPage : UserControl
 public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISearchPageViewModel
 {
     private const int PageSize = 40;
-    private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
-    private static Task<IReadOnlyList<VersionManifestEntry>>? _versionLoadTask;
     private readonly CurseforgeProvider _curseForge = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
     private readonly ModrinthProvider _modrinth = new();
@@ -129,6 +126,11 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     }
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
+
+    public void ExecuteSearch()
+    {
+        SearchCommand.Execute(null);
+    }
 
     public async Task InitializeAsync()
     {
@@ -251,7 +253,8 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         if (request.Source is SearchSource.Modrinth)
         {
             var modrinthPage = await _modrinth.SearchPageAsync(request.Query, request.GameVersion, request.Category,
-                modLoader: request.Loader, index: ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
+                modLoader: request.Loader, index: MinecraftVersionParsing.ToModrinthSort(request.Sort), offset: offset,
+                limit: PageSize,
                 cancellationToken: cancellationToken);
             var items = modrinthPage.Items.ToArray();
             var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
@@ -269,7 +272,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
             CategoryId = int.TryParse(request.Category, out var category) ? category : 0,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
             ModLoaderType = request.Loader,
-            SortField = ToCurseForgeSort(request.Sort),
+            SortField = MinecraftVersionParsing.ToCurseForgeSort(request.Sort),
             SortOrder = SortOrder.Desc,
             Index = offset,
             PageSize = PageSize
@@ -320,28 +323,8 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     {
         try
         {
-            await VersionLoadLock.WaitAsync(_disposeCancellation.Token);
-        }
-        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
-        {
-            return;
-        }
-
-        try
-        {
-            var entries = Data.UiProperty.MinecraftVersionManifestEntries;
-
-            if (_versionLoadTask is { IsCompleted: true, IsCompletedSuccessfully: false })
-                _versionLoadTask = null;
-            if (_versionLoadTask is null)
-                _versionLoadTask = entries.Count == 0
-                    ? LoadReleaseManifestAsync()
-                    : Task.FromResult<IReadOnlyList<VersionManifestEntry>>(entries);
-            var loadedEntries = await _versionLoadTask.WaitAsync(_disposeCancellation.Token);
+            var versions = await MinecraftVersionLoader.LoadReleaseVersionsAsync(_disposeCancellation.Token);
             if (_disposed) return;
-            if (entries.Count == 0) entries.AddRange(loadedEntries);
-            var versions = entries.Where(x => x.Type == "release").Select(x => x.Id).Distinct()
-                .OrderByDescending(ParseMinecraftVersion).ThenByDescending(x => x, StringComparer.Ordinal).ToList();
             MinecraftVersions.Clear();
             foreach (var version in versions) MinecraftVersions.Add(version);
         }
@@ -353,65 +336,6 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         {
             Logger.Warning($"[ModSearch] Version loading failed: {exception}");
         }
-        finally
-        {
-            VersionLoadLock.Release();
-        }
-    }
-
-    private static ModrinthSearchIndex ToModrinthSort(SearchSort sort)
-    {
-        return sort switch
-        {
-            SearchSort.Popularity => ModrinthSearchIndex.Downloads,
-            SearchSort.Updated => ModrinthSearchIndex.DateUpdated,
-            SearchSort.Newest => ModrinthSearchIndex.DatePublished, _ => ModrinthSearchIndex.Relevance
-        };
-    }
-
-    private static SortField ToCurseForgeSort(SearchSort sort)
-    {
-        return sort switch
-        {
-            SearchSort.Popularity => SortField.Popularity, SearchSort.Updated => SortField.LastUpdated,
-            SearchSort.Newest => SortField.ReleasedDate, _ => SortField.Featured
-        };
-    }
-
-    private static async Task<IReadOnlyList<VersionManifestEntry>> LoadReleaseManifestAsync()
-    {
-        var entries = (await VanillaInstaller.EnumerableMinecraftAsync()).ToList();
-        UnlistedVersions.MergeInto(entries);
-        return entries;
-    }
-
-    private static MinecraftVersionSortKey ParseMinecraftVersion(string value)
-    {
-        var match = Regex.Match(value,
-            @"^(?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?(?<suffix>.*)$");
-        if (!match.Success) return new MinecraftVersionSortKey(-1, -1, -1, -1);
-        var suffix = match.Groups["suffix"].Value;
-
-        var stage = string.IsNullOrEmpty(suffix) ? 3 :
-            suffix.Contains("rc", StringComparison.OrdinalIgnoreCase) ? 2 :
-            suffix.Contains("pre", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
-        return new MinecraftVersionSortKey(int.Parse(match.Groups["major"].Value),
-            int.Parse(match.Groups["minor"].Value),
-            match.Groups["patch"].Success ? int.Parse(match.Groups["patch"].Value) : 0, stage);
-    }
-}
-
-public readonly record struct MinecraftVersionSortKey(int Major, int Minor, int Patch, int Stage)
-    : IComparable<MinecraftVersionSortKey>
-{
-    public int CompareTo(MinecraftVersionSortKey other)
-    {
-        var result = Major.CompareTo(other.Major);
-        if (result != 0) return result;
-        result = Minor.CompareTo(other.Minor);
-        if (result != 0) return result;
-        result = Patch.CompareTo(other.Patch);
-        return result != 0 ? result : Stage.CompareTo(other.Stage);
     }
 }
 
@@ -466,7 +390,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Summary = item.Summary;
         var timestamp = sort is SearchSort.Newest ? item.DateModified : item.Updated;
         IconUrl = item.IconUrl;
-        Metadata = $"{FormatRelativeTime(timestamp)}·{item.DownloadCount:N0} 下载";
+        Metadata = $"{RelativeTime.Format(timestamp)}·{item.DownloadCount:N0} 下载";
         Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId, gameVersion, loader);
         IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
@@ -478,7 +402,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
         FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name;
         Summary = item.Summary;
         IconUrl = item.IconUrl;
-        Metadata = $"{FormatRelativeTime(item.DateModified)}·{item.DownloadCount:N0} 下载";
+        Metadata = $"{RelativeTime.Format(item.DateModified)}·{item.DownloadCount:N0} 下载";
         Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString(), gameVersion, loader);
         IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
@@ -514,22 +438,6 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Metadata = item.Metadata;
         Target = item.Target;
         OnPropertyChanged(nameof(HasIcon));
-    }
-
-    private static string FormatRelativeTime(DateTime timestamp)
-    {
-        var localTime = timestamp.Kind == DateTimeKind.Utc ? timestamp.ToLocalTime() : timestamp;
-        var elapsed = DateTime.Now - localTime;
-        if (elapsed < TimeSpan.Zero) return "刚刚";
-        if (elapsed < TimeSpan.FromMinutes(1)) return "刚刚";
-        if (elapsed < TimeSpan.FromHours(1)) return $"{Math.Max(1, (int)elapsed.TotalMinutes)} 分钟前";
-        if (elapsed < TimeSpan.FromDays(1)) return $"{Math.Max(1, (int)elapsed.TotalHours)} 小时前";
-        if (elapsed < TimeSpan.FromDays(2)) return "昨天";
-        if (elapsed < TimeSpan.FromDays(7)) return $"{(int)elapsed.TotalDays} 天前";
-        if (elapsed < TimeSpan.FromDays(14)) return "上周";
-        if (elapsed < TimeSpan.FromDays(30)) return $"{Math.Max(2, (int)(elapsed.TotalDays / 7))} 周前";
-        if (elapsed < TimeSpan.FromDays(365)) return $"{Math.Max(1, (int)(elapsed.TotalDays / 30))} 个月前";
-        return $"{Math.Max(1, (int)(elapsed.TotalDays / 365))} 年前";
     }
 }
 

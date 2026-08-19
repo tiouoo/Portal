@@ -233,14 +233,7 @@ public partial class FavoritesPageViewModel : ObservableObject
                 _ => JavaResourceDefinitions.ResourcePack
             };
         var target = new JavaResourceDetailsTarget(definition, resource.Source, resource.ProjectId);
-        if (resource.Edition == FavoriteEdition.Bedrock)
-            BedrockResourceDetailsPage.Open(topLevel, target, resource.Name);
-        else if (resource.Kind == JavaResourceKind.Modpack) ModpackDetailsPage.Open(topLevel, target, resource.Name);
-        else if (resource.Kind == JavaResourceKind.ShaderPack)
-            ShaderPackDetailsPage.Open(topLevel, target, resource.Name);
-        else if (resource.Kind == JavaResourceKind.DataPack) DataPackDetailsPage.Open(topLevel, target, resource.Name);
-        else if (resource.Kind == JavaResourceKind.Save) SaveDetailsPage.Open(topLevel, target, resource.Name);
-        else ResourcePackDetailsPage.Open(topLevel, target, resource.Name);
+        JavaResourceDetailsPage.Open(topLevel, target, resource.Name);
     }
 
     public static async Task QuickDownloadAsync(TopLevel topLevel, FavoriteResource resource)

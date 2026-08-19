@@ -2,11 +2,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Interfaces;
@@ -18,68 +15,27 @@ using MinecraftLaunch.Components.Installer.Modpack;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Classes;
 using Portal.Core.Const;
+using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
-using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
-using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 
 namespace Portal.Views.Pages.DownloadPages;
 
-public partial class ModpackDetailsPage : UserControl, ITioTabPage
+internal static class ModpackInstallation
 {
-    private bool _isWaitingForTargetVersionGroup;
-    private JavaResourceVersionGroup? _targetVersionGroup;
-
-    public ModpackDetailsPage() : this(new JavaResourceDetailsTarget(JavaResourceDefinitions.Modpack,
-        ModDetailsSource.Modrinth, string.Empty))
+    public static async Task HandleVersionFileClickAsync(JavaResourceDetailsViewModel viewModel, TopLevel topLevel,
+        JavaResourceFileItem file)
     {
-    }
-
-    public ModpackDetailsPage(JavaResourceDetailsTarget target)
-    {
-        InitializeComponent();
-        ViewModel = new ModpackDetailsPageViewModel(target);
-        DataContext = ViewModel;
-        ViewModel.TargetVersionGroupReady += ScrollToTargetVersionGroup;
-        PageInfo = new PageInfo { Title = "整合包详情", Icon = StreamGeometry.Parse(JavaResourceDetailsIcon.Data) };
-        Loaded += async (_, _) =>
-        {
-            Logger.Info($"[Modpack] Details page loaded for {target.Source} project {target.ProjectId}.");
-            await ViewModel.LoadAsync();
-        };
-    }
-
-    public ModpackDetailsPageViewModel ViewModel { get; }
-    public PageInfo PageInfo { get; init; }
-    public TabEntry HostTab { get; set; }
-
-    public void OnClose()
-    {
-        Logger.Info($"[Modpack] Details page closing for {ViewModel.Name}.");
-        ViewModel.TargetVersionGroupReady -= ScrollToTargetVersionGroup;
-        LayoutUpdated -= OnLayoutUpdated;
-        _targetVersionGroup = null;
-        _isWaitingForTargetVersionGroup = false;
-        ViewModel.Dispose();
-        DataContext = null;
-    }
-
-    private async void VersionFile_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Control { DataContext: JavaResourceFileItem file } ||
-            TopLevel.GetTopLevel(this) is not { } topLevel)
-            return;
-
         var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
-            ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(ViewModel.Name),
+            ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(viewModel.Name),
             topLevel.TryGetHostId(), new OverlayDialogOptions
             {
                 Title = "下载整合包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
@@ -92,36 +48,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         }
 
         if (result.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
-        StartInstallation(topLevel, ViewModel.Target.Source, file, ViewModel.IconUrl, result);
-    }
-
-    private void ScrollToTargetVersionGroup(JavaResourceVersionGroup group)
-    {
-        _targetVersionGroup = group;
-        if (_isWaitingForTargetVersionGroup) return;
-        _isWaitingForTargetVersionGroup = true;
-        LayoutUpdated += OnLayoutUpdated;
-    }
-
-    private void OnLayoutUpdated(object? sender, EventArgs e)
-    {
-        if (_targetVersionGroup is null) return;
-        var expander = this.GetVisualDescendants().OfType<TioExpander>()
-            .FirstOrDefault(control => ReferenceEquals(control.DataContext, _targetVersionGroup));
-        if (expander is null) return;
-        LayoutUpdated -= OnLayoutUpdated;
-        _isWaitingForTargetVersionGroup = false;
-        _targetVersionGroup = null;
-        expander.IsExpanded = true;
-        Dispatcher.UIThread.Post(() => expander.BringIntoView(), DispatcherPriority.Render);
-    }
-
-    public static void Open(TopLevel sender, JavaResourceDetailsTarget target, string title)
-    {
-        if (sender is not TioTabWindowBase window || string.IsNullOrWhiteSpace(target.ProjectId)) return;
-        var tab = new TabEntry(window, new ModpackDetailsPage(target), title: title);
-        window.CreateTab(tab);
-        window.SelectTab(tab);
+        StartInstallation(topLevel, viewModel.Target.Source, file, viewModel.IconUrl, result);
     }
 
     public static async Task InstallLocalAsync(TopLevel topLevel, string archivePath, ModDetailsSource source,
@@ -147,17 +74,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
                 Actions =
                 [
-                    new TaskActionDefinition
-                    {
-                        Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
-                        ExecuteAsync = (managedTask, _) =>
-                        {
-                            managedTask.RequestCancellation();
-                            return Task.CompletedTask;
-                        },
-                        CanExecute = managedTask => managedTask.CanBeCancelled,
-                        IsVisible = managedTask => !managedTask.IsTerminal
-                    }
+                    CreateCancelInstallAction()
                 ]
             },
             context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath,
@@ -195,17 +112,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
                 Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
                 Actions =
                 [
-                    new TaskActionDefinition
-                    {
-                        Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
-                        ExecuteAsync = (managedTask, _) =>
-                        {
-                            managedTask.RequestCancellation();
-                            return Task.CompletedTask;
-                        },
-                        CanExecute = managedTask => managedTask.CanBeCancelled,
-                        IsVisible = managedTask => !managedTask.IsTerminal
-                    }
+                    CreateCancelInstallAction()
                 ]
             },
             context => InstallLocalArchiveAsync(context, source, archivePath, result.Folder!.FolderPath,
@@ -229,6 +136,21 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         return true;
     }
 
+    private static TaskActionDefinition CreateCancelInstallAction()
+    {
+        return new TaskActionDefinition
+        {
+            Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
+            ExecuteAsync = (managedTask, _) =>
+            {
+                managedTask.RequestCancellation();
+                return Task.CompletedTask;
+            },
+            CanExecute = managedTask => managedTask.CanBeCancelled,
+            IsVisible = managedTask => !managedTask.IsTerminal
+        };
+    }
+
     private static async Task SaveAsAsync(TopLevel topLevel, JavaResourceFileItem file)
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -250,17 +172,7 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             Name = $"安装整合包：{file.DisplayName}", Description = "正在准备安装", Progress = 0,
             Actions =
             [
-                new TaskActionDefinition
-                {
-                    Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
-                    ExecuteAsync = (managedTask, _) =>
-                    {
-                        managedTask.RequestCancellation();
-                        return Task.CompletedTask;
-                    },
-                    CanExecute = managedTask => managedTask.CanBeCancelled,
-                    IsVisible = managedTask => !managedTask.IsTerminal
-                }
+                CreateCancelInstallAction()
             ]
         }, context => InstallAsync(context, source, file, iconUrl, selection));
         task.Start();
@@ -400,7 +312,6 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             {
                 if (Directory.Exists(directory)) Directory.Delete(directory, true);
             }
-
             catch (Exception exception)
             {
                 Logger.Warning($"[Modpack] Failed to clean up {directory}: {exception}");
@@ -412,10 +323,10 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         string destination)
     {
         context.SetRunning($"正在下载：{file.FileName}");
-        var reportProgress = CreateDownloadProgressReporter(context);
         var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
         {
-            ProgressChanged = reportProgress
+            ProgressChanged = DownloadProgressReporter.Create(context,
+                speed => $"正在下载安装包：{DefaultDownloader.FormatSize(speed, true)}")
         };
         var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
         if (result.Type == DownloadResultType.Cancelled)
@@ -450,7 +361,6 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             Logger.Debug($"[Modpack] Optional project icon download was cancelled: {exception}");
             throw;
         }
-
         catch (Exception exception)
         {
             Logger.Warning($"[Modpack] Failed to save optional project icon to {instancePath}: {exception}");
@@ -691,27 +601,8 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
             return javaPath;
         var runtime = await JavaAutoInstallCoordinator.EnsureAsync(
             MinecraftInstallationViewModel.GetRecommendedJavaVersion(minecraftVersion),
-            progress => ReportJavaInstallProgress(context, progress), cancellationToken);
+            progress => MinecraftInstallationTasks.ReportJavaInstallProgress(context, progress), cancellationToken);
         return runtime?.JavaPath ?? throw new InvalidOperationException("该整合包使用 Forge 或 NeoForge，需要有效的 Java 运行时。");
-    }
-
-    private static void ReportJavaInstallProgress(TaskExecutionContext context, JavaInstallProgress progress)
-    {
-        if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-            try
-            {
-                context.ReportProgress(progress.Fraction);
-                context.SetDescription(progress.SpeedBytesPerSecond > 0
-                    ? $"{progress.Stage}，下载速度：{DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true)}"
-                    : progress.Stage);
-            }
-            catch (InvalidOperationException)
-            {
-            }
-        });
     }
 
     private static string? GetForgeJavaPath()
@@ -829,32 +720,6 @@ public partial class ModpackDetailsPage : UserControl, ITioTabPage
         CancellationToken cancellationToken)
     {
         return Task.Run(() => operation(cancellationToken), cancellationToken);
-    }
-
-    private static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(
-        TaskExecutionContext context)
-    {
-        ResourceDownloadProgressChangedEventArgs? latestProgress = null;
-        var dispatchQueued = 0;
-        return progress =>
-        {
-            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-
-            Volatile.Write(ref latestProgress, progress);
-            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
-            Dispatcher.UIThread.Post(() =>
-            {
-                Interlocked.Exchange(ref dispatchQueued, 0);
-                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                if (Volatile.Read(ref latestProgress) is { } current)
-                {
-                    context.ReportProgress(current.TotalBytes > 0
-                        ? Math.Clamp((double)current.DownloadedBytes / current.TotalBytes, 0, 1)
-                        : null);
-                    context.SetDescription($"正在下载安装包：{DefaultDownloader.FormatSize(current.Speed, true)}");
-                }
-            }, DispatcherPriority.Background);
-        };
     }
 
     private static EventHandler<InstallProgressChangedEventArgs> CreateInstallerProgressReporter(

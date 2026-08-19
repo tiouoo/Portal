@@ -91,7 +91,7 @@ public static class PortalCommandExecutor
 
         var task = MinecraftInstallationViewModel.CreateInstallationTask(vanilla, folder, versionId, loaders, javaPath);
         task.Start();
-        _ = ModpackDetailsPage.ObserveInstallationAsync(task, window, $"Minecraft {versionId}");
+        _ = ModpackInstallation.ObserveInstallationAsync(task, window, $"Minecraft {versionId}");
         window.Notice($"已开始安装 Minecraft {versionId} 到“{folder.FolderName}”", NotificationType.Success);
     }
 
@@ -168,7 +168,7 @@ public static class PortalCommandExecutor
 
         if (kind == ModpackSourceKind.LocalFile)
         {
-            _ = ModpackDetailsPage.TryInstallFromPath(window, source);
+            _ = ModpackInstallation.TryInstallFromPath(window, source);
             return;
         }
 
@@ -197,7 +197,7 @@ public static class PortalCommandExecutor
             ]
         }, context => InstallModpackAsync(context, command, kind, folder));
         task.Start();
-        _ = ModpackDetailsPage.ObserveInstallationAsync(task, window, displayName);
+        _ = ModpackInstallation.ObserveInstallationAsync(task, window, displayName);
         window.Notice($"已开始安装整合包到“{folder.FolderName}”", NotificationType.Success);
     }
 
@@ -253,9 +253,9 @@ public static class PortalCommandExecutor
             if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                 throw new InvalidOperationException($"实例 ID“{id}”包含文件夹名称不允许的字符。");
 
-            var instancePath = await ModpackDetailsPage.InstallLocalArchiveAsync(context, modpackSource, archivePath,
+            var instancePath = await ModpackInstallation.InstallLocalArchiveAsync(context, modpackSource, archivePath,
                 folder.FolderPath, id);
-            await ModpackDetailsPage.TrySaveProjectIconAsync(iconUrl, instancePath, context.CancellationToken);
+            await ModpackInstallation.TrySaveProjectIconAsync(iconUrl, instancePath, context.CancellationToken);
         }
         finally
         {

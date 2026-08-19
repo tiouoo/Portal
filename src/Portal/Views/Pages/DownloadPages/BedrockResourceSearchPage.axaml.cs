@@ -1,11 +1,10 @@
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
+using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 
-public partial class BedrockResourceSearchPage : UserControl
+public partial class BedrockResourceSearchPage : ResourceSearchPageBase
 {
     protected BedrockResourceSearchPage(JavaResourceDefinition definition)
     {
@@ -18,40 +17,11 @@ public partial class BedrockResourceSearchPage : UserControl
     {
     }
 
-    private void SearchBox_OnKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter || DataContext is not BedrockResourceSearchViewModel viewModel) return;
-        viewModel.SearchCommand.Execute(null);
-        e.Handled = true;
-    }
+    protected override FavoriteEdition FavoriteEdition => FavoriteEdition.Bedrock;
 
-    private void Result_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    protected override Task QuickDownloadAsync(TopLevel topLevel, JavaResourceSearchResultItem item)
     {
-        if (e.GetCurrentPoint(sender as Control).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed ||
-            (sender as Control)?.DataContext is not JavaResourceSearchResultItem item ||
-            TopLevel.GetTopLevel(this) is not { } topLevel) return;
-        BedrockResourceDetailsPage.Open(topLevel, item.Target, item.Name);
-        e.Handled = true;
-    }
-
-    private void Favorite_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is JavaResourceSearchResultItem item)
-        {
-            var resource = FavoriteResourceFactory.From(item, FavoriteEdition.Bedrock);
-            if (item.IsFavorite) FavoriteCollectionService.Instance.Remove(resource);
-            else FavoriteCollectionService.Instance.Add(resource);
-            item.IsFavorite = !item.IsFavorite;
-        }
-
-        e.Handled = true;
-    }
-
-    private async void Download_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is JavaResourceSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
-            await BedrockResourceDownload.QuickDownloadAsync(topLevel, item.Target);
-        e.Handled = true;
+        return BedrockResourceDownload.QuickDownloadAsync(topLevel, item.Target);
     }
 }
 

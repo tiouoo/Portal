@@ -5,14 +5,12 @@ using AsyncImageLoader;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Provider;
+using Portal.Core.App.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
@@ -85,7 +83,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
 
         _buildingFilters = true;
         _filterCancellation = null;
-        CancelInBackground(_disposeCancellation);
+        CancellationTokens.CancelInBackground(_disposeCancellation);
         TargetVersionGroupReady = null;
         VersionGroups = [];
         VersionFilters.Clear();
@@ -116,7 +114,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 Summary = translations.GetValueOrDefault(project.ProjectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata =
-                    $"{JavaResourceSearchResultItem.FormatRelativeTime(project.Updated)}·{project.DownloadCount:N0} 下载";
+                    $"{RelativeTime.Format(project.Updated)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
                 AllFiles = await Task.Run(async () => (await _modrinth.GetModFilesByProjectIdAsync(Target.ProjectId,
                     cancellationToken)).Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
@@ -133,7 +131,7 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 Summary = translations.GetValueOrDefault(projectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata =
-                    $"{JavaResourceSearchResultItem.FormatRelativeTime(project.DateModified)}·{project.DownloadCount:N0} 下载";
+                    $"{RelativeTime.Format(project.DateModified)}·{project.DownloadCount:N0} 下载";
                 AddScreenshots(project.Screenshots);
                 AllFiles = await Task.Run(async () =>
                     (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
@@ -256,27 +254,6 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
 
         OnPropertyChanged(nameof(HasScreenshots));
     }
-
-    private static void CancelInBackground(CancellationTokenSource cancellation)
-    {
-        _ = CancelAndDisposeAsync(cancellation);
-    }
-
-    private static async Task CancelAndDisposeAsync(CancellationTokenSource cancellation)
-    {
-        try
-        {
-            await cancellation.CancelAsync();
-        }
-        catch (ObjectDisposedException exception)
-        {
-            Logger.Debug($"[Download] Cancellation source was already disposed: {exception}");
-        }
-        finally
-        {
-            cancellation.Dispose();
-        }
-    }
 }
 
 public sealed partial class JavaResourceVersionGroup : ObservableObject
@@ -339,7 +316,7 @@ public sealed record JavaResourceFileItem(
 
     private static string FormatDetails(string fileName, DateTime published, FileReleaseType releaseType)
     {
-        return $"{fileName}·{JavaResourceSearchResultItem.FormatRelativeTime(published)}·{ReleaseType(releaseType)}";
+        return $"{fileName}·{RelativeTime.Format(published)}·{ReleaseType(releaseType)}";
     }
 
     private static string ReleaseType(FileReleaseType type)
@@ -518,77 +495,18 @@ public static class JavaResourceDownload
     internal static ManagedTask StartDownload(TopLevel topLevel, JavaResourceDefinition definition,
         JavaResourceFileItem file, string destination, bool extractSave = false)
     {
-        var task = TaskManager.Instance.CreateTask(new TaskOptions
-        {
-            Name = $"下载{definition.DisplayName}：{file.FileName}",
-            Description = "正在连接下载服务器",
-            Progress = 0,
-            Actions =
-            [
-                new TaskActionDefinition
-                {
-                    Name = "取消下载", Description = $"取消此{definition.DisplayName}下载", IconKey = "Cancel",
-                    ExecuteAsync = (managedTask, _) =>
-                    {
-                        managedTask.RequestCancellation();
-                        return Task.CompletedTask;
-                    },
-                    CanExecute = managedTask => managedTask.CanBeCancelled,
-                    IsVisible = managedTask => !managedTask.IsTerminal
-                }
-            ]
-        }, async context =>
-        {
-            context.SetRunning($"正在下载：{file.FileName}");
-            var reportProgress = CreateDownloadProgressReporter(context);
-            var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
-            {
-                ProgressChanged = reportProgress
-            };
-            var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
-            if (result.Type == DownloadResultType.Cancelled)
-                throw new OperationCanceledException(context.CancellationToken);
-            if (result.Type != DownloadResultType.Successful) throw result.Exception ?? new IOException("下载失败。");
-            if (extractSave)
+        Func<TaskExecutionContext, Task>? afterDownload = null;
+        if (extractSave)
+            afterDownload = async context =>
             {
                 context.SetDescription("正在解压存档");
                 await ExtractSaveAsync(destination, file.FileName, context.CancellationToken);
-            }
-
-            context.ReportProgress(1);
-            context.SetDescription(extractSave ? "存档已安装" : "下载完成");
-        });
+            };
         Logger.Info(
             $"[Download] Starting {definition.DisplayName} download {file.FileName} from {file.DownloadUrl} to {destination}; extractSave={extractSave}.");
-        task.Start();
-        _ = ObserveAsync(task, topLevel, file.FileName);
-        return task;
-    }
-
-    internal static Action<ResourceDownloadProgressChangedEventArgs> CreateDownloadProgressReporter(
-        TaskExecutionContext context)
-    {
-        ResourceDownloadProgressChangedEventArgs? latestProgress = null;
-        var dispatchQueued = 0;
-        return progress =>
-        {
-            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-
-            Volatile.Write(ref latestProgress, progress);
-            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
-            Dispatcher.UIThread.Post(() =>
-            {
-                Interlocked.Exchange(ref dispatchQueued, 0);
-                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                if (Volatile.Read(ref latestProgress) is { } current)
-                {
-                    context.ReportProgress(current.TotalBytes > 0
-                        ? Math.Clamp((double)current.DownloadedBytes / current.TotalBytes, 0, 1)
-                        : null);
-                    context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(current.Speed, true)}");
-                }
-            }, DispatcherPriority.Background);
-        };
+        return DownloadTasks.Download(topLevel, $"下载{definition.DisplayName}：{file.FileName}",
+            $"取消此{definition.DisplayName}下载", file.FileName, file.DownloadUrl, destination, file.FileSize,
+            afterDownload, extractSave ? "存档已安装" : "下载完成");
     }
 
     private static IReadOnlyList<string> Patterns(JavaResourceKind kind)
@@ -654,36 +572,6 @@ public static class JavaResourceDownload
             if (Directory.Exists(stagingFolder)) Directory.Delete(stagingFolder, true);
             if (File.Exists(archivePath)) File.Delete(archivePath);
         }
-    }
-
-    private static async Task ObserveAsync(ManagedTask task, TopLevel topLevel, string fileName)
-    {
-        try
-        {
-            await task.Completion;
-        }
-        catch (OperationCanceledException exception)
-        {
-            Logger.Debug($"[Download] Download {fileName} was cancelled: {exception}");
-        }
-        catch (Exception exception)
-        {
-            Logger.Error(exception);
-        }
-
-        if (task.Status == ManagedTaskStatus.Completed)
-        {
-            Logger.Info($"[Download] Download completed for {fileName}.");
-            Dispatcher.UIThread.Post(() => topLevel.Notice($"{fileName} 下载完成", NotificationType.Success));
-        }
-        else if (task.Status == ManagedTaskStatus.Faulted)
-        {
-            Logger.Warning($"[Download] Download failed for {fileName}: {task.Exception}");
-            Dispatcher.UIThread.Post(() => topLevel.Notice($"{fileName} 下载失败", NotificationType.Error));
-        }
-
-        await Task.Delay(TimeSpan.FromSeconds(3));
-        Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
     }
 }
 

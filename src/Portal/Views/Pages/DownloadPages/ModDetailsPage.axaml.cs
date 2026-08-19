@@ -6,14 +6,12 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
-using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Provider;
+using Portal.Core.App.Helpers;
 using Portal.Core.Classes;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
@@ -22,9 +20,7 @@ using Portal.Core.Minecraft.Services;
 using Portal.Module.Imaging;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
-using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -38,11 +34,8 @@ public sealed record ModDetailsTarget(
     string GameVersion = "",
     ModLoaderType Loader = ModLoaderType.Any);
 
-public partial class ModDetailsPage : UserControl, ITioTabPage
+public partial class ModDetailsPage : ResourceDetailsPageBase
 {
-    private bool _isWaitingForTargetVersionGroup;
-    private ModVersionGroup? _targetVersionGroup;
-
     public ModDetailsPage() : this(new ModDetailsTarget(ModDetailsSource.Modrinth, string.Empty))
     {
     }
@@ -52,7 +45,7 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
         InitializeComponent();
         ViewModel = new ModDetailsPageViewModel(target);
         DataContext = ViewModel;
-        ViewModel.TargetVersionGroupReady += ScrollToTargetVersionGroup;
+        ViewModel.TargetVersionGroupReady += OnTargetVersionGroupReady;
         PageInfo = new PageInfo
         {
             Title = "模组详情",
@@ -63,45 +56,17 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
     }
 
     public ModDetailsPageViewModel ViewModel { get; }
-    public PageInfo PageInfo { get; init; }
-    public TabEntry HostTab { get; set; }
 
-    public void OnClose()
+    public override void OnClose()
     {
-        ViewModel.TargetVersionGroupReady -= ScrollToTargetVersionGroup;
-        LayoutUpdated -= OnLayoutUpdated;
-        _targetVersionGroup = null;
-        _isWaitingForTargetVersionGroup = false;
+        ViewModel.TargetVersionGroupReady -= OnTargetVersionGroupReady;
+        base.OnClose();
         ViewModel.Dispose();
-        DataContext = null;
     }
 
-    private void ScrollToTargetVersionGroup(ModVersionGroup group)
+    private void OnTargetVersionGroupReady(ModVersionGroup group)
     {
-        _targetVersionGroup = group;
-        if (_isWaitingForTargetVersionGroup)
-            return;
-
-        _isWaitingForTargetVersionGroup = true;
-        LayoutUpdated += OnLayoutUpdated;
-    }
-
-    private void OnLayoutUpdated(object? sender, EventArgs e)
-    {
-        if (_targetVersionGroup is null)
-            return;
-
-        var expander = this.GetVisualDescendants().OfType<TioExpander>()
-            .FirstOrDefault(control => ReferenceEquals(control.DataContext, _targetVersionGroup));
-        if (expander is null)
-            return;
-
-        LayoutUpdated -= OnLayoutUpdated;
-        _isWaitingForTargetVersionGroup = false;
-        _targetVersionGroup = null;
-        expander.IsExpanded = true;
-
-        Dispatcher.UIThread.Post(() => expander.BringIntoView(), DispatcherPriority.Render);
+        QueueScrollTo(group);
     }
 
     private async void VersionFile_OnClick(object? sender, RoutedEventArgs e)
@@ -213,67 +178,8 @@ public partial class ModDetailsPage : UserControl, ITioTabPage
 
     private static void StartDownload(TopLevel topLevel, ModVersionFileItem file, string destination)
     {
-        var task = TaskManager.Instance.CreateTask(new TaskOptions
-        {
-            Name = $"下载模组：{file.FileName}",
-            Description = "正在连接下载服务器",
-            Progress = 0,
-            Actions =
-            [
-                new TaskActionDefinition
-                {
-                    Name = "取消下载", Description = "取消此模组下载", IconKey = "Cancel",
-                    ExecuteAsync = (managedTask, _) =>
-                    {
-                        managedTask.RequestCancellation();
-                        return Task.CompletedTask;
-                    },
-                    CanExecute = managedTask => managedTask.CanBeCancelled,
-                    IsVisible = managedTask => !managedTask.IsTerminal
-                }
-            ]
-        }, async context =>
-        {
-            context.SetRunning($"正在下载：{file.FileName}");
-            var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
-            {
-                ProgressChanged = JavaResourceDownload.CreateDownloadProgressReporter(context)
-            };
-            var download = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
-            if (download.Type == DownloadResultType.Cancelled)
-                throw new OperationCanceledException(context.CancellationToken);
-            if (download.Type != DownloadResultType.Successful)
-                throw download.Exception ?? new IOException("模组下载失败。");
-            context.ReportProgress(1);
-            context.SetDescription("下载完成");
-        });
-        task.Start();
-        _ = ObserveDownloadAsync(task, topLevel, file.FileName);
-    }
-
-    private static async Task ObserveDownloadAsync(ManagedTask task, TopLevel topLevel, string fileName)
-    {
-        try
-        {
-            await task.Completion;
-        }
-        catch (OperationCanceledException exception)
-        {
-            Logger.Debug($"[ModDownload] Download {fileName} was cancelled: {exception}");
-        }
-        catch (Exception exception)
-        {
-            Logger.Error(exception);
-        }
-
-        if (task.Status == ManagedTaskStatus.Completed)
-            Dispatcher.UIThread.Post(() =>
-                topLevel.Notice($"{fileName} 下载完成", NotificationType.Success));
-        else if (task.Status == ManagedTaskStatus.Faulted)
-            Dispatcher.UIThread.Post(() =>
-                topLevel.Notice($"{fileName} 下载失败", NotificationType.Error));
-        await Task.Delay(TimeSpan.FromSeconds(3));
-        Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
+        DownloadTasks.Download(topLevel, $"下载模组：{file.FileName}", "取消此模组下载", file.FileName,
+            file.DownloadUrl, destination, file.FileSize, failureMessage: "模组下载失败。");
     }
 
     public static void Open(TopLevel sender, ModDetailsTarget target, string? title = null)
@@ -333,7 +239,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         _buildingFilters = true;
         _filterCancellation = null;
         _filterDebounce = null;
-        CancelInBackground(_disposeCancellation);
+        CancellationTokens.CancelInBackground(_disposeCancellation);
 
         VersionGroups = [];
         TargetVersionGroupReady = null;
@@ -546,22 +452,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
     private static string FormatMetadata(DateTime updated, int downloadCount, string source)
     {
-        return $"{source}·{FormatRelativeTime(updated)}·{downloadCount:N0} 下载";
-    }
-
-    private static string FormatRelativeTime(DateTime timestamp)
-    {
-        var localTime = timestamp.Kind == DateTimeKind.Utc ? timestamp.ToLocalTime() : timestamp;
-        var elapsed = DateTime.Now - localTime;
-        if (elapsed < TimeSpan.FromMinutes(1)) return "刚刚";
-        if (elapsed < TimeSpan.FromHours(1)) return $"{Math.Max(1, (int)elapsed.TotalMinutes)} 分钟前";
-        if (elapsed < TimeSpan.FromDays(1)) return $"{Math.Max(1, (int)elapsed.TotalHours)} 小时前";
-        if (elapsed < TimeSpan.FromDays(2)) return "1 天前";
-        if (elapsed < TimeSpan.FromDays(7)) return $"{(int)elapsed.TotalDays} 天前";
-        if (elapsed < TimeSpan.FromDays(14)) return "1 周前";
-        if (elapsed < TimeSpan.FromDays(30)) return $"{Math.Max(2, (int)(elapsed.TotalDays / 7))} 周前";
-        if (elapsed < TimeSpan.FromDays(365)) return $"{Math.Max(1, (int)(elapsed.TotalDays / 30))} 个月前";
-        return $"{Math.Max(1, (int)(elapsed.TotalDays / 365))} 年前";
+        return $"{source}·{RelativeTime.Format(updated)}·{downloadCount:N0} 下载";
     }
 
     private static string? GetVersionFamily(string version)
@@ -577,27 +468,6 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             ModLoaderType.NeoForge => "NeoForge", ModLoaderType.Forge => "Forge", ModLoaderType.Fabric => "Fabric",
             ModLoaderType.Quilt => "Quilt", _ => null
         };
-    }
-
-    private static void CancelInBackground(CancellationTokenSource cancellation)
-    {
-        _ = CancelAndDisposeAsync(cancellation);
-    }
-
-    private static async Task CancelAndDisposeAsync(CancellationTokenSource cancellation)
-    {
-        try
-        {
-            await cancellation.CancelAsync();
-        }
-        catch (ObjectDisposedException exception)
-        {
-            Logger.Debug($"[ModDetails] Cancellation source was already disposed: {exception}");
-        }
-        finally
-        {
-            cancellation.Dispose();
-        }
     }
 }
 

@@ -2,8 +2,8 @@
     d:DesignHeight="600"
     d:DesignWidth="900"
     mc:Ignorable="d"
-    x:Class="Portal.Views.Pages.DownloadPages.BedrockResourceDetailsPage"
-    x:DataType="local:BedrockResourceDetailsPageViewModel"
+    x:Class="Portal.Views.Pages.DownloadPages.JavaResourceDetailsPage"
+    x:DataType="local:JavaResourceDetailsViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -28,7 +28,7 @@
                             <Carousel.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
                                     <owned:OwnedAdvancedImage
-                                        Loader="{Binding $parent[UserControl].((local:BedrockResourceDetailsPageViewModel)DataContext).ScreenshotLoader}"
+                                        Loader="{Binding $parent[UserControl].((local:JavaResourceDetailsViewModel)DataContext).ScreenshotLoader}"
                                         Source="{Binding}"
                                         Stretch="UniformToFill" />
                                 </DataTemplate>
@@ -54,7 +54,7 @@
                                 FontWeight="SemiBold"
                                 Margin="0,0,0,-2"
                                 Text="{Binding Name}" />
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="CurseForge" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Target.Source}" />
                             <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" />
                         </StackPanel>
                     </DockPanel>

@@ -63,7 +63,7 @@ public class DragDropHandler
             if (TryGetModpack(data, out var archivePath, out var source, out var suggestedInstanceId))
             {
                 e.Handled = true;
-                await ModpackDetailsPage.InstallLocalAsync(window, archivePath, source, suggestedInstanceId);
+                await ModpackInstallation.InstallLocalAsync(window, archivePath, source, suggestedInstanceId);
                 return;
             }
 
