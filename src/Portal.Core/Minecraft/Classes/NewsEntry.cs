@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Classes;
 
@@ -19,14 +20,14 @@ public class NewsEntry : ObservableObject
     private static string GetRelativeTime(DateTime date)
     {
         var diff = DateTime.Now - date;
-        if (diff.TotalMinutes < 1) return "刚刚";
-        if (diff.TotalHours < 1) return $"{(int)diff.TotalMinutes}分钟前";
-        if (diff.TotalDays < 1) return $"{(int)diff.TotalHours}小时前";
-        if (diff.TotalDays < 2) return "昨天";
-        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}天前";
-        if (diff.TotalDays < 30) return $"{(int)(diff.TotalDays / 7)}周前";
-        if (diff.TotalDays < 365) return $"{(int)(diff.TotalDays / 30)}个月前";
-        return $"{(int)(diff.TotalDays / 365)}年前";
+        if (diff.TotalMinutes < 1) return CommonLanguageManager.Instance.news_justNow.CurrentValue();
+        if (diff.TotalHours < 1) return string.Format(CommonLanguageManager.Instance.news_minutesAgo.CurrentValue(), (int)diff.TotalMinutes);
+        if (diff.TotalDays < 1) return string.Format(CommonLanguageManager.Instance.news_hoursAgo.CurrentValue(), (int)diff.TotalHours);
+        if (diff.TotalDays < 2) return CommonLanguageManager.Instance.news_yesterday.CurrentValue();
+        if (diff.TotalDays < 7) return string.Format(CommonLanguageManager.Instance.news_daysAgo.CurrentValue(), (int)diff.TotalDays);
+        if (diff.TotalDays < 30) return string.Format(CommonLanguageManager.Instance.news_weeksAgo.CurrentValue(), (int)(diff.TotalDays / 7));
+        if (diff.TotalDays < 365) return string.Format(CommonLanguageManager.Instance.news_monthsAgo.CurrentValue(), (int)(diff.TotalDays / 30));
+        return string.Format(CommonLanguageManager.Instance.news_yearsAgo.CurrentValue(), (int)(diff.TotalDays / 365));
     }
 }
 

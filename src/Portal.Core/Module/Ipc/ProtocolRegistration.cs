@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using Portal.Core.Const;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Module.Ipc;
@@ -37,10 +38,10 @@ public static class ProtocolRegistration
     public static async Task RegisterAsync()
     {
         var executablePath = Environment.ProcessPath
-                             ?? throw new InvalidOperationException("无法确定启动器可执行文件路径。");
+                             ?? throw new InvalidOperationException(CommonLanguageManager.Instance.common_cannotDetermineExecutablePath.CurrentValue());
         if (OperatingSystem.IsWindows()) await RegisterWindowsAsync(executablePath);
         else if (OperatingSystem.IsLinux()) await RegisterLinuxAsync(executablePath);
-        else throw new PlatformNotSupportedException("当前系统暂不支持注册 portal:// 协议。");
+        else throw new PlatformNotSupportedException(CommonLanguageManager.Instance.ipc_unsupportedProtocolRegistration.CurrentValue());
     }
 
     public static async Task TryRegisterLinuxOnStartupAsync()
@@ -59,8 +60,7 @@ public static class ProtocolRegistration
         }
         catch (Exception exception)
         {
-            Logger.Warning("Linux portal:// 协议自动注册失败，可在设置中重试。" +
-                           Environment.NewLine + exception);
+            Logger.Warning(string.Format(LogLanguageManager.Instance.ipc_linuxAutoRegisterFailed.CurrentValue(), Environment.NewLine, exception));
         }
     }
 
@@ -69,7 +69,7 @@ public static class ProtocolRegistration
         Directory.CreateDirectory(ConfigPath.TempFolderPath);
         var scriptPath = Path.Combine(ConfigPath.TempFolderPath, "RegisterPortalProtocol.bat");
         await File.WriteAllTextAsync(scriptPath, WindowsScriptTemplate.Replace("__PORTAL_EXE__", executablePath));
-        Logger.Info($"已写出协议注册脚本：{scriptPath}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ipc_scriptWritten.CurrentValue(), scriptPath));
 
         Process process;
         try
@@ -80,16 +80,16 @@ public static class ProtocolRegistration
                 UseShellExecute = true,
                 Verb = "runas",
                 WindowStyle = ProcessWindowStyle.Hidden
-            }) ?? throw new InvalidOperationException("无法启动协议注册脚本。");
+            }) ?? throw new InvalidOperationException(CommonLanguageManager.Instance.ipc_cannotStartRegistrationScript.CurrentValue());
         }
         catch (Win32Exception exception) when (exception.NativeErrorCode == 1223)
         {
-            throw new OperationCanceledException("未获得管理员权限。");
+            throw new OperationCanceledException(CommonLanguageManager.Instance.ipc_adminPrivilegeNotObtained.CurrentValue());
         }
 
         await process.WaitForExitAsync();
         if (process.ExitCode != 0)
-            throw new InvalidOperationException($"注册脚本执行失败（退出码 {process.ExitCode}）。");
+            throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.ipc_scriptExecutionFailed.CurrentValue(), process.ExitCode));
     }
 
     private static async Task RegisterLinuxAsync(string executablePath)
@@ -106,7 +106,7 @@ public static class ProtocolRegistration
         var desktopFilePath = Path.Combine(applicationsFolder, desktopFileName);
         await File.WriteAllTextAsync(desktopFilePath,
             LinuxDesktopTemplate.Replace("__PORTAL_EXE__", EscapeDesktopExecArgument(executablePath)) + "\n");
-        Logger.Info($"已写出协议处理器：{desktopFilePath}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ipc_desktopHandlerWritten.CurrentValue(), desktopFilePath));
 
         await RunProcessAsync("xdg-mime", ["default", desktopFileName, "x-scheme-handler/portal"], true);
 
@@ -130,10 +130,10 @@ public static class ProtocolRegistration
             var startInfo = new ProcessStartInfo { FileName = fileName, UseShellExecute = false };
             foreach (var argument in arguments) startInfo.ArgumentList.Add(argument);
             using var process = Process.Start(startInfo)
-                                ?? throw new InvalidOperationException($"无法启动 {fileName}。");
+                                ?? throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.common_cannotStart.CurrentValue(), fileName));
             await process.WaitForExitAsync();
             if (required && process.ExitCode != 0)
-                throw new InvalidOperationException($"{fileName} 执行失败（退出码 {process.ExitCode}）。");
+                throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.common_executeFailed.CurrentValue(), fileName, process.ExitCode));
         }
         catch (Exception) when (!required)
         {

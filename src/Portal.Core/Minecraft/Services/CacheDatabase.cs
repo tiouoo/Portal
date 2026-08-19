@@ -4,6 +4,7 @@ using Portal.Core.App.Helpers;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
+using Portal.Localization;
 using SQLitePCL;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -54,12 +55,12 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Warning($"读取模组缓存失败（指纹：{fingerprint}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_modReadFingerprintFailed.CurrentValue(), fingerprint, Environment.NewLine, exception));
             return null;
         }
         catch (IOException exception)
         {
-            Logger.Warning($"读取模组缓存文件失败（指纹：{fingerprint}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_modReadFileFingerprintFailed.CurrentValue(), fingerprint, Environment.NewLine, exception));
             return null;
         }
 
@@ -88,12 +89,12 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Warning($"读取模组缓存失败（SHA-1：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_modReadSha1Failed.CurrentValue(), sha1, Environment.NewLine, exception));
             return null;
         }
         catch (IOException exception)
         {
-            Logger.Warning($"读取模组缓存文件失败（SHA-1：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_modReadFileSha1Failed.CurrentValue(), sha1, Environment.NewLine, exception));
             return null;
         }
 
@@ -125,11 +126,11 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Error($"写入模组缓存失败（指纹：{fingerprint}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_modWriteFingerprintFailed.CurrentValue(), fingerprint), exception);
         }
         catch (IOException exception)
         {
-            Logger.Error($"写入模组缓存文件失败（指纹：{fingerprint}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_modWriteFileFingerprintFailed.CurrentValue(), fingerprint), exception);
         }
     }
 
@@ -157,11 +158,11 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Error($"写入模组缓存失败（SHA-1：{sha1}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_modWriteSha1Failed.CurrentValue(), sha1), exception);
         }
         catch (IOException exception)
         {
-            Logger.Error($"写入模组缓存文件失败（SHA-1：{sha1}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_modWriteFileSha1Failed.CurrentValue(), sha1), exception);
         }
     }
 
@@ -196,11 +197,11 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Error($"写入模组缓存失败（指纹：{fingerprint}，SHA-1：{sha1}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_modWriteBothFailed.CurrentValue(), fingerprint, sha1), exception);
         }
         catch (IOException exception)
         {
-            Logger.Error($"写入模组缓存文件失败（指纹：{fingerprint}，SHA-1：{sha1}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_modWriteFileBothFailed.CurrentValue(), fingerprint, sha1), exception);
         }
     }
 
@@ -224,12 +225,12 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Warning($"读取资源缓存失败（{kind}：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_resourceReadFailed.CurrentValue(), kind, sha1, Environment.NewLine, exception));
             return null;
         }
         catch (IOException exception)
         {
-            Logger.Warning($"读取资源缓存文件失败（{kind}：{sha1}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_resourceReadFileFailed.CurrentValue(), kind, sha1, Environment.NewLine, exception));
             return null;
         }
 
@@ -306,11 +307,11 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Error($"写入资源缓存失败（{kind}：{fingerprint} / {sha1}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_resourceWriteFailed.CurrentValue(), kind, fingerprint, sha1), exception);
         }
         catch (IOException exception)
         {
-            Logger.Error($"写入资源缓存文件失败（{kind}：{fingerprint} / {sha1}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_resourceWriteFileFailed.CurrentValue(), kind, fingerprint, sha1), exception);
         }
     }
 
@@ -376,12 +377,12 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Warning($"读取 {edition} 新闻缓存失败，将使用空缓存。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_newsReadFailed.CurrentValue(), edition, Environment.NewLine, exception));
             return [];
         }
         catch (IOException exception)
         {
-            Logger.Warning($"读取 {edition} 新闻缓存文件失败，将使用空缓存。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_newsReadFileFailed.CurrentValue(), edition, Environment.NewLine, exception));
             return [];
         }
     }
@@ -429,11 +430,11 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Error($"写入 {edition} 新闻缓存失败。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_newsWriteFailed.CurrentValue(), edition), exception);
         }
         catch (IOException exception)
         {
-            Logger.Error($"写入 {edition} 新闻缓存文件失败。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_newsWriteFileFailed.CurrentValue(), edition), exception);
         }
     }
 
@@ -465,12 +466,12 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Warning($"读取新闻详情缓存失败（ID：{id}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_newsDetailReadFailed.CurrentValue(), id, Environment.NewLine, exception));
             return null;
         }
         catch (IOException exception)
         {
-            Logger.Warning($"读取新闻详情缓存文件失败（ID：{id}），将按缓存未命中继续。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.cacheDatabase_newsDetailReadFileFailed.CurrentValue(), id, Environment.NewLine, exception));
             return null;
         }
     }
@@ -505,11 +506,11 @@ internal static class CacheDatabase
         }
         catch (SqliteException exception)
         {
-            Logger.Error($"写入新闻详情缓存失败（ID：{detail.Id}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_newsDetailWriteFailed.CurrentValue(), detail.Id), exception);
         }
         catch (IOException exception)
         {
-            Logger.Error($"写入新闻详情缓存文件失败（ID：{detail.Id}）。", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.cacheDatabase_newsDetailWriteFileFailed.CurrentValue(), detail.Id), exception);
         }
     }
 
@@ -529,7 +530,7 @@ internal static class CacheDatabase
         lock (InitializationLock)
         {
             if (_initialized) return;
-            Logger.Info($"正在初始化本地缓存数据库：{DatabasePath}");
+            Logger.Info(string.Format(LogLanguageManager.Instance.cacheDatabase_initStart.CurrentValue(), DatabasePath));
             Batteries.Init();
             Directory.CreateDirectory(Path.GetDirectoryName(DatabasePath)!);
             using var connection = new SqliteConnection($"Data Source={DatabasePath};Pooling=True");
@@ -572,7 +573,7 @@ internal static class CacheDatabase
             EnsureNewsDetailColumns(connection);
             MigrateLegacyNews(connection);
             _initialized = true;
-            Logger.Info("本地缓存数据库初始化完成。");
+            Logger.Info(LogLanguageManager.Instance.cacheDatabase_initComplete.CurrentValue());
         }
     }
 
@@ -714,7 +715,7 @@ internal static class CacheDatabase
                 }
                 catch (JsonException exception)
                 {
-                    Logger.Error("迁移旧新闻缓存失败，旧缓存将保持不变。", exception);
+                    Logger.Error(LogLanguageManager.Instance.cacheDatabase_migrateOldNewsFailed.CurrentValue(), exception);
                     return;
                 }
 

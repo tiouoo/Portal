@@ -1,5 +1,6 @@
 using fNbt;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -49,7 +50,7 @@ public static class JavaServerManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"读取服务器列表失败：{path}{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_readListFailed.CurrentValue(), path, Environment.NewLine + exception));
                 return [];
             }
         }
@@ -87,7 +88,7 @@ public static class JavaServerManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"添加服务器失败：{name} {address}{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_addFailed.CurrentValue(), name, address, Environment.NewLine + exception));
                 return false;
             }
         }
@@ -120,7 +121,7 @@ public static class JavaServerManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"编辑服务器失败：{name} {address}{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_editFailed.CurrentValue(), name, address, Environment.NewLine + exception));
                 return false;
             }
         }
@@ -151,7 +152,7 @@ public static class JavaServerManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"删除服务器失败：{index}{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_deleteFailed.CurrentValue(), index, Environment.NewLine + exception));
                 return false;
             }
         }
@@ -175,7 +176,7 @@ public static class JavaServerManager
             }
             catch (FormatException exception)
             {
-                Logger.Warning($"服务器图标 Base64 数据无效，将忽略图标。{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_invalidIconBase64.CurrentValue(), Environment.NewLine, exception));
             }
         }
 

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -34,7 +35,9 @@ public sealed class RecentPlayService
                 .Where(world => world.LastPlayedTime.HasValue)
                 .Select(world => new RecentPlayTarget(instance, RecentPlayTargetType.World, world.FolderName,
                     string.IsNullOrWhiteSpace(world.LevelName) ? world.FolderName : world.LevelName,
-                    $"存档·{world.Version ?? "未知版本"}·{GetGameModeText(world.GameMode)}",
+                    string.Format(CommonLanguageManager.Instance.recentPlay_saveDescription.CurrentValue(),
+                        world.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                        GetGameModeText(world.GameMode)),
                     world.LastPlayedTime!.Value, world.IconPath)));
 
             foreach (var server in servers.Where(server => !IsLanAddress(server.Host)))
@@ -44,7 +47,8 @@ public sealed class RecentPlayService
                     continue;
 
                 targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
-                    GetServerHistoryKey(server.Address, server.Port), server.Name, $"服务器·{server.Address}",
+                    GetServerHistoryKey(server.Address, server.Port), server.Name,
+                    string.Format(CommonLanguageManager.Instance.recentPlay_serverDescription.CurrentValue(), server.Address),
                     recorded.LastPlayedTime, ServerIconData: server.IconData, ServerAddress: server.Host,
                     ServerPort: server.Port));
             }
@@ -55,7 +59,7 @@ public sealed class RecentPlayService
                                                                IsSameServer(item, server.Host, server.Port))))
                 targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
                     GetServerHistoryKey(recorded.Address, recorded.Port), recorded.Name ?? recorded.Address,
-                    $"服务器·{recorded.Address}:{recorded.Port}",
+                    string.Format(CommonLanguageManager.Instance.recentPlay_serverDescriptionWithPort.CurrentValue(), recorded.Address, recorded.Port),
                     recorded.LastPlayedTime, ServerAddress: recorded.Address, ServerPort: recorded.Port));
         }
 
@@ -80,7 +84,7 @@ public sealed class RecentPlayService
         }
         catch (Exception e)
         {
-            Logger.Error("记录服务器游玩历史失败。", e);
+            Logger.Error(LogLanguageManager.Instance.recentPlay_recordFailed.CurrentValue(), e);
         }
     }
 
@@ -181,7 +185,11 @@ public sealed class RecentPlayService
     {
         return gameMode switch
         {
-            0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式"
+            0 => CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue(),
+            1 => CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue(),
+            2 => CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue(),
+            3 => CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue(),
+            _ => CommonLanguageManager.Instance.recentPlay_gameModeUnknown.CurrentValue()
         };
     }
 

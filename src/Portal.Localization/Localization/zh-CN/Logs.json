@@ -10,7 +10,10 @@
     "versionLoaded": "已加载版本信息：{0} ({1})",
     "packageTypeDetected": "已识别安装包类型：{0}",
     "tempCleared": "已清理临时目录",
-    "loadComplete": "配置加载完成，已配置 {0} 个 Minecraft 文件夹"
+    "loadComplete": "配置加载完成，已配置 {0} 个 Minecraft 文件夹",
+    "saveStart": "开始保存应用配置：{0}",
+    "saveComplete": "应用配置保存完成，耗时 {0} ms。",
+    "saveFailed": "保存应用配置失败：{0}"
   },
   "app": {
     "initStart": "开始初始化",
@@ -57,6 +60,254 @@
     "singleInstance_runningDetected": "检测到 Portal 正在运行，本进程将只转发外部命令或请求显示窗口后退出。",
     "startup_osLinux": "操作系统：Linux",
     "startup_osMacos": "操作系统：macOS",
-    "startup_osWindows": "操作系统：Windows"
+    "startup_osWindows": "操作系统：Windows",
+    "shortcutCreated": "已创建桌面快捷方式：{0}",
+    "iconWriteFailed": "写入快捷方式图标失败。"
+  },
+  "accountRefresher": {
+    "microsoftRefreshStart": "开始刷新微软账户：{0}",
+    "skinFetchFailed": "获取皮肤失败。",
+    "microsoftRefreshComplete": "微软账户刷新成功：{0}",
+    "microsoftRefreshFailed": "刷新微软账户失败：{0}，{1}",
+    "yggdrasilLoginStart": "开始重新登录外置账户：{0}，服务器：{1}",
+    "yggdrasilNoAccount": "外置账户重新登录未返回账户：{0}",
+    "yggdrasilLoginComplete": "外置账户重新登录完成：{0}，刷新 {1} 个账户，新增 {2} 个，移除 {3} 个",
+    "yggdrasilLoginFailed": "重新登录外置账户失败：{0}，{1}"
+  },
+  "appVersion": {
+    "loadStart": "正在加载应用版本信息。",
+    "embeddedNotFoundUseLocal": "未找到内嵌版本信息，使用本地开发版本信息。",
+    "loadComplete": "应用版本信息加载完成：{0} ({1})。"
+  },
+  "bedrockWorld": {
+    "scanStart": "扫描基岩版世界：{0}",
+    "scanComplete": "基岩版世界扫描完成：{0}，发现 {1} 个世界。",
+    "scanFailed": "扫描基岩版世界失败。",
+    "scanDenied": "扫描基岩版世界被拒绝。",
+    "readNameFailed": "读取基岩版世界名称失败：{0}",
+    "readNameDenied": "读取基岩版世界名称被拒绝：{0}",
+    "readFileFailed": "读取基岩版世界文件失败：{0}",
+    "readFileDenied": "读取基岩版世界文件被拒绝：{0}",
+    "readPackRefsFailed": "读取基岩版世界资源包引用失败：{0}",
+    "readPackRefsDenied": "读取基岩版世界资源包引用被拒绝：{0}",
+    "parsePackRefsFailed": "解析基岩版世界资源包引用失败：{0}"
+  },
+  "cacheDatabase": {
+    "modReadFingerprintFailed": "读取模组缓存失败（指纹：{0}），将按缓存未命中继续。{1}{2}",
+    "modReadFileFingerprintFailed": "读取模组缓存文件失败（指纹：{0}），将按缓存未命中继续。{1}{2}",
+    "modReadSha1Failed": "读取模组缓存失败（SHA-1：{0}），将按缓存未命中继续。{1}{2}",
+    "modReadFileSha1Failed": "读取模组缓存文件失败（SHA-1：{0}），将按缓存未命中继续。{1}{2}",
+    "modWriteFingerprintFailed": "写入模组缓存失败（指纹：{0}）。",
+    "modWriteFileFingerprintFailed": "写入模组缓存文件失败（指纹：{0}）。",
+    "modWriteSha1Failed": "写入模组缓存失败（SHA-1：{0}）。",
+    "modWriteFileSha1Failed": "写入模组缓存文件失败（SHA-1：{0}）。",
+    "modWriteBothFailed": "写入模组缓存失败（指纹：{0}，SHA-1：{1}）。",
+    "modWriteFileBothFailed": "写入模组缓存文件失败（指纹：{0}，SHA-1：{1}）。",
+    "resourceReadFailed": "读取资源缓存失败（{0}：{1}），将按缓存未命中继续。{2}{3}",
+    "resourceReadFileFailed": "读取资源缓存文件失败（{0}：{1}），将按缓存未命中继续。{2}{3}",
+    "resourceWriteFailed": "写入资源缓存失败（{0}：{1} / {2}）。",
+    "resourceWriteFileFailed": "写入资源缓存文件失败（{0}：{1} / {2}）。",
+    "newsReadFailed": "读取 {0} 新闻缓存失败，将使用空缓存。{1}{2}",
+    "newsReadFileFailed": "读取 {0} 新闻缓存文件失败，将使用空缓存。{1}{2}",
+    "newsWriteFailed": "写入 {0} 新闻缓存失败。",
+    "newsWriteFileFailed": "写入 {0} 新闻缓存文件失败。",
+    "newsDetailReadFailed": "读取新闻详情缓存失败（ID：{0}），将按缓存未命中继续。{1}{2}",
+    "newsDetailReadFileFailed": "读取新闻详情缓存文件失败（ID：{0}），将按缓存未命中继续。{1}{2}",
+    "newsDetailWriteFailed": "写入新闻详情缓存失败（ID：{0}）。",
+    "newsDetailWriteFileFailed": "写入新闻详情缓存文件失败（ID：{0}）。",
+    "initStart": "正在初始化本地缓存数据库：{0}",
+    "initComplete": "本地缓存数据库初始化完成。",
+    "migrateOldNewsFailed": "迁移旧新闻缓存失败，旧缓存将保持不变。"
+  },
+  "gameOptions": {
+    "setLanguageFailed": "设置游戏语言失败，将不影响游戏启动。{0}{1}"
+  },
+  "highPerformanceGpu": {
+    "setPreferenceFailed": "设置 Java 高性能显卡首选项失败。{0}{1}",
+    "usingSwitcheroo": "正在使用 switcheroo-control 提供的高性能显卡环境变量",
+    "switcherooQueryFailed": "查询 switcheroo-control 失败，将回退到 PRIME 渲染卸载变量。{0}{1}"
+  },
+  "instanceManager": {
+    "folderMissing": "Minecraft 文件夹不存在，跳过扫描：{0}",
+    "folderScanStart": "正在扫描 Minecraft 文件夹：{0}",
+    "scanComplete": "全部 Minecraft 实例扫描完成，共 {0} 个实例，耗时 {1} ms。",
+    "applyStart": "正在将扫描结果应用到实例列表，共 {0} 个实例。",
+    "bedrockScanFailed": "扫描基岩版实例失败：{0}",
+    "javaScanFailed": "扫描 Java 实例失败：{0}",
+    "readVersionMetadataFailed": "读取实例版本元数据失败：{0}{1}",
+    "parseVersionMetadataFailed": "解析实例版本元数据失败：{0}{1}"
+  },
+  "instanceRename": {
+    "failedRollingBack": "[InstanceRename] 重命名实例“{0}”失败，正在回滚。{1}{2}",
+    "rollbackFailed": "[InstanceRename] 回滚失败：{0}"
+  },
+  "ipc": {
+    "queueInitializeStart": "正在初始化外部命令队列。",
+    "queueUiReadyDrain": "主界面已就绪，开始执行等待中的外部命令。",
+    "queueCommandEnqueued": "外部命令已入队，等待执行数量：{0}。",
+    "linuxAutoRegisterFailed": "Linux portal:// 协议自动注册失败，可在设置中重试。{0}{1}",
+    "scriptWritten": "已写出协议注册脚本：{0}",
+    "desktopHandlerWritten": "已写出协议处理器：{0}"
+  },
+  "javaRuntime": {
+    "deepScanReadFailed": "读取深度扫描发现的 Java 运行时失败：{0}"
+  },
+  "launch": {
+    "workflowFaulted": "启动 Minecraft 实例工作流异常结束：{0}",
+    "memoryOptimizationFailed": "游戏启动前内存优化失败，将继续启动游戏。{0}{1}",
+    "startupHeader": "==================== Portal 启动前置信息 ====================",
+    "startupPortalVersion": "Portal 版本：{0}",
+    "startupTime": "启动时间：{0}",
+    "startupOs": "操作系统：{0}（{1}）",
+    "startupDotnet": ".NET 运行时：{0}",
+    "startupArchitecture": "进程架构：{0}",
+    "instanceInfoHeader": "---------------------- 实例信息 ----------------------",
+    "instanceName": "实例名称：{0}",
+    "gameVersion": "游戏版本：{0}",
+    "versionType": "版本类型：{0}",
+    "loaderDescription": "加载器：{0}",
+    "gameDirectory": "游戏目录：{0}",
+    "independentVersion": "独立版本：{0}",
+    "accountInfoHeader": "---------------------- 账户信息 ----------------------",
+    "accountType": "账户类型：{0}",
+    "playerName": "玩家名：{0}",
+    "javaInfoHeader": "---------------------- Java 运行时 ----------------------",
+    "javaVersion": "Java 版本：{0}",
+    "javaType": "Java 类型：{0}",
+    "javaMajorVersion": "Java 主版本：{0}",
+    "javaArchitecture": "Java 架构：{0}",
+    "javaExecutable": "Java 可执行文件：{0}",
+    "memoryWindowHeader": "---------------------- 内存与窗口 ----------------------",
+    "minMemory": "最小内存：{0} MB",
+    "maxMemory": "最大内存：{0} MB",
+    "windowSize": "窗口大小：{0}",
+    "fullscreenMode": "全屏模式：{0}",
+    "jvmArgumentsHeader": "---------------------- JVM 参数 ----------------------",
+    "gameArgumentsHeader": "---------------------- 游戏参数 ----------------------",
+    "environmentVariablesHeader": "---------------------- 环境变量 ----------------------",
+    "wrapperCommandHeader": "---------------------- 包装命令 ----------------------",
+    "footer": "==========================================================="
+  },
+  "launchCustomization": {
+    "runCommand": "执行启动自定义命令，工作目录：{0}",
+    "commandProcessStarted": "启动自定义命令进程：{0}",
+    "killAfterCancelFailed": "取消自定义命令后终止进程失败，进程可能已退出。{0}{1}",
+    "commandExited": "启动自定义命令已结束，退出代码：{0}",
+    "commandScheduled": "已安排后台启动自定义命令，工作目录：{0}",
+    "backgroundCommandFailed": "后台启动自定义命令失败。{0}{1}",
+    "backgroundCommandFaulted": "后台启动自定义命令异常结束：{0}",
+    "watchWindowTitleStart": "开始监视游戏窗口标题，进程：{0}",
+    "watchWindowTitleStopped": "停止监视游戏窗口标题，进程：{0}。{1}{2}",
+    "watchWindowTitleFaulted": "游戏窗口标题监视异常结束，进程：{0}"
+  },
+  "minecraft": {
+    "coreInitialize": "初始化 Minecraft 核心：线程数 {0}，分片数 {1}，重试次数 {2}，分片下载 {3}",
+    "customUserAgentApplied": "Minecraft 核心已应用自定义 User-Agent: {0}",
+    "defaultUserAgentApplied": "Minecraft 核心已应用 Portal 默认 User-Agent: {0}",
+    "instanceConfigLoadFailed": "读取实例配置失败，已回退默认配置：{0}",
+    "instanceConfigBackupFailed": "备份损坏的实例配置失败。"
+  },
+  "modService": {
+    "updateFriendlyNameCacheFailed": "更新模组友好名称缓存失败：{0}",
+    "updateFriendlyNameCacheDenied": "更新模组友好名称缓存被拒绝：{0}"
+  },
+  "modScan": {
+    "installedFailed": "[ModDownload] 扫描已安装模组失败，依赖将照常下载：{0}"
+  },
+  "modpack": {
+    "sniffModrinthFailed": "按 Modrinth 格式识别整合包失败：{0}{1}",
+    "sniffCurseForgeFailed": "按 CurseForge 格式识别整合包失败：{0}{1}",
+    "cleanupTempFailed": "[Export] 清理临时目录失败：{0}",
+    "copyPortalSettingsFailed": "[Export] 复制 Portal 实例设置失败：{0}",
+    "copyPortalIconFailed": "[Export] 复制 Portal 实例图标失败：{0}",
+    "fetchModrinthFailed": "[Export] 从 Modrinth 获取下载地址失败：{0}",
+    "fetchCurseForgeFailed": "[Export] 从 CurseForge 获取下载地址失败：{0}"
+  },
+  "multiplayer": {
+    "fetch1tmcPeersFailed": "获取 1TMC 联机节点失败，将尝试读取本地缓存。{0}{1}",
+    "fetchRelaysFailed": "获取 Portal 中继节点失败，将尝试读取本地缓存。{0}{1}",
+    "relaysPrefetched": "Portal 中继节点列表预取完成，共 {0} 个节点。",
+    "fetchManifestVersionFailed": "获取联机组件清单版本失败。{0}{1}",
+    "cleanupOldVersionFailed": "清理旧版联机组件失败：{0}{1}",
+    "fetchNodeUrlFailed": "获取联机节点 {0} 地址失败。{1}{2}",
+    "readNodeCacheFailed": "读取联机节点缓存失败。{0}{1}",
+    "readRelayCacheFailed": "读取 Portal 中继节点缓存失败。{0}{1}"
+  },
+  "news": {
+    "cacheLoadStart": "开始加载新闻缓存。",
+    "cacheLoadComplete": "新闻缓存加载完成，Java：{0} 条，Bedrock：{1} 条。",
+    "fetchStart": "开始从远程服务刷新新闻。",
+    "fetchComplete": "远程新闻刷新完成，数据是否变更：{0}，耗时 {1} ms。",
+    "fetchFailed": "刷新新闻失败。",
+    "cacheLoadFailed": "加载 {0} 新闻缓存失败。",
+    "fetchEditionFailed": "获取 {0} 新闻失败：{1}",
+    "detailsBackgroundTranslationFailed": "后台刷新翻译新闻失败：{0}",
+    "detailsFetchFailed": "获取新闻详情失败：{0}"
+  },
+  "recentPlay": {
+    "recordFailed": "记录服务器游玩历史失败。",
+    "refreshFailed": "刷新最近游玩失败。"
+  },
+  "resourcePack": {
+    "scanStart": "扫描资源包：实例 {0}，目录 {1}。",
+    "scanComplete": "资源包扫描完成：实例 {0}，发现 {1} 个资源包。",
+    "scanFailed": "扫描资源包失败：{0}",
+    "scanDenied": "扫描资源包被拒绝：{0}",
+    "parseJavaFailed": "解析 Java 资源包失败：{0}",
+    "readJavaFailed": "读取 Java 资源包失败：{0}",
+    "readJavaDenied": "读取 Java 资源包被拒绝：{0}",
+    "readBedrockManifestFailed": "读取基岩版资源包清单失败：{0}",
+    "readBedrockManifestDenied": "读取基岩版资源包清单被拒绝：{0}",
+    "parseBedrockManifestFailed": "解析基岩版资源包清单失败：{0}",
+    "readBedrockSkinManifestFailed": "读取基岩版皮肤包清单失败：{0}",
+    "readBedrockSkinManifestDenied": "读取基岩版皮肤包清单被拒绝：{0}",
+    "parseBedrockSkinManifestFailed": "解析基岩版皮肤包清单失败：{0}",
+    "readSkinCountFailed": "读取皮肤包数量失败：{0}",
+    "readSkinCountDenied": "读取皮肤包数量被拒绝：{0}",
+    "parseSkinCountFailed": "解析皮肤包数量失败：{0}",
+    "readIconFailed": "读取资源包图标失败：{0}",
+    "readIconDenied": "读取资源包图标被拒绝：{0}",
+    "sizeStatsFailed": "统计资源包大小失败：{0}",
+    "sizeStatsDenied": "统计资源包大小被拒绝：{0}",
+    "parseJavaMetadataFailed": "解析 Java 资源包元数据失败：{0}"
+  },
+  "serverManager": {
+    "readListFailed": "读取服务器列表失败：{0}{1}",
+    "addFailed": "添加服务器失败：{0} {1}{2}",
+    "editFailed": "编辑服务器失败：{0} {1}{2}",
+    "deleteFailed": "删除服务器失败：{0}{1}",
+    "invalidIconBase64": "服务器图标 Base64 数据无效，将忽略图标。{0}{1}",
+    "bedrockAddFailed": "添加基岩版服务器失败：{0} {1}{2}",
+    "bedrockEditFailed": "编辑基岩版服务器失败：{0} {1}{2}",
+    "bedrockDeleteFailed": "删除基岩版服务器失败：{0}{1}",
+    "bedrockInvalidIconBase64": "基岩版服务器图标 Base64 数据无效，将忽略图标。{0}{1}"
+  },
+  "serverPing": {
+    "bedrockDetectionFailed": "检测基岩版服务器状态失败：{0}{1}",
+    "bedrockResolveFailed": "解析基岩版服务器地址失败：{0}{1}",
+    "resolveFailed": "解析服务器地址失败：{0}{1}",
+    "parseResponseFailed": "解析服务器状态响应失败。{0}{1}"
+  },
+  "systemResources": {
+    "gpuWarmupFailed": "预热 GPU 信息采集失败。",
+    "memoryCollectionFailed": "采集内存资源信息失败。{0}{1}",
+    "diskCollectionFailed": "采集磁盘资源信息失败。{0}{1}",
+    "networkCollectionFailed": "采集网络资源信息失败。{0}{1}",
+    "gpuCollectionFailed": "采集 GPU 资源信息失败。{0}{1}",
+    "workingSetTrimFailed": "进程工作集修剪失败，Win32 错误码：{0}。",
+    "workingSetTrimmed": "进程工作集修剪完成：{0} MiB -> {1} MiB。",
+    "workingSetTrimException": "进程工作集自动修剪发生异常。"
+  },
+  "update": {
+    "prepareStart": "开始检查并准备应用更新。",
+    "packageSelected": "已选择更新包：{0}，下载目录：{1}",
+    "prepareComplete": "应用更新准备完成，耗时 {0} ms。",
+    "prepareFailed": "准备应用更新失败。",
+    "cleanupOldDirectoryFailed": "删除过期更新目录失败：{0}",
+    "cleanupOldDirectoriesFailed": "清理过期更新目录失败。",
+    "writePermissionCheckFailed": "检测目录写入权限失败：{0}{1}"
+  },
+  "versionModify": {
+    "failedRestoring": "[VersionModify] 修改实例“{0}”失败，正在恢复原版本文件。{1}{2}"
   }
 }

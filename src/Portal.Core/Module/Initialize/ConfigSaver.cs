@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Json;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Helper;
@@ -29,7 +30,7 @@ public static class ConfigSaver
     private static async Task FlushConfigAsync()
     {
         var stopwatch = Stopwatch.StartNew();
-        Logger.Info($"开始保存应用配置：{ConfigPath.SettingDataPath}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.config_saveStart.CurrentValue(), ConfigPath.SettingDataPath));
         try
         {
             var payload = Dispatcher.UIThread.CheckAccess()
@@ -46,11 +47,11 @@ public static class ConfigSaver
                 }
             }).ConfigureAwait(false);
 
-            Logger.Info($"应用配置保存完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+            Logger.Info(string.Format(LogLanguageManager.Instance.config_saveComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
         }
         catch (Exception ex)
         {
-            Logger.Error($"保存应用配置失败：{ConfigPath.SettingDataPath}", ex);
+            Logger.Error(string.Format(LogLanguageManager.Instance.config_saveFailed.CurrentValue(), ConfigPath.SettingDataPath), ex);
         }
     }
 

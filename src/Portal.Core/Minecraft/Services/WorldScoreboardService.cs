@@ -1,5 +1,6 @@
 using fNbt;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -45,11 +46,11 @@ public sealed class WorldScoreboardService
     {
         cancellationToken.ThrowIfCancellationRequested();
         var path = FindPath(worldPath);
-        if (!File.Exists(path)) throw new FileNotFoundException("未找到积分榜数据文件。", path);
+        if (!File.Exists(path)) throw new FileNotFoundException(CommonLanguageManager.Instance.world_scoreboardFileNotFound.CurrentValue(), path);
 
         var file = new NbtFile();
         file.LoadFromFile(path);
-        var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException("积分榜数据文件不包含 data 标签。");
+        var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException(CommonLanguageManager.Instance.world_scoreboardMissingDataTag.CurrentValue());
         ReplaceList(data, "Objectives", scoreboard.Objectives.Select(x =>
         {
             var objective = new NbtCompound();

@@ -11,6 +11,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Data = Portal.Core.Const.Data;
@@ -24,15 +25,15 @@ public static class MinecraftInstallationTasks
     {
         return TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"安装 Minecraft Java {versionId}",
-            Description = "正在创建安装任务",
+            Name = string.Format(CommonLanguageManager.Instance.minecraft_installJavaTaskName.CurrentValue(), versionId),
+            Description = CommonLanguageManager.Instance.minecraft_creatingInstallTask.CurrentValue(),
             Progress = 0,
             Actions =
             [
                 new TaskActionDefinition
                 {
-                    Name = "取消安装",
-                    Description = "取消当前安装任务。",
+                    Name = CommonLanguageManager.Instance.minecraft_cancelInstall.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.minecraft_cancelInstallDescription.CurrentValue(),
                     IconKey = "Cancel",
                     ExecuteAsync = (managedTask, _) =>
                     {
@@ -74,7 +75,8 @@ public static class MinecraftInstallationTasks
         var sourceRoots =
             MinecraftResourceRoots.ResolveForInstall(Data.ConfigEntry.MinecraftFolders, folder.FolderPath);
 
-        await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
+        await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_validateInstallConfig.CurrentValue(),
+            CommonLanguageManager.Instance.minecraft_checkingInstallConfig.CurrentValue(), async step =>
         {
             if (RequiresJavaRuntime(selectedEntries.Keys) && string.IsNullOrWhiteSpace(javaPath))
             {
@@ -82,11 +84,11 @@ public static class MinecraftInstallationTasks
                     progress => ReportJavaInstallProgress(step, progress), step.CancellationToken);
                 javaPath = runtime?.JavaPath;
                 if (string.IsNullOrWhiteSpace(javaPath))
-                    throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
+                    throw new InvalidOperationException(CommonLanguageManager.Instance.minecraft_javaRuntimeRequired.CurrentValue());
             }
 
             if (Directory.Exists(Path.Combine(instancesRoot, versionId)))
-                throw new InvalidOperationException($"实例 ID “{versionId}”已存在于所选文件夹，请更换名称。");
+                throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.minecraft_instanceIdExists.CurrentValue(), versionId));
             step.ReportProgress(1);
             await Task.CompletedTask;
         });
@@ -111,7 +113,8 @@ public static class MinecraftInstallationTasks
                 ? CreatePreloadOptifineInstaller(metaRoot, (OptifineInstallEntry)optifineEntry, javaPath)
                 : null;
 
-            var vanillaTask = RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", async step =>
+            var vanillaTask = RunStepAsync(context, CommonLanguageManager.Instance.minecraft_installVanillaStep.CurrentValue(),
+                string.Format(CommonLanguageManager.Instance.minecraft_installingMinecraft.CurrentValue(), vanilla.Id), async step =>
             {
                 var installer = VanillaInstaller.Create(metaRoot, vanilla, vanillaId);
                 installer.SourceRootDirectories = sourceRoots;
@@ -120,14 +123,16 @@ public static class MinecraftInstallationTasks
             });
             var preloadTasks = new List<Task>();
             if (primaryInstaller is not null)
-                preloadTasks.Add(RunStepAsync(context, $"预下载 {primary.Key}", $"正在并行下载 {primary.Key} 安装文件", step =>
+                preloadTasks.Add(RunStepAsync(context, string.Format(CommonLanguageManager.Instance.minecraft_preloadLoaderStep.CurrentValue(), primary.Key),
+                    string.Format(CommonLanguageManager.Instance.minecraft_parallelDownloading.CurrentValue(), primary.Key), step =>
                 {
                     AttachProgressReporter(primaryInstaller, step);
                     return RunInBackgroundAsync(token => PreloadInstallerAsync(primaryInstaller, token),
                         step.CancellationToken);
                 }));
             if (optifineInstaller is not null)
-                preloadTasks.Add(RunStepAsync(context, "预下载 OptiFine", "正在并行下载 OptiFine 安装包", step =>
+                preloadTasks.Add(RunStepAsync(context, CommonLanguageManager.Instance.minecraft_preloadOptifineStep.CurrentValue(),
+                    CommonLanguageManager.Instance.minecraft_parallelDownloadingOptifine.CurrentValue(), step =>
                 {
                     AttachProgressReporter(optifineInstaller, step);
                     return RunInBackgroundAsync(optifineInstaller.PreloadAsync, step.CancellationToken);
@@ -136,7 +141,8 @@ public static class MinecraftInstallationTasks
             await Task.WhenAll([vanillaTask, .. preloadTasks]);
             var minecraft = await vanillaTask;
             if (primaryInstaller is not null)
-                minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}",
+                minecraft = await RunInstallerStepAsync(context, string.Format(CommonLanguageManager.Instance.minecraft_installLoaderStep.CurrentValue(), primary.Key),
+                    string.Format(CommonLanguageManager.Instance.minecraft_installingLatestLoader.CurrentValue(), primary.Key),
                     primaryInstaller);
 
             if (optifineInstaller is not null)
@@ -145,10 +151,12 @@ public static class MinecraftInstallationTasks
                     ? OptifineInstaller.Create(metaRoot, (OptifineInstallEntry)optifineEntry!, minecraft)
                     : OptifineInstaller.Create(metaRoot, javaPath!, (OptifineInstallEntry)optifineEntry!,
                         effectiveLoaderId);
-                minecraft = await RunInstallerStepAsync(context, "安装 OptiFine", "正在安装最新版 OptiFine", installer);
+                minecraft = await RunInstallerStepAsync(context, CommonLanguageManager.Instance.minecraft_installOptifineStep.CurrentValue(),
+                    CommonLanguageManager.Instance.minecraft_installingLatestOptifine.CurrentValue(), installer);
             }
 
-            await RunStepAsync(context, "创建游戏实例", "正在生成实例配置", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_createInstanceStep.CurrentValue(),
+                CommonLanguageManager.Instance.minecraft_generatingInstanceConfig.CurrentValue(), step =>
             {
                 Directory.CreateDirectory(instancesRoot);
                 if (hasLoaders)
@@ -177,14 +185,15 @@ public static class MinecraftInstallationTasks
                 return Task.CompletedTask;
             });
 
-            await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_refreshInstancesStep.CurrentValue(),
+                CommonLanguageManager.Instance.minecraft_scanningNewInstances.CurrentValue(), step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-                step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
+                step.SetDescription(string.Format(CommonLanguageManager.Instance.minecraft_instancesRefreshed.CurrentValue(), minecraft.Id));
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            context.SetDescription($"已完成 Minecraft Java {minecraft.Id} 的安装");
+            context.SetDescription(string.Format(CommonLanguageManager.Instance.minecraft_installationComplete.CurrentValue(), minecraft.Id));
         }
         catch (OperationCanceledException exception)
         {
@@ -229,7 +238,8 @@ public static class MinecraftInstallationTasks
         MinecraftFolderEntry folder, string versionId,
         IReadOnlyDictionary<LoaderKind, IInstallEntry> selectedEntries, string? javaPath)
     {
-        await RunStepAsync(context, "验证安装配置", "正在检查安装目录、实例 ID 和 Java 运行时", async step =>
+        await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_validateInstallConfig.CurrentValue(),
+            CommonLanguageManager.Instance.minecraft_checkingInstallConfig.CurrentValue(), async step =>
         {
             if (RequiresJavaRuntime(selectedEntries.Keys) && string.IsNullOrWhiteSpace(javaPath))
             {
@@ -237,11 +247,11 @@ public static class MinecraftInstallationTasks
                     progress => ReportJavaInstallProgress(step, progress), step.CancellationToken);
                 javaPath = runtime?.JavaPath;
                 if (string.IsNullOrWhiteSpace(javaPath))
-                    throw new InvalidOperationException("所选安装方案需要有效的 Java 运行时。");
+                    throw new InvalidOperationException(CommonLanguageManager.Instance.minecraft_javaRuntimeRequired.CurrentValue());
             }
 
             if (Directory.Exists(Path.Combine(folder.FolderPath, "versions", versionId)))
-                throw new InvalidOperationException($"实例 ID “{versionId}”已存在于所选文件夹，请更换名称。");
+                throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.minecraft_instanceIdExists.CurrentValue(), versionId));
             step.ReportProgress(1);
             await Task.CompletedTask;
         });
@@ -265,7 +275,8 @@ public static class MinecraftInstallationTasks
                 ? CreatePreloadOptifineInstaller(folder.FolderPath, (OptifineInstallEntry)optifineEntry, javaPath)
                 : null;
 
-            var vanillaTask = RunStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {vanilla.Id}", async step =>
+            var vanillaTask = RunStepAsync(context, CommonLanguageManager.Instance.minecraft_installVanillaStep.CurrentValue(),
+                string.Format(CommonLanguageManager.Instance.minecraft_installingMinecraft.CurrentValue(), vanilla.Id), async step =>
             {
                 var installer = VanillaInstaller.Create(folder.FolderPath, vanilla, vanillaId);
                 installer.SourceRootDirectories = sourceRoots;
@@ -274,14 +285,16 @@ public static class MinecraftInstallationTasks
             });
             var preloadTasks = new List<Task>();
             if (primaryInstaller is not null)
-                preloadTasks.Add(RunStepAsync(context, $"预下载 {primary.Key}", $"正在并行下载 {primary.Key} 安装文件", step =>
+                preloadTasks.Add(RunStepAsync(context, string.Format(CommonLanguageManager.Instance.minecraft_preloadLoaderStep.CurrentValue(), primary.Key),
+                    string.Format(CommonLanguageManager.Instance.minecraft_parallelDownloading.CurrentValue(), primary.Key), step =>
                 {
                     AttachProgressReporter(primaryInstaller, step);
                     return RunInBackgroundAsync(token => PreloadInstallerAsync(primaryInstaller, token),
                         step.CancellationToken);
                 }));
             if (optifineInstaller is not null)
-                preloadTasks.Add(RunStepAsync(context, "预下载 OptiFine", "正在并行下载 OptiFine 安装包", step =>
+                preloadTasks.Add(RunStepAsync(context, CommonLanguageManager.Instance.minecraft_preloadOptifineStep.CurrentValue(),
+                    CommonLanguageManager.Instance.minecraft_parallelDownloadingOptifine.CurrentValue(), step =>
                 {
                     AttachProgressReporter(optifineInstaller, step);
                     return RunInBackgroundAsync(optifineInstaller.PreloadAsync, step.CancellationToken);
@@ -290,7 +303,8 @@ public static class MinecraftInstallationTasks
             await Task.WhenAll([vanillaTask, .. preloadTasks]);
             var minecraft = await vanillaTask;
             if (primaryInstaller is not null)
-                minecraft = await RunInstallerStepAsync(context, $"安装 {primary.Key}", $"正在安装最新版 {primary.Key}",
+                minecraft = await RunInstallerStepAsync(context, string.Format(CommonLanguageManager.Instance.minecraft_installLoaderStep.CurrentValue(), primary.Key),
+                    string.Format(CommonLanguageManager.Instance.minecraft_installingLatestLoader.CurrentValue(), primary.Key),
                     primaryInstaller);
 
             if (optifineInstaller is not null)
@@ -299,17 +313,19 @@ public static class MinecraftInstallationTasks
                     ? OptifineInstaller.Create(folder.FolderPath, (OptifineInstallEntry)optifineEntry!, minecraft)
                     : OptifineInstaller.Create(folder.FolderPath, javaPath!, (OptifineInstallEntry)optifineEntry!,
                         versionId);
-                minecraft = await RunInstallerStepAsync(context, "安装 OptiFine", "正在安装最新版 OptiFine", installer);
+                minecraft = await RunInstallerStepAsync(context, CommonLanguageManager.Instance.minecraft_installOptifineStep.CurrentValue(),
+                    CommonLanguageManager.Instance.minecraft_installingLatestOptifine.CurrentValue(), installer);
             }
 
-            await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_refreshInstancesStep.CurrentValue(),
+                CommonLanguageManager.Instance.minecraft_scanningNewInstances.CurrentValue(), step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-                step.SetDescription($"已刷新实例列表，{minecraft.Id} 已可用");
+                step.SetDescription(string.Format(CommonLanguageManager.Instance.minecraft_instancesRefreshed.CurrentValue(), minecraft.Id));
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            context.SetDescription($"已完成 Minecraft Java {minecraft.Id} 的安装");
+            context.SetDescription(string.Format(CommonLanguageManager.Instance.minecraft_installationComplete.CurrentValue(), minecraft.Id));
         }
         catch (OperationCanceledException exception)
         {
@@ -354,7 +370,7 @@ public static class MinecraftInstallationTasks
                 ForgeInstaller.Create(folder, javaPath!, (ForgeInstallEntry)entry, versionId),
             LoaderKind.Fabric => FabricInstaller.Create(folder, (FabricInstallEntry)entry, versionId),
             LoaderKind.Quilt => QuiltInstaller.Create(folder, (QuiltInstallEntry)entry, versionId),
-            _ => throw new InvalidOperationException($"不支持的加载器：{kind}")
+            _ => throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.minecraft_unsupportedLoader.CurrentValue(), kind))
         };
         installer.SourceRootDirectories = sourceRoots;
         return installer;
@@ -373,7 +389,7 @@ public static class MinecraftInstallationTasks
             ForgeInstaller forge => forge.PreloadAsync(cancellationToken),
             FabricInstaller fabric => fabric.PreloadAsync(cancellationToken),
             QuiltInstaller quilt => quilt.PreloadAsync(cancellationToken),
-            _ => throw new NotSupportedException($"不支持预下载的加载器：{installer.GetType().Name}")
+            _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.minecraft_unsupportedPreloadLoader.CurrentValue(), installer.GetType().Name))
         };
     }
 
@@ -453,7 +469,7 @@ public static class MinecraftInstallationTasks
             ? $" {progress.FinishedStepTaskCount}/{progress.TotalStepTaskCount}"
             : string.Empty;
         var speed = progress.IsStepSupportSpeed && progress.Speed >= 0
-            ? $"，{FormatDownloadSpeed(progress.Speed)}"
+            ? string.Format(CommonLanguageManager.Instance.minecraft_speedSuffix.CurrentValue(), FormatDownloadSpeed(progress.Speed))
             : string.Empty;
         context.SetDescription($"{GetInstallStepDescription(progress.StepName)}{count}{speed}");
     }
@@ -468,7 +484,7 @@ public static class MinecraftInstallationTasks
             {
                 context.ReportProgress(progress.Fraction);
                 context.SetDescription(progress.SpeedBytesPerSecond > 0
-                    ? $"{progress.Stage}，下载速度：{DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true)}"
+                    ? $"{progress.Stage}{string.Format(CommonLanguageManager.Instance.minecraft_javaInstallSpeed.CurrentValue(), DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true))}"
                     : progress.Stage);
             }
             catch (InvalidOperationException)
@@ -481,19 +497,19 @@ public static class MinecraftInstallationTasks
     {
         return step switch
         {
-            InstallStep.Started => "正在准备安装器",
-            InstallStep.DownloadVersionJson => "正在下载版本元数据",
-            InstallStep.ParseMinecraft => "正在解析 Minecraft 版本信息",
-            InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
-            InstallStep.DownloadLibraries => "正在下载游戏依赖文件",
-            InstallStep.CopyLibraries => "正在复制本地资源文件",
-            InstallStep.DownloadPackage => "正在下载加载器安装包",
-            InstallStep.ParsePackage => "正在解析加载器安装包",
-            InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入版本与依赖配置",
-            InstallStep.RunInstallProcessor => "正在运行加载器安装处理器",
-            InstallStep.RanToCompletion => "安装文件已完成",
-            InstallStep.Interrupted => "安装已中断",
-            _ => "正在安装游戏文件"
+            InstallStep.Started => CommonLanguageManager.Instance.minecraft_stepPreparingInstaller.CurrentValue(),
+            InstallStep.DownloadVersionJson => CommonLanguageManager.Instance.minecraft_stepDownloadingVersionJson.CurrentValue(),
+            InstallStep.ParseMinecraft => CommonLanguageManager.Instance.minecraft_stepParsingMinecraft.CurrentValue(),
+            InstallStep.DownloadAssetIndexFile => CommonLanguageManager.Instance.minecraft_stepDownloadingAssetIndex.CurrentValue(),
+            InstallStep.DownloadLibraries => CommonLanguageManager.Instance.minecraft_stepDownloadingLibraries.CurrentValue(),
+            InstallStep.CopyLibraries => CommonLanguageManager.Instance.minecraft_stepCopyingLibraries.CurrentValue(),
+            InstallStep.DownloadPackage => CommonLanguageManager.Instance.minecraft_stepDownloadingPackage.CurrentValue(),
+            InstallStep.ParsePackage => CommonLanguageManager.Instance.minecraft_stepParsingPackage.CurrentValue(),
+            InstallStep.WriteVersionJsonAndSomeDependencies => CommonLanguageManager.Instance.minecraft_stepWritingVersionConfig.CurrentValue(),
+            InstallStep.RunInstallProcessor => CommonLanguageManager.Instance.minecraft_stepRunningInstallProcessor.CurrentValue(),
+            InstallStep.RanToCompletion => CommonLanguageManager.Instance.minecraft_stepInstallComplete.CurrentValue(),
+            InstallStep.Interrupted => CommonLanguageManager.Instance.minecraft_stepInstallInterrupted.CurrentValue(),
+            _ => CommonLanguageManager.Instance.minecraft_stepInstallingGameFiles.CurrentValue()
         };
     }
 

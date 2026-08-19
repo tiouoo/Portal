@@ -9,6 +9,7 @@ using MinecraftLaunch.Utilities;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
@@ -36,12 +37,12 @@ public static class UpdateChecker
         {
             if (!noreply && sender is not null)
                 Dispatcher.UIThread.Post(() =>
-                    sender.Notice($"网络请求错误: {e.StatusCode}\n{e.Message}", NotificationType.Error));
+                    sender.Notice(string.Format(CommonLanguageManager.Instance.update_networkRequestError.CurrentValue(), e.StatusCode, e.Message), NotificationType.Error));
         }
         catch (Exception e)
         {
             if (!noreply && sender is not null)
-                Dispatcher.UIThread.Post(() => sender.Notice($"检查更新失败\n{e.Message}", NotificationType.Error));
+                Dispatcher.UIThread.Post(() => sender.Notice(string.Format(CommonLanguageManager.Instance.update_checkFailed.CurrentValue(), e.Message), NotificationType.Error));
         }
 
         return null;
@@ -53,7 +54,7 @@ public static class UpdateChecker
         {
             UpdateSource.Github => GetGithubRelease(),
             UpdateSource.Cnb => GetCnbRelease(),
-            _ => throw new NotSupportedException($"不支持更新源“{Data.ConfigEntry.UpdateSource}”。")
+            _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedSource.CurrentValue(), Data.ConfigEntry.UpdateSource))
         };
     }
 
@@ -67,7 +68,7 @@ public static class UpdateChecker
         response.EnsureSuccessStatusCode();
         var size = response.Content.Headers.ContentLength;
         if (size is not > 0)
-            throw new InvalidDataException($"无法获取更新包大小：{asset.Name}");
+            throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.update_cannotGetAssetSize.CurrentValue(), asset.Name));
         return asset with { Size = size.Value };
     }
 
@@ -109,7 +110,7 @@ public static class UpdateChecker
         var token = CredentialsService.CnbUpdateToken;
         if (string.IsNullOrWhiteSpace(token))
             throw new InvalidOperationException(
-                $"CNB 更新源未配置 {CredentialsService.CnbUpdateTokenEnvironmentVariable}。请使用包含该变量的正式构建。");
+                string.Format(CommonLanguageManager.Instance.update_cnbSourceNotConfigured.CurrentValue(), CredentialsService.CnbUpdateTokenEnvironmentVariable));
 
         Logger.Info($"Checking update from CNB: {CnbReleasesUrl}");
         var text = await HttpUtil.Request(CnbReleasesUrl)
@@ -130,7 +131,7 @@ public static class UpdateChecker
         Func<JsonElement, UpdateAsset> toAsset)
     {
         var title = GetString(release, "name")?.Trim();
-        if (string.IsNullOrEmpty(title)) throw new InvalidOperationException("更新发布缺少版本名称。");
+        if (string.IsNullOrEmpty(title)) throw new InvalidOperationException(CommonLanguageManager.Instance.update_releaseMissingTitle.CurrentValue());
 
         var assets = release.TryGetProperty("assets", out var assetsElement) &&
                      assetsElement.ValueKind == JsonValueKind.Array
@@ -146,7 +147,7 @@ public static class UpdateChecker
     private static JsonElement LatestStableRelease(JsonElement releases)
     {
         if (releases.ValueKind != JsonValueKind.Array)
-            throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.update_noStableRelease.CurrentValue());
 
         JsonElement? best = null;
         (long Major, long Minor, long Patch)? bestVersion = null;
@@ -163,7 +164,7 @@ public static class UpdateChecker
             }
         }
 
-        return best ?? throw new InvalidOperationException("远程仓库中未找到正式版发布。");
+        return best ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_noStableRelease.CurrentValue());
     }
 
     private static bool IsNewerVersion((long Major, long Minor, long Patch) candidate,
@@ -236,7 +237,7 @@ public static class UpdateChecker
             "release" or "stable" => "release",
             "nightly" => "nightly",
             "commit" => "commit",
-            _ => throw new NotSupportedException($"不支持更新通道“{channel}”。")
+            _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedChannel.CurrentValue(), channel))
         };
     }
 

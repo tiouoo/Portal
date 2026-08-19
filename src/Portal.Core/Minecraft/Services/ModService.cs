@@ -7,6 +7,7 @@ using Flurl.Http;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -463,11 +464,11 @@ public sealed class ModService
             }
             catch (IOException exception)
             {
-                Logger.Error($"更新模组友好名称缓存失败：{mod.FilePath}", exception);
+                Logger.Error(string.Format(LogLanguageManager.Instance.modService_updateFriendlyNameCacheFailed.CurrentValue(), mod.FilePath), exception);
             }
             catch (UnauthorizedAccessException exception)
             {
-                Logger.Error($"更新模组友好名称缓存被拒绝：{mod.FilePath}", exception);
+                Logger.Error(string.Format(LogLanguageManager.Instance.modService_updateFriendlyNameCacheDenied.CurrentValue(), mod.FilePath), exception);
             }
         }
     }

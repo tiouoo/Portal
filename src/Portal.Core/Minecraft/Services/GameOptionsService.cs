@@ -1,4 +1,5 @@
 using System.Text;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -13,7 +14,7 @@ public static class GameOptionsService
         }
         catch (Exception exception)
         {
-            Logger.Warning($"设置游戏语言失败，将不影响游戏启动。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.gameOptions_setLanguageFailed.CurrentValue(), Environment.NewLine, exception));
         }
     }
 

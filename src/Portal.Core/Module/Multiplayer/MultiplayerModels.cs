@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Localization;
 
 namespace Portal.Core.Module.Multiplayer;
 
@@ -24,8 +25,8 @@ public sealed class OnlineMember : ObservableObject
 
     public string Role => Kind.Equals("HOST", StringComparison.OrdinalIgnoreCase) ||
                           Kind.Equals("host", StringComparison.OrdinalIgnoreCase)
-        ? "房主"
-        : "成员";
+        ? CommonLanguageManager.Instance.multiplayer_roleHost.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_roleMember.CurrentValue();
 
     public string Detail => string.IsNullOrWhiteSpace(Vendor) ? Role : $"{Role}·{Vendor}";
 }

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Classes;
 
@@ -14,11 +15,11 @@ public partial class BedrockAccount : ObservableObject
     [ObservableProperty] public partial DateTimeOffset ExpiresAt { get; set; }
     [ObservableProperty] public partial DateTime LastLoginTime { get; set; } = DateTime.MinValue;
 
-    public string DisplayAccountNote => string.IsNullOrWhiteSpace(AccountNote) ? "基岩版 · Xbox" : AccountNote;
-    public string ShortDisplay => $"基岩·{Gamertag}";
+    public string DisplayAccountNote => string.IsNullOrWhiteSpace(AccountNote) ? CommonLanguageManager.Instance.account_bedrockXbox.CurrentValue() : AccountNote;
+    public string ShortDisplay => string.Format(CommonLanguageManager.Instance.account_bedrockShort.CurrentValue(), Gamertag);
 
     public string DisplayLastLoginTime => LastLoginTime == DateTime.MinValue
-        ? "从未登录"
+        ? CommonLanguageManager.Instance.account_neverLoggedIn.CurrentValue()
         : LastLoginTime.ToString("yyyy-MM-dd HH:mm");
 
     partial void OnAccountNoteChanged(string? value)

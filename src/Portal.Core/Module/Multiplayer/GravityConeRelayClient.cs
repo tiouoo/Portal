@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Portal.Core.Const;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Module.Multiplayer;
@@ -21,7 +22,7 @@ public sealed class GravityConeRelayClient
     public async Task PrefetchAsync(CancellationToken cancellationToken = default)
     {
         var relays = await FetchRelaysAsync(cancellationToken);
-        Logger.Info($"Portal 中继节点列表预取完成，共 {relays.Count} 个节点。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.multiplayer_relaysPrefetched.CurrentValue(), relays.Count));
     }
 
     public async Task<IReadOnlyList<string>> FetchRelaysAsync(CancellationToken cancellationToken)
@@ -36,7 +37,7 @@ public sealed class GravityConeRelayClient
         var document = JsonDocument.Parse(body);
         var root = document.RootElement;
         if (!root.TryGetProperty("peers", out var peers) || peers.ValueKind != JsonValueKind.Array)
-            throw new InvalidDataException("Portal 中继节点列表缺少 peers 数据。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysMissingPeers.CurrentValue());
 
         var result = new List<string>();
         foreach (var peer in peers.EnumerateArray())
@@ -49,7 +50,7 @@ public sealed class GravityConeRelayClient
 
         result = result.Distinct(StringComparer.Ordinal).ToList();
         if (result.Count == 0)
-            throw new InvalidDataException("Portal 中继节点列表未包含可用节点。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysNoUsableNodes.CurrentValue());
 
         await SaveCacheAsync(result, cancellationToken);
         return result;
@@ -67,7 +68,7 @@ public sealed class GravityConeRelayClient
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            Logger.Warning($"读取 Portal 中继节点缓存失败。{Environment.NewLine}{ex}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_readRelayCacheFailed.CurrentValue(), Environment.NewLine, ex));
             return null;
         }
     }
@@ -80,7 +81,7 @@ public sealed class GravityConeRelayClient
         while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
         {
             if (memory.Length + read > MaxResponseSizeBytes)
-                throw new InvalidDataException("Portal 中继节点响应过大。");
+                throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relayResponseTooLarge.CurrentValue());
             await memory.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
         }
 

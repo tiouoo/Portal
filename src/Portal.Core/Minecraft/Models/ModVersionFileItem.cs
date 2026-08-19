@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using Portal.Core.App.Helpers;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Models;
 
@@ -103,8 +104,10 @@ public sealed record ModVersionFileItem(
     {
         return type switch
         {
-            FileReleaseType.Release => "正式版", FileReleaseType.Beta => "测试B版", FileReleaseType.Alpha => "测试A版",
-            _ => "测试版"
+            FileReleaseType.Release => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
+            FileReleaseType.Beta => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
+            FileReleaseType.Alpha => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
+            _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
         };
     }
 }

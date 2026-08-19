@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Services.SystemResources;
@@ -69,18 +70,18 @@ public static class MemoryOptimizationService
     {
         var executable = Environment.ProcessPath;
         if (string.IsNullOrWhiteSpace(executable))
-            throw new InvalidOperationException("无法定位 Portal 可执行文件。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.systemResources_cannotLocateExecutable.CurrentValue());
 
         using var process = Process.Start(new ProcessStartInfo(executable, "--memory-optimize")
         {
             UseShellExecute = true,
             Verb = "runas",
             WindowStyle = ProcessWindowStyle.Hidden
-        }) ?? throw new InvalidOperationException("无法申请管理员权限以执行内存优化。");
+        }) ?? throw new InvalidOperationException(CommonLanguageManager.Instance.systemResources_adminPrivilegeRequestFailed.CurrentValue());
 
         await process.WaitForExitAsync(cancellationToken);
         if (process.ExitCode != 0)
-            throw new InvalidOperationException("管理员权限被拒绝或内存优化未完成。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.systemResources_adminPrivilegeRejected.CurrentValue());
     }
 
     private static void OptimizeWindowsMemory()
@@ -108,7 +109,7 @@ public static class MemoryOptimizationService
                 if (!AdjustTokenPrivileges(token, false, ref privileges, 0, IntPtr.Zero, IntPtr.Zero))
                     throw CreatePrivilegeException();
                 if (Marshal.GetLastWin32Error() == 1300)
-                    throw new UnauthorizedAccessException("当前进程没有内存优化所需的权限。");
+                    throw new UnauthorizedAccessException(CommonLanguageManager.Instance.systemResources_missingPrivilege.CurrentValue());
             }
 
             var statuses = new List<int>(7);
@@ -131,7 +132,7 @@ public static class MemoryOptimizationService
             statuses.Add(NtSetSystemInformation(130, ref combine, Marshal.SizeOf<MemoryCombineInformationEx>()));
 
             if (statuses[0] < 0 && statuses[1] < 0)
-                throw new UnauthorizedAccessException("内存优化需要管理员权限。");
+                throw new UnauthorizedAccessException(CommonLanguageManager.Instance.systemResources_memoryOptimizationNeedsAdmin.CurrentValue());
         }
         finally
         {
@@ -158,17 +159,17 @@ public static class MemoryOptimizationService
 
             if (!TrimCurrentProcessWorkingSet())
             {
-                Logger.Warning($"进程工作集修剪失败，Win32 错误码：{Marshal.GetLastWin32Error()}。");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.systemResources_workingSetTrimFailed.CurrentValue(), Marshal.GetLastWin32Error()));
                 return;
             }
 
             process.Refresh();
-            Logger.Debug($"进程工作集修剪完成：{before / 1024d / 1024d:F1} MiB -> " +
-                         $"{process.WorkingSet64 / 1024d / 1024d:F1} MiB。");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.systemResources_workingSetTrimmed.CurrentValue(),
+                $"{before / 1024d / 1024d:F1}", $"{process.WorkingSet64 / 1024d / 1024d:F1}"));
         }
         catch (Exception exception)
         {
-            Logger.Error("进程工作集自动修剪发生异常。", exception);
+            Logger.Error(LogLanguageManager.Instance.systemResources_workingSetTrimException.CurrentValue(), exception);
         }
         finally
         {
@@ -180,7 +181,7 @@ public static class MemoryOptimizationService
     {
         var error = Marshal.GetLastWin32Error();
         return error is 5 or 1300
-            ? new UnauthorizedAccessException("当前进程没有内存优化所需的权限。")
+            ? new UnauthorizedAccessException(CommonLanguageManager.Instance.systemResources_missingPrivilege.CurrentValue())
             : new Win32Exception(error);
     }
 

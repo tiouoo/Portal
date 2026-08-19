@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Graphics;
 
@@ -7,7 +8,7 @@ public sealed record Renderer
     public static readonly Renderer Default = new()
     {
         Name = "DEFAULT",
-        DisplayName = "默认",
+        DisplayName = CommonLanguageManager.Instance.renderer_default.CurrentValue(),
         Api = GraphicsApi.Default
     };
 
@@ -55,7 +56,7 @@ public static class Renderers
     public static readonly Renderer OpenGlLlvmPipe = new()
     {
         Name = "LLVMPIPE",
-        DisplayName = "LLVM (软件渲染)",
+        DisplayName = CommonLanguageManager.Instance.renderer_llvmSoftware.CurrentValue(),
         Api = GraphicsApi.OpenGL,
         MesaDriverName = "llvmpipe"
     };
@@ -80,7 +81,7 @@ public static class Renderers
     public static readonly Renderer VulkanLavaPipe = new()
     {
         Name = "LAVAPIPE",
-        DisplayName = "Lavapipe (软件渲染)",
+        DisplayName = CommonLanguageManager.Instance.renderer_lavapipeSoftware.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "lvp",
         MesaDriverName = "lavapipe"
@@ -99,7 +100,7 @@ public static class Renderers
     public static readonly Renderer VulkanNvidia = new()
     {
         Name = "NVIDIA_VULKAN",
-        DisplayName = "NVIDIA 官方驱动",
+        DisplayName = CommonLanguageManager.Instance.renderer_nvidiaOfficial.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "nvidia"
     };
@@ -107,7 +108,7 @@ public static class Renderers
     public static readonly Renderer VulkanNvk = new()
     {
         Name = "NVIDIA_NVK",
-        DisplayName = "NVIDIA NVK (开源)",
+        DisplayName = CommonLanguageManager.Instance.renderer_nvidiaNvk.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "nouveau",
         IsSupportedOverride = platform => platform.Os == OperatingSystemKind.Linux
@@ -116,7 +117,7 @@ public static class Renderers
     public static readonly Renderer VulkanAmdvlk = new()
     {
         Name = "AMDVLK",
-        DisplayName = "AMD 官方驱动",
+        DisplayName = CommonLanguageManager.Instance.renderer_amdOfficial.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "amd",
         IsSupportedOverride = platform => platform.Os == OperatingSystemKind.Linux
@@ -125,7 +126,7 @@ public static class Renderers
     public static readonly Renderer VulkanRadv = new()
     {
         Name = "AMD_RADV",
-        DisplayName = "AMD RADV (开源)",
+        DisplayName = CommonLanguageManager.Instance.renderer_amdRadv.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "radeon"
     };
@@ -133,7 +134,7 @@ public static class Renderers
     public static readonly Renderer VulkanIntel = new()
     {
         Name = "INTEL_VULKAN",
-        DisplayName = "Intel 官方驱动",
+        DisplayName = CommonLanguageManager.Instance.renderer_intelOfficial.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "ig",
         IsSupportedOverride = platform => platform.Os == OperatingSystemKind.Windows
@@ -142,7 +143,7 @@ public static class Renderers
     public static readonly Renderer VulkanAnv = new()
     {
         Name = "INTEL_ANV",
-        DisplayName = "Intel ANV (开源)",
+        DisplayName = CommonLanguageManager.Instance.renderer_intelAnv.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "intel",
         IsSupportedOverride = platform => platform.Os != OperatingSystemKind.Windows
@@ -151,7 +152,7 @@ public static class Renderers
     public static readonly Renderer VulkanHasvk = new()
     {
         Name = "INTEL_HASVK",
-        DisplayName = "Intel HASVK (开源)",
+        DisplayName = CommonLanguageManager.Instance.renderer_intelHasvk.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "intel_hasvk",
         IsSupportedOverride = platform => platform.Os != OperatingSystemKind.Windows
@@ -160,7 +161,7 @@ public static class Renderers
     public static readonly Renderer VulkanQualcomm = new()
     {
         Name = "QUALCOMM",
-        DisplayName = "Qualcomm 官方驱动",
+        DisplayName = CommonLanguageManager.Instance.renderer_qualcommOfficial.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "qc",
         IsSupportedOverride = platform => platform is { Os: OperatingSystemKind.Windows, IsArm: true }
@@ -169,7 +170,7 @@ public static class Renderers
     public static readonly Renderer VulkanFreedreno = new()
     {
         Name = "TURNIP",
-        DisplayName = "Turnip (开源)",
+        DisplayName = CommonLanguageManager.Instance.renderer_turnip.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "freedreno",
         IsSupportedOverride = platform => platform.Os != OperatingSystemKind.Windows && platform.IsArm
@@ -187,7 +188,7 @@ public static class Renderers
     public static readonly Renderer VulkanKosmicKrisp = new()
     {
         Name = "KOSMICKRISP",
-        DisplayName = "KosmicKrisp (开源)",
+        DisplayName = CommonLanguageManager.Instance.renderer_kosmickrisp.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "kosmickrisp_mesa",
         IsSupportedOverride = platform => platform is { Os: OperatingSystemKind.MacOS, IsArm: true }
@@ -196,7 +197,7 @@ public static class Renderers
     public static readonly Renderer VulkanPanvk = new()
     {
         Name = "PANVK",
-        DisplayName = "PanVK (开源)",
+        DisplayName = CommonLanguageManager.Instance.renderer_panvk.CurrentValue(),
         Api = GraphicsApi.Vulkan,
         IcdName = "panfrost",
         IsSupportedOverride = platform => platform.Os == OperatingSystemKind.Linux && platform.IsArm

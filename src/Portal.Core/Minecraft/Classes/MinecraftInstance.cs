@@ -15,6 +15,7 @@ using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Classes;
@@ -75,8 +76,8 @@ public class MinecraftInstance : ObservableObject
         }
     }
 
-    public string BlockHeaderText => IsBlocked ? "取消屏蔽" : "屏蔽";
-    public string FavoriteHeaderText => Config?.IsFavorite == true ? "取消收藏" : "收藏";
+    public string BlockHeaderText => IsBlocked ? CommonLanguageManager.Instance.minecraft_unblock.CurrentValue() : CommonLanguageManager.Instance.minecraft_block.CurrentValue();
+    public string FavoriteHeaderText => Config?.IsFavorite == true ? CommonLanguageManager.Instance.minecraft_unfavorite.CurrentValue() : CommonLanguageManager.Instance.minecraft_favorite.CurrentValue();
 
     public MinecraftEntry? MinecraftEntry { get; init; }
 
@@ -88,7 +89,7 @@ public class MinecraftInstance : ObservableObject
     public string InstanceFolderPath { get; init; }
     public MinecraftInstanceLayout? Layout { get; init; }
     public string? ExternalDisplayName { get; init; }
-    public string FolderTypeDescription => Layout?.KindDisplayName ?? "传统 .minecraft";
+    public string FolderTypeDescription => Layout?.KindDisplayName ?? CommonLanguageManager.Instance.minecraft_traditionalMinecraft.CurrentValue();
     public bool IsExternallyManaged => Layout != null;
 
     public bool RequiresIndependentInstance => Layout?.Kind is
@@ -112,18 +113,20 @@ public class MinecraftInstance : ObservableObject
         {
             var time = LastPlayTime;
             if (time == DateTime.MinValue)
-                return "从未游玩";
+                return CommonLanguageManager.Instance.minecraft_neverPlayed.CurrentValue();
 
             var timeSpan = DateTime.Now - time;
 
             if (timeSpan.TotalMinutes < 1)
-                return "刚刚";
+                return CommonLanguageManager.Instance.minecraft_justNow.CurrentValue();
 
             if (!(timeSpan.TotalDays <= 30)) return time.ToString("yyyy-MM-dd HH:mm");
             if (timeSpan.TotalDays >= 1)
-                return $"{(int)timeSpan.TotalDays} 天前";
+                return string.Format(CommonLanguageManager.Instance.minecraft_daysAgo.CurrentValue(), (int)timeSpan.TotalDays);
 
-            return timeSpan.TotalHours >= 1 ? $"{(int)timeSpan.TotalHours} 小时前" : $"{(int)timeSpan.TotalMinutes} 分钟前";
+            return timeSpan.TotalHours >= 1
+                ? string.Format(CommonLanguageManager.Instance.minecraft_hoursAgo.CurrentValue(), (int)timeSpan.TotalHours)
+                : string.Format(CommonLanguageManager.Instance.minecraft_minutesAgo.CurrentValue(), (int)timeSpan.TotalMinutes);
         }
     }
 
@@ -156,10 +159,10 @@ public class MinecraftInstance : ObservableObject
 
     public string BedrockDataScope => (EnableIndependentBedrockVersion, EnableLauncherSharedBedrockData) switch
     {
-        (true, false) => "Portal 实例隔离数据文件夹",
-        (false, false) => "Portal 数据文件夹",
-        (true, true) => "实例隔离数据文件夹",
-        (false, true) => "用户目录共享文件夹"
+        (true, false) => CommonLanguageManager.Instance.minecraft_bedrockScopePortalInstance.CurrentValue(),
+        (false, false) => CommonLanguageManager.Instance.minecraft_bedrockScopePortal.CurrentValue(),
+        (true, true) => CommonLanguageManager.Instance.minecraft_bedrockScopeInstance.CurrentValue(),
+        (false, true) => CommonLanguageManager.Instance.minecraft_bedrockScopeUserShared.CurrentValue()
     };
 
     public string InstanceName
@@ -221,11 +224,11 @@ public class MinecraftInstance : ObservableObject
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
                 return MinecraftEntry.IsVanilla ||
                        (MinecraftEntry as ModifiedMinecraftEntry)?.ModLoaders.Any() == false
-                    ? "原版"
+                    ? CommonLanguageManager.Instance.minecraft_vanilla.CurrentValue()
                     : string.Join(", ", (MinecraftEntry as ModifiedMinecraftEntry)?
                         .ModLoaders.Select(x => x.Type.ToString()) ?? []);
 
-            if (Type == MinecraftInstanceType.Bedrock) return "基岩版";
+            if (Type == MinecraftInstanceType.Bedrock) return CommonLanguageManager.Instance.minecraft_bedrock.CurrentValue();
 
             return string.Empty;
         }
@@ -252,22 +255,22 @@ public class MinecraftInstance : ObservableObject
 
             var note = Config?.Note?.Trim();
             if (!string.IsNullOrEmpty(note))
-                info.Add($"备注: {note}");
+                info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoNote.CurrentValue(), note));
 
             if (!string.IsNullOrEmpty(FolderName))
-                info.Add($"文件夹: {FolderName}");
+                info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoFolder.CurrentValue(), FolderName));
 
             if (!string.IsNullOrEmpty(LoaderDescription))
-                info.Add($"加载器: {LoaderDescription}");
+                info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoLoader.CurrentValue(), LoaderDescription));
 
             if (!string.IsNullOrEmpty(VersionId))
-                info.Add($"版本: {VersionId}");
+                info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoVersion.CurrentValue(), VersionId));
 
             if (!string.IsNullOrEmpty(VersionType))
-                info.Add($"类型: {VersionType}");
+                info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoType.CurrentValue(), VersionType));
 
             if (!string.IsNullOrEmpty(DisplayLastPlayTime))
-                info.Add($"最近游玩: {DisplayLastPlayTime}");
+                info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoLastPlayed.CurrentValue(), DisplayLastPlayTime));
 
             if (Config != null)
             {
@@ -276,16 +279,16 @@ public class MinecraftInstance : ObservableObject
                 {
                     string timeStr;
                     if (playTime < 60)
-                        timeStr = $"{playTime}秒";
+                        timeStr = string.Format(CommonLanguageManager.Instance.minecraft_playTimeSeconds.CurrentValue(), playTime);
                     else if (playTime < 3600)
-                        timeStr = $"{playTime / 60.0:F1}分钟";
+                        timeStr = string.Format(CommonLanguageManager.Instance.minecraft_playTimeMinutes.CurrentValue(), $"{playTime / 60.0:F1}");
                     else
-                        timeStr = $"{playTime / 3600.0:F1}小时";
-                    info.Add($"游玩时长: {timeStr}");
+                        timeStr = string.Format(CommonLanguageManager.Instance.minecraft_playTimeHours.CurrentValue(), $"{playTime / 3600.0:F1}");
+                    info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoPlayTime.CurrentValue(), timeStr));
                 }
 
                 if (Config.PlaySessions > 0)
-                    info.Add($"会话次数: {Config.PlaySessions}次");
+                    info.Add(string.Format(CommonLanguageManager.Instance.minecraft_fullInfoSessions.CurrentValue(), Config.PlaySessions));
             }
 
             return string.Join("\n", info);
@@ -376,14 +379,14 @@ public class MinecraftInstance : ObservableObject
             }
             catch (Exception e)
             {
-                Logger.Error($"读取实例配置失败，已回退默认配置：{configPath}", e);
+                Logger.Error(string.Format(LogLanguageManager.Instance.minecraft_instanceConfigLoadFailed.CurrentValue(), configPath), e);
                 try
                 {
                     File.Copy(configPath, configPath + ".bak", true);
                 }
                 catch (Exception backupException)
                 {
-                    Logger.Error("备份损坏的实例配置失败。", backupException);
+                    Logger.Error(LogLanguageManager.Instance.minecraft_instanceConfigBackupFailed.CurrentValue(), backupException);
                 }
             }
 

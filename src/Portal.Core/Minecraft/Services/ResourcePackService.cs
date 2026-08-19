@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -20,7 +21,7 @@ public sealed class ResourcePackService
         try
         {
             var root = instance.GetSpecialFolder(folder);
-            Logger.Debug($"扫描资源包：实例 {instance.InstanceName}，目录 {root}。");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.resourcePack_scanStart.CurrentValue(), instance.InstanceName, root));
             var packs = instance.Type == MinecraftInstanceType.Java
                 ? Directory.EnumerateFiles(root, "*.zip").Select(path => ReadJavaPack(path, cancellationToken))
                 : folder == MinecraftSpecialFolder.SkinPacksFolder
@@ -33,17 +34,17 @@ public sealed class ResourcePackService
                 .OrderBy(pack => pack.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(pack => pack.FileName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            Logger.Debug($"资源包扫描完成：实例 {instance.InstanceName}，发现 {result.Length} 个资源包。");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.resourcePack_scanComplete.CurrentValue(), instance.InstanceName, result.Length));
             return result;
         }
         catch (IOException exception)
         {
-            Logger.Error($"扫描资源包失败：{instance.InstanceName}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_scanFailed.CurrentValue(), instance.InstanceName), exception);
             return [];
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"扫描资源包被拒绝：{instance.InstanceName}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_scanDenied.CurrentValue(), instance.InstanceName), exception);
             return [];
         }
     }
@@ -82,15 +83,15 @@ public sealed class ResourcePackService
         }
         catch (InvalidDataException exception)
         {
-            Logger.Error($"解析 Java 资源包失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_parseJavaFailed.CurrentValue(), path), exception);
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取 Java 资源包失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readJavaFailed.CurrentValue(), path), exception);
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取 Java 资源包被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readJavaDenied.CurrentValue(), path), exception);
         }
 
         return new ResourcePackInfo(path, fileName, displayName, description, supportedFormats, file.Length,
@@ -155,15 +156,15 @@ public sealed class ResourcePackService
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取基岩版资源包清单失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readBedrockManifestFailed.CurrentValue(), path), exception);
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取基岩版资源包清单被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readBedrockManifestDenied.CurrentValue(), path), exception);
         }
         catch (JsonException exception)
         {
-            Logger.Error($"解析基岩版资源包清单失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_parseBedrockManifestFailed.CurrentValue(), path), exception);
         }
 
         return new ResourcePackInfo(path, fileName, displayName, description, version,
@@ -211,17 +212,17 @@ public sealed class ResourcePackService
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取基岩版皮肤包清单失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readBedrockSkinManifestFailed.CurrentValue(), path), exception);
             return null;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取基岩版皮肤包清单被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readBedrockSkinManifestDenied.CurrentValue(), path), exception);
             return null;
         }
         catch (JsonException exception)
         {
-            Logger.Error($"解析基岩版皮肤包清单失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_parseBedrockSkinManifestFailed.CurrentValue(), path), exception);
             return null;
         }
 
@@ -247,17 +248,17 @@ public sealed class ResourcePackService
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取皮肤包数量失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readSkinCountFailed.CurrentValue(), path), exception);
             return null;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取皮肤包数量被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readSkinCountDenied.CurrentValue(), path), exception);
             return null;
         }
         catch (JsonException exception)
         {
-            Logger.Error($"解析皮肤包数量失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_parseSkinCountFailed.CurrentValue(), path), exception);
             return null;
         }
     }
@@ -292,12 +293,12 @@ public sealed class ResourcePackService
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取资源包图标失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readIconFailed.CurrentValue(), path), exception);
             return null;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取资源包图标被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_readIconDenied.CurrentValue(), path), exception);
             return null;
         }
     }
@@ -314,12 +315,12 @@ public sealed class ResourcePackService
         }
         catch (IOException exception)
         {
-            Logger.Error($"统计资源包大小失败：{directory.FullName}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_sizeStatsFailed.CurrentValue(), directory.FullName), exception);
             return 0;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"统计资源包大小被拒绝：{directory.FullName}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_sizeStatsDenied.CurrentValue(), directory.FullName), exception);
             return 0;
         }
     }
@@ -344,7 +345,7 @@ public sealed class ResourcePackService
         }
         catch (JsonException exception)
         {
-            Logger.Error($"解析 Java 资源包元数据失败：{entry.FullName}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.resourcePack_parseJavaMetadataFailed.CurrentValue(), entry.FullName), exception);
             return (null, null);
         }
     }

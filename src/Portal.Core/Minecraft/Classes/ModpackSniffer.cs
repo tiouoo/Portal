@@ -1,5 +1,6 @@
 using MinecraftLaunch.Components.Installer.Modpack;
 using Portal.Core.Minecraft.Models;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Classes;
@@ -21,7 +22,7 @@ public static class ModpackSniffer
         }
         catch (Exception exception)
         {
-            Logger.Debug($"按 Modrinth 格式识别整合包失败：{archivePath}{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.modpack_sniffModrinthFailed.CurrentValue(), archivePath, Environment.NewLine, exception));
         }
 
         try
@@ -33,7 +34,7 @@ public static class ModpackSniffer
         }
         catch (Exception exception)
         {
-            Logger.Debug($"按 CurseForge 格式识别整合包失败：{archivePath}{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.modpack_sniffCurseForgeFailed.CurrentValue(), archivePath, Environment.NewLine, exception));
         }
 
         return false;

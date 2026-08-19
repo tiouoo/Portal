@@ -1,3 +1,5 @@
+using Portal.Localization;
+
 namespace Portal.Core.Module.Ipc;
 
 public enum PortalCliParseStatus
@@ -35,33 +37,7 @@ public static class PortalCommandParser
 
     public static string GetUsageText()
     {
-        return """
-               Portal 命令行用法：
-                 Portal.Desktop.exe install vanilla <版本> [--folder <文件夹>] [--id <实例ID>]
-                 Portal.Desktop.exe install loader <版本> --loader <加载器[@版本]> [--loader ...] [--folder <文件夹>] [--id <实例ID>]
-                 Portal.Desktop.exe install modpack <路径|链接|项目名或ID> [--from modrinth|curseforge] [--version <版本或fileId>] [--folder <文件夹>] [--id <实例ID>]
-                 Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--world <世界文件夹>]
-                 Portal.Desktop.exe launch <实例ID> [--folder <文件夹>] [--server <服务器地址>] [--port <端口>]
-                 Portal.Desktop.exe help
-
-               加载器：fabric / forge / neoforge / quilt / optifine（可用 @ 指定版本，如 fabric@0.16.9）
-               整合包：可传本地文件、直链，或 Modrinth / CurseForge 的项目名称、slug、项目 ID；
-                       不指定 --version 时安装最新版本（--version 为 Modrinth 版本 ID/版本号或 CurseForge fileId，--file 等价）。
-               文件夹：启动器内已添加的 Minecraft 文件夹名称或路径；不传时使用默认（第一个）文件夹。
-               启动时未指定文件夹则启动第一个匹配该实例 ID 的实例。
-               世界：--world 传世界在 saves 目录下的文件夹名，启动后直接进入该世界（同名世界以文件夹名区分）。
-               服务器：--server 传服务器地址，--port 传端口（缺省 25565），启动后直接进入该服务器。
-               --world 与 --server 互斥。
-
-               等价的 portal:// 协议形式（注册协议后浏览器可直接调用）：
-                 portal://install/vanilla?version=1.21.8&folder=B&id=my-1.21.8
-                 portal://install/loader?version=1.21.8&loader=fabric&loader=optifine
-                 portal://install/modpack?source=fabulously-optimized&from=modrinth&version=cZY3Bvs9
-                 portal://install/modpack?source=https%3A%2F%2Fexample.com%2Fpack.mrpack&folder=B
-                 portal://launch?id=26.2&folder=B
-                 portal://launch?id=26.2&folder=B&world=New%20World
-                 portal://launch?id=26.2&folder=B&server=play.example.com&port=25565
-               """;
+        return CommonLanguageManager.Instance.ipc_usageText.CurrentValue();
     }
 
     private static PortalCliParseStatus ParseInstallCli(string[] args, out PortalCommand? command, out string? error)
@@ -70,14 +46,14 @@ public static class PortalCommandParser
         error = null;
         if (args.Length < 2)
         {
-            error = "install 需要子命令：vanilla / loader / modpack。";
+            error = CommonLanguageManager.Instance.ipc_installNeedsSubcommand.CurrentValue();
             return PortalCliParseStatus.Error;
         }
 
         var sub = args[1].ToLowerInvariant();
         if (sub is not ("vanilla" or "loader" or "modpack"))
         {
-            error = $"未知的 install 子命令“{args[1]}”，支持：vanilla / loader / modpack。";
+            error = string.Format(CommonLanguageManager.Instance.ipc_unknownInstallSubcommand.CurrentValue(), args[1]);
             return PortalCliParseStatus.Error;
         }
 
@@ -86,8 +62,8 @@ public static class PortalCommandParser
         if (positionals.Count != 1)
         {
             error = sub == "modpack"
-                ? "install modpack 需要且仅需要一个参数：整合包路径、链接或项目名称/ID。"
-                : $"install {sub} 需要且仅需要一个参数：Minecraft 版本号。";
+                ? CommonLanguageManager.Instance.ipc_installModpackNeedsOneArg.CurrentValue()
+                : string.Format(CommonLanguageManager.Instance.ipc_installVersionNeedsOneArg.CurrentValue(), sub);
             return PortalCliParseStatus.Error;
         }
 
@@ -95,7 +71,7 @@ public static class PortalCommandParser
         {
             if (options.Loaders.Count > 0)
             {
-                error = "install modpack 不支持 --loader 参数。";
+                error = CommonLanguageManager.Instance.ipc_installModpackNoLoader.CurrentValue();
                 return PortalCliParseStatus.Error;
             }
 
@@ -114,13 +90,13 @@ public static class PortalCommandParser
 
         if (options.Provider is not null || options.PackVersion is not null)
         {
-            error = "--from / --version 仅用于 install modpack。";
+            error = CommonLanguageManager.Instance.ipc_fromVersionOnlyForModpack.CurrentValue();
             return PortalCliParseStatus.Error;
         }
 
         if (sub == "loader" && options.Loaders.Count == 0)
         {
-            error = "install loader 至少需要一个 --loader 参数。";
+            error = CommonLanguageManager.Instance.ipc_installLoaderNeedsLoader.CurrentValue();
             return PortalCliParseStatus.Error;
         }
 
@@ -139,7 +115,7 @@ public static class PortalCommandParser
     {
         error = null;
         if (provider is null || provider.ToLowerInvariant() is "modrinth" or "curseforge") return true;
-        error = $"未知的整合包平台“{provider}”，支持：modrinth / curseforge。";
+        error = string.Format(CommonLanguageManager.Instance.ipc_unknownProvider.CurrentValue(), provider);
         return false;
     }
 
@@ -150,19 +126,19 @@ public static class PortalCommandParser
             return PortalCliParseStatus.Error;
         if (positionals.Count != 1 || options.Loaders.Count > 0)
         {
-            error = "launch 需要且仅需要一个参数：要启动的实例 ID（可加 --folder 指定文件夹）。";
+            error = CommonLanguageManager.Instance.ipc_launchNeedsOneArg.CurrentValue();
             return PortalCliParseStatus.Error;
         }
 
         if (!string.IsNullOrWhiteSpace(options.WorldFolder) && !string.IsNullOrWhiteSpace(options.ServerAddress))
         {
-            error = "--world 与 --server 不能同时指定。";
+            error = CommonLanguageManager.Instance.ipc_worldServerMutuallyExclusive.CurrentValue();
             return PortalCliParseStatus.Error;
         }
 
         if (options.ServerPort != null && string.IsNullOrWhiteSpace(options.ServerAddress))
         {
-            error = "--port 需要配合 --server 使用。";
+            error = CommonLanguageManager.Instance.ipc_portNeedsServer.CurrentValue();
             return PortalCliParseStatus.Error;
         }
 
@@ -236,7 +212,7 @@ public static class PortalCommandParser
                     if (!TryReadValue(args, ref index, inlineValue, name, out var portValue, out error)) return false;
                     if (!int.TryParse(portValue, out var parsedPort) || parsedPort is <= 0 or > 65535)
                     {
-                        error = $"参数 {name} 需要 1-65535 之间的端口号。";
+                        error = string.Format(CommonLanguageManager.Instance.ipc_invalidPortRange.CurrentValue(), name);
                         return false;
                     }
 
@@ -245,7 +221,7 @@ public static class PortalCommandParser
                 default:
                     if (name.StartsWith('-'))
                     {
-                        error = $"未知参数“{token}”。";
+                        error = string.Format(CommonLanguageManager.Instance.ipc_unknownArgument.CurrentValue(), token);
                         return false;
                     }
 
@@ -272,7 +248,7 @@ public static class PortalCommandParser
         if (index + 1 >= args.Length)
         {
             value = null;
-            error = $"参数 {name} 缺少值。";
+            error = string.Format(CommonLanguageManager.Instance.ipc_missingArgumentValue.CurrentValue(), name);
             return false;
         }
 
@@ -309,7 +285,7 @@ public static class PortalCommandParser
 
         if (segments.Length == 0)
         {
-            error = "portal:// 链接缺少命令，例如 portal://launch?id=xxx。";
+            error = CommonLanguageManager.Instance.ipc_uriMissingCommand.CurrentValue();
             return PortalCliParseStatus.Error;
         }
 
@@ -320,7 +296,7 @@ public static class PortalCommandParser
                 var id = segments.Length > 1 ? segments[1] : GetValue(parameters, "id", "instance");
                 if (string.IsNullOrWhiteSpace(id))
                 {
-                    error = "portal://launch 缺少实例 ID，例如 portal://launch?id=xxx。";
+                    error = CommonLanguageManager.Instance.ipc_uriLaunchMissingId.CurrentValue();
                     return PortalCliParseStatus.Error;
                 }
 
@@ -335,13 +311,13 @@ public static class PortalCommandParser
 
                 if (!string.IsNullOrWhiteSpace(worldFolder) && !string.IsNullOrWhiteSpace(serverAddress))
                 {
-                    error = "world 与 server 不能同时指定。";
+                    error = CommonLanguageManager.Instance.ipc_worldServerMutuallyExclusiveUri.CurrentValue();
                     return PortalCliParseStatus.Error;
                 }
 
                 if (serverPort != null && string.IsNullOrWhiteSpace(serverAddress))
                 {
-                    error = "port 需要配合 server 使用。";
+                    error = CommonLanguageManager.Instance.ipc_portNeedsServerUri.CurrentValue();
                     return PortalCliParseStatus.Error;
                 }
 
@@ -368,7 +344,7 @@ public static class PortalCommandParser
                         var version = GetValue(parameters, "version", "v");
                         if (string.IsNullOrWhiteSpace(version))
                         {
-                            error = $"portal://install/{sub} 缺少 version 参数。";
+                            error = string.Format(CommonLanguageManager.Instance.ipc_uriInstallMissingVersion.CurrentValue(), sub);
                             return PortalCliParseStatus.Error;
                         }
 
@@ -378,7 +354,7 @@ public static class PortalCommandParser
                             .Select(ParseLoaderSpec).ToList();
                         if (sub == "loader" && loaders.Count == 0)
                         {
-                            error = "portal://install/loader 至少需要一个 loader 参数。";
+                            error = CommonLanguageManager.Instance.ipc_uriInstallLoaderNeedsLoader.CurrentValue();
                             return PortalCliParseStatus.Error;
                         }
 
@@ -399,7 +375,7 @@ public static class PortalCommandParser
                         var source = GetValue(parameters, "source", "url", "path", "project");
                         if (string.IsNullOrWhiteSpace(source))
                         {
-                            error = "portal://install/modpack 缺少 source（整合包路径、链接或项目名称/ID）参数。";
+                            error = CommonLanguageManager.Instance.ipc_uriInstallModpackMissingSource.CurrentValue();
                             return PortalCliParseStatus.Error;
                         }
 
@@ -417,12 +393,12 @@ public static class PortalCommandParser
                         return PortalCliParseStatus.Command;
                     }
                     default:
-                        error = "portal://install 需要子命令 vanilla / loader / modpack。";
+                        error = CommonLanguageManager.Instance.ipc_uriInstallNeedsSubcommand.CurrentValue();
                         return PortalCliParseStatus.Error;
                 }
             }
             default:
-                error = $"未知的 portal:// 命令“{segments[0]}”，支持 install / launch。";
+                error = string.Format(CommonLanguageManager.Instance.ipc_uriUnknownCommand.CurrentValue(), segments[0]);
                 return PortalCliParseStatus.Error;
         }
     }
@@ -465,7 +441,7 @@ public static class PortalCommandParser
             return null;
         if (int.TryParse(value, out var port) && port is > 0 and <= 65535)
             return port;
-        error = $"port 需要 1-65535 之间的端口号，收到“{value}”。";
+        error = string.Format(CommonLanguageManager.Instance.ipc_invalidPortRangeReceived.CurrentValue(), value);
         return null;
     }
 

@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiteSkinViewer2D;
 using LiteSkinViewer2D.Extensions;
+using Portal.Localization;
 using SkiaSharp;
 
 namespace Portal.Core.Minecraft.Classes;
@@ -56,13 +57,13 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
                 return AccountNote;
             return AccountType switch
             {
-                AccountType.Offline => "离线模式",
+                AccountType.Offline => CommonLanguageManager.Instance.account_offlineMode.CurrentValue(),
                 AccountType.Yggdrasil =>
                     ServerNote ?? (Uri.TryCreate(YggdrasilServerUrl, UriKind.Absolute, out var uri)
                         ? uri.Host
-                        : "外置登录"),
-                AccountType.Microsoft => "微软账户",
-                _ => "未知"
+                        : CommonLanguageManager.Instance.account_yggdrasil.CurrentValue()),
+                AccountType.Microsoft => CommonLanguageManager.Instance.account_microsoft.CurrentValue(),
+                _ => CommonLanguageManager.Instance.account_unknown.CurrentValue()
             };
         }
     }
@@ -82,10 +83,10 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
         {
             var t = AccountType switch
             {
-                AccountType.Offline => "离线",
-                AccountType.Yggdrasil => "外置",
-                AccountType.Microsoft => "微软",
-                _ => "未知"
+                AccountType.Offline => CommonLanguageManager.Instance.account_offlineShort.CurrentValue(),
+                AccountType.Yggdrasil => CommonLanguageManager.Instance.account_yggdrasilShort.CurrentValue(),
+                AccountType.Microsoft => CommonLanguageManager.Instance.account_microsoftShort.CurrentValue(),
+                _ => CommonLanguageManager.Instance.account_unknown.CurrentValue()
             };
             return $"{t}·{Name}";
         }
@@ -98,10 +99,10 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
         {
             var t = AccountType switch
             {
-                AccountType.Offline => "离线",
-                AccountType.Yggdrasil => "外置",
-                AccountType.Microsoft => "微软",
-                _ => "未知"
+                AccountType.Offline => CommonLanguageManager.Instance.account_offlineShort.CurrentValue(),
+                AccountType.Yggdrasil => CommonLanguageManager.Instance.account_yggdrasilShort.CurrentValue(),
+                AccountType.Microsoft => CommonLanguageManager.Instance.account_microsoftShort.CurrentValue(),
+                _ => CommonLanguageManager.Instance.account_unknown.CurrentValue()
             };
             return $"{t}";
         }
@@ -131,18 +132,20 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
         get
         {
             if (LastLoginTime == DateTime.MinValue)
-                return "从未登录";
+                return CommonLanguageManager.Instance.account_neverLoggedIn.CurrentValue();
 
             var timeSpan = DateTime.Now - LastLoginTime;
 
             if (timeSpan.TotalMinutes < 1)
-                return "刚刚";
+                return CommonLanguageManager.Instance.account_justNow.CurrentValue();
 
             if (!(timeSpan.TotalDays <= 30)) return LastLoginTime.ToString("yyyy-MM-dd HH:mm");
             if (timeSpan.TotalDays >= 1)
-                return $"{(int)timeSpan.TotalDays} 天前";
+                return string.Format(CommonLanguageManager.Instance.account_daysAgo.CurrentValue(), (int)timeSpan.TotalDays);
 
-            return timeSpan.TotalHours >= 1 ? $"{(int)timeSpan.TotalHours} 小时前" : $"{(int)timeSpan.TotalMinutes} 分钟前";
+            return timeSpan.TotalHours >= 1
+                ? string.Format(CommonLanguageManager.Instance.account_hoursAgo.CurrentValue(), (int)timeSpan.TotalHours)
+                : string.Format(CommonLanguageManager.Instance.account_minutesAgo.CurrentValue(), (int)timeSpan.TotalMinutes);
         }
     }
 

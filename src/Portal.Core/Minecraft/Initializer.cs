@@ -2,6 +2,7 @@
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;
@@ -13,8 +14,11 @@ public static class MinecraftCoreInitializer
     public static void Initialize(MinecraftCoreInitializeOptions options)
     {
         AppVersion = options.AppVersion ?? string.Empty;
-        Logger.Info(
-            $"初始化 Minecraft 核心：线程数 {options.MaxThread}，分片数 {options.MaxFragment}，重试次数 {options.MaxRetryCount}，分片下载 {(options.IsEnableFragment ? "已启用" : "未启用")}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.minecraft_coreInitialize.CurrentValue(), options.MaxThread,
+            options.MaxFragment, options.MaxRetryCount,
+            options.IsEnableFragment
+                ? CommonLanguageManager.Instance.minecraft_enabled.CurrentValue()
+                : CommonLanguageManager.Instance.minecraft_disabled.CurrentValue()));
         InitializeHelper.Initialize(settings =>
         {
             settings.MaxThread = options.MaxThread;
@@ -31,13 +35,13 @@ public static class MinecraftCoreInitializer
         if (options.EnableCustomUserAgent && !string.IsNullOrEmpty(options.CustomUserAgent))
         {
             HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent", options.CustomUserAgent);
-            Logger.Info("Minecraft 核心已应用自定义 User-Agent: " + options.CustomUserAgent);
+            Logger.Info(string.Format(LogLanguageManager.Instance.minecraft_customUserAgentApplied.CurrentValue(), options.CustomUserAgent));
         }
         else
         {
             HttpUtil.FlurlClient.Headers.AddOrReplace("User-Agent",
                 $"Portal/{options.AppVersion}");
-            Logger.Debug("Minecraft 核心已应用 Portal 默认 User-Agent: " + $"Portal/{options.AppVersion}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.minecraft_defaultUserAgentApplied.CurrentValue(), $"Portal/{options.AppVersion}"));
         }
     }
 }

@@ -7,6 +7,7 @@ using Portal.Core.Const;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -20,7 +21,7 @@ public class Config
 
     public static void Initialize()
     {
-        Logger.Info("开始加载应用配置");
+        Logger.Info(LogLanguageManager.Instance.config_loadStart.CurrentValue());
         Helper.TryCreateFolder(ConfigPath.UserDataRootPath);
         Helper.TryCreateFolder(ConfigPath.TempFolderPath);
         Helper.TryCreateFolder(ConfigPath.UpdateFolderPath);
@@ -29,11 +30,11 @@ public class Config
         var isFirstRun = !File.Exists(ConfigPath.SettingDataPath);
         if (isFirstRun)
         {
-            Logger.Info("未找到配置文件，正在创建默认配置");
+            Logger.Info(LogLanguageManager.Instance.config_notFoundCreateDefault.CurrentValue());
             File.WriteAllText(ConfigPath.SettingDataPath, new ConfigEntry().AsJson());
         }
 
-        Logger.Info($"配置文件夹：{ConfigPath.UserDataRootPath}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.config_folder.CurrentValue(), ConfigPath.UserDataRootPath));
 
         InitializationEvents.RaiseBeforeReadSettings();
 
@@ -47,16 +48,16 @@ public class Config
         catch (JsonException exception)
         {
             FailedSettingKeys.Add($"Setting load failed at: {exception.Path}");
-            Logger.Error($"读取或解析配置文件失败：{ConfigPath.SettingDataPath}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.config_parseFailed.CurrentValue(), ConfigPath.SettingDataPath), exception);
             try
             {
                 var backupPath = ConfigPath.SettingDataPath + ".bak";
                 File.Copy(ConfigPath.SettingDataPath, backupPath, true);
-                Logger.Error($"配置文件解析失败，已备份到：{backupPath}");
+                Logger.Error(string.Format(LogLanguageManager.Instance.config_backupFailed.CurrentValue(), backupPath));
             }
             catch (Exception backupEx)
             {
-                Logger.Error($"备份损坏配置文件失败：{ConfigPath.SettingDataPath}", backupEx);
+                Logger.Error(string.Format(LogLanguageManager.Instance.config_backupFailedError.CurrentValue(), ConfigPath.SettingDataPath), backupEx);
             }
 
             Data.ConfigEntry = new ConfigEntry();
@@ -67,7 +68,7 @@ public class Config
 
         if (!Enum.IsDefined(typeof(UpdateSource), Data.ConfigEntry.UpdateSource))
         {
-            Logger.Info($"旧配置中的更新源 {Data.ConfigEntry.UpdateSource} 已失效，回退为 CNB。");
+            Logger.Info(string.Format(LogLanguageManager.Instance.config_updateSourceInvalid.CurrentValue(), Data.ConfigEntry.UpdateSource));
             Data.ConfigEntry.UpdateSource = UpdateSource.Cnb;
         }
 
@@ -86,7 +87,7 @@ public class Config
         Data.ConfigEntry.AuthServers.CollectionChanged += (_, _) => Index.MarkDirty();
 
         var version = AppVersionService.Instance.Version;
-        Logger.Info($"已加载版本信息：{version.VersionTitle} ({version.Type})");
+        Logger.Info(string.Format(LogLanguageManager.Instance.config_versionLoaded.CurrentValue(), version.VersionTitle, version.Type));
         Data.UiProperty.OverrideUpdateChannel = Data.ConfigEntry.UpdateSource == UpdateSource.Github
             ? version.Type
             : "release";
@@ -97,18 +98,18 @@ public class Config
         using var reader1 = new StreamReader(stream1!);
         var result1 = reader1.ReadToEnd();
         Data.Instance.PackageType = string.IsNullOrWhiteSpace(result1) ? "portable" : result1.Trim().ToLowerInvariant();
-        Logger.Info($"已识别安装包类型：{Data.Instance.PackageType}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.config_packageTypeDetected.CurrentValue(), Data.Instance.PackageType));
 
         ConfigIdentifyExtension.Window(Data.ConfigEntry);
 
         Helper.ClearFolder(ConfigPath.TempFolderPath);
-        Logger.Debug("已清理临时目录");
+        Logger.Debug(LogLanguageManager.Instance.config_tempCleared.CurrentValue());
         ConfigSaver.SaveConfig();
 
         Data.UiProperty.ConfigLoaded = true;
         ConfigIdentifyExtension.MinecraftFolder(Data.ConfigEntry);
 
-        Logger.Info($"配置加载完成，已配置 {Data.ConfigEntry.MinecraftFolders.Count} 个 Minecraft 文件夹");
+        Logger.Info(string.Format(LogLanguageManager.Instance.config_loadComplete.CurrentValue(), Data.ConfigEntry.MinecraftFolders.Count));
 
         InitializationEvents.RaiseBeforeUiLoaded();
     }

@@ -1,6 +1,7 @@
 using System.Text;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -60,7 +61,7 @@ public static class BedrockServerManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"添加基岩版服务器失败：{name} {address}{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_bedrockAddFailed.CurrentValue(), name, address, Environment.NewLine + exception));
                 return false;
             }
         }
@@ -96,7 +97,7 @@ public static class BedrockServerManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"编辑基岩版服务器失败：{name} {address}{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_bedrockEditFailed.CurrentValue(), name, address, Environment.NewLine + exception));
                 return false;
             }
         }
@@ -125,7 +126,7 @@ public static class BedrockServerManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"删除基岩版服务器失败：{lineIndex}{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_bedrockDeleteFailed.CurrentValue(), lineIndex, Environment.NewLine + exception));
                 return false;
             }
         }
@@ -237,7 +238,7 @@ public static class BedrockServerManager
         }
         catch (FormatException exception)
         {
-            Logger.Warning($"基岩版服务器图标 Base64 数据无效，将忽略图标。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.serverManager_bedrockInvalidIconBase64.CurrentValue(), Environment.NewLine, exception));
             return null;
         }
     }

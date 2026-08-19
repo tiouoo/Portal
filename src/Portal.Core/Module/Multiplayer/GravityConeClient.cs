@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
@@ -63,7 +64,7 @@ public sealed class GravityConeClient : IAsyncDisposable
         startInfo.ArgumentList.Add("--vendor");
         startInfo.ArgumentList.Add("Portal");
         startInfo.ArgumentList.Add("--motd");
-        startInfo.ArgumentList.Add("Portal 联机房间");
+        startInfo.ArgumentList.Add(CommonLanguageManager.Instance.multiplayer_motd.CurrentValue());
         foreach (var peer in peers)
         {
             startInfo.ArgumentList.Add("--peers");
@@ -74,12 +75,12 @@ public sealed class GravityConeClient : IAsyncDisposable
         _process = await Task.Run(() =>
         {
             var p = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-            if (!p.Start()) throw new InvalidOperationException("无法启动 GravityCone CLI。");
+            if (!p.Start()) throw new InvalidOperationException(CommonLanguageManager.Instance.multiplayer_cannotStartCli.CurrentValue());
             return p;
         });
-        _process.Exited += (_, _) => FailAllPending("GravityCone CLI 已退出。");
-        ReadOutputAsync(_process).Forget($"读取 GravityCone 标准输出，进程：{_process.Id}");
-        ReadErrorAsync(_process).Forget($"读取 GravityCone 错误输出，进程：{_process.Id}");
+        _process.Exited += (_, _) => FailAllPending(CommonLanguageManager.Instance.multiplayer_cliExited.CurrentValue());
+        ReadOutputAsync(_process).Forget(string.Format(CommonLanguageManager.Instance.multiplayer_readStdout.CurrentValue(), _process.Id));
+        ReadErrorAsync(_process).Forget(string.Format(CommonLanguageManager.Instance.multiplayer_readStderr.CurrentValue(), _process.Id));
 
         using var ready = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ready.Token);
@@ -94,7 +95,7 @@ public sealed class GravityConeClient : IAsyncDisposable
                 await Task.Delay(150, linked.Token);
             }
 
-        throw new TimeoutException("GravityCone CLI 启动超时。");
+        throw new TimeoutException(CommonLanguageManager.Instance.multiplayer_cliStartTimeout.CurrentValue());
     }
 
     public async Task RestartAsync(GravityConeInstallation installation, CancellationToken cancellationToken)
@@ -114,7 +115,7 @@ public sealed class GravityConeClient : IAsyncDisposable
 
         _process = null;
         process?.Dispose();
-        FailAllPending("GravityCone CLI 正在重启。");
+        FailAllPending(CommonLanguageManager.Instance.multiplayer_cliRestarting.CurrentValue());
         await StartAsync(installation, cancellationToken);
     }
 
@@ -133,7 +134,7 @@ public sealed class GravityConeClient : IAsyncDisposable
                                    ex is HttpRequestException or JsonException or InvalidOperationException
                                        or IOException)
         {
-            Logger.Warning($"获取 1TMC 联机节点失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_fetch1tmcPeersFailed.CurrentValue(), Environment.NewLine, ex));
             if (await GravityConeNodeClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedUptime)
                 peers.AddRange(cachedUptime);
         }
@@ -149,14 +150,14 @@ public sealed class GravityConeClient : IAsyncDisposable
                                    ex is HttpRequestException or JsonException or InvalidOperationException
                                        or IOException)
         {
-            Logger.Warning($"获取 Portal 中继节点失败，将尝试读取本地缓存。{Environment.NewLine}{ex}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_fetchRelaysFailed.CurrentValue(), Environment.NewLine, ex));
             if (await GravityConeRelayClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedRelays)
                 peers.AddRange(cachedRelays);
         }
 
         var merged = peers.Distinct(StringComparer.Ordinal).ToList();
         if (merged.Count == 0)
-            throw new InvalidOperationException("无法获取联机节点列表，请检查网络后重试。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.multiplayer_noPeersAvailable.CurrentValue());
 
         return merged;
     }
@@ -166,13 +167,13 @@ public sealed class GravityConeClient : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         if (_process is not { HasExited: false } process)
-            throw new InvalidOperationException("GravityCone CLI 尚未启动。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.multiplayer_cliNotStarted.CurrentValue());
 
         var id = Interlocked.Increment(ref _nextId);
         var completion =
             new TaskCompletionSource<GravityConeResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (!_pending.TryAdd(id, new PendingRequest(completion, progress)))
-            throw new InvalidOperationException("无法创建 CLI 请求。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.multiplayer_cannotCreateCliRequest.CurrentValue());
 
         try
         {
@@ -196,7 +197,7 @@ public sealed class GravityConeClient : IAsyncDisposable
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new TimeoutException($"GravityCone 请求 {method} 超时。");
+            throw new TimeoutException(string.Format(CommonLanguageManager.Instance.multiplayer_requestTimeout.CurrentValue(), method));
         }
         finally
         {
@@ -233,7 +234,7 @@ public sealed class GravityConeClient : IAsyncDisposable
                 if (response.Status == "error")
                 {
                     pending.Completion.TrySetException(new GravityConeException(
-                        response.Error?.Code ?? "UNKNOWN", response.Error?.Message ?? "联机操作失败。"));
+                        response.Error?.Code ?? "UNKNOWN", response.Error?.Message ?? CommonLanguageManager.Instance.multiplayer_operationFailed.CurrentValue()));
                     continue;
                 }
 
@@ -284,7 +285,7 @@ public sealed class GravityConeClient : IAsyncDisposable
 
         _process = null;
         process.Dispose();
-        FailAllPending("GravityCone CLI 已停止。");
+        FailAllPending(CommonLanguageManager.Instance.multiplayer_cliStopped.CurrentValue());
     }
 
     private static void Trace(string message)

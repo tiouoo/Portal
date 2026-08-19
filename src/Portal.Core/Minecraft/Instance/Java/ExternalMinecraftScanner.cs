@@ -7,6 +7,7 @@ using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Components.Parser;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Localization;
 using SQLitePCL;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -121,7 +122,7 @@ internal static class ExternalMinecraftScanner
             }
             catch (Exception exception)
             {
-                Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
+                Logger.Error(string.Format(LogLanguageManager.Instance.instanceManager_bedrockScanFailed.CurrentValue(), instanceFolder), exception);
             }
 
         return result;

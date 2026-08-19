@@ -1,5 +1,6 @@
 using fNbt;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -61,7 +62,7 @@ public sealed class WorldEnvironmentService
         var file = LoadModernFile(worldPath, "weather.dat");
         if (file != null)
         {
-            var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException("天气数据文件不包含 data 标签。");
+            var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException(CommonLanguageManager.Instance.world_weatherMissingDataTag.CurrentValue());
             SetBool(data, "raining", settings.Raining);
             SetBool(data, "thundering", settings.Thundering);
             SetInt(data, "rain_time", settings.RainTime);
@@ -84,7 +85,7 @@ public sealed class WorldEnvironmentService
             return;
         }
 
-        var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException("世界时钟数据文件不包含 data 标签。");
+        var data = file.RootTag["data"] as NbtCompound ?? throw new InvalidDataException(CommonLanguageManager.Instance.world_timeMissingDataTag.CurrentValue());
         foreach (var (dimension, totalTicks) in settings.TotalTicks)
             if (data[dimension] is NbtCompound clock && clock["total_ticks"] is NbtLong ticks)
                 ticks.Value = totalTicks;

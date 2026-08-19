@@ -13,6 +13,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Module.Initialize;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common.Helpers;
 
@@ -57,7 +58,7 @@ public partial class ConfigEntry : ObservableObject
 
     public string CurrentAccountDisplay => UsingMinecraftMinecraftAccount?.ShortDisplay
                                            ?? (OperatingSystem.IsMacOS() ? null : UsingBedrockAccount?.ShortDisplay)
-                                           ?? "无账户";
+                                           ?? CommonLanguageManager.Instance.config_noAccount.CurrentValue();
 
     public ObservableCollection<MinecraftFolderEntry> MinecraftFolders { get; } = [];
     public bool CanDisableSystemProxy => !EnableProxyServer;

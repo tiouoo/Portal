@@ -3,6 +3,7 @@ using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Core.Minecraft.Graphics;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -25,7 +26,7 @@ public static class MesaLoaderService
     {
         var os = OperatingSystem.IsWindows() ? OperatingSystemKind.Windows : OperatingSystemKind.Unknown;
         var artifact = MesaLoaderArtifact.ForCurrentPlatform(os)
-                       ?? throw new InvalidOperationException("当前平台不支持 Mesa 软件渲染。");
+                       ?? throw new InvalidOperationException(CommonLanguageManager.Instance.mesaLoader_platformUnsupported.CurrentValue());
 
         var jarPath = Path.Combine(CacheRoot, artifact.Sha1, "mesa-loader.jar");
         if (File.Exists(jarPath) &&
@@ -50,10 +51,10 @@ public static class MesaLoaderService
             if (result.Type == DownloadResultType.Cancelled)
                 throw new OperationCanceledException(cancellationToken);
             if (result.Type != DownloadResultType.Successful)
-                throw result.Exception ?? new IOException("mesa-loader 下载失败。");
+                throw result.Exception ?? new IOException(CommonLanguageManager.Instance.mesaLoader_downloadFailed.CurrentValue());
 
             if (!await VerifySha1Async(jarPath, artifact.Sha1, cancellationToken).ConfigureAwait(false))
-                throw new InvalidDataException("mesa-loader 下载文件校验失败。");
+                throw new InvalidDataException(CommonLanguageManager.Instance.mesaLoader_verificationFailed.CurrentValue());
 
             return jarPath;
         }

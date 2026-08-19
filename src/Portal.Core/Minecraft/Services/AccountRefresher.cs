@@ -4,6 +4,7 @@ using MinecraftLaunch.Components.Provider;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
@@ -18,7 +19,7 @@ public static class AccountRefresher
 
         try
         {
-            Logger.Info($"开始刷新微软账户：{account.Name}");
+            Logger.Info(string.Format(LogLanguageManager.Instance.accountRefresher_microsoftRefreshStart.CurrentValue(), account.Name));
 
             var authenticator = new MicrosoftAuthenticator(CredentialsService.MicrosoftClientId);
             var authResult = await authenticator.RefreshAsync(new MicrosoftAccount(account.Name, (Guid)account.Uuid!,
@@ -35,7 +36,7 @@ public static class AccountRefresher
             }
             catch (Exception e)
             {
-                Logger.Error("获取皮肤失败。", e);
+                Logger.Error(LogLanguageManager.Instance.accountRefresher_skinFetchFailed.CurrentValue(), e);
             }
 
             var newAccount = new MinecraftAccount(AccountType.Microsoft)
@@ -51,12 +52,12 @@ public static class AccountRefresher
                 AccountNote = account.AccountNote
             };
 
-            Logger.Info($"微软账户刷新成功：{newAccount.Name}");
+            Logger.Info(string.Format(LogLanguageManager.Instance.accountRefresher_microsoftRefreshComplete.CurrentValue(), newAccount.Name));
             return newAccount;
         }
         catch (Exception e)
         {
-            Logger.Error($"刷新微软账户失败：{account.Name}，{e}");
+            Logger.Error(string.Format(LogLanguageManager.Instance.accountRefresher_microsoftRefreshFailed.CurrentValue(), account.Name, e));
             return null;
         }
     }
@@ -73,7 +74,7 @@ public static class AccountRefresher
 
         try
         {
-            Logger.Info($"开始重新登录外置账户：{account.Name}，服务器：{account.YggdrasilServerUrl}");
+            Logger.Info(string.Format(LogLanguageManager.Instance.accountRefresher_yggdrasilLoginStart.CurrentValue(), account.Name, account.YggdrasilServerUrl));
 
             var normalizedUrl = UrlHelper.NormalizeUrl(account.YggdrasilServerUrl);
             var existingAccounts = allAccounts
@@ -90,7 +91,7 @@ public static class AccountRefresher
             var authenticatedAccounts = await authenticator.AuthenticateAsync();
             if (authenticatedAccounts == null)
             {
-                Logger.Warning($"外置账户重新登录未返回账户：{account.Name}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.accountRefresher_yggdrasilNoAccount.CurrentValue(), account.Name));
                 return null;
             }
 
@@ -120,13 +121,13 @@ public static class AccountRefresher
                     !candidate.Uuid.HasValue || !refreshedUuids.Contains(candidate.Uuid.Value))
                 .ToList();
 
-            Logger.Info(
-                $"外置账户重新登录完成：{account.Name}，刷新 {refreshedAccounts.Count} 个账户，新增 {added.Count} 个，移除 {removed.Count} 个");
+            Logger.Info(string.Format(LogLanguageManager.Instance.accountRefresher_yggdrasilLoginComplete.CurrentValue(),
+                account.Name, refreshedAccounts.Count, added.Count, removed.Count));
             return new YggdrasilRefreshResult(existingAccounts, refreshedAccounts, updated, added, removed);
         }
         catch (Exception e)
         {
-            Logger.Error($"重新登录外置账户失败：{account.Name}，{e}");
+            Logger.Error(string.Format(LogLanguageManager.Instance.accountRefresher_yggdrasilLoginFailed.CurrentValue(), account.Name, e));
             return null;
         }
     }
@@ -147,7 +148,7 @@ public static class AccountRefresher
         }
         catch (Exception e)
         {
-            Logger.Error("获取皮肤失败。", e);
+            Logger.Error(LogLanguageManager.Instance.accountRefresher_skinFetchFailed.CurrentValue(), e);
         }
 
         return new MinecraftAccount(AccountType.Yggdrasil)

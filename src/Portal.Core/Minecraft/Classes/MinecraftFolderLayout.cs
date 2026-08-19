@@ -1,3 +1,5 @@
+using Portal.Localization;
+
 namespace Portal.Core.Minecraft.Classes;
 
 public enum MinecraftFolderKind
@@ -40,11 +42,11 @@ public sealed record MinecraftFolderLayout(
         {
             var brand = GetMultiMcBrand(parent.FullName);
             if (brand != "MultiMC / Prism Launcher")
-                return $"{brand} 实例";
+                return string.Format(CommonLanguageManager.Instance.minecraft_multiMcInstanceBrand.CurrentValue(), brand);
             parent = parent.Parent;
         }
 
-        return "MultiMC / Prism Launcher 实例";
+        return CommonLanguageManager.Instance.minecraft_multiMcInstanceDefault.CurrentValue();
     }
 
     private static bool IsPortalMcRoot(string path)
@@ -79,7 +81,7 @@ public sealed record MinecraftFolderLayout(
     {
         if (string.IsNullOrWhiteSpace(path))
             return new MinecraftFolderLayout(MinecraftFolderKind.Unknown, string.Empty, string.Empty,
-                "未识别的 Minecraft 文件夹");
+                CommonLanguageManager.Instance.minecraft_unrecognizedFolder.CurrentValue());
         var selected = Path.GetFullPath(path.Trim());
 
 
@@ -119,7 +121,7 @@ public sealed record MinecraftFolderLayout(
         if (File.Exists(Path.Combine(selected, "minecraftinstance.json")) &&
             TryFindParentDirectory(selected, "Install", "Instances", out var curseForgeRoot))
             return new MinecraftFolderLayout(MinecraftFolderKind.CurseForgeInstance, selected, curseForgeRoot,
-                "CurseForge 实例");
+                CommonLanguageManager.Instance.minecraft_curseForgeInstance.CurrentValue());
 
 
         if (Directory.Exists(Path.Combine(selected, "Install")) &&
@@ -144,7 +146,7 @@ public sealed record MinecraftFolderLayout(
         if (TryFindModrinthRoot(selected, out var modrinthRoot) &&
             IsUnder(selected, Path.Combine(modrinthRoot, "profiles")))
             return new MinecraftFolderLayout(MinecraftFolderKind.ModrinthInstance, selected, modrinthRoot,
-                "Modrinth 实例");
+                CommonLanguageManager.Instance.minecraft_modrinthInstance.CurrentValue());
 
 
         if (Directory.Exists(Path.Combine(selected, "instances")) &&
@@ -173,21 +175,21 @@ public sealed record MinecraftFolderLayout(
         if (Directory.Exists(Path.Combine(selected, "versions")) ||
             Directory.Exists(Path.Combine(selected, "bedrock_versions")) ||
             Path.GetFileName(selected).Equals(".minecraft", StringComparison.OrdinalIgnoreCase))
-            return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
+            return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected, selected, CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue());
 
         if (Directory.Exists(Path.Combine(selected, ".minecraft")))
             return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected,
                 Path.Combine(selected, ".minecraft"),
-                "传统 .minecraft 文件夹");
+                CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue());
 
-        return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected, selected, "传统 .minecraft 文件夹");
+        return new MinecraftFolderLayout(MinecraftFolderKind.Standard, selected, selected, CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue());
     }
 
     public static MinecraftFolderLayout FromFolderKind(MinecraftFolderKind kind, string path)
     {
         if (string.IsNullOrWhiteSpace(path))
             return new MinecraftFolderLayout(MinecraftFolderKind.Unknown, string.Empty, string.Empty,
-                "未识别的 Minecraft 文件夹");
+                CommonLanguageManager.Instance.minecraft_unrecognizedFolder.CurrentValue());
         var selected = Path.GetFullPath(path.Trim());
         var displayName = kind switch
         {
@@ -195,8 +197,8 @@ public sealed record MinecraftFolderLayout(
             MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => GetMultiMcBrand(selected),
             MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge",
             MinecraftFolderKind.PortalMc => "Portal MC",
-            MinecraftFolderKind.Standard => "传统 .minecraft 文件夹",
-            _ => "未识别的 Minecraft 文件夹"
+            MinecraftFolderKind.Standard => CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue(),
+            _ => CommonLanguageManager.Instance.minecraft_unrecognizedFolder.CurrentValue()
         };
         return new MinecraftFolderLayout(kind, selected, selected, displayName);
     }
@@ -349,7 +351,7 @@ public sealed record MinecraftInstanceLayout(
         MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => "MultiMC / Prism Launcher / BakaXL",
         MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge",
         MinecraftFolderKind.PortalMc => "Portal MC",
-        MinecraftFolderKind.Standard => "传统 .minecraft",
-        _ => "未知"
+        MinecraftFolderKind.Standard => CommonLanguageManager.Instance.minecraft_traditionalMinecraft.CurrentValue(),
+        _ => CommonLanguageManager.Instance.minecraft_unknown.CurrentValue()
     };
 }

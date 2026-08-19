@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Xml;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Instance.Bedrock;
 
@@ -15,7 +16,7 @@ public class BedrockHelper
     public static (string Version, string PackName) GetInstanceVersion(string instanceFolder)
     {
         var manifestPath = Path.Combine(instanceFolder, "appxmanifest.xml");
-        if (!File.Exists(manifestPath)) throw new FileNotFoundException($"未找到 {manifestPath} 文件");
+        if (!File.Exists(manifestPath)) throw new FileNotFoundException(string.Format(CommonLanguageManager.Instance.bedrock_manifestNotFound.CurrentValue(), manifestPath));
 
         var xmlDoc = new XmlDocument();
         xmlDoc.LoadXml(File.ReadAllText(manifestPath));
@@ -28,20 +29,20 @@ public class BedrockHelper
         if (identityNode != null)
         {
             var version = identityNode.Attributes["Version"]?.Value
-                          ?? throw new InvalidDataException("Identity 节点缺少 Version 属性");
+                          ?? throw new InvalidDataException(CommonLanguageManager.Instance.bedrock_identityMissingVersion.CurrentValue());
             var packName = identityNode.Attributes["Name"]?.Value
-                           ?? throw new InvalidDataException("Identity 节点缺少 Name 属性");
+                           ?? throw new InvalidDataException(CommonLanguageManager.Instance.bedrock_identityMissingName.CurrentValue());
 
             return (version, packName);
         }
 
-        throw new NullReferenceException("未找到 Identity 节点");
+        throw new NullReferenceException(CommonLanguageManager.Instance.bedrock_identityNotFound.CurrentValue());
     }
 
     public static BedrockInstanceConfig GetInstanceConfig(string instanceFolder)
     {
         if (InstanceManager.GetInstanceType(instanceFolder) != MinecraftInstanceType.Bedrock)
-            throw new InvalidOperationException("指定的实例文件夹不是 Bedrock 实例");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.bedrock_notBedrockInstance.CurrentValue());
 
         MigrateLegacyConfigFolder(instanceFolder);
         MigrateInstanceConfig(instanceFolder);

@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -59,7 +60,7 @@ public sealed class BedrockServerPingService
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Logger.Debug($"检测基岩版服务器状态失败：{endpoint}{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.serverPing_bedrockDetectionFailed.CurrentValue(), endpoint, Environment.NewLine + exception));
             return null;
         }
     }
@@ -131,7 +132,7 @@ public sealed class BedrockServerPingService
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Logger.Warning($"解析基岩版服务器地址失败：{host}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.serverPing_bedrockResolveFailed.CurrentValue(), host, Environment.NewLine + exception));
             return null;
         }
     }

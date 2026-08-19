@@ -4,6 +4,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -56,7 +57,7 @@ public sealed class RecentPlayListService
         }
         catch (Exception exception)
         {
-            Logger.Error("刷新最近游玩失败。", exception);
+            Logger.Error(LogLanguageManager.Instance.recentPlay_refreshFailed.CurrentValue(), exception);
         }
         finally
         {

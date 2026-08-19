@@ -11,6 +11,7 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Localization;
 using SharpCompress.Compressors.Xz;
 
 namespace Portal.Core.Minecraft.Services;
@@ -116,21 +117,21 @@ public static class JavaDistributionService
             await DownloadArchiveAsync(version, archive, progress, cancellationToken);
             if (!string.IsNullOrWhiteSpace(version.Sha256))
             {
-                progress?.Invoke(new JavaInstallProgress("校验", null, 0, 0, 0));
+                progress?.Invoke(new JavaInstallProgress(CommonLanguageManager.Instance.javaDistribution_verifyStage.CurrentValue(), null, 0, 0, 0));
                 await using var hashStream = File.OpenRead(archive);
                 var actual = Convert.ToHexString(await SHA256.HashDataAsync(hashStream, cancellationToken));
                 if (!actual.Equals(version.Sha256, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("Java 安装包 SHA-256 校验失败。");
+                    throw new InvalidDataException(CommonLanguageManager.Instance.javaDistribution_sha256VerificationFailed.CurrentValue());
             }
 
-            progress?.Invoke(new JavaInstallProgress("解压", null, 0, 0, 0));
+            progress?.Invoke(new JavaInstallProgress(CommonLanguageManager.Instance.javaDistribution_extractStage.CurrentValue(), null, 0, 0, 0));
             Directory.CreateDirectory(staging);
             await ExtractAsync(archive, staging, cancellationToken);
             var root = FindRuntimeRoot(staging);
             Directory.Move(root, target);
             var executable = FindJavaExecutable(target);
             var runtime = await JavaRuntimeManager.FromPathAsync(executable, cancellationToken)
-                          ?? throw new InvalidDataException("下载的 Java 运行时无法识别。");
+                          ?? throw new InvalidDataException(CommonLanguageManager.Instance.javaDistribution_runtimeUnrecognized.CurrentValue());
             return runtime;
         }
         finally
@@ -154,7 +155,7 @@ public static class JavaDistributionService
             : arm64 ? null : "linux";
         if (component is null || platform is null) return null;
 
-        progress?.Invoke(new JavaInstallProgress("获取元数据", null, 0, 0, 0));
+        progress?.Invoke(new JavaInstallProgress(CommonLanguageManager.Instance.javaDistribution_fetchMetadataStage.CurrentValue(), null, 0, 0, 0));
         using var index = await GetJsonAsync(MojangRuntimeIndexUrl, cancellationToken);
         if (!index.RootElement.TryGetProperty(platform, out var platformNode) ||
             !platformNode.TryGetProperty(component, out var components) || components.GetArrayLength() == 0)
@@ -205,7 +206,7 @@ public static class JavaDistributionService
                             {
                                 var downloaded = Interlocked.Add(ref downloadedBytes, received);
                                 var elapsed = stopwatch.Elapsed.TotalSeconds;
-                                progress?.Invoke(new JavaInstallProgress("下载",
+                                progress?.Invoke(new JavaInstallProgress(CommonLanguageManager.Instance.javaDistribution_downloadStage.CurrentValue(),
                                     totalBytes > 0 ? Math.Clamp((double)downloaded / totalBytes, 0, 1) : null,
                                     downloaded, totalBytes, downloaded / Math.Max(1.0, elapsed)));
                             }, cancellationToken);
@@ -224,7 +225,7 @@ public static class JavaDistributionService
 
             await Task.WhenAll(tasks);
             var finalElapsed = stopwatch.Elapsed.TotalSeconds;
-            progress?.Invoke(new JavaInstallProgress("完成", 1, downloadedBytes, totalBytes,
+            progress?.Invoke(new JavaInstallProgress(CommonLanguageManager.Instance.javaDistribution_completeStage.CurrentValue(), 1, downloadedBytes, totalBytes,
                 downloadedBytes / Math.Max(1.0, finalElapsed)));
             Directory.Move(staging, target);
             return await JavaRuntimeManager.FromPathAsync(FindJavaExecutable(target), cancellationToken);
@@ -283,7 +284,7 @@ public static class JavaDistributionService
     {
         var request = new DownloadRequest(version.Url, destination, version.Size)
         {
-            ProgressChanged = e => progress?.Invoke(new JavaInstallProgress("下载",
+            ProgressChanged = e => progress?.Invoke(new JavaInstallProgress(CommonLanguageManager.Instance.javaDistribution_downloadStage.CurrentValue(),
                 e.TotalBytes > 0 ? Math.Clamp((double)e.DownloadedBytes / e.TotalBytes, 0, 1) : null,
                 e.DownloadedBytes, e.TotalBytes, e.Speed))
         };
@@ -291,7 +292,7 @@ public static class JavaDistributionService
         if (result.Type == DownloadResultType.Cancelled)
             throw new OperationCanceledException(cancellationToken);
         if (result.Type != DownloadResultType.Successful)
-            throw result.Exception ?? new IOException("Java 安装包下载失败。");
+            throw result.Exception ?? new IOException(CommonLanguageManager.Instance.javaDistribution_downloadFailed.CurrentValue());
     }
 
     private static async Task DownloadFileVerifiedAsync(string url, string destination, string sha1, long size,
@@ -313,11 +314,11 @@ public static class JavaDistributionService
                 if (result.Type == DownloadResultType.Cancelled)
                     throw new OperationCanceledException(cancellationToken);
                 if (result.Type != DownloadResultType.Successful)
-                    throw result.Exception ?? new IOException("Java 运行时文件下载失败。");
+                    throw result.Exception ?? new IOException(CommonLanguageManager.Instance.javaDistribution_runtimeFileDownloadFailed.CurrentValue());
                 await using var stream = File.OpenRead(destination);
                 var actual = Convert.ToHexString(await SHA1.HashDataAsync(stream, cancellationToken));
                 if (actual.Equals(sha1, StringComparison.OrdinalIgnoreCase)) return;
-                lastError = new InvalidDataException("Java 运行时文件 SHA-1 校验失败。");
+                lastError = new InvalidDataException(CommonLanguageManager.Instance.javaDistribution_runtimeFileSha1Failed.CurrentValue());
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -332,7 +333,7 @@ public static class JavaDistributionService
                 await Task.Delay(TimeSpan.FromMilliseconds(1000 * attempt), cancellationToken);
         }
 
-        throw lastError ?? new IOException("Java 运行时文件下载失败。");
+        throw lastError ?? new IOException(CommonLanguageManager.Instance.javaDistribution_runtimeFileDownloadFailed.CurrentValue());
     }
 
     private static async Task<JsonDocument> GetJsonAsync(string url, CancellationToken cancellationToken)
@@ -346,7 +347,7 @@ public static class JavaDistributionService
         var fullRoot = Path.GetFullPath(root) + Path.DirectorySeparatorChar;
         var full = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
         if (!full.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Java 清单包含无效路径。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.javaDistribution_manifestInvalidPath.CurrentValue());
         return full;
     }
 
@@ -376,7 +377,7 @@ public static class JavaDistributionService
                 var path = Path.GetFullPath(Path.Combine(destination,
                     entry.FullName.Replace('/', Path.DirectorySeparatorChar)));
                 if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("Java 压缩包包含无效路径。");
+                    throw new InvalidDataException(CommonLanguageManager.Instance.javaDistribution_archiveInvalidPath.CurrentValue());
                 if (string.IsNullOrEmpty(entry.Name))
                 {
                     Directory.CreateDirectory(path);
@@ -408,7 +409,7 @@ public static class JavaDistributionService
         var candidates = OperatingSystem.IsWindows() ? new[] { "javaw.exe", "java.exe" } : new[] { "java" };
         var found = candidates.SelectMany(name => Directory.EnumerateFiles(root, name, SearchOption.AllDirectories))
             .FirstOrDefault();
-        return found ?? throw new InvalidDataException("Java 安装包中没有找到 Java 可执行文件。");
+        return found ?? throw new InvalidDataException(CommonLanguageManager.Instance.javaDistribution_noExecutable.CurrentValue());
     }
 
     private static string GetUniqueDirectory(string path)

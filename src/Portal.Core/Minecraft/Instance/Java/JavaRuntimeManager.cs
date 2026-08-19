@@ -1,5 +1,6 @@
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Utilities;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Instance.Java;
@@ -61,7 +62,7 @@ public static class JavaRuntimeManager
         long totalDirsToScan = 0;
 
 
-        progress?.Report(new DeepScanProgress(0, 0, 0, "阶段 1/2：执行自动扫描（registry + where + 常见路径）…"));
+        progress?.Report(new DeepScanProgress(0, 0, 0, CommonLanguageManager.Instance.javaRuntime_scanStage1.CurrentValue()));
         try
         {
             await foreach (var java in JavaUtil.EnumerableJavaAsync(false, cancellationToken))
@@ -70,7 +71,7 @@ public static class JavaRuntimeManager
                     result.Add(Convert(java));
                     foundPaths.Add(java.JavaPath);
                     progress?.Report(new DeepScanProgress(0, 0, result.Count,
-                        $"自动扫描找到: {java.JavaVersion}"));
+                        string.Format(CommonLanguageManager.Instance.javaRuntime_autoScanFound.CurrentValue(), java.JavaVersion)));
                 }
         }
         catch (OperationCanceledException)
@@ -82,7 +83,7 @@ public static class JavaRuntimeManager
         totalDirsToScan = roots.Count;
         progress?.Report(new DeepScanProgress(
             totalDirsScanned, totalDirsToScan, result.Count,
-            $"阶段 2/2：深度扫描磁盘（已找到 {result.Count} 个）…"));
+            string.Format(CommonLanguageManager.Instance.javaRuntime_scanStage2.CurrentValue(), result.Count)));
 
         var tasks = new List<Task>();
         const int collectConcurrency = 4;
@@ -113,12 +114,12 @@ public static class JavaRuntimeManager
 
                                 progress?.Report(new DeepScanProgress(
                                     totalDirsScanned, totalDirsToScan, result.Count,
-                                    $"深度扫描找到 Java: {Path.GetFileName(Path.GetDirectoryName(javaPath))}"));
+                                    string.Format(CommonLanguageManager.Instance.javaRuntime_deepScanFound.CurrentValue(), Path.GetFileName(Path.GetDirectoryName(javaPath)))));
                             }
                         }
                         catch (Exception exception)
                         {
-                            Logger.Error($"读取深度扫描发现的 Java 运行时失败：{javaPath}", exception);
+                            Logger.Error(string.Format(LogLanguageManager.Instance.javaRuntime_deepScanReadFailed.CurrentValue(), javaPath), exception);
                         }
                     }
                 }
@@ -142,7 +143,7 @@ public static class JavaRuntimeManager
 
         progress?.Report(new DeepScanProgress(
             totalDirsScanned, totalDirsToScan, result.Count,
-            $"扫描完成，共找到 {result.Count} 个 Java"));
+            string.Format(CommonLanguageManager.Instance.javaRuntime_scanComplete.CurrentValue(), result.Count)));
 
         return result.ToList();
     }
@@ -287,7 +288,7 @@ public static class JavaRuntimeManager
                         Volatile.Read(ref totalDirsScanned),
                         Volatile.Read(ref totalDirsToScan),
                         foundPaths.Count + found.Count,
-                        $"正在扫描: {entryPath}"));
+                        string.Format(CommonLanguageManager.Instance.javaRuntime_scanning.CurrentValue(), entryPath)));
 
 
                 try

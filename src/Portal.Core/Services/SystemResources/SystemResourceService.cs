@@ -1,5 +1,6 @@
 using System.Net.NetworkInformation;
 using Hardware.Info;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Services.SystemResources;
@@ -50,7 +51,7 @@ public sealed class SystemResourceService : IDisposable
         }
         catch (Exception exception)
         {
-            Logger.Error("预热 GPU 信息采集失败。", exception);
+            Logger.Error(LogLanguageManager.Instance.systemResources_gpuWarmupFailed.CurrentValue(), exception);
         }
 
         _ = CpuUsageProvider.GetUsage();
@@ -87,7 +88,7 @@ public sealed class SystemResourceService : IDisposable
         }
         catch (Exception exception)
         {
-            Logger.Debug($"采集内存资源信息失败。{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.systemResources_memoryCollectionFailed.CurrentValue(), Environment.NewLine, exception));
         }
 
         var memStatus = _hardware.MemoryStatus;
@@ -112,7 +113,7 @@ public sealed class SystemResourceService : IDisposable
         }
         catch (Exception exception)
         {
-            Logger.Debug($"采集磁盘资源信息失败。{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.systemResources_diskCollectionFailed.CurrentValue(), Environment.NewLine, exception));
         }
 
         ulong downBytes = 0, upBytes = 0;
@@ -146,7 +147,7 @@ public sealed class SystemResourceService : IDisposable
         }
         catch (Exception exception)
         {
-            Logger.Debug($"采集网络资源信息失败。{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.systemResources_networkCollectionFailed.CurrentValue(), Environment.NewLine, exception));
         }
 
         var snapshot = Latest with
@@ -179,7 +180,7 @@ public sealed class SystemResourceService : IDisposable
         }
         catch (Exception exception)
         {
-            Logger.Debug($"采集 GPU 资源信息失败。{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.systemResources_gpuCollectionFailed.CurrentValue(), Environment.NewLine, exception));
         }
 
         var snapshot = Latest with

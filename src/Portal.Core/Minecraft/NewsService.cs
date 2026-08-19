@@ -3,6 +3,7 @@ using System.Text.Json;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;
@@ -19,10 +20,10 @@ public static class NewsService
 
     public static void InitializeFromCache()
     {
-        Logger.Info("开始加载新闻缓存。");
+        Logger.Info(LogLanguageManager.Instance.news_cacheLoadStart.CurrentValue());
         JavaNews = LoadCache(NewsEdition.Java);
         BedrockNews = LoadCache(NewsEdition.Bedrock);
-        Logger.Info($"新闻缓存加载完成，Java：{JavaNews.Count} 条，Bedrock：{BedrockNews.Count} 条。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.news_cacheLoadComplete.CurrentValue(), JavaNews.Count, BedrockNews.Count));
     }
 
     public static void RaiseNewsUpdated()
@@ -34,7 +35,7 @@ public static class NewsService
     public static async Task FetchAndRefreshAsync()
     {
         var stopwatch = Stopwatch.StartNew();
-        Logger.Info("开始从远程服务刷新新闻。");
+        Logger.Info(LogLanguageManager.Instance.news_fetchStart.CurrentValue());
         try
         {
             var jTask = FetchAsync(JavaApiUrl, NewsEdition.Java);
@@ -57,11 +58,11 @@ public static class NewsService
             }
 
             if (changed) NewsUpdated?.Invoke(null, EventArgs.Empty);
-            Logger.Info($"远程新闻刷新完成，数据是否变更：{changed}，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+            Logger.Info(string.Format(LogLanguageManager.Instance.news_fetchComplete.CurrentValue(), changed, stopwatch.ElapsedMilliseconds));
         }
         catch (Exception ex)
         {
-            Logger.Error("刷新新闻失败。", ex);
+            Logger.Error(LogLanguageManager.Instance.news_fetchFailed.CurrentValue(), ex);
         }
     }
 
@@ -73,7 +74,7 @@ public static class NewsService
         }
         catch (Exception ex)
         {
-            Logger.Error($"加载 {edition} 新闻缓存失败。", ex);
+            Logger.Error(string.Format(LogLanguageManager.Instance.news_cacheLoadFailed.CurrentValue(), edition), ex);
             return [];
         }
     }
@@ -89,7 +90,7 @@ public static class NewsService
         }
         catch (Exception ex)
         {
-            Logger.Error($"获取 {edition} 新闻失败：{url}", ex);
+            Logger.Error(string.Format(LogLanguageManager.Instance.news_fetchEditionFailed.CurrentValue(), edition, url), ex);
             return null;
         }
     }

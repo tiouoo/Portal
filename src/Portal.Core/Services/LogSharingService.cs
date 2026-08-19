@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Portal.Localization;
 
 namespace Portal.Core.Services;
 
@@ -33,7 +34,8 @@ public static class LogSharingService
             var body = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
                 return new LogShareResult("LogShare.CN", null,
-                    $"HTTP {(int)response.StatusCode}：{ExtractError(body) ?? "服务器返回错误"}");
+                    string.Format(CommonLanguageManager.Instance.logSharing_httpError.CurrentValue(), (int)response.StatusCode,
+                        ExtractError(body) ?? CommonLanguageManager.Instance.logSharing_serverError.CurrentValue()));
 
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
@@ -42,7 +44,7 @@ public static class LogSharingService
                 data.TryGetProperty("url", out urlElement))
                 url = urlElement.GetString();
             if (string.IsNullOrWhiteSpace(url))
-                return new LogShareResult("LogShare.CN", null, "服务器未返回分享链接");
+                return new LogShareResult("LogShare.CN", null, CommonLanguageManager.Instance.logSharing_noShareLink.CurrentValue());
             return new LogShareResult("LogShare.CN", url, null);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or IOException)
@@ -63,13 +65,14 @@ public static class LogSharingService
             var body = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
                 return new LogShareResult("mclo.gs", null,
-                    $"HTTP {(int)response.StatusCode}：{ExtractError(body) ?? "服务器返回错误"}");
+                    string.Format(CommonLanguageManager.Instance.logSharing_httpError.CurrentValue(), (int)response.StatusCode,
+                        ExtractError(body) ?? CommonLanguageManager.Instance.logSharing_serverError.CurrentValue()));
 
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
             var url = root.TryGetProperty("url", out var urlElement) ? urlElement.GetString() : null;
             if (string.IsNullOrWhiteSpace(url))
-                return new LogShareResult("mclo.gs", null, "服务器未返回分享链接");
+                return new LogShareResult("mclo.gs", null, CommonLanguageManager.Instance.logSharing_noShareLink.CurrentValue());
             return new LogShareResult("mclo.gs", url, null);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or IOException)
@@ -88,7 +91,8 @@ public static class LogSharingService
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)response.StatusCode}：{ExtractError(error) ?? "服务器返回错误"}");
+            throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.logSharing_httpError.CurrentValue(),
+                (int)response.StatusCode, ExtractError(error) ?? CommonLanguageManager.Instance.logSharing_serverError.CurrentValue()));
         }
 
         await using var stream = await response.Content.ReadAsStreamAsync(ct);
@@ -126,7 +130,7 @@ public static class LogSharingService
         }
 
         if (builder.Length == 0)
-            throw new InvalidOperationException("AI 分析未返回结果");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.logSharing_aiNoResult.CurrentValue());
         return builder.ToString();
     }
 

@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -64,7 +65,7 @@ public sealed class BedrockPackageImportService
                 var level = archive.Entries.FirstOrDefault(entry =>
                     entry.FullName.EndsWith("level.dat", StringComparison.OrdinalIgnoreCase));
                 if (level == null)
-                    throw new InvalidDataException("该 MCWORLD 文件不包含 level.dat。");
+                    throw new InvalidDataException(CommonLanguageManager.Instance.bedrockImport_mcworldMissingLevelDat.CurrentValue());
                 return new BedrockPackageInspection(archiveType, Path.GetFileNameWithoutExtension(archivePath), []);
             }
 
@@ -75,13 +76,13 @@ public sealed class BedrockPackageImportService
                 .Cast<BedrockPackageContent>()
                 .ToArray();
             if (contents.Length == 0)
-                throw new InvalidDataException("未找到可导入的基岩版包清单。");
+                throw new InvalidDataException(CommonLanguageManager.Instance.bedrockImport_noManifest.CurrentValue());
 
             return new BedrockPackageInspection(archiveType, Path.GetFileNameWithoutExtension(archivePath), contents);
         }
         catch (IOException ex)
         {
-            throw new InvalidDataException("无法读取基岩版包。", ex);
+            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockImport_cannotRead.CurrentValue(), ex);
         }
     }
 
@@ -92,13 +93,13 @@ public sealed class BedrockPackageImportService
         ArgumentNullException.ThrowIfNull(inspection);
         ArgumentNullException.ThrowIfNull(instance);
         if (!instance.IsBedrock || instance.BedrockConfig == null)
-            throw new InvalidOperationException("请选择一个基岩版实例。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockImport_selectInstance.CurrentValue());
 
         using var archive = ZipFile.OpenRead(archivePath);
         if (inspection.ArchiveType == BedrockPackageArchiveType.Mcworld)
         {
             if (string.IsNullOrWhiteSpace(userId))
-                throw new InvalidOperationException("请选择存档用户 ID。");
+                throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockImport_selectUserId.CurrentValue());
             var level = archive.Entries.First(entry =>
                 entry.FullName.EndsWith("level.dat", StringComparison.OrdinalIgnoreCase));
             var root = GetArchiveDirectory(level.FullName);
@@ -117,7 +118,7 @@ public sealed class BedrockPackageImportService
                 BedrockPackageContentType.BehaviorPack => MinecraftSpecialFolder.BehaviorPacksFolder,
                 BedrockPackageContentType.SkinPack => MinecraftSpecialFolder.SkinPacksFolder,
                 BedrockPackageContentType.WorldTemplate => MinecraftSpecialFolder.WorldTemplatesFolder,
-                _ => throw new InvalidOperationException("不支持的基岩版包类型。")
+                _ => throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockImport_unsupportedType.CurrentValue())
             });
             ExtractDirectory(archive, content.ArchiveRoot, CreateDestination(destinationRoot, content.Name),
                 cancellationToken);
@@ -140,7 +141,7 @@ public sealed class BedrockPackageImportService
     private static BedrockPackageArchiveType GetArchiveType(string path)
     {
         if (!TryGetArchiveType(path, out var archiveType))
-            throw new InvalidDataException("不支持的基岩版包格式。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockImport_unsupportedFormat.CurrentValue());
         return archiveType;
     }
 
@@ -321,7 +322,7 @@ public sealed class BedrockPackageImportService
         var entries = archive.Entries
             .Where(entry => entry.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToArray();
         if (entries.Length == 0)
-            throw new InvalidDataException("包中没有可解压的文件。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockImport_noExtractableFiles.CurrentValue());
 
         var destinationFullPath = Path.GetFullPath(destination);
         Directory.CreateDirectory(destinationFullPath);
@@ -333,7 +334,7 @@ public sealed class BedrockPackageImportService
             var targetPath = Path.GetFullPath(Path.Combine(destinationFullPath, relativePath));
             if (!targetPath.StartsWith(destinationFullPath + Path.DirectorySeparatorChar,
                     StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("压缩包包含不安全的文件路径。");
+                throw new InvalidDataException(CommonLanguageManager.Instance.bedrockImport_unsafePath.CurrentValue());
             if (entry.FullName.EndsWith('/'))
             {
                 Directory.CreateDirectory(targetPath);

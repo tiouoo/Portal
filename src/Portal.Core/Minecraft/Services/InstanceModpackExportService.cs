@@ -1,5 +1,6 @@
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Modpack;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Core.Minecraft.Services;
@@ -11,8 +12,8 @@ public static class InstanceModpackExportService
     {
         return TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"导出整合包 {options.PackName}",
-            Description = "正在准备导出",
+            Name = string.Format(CommonLanguageManager.Instance.modpackExport_taskName.CurrentValue(), options.PackName),
+            Description = CommonLanguageManager.Instance.modpackExport_preparing.CurrentValue(),
             Progress = 0,
             Actions = []
         }, context => RunExportAsync(context, instance, options, outputPath));
@@ -22,7 +23,7 @@ public static class InstanceModpackExportService
         ModpackExportOptions options, string outputPath)
     {
         if (instance.Type != MinecraftInstanceType.Java)
-            throw new InvalidOperationException("仅支持导出 Java 版实例。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.modpackExport_onlyJava.CurrentValue());
 
         var lastStage = string.Empty;
         var lastProgress = double.NaN;

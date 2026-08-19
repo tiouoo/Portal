@@ -3,6 +3,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Components.Parser;
 using Portal.Core.App.Events;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
 
@@ -45,7 +46,7 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
             var detected = MinecraftFolderLayout.Detect(FolderPath);
             if (detected.Kind == MinecraftFolderKind.Unknown && FolderKind == MinecraftFolderKind.Standard)
                 return new MinecraftFolderLayout(MinecraftFolderKind.Standard, FolderPath, FolderPath,
-                    "传统 .minecraft 文件夹");
+                    CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue());
             if (FolderKind is not (MinecraftFolderKind.Auto or MinecraftFolderKind.Standard or
                     MinecraftFolderKind.Unknown) &&
                 detected.Kind != FolderKind)

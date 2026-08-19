@@ -1,6 +1,7 @@
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Classes;
@@ -19,7 +20,7 @@ public static class ModDependencyFilter
         }
         catch (Exception exception)
         {
-            Logger.Warning($"[ModDownload] 扫描已安装模组失败，依赖将照常下载：{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.modScan_installedFailed.CurrentValue(), exception));
             return dependencies;
         }
 

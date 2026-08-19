@@ -8,6 +8,7 @@ using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Standard.Ui;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -68,11 +69,11 @@ public partial class UiProperty : ObservableObject
 
     public static List<AggregatedSearchType> AggregatedSearchTypes { get; set; } =
     [
-        new() { DisplayText = "所有", EnumFlag = AggregatedSearchEntryType.All },
-        new() { DisplayText = "最近游玩", EnumFlag = AggregatedSearchEntryType.RecentPlay },
-        new() { DisplayText = "实例", EnumFlag = AggregatedSearchEntryType.Instance },
-        new() { DisplayText = "账户", EnumFlag = AggregatedSearchEntryType.Account },
-        new() { DisplayText = "页面", EnumFlag = AggregatedSearchEntryType.Page }
+        new() { DisplayText = CommonLanguageManager.Instance.aggregatedSearch_all.CurrentValue(), EnumFlag = AggregatedSearchEntryType.All },
+        new() { DisplayText = CommonLanguageManager.Instance.aggregatedSearch_recentPlay.CurrentValue(), EnumFlag = AggregatedSearchEntryType.RecentPlay },
+        new() { DisplayText = CommonLanguageManager.Instance.aggregatedSearch_instance.CurrentValue(), EnumFlag = AggregatedSearchEntryType.Instance },
+        new() { DisplayText = CommonLanguageManager.Instance.aggregatedSearch_account.CurrentValue(), EnumFlag = AggregatedSearchEntryType.Account },
+        new() { DisplayText = CommonLanguageManager.Instance.aggregatedSearch_page.CurrentValue(), EnumFlag = AggregatedSearchEntryType.Page }
     ];
 
     private void OnInstancesChanged(object? sender, EventArgs e)

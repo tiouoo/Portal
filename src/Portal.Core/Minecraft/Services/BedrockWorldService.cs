@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -19,7 +20,7 @@ public sealed class BedrockWorldService
         try
         {
             var worldsPath = BedrockDataPathResolver.GetWorldsFolder(config, userId);
-            Logger.Debug($"扫描基岩版世界：{worldsPath}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.bedrockWorld_scanStart.CurrentValue(), worldsPath));
             var worlds = Directory.EnumerateDirectories(worldsPath)
                 .Select(path => Read(path, cancellationToken))
                 .Where(world => world != null)
@@ -27,17 +28,17 @@ public sealed class BedrockWorldService
                 .OrderByDescending(world => world.LastWriteTime)
                 .ThenBy(world => world.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            Logger.Debug($"基岩版世界扫描完成：{worldsPath}，发现 {worlds.Length} 个世界。");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.bedrockWorld_scanComplete.CurrentValue(), worldsPath, worlds.Length));
             return worlds;
         }
         catch (IOException exception)
         {
-            Logger.Error("扫描基岩版世界失败。", exception);
+            Logger.Error(LogLanguageManager.Instance.bedrockWorld_scanFailed.CurrentValue(), exception);
             return [];
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error("扫描基岩版世界被拒绝。", exception);
+            Logger.Error(LogLanguageManager.Instance.bedrockWorld_scanDenied.CurrentValue(), exception);
             return [];
         }
     }
@@ -64,12 +65,12 @@ public sealed class BedrockWorldService
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取基岩版世界名称失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.bedrockWorld_readNameFailed.CurrentValue(), path), exception);
             return null;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取基岩版世界名称被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.bedrockWorld_readNameDenied.CurrentValue(), path), exception);
             return null;
         }
     }
@@ -82,12 +83,12 @@ public sealed class BedrockWorldService
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取基岩版世界文件失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.bedrockWorld_readFileFailed.CurrentValue(), path), exception);
             return null;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取基岩版世界文件被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.bedrockWorld_readFileDenied.CurrentValue(), path), exception);
             return null;
         }
     }
@@ -110,17 +111,17 @@ public sealed class BedrockWorldService
         }
         catch (IOException exception)
         {
-            Logger.Error($"读取基岩版世界资源包引用失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.bedrockWorld_readPackRefsFailed.CurrentValue(), path), exception);
             return [];
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"读取基岩版世界资源包引用被拒绝：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.bedrockWorld_readPackRefsDenied.CurrentValue(), path), exception);
             return [];
         }
         catch (JsonException exception)
         {
-            Logger.Error($"解析基岩版世界资源包引用失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.bedrockWorld_parsePackRefsFailed.CurrentValue(), path), exception);
             return [];
         }
     }

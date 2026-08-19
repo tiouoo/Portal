@@ -6,6 +6,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 
 namespace Portal.Core.Module.AggregatedSearch;
 
@@ -70,7 +71,7 @@ public class Index
                 Description = attr.Path,
                 IconKey = attr.IconKey,
                 Data = type,
-                TypeDescription = "页面"
+                TypeDescription = CommonLanguageManager.Instance.aggregatedSearch_page.CurrentValue()
             };
         }
     }
@@ -84,7 +85,7 @@ public class Index
             Description = $"{instance.FolderName}·{instance.ShortDisplay}",
             IconKey = instance.Type.ToString(),
             Data = instance,
-            TypeDescription = "实例"
+            TypeDescription = CommonLanguageManager.Instance.aggregatedSearch_instance.CurrentValue()
         };
     }
 
@@ -97,7 +98,7 @@ public class Index
             Description = BuildRecentPlayDescription(target),
             IconKey = target.Type.ToString(),
             Data = target,
-            TypeDescription = "最近游玩"
+            TypeDescription = CommonLanguageManager.Instance.aggregatedSearch_recentPlay.CurrentValue()
         };
     }
 
@@ -126,7 +127,7 @@ public class Index
             Description = account.DisplayAccountNote,
             IconKey = account.AccountType.ToString(),
             Data = account,
-            TypeDescription = "游戏档案"
+            TypeDescription = CommonLanguageManager.Instance.aggregatedSearch_gameProfile.CurrentValue()
         };
     }
 
@@ -139,7 +140,7 @@ public class Index
             Description = authServer.ServerUrl,
             IconKey = authServer.AuthType.ToString(),
             Data = authServer,
-            TypeDescription = "认证服务器"
+            TypeDescription = CommonLanguageManager.Instance.aggregatedSearch_authServer.CurrentValue()
         };
     }
 }

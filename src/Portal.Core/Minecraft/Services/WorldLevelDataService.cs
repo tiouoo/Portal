@@ -1,5 +1,6 @@
 using fNbt;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -36,7 +37,7 @@ public sealed class WorldLevelDataService
     {
         cancellationToken.ThrowIfCancellationRequested();
         var path = Path.Combine(worldPath, "level.dat");
-        if (!File.Exists(path)) throw new FileNotFoundException("未找到 level.dat 文件。", path);
+        if (!File.Exists(path)) throw new FileNotFoundException(CommonLanguageManager.Instance.world_levelDatNotFound.CurrentValue(), path);
         var file = new NbtFile();
         file.LoadFromFile(path);
         var data = file.RootTag["Data"] as NbtCompound ?? file.RootTag;

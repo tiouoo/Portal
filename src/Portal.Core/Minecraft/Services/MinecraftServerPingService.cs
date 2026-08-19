@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
@@ -69,7 +70,7 @@ public sealed class MinecraftServerPingService
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Logger.Warning($"解析服务器地址失败：{host}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.serverPing_resolveFailed.CurrentValue(), host, Environment.NewLine + exception));
             return null;
         }
     }
@@ -209,7 +210,7 @@ public sealed class MinecraftServerPingService
         }
         catch (Exception exception)
         {
-            Logger.Warning($"解析服务器状态响应失败。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.serverPing_parseResponseFailed.CurrentValue(), Environment.NewLine, exception));
             return null;
         }
     }
@@ -361,6 +362,6 @@ public sealed class MinecraftServerPingService
                 return result;
         }
 
-        throw new InvalidDataException("VarInt 长度超出限制。");
+        throw new InvalidDataException(CommonLanguageManager.Instance.serverPing_varIntTooLong.CurrentValue());
     }
 }

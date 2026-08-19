@@ -2,6 +2,7 @@ using System.Text.Json;
 using Portal.Core.Const;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Models;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -26,7 +27,7 @@ public class FavoriteResource
 public sealed class FavoriteCollection
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
-    public string Name { get; set; } = "默认收藏夹";
+    public string Name { get; set; } = CommonLanguageManager.Instance.favorite_defaultCollectionName.CurrentValue();
     public List<FavoriteResource> Items { get; set; } = [];
 }
 
@@ -92,7 +93,7 @@ public sealed class FavoriteCollectionService
     {
         var imported = JsonSerializer.Deserialize<FavoriteCollectionDocument>(File.ReadAllText(path), PortalJson.Options);
         if (imported?.Collections is null)
-            throw new InvalidDataException("收藏夹文件格式无效。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.favorite_invalidFileFormat.CurrentValue());
         foreach (var collection in
                  imported.Collections.Where(collection => !string.IsNullOrWhiteSpace(collection.Name)))
         {

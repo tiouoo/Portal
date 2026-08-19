@@ -5,6 +5,7 @@ using Flurl.Http;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
+using Portal.Localization;
 using MinecraftLaunch.Utilities;
 
 namespace Portal.Core.Minecraft.Services;
@@ -660,10 +661,10 @@ public sealed class ResourceUpdateService
         {
             return versionType switch
             {
-                "release" => "正式版",
-                "beta" => "测试B版",
-                "alpha" => "测试A版",
-                _ => "测试版"
+                "release" => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
+                "beta" => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
+                "alpha" => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
+                _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
             };
         }
 
@@ -746,10 +747,10 @@ public sealed class ResourceUpdateService
         {
             return releaseType switch
             {
-                1 => "正式版",
-                2 => "测试B版",
-                3 => "测试A版",
-                _ => "测试版"
+                1 => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
+                2 => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
+                3 => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
+                _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
             };
         }
     }

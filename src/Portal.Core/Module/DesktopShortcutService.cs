@@ -5,6 +5,7 @@ using System.Text;
 using Avalonia.Media.Imaging;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Module;
@@ -60,7 +61,7 @@ public static class DesktopShortcutService
         if (OperatingSystem.IsWindows()) return CreateWindowsShortcut(url, displayName, icon);
         if (OperatingSystem.IsLinux()) return await CreateLinuxShortcutAsync(url, displayName, icon);
         if (OperatingSystem.IsMacOS()) return CreateMacShortcut(url, displayName);
-        throw new PlatformNotSupportedException("当前系统暂不支持创建桌面快捷方式。");
+        throw new PlatformNotSupportedException(CommonLanguageManager.Instance.desktop_notSupportedCreateShortcut.CurrentValue());
     }
 
     private static Bitmap? TryLoadIcon(string? path, byte[]? data)
@@ -104,7 +105,7 @@ public static class DesktopShortcutService
     {
         if (Environment.GetEnvironmentVariable("APPIMAGE") is { Length: > 0 } appImagePath && File.Exists(appImagePath))
             return appImagePath;
-        return Environment.ProcessPath ?? throw new InvalidOperationException("无法确定启动器可执行文件路径。");
+        return Environment.ProcessPath ?? throw new InvalidOperationException(CommonLanguageManager.Instance.common_cannotDetermineExecutablePath.CurrentValue());
     }
 
     private static string SanitizeFileName(string name)
@@ -131,7 +132,7 @@ public static class DesktopShortcutService
         {
             link.SetPath(GetExecutablePath());
             link.SetArguments(url);
-            link.SetDescription($"通过 Portal 启动 {displayName}");
+            link.SetDescription(string.Format(CommonLanguageManager.Instance.desktop_launchViaPortal.CurrentValue(), displayName));
             link.SetWorkingDirectory(Path.GetDirectoryName(GetExecutablePath()) ?? string.Empty);
             link.SetIconLocation(iconFile, 0);
 
@@ -142,7 +143,7 @@ public static class DesktopShortcutService
             Marshal.FinalReleaseComObject(link);
         }
 
-        Logger.Info($"已创建桌面快捷方式：{path}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.desktop_shortcutCreated.CurrentValue(), path));
         return path;
     }
 
@@ -150,7 +151,7 @@ public static class DesktopShortcutService
     {
         var desktop = GetDesktopDirectory();
         if (!Directory.Exists(desktop))
-            throw new DirectoryNotFoundException($"未找到桌面文件夹：{desktop}");
+            throw new DirectoryNotFoundException(string.Format(CommonLanguageManager.Instance.desktop_desktopFolderNotFound.CurrentValue(), desktop));
 
         var safeName = SanitizeFileName(displayName);
         var path = Path.Combine(desktop, $"{safeName}.desktop");
@@ -161,7 +162,7 @@ public static class DesktopShortcutService
         builder.AppendLine("[Desktop Entry]");
         builder.AppendLine("Type=Application");
         builder.AppendLine($"Name={EscapeDesktopValue(displayName)}");
-        builder.AppendLine($"Comment=通过 Portal 启动 {EscapeDesktopValue(displayName)}");
+        builder.AppendLine($"Comment={string.Format(CommonLanguageManager.Instance.desktop_launchViaPortal.CurrentValue(), EscapeDesktopValue(displayName))}");
         builder.AppendLine($"Exec={EscapeDesktopExec(GetExecutablePath())} {EscapeDesktopExec(url)}");
         if (iconPath != null) builder.AppendLine($"Icon={iconPath}");
         builder.AppendLine("Terminal=false");
@@ -170,7 +171,7 @@ public static class DesktopShortcutService
 
 
         await RunProcessAsync("chmod", ["+x", path], false);
-        Logger.Info($"已创建桌面快捷方式：{path}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.desktop_shortcutCreated.CurrentValue(), path));
         return path;
     }
 
@@ -190,7 +191,7 @@ public static class DesktopShortcutService
                      </plist>
                      """;
         File.WriteAllText(path, plist);
-        Logger.Info($"已创建桌面快捷方式：{path}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.desktop_shortcutCreated.CurrentValue(), path));
         return path;
     }
 
@@ -209,7 +210,7 @@ public static class DesktopShortcutService
         }
         catch (Exception e)
         {
-            Logger.Error("写入快捷方式图标失败。", e);
+            Logger.Error(LogLanguageManager.Instance.desktop_iconWriteFailed.CurrentValue(), e);
             return null;
         }
     }
@@ -264,10 +265,10 @@ public static class DesktopShortcutService
                 { FileName = fileName, UseShellExecute = false, CreateNoWindow = true };
             foreach (var argument in arguments) startInfo.ArgumentList.Add(argument);
             using var process = Process.Start(startInfo)
-                                ?? throw new InvalidOperationException($"无法启动 {fileName}。");
+                                ?? throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.common_cannotStart.CurrentValue(), fileName));
             await process.WaitForExitAsync();
             if (required && process.ExitCode != 0)
-                throw new InvalidOperationException($"{fileName} 执行失败（退出码 {process.ExitCode}）。");
+                throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.common_executeFailed.CurrentValue(), fileName, process.ExitCode));
         }
         catch (Exception) when (!required)
         {

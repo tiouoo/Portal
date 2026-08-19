@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Portal.Core.Const;
 using Portal.Core.Module.Update;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Module.Multiplayer;
@@ -67,16 +68,16 @@ public static class GravityConeInstaller
     {
         if (!forceUpdate && FindInstalled() is { } installed) return installed;
 
-        progress?.Report((null, "正在获取联机组件清单"));
+        progress?.Report((null, CommonLanguageManager.Instance.multiplayer_fetchingManifest.CurrentValue()));
         await using var manifestStream = await Client.GetStreamAsync(ManifestUrl, cancellationToken);
         var manifest = await JsonSerializer.DeserializeAsync<GravityConeManifest>(manifestStream,
-            cancellationToken: cancellationToken) ?? throw new InvalidDataException("联机组件清单为空。");
-        if (manifest.SchemaVersion != 1) throw new InvalidDataException("不支持的联机组件清单版本。");
+            cancellationToken: cancellationToken) ?? throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_manifestEmpty.CurrentValue());
+        if (manifest.SchemaVersion != 1) throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_unsupportedManifestVersion.CurrentValue());
 
         var rid = GetRid();
         if (!manifest.GravityCone.Packages.TryGetValue(rid, out var gcPackage) ||
             !manifest.EasyTier.Packages.TryGetValue(rid, out var etPackage))
-            throw new PlatformNotSupportedException($"联机组件暂不支持 {rid}。");
+            throw new PlatformNotSupportedException(string.Format(CommonLanguageManager.Instance.multiplayer_unsupportedRid.CurrentValue(), rid));
 
         var gcDirectory = Path.Combine(Root, "GravityCone", manifest.GravityCone.Version);
         var etDirectory = Path.Combine(Root, "EasyTier", manifest.EasyTier.Version, rid);
@@ -95,14 +96,14 @@ public static class GravityConeInstaller
 
         await Task.WhenAll(gcTask, etTask);
 
-        progress?.Report((null, "正在校验联机组件"));
+        progress?.Report((null, CommonLanguageManager.Instance.multiplayer_verifyingComponents.CurrentValue()));
 
         var cliName = gcPackage.Executable ?? GetCliName(rid);
         var cliPath = Path.Combine(gcDirectory, cliName);
         var suffix = OperatingSystem.IsWindows() ? ".exe" : string.Empty;
         if (!File.Exists(cliPath) || !File.Exists(Path.Combine(etDirectory, "easytier-core" + suffix)) ||
             !File.Exists(Path.Combine(etDirectory, "easytier-cli" + suffix)))
-            throw new InvalidDataException("联机组件压缩包缺少必要文件。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_archiveMissingFiles.CurrentValue());
 
         MakeExecutable(cliPath);
         MakeExecutable(Path.Combine(etDirectory, "easytier-core" + suffix));
@@ -110,7 +111,7 @@ public static class GravityConeInstaller
         Directory.CreateDirectory(Root);
         await File.WriteAllTextAsync(InstallationStatePath, JsonSerializer.Serialize(new InstallationState(
             manifest.GravityCone.Version, manifest.EasyTier.Version, rid, cliName)), cancellationToken);
-        progress?.Report((1, "联机组件安装完成"));
+        progress?.Report((1, CommonLanguageManager.Instance.multiplayer_installComplete.CurrentValue()));
         CleanupOldGravityConeVersions(manifest.GravityCone.Version);
         return new GravityConeInstallation(cliPath, etDirectory);
     }
@@ -145,7 +146,7 @@ public static class GravityConeInstaller
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidDataException or IOException)
         {
-            Logger.Warning($"获取联机组件清单版本失败。{Environment.NewLine}{ex}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_fetchManifestVersionFailed.CurrentValue(), Environment.NewLine, ex));
             return null;
         }
     }
@@ -184,7 +185,7 @@ public static class GravityConeInstaller
             }
             catch (Exception ex)
             {
-                Logger.Warning($"清理旧版联机组件失败：{directory}{Environment.NewLine}{ex}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_cleanupOldVersionFailed.CurrentValue(), directory, Environment.NewLine + ex));
             }
         }
     }
@@ -215,7 +216,7 @@ public static class GravityConeInstaller
             var downloadUrl = GithubMirror.Apply(package.Url);
             var total = package.Size;
 
-            context.ReportDownloadProgress(0, total, $"正在下载 {package.FileName}");
+            context.ReportDownloadProgress(0, total, string.Format(CommonLanguageManager.Instance.multiplayer_downloading.CurrentValue(), package.FileName));
 
             var supportsRange = total > 0 && await ValidateRangeSupportAsync(downloadUrl, cancellationToken);
 
@@ -225,15 +226,15 @@ public static class GravityConeInstaller
                 await DownloadSinglePartAsync(downloadUrl, archive, total, context, cancellationToken);
 
             if (package.Size > 0 && new FileInfo(archive).Length != package.Size)
-                throw new InvalidDataException($"{package.FileName} 文件大小校验失败。");
+                throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.multiplayer_sizeVerificationFailed.CurrentValue(), package.FileName));
             await using (var stream = File.OpenRead(archive))
             {
                 var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken));
                 if (!hash.Equals(package.Sha256, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException($"{package.FileName} SHA-256 校验失败。");
+                    throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.multiplayer_sha256VerificationFailed.CurrentValue(), package.FileName));
             }
 
-            context.ReportMessage($"正在解压 {package.FileName}");
+            context.ReportMessage(string.Format(CommonLanguageManager.Instance.multiplayer_extracting.CurrentValue(), package.FileName));
             if (package.ArchiveType.Equals("zip", StringComparison.OrdinalIgnoreCase))
             {
                 ZipFile.ExtractToDirectory(archive, extracted);
@@ -246,7 +247,7 @@ public static class GravityConeInstaller
             }
             else
             {
-                throw new InvalidDataException($"不支持的压缩格式：{package.ArchiveType}");
+                throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.multiplayer_unsupportedArchiveFormat.CurrentValue(), package.ArchiveType));
             }
 
             foreach (var file in Directory.EnumerateFiles(extracted, "*", SearchOption.AllDirectories))
@@ -293,7 +294,7 @@ public static class GravityConeInstaller
             await DownloadRangeAsync(url, path, start, end, bytes =>
             {
                 var current = Interlocked.Add(ref downloaded, bytes);
-                context.ReportDownloadProgress(current, total, $"正在下载 {context.Package.FileName}");
+                context.ReportDownloadProgress(current, total, string.Format(CommonLanguageManager.Instance.multiplayer_downloading.CurrentValue(), context.Package.FileName));
             }, cancellationToken);
         });
         await Task.WhenAll(downloads);
@@ -335,7 +336,7 @@ public static class GravityConeInstaller
             if (read == 0) break;
             await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
             downloaded += read;
-            context.ReportDownloadProgress(downloaded, total, $"正在下载 {context.Package.FileName}");
+            context.ReportDownloadProgress(downloaded, total, string.Format(CommonLanguageManager.Instance.multiplayer_downloading.CurrentValue(), context.Package.FileName));
         }
     }
 
@@ -345,11 +346,11 @@ public static class GravityConeInstaller
         {
             Architecture.X64 => "x64",
             Architecture.Arm64 => "arm64",
-            _ => throw new PlatformNotSupportedException("联机组件仅支持 x64 和 arm64。")
+            _ => throw new PlatformNotSupportedException(CommonLanguageManager.Instance.multiplayer_onlyX64Arm64.CurrentValue())
         };
         var os = OperatingSystem.IsWindows() ? "win" :
             OperatingSystem.IsLinux() ? "linux" :
-            OperatingSystem.IsMacOS() ? "osx" : throw new PlatformNotSupportedException("当前系统不支持联机组件。");
+            OperatingSystem.IsMacOS() ? "osx" : throw new PlatformNotSupportedException(CommonLanguageManager.Instance.multiplayer_osNotSupported.CurrentValue());
         return $"{os}-{architecture}";
     }
 
@@ -363,7 +364,7 @@ public static class GravityConeInstaller
             "linux-arm64" => "gravitycone-cli-linux-arm64",
             "osx-x64" => "gravitycone-cli-darwin-amd64",
             "osx-arm64" => "gravitycone-cli-darwin-arm64",
-            _ => throw new PlatformNotSupportedException($"联机组件暂不支持 {rid}。")
+            _ => throw new PlatformNotSupportedException(string.Format(CommonLanguageManager.Instance.multiplayer_unsupportedRid.CurrentValue(), rid))
         };
     }
 
@@ -490,10 +491,10 @@ public static class GravityConeInstaller
 
             double? progress = totalSum > 0 ? (double)downloadedSum / totalSum : null;
             var message = completedCount == _count
-                ? "联机组件下载完成"
+                ? CommonLanguageManager.Instance.multiplayer_downloadComplete.CurrentValue()
                 : messages.Count > 0
                     ? string.Join("，", messages)
-                    : "正在下载联机组件";
+                    : CommonLanguageManager.Instance.multiplayer_downloadingComponents.CurrentValue();
 
             _progress?.Report((progress, message));
         }

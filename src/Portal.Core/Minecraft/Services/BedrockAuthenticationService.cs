@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -66,14 +67,14 @@ public sealed class BedrockAuthenticationService
             return await CreateAccountAsync(token, cancellationToken);
         }
 
-        throw new TimeoutException("微软账户登录已超时，请重试。");
+        throw new TimeoutException(CommonLanguageManager.Instance.bedrockAuth_loginTimeout.CurrentValue());
     }
 
     public async Task<BedrockAccount> RefreshAsync(BedrockAccount account,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(account.RefreshToken))
-            throw new InvalidOperationException("基岩账户缺少刷新令牌，请重新登录。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockAuth_missingRefreshToken.CurrentValue());
 
         var token = await PostFormAsync(TokenEndpoint, new Dictionary<string, string>
         {
@@ -151,7 +152,7 @@ public sealed class BedrockAuthenticationService
             if (id == "GameDisplayPicRaw") avatarUrl = setting.GetProperty("value").GetString();
         }
 
-        return (gamertag ?? throw new InvalidOperationException("Xbox 档案未返回玩家代号。"), avatarUrl);
+        return (gamertag ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockAuth_noGamertag.CurrentValue()), avatarUrl);
     }
 
     private async Task<JsonElement> PostFormAsync(string endpoint, Dictionary<string, string> values,
@@ -177,7 +178,7 @@ public sealed class BedrockAuthenticationService
     {
         if (response.IsSuccessStatusCode) return;
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        throw new InvalidOperationException($"{operation} 请求失败（{(int)response.StatusCode}）：{GetSafeError(body)}");
+        throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.bedrockAuth_requestFailed.CurrentValue(), operation, (int)response.StatusCode, GetSafeError(body)));
     }
 
     private static string GetSafeError(string body)
@@ -187,19 +188,19 @@ public sealed class BedrockAuthenticationService
             using var json = JsonDocument.Parse(body);
             if (json.RootElement.TryGetProperty("XErr", out var xerr)) return $"XErr {xerr.GetInt64()}";
             if (json.RootElement.TryGetProperty("error_description", out var description))
-                return description.GetString() ?? "未知错误";
+                return description.GetString() ?? CommonLanguageManager.Instance.bedrockAuth_unknownError.CurrentValue();
         }
         catch (JsonException)
         {
         }
 
-        return "请检查网络和 Xbox 账户状态";
+        return CommonLanguageManager.Instance.bedrockAuth_checkNetwork.CurrentValue();
     }
 
     private static string GetRequiredString(JsonElement element, string propertyName)
     {
         return element.TryGetProperty(propertyName, out var value) && !string.IsNullOrWhiteSpace(value.GetString())
             ? value.GetString()!
-            : throw new InvalidOperationException($"账户服务响应缺少 {propertyName}。");
+            : throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.bedrockAuth_responseMissingProperty.CurrentValue(), propertyName));
     }
 }

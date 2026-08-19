@@ -13,6 +13,7 @@ using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Const;
 using Portal.Core.Module.Initialize;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Events;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -30,13 +31,13 @@ public static class UpdateApp
     public static async Task<PreparedUpdate?> Prepare(TopLevel sender)
     {
         var stopwatch = Stopwatch.StartNew();
-        Logger.Info("开始检查并准备应用更新。");
+        Logger.Info(LogLanguageManager.Instance.update_prepareStart.CurrentValue());
         try
         {
             var release = await UpdateChecker.GetRelease();
             if (!UpdateChecker.IsNewer(release))
             {
-                sender.Notice("当前是最新版本", NotificationType.Success);
+                sender.Notice(CommonLanguageManager.Instance.update_alreadyLatest.CurrentValue(), NotificationType.Success);
                 return null;
             }
 
@@ -49,9 +50,9 @@ public static class UpdateApp
             Directory.CreateDirectory(updateDirectory);
             CleanupOldUpdateDirectories(updateDirectory);
             var packagePath = Path.Combine(updateDirectory, asset.Name);
-            Logger.Info($"已选择更新包：{asset.Name}，下载目录：{updateDirectory}");
+            Logger.Info(string.Format(LogLanguageManager.Instance.update_packageSelected.CurrentValue(), asset.Name, updateDirectory));
 
-            sender.Notice($"正在下载 {asset.Name}");
+            sender.Notice(string.Format(CommonLanguageManager.Instance.update_downloading.CurrentValue(), asset.Name));
             var taskHandle = await Download(asset, packagePath);
 
 
@@ -66,7 +67,7 @@ public static class UpdateApp
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType is "deb" or "rpm")
             {
                 var processPath = Environment.ProcessPath
-                                  ?? throw new InvalidOperationException("无法确定当前程序路径。");
+                                  ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotDetermineCurrentPath.CurrentValue());
                 var packageUpdate = new PreparedUpdate(
                     await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType, processPath)),
                     true, true);
@@ -75,7 +76,7 @@ public static class UpdateApp
             }
 
             var path = Environment.ProcessPath
-                       ?? throw new InvalidOperationException("无法确定当前程序路径。");
+                       ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotDetermineCurrentPath.CurrentValue());
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType == "appimage")
             {
                 var appImageUpdate = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
@@ -89,17 +90,17 @@ public static class UpdateApp
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && packageType is "app" or "dmg")
                 updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, path));
             else
-                throw new NotSupportedException($"当前系统不支持安装类型“{packageType}”的自动更新。");
+                throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedInstallType.CurrentValue(), packageType));
 
             var preparedUpdate = new PreparedUpdate(updater, false);
             CompletePreparation(taskHandle, preparedUpdate);
-            Logger.Info($"应用更新准备完成，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+            Logger.Info(string.Format(LogLanguageManager.Instance.update_prepareComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
             return preparedUpdate;
         }
         catch (Exception ex)
         {
-            Logger.Error("准备应用更新失败。", ex);
-            sender.Notice($"更新失败：{ex.Message}", NotificationType.Error);
+            Logger.Error(LogLanguageManager.Instance.update_prepareFailed.CurrentValue(), ex);
+            sender.Notice(string.Format(CommonLanguageManager.Instance.update_failed.CurrentValue(), ex.Message), NotificationType.Error);
             return null;
         }
     }
@@ -109,12 +110,12 @@ public static class UpdateApp
         if (!await ApplicationEvents.RaiseAppExiting()) return;
         ConfigSaver.FlushConfig();
         using var process = Process.Start(update.StartInfo)
-                            ?? throw new InvalidOperationException("无法启动更新安装程序。");
+                            ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotStartInstaller.CurrentValue());
         if (update.WaitForStart)
         {
             await process.WaitForExitAsync();
             if (process.ExitCode != 0)
-                throw new InvalidOperationException($"更新安装程序未能启动（退出代码 {process.ExitCode}）。");
+                throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.update_installerFailedToStart.CurrentValue(), process.ExitCode));
         }
 
         Environment.Exit(0);
@@ -127,43 +128,43 @@ public static class UpdateApp
             Architecture.X64 => "x64",
             Architecture.Arm64 => "arm64",
             Architecture.Arm => "arm",
-            _ => throw new PlatformNotSupportedException($"不支持 {RuntimeInformation.ProcessArchitecture} 架构更新。")
+            _ => throw new PlatformNotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedArchitecture.CurrentValue(), RuntimeInformation.ProcessArchitecture))
         };
         string expectedName;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (arch != "x64") throw new PlatformNotSupportedException("当前没有 Windows ARM 更新包。");
+            if (arch != "x64") throw new PlatformNotSupportedException(CommonLanguageManager.Instance.update_noWindowsArmPackage.CurrentValue());
             expectedName = packageType switch
             {
                 "installer" => "Portal.win.x64.installer.zip",
                 "portable" => "Portal.win.x64.portable.zip",
-                _ => throw new NotSupportedException($"无法自动更新 Windows 安装类型“{packageType}”。")
+                _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedWindowsInstallType.CurrentValue(), packageType))
             };
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            if (arch != "x64") throw new PlatformNotSupportedException("Portal Linux 版本目前仅发布 x64 更新包。");
+            if (arch != "x64") throw new PlatformNotSupportedException(CommonLanguageManager.Instance.update_linuxOnlyX64.CurrentValue());
             expectedName = packageType switch
             {
                 "appimage" => "Portal.linux.x64.AppImage",
                 "deb" => "Portal.linux.x64.deb",
                 "rpm" => "Portal.linux.x64.rpm",
-                _ => throw new NotSupportedException($"无法自动更新 Linux 安装类型“{packageType}”。")
+                _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedLinuxInstallType.CurrentValue(), packageType))
             };
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            if (packageType is not ("app" or "dmg")) throw new NotSupportedException("macOS 自动更新仅支持应用程序包。");
-            if (arch == "arm") throw new PlatformNotSupportedException("不支持 32 位 ARM macOS。");
+            if (packageType is not ("app" or "dmg")) throw new NotSupportedException(CommonLanguageManager.Instance.update_macOnlyAppBundle.CurrentValue());
+            if (arch == "arm") throw new PlatformNotSupportedException(CommonLanguageManager.Instance.update_noArmMac.CurrentValue());
             expectedName = $"Portal.osx.mac.{arch}.app.zip";
         }
         else
         {
-            throw new PlatformNotSupportedException("当前操作系统不支持自动更新。");
+            throw new PlatformNotSupportedException(CommonLanguageManager.Instance.update_osNotSupported.CurrentValue());
         }
 
         return release.Assets.SingleOrDefault(asset => asset.Name.Equals(expectedName, StringComparison.Ordinal))
-               ?? throw new FileNotFoundException($"发布中找不到匹配的更新包：{expectedName}");
+               ?? throw new FileNotFoundException(string.Format(CommonLanguageManager.Instance.update_packageNotFound.CurrentValue(), expectedName));
     }
 
     private static async Task<UpdateTaskHandle> Download(UpdateAsset asset, string destination)
@@ -175,15 +176,15 @@ public static class UpdateApp
         UpdateTaskHandle? handle = null;
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = "下载 Portal 更新",
-            Description = $"正在连接：{asset.Name}",
+            Name = CommonLanguageManager.Instance.update_taskName.CurrentValue(),
+            Description = string.Format(CommonLanguageManager.Instance.update_taskConnecting.CurrentValue(), asset.Name),
             Progress = 0,
             Actions =
             [
                 new TaskActionDefinition
                 {
-                    Name = "取消下载",
-                    Description = "取消 Portal 更新包下载",
+                    Name = CommonLanguageManager.Instance.update_cancelDownload.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.update_cancelDownloadDescription.CurrentValue(),
                     IconKey = "Cancel",
                     ExecuteAsync = (managedTask, _) =>
                     {
@@ -195,8 +196,8 @@ public static class UpdateApp
                 },
                 new TaskActionDefinition
                 {
-                    Name = "更新并重启",
-                    Description = "退出 Portal，应用已下载的更新并重新启动",
+                    Name = CommonLanguageManager.Instance.update_applyAndRestart.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.update_applyAndRestartDescription.CurrentValue(),
                     IconKey = "Refresh",
                     ExecuteAsync = async (_, _) =>
                     {
@@ -210,7 +211,7 @@ public static class UpdateApp
             ]
         }, async context =>
         {
-            context.SetRunning($"正在下载：{asset.Name}");
+            context.SetRunning(string.Format(CommonLanguageManager.Instance.update_downloadingName.CurrentValue(), asset.Name));
             await ResumableDownloadAsync(downloadUrl, temporary, asset.Size,
                 progress => Dispatcher.UIThread.Post(() =>
                 {
@@ -219,25 +220,25 @@ public static class UpdateApp
                         ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
                         : (double?)null;
                     var speed = DefaultDownloader.FormatSize(progress.Speed, true);
-                    context.SetDescription($"下载速度：{speed}");
+                    context.SetDescription(string.Format(CommonLanguageManager.Instance.update_downloadSpeed.CurrentValue(), speed));
                     context.ReportProgress(fraction);
                 }), context.CancellationToken);
-            context.SetDescription("下载完成，正在校验");
+            context.SetDescription(CommonLanguageManager.Instance.update_downloadCompleteVerifying.CurrentValue());
             context.ReportProgress(1);
         });
         handle = new UpdateTaskHandle { Task = task };
         task.Start();
         await task.Completion;
         if (task.Status == ManagedTaskStatus.Cancelled)
-            throw new OperationCanceledException("更新下载已取消。");
+            throw new OperationCanceledException(CommonLanguageManager.Instance.update_downloadCancelled.CurrentValue());
         if (task.Status == ManagedTaskStatus.Faulted)
-            throw task.Exception ?? new IOException("更新包下载失败。");
+            throw task.Exception ?? new IOException(CommonLanguageManager.Instance.update_downloadFailed.CurrentValue());
 
         var actualSize = new FileInfo(temporary).Length;
         if (asset.Size <= 0 || actualSize != asset.Size)
         {
             File.Delete(temporary);
-            throw new InvalidDataException($"更新包大小校验失败（预期 {asset.Size}，实际 {actualSize}）。");
+            throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.update_sizeVerificationFailed.CurrentValue(), asset.Size, actualSize));
         }
 
         if (asset.Sha256 is not null)
@@ -247,7 +248,7 @@ public static class UpdateApp
             if (!actualHash.Equals(asset.Sha256, StringComparison.OrdinalIgnoreCase))
             {
                 File.Delete(temporary);
-                throw new InvalidDataException("更新包 SHA-256 校验失败。");
+                throw new InvalidDataException(CommonLanguageManager.Instance.update_sha256VerificationFailed.CurrentValue());
             }
         }
 
@@ -302,7 +303,7 @@ public static class UpdateApp
                 }
             }
 
-            throw lastError ?? new IOException("更新包下载失败。");
+            throw lastError ?? new IOException(CommonLanguageManager.Instance.update_downloadFailed.CurrentValue());
         }
     }
 
@@ -345,7 +346,7 @@ public static class UpdateApp
             await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
             downloaded += read;
             if (downloaded > total && total > 0)
-                throw new IOException($"服务器返回数据超过预期长度（预期 {total}）。");
+                throw new IOException(string.Format(CommonLanguageManager.Instance.update_serverDataTooLong.CurrentValue(), total));
 
             var now = stopwatch.Elapsed;
             if (now - lastReportTime >= TimeSpan.FromMilliseconds(250))
@@ -359,7 +360,7 @@ public static class UpdateApp
         await output.FlushAsync(cancellationToken);
 
         if (total > 0 && downloaded != total)
-            throw new IOException($"下载不完整（预期 {total}，已下载 {downloaded}）。");
+            throw new IOException(string.Format(CommonLanguageManager.Instance.update_incompleteDownload.CurrentValue(), total, downloaded));
 
         progress(new ResourceDownloadProgressChangedEventArgs
         {
@@ -413,12 +414,12 @@ public static class UpdateApp
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"删除过期更新目录失败：{directory.FullName}", ex);
+                    Logger.Error(string.Format(LogLanguageManager.Instance.update_cleanupOldDirectoryFailed.CurrentValue(), directory.FullName), ex);
                 }
         }
         catch (Exception ex)
         {
-            Logger.Error("清理过期更新目录失败。", ex);
+            Logger.Error(LogLanguageManager.Instance.update_cleanupOldDirectoriesFailed.CurrentValue(), ex);
         }
     }
 
@@ -428,7 +429,7 @@ public static class UpdateApp
         if (Directory.Exists(extracted)) Directory.Delete(extracted, true);
         ZipFile.ExtractToDirectory(zipPath, extracted);
         var replacement = Directory.GetFiles(extracted, "*.exe", SearchOption.AllDirectories).SingleOrDefault()
-                          ?? throw new InvalidDataException("portable 更新包中必须有且只有一个 EXE。");
+                          ?? throw new InvalidDataException(CommonLanguageManager.Instance.update_portableMustHaveOneExe.CurrentValue());
         var script = Path.Combine(updateDirectory, "apply-update.ps1");
 
         File.WriteAllText(script, $$"""
@@ -467,7 +468,7 @@ public static class UpdateApp
         if (Directory.Exists(extracted)) Directory.Delete(extracted, true);
         ZipFile.ExtractToDirectory(zipPath, extracted);
         var installer = Directory.GetFiles(extracted, "*.exe", SearchOption.AllDirectories).SingleOrDefault()
-                        ?? throw new InvalidDataException("安装程序更新包中必须有且只有一个 EXE。");
+                        ?? throw new InvalidDataException(CommonLanguageManager.Instance.update_installerMustHaveOneExe.CurrentValue());
         return new ProcessStartInfo(installer) { UseShellExecute = true };
     }
 
@@ -475,7 +476,7 @@ public static class UpdateApp
     {
         var target = Environment.GetEnvironmentVariable("APPIMAGE");
         if (string.IsNullOrWhiteSpace(target) || !File.Exists(target))
-            throw new InvalidOperationException("无法定位当前 AppImage；请从 AppImage 文件启动后重试。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.update_appImageNotLocated.CurrentValue());
         var workerScript = Path.Combine(updateDirectory, "apply-appimage-update.sh");
         var launcherScript = Path.Combine(updateDirectory, "start-appimage-update.sh");
         var log = Path.Combine(updateDirectory, "apply-appimage-update.log");
@@ -585,7 +586,7 @@ public static class UpdateApp
                          rpm -Uvh {{Sh(packagePath)}}
                        fi
                        """,
-            _ => throw new ArgumentOutOfRangeException(nameof(packageType), packageType, "不支持的 Linux 安装包类型。")
+            _ => throw new ArgumentOutOfRangeException(nameof(packageType), packageType, CommonLanguageManager.Instance.update_unsupportedLinuxPackageType.CurrentValue())
         };
         File.WriteAllText(workerScript, $$"""
                                           #!/bin/sh
@@ -658,10 +659,10 @@ public static class UpdateApp
         var marker =
             $"{Path.DirectorySeparatorChar}Contents{Path.DirectorySeparatorChar}MacOS{Path.DirectorySeparatorChar}";
         var markerIndex = processPath.IndexOf(marker, StringComparison.Ordinal);
-        if (markerIndex < 0) throw new InvalidOperationException("当前程序不在 macOS .app 应用程序包中。");
+        if (markerIndex < 0) throw new InvalidOperationException(CommonLanguageManager.Instance.update_notInMacAppBundle.CurrentValue());
         var target = processPath[..markerIndex];
         if (target.StartsWith("/Volumes/", StringComparison.Ordinal))
-            throw new UnauthorizedAccessException("程序正在 DMG 中运行。请先将 Portal.app 拖到“应用程序”文件夹。");
+            throw new UnauthorizedAccessException(CommonLanguageManager.Instance.update_runningInDmg.CurrentValue());
 
         var extracted = Path.Combine(updateDirectory, "mac-app");
         if (Directory.Exists(extracted)) Directory.Delete(extracted, true);
@@ -669,7 +670,7 @@ public static class UpdateApp
         RunAndWait("/usr/bin/ditto", "-x", "-k", packagePath, extracted);
         var replacement = Path.Combine(extracted, "Portal.app");
         if (!File.Exists(Path.Combine(replacement, "Contents", "MacOS", "Portal.Desktop")))
-            throw new InvalidDataException("macOS 更新包结构无效。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.update_macPackageInvalid.CurrentValue());
         var script = WriteUnixScript(updateDirectory, target, replacement, true);
         return UnixScript(script, !CanWriteDirectory(Path.GetDirectoryName(target)!));
     }
@@ -729,7 +730,7 @@ public static class UpdateApp
         if (!elevate) return new ProcessStartInfo(script) { UseShellExecute = false };
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            if (!File.Exists("/usr/bin/pkexec")) throw new UnauthorizedAccessException("目标位置不可写，且系统未安装 pkexec。");
+            if (!File.Exists("/usr/bin/pkexec")) throw new UnauthorizedAccessException(CommonLanguageManager.Instance.update_pkexecMissing.CurrentValue());
             var info = new ProcessStartInfo("/usr/bin/pkexec") { UseShellExecute = false };
             info.ArgumentList.Add(script);
             return info;
@@ -755,7 +756,7 @@ public static class UpdateApp
         }
         catch (Exception exception)
         {
-            Logger.Warning($"检测目录写入权限失败：{directory}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.update_writePermissionCheckFailed.CurrentValue(), directory, Environment.NewLine + exception));
             return false;
         }
     }
@@ -764,9 +765,9 @@ public static class UpdateApp
     {
         var info = new ProcessStartInfo(fileName) { UseShellExecute = false };
         foreach (var argument in arguments) info.ArgumentList.Add(argument);
-        using var process = Process.Start(info) ?? throw new InvalidOperationException($"无法启动 {fileName}。");
+        using var process = Process.Start(info) ?? throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.common_cannotStart.CurrentValue(), fileName));
         process.WaitForExit();
-        if (process.ExitCode != 0) throw new InvalidOperationException($"{fileName} 执行失败（{process.ExitCode}）。");
+        if (process.ExitCode != 0) throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.update_runFailed.CurrentValue(), fileName, process.ExitCode));
     }
 
     private static string Ps(string value)

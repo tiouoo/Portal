@@ -7,6 +7,7 @@ using MinecraftLaunch.Components.Parser;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Instance;
@@ -62,11 +63,11 @@ public class InstanceManager
             var folderPath = folder.FolderPath;
             if (!Directory.Exists(folderPath))
             {
-                Logger.Warning($"Minecraft 文件夹不存在，跳过扫描：{folderPath}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_folderMissing.CurrentValue(), folderPath));
                 continue;
             }
 
-            Logger.Info($"正在扫描 Minecraft 文件夹：{folderPath}");
+            Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_folderScanStart.CurrentValue(), folderPath));
             var layout = folder.DetectedLayout;
             var instances = layout.Kind == MinecraftFolderKind.Standard
                 ? new FolderScanner(layout.RootPath, folder.FolderName, VersionFolders).Scan()
@@ -74,7 +75,7 @@ public class InstanceManager
             result.AddRange(instances);
         }
 
-        Logger.Info($"全部 Minecraft 实例扫描完成，共 {result.Count} 个实例，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_scanComplete.CurrentValue(), result.Count, stopwatch.ElapsedMilliseconds));
         return result;
     }
 
@@ -100,7 +101,7 @@ public class InstanceManager
                 }
                 catch (Exception exception)
                 {
-                    Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
+                    Logger.Error(string.Format(LogLanguageManager.Instance.instanceManager_bedrockScanFailed.CurrentValue(), instanceFolder), exception);
                 }
         }
 
@@ -110,7 +111,7 @@ public class InstanceManager
     public void ApplyInstances(IEnumerable<MinecraftInstance> instances)
     {
         var loadedInstances = instances as ICollection<MinecraftInstance> ?? instances.ToList();
-        Logger.Info($"正在将扫描结果应用到实例列表，共 {loadedInstances.Count} 个实例。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_applyStart.CurrentValue(), loadedInstances.Count));
         Instances.Clear();
         foreach (var instance in loadedInstances)
             Instances.Add(instance);
@@ -193,7 +194,7 @@ internal class FolderScanner
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"扫描 Java 实例失败：{instanceFolder}", e);
+                        Logger.Error(string.Format(LogLanguageManager.Instance.instanceManager_javaScanFailed.CurrentValue(), instanceFolder), e);
                     }
                 else if (instanceType == MinecraftInstanceType.Bedrock)
                     try
@@ -203,7 +204,7 @@ internal class FolderScanner
                     }
                     catch (Exception exception)
                     {
-                        Logger.Error($"扫描基岩版实例失败：{instanceFolder}", exception);
+                        Logger.Error(string.Format(LogLanguageManager.Instance.instanceManager_bedrockScanFailed.CurrentValue(), instanceFolder), exception);
                     }
             }
         }
@@ -223,12 +224,12 @@ internal class FolderScanner
         }
         catch (IOException exception)
         {
-            Logger.Warning($"读取实例版本元数据失败：{entry.ClientJsonPath}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_readVersionMetadataFailed.CurrentValue(), entry.ClientJsonPath, Environment.NewLine + exception));
             return false;
         }
         catch (JsonException exception)
         {
-            Logger.Warning($"解析实例版本元数据失败：{entry.ClientJsonPath}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_parseVersionMetadataFailed.CurrentValue(), entry.ClientJsonPath, Environment.NewLine + exception));
             return false;
         }
     }

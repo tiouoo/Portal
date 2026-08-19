@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
@@ -22,7 +23,7 @@ public static class PortalCommandQueue
     public static void Initialize()
     {
         if (_initialized) return;
-        Logger.Info("正在初始化外部命令队列。");
+        Logger.Info(LogLanguageManager.Instance.ipc_queueInitializeStart.CurrentValue());
         _initialized = true;
         UiLoaded += () =>
         {
@@ -31,7 +32,7 @@ public static class PortalCommandQueue
                 _isReady = true;
             }
 
-            Logger.Info("主界面已就绪，开始执行等待中的外部命令。");
+            Logger.Info(LogLanguageManager.Instance.ipc_queueUiReadyDrain.CurrentValue());
             Dispatcher.UIThread.Post(DrainPendingCommands);
         };
     }
@@ -43,7 +44,7 @@ public static class PortalCommandQueue
         {
             PendingCommands.Enqueue(command);
             isReady = _isReady;
-            Logger.Info($"外部命令已入队，等待执行数量：{PendingCommands.Count}。");
+            Logger.Info(string.Format(LogLanguageManager.Instance.ipc_queueCommandEnqueued.CurrentValue(), PendingCommands.Count));
         }
 
         if (isReady)
@@ -64,7 +65,7 @@ public static class PortalCommandQueue
                 return;
 
             if (ExecutionHandler is not null)
-                ExecutionHandler(command).Forget("执行外部命令");
+                ExecutionHandler(command).Forget(CommonLanguageManager.Instance.ipc_executeExternalCommand.CurrentValue());
         }
     }
 }

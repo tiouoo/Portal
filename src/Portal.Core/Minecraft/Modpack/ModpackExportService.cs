@@ -9,6 +9,7 @@ using MinecraftLaunch.Utilities;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Modpack;
@@ -61,7 +62,7 @@ public sealed class ModpackExportService
     {
         var gameRoot = instance.GetJavaGameDirectory().TrimEnd('\\', '/');
         if (string.IsNullOrEmpty(gameRoot) || !Directory.Exists(gameRoot))
-            throw new InvalidOperationException("游戏目录不存在，无法导出整合包。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.modpack_gameDirectoryMissing.CurrentValue());
 
         var cacheFolder = Path.Combine(Path.GetTempPath(), "Portal", "ModpackExport",
             $"{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid():N}");
@@ -71,7 +72,7 @@ public sealed class ModpackExportService
 
         try
         {
-            report?.Invoke(new ModpackExportProgress("copy", 0.1, "正在复制文件"));
+            report?.Invoke(new ModpackExportProgress("copy", 0.1, CommonLanguageManager.Instance.modpack_copyingFiles.CurrentValue()));
             var copyResult = CopyFilesAsync(gameRoot, options.Rules, overridesFolder, report, cancellationToken);
 
             if (options.IncludePortalSettings)
@@ -83,16 +84,16 @@ public sealed class ModpackExportService
             var filesIndex = new JsonArray();
             if (options.CheckHostedAssets)
             {
-                report?.Invoke(new ModpackExportProgress("fetch", 0.5, "正在从平台获取下载地址"));
+                report?.Invoke(new ModpackExportProgress("fetch", 0.5, CommonLanguageManager.Instance.modpack_fetchingDownloads.CurrentValue()));
                 await FetchHostedDownloadsAsync(copyResult.HostedFiles, filesIndex, overridesFolder,
                     options.ModrinthOnly,
                     report, cancellationToken);
             }
 
-            report?.Invoke(new ModpackExportProgress("archive", 0.85, "正在生成整合包"));
+            report?.Invoke(new ModpackExportProgress("archive", 0.85, CommonLanguageManager.Instance.modpack_buildingArchive.CurrentValue()));
             var mrpackPath = await Task.Run(() => BuildArchive(instance, options, filesIndex, modpackRoot, outputPath),
                 cancellationToken);
-            report?.Invoke(new ModpackExportProgress("done", 1.0, "导出完成"));
+            report?.Invoke(new ModpackExportProgress("done", 1.0, CommonLanguageManager.Instance.modpack_exportComplete.CurrentValue()));
             progressReporter?.Report(1.0);
 
             return new ModpackExportResult
@@ -111,7 +112,7 @@ public sealed class ModpackExportService
             }
             catch (Exception exception)
             {
-                Logger.Warning($"[Export] 清理临时目录失败：{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.modpack_cleanupTempFailed.CurrentValue(), exception));
             }
         }
     }
@@ -130,7 +131,7 @@ public sealed class ModpackExportService
         }
         catch (Exception exception)
         {
-            Logger.Warning($"[Export] 复制 Portal 实例设置失败：{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.modpack_copyPortalSettingsFailed.CurrentValue(), exception));
         }
     }
 
@@ -148,7 +149,7 @@ public sealed class ModpackExportService
         }
         catch (Exception exception)
         {
-            Logger.Warning($"[Export] 复制 Portal 实例图标失败：{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.modpack_copyPortalIconFailed.CurrentValue(), exception));
         }
     }
 
@@ -198,7 +199,7 @@ public sealed class ModpackExportService
                     hostedFiles.Add(new ModFileInfo { Path = targetPath });
 
                 if (++progress % 25 == 0)
-                    report?.Invoke(new ModpackExportProgress("copy", 0, $"已复制 {progress} 个文件"));
+                    report?.Invoke(new ModpackExportProgress("copy", 0, string.Format(CommonLanguageManager.Instance.modpack_copiedCount.CurrentValue(), progress)));
             }
         }
 
@@ -259,7 +260,7 @@ public sealed class ModpackExportService
             }
             catch (Exception exception) when (exception is FlurlHttpException or JsonException)
             {
-                Logger.Warning($"[Export] 从 Modrinth 获取下载地址失败：{exception.Message}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.modpack_fetchModrinthFailed.CurrentValue(), exception.Message));
             }
 
         if (!modrinthOnly && CredentialsService.CurseForgeApiKey is { } apiKey)
@@ -288,7 +289,7 @@ public sealed class ModpackExportService
                 }
                 catch (Exception exception) when (exception is FlurlHttpException or IOException or JsonException)
                 {
-                    Logger.Warning($"[Export] 从 CurseForge 获取下载地址失败：{exception.Message}");
+                    Logger.Warning(string.Format(LogLanguageManager.Instance.modpack_fetchCurseForgeFailed.CurrentValue(), exception.Message));
                 }
         }
 

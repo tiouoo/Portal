@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Portal.Core.Const;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Module.Multiplayer;
@@ -31,18 +32,18 @@ public sealed class GravityConeNodeClient
         var apiKey = CredentialsService.GravityConeUptimeApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException(
-                $"未配置 {CredentialsService.GravityConeUptimeApiKeyEnvironmentVariable}，无法获取联机节点列表。");
+                string.Format(CommonLanguageManager.Instance.multiplayer_uptimeApiKeyNotConfigured.CurrentValue(), CredentialsService.GravityConeUptimeApiKeyEnvironmentVariable));
 
         var p2pNodes = await FetchP2PNodeListAsync(apiKey, cancellationToken);
         if (p2pNodes.Count == 0)
-            throw new InvalidOperationException("联机节点服务未返回可用的 P2P 节点。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.multiplayer_noP2pNodes.CurrentValue());
 
         var urlTasks = p2pNodes.Select(node => FetchNodeUrlSafelyAsync(apiKey, node, cancellationToken)).ToArray();
         var urls = await Task.WhenAll(urlTasks);
         var peers = urls.OfType<string>().Where(url => !string.IsNullOrWhiteSpace(url)).Distinct(StringComparer.Ordinal).ToList();
 
         if (peers.Count == 0)
-            throw new InvalidOperationException("Uptime 中继节点地址获取失败。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.multiplayer_uptimeNodeUrlFailed.CurrentValue());
 
         await SaveCacheAsync(peers, cancellationToken);
         return peers;
@@ -58,7 +59,7 @@ public sealed class GravityConeNodeClient
         }
         catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or IOException)
         {
-            Logger.Warning($"获取联机节点 {node.DisplayName} 地址失败。{Environment.NewLine}{ex}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_fetchNodeUrlFailed.CurrentValue(), node.DisplayName, Environment.NewLine, ex));
             return null;
         }
     }
@@ -75,7 +76,7 @@ public sealed class GravityConeNodeClient
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            Logger.Warning($"读取联机节点缓存失败。{Environment.NewLine}{ex}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_readNodeCacheFailed.CurrentValue(), Environment.NewLine, ex));
             return null;
         }
     }
@@ -94,7 +95,7 @@ public sealed class GravityConeNodeClient
         var root = document.RootElement;
         if (!root.TryGetProperty("data", out var data) || !data.TryGetProperty("p2p", out var p2p) ||
             p2p.ValueKind != JsonValueKind.Array)
-            throw new InvalidDataException("联机节点列表缺少 P2P 节点数据。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_missingP2pData.CurrentValue());
 
         var nodes = new List<NodeEntry>();
         foreach (var node in p2p.EnumerateArray())
@@ -171,7 +172,7 @@ public sealed class GravityConeNodeClient
         while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
         {
             if (memory.Length + read > MaxResponseSizeBytes)
-                throw new InvalidDataException("联机节点响应过大。");
+                throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_responseTooLarge.CurrentValue());
             await memory.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
         }
 

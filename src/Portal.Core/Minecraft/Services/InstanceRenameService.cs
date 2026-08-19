@@ -3,6 +3,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
@@ -15,8 +16,8 @@ public static class InstanceRenameService
         var trimmedId = newId.Trim();
         return TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"重命名实例 {instance.InstanceName}",
-            Description = "正在准备重命名实例",
+            Name = string.Format(CommonLanguageManager.Instance.instanceRename_taskName.CurrentValue(), instance.InstanceName),
+            Description = CommonLanguageManager.Instance.instanceRename_preparing.CurrentValue(),
             Progress = 0,
             Actions = []
         }, context => RunRenameAsync(context, instance, trimmedId));
@@ -25,20 +26,20 @@ public static class InstanceRenameService
     private static async Task RunRenameAsync(TaskExecutionContext context, MinecraftInstance instance, string newId)
     {
         if (instance.Type != MinecraftInstanceType.Java || instance.MinecraftEntry is not { } minecraftEntry)
-            throw new InvalidOperationException("仅支持重命名 Java 版实例。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.instanceRename_onlyJava.CurrentValue());
 
         if (!instance.CanModifyVersion || instance.Layout is not { } layout)
-            throw new InvalidOperationException("仅支持重命名 Portal 游戏目录下的实例，其他格式的实例请在对应启动器中重命名。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.instanceRename_onlyPortal.CurrentValue());
 
         var oldId = minecraftEntry.Id;
         if (string.Equals(oldId, newId, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("新名称与原名称相同，无需重命名。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.instanceRename_sameName.CurrentValue());
 
         var instancesRoot = Path.GetDirectoryName(layout.InstanceRoot)
-                            ?? throw new InvalidOperationException("无法确定实例所在目录。");
+                            ?? throw new InvalidOperationException(CommonLanguageManager.Instance.instanceRename_cannotLocateDirectory.CurrentValue());
         var newInstanceDirectory = Path.Combine(instancesRoot, newId);
         if (Directory.Exists(newInstanceDirectory))
-            throw new InvalidOperationException($"实例 ID “{newId}”已存在，请更换名称。");
+            throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.instanceRename_idExists.CurrentValue(), newId));
 
         var oldInstanceDirectory = layout.InstanceRoot;
         var metadataRoot = layout.MetadataRoot;
@@ -57,7 +58,8 @@ public static class InstanceRenameService
         var undoActions = new List<Action>();
         try
         {
-            await MinecraftInstallationTasks.RunStepAsync(context, "迁移实例设置", "正在迁移实例配置、图标与游玩记录", step =>
+            await MinecraftInstallationTasks.RunStepAsync(context, CommonLanguageManager.Instance.instanceRename_migrateSettingsStep.CurrentValue(),
+                CommonLanguageManager.Instance.instanceRename_migratingSettings.CurrentValue(), step =>
             {
                 if (MoveFileIfExists(oldConfigPath, newConfigPath))
                     undoActions.Add(() => MoveFileIfExists(newConfigPath, oldConfigPath));
@@ -69,7 +71,8 @@ public static class InstanceRenameService
                 return Task.CompletedTask;
             });
 
-            await MinecraftInstallationTasks.RunStepAsync(context, "重命名版本文件", "正在重命名实例版本文件", step =>
+            await MinecraftInstallationTasks.RunStepAsync(context, CommonLanguageManager.Instance.instanceRename_renameVersionFilesStep.CurrentValue(),
+                CommonLanguageManager.Instance.instanceRename_renamingVersionFiles.CurrentValue(), step =>
             {
                 var oldJson = Path.Combine(oldInstanceDirectory, $"{oldId}.json");
                 var newJson = Path.Combine(oldInstanceDirectory, $"{newId}.json");
@@ -101,8 +104,8 @@ public static class InstanceRenameService
                 return Task.CompletedTask;
             });
 
-            await MinecraftInstallationTasks.RunStepAsync(context, "重命名实例目录",
-                $"正在将实例目录重命名为 {newId}", step =>
+            await MinecraftInstallationTasks.RunStepAsync(context, CommonLanguageManager.Instance.instanceRename_renameDirectoryStep.CurrentValue(),
+                string.Format(CommonLanguageManager.Instance.instanceRename_renamingDirectory.CurrentValue(), newId), step =>
                 {
                     Directory.Move(oldInstanceDirectory, newInstanceDirectory);
                     undoActions.Add(() => Directory.Move(newInstanceDirectory, oldInstanceDirectory));
@@ -110,7 +113,8 @@ public static class InstanceRenameService
                     return Task.CompletedTask;
                 });
 
-            await MinecraftInstallationTasks.RunStepAsync(context, "迁移原生库目录", "正在迁移实例原生库目录", step =>
+            await MinecraftInstallationTasks.RunStepAsync(context, CommonLanguageManager.Instance.instanceRename_migrateNativesStep.CurrentValue(),
+                CommonLanguageManager.Instance.instanceRename_migratingNatives.CurrentValue(), step =>
             {
                 if (MoveDirectoryIfExists(oldNativesDirectory, newNativesDirectory))
                     undoActions.Add(() => MoveDirectoryIfExists(newNativesDirectory, oldNativesDirectory));
@@ -119,11 +123,11 @@ public static class InstanceRenameService
             });
 
             await RefreshInstancesAsync(context);
-            context.SetDescription($"实例“{instance.InstanceName}”已重命名为 {newId}");
+            context.SetDescription(string.Format(CommonLanguageManager.Instance.instanceRename_complete.CurrentValue(), instance.InstanceName, newId));
         }
         catch (Exception exception)
         {
-            Logger.Error($"[InstanceRename] 重命名实例“{instance.InstanceName}”失败，正在回滚。{Environment.NewLine}{exception}");
+            Logger.Error(string.Format(LogLanguageManager.Instance.instanceRename_failedRollingBack.CurrentValue(), instance.InstanceName, Environment.NewLine, exception));
             for (var i = undoActions.Count - 1; i >= 0; i--)
                 try
                 {
@@ -131,7 +135,7 @@ public static class InstanceRenameService
                 }
                 catch (Exception rollbackException)
                 {
-                    Logger.Warning($"[InstanceRename] 回滚失败：{rollbackException}");
+                    Logger.Warning(string.Format(LogLanguageManager.Instance.instanceRename_rollbackFailed.CurrentValue(), rollbackException));
                 }
 
             throw;
@@ -184,10 +188,11 @@ public static class InstanceRenameService
 
     private static async Task RefreshInstancesAsync(TaskExecutionContext context)
     {
-        await MinecraftInstallationTasks.RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的实例", step =>
+        await MinecraftInstallationTasks.RunStepAsync(context, CommonLanguageManager.Instance.instanceRename_refreshInstancesStep.CurrentValue(),
+            CommonLanguageManager.Instance.instanceRename_scanningInstances.CurrentValue(), step =>
         {
             InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-            step.SetDescription("正在刷新已安装实例");
+            step.SetDescription(CommonLanguageManager.Instance.instanceRename_refreshingInstances.CurrentValue());
             step.ReportProgress(1);
             return Task.CompletedTask;
         });

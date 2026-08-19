@@ -1,5 +1,6 @@
 using fNbt;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -64,7 +65,7 @@ public sealed class WorldGameRuleService
         var data = isModern
             ? file.RootTag["data"] as NbtCompound
             : (file.RootTag["Data"] as NbtCompound ?? file.RootTag)["GameRules"] as NbtCompound;
-        if (data == null) throw new InvalidDataException("游戏规则文件不包含可编辑的数据。");
+        if (data == null) throw new InvalidDataException(CommonLanguageManager.Instance.world_gameRuleNoData.CurrentValue());
 
         foreach (var (name, value) in rules.BooleanRules)
             if (data[name] is NbtByte tag) tag.Value = value ? (byte)1 : (byte)0;

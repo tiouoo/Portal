@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -37,7 +38,7 @@ public static class JavaAutoInstallCoordinator
             if (runtime is null)
             {
                 var version = await JavaDistributionService.GetFastestVersionAsync(majorVersion, cancellationToken)
-                              ?? throw new InvalidOperationException($"没有找到适用于当前平台的 Java {majorVersion}。 ");
+                              ?? throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.javaAutoInstall_noJavaForPlatform.CurrentValue(), majorVersion));
                 runtime = await JavaDistributionService.InstallAsync(version, ConfigPath.JavaRuntimesPath,
                     ConfigPath.TempFolderPath, progress, cancellationToken);
             }
@@ -65,12 +66,14 @@ public static class JavaAutoInstallCoordinator
             var result = await OverlayDialog.ShowStandardAsync(new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = "暂未发现适配版本 Java，是否自动安装？",
+                Text = CommonLanguageManager.Instance.javaAutoInstall_confirmText.CurrentValue(),
                 TextWrapping = TextWrapping.Wrap
             }, null, topLevel.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = $"需要 Java {majorVersion}", Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "自动安装", OverrideNoButtonText = "取消",
+                Title = string.Format(CommonLanguageManager.Instance.javaAutoInstall_title.CurrentValue(), majorVersion),
+                Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = CommonLanguageManager.Instance.javaAutoInstall_yesButton.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false, CanResize = false
             });
             return result == DialogResult.Yes;

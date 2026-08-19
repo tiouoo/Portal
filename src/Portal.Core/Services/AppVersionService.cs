@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Json;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Services;
@@ -22,12 +23,12 @@ public sealed class AppVersionService
 
     private static CiVersionInfo LoadVersionInfo()
     {
-        Logger.Info("正在加载应用版本信息。");
+        Logger.Info(LogLanguageManager.Instance.appVersion_loadStart.CurrentValue());
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream(VersionResourceName);
         if (stream is null)
         {
-            Logger.Warning("未找到内嵌版本信息，使用本地开发版本信息。");
+            Logger.Warning(LogLanguageManager.Instance.appVersion_embeddedNotFoundUseLocal.CurrentValue());
             return CreateLocalVersionInfo();
         }
 
@@ -36,7 +37,8 @@ public sealed class AppVersionService
         var versionInfo = string.IsNullOrWhiteSpace(text)
             ? null
             : JsonSerializer.Deserialize<CiVersionInfo>(text, PortalJson.Options);
-        Logger.Info($"应用版本信息加载完成：{versionInfo?.VersionTitle ?? "local-build"} ({versionInfo?.Type ?? "dev"})。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.appVersion_loadComplete.CurrentValue(),
+            versionInfo?.VersionTitle ?? "local-build", versionInfo?.Type ?? "dev"));
         return versionInfo ?? CreateLocalVersionInfo();
     }
 

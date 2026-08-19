@@ -3,6 +3,7 @@ using Portal.Core.App.Helpers;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;
@@ -93,7 +94,7 @@ public static class NewsDetailsService
             }
             catch (Exception ex)
             {
-                Logger.Error($"后台刷新翻译新闻失败：{entry.ContentPath}", ex);
+                Logger.Error(string.Format(LogLanguageManager.Instance.news_detailsBackgroundTranslationFailed.CurrentValue(), entry.ContentPath), ex);
             }
             finally
             {
@@ -136,7 +137,7 @@ public static class NewsDetailsService
         }
         catch (Exception ex)
         {
-            Logger.Error($"获取新闻详情失败：{entry.ContentPath}", ex);
+            Logger.Error(string.Format(LogLanguageManager.Instance.news_detailsFetchFailed.CurrentValue(), entry.ContentPath), ex);
             return null;
         }
     }

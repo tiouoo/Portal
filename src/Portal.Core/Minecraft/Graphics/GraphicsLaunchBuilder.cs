@@ -1,3 +1,5 @@
+using Portal.Localization;
+
 namespace Portal.Core.Minecraft.Graphics;
 
 public sealed record GraphicsLaunchConfiguration
@@ -110,7 +112,7 @@ public static class GraphicsLaunchArgumentsBuilder
     public static string BuildJavaAgent(string jarPath, string mesaDriverName)
     {
         if (jarPath.Contains('='))
-            throw new InvalidOperationException("mesa-loader 所在路径包含 '=' 字符，无法附加软件渲染器。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.minecraft_mesaLoaderPathInvalid.CurrentValue());
         return $"{jarPath}={mesaDriverName}";
     }
 

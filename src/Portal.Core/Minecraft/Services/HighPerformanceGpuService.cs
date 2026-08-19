@@ -1,5 +1,6 @@
 using System.Collections;
 using Microsoft.Win32;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tmds.DBus;
 
@@ -25,7 +26,7 @@ public static class HighPerformanceGpuService
         }
         catch (Exception exception)
         {
-            Logger.Warning($"设置 Java 高性能显卡首选项失败。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.highPerformanceGpu_setPreferenceFailed.CurrentValue(), Environment.NewLine, exception));
         }
     }
 
@@ -37,13 +38,13 @@ public static class HighPerformanceGpuService
             var environment = await QuerySwitcherooEnvironmentAsync();
             if (environment is { Count: > 0 })
             {
-                Logger.Info("正在使用 switcheroo-control 提供的高性能显卡环境变量");
+                Logger.Info(LogLanguageManager.Instance.highPerformanceGpu_usingSwitcheroo.CurrentValue());
                 return environment;
             }
         }
         catch (Exception exception)
         {
-            Logger.Debug($"查询 switcheroo-control 失败，将回退到 PRIME 渲染卸载变量。{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.highPerformanceGpu_switcherooQueryFailed.CurrentValue(), Environment.NewLine, exception));
         }
 
         return CreatePrimeFallbackEnvironment();

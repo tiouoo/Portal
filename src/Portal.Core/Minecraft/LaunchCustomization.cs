@@ -5,6 +5,7 @@ using MinecraftLaunch.Base.Models.Authentication;
 using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Extensions;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft;
@@ -111,7 +112,8 @@ public static class LaunchCustomization
     public static async Task<int> RunShellCommandAsync(string command, string? workingDirectory,
         CancellationToken cancellationToken)
     {
-        Logger.Info($"执行启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.launchCustomization_runCommand.CurrentValue(),
+            workingDirectory ?? CommonLanguageManager.Instance.launch_defaultDirectory.CurrentValue()));
         var startInfo = OperatingSystem.IsWindows()
             ? new ProcessStartInfo("cmd.exe") { Arguments = $"/c {command}" }
             : new ProcessStartInfo("/bin/sh") { ArgumentList = { "-c", command } };
@@ -122,7 +124,7 @@ public static class LaunchCustomization
 
         using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.Start();
-        Logger.Debug($"启动自定义命令进程：{process.Id}");
+        Logger.Debug(string.Format(LogLanguageManager.Instance.launchCustomization_commandProcessStarted.CurrentValue(), process.Id));
         try
         {
             await process.WaitForExitAsync(cancellationToken);
@@ -136,19 +138,20 @@ public static class LaunchCustomization
             }
             catch (Exception exception)
             {
-                Logger.Debug($"取消自定义命令后终止进程失败，进程可能已退出。{Environment.NewLine}{exception}");
+                Logger.Debug(string.Format(LogLanguageManager.Instance.launchCustomization_killAfterCancelFailed.CurrentValue(), Environment.NewLine, exception));
             }
 
             throw;
         }
 
-        Logger.Info($"启动自定义命令已结束，退出代码：{process.ExitCode}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.launchCustomization_commandExited.CurrentValue(), process.ExitCode));
         return process.ExitCode;
     }
 
     public static void RunShellCommandDetached(string command, string? workingDirectory)
     {
-        Logger.Info($"已安排后台启动自定义命令，工作目录：{workingDirectory ?? "默认目录"}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.launchCustomization_commandScheduled.CurrentValue(),
+            workingDirectory ?? CommonLanguageManager.Instance.launch_defaultDirectory.CurrentValue()));
         Task.Run(async () =>
         {
             try
@@ -157,9 +160,9 @@ public static class LaunchCustomization
             }
             catch (Exception exception)
             {
-                Logger.Warning($"后台启动自定义命令失败。{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.launchCustomization_backgroundCommandFailed.CurrentValue(), Environment.NewLine, exception));
             }
-        }).ContinueWith(completedTask => Logger.Error($"后台启动自定义命令异常结束：{command}", completedTask.Exception!),
+        }).ContinueWith(completedTask => Logger.Error(string.Format(LogLanguageManager.Instance.launchCustomization_backgroundCommandFaulted.CurrentValue(), command), completedTask.Exception!),
             CancellationToken.None,
             TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
@@ -172,7 +175,7 @@ public static class LaunchCustomization
 
         Task.Run(async () =>
         {
-            Logger.Debug($"开始监视游戏窗口标题，进程：{process.Id}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.launchCustomization_watchWindowTitleStart.CurrentValue(), process.Id));
             try
             {
                 while (!process.HasExited)
@@ -192,9 +195,9 @@ public static class LaunchCustomization
             }
             catch (Exception exception)
             {
-                Logger.Debug($"停止监视游戏窗口标题，进程：{process.Id}。{Environment.NewLine}{exception}");
+                Logger.Debug(string.Format(LogLanguageManager.Instance.launchCustomization_watchWindowTitleStopped.CurrentValue(), process.Id, Environment.NewLine, exception));
             }
-        }).ContinueWith(completedTask => Logger.Error($"游戏窗口标题监视异常结束，进程：{process.Id}", completedTask.Exception!),
+        }).ContinueWith(completedTask => Logger.Error(string.Format(LogLanguageManager.Instance.launchCustomization_watchWindowTitleFaulted.CurrentValue(), process.Id), completedTask.Exception!),
             CancellationToken.None,
             TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
