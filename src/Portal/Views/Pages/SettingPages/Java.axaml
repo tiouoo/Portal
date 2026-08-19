@@ -138,7 +138,7 @@
         </StackPanel>
         <DockPanel Margin="0,4,0,0">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_maxMemory0}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_javaManagement}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Margin="0,0,0,0" />
@@ -149,18 +149,18 @@
                 Spacing="10">
                 <HyperlinkButton
                     Click="DeepScan_Click"
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_maxMemory1}}"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_deepScan}}"
                     FontSize="13"
                     Name="DeepScanButton"
                     Theme="{StaticResource TransparentHyperlinkButton}" />
                 <HyperlinkButton
                     Click="AutoScan_Click"
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_maxMemory2}}"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_autoScan}}"
                     FontSize="13"
                     Theme="{StaticResource TransparentHyperlinkButton}" />
                 <HyperlinkButton
                     Click="AddJava_Click"
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_maxMemory3}}"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_addManually}}"
                     FontSize="13"
                     Theme="{StaticResource TransparentHyperlinkButton}" />
             </StackPanel>

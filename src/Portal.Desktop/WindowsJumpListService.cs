@@ -9,6 +9,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -152,7 +153,7 @@ internal static partial class WindowsJumpListService
                 }
                 catch (Exception exception)
                 {
-                    Logger.Error($"执行 Jump List 命令失败：{exception}");
+                    Logger.Error(string.Format(LogLanguageManager.Instance.desktop_jumpList_executeFailed.CurrentValue(), exception));
                 }
             }
         }
@@ -224,19 +225,19 @@ internal static partial class WindowsJumpListService
                 .OrderByDescending(instance => instance.LastPlayTime)
                 .FirstOrDefault();
             if (recentInstance != null)
-                items.Add(("继续游戏", recentInstance.InstanceName, "启动最近运行的实例",
+                items.Add((CommonLanguageManager.Instance.desktop_jumpList_continueCategory.CurrentValue(), recentInstance.InstanceName, CommonLanguageManager.Instance.desktop_jumpList_continueDescription.CurrentValue(),
                     new JumpListCommand(JumpListCommandKind.Continue, recentInstance.InstanceFolderPath)));
 
-            items.Add(("任务", "新标签页", "在 Portal 中创建一个新标签页",
+            items.Add((CommonLanguageManager.Instance.desktop_jumpList_taskCategory.CurrentValue(), CommonLanguageManager.Instance.desktop_jumpList_newTabTitle.CurrentValue(), CommonLanguageManager.Instance.desktop_jumpList_newTabDescription.CurrentValue(),
                 new JumpListCommand(JumpListCommandKind.NewTab, null)));
 
-            items.Add(("任务", "设置", "打开 Portal 设置",
+            items.Add((CommonLanguageManager.Instance.desktop_jumpList_taskCategory.CurrentValue(), CommonLanguageManager.Instance.desktop_jumpList_settingsTitle.CurrentValue(), CommonLanguageManager.Instance.desktop_jumpList_settingsDescription.CurrentValue(),
                 new JumpListCommand(JumpListCommandKind.Settings, null)));
 
             var recentPlay = (await RecentPlayService.ScanAsync(InstanceManager.Instance.Instances)).FirstOrDefault();
 
             if (recentPlay != null)
-                items.Add(("继续游戏", recentPlay.Name, $"{recentPlay.Instance.InstanceName}·{recentPlay.Details}",
+                items.Add((CommonLanguageManager.Instance.desktop_jumpList_continueCategory.CurrentValue(), recentPlay.Name, $"{recentPlay.Instance.InstanceName}·{recentPlay.Details}",
                     new JumpListCommand(JumpListCommandKind.RecentPlay, recentPlay.Instance.InstanceFolderPath,
                         recentPlay.Type, recentPlay.Id)));
 
@@ -244,7 +245,7 @@ internal static partial class WindowsJumpListService
         }
         catch (Exception exception)
         {
-            Logger.Error($"更新 Windows 任务栏 Jump List 失败：{exception}");
+            Logger.Error(string.Format(LogLanguageManager.Instance.desktop_jumpList_refreshFailed.CurrentValue(), exception));
         }
     }
 

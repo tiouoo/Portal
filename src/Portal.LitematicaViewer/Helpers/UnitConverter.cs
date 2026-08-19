@@ -1,3 +1,5 @@
+using Portal.Localization;
+
 namespace Portal.LitematicaViewer.Helpers;
 
 public static class UnitConverter
@@ -11,7 +13,7 @@ public static class UnitConverter
 
     private static string ConvertZh(long number)
     {
-        if (number == 0) return "0个";
+        if (number == 0) return string.Format(CommonLanguageManager.Instance.litematica_unitCount.CurrentValue(), 0);
 
         var largeChest = 54L * 27 * 64;
         var shulkerBox = 27L * 64;
@@ -20,21 +22,21 @@ public static class UnitConverter
         var result = "";
         if (number >= largeChest)
         {
-            result += $"{number / largeChest}箱";
+            result += string.Format(CommonLanguageManager.Instance.litematica_unitChest.CurrentValue(), number / largeChest);
             number %= largeChest;
         }
         if (number >= shulkerBox)
         {
-            result += $"{number / shulkerBox}盒";
+            result += string.Format(CommonLanguageManager.Instance.litematica_unitShulkerBox.CurrentValue(), number / shulkerBox);
             number %= shulkerBox;
         }
         if (number >= stack)
         {
-            result += $"{number / stack}组";
+            result += string.Format(CommonLanguageManager.Instance.litematica_unitStack.CurrentValue(), number / stack);
             number %= stack;
         }
         if (number > 0)
-            result += $"{number}个";
+            result += string.Format(CommonLanguageManager.Instance.litematica_unitCount.CurrentValue(), number);
 
         return result;
     }

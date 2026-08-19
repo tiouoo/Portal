@@ -143,14 +143,14 @@
                 SelectedIndex="{Binding Data.UiProperty.OverrideUpdateChannel, Converter={StaticResource UpdateChannelToIndexConverter}, Mode=TwoWay}"
                 SelectionChanged="UpdateChannel_OnSelectionChanged">
                 <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_channelRelease}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion0}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion1}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_channelDailyBuild}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_channelCommitBuild}}" />
             </ComboBox>
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Cnb}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion2}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_cnbChannelHint}}" />
         </StackPanel>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
         <StackPanel Margin="5,0,0,0" Spacing="5">
@@ -197,7 +197,7 @@
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
             BorderThickness="1"
-            Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_latestVersion3}}"
+            Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_thirdPartyComponentLibraries}}"
             HorizontalAlignment="Stretch">
             <StackPanel>
                 <ItemsRepeater ItemsSource="{Binding OpenSourceProjects}" Margin="16,0,12,16">

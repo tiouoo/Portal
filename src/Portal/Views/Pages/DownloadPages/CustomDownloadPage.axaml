@@ -60,7 +60,7 @@
                 </StackPanel>
                 <StackPanel Spacing="5">
                     <Label
-                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_downloadUrlLabel0}}"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_maxFragmentCountLabel}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <Grid ColumnDefinitions="*,Auto">

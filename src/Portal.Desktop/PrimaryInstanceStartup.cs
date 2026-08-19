@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Portal.Core.Module.Ipc;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -26,7 +27,7 @@ internal static class PrimaryInstanceStartup
 
             if (packagePath == null && PortalCommandService.TryForwardToRunningInstance(javaCommand))
             {
-                Logger.Info($"已将 Java 整合包命令转发给正在运行的 Portal 实例：{javaPackagePath}");
+                Logger.Info(string.Format(LogLanguageManager.Instance.desktop_primaryInstance_javaForwarded.CurrentValue(), javaPackagePath));
                 return false;
             }
 
@@ -58,7 +59,7 @@ internal static class PrimaryInstanceStartup
         if (packagePath == null)
             PortalCommandService.StartCommandServer();
 
-        Logger.Info($"开始启动应用，命令行参数数量：{args.Length}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.desktop_primaryInstance_starting.CurrentValue(), args.Length));
         var versionInfo = AppVersionService.Instance.Version;
         Initializer.Program("Portal", "cc.tiouo.Portal", versionInfo.VersionTitle);
 
@@ -67,7 +68,7 @@ internal static class PrimaryInstanceStartup
         WindowsJavaFileAssociationService.Register();
 #endif
 
-        Logger.Info("应用程序启动 Main()");
+        Logger.Info(LogLanguageManager.Instance.desktop_primaryInstance_mainEntry.CurrentValue());
 
 #if WINDOWS || LINUX
         AppSetup.RegisterBedrockLauncher();
@@ -80,10 +81,10 @@ internal static class PrimaryInstanceStartup
     private static void LogOperatingSystem()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            Logger.Info("操作系统：Windows");
+            Logger.Info(LogLanguageManager.Instance.desktop_startup_osWindows.CurrentValue());
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Logger.Info("操作系统：Linux");
+            Logger.Info(LogLanguageManager.Instance.desktop_startup_osLinux.CurrentValue());
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            Logger.Info("操作系统：macOS");
+            Logger.Info(LogLanguageManager.Instance.desktop_startup_osMacos.CurrentValue());
     }
 }

@@ -139,7 +139,7 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:BedrockResourcePackSearchPage}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_JavaEdition0}}">
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_BedrockResourcePacks}}">
                         <tio:NavMenuItem.Icon>
                             <PathIcon
                                 Data="F1 M640,640z M0,0z M348,62.7C330.7,52.7,309.3,52.7,292,62.7L207.8,111.3C190.5,121.3,179.8,139.8,179.8,159.8L179.8,261.7 91.5,312.7C74.2,322.7,63.5,341.2,63.5,361.2L63.5,458.5C63.5,478.5,74.2,497,91.5,507L175.8,555.6C193.1,565.6,214.5,565.6,231.8,555.6L320.1,504.6 408.4,555.6C425.7,565.6,447.1,565.6,464.4,555.6L548.5,507C565.8,497,576.5,478.5,576.5,458.5L576.5,361.2C576.5,341.2,565.8,322.7,548.5,312.7L460.2,261.7 460.2,159.8C460.2,139.8,449.5,121.3,432.2,111.3L348,62.7z M296,356.6L296,463.1 207.7,514.1C206.5,514.8,205.1,515.2,203.7,515.2L203.7,409.9 296,356.6z M527.4,357.2C528.1,358.4,528.5,359.8,528.5,361.2L528.5,458.5C528.5,461.4,527,464,524.5,465.4L440.2,514C439,514.7,437.6,515.1,436.2,515.1L436.2,409.8 527.4,357.2z M412.3,159.8L412.3,261.7 320,315 320,208.5 411.2,155.9C411.9,157.1,412.3,158.5,412.3,159.9z"
@@ -148,7 +148,7 @@
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_JavaEdition1}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Others}}">
                     <tio:NavMenuItem.Icon>
                         <PathIcon
                             Data="F1 M640,640z M0,0z M541.9,139.5C546.4,127.7 543.6,114.3 534.7,105.4 525.8,96.5 512.4,93.6 500.6,98.2L84.6,258.2C71.9,263 63.7,275.2 64,288.7 64.3,302.2 73.1,314.1 85.9,318.3L262.7,377.2 321.6,554C325.9,566.8 337.7,575.6 351.2,575.9 364.7,576.2 376.9,568 381.8,555.4L541.8,139.4z"
@@ -169,7 +169,7 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:CustomDownloadPage}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_JavaEdition2}}">
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_CustomDownload}}">
                         <tio:NavMenuItem.Icon>
                             <PathIcon
                                 Data="F1 M640,640z M0,0z M176,544C96.5,544 32,479.5 32,400 32,336.6 73,282.8 129.9,263.5 128.6,255.8 128,248 128,240 128,160.5 192.5,96 272,96 327.4,96 375.5,127.3 399.6,173.1 413.8,164.8 430.4,160 448,160 501,160 544,203 544,256 544,271.7 540.2,286.6 533.5,299.7 577.5,320 608,364.4 608,416 608,486.7 550.7,544 480,544L176,544z M409,377C418.4,367.6 418.4,352.4 409,343.1 399.6,333.8 384.4,333.7 375.1,343.1L344.1,374.1 344.1,272C344.1,258.7 333.4,248 320.1,248 306.8,248 296.1,258.7 296.1,272L296.1,374.1 265.1,343.1C255.7,333.7 240.5,333.7 231.2,343.1 221.9,352.5 221.8,367.7 231.2,377L303.2,449C312.6,458.4,327.8,458.4,337.1,449L409.1,377z"

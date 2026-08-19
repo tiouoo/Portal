@@ -63,25 +63,25 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Java}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance0}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_JavaRuntime}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:GameFolder}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance1}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_GameFolder}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Advanced}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance2}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Advanced}}" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance3}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Network}}">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Download}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance4}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Download}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Agent}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance5}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Proxy}}" />
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>

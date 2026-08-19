@@ -38,7 +38,7 @@
         </StackPanel>
         <StackPanel>
             <Label
-                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero0}}"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_VersionInfo}}"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left" />
             <tio:Form HorizontalAlignment="Stretch" LabelPosition="Top">
@@ -47,19 +47,19 @@
                         <StackPanel Spacing="-4" />
                     </ItemsPanelTemplate>
                 </tio:Form.ItemsPanel>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero1}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_BuildType}}">
                     <TextBox Text="{Binding Data.Version.Type}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero2}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_BuildTime}}">
                     <TextBox Text="{Binding Data.Version.BuildTime}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero3}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_BuildVersion}}">
                     <TextBox Text="{Binding Data.Version.Version}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero4}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_BuildAction}}">
                     <TextBox Text="{Binding Data.Version.Action}" />
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_TriggerCrashDivideByZero5}}">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_BuildCommit}}">
                     <TextBox Text="{Binding Data.Version.Commit}" />
                 </tio:FormItem>
                 <tio:FormItem Label="OverrideUpdateChannel">

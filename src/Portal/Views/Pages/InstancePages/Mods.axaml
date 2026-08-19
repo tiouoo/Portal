@@ -117,7 +117,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates0}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_deleteSelected}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -127,7 +127,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates1}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_title}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -139,20 +139,20 @@
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLoadingMetadata}"
                     Margin="0,8,0,0"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates2}}" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_loadingMetadata}}" />
             </DockPanel>
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates3}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_loading}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates4}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_empty}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -178,7 +178,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowModDetails_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates5}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_showDetails}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -190,7 +190,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="EnableMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates6}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_enableMod}}"
                                         IsVisible="{Binding IsDisabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -202,7 +202,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DisableMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates7}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_disableMod}}"
                                         IsVisible="{Binding IsEnabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -214,7 +214,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="UpdateMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates8}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_updateMod}}"
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -226,7 +226,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="SwitchVersionMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_checkUpdates9}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_switchVersion}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -238,7 +238,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RollbackMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_importMods0}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_rollbackUpdate}}"
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -251,7 +251,7 @@
                                     <Separator IsVisible="{Binding HasIdentity}" />
                                     <MenuItem
                                         Click="OpenModFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_importMods1}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_openInFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -262,7 +262,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_importMods2}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -331,7 +331,7 @@
                                                     IsVisible="{Binding IsDisabled}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_importMods3}}"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_disabled}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     DockPanel.Dock="Left"
@@ -341,7 +341,7 @@
                                                     IsVisible="{Binding IsDuplicate}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_importMods4}}"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_duplicate}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     DockPanel.Dock="Left"
@@ -351,7 +351,7 @@
                                                     IsVisible="{Binding HasUpdate}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_importMods5}}"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_updatable}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     FontSize="16"

@@ -1,6 +1,7 @@
 #if WINDOWS
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;
@@ -12,7 +13,7 @@ internal static partial class WindowsJavaFileAssociationService
 
     private static readonly (string Extension, string ProgId, string TypeName)[] Associations =
     [
-        (".mrpack", "Portal.Minecraft.Mrpack", "Minecraft 整合包")
+        (".mrpack", "Portal.Minecraft.Mrpack", CommonLanguageManager.Instance.desktop_javaFileAssociation_mrpack.CurrentValue())
     ];
 
     public static void Register()
@@ -32,7 +33,7 @@ internal static partial class WindowsJavaFileAssociationService
                 progId.SetValue("FriendlyTypeName", association.TypeName);
                 using var application = progId.CreateSubKey("Application");
                 application.SetValue("ApplicationName", "Portal");
-                application.SetValue("ApplicationDescription", "Portal Minecraft 启动器");
+                application.SetValue("ApplicationDescription", CommonLanguageManager.Instance.desktop_fileAssociation_appDescription.CurrentValue());
                 using var icon = progId.CreateSubKey("DefaultIcon");
                 icon.SetValue(null, $"\"{executablePath}\",0");
                 using var command = progId.CreateSubKey(@"shell\open\command");
@@ -62,7 +63,7 @@ internal static partial class WindowsJavaFileAssociationService
         }
         catch (Exception exception)
         {
-            Logger.Error($"注册整合包文件关联失败：{exception}");
+            Logger.Error(string.Format(LogLanguageManager.Instance.desktop_javaFileAssociation_registerFailed.CurrentValue(), exception));
         }
     }
 

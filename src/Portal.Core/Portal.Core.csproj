@@ -60,6 +60,7 @@
         <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\module\TioUi.Avalonia\src\TioUi\TioUi.csproj"/>
         <ProjectReference Include="..\..\module\Tio.Avalonia.Standard\src\Tio.Avalonia.Standard.Tab\Tio.Avalonia.Standard.Tab.csproj"/>
         <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj"/>
+        <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

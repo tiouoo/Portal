@@ -1,4 +1,5 @@
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;
@@ -22,7 +23,7 @@ internal static class PackagePathResolver
             return false;
 
         packagePath = fullPath;
-        Logger.Info($"从命令行参数解析到 Bedrock 整合包路径：{packagePath}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.desktop_packageResolver_bedrockPath.CurrentValue(), packagePath));
         return true;
     }
 
@@ -45,7 +46,7 @@ internal static class PackagePathResolver
             return false;
 
         packagePath = fullPath;
-        Logger.Info($"从命令行参数解析到 Java 整合包路径：{packagePath}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.desktop_packageResolver_javaPath.CurrentValue(), packagePath));
         return true;
     }
 }

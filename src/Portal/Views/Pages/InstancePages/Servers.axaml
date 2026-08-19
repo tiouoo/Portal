@@ -125,7 +125,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="EditServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshAll0}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_edit}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -136,7 +136,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RemoveServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshAll1}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -233,7 +233,7 @@
                                             Padding="4,-2,2,0"
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
-                                            ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshAll2}}"
+                                            ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_launchServer}}"
                                             VerticalAlignment="Bottom"
                                             VerticalContentAlignment="Bottom">
                                             <PathIcon

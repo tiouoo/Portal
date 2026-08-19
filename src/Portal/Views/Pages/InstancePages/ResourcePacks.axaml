@@ -196,7 +196,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RollbackResourcePack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates0}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_rollbackUpdate}}"
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -209,7 +209,7 @@
                                     <Separator IsVisible="{Binding HasDetails}" />
                                     <MenuItem
                                         Click="OpenResourcePackFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates1}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_openInFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -220,7 +220,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteResourcePack_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates2}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -273,7 +273,7 @@
                                                     IsVisible="{Binding HasUpdate}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_checkUpdates3}}"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_updatable}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     FontSize="16"

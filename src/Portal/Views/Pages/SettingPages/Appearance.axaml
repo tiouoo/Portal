@@ -342,7 +342,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Blur'}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor0}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_blurColor}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -376,7 +376,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Mica'}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor1}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_micaColor}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -410,7 +410,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor2}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_controlOpacity}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -429,7 +429,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor3}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_translucentControlOpacity}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -448,14 +448,14 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor4}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_enableCustomForegroundColor}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableCustomForegroundColor, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding EnableCustomForegroundColor, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor5}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_foregroundColor}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -470,14 +470,14 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding IsWindows}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor6}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_disableSystemWindowBorder}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor7}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_enableWindowBorder}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
@@ -488,7 +488,7 @@
                 Margin="0,5,0,0"
                 Spacing="5">
                 <Label
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor8}}"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_borderColor}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}" />
                 <tio:TioColorPicker
@@ -504,7 +504,7 @@
         </Border>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundColor9}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_showWidgetBackground}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding ShowWidgetBackground, Source={x:Static const1:Data.ConfigEntry}}" />

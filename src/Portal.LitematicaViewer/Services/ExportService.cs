@@ -1,5 +1,6 @@
 using System.Text;
 using Portal.LitematicaViewer.Helpers;
+using Portal.Localization;
 
 namespace Portal.LitematicaViewer.Services;
 
@@ -54,7 +55,7 @@ public class ExportService
     private static string BuildCsv(List<KeyValuePair<string, long>> blocks, string lang)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("名称,数量,换算");
+        sb.AppendLine(CommonLanguageManager.Instance.litematica_export_csvHeader.CurrentValue());
         foreach (var (blockId, count) in blocks)
         {
             var name = CnTranslateHelper.ToChinese(blockId);
@@ -86,7 +87,7 @@ public class ExportService
     private static string BuildCategorizedCsv(AnalysisResult result, string lang)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("类别,名称,数量,换算");
+        sb.AppendLine(CommonLanguageManager.Instance.litematica_export_categorizedCsvHeader.CurrentValue());
         foreach (var (category, blocks) in result.Categories)
         {
             foreach (var (count, blockId) in blocks)

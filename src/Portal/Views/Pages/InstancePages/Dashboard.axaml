@@ -152,7 +152,7 @@
 
                             <Button
                                 Click="LaunchInstance_Click"
-                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon0}}"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_launchInstance}}"
                                 Margin="0,0,10,0"
                                 Width="97"
                                 x:Name="LaunchButton" />
@@ -191,22 +191,22 @@
                     ColumnSpacing="36"
                     Margin="12,0,12,0">
                     <tio:Descriptions LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon0}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_totalPlayTime}}">
                             <TextBlock TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
                                 <Run FontSize="24" Text="{Binding TotalPlayTime}" />
                             </TextBlock>
                         </tio:DescriptionsItem>
                     </tio:Descriptions>
                     <tio:Descriptions Grid.Column="1" LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon1}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_playSessions}}">
                             <TextBlock TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
                                 <Run FontSize="24" Text="{Binding Instance.Config.PlaySessions}" />
-                                <Run FontSize="24" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon1}}" />
+                                <Run FontSize="24" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_sessionCountSuffix}}" />
                             </TextBlock>
                         </tio:DescriptionsItem>
                     </tio:Descriptions>
                     <tio:Descriptions Grid.Column="2" LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon2}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_lastPlayed}}">
                             <TextBlock
                                 FontSize="24"
                                 Text="{Binding Instance.DisplayLastPlayTime}"
@@ -215,7 +215,7 @@
                         </tio:DescriptionsItem>
                     </tio:Descriptions>
                     <tio:Descriptions Grid.Column="3" LabelPosition="Top">
-                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon3}}">
+                        <tio:DescriptionsItem Label="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_gameVersion}}">
                             <TextBlock TextTrimming="LeadingCharacterEllipsis" TextWrapping="NoWrap">
                                 <Run FontSize="24" Text="{Binding Instance.ShortDisplay}" />
                             </TextBlock>
@@ -239,7 +239,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon2}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_modsLabel}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -288,7 +288,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon3}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resourcePacksLabel}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -337,7 +337,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon4}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_shaderPacksLabel}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -386,7 +386,7 @@
                         <StackPanel Margin="10">
                             <DockPanel>
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon5}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_savesLabel}}"
                                     DockPanel.Dock="Left"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -444,7 +444,7 @@
                             Tag="bedrock-resource-packs">
                             <StackPanel Margin="10" Spacing="4">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon3}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resourcePacksLabel}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <TextBlock FontSize="24" Text="{Binding Instance.StorageUsage.ResourcePacksSizeText}" />
@@ -465,7 +465,7 @@
                             Tag="bedrock-behavior-packs">
                             <StackPanel Margin="10" Spacing="4">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon6}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_behaviorPacksLabel}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <TextBlock FontSize="24" Text="{Binding Instance.StorageUsage.BehaviorPacksSizeText}" />
@@ -487,7 +487,7 @@
                             <StackPanel Margin="10" Spacing="4">
                                 <DockPanel LastChildFill="False">
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon5}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_savesLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
@@ -499,7 +499,7 @@
                                         MinWidth="96"
                                         Name="WorldUserIdSelector"
                                         SelectionChanged="WorldUserIdSelector_OnSelectionChanged"
-                                        ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon7}}" />
+                                        ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_selectWorldUserId}}" />
                                 </DockPanel>
                                 <TextBlock FontSize="24" Text="{Binding Instance.StorageUsage.WorldsSizeText}" />
                                 <TextBlock
@@ -522,7 +522,7 @@
                             <TextBlock
                                 DockPanel.Dock="Left"
                                 FontSize="15"
-                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon8}}" />
+                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_recentPlayTime}}" />
                             <Button
                                 Click="ToggleChartDays_Click"
                                 DockPanel.Dock="Right"
@@ -534,7 +534,7 @@
                                 <TextBlock
                                     Foreground="{DynamicResource SystemAccentColor}"
                                     Name="Block"
-                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon9}}" />
+                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_days7}}" />
                             </Button>
                         </DockPanel>
                         <instancePages:RecentPlayTimeChart

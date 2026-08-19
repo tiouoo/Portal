@@ -160,7 +160,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="DeleteWorld_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_importWorlds0}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_deleteWorld}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

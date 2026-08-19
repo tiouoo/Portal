@@ -194,8 +194,8 @@
                 <ToggleSwitch
                     HorizontalAlignment="Right"
                     IsChecked="{Binding Data.ConfigEntry.EnableBedrockAccountInjection}"
-                    OffContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_saveSkin0}}"
-                    OnContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_saveSkin1}}"
+                    OffContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_disable}}"
+                    OnContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_enable}}"
                     VerticalAlignment="Center" />
             </Panel>
             <ListBox

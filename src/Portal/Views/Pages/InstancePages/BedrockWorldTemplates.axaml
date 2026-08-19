@@ -116,16 +116,16 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowWorldTemplateDetails_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates0}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_showDetails}}"
                                         Tag="{Binding}" />
                                     <Separator />
                                     <MenuItem
                                         Click="OpenWorldTemplateFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates1}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_openInFolder}}"
                                         Tag="{Binding}" />
                                     <MenuItem
                                         Click="DeleteWorldTemplate_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates2}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_delete}}"
                                         Tag="{Binding}" />
                                 </MenuFlyout>
                             </Border.ContextFlyout>
@@ -174,7 +174,7 @@
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Margin="3,1,3,0">
-                                        <Run Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates3}}" /><Run Text="{Binding BaseGameVersionText}" />
+                                        <Run Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_baseGameVersionLabel}}" /><Run Text="{Binding BaseGameVersionText}" />
                                     </TextBlock>
                                     <TextBlock
                                         FontSize="13"

@@ -117,7 +117,7 @@
                     Cursor="Hand"
                     FontSize="24"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods0}}" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_title}}" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
@@ -128,13 +128,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods1}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_loading}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods2}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_empty}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -159,7 +159,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowDetails_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods3}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_showDetails}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -170,7 +170,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="EnableMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods4}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_enableMod}}"
                                         IsVisible="{Binding IsDisabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -182,7 +182,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DisableMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods5}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_disableMod}}"
                                         IsVisible="{Binding IsEnabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -195,7 +195,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="OpenModFolder_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods6}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_openInFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -206,7 +206,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteMod_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods7}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -239,7 +239,7 @@
                                             <TextBlock
                                                 FontSize="11"
                                                 Foreground="White"
-                                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods8}}"
+                                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_preload}}"
                                                 VerticalAlignment="Center" />
                                         </Border>
                                         <Border
@@ -250,7 +250,7 @@
                                             <TextBlock
                                                 FontSize="11"
                                                 Foreground="White"
-                                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_importMods9}}"
+                                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_disabled}}"
                                                 VerticalAlignment="Center" />
                                         </Border>
                                         <TextBlock

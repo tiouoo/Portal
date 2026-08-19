@@ -122,7 +122,7 @@
                                     Width="80" />
                                 <DataGridTextColumn
                                     Binding="{Binding Units}"
-                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ProjectionFile0}}"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_Units}}"
                                     Width="250" />
                             </DataGrid.Columns>
                         </DataGrid>
@@ -132,11 +132,11 @@
             <WrapPanel HorizontalAlignment="Stretch" IsVisible="{Binding HasData}">
                 <Button
                     Click="ExportTxt_Click"
-                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ProjectionFile1}}"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ExportTxt}}"
                     Width="100" />
                 <Button
                     Click="ExportCsv_Click"
-                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ProjectionFile2}}"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_ExportCsv}}"
                     Width="100" />
             </WrapPanel>
         </StackPanel>

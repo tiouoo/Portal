@@ -24,7 +24,7 @@
             HorizontalAlignment="Stretch"
             LabelPosition="Top"
             Margin="0,10,0,15">
-            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder1}}">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNameLabel}}">
                 <StackPanel Spacing="4">
                     <TextBox
                         PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder}}"
@@ -32,7 +32,7 @@
                         tio:FocusHelper.DialogFocusHint="True" />
                 </StackPanel>
             </tio:FormItem>
-            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder2}}">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderPathLabel}}">
                 <StackPanel Spacing="4">
                     <tio:PathPicker
                         Command="{Binding FolderPickedCommand}"
@@ -87,7 +87,7 @@
                 <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_addButton}}" />
             </StackPanel>
             <DropDownButton
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_folderNamePlaceholder0}}"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_importButton}}"
                 DockPanel.Dock="Left"
                 HorizontalAlignment="Left"
                 IsVisible="{Binding HasImports}"

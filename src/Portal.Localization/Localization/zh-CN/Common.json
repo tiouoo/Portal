@@ -7,5 +7,35 @@
     "close": "关闭",
     "language": "语言",
     "loading": "加载中..."
+  },
+  "desktop": {
+    "bedrockFileAssociation_mcaddon": "Minecraft 基岩版附加包",
+    "bedrockFileAssociation_mcpack": "Minecraft 基岩版资源包",
+    "bedrockFileAssociation_mctemplate": "Minecraft 基岩版世界模板",
+    "bedrockFileAssociation_mcworld": "Minecraft 基岩版世界存档",
+    "commandService_argumentError": "参数错误：{0}{1}{2}{3}",
+    "commandService_forgetLabel": "命令行命名管道服务",
+    "commandService_forwarded": "已将命令转发给正在运行的 Portal 实例。",
+    "debugConsole_configReadFailed": "无法读取调试模式配置：{0}",
+    "debugConsole_linuxCommand": "echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {0}; exec bash",
+    "debugConsole_macosCommand": "echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {0}",
+    "debugConsole_started": "Portal 调试终端已启动。",
+    "fileAssociation_appDescription": "Portal Minecraft 启动器",
+    "javaFileAssociation_mrpack": "Minecraft 整合包",
+    "jumpList_continueCategory": "继续游戏",
+    "jumpList_continueDescription": "启动最近运行的实例",
+    "jumpList_newTabDescription": "在 Portal 中创建一个新标签页",
+    "jumpList_newTabTitle": "新标签页",
+    "jumpList_settingsDescription": "打开 Portal 设置",
+    "jumpList_settingsTitle": "设置",
+    "jumpList_taskCategory": "任务"
+  },
+  "litematica": {
+    "export_categorizedCsvHeader": "类别,名称,数量,换算",
+    "export_csvHeader": "名称,数量,换算",
+    "unitChest": "{0}箱",
+    "unitCount": "{0}个",
+    "unitShulkerBox": "{0}盒",
+    "unitStack": "{0}组"
   }
 }

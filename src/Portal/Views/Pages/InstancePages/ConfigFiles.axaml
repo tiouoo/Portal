@@ -256,23 +256,23 @@
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Paste_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title0}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_paste}}"
                                     InputGesture="Ctrl+V" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="SelectAll_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title1}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_selectAll}}"
                                     InputGesture="Ctrl+A" />
                                 <Separator />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Save_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title2}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_save}}"
                                     InputGesture="Ctrl+S" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Format_OnClick"
-                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_title3}}"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_format}}"
                                     InputGesture="Shift+Alt+F" />
                             </ContextMenu>
                         </avaloniaEdit:TextEditor.ContextMenu>

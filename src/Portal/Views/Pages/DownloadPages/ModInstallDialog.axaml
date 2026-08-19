@@ -114,12 +114,12 @@
                 <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_cancel}}" />
                 <Button
                     Click="SkipDependencies_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_showAllInstances0}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_skipDependencies}}"
                     IsEnabled="{Binding CanInstall}"
                     IsVisible="{Binding ShowDependencyActions}" />
                 <Button
                     Click="Install_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_showAllInstances1}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modinstalldialog_confirm}}"
                     IsEnabled="{Binding CanInstallWithDependencies}" />
             </StackPanel>
         </DockPanel>

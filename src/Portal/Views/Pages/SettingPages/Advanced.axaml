@@ -70,7 +70,7 @@
                 <TextBox
                     AcceptsReturn="True"
                     Grid.Column="0"
-                    InnerLeftContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage7}}"
+                    InnerLeftContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_width}}"
                     Margin="0,0,10,0"
                     Text="{Binding Data.ConfigEntry.MinecraftWindowWidth}"
                     TextWrapping="Wrap"
@@ -78,7 +78,7 @@
                 <TextBox
                     AcceptsReturn="True"
                     Grid.Column="1"
-                    InnerLeftContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage8}}"
+                    InnerLeftContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_height}}"
                     Margin="10,0,0,0"
                     Text="{Binding Data.ConfigEntry.MinecraftWindowHeight}"
                     TextWrapping="Wrap"
@@ -87,43 +87,43 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage0}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_jvmArgs}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
                 AcceptsReturn="True"
-                PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage1}}"
+                PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_leaveEmptyByDefault}}"
                 Text="{Binding Data.ConfigEntry.JvmArgs}"
                 TextWrapping="Wrap"
                 VerticalAlignment="Top" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage2}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_beforeLaunchCommand}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
                 AcceptsReturn="True"
-                PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage3}}"
+                PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_beforeLaunchCommandHint}}"
                 Text="{Binding Data.ConfigEntry.BeforeLaunchCommand}"
                 TextWrapping="Wrap"
                 VerticalAlignment="Top" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage4}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_afterLaunchCommand}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
                 AcceptsReturn="True"
-                PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage5}}"
+                PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_afterLaunchCommandHint}}"
                 Text="{Binding Data.ConfigEntry.AfterLaunchCommand}"
                 TextWrapping="Wrap"
                 VerticalAlignment="Top" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_autoSetChineseLanguage6}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_packagedCommand}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox

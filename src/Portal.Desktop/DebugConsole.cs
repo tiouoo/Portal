@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Portal.Core.Const;
+using Portal.Localization;
 
 namespace Portal.Desktop;
 
@@ -34,7 +35,7 @@ internal static partial class DebugConsole
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine($"无法读取调试模式配置：{exception.Message}");
+            Console.Error.WriteLine(string.Format(CommonLanguageManager.Instance.desktop_debugConsole_configReadFailed.CurrentValue(), exception.Message));
             return false;
         }
     }
@@ -46,13 +47,13 @@ internal static partial class DebugConsole
         Console.SetOut(output);
         Console.SetError(error);
         Console.OutputEncoding = Encoding.UTF8;
-        Console.WriteLine("Portal 调试终端已启动。");
+        Console.WriteLine(CommonLanguageManager.Instance.desktop_debugConsole_started.CurrentValue());
     }
 
     private static void StartLinuxTerminal()
     {
         var command =
-            $"echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log"))}; exec bash";
+            string.Format(CommonLanguageManager.Instance.desktop_debugConsole_linuxCommand.CurrentValue(), QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log")));
         foreach (var (fileName, arguments) in new[]
                  {
                      ("gnome-terminal", ["--", "bash", "-c", command]),
@@ -73,7 +74,7 @@ internal static partial class DebugConsole
     private static void StartMacOsTerminal()
     {
         var command =
-            $"echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log"))}";
+            string.Format(CommonLanguageManager.Instance.desktop_debugConsole_macosCommand.CurrentValue(), QuoteForShell(Path.Combine(ConfigPath.LogFolderPath, "latest.log")));
         try
         {
             var startInfo = new ProcessStartInfo("osascript") { UseShellExecute = false };

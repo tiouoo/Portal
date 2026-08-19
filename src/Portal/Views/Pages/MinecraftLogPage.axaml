@@ -106,12 +106,12 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_AutoScrollToBottom0}}"
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_SelectAll}}"
                             InputGesture="ctrl+a" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Copy_OnClick"
-                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_AutoScrollToBottom1}}"
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_Copy}}"
                             InputGesture="ctrl+c" />
                         <Separator />
                         <MenuItem

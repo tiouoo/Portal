@@ -129,7 +129,7 @@
                 Orientation="Horizontal"
                 Spacing="8">
                 <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_cancel}}" />
-                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_packVersionLabel0}}" />
+                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_confirmExport}}" />
             </StackPanel>
         </StackPanel>
     </Grid>

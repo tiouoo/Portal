@@ -66,7 +66,7 @@
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder0}}"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_configFolder}}"
                         Tag="config" />
                 </MenuFlyout>
             </DropDownButton.Flyout>
@@ -76,7 +76,7 @@
                 DockPanel.Dock="Top"
                 FontSize="24"
                 Margin="10,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder1}}" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_storageTitle}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 FontSize="38"
@@ -100,7 +100,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder2}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_modsLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -149,7 +149,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder3}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_resourcePacksLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -202,7 +202,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder4}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_shaderPacksLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -251,7 +251,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder5}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_savesLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -300,7 +300,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder6}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_screenshotsLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -353,7 +353,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder7}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_logsLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -402,7 +402,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder8}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_configLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -448,7 +448,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_rootFolder9}}"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_crashReportsLabel}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"

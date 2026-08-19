@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using Portal.Core.Module.Ipc;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
@@ -25,12 +26,12 @@ internal static partial class PortalCommandService
                 return true;
             case PortalCliParseStatus.Error:
                 WriteConsole(
-                    $"参数错误：{error}{Environment.NewLine}{Environment.NewLine}{PortalCommandParser.GetUsageText()}");
+                    string.Format(CommonLanguageManager.Instance.desktop_commandService_argumentError.CurrentValue(), error, Environment.NewLine, Environment.NewLine, PortalCommandParser.GetUsageText()));
                 return true;
             case PortalCliParseStatus.Command when command is not null:
                 if (TryForwardToRunningInstance(command))
                 {
-                    WriteConsole("已将命令转发给正在运行的 Portal 实例。");
+                    WriteConsole(CommonLanguageManager.Instance.desktop_commandService_forwarded.CurrentValue());
                     return true;
                 }
 
@@ -48,8 +49,8 @@ internal static partial class PortalCommandService
 
     public static void StartCommandServer()
     {
-        Logger.Info("正在启动命令行命名管道服务。");
-        Task.Run(ListenForCommandsAsync).Forget("命令行命名管道服务");
+        Logger.Info(LogLanguageManager.Instance.desktop_commandService_starting.CurrentValue());
+        Task.Run(ListenForCommandsAsync).Forget(CommonLanguageManager.Instance.desktop_commandService_forgetLabel.CurrentValue());
     }
 
     internal static bool TryForwardToRunningInstance(PortalCommand command, int attempts = 1)
@@ -78,12 +79,12 @@ internal static partial class PortalCommandService
         }
         catch (TimeoutException exception)
         {
-            Logger.Debug($"连接已有 Portal 命令服务超时。{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.desktop_commandService_connectTimeout.CurrentValue(), Environment.NewLine, exception));
             return false;
         }
         catch (IOException exception)
         {
-            Logger.Debug($"无法连接已有 Portal 命令服务。{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.desktop_commandService_connectFailed.CurrentValue(), Environment.NewLine, exception));
             return false;
         }
     }
@@ -102,21 +103,21 @@ internal static partial class PortalCommandService
                 if (string.IsNullOrWhiteSpace(json))
                     continue;
                 if (JsonSerializer.Deserialize<PortalCommand>(json) is not { } command) continue;
-                Logger.Info("已从命名管道接收到外部命令。");
+                Logger.Info(LogLanguageManager.Instance.desktop_commandService_received.CurrentValue());
                 PortalCommandQueue.Enqueue(command);
             }
             catch (JsonException exception)
             {
-                Logger.Warning($"命令行命名管道收到无效负载，已丢弃。{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.desktop_commandService_invalidPayload.CurrentValue(), Environment.NewLine, exception));
             }
             catch (IOException exception)
             {
-                Logger.Warning($"命令行命名管道发生 I/O 错误，1 秒后重试。{Environment.NewLine}{exception}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.desktop_commandService_ioError.CurrentValue(), Environment.NewLine, exception));
                 await Task.Delay(1000);
             }
             catch (Exception exception)
             {
-                Logger.Error("命令行命名管道发生未预期错误，1 秒后重试。", exception);
+                Logger.Error(LogLanguageManager.Instance.desktop_commandService_unexpectedError.CurrentValue(), exception);
                 await Task.Delay(1000);
             }
     }

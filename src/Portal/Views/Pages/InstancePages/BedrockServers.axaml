@@ -111,7 +111,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="CopyAddress_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshAll0}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_copyAddress}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -123,7 +123,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="EditServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshAll1}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_edit}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -134,7 +134,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RemoveServer_OnClick"
-                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshAll2}}"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

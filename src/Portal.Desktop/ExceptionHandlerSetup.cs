@@ -1,3 +1,4 @@
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;
@@ -13,7 +14,7 @@ internal static class ExceptionHandlerSetup
             if (Interlocked.Exchange(ref _isLoggingFirstChanceException, 1) != 0) return;
             try
             {
-                Logger.Debug($"运行时引发异常：{Environment.NewLine}{eventArgs.Exception}");
+                Logger.Debug(string.Format(LogLanguageManager.Instance.desktop_exceptionHandler_runtimeException.CurrentValue(), Environment.NewLine, eventArgs.Exception));
             }
             finally
             {
@@ -24,14 +25,14 @@ internal static class ExceptionHandlerSetup
         AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
         {
             if (eventArgs.ExceptionObject is Exception exception)
-                Logger.Fatal("未处理的 AppDomain 异常。", exception);
+                Logger.Fatal(LogLanguageManager.Instance.desktop_exceptionHandler_unhandledAppDomain.CurrentValue(), exception);
             else
-                Logger.Fatal($"未处理的 AppDomain 非异常对象：{eventArgs.ExceptionObject}");
+                Logger.Fatal(string.Format(LogLanguageManager.Instance.desktop_exceptionHandler_unhandledAppDomainNonException.CurrentValue(), eventArgs.ExceptionObject));
         };
 
         TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
         {
-            Logger.Error("检测到未观察的任务异常。", eventArgs.Exception);
+            Logger.Error(LogLanguageManager.Instance.desktop_exceptionHandler_unobservedTaskException.CurrentValue(), eventArgs.Exception);
             eventArgs.SetObserved();
         };
     }

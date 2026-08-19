@@ -87,7 +87,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_notificationMethod0}}" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_showRecentPlays}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"

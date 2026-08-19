@@ -78,45 +78,45 @@
                                     </Grid>
                                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading0}}" />
+                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_experienceProgress}}" />
                                             <TextBox Text="{Binding ExperienceProgress}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Spacing="4">
-                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading1}}" />
+                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_dimension}}" />
                                             <TextBox Text="{Binding Dimension}" />
                                         </StackPanel>
                                     </Grid>
                                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading2}}" />
+                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_positionX}}" />
                                             <TextBox Text="{Binding PositionX}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Spacing="4">
-                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading3}}" />
+                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_positionY}}" />
                                             <TextBox Text="{Binding PositionY}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Spacing="4">
-                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading4}}" />
+                                            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_positionZ}}" />
                                             <TextBox Text="{Binding PositionZ}" />
                                         </StackPanel>
                                     </Grid>
                                     <StackPanel Orientation="Horizontal" Spacing="12">
                                         <ToggleSwitch
                                             IsChecked="{Binding Invulnerable}"
-                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading5}}"
-                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading6}}" />
+                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_notInvulnerable}}"
+                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_invulnerable}}" />
                                         <ToggleSwitch
                                             IsChecked="{Binding MayFly}"
-                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading7}}"
-                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading8}}" />
+                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_mayNotFly}}"
+                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_mayFly}}" />
                                         <ToggleSwitch
                                             IsChecked="{Binding Flying}"
-                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_loading9}}"
-                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_noPlayers0}}" />
+                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_notFlying}}"
+                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_flying}}" />
                                         <ToggleSwitch
                                             IsChecked="{Binding Instabuild}"
-                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_noPlayers1}}"
-                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_noPlayers2}}" />
+                                            OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_notInstabuild}}"
+                                            OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveplayers_instabuild}}" />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

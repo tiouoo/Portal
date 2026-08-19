@@ -237,10 +237,10 @@
                 Margin="0,10,0,0"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_changeIcon0}}" />
+                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_cancel}}" />
                 <Button
                     Click="Create_Click"
-                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_changeIcon1}}"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.createinstancedialog_createInstance}}"
                     IsEnabled="{Binding CanCreate}" />
             </StackPanel>
         </StackPanel>

@@ -61,18 +61,18 @@
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror0}}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_disableSystemProxyHint}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableProxyServer}" Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror1}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_proxyServerAddress}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox PlaceholderText="http://127.0.0.1:7890" Text="{Binding Data.ConfigEntry.ProxyServer}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror2}}"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableCustomUserAgent}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableCustomUserAgent}" />
@@ -87,7 +87,7 @@
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_enableGithubMirror3}}" />
+                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_defaultUserAgent}}" />
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"

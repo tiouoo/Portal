@@ -17,4 +17,8 @@
     <PackageReference Include="fNbt" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj" />
+  </ItemGroup>
+
 </Project>

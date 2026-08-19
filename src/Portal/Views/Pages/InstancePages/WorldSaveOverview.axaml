@@ -74,8 +74,8 @@
                         HorizontalAlignment="Left"
                         IsChecked="{Binding AllowCheats}"
                         IsEnabled="{Binding IsUnlocked}"
-                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName3}}"
-                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName4}}" />
+                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_off}}"
+                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_on}}" />
                     <TextBlock Grid.Row="8" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_playersAndDatapacks}}" />
                     <TextBlock
                         Grid.Column="1"
@@ -85,17 +85,17 @@
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLoading}"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName0}}" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_loading}}" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLocked}"
-                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName1}}"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_worldLocked}}"
                     TextWrapping="Wrap" />
             </StackPanel>
         </controls:ScrollView>
         <Button
             Command="{Binding SaveLevelSettingsCommand}"
-            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_folderName2}}"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_save}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasLevelSettings}"

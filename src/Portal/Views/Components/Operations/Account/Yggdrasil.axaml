@@ -56,7 +56,7 @@
                         </ComboBox>
                     </StackPanel>
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_verifyFailedMessage0}}">
+                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_apiUrlLabel}}">
                     <StackPanel Spacing="4">
                         <DataValidationErrors>
                             <TextBox
@@ -66,14 +66,14 @@
                         </DataValidationErrors>
                     </StackPanel>
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_verifyFailedMessage1}}">
+                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_usernameLabel}}">
                     <StackPanel Spacing="4">
                         <DataValidationErrors>
                             <TextBox PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_usernamePlaceholder}}" Text="{Binding Username}" />
                         </DataValidationErrors>
                     </StackPanel>
                 </tio:FormItem>
-                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_verifyFailedMessage2}}">
+                <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.yggdrasil_passwordLabel}}">
                     <StackPanel Spacing="4">
                         <DataValidationErrors>
                             <TextBox

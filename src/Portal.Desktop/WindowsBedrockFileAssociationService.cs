@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Desktop;
@@ -13,10 +14,10 @@ internal static partial class WindowsBedrockFileAssociationService
 
     private static readonly (string Extension, string ProgId, string TypeName)[] Associations =
     [
-        (".mcpack", "Portal.Minecraft.Mcpack", "Minecraft 基岩版资源包"),
-        (".mcaddon", "Portal.Minecraft.Mcaddon", "Minecraft 基岩版附加包"),
-        (".mcworld", "Portal.Minecraft.Mcworld", "Minecraft 基岩版世界存档"),
-        (".mctemplate", "Portal.Minecraft.Mctemplate", "Minecraft 基岩版世界模板")
+        (".mcpack", "Portal.Minecraft.Mcpack", CommonLanguageManager.Instance.desktop_bedrockFileAssociation_mcpack.CurrentValue()),
+        (".mcaddon", "Portal.Minecraft.Mcaddon", CommonLanguageManager.Instance.desktop_bedrockFileAssociation_mcaddon.CurrentValue()),
+        (".mcworld", "Portal.Minecraft.Mcworld", CommonLanguageManager.Instance.desktop_bedrockFileAssociation_mcworld.CurrentValue()),
+        (".mctemplate", "Portal.Minecraft.Mctemplate", CommonLanguageManager.Instance.desktop_bedrockFileAssociation_mctemplate.CurrentValue())
     ];
 
     public static void Register()
@@ -36,7 +37,7 @@ internal static partial class WindowsBedrockFileAssociationService
                 progId.SetValue("FriendlyTypeName", association.TypeName);
                 using var application = progId.CreateSubKey("Application");
                 application.SetValue("ApplicationName", "Portal");
-                application.SetValue("ApplicationDescription", "Portal Minecraft 启动器");
+                application.SetValue("ApplicationDescription", CommonLanguageManager.Instance.desktop_fileAssociation_appDescription.CurrentValue());
                 using var icon = progId.CreateSubKey("DefaultIcon");
                 icon.SetValue(null, $"\"{executablePath}\",0");
                 using var command = progId.CreateSubKey(@"shell\open\command");
@@ -66,7 +67,7 @@ internal static partial class WindowsBedrockFileAssociationService
         }
         catch (Exception exception)
         {
-            Logger.Error($"注册基岩版包文件关联失败：{exception}");
+            Logger.Error(string.Format(LogLanguageManager.Instance.desktop_bedrockFileAssociation_registerFailed.CurrentValue(), exception));
         }
     }
 

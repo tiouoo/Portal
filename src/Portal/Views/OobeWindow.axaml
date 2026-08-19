@@ -180,7 +180,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back0}}" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeMirage}}" />
                             </StackPanel>
                         </ListBoxItem>
                     </ListBox>
@@ -188,7 +188,7 @@
                 <StackPanel Spacing="5">
                     <Panel>
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back1}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeColor}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             HorizontalAlignment="Left" />
@@ -214,22 +214,22 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
-                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back2}}" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addMinecraftFolder}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back3}}"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addMinecraftFolderDescription}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back4}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_folderList}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center" />
                         <HyperlinkButton
                             Click="AddFolder_OnClick"
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back5}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addFolder}}"
                             FontSize="13"
                             HorizontalAlignment="Right"
                             Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -291,22 +291,22 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
-                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back6}}" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addAccount}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back7}}"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addAccountDescription}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back8}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_accountList}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center" />
                         <HyperlinkButton
                             Click="AddAccount_OnClick"
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back6}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addAccount}}"
                             FontSize="13"
                             HorizontalAlignment="Right"
                             Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -317,7 +317,7 @@
                         HorizontalAlignment="Center"
                         IsVisible="{Binding !Data.ConfigEntry.MinecraftAccounts.Count}"
                         Margin="0,20,0,0"
-                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_back9}}" />
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_noAccounts}}" />
                 </StackPanel>
                 <controls:ScrollView
                     Classes="Flat"
@@ -369,15 +369,15 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="4">
-                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next0}}" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addJava}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next1}}"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_addJavaDescription}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next2}}"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_javaList}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
@@ -389,13 +389,13 @@
                             Spacing="10">
                             <HyperlinkButton
                                 Click="ScanJava_OnClick"
-                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next3}}"
+                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_autoScan}}"
                                 FontSize="13"
                                 Name="ScanJavaButton"
                                 Theme="{StaticResource TransparentHyperlinkButton}" />
                             <HyperlinkButton
                                 Click="AddJava_OnClick"
-                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next4}}"
+                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_manualAdd}}"
                                 FontSize="13"
                                 Name="AddJavaButton"
                                 Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -413,7 +413,7 @@
                         HorizontalAlignment="Center"
                         IsVisible="{Binding !Data.ConfigEntry.JavaRuntimes.Count}"
                         Margin="0,20,0,0"
-                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_next5}}" />
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_noJava}}" />
                 </StackPanel>
                 <controls:ScrollView
                     Classes="Flat"
