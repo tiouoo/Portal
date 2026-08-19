@@ -37,7 +37,7 @@
 | **Arch Linux / AUR**    | [portal-mc-bin](https://aur.archlinux.org/packages/portal-mc-bin)                                    | [portal-mc-commit-bin](https://aur.archlinux.org/packages/portal-mc-commit-bin)                                    | [portal-mc-nightly-bin](https://aur.archlinux.org/packages/portal-mc-nightly-bin)                                    |
 
 > [!NOTE]
-> 通过 [Aur](https://aur.archlinux.org) 安装
+> Arch Linux 用户可以通过 [aur](https://aur.archlinux.org) 安装
 >
 > ```bash
 > yay -S portal-mc-bin                  # 正式版
