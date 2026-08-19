@@ -9,6 +9,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Services.SystemResources;
+using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Components.Operations.Java;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -50,8 +51,11 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
         new(Math.Max(0, TotalMemoryMb - SystemUsedMemoryMb - Data.ConfigEntry.MinecraftMaxMemory), GridUnitType.Star);
 
     public int SystemUsedMemoryMb => Math.Max(0, _totalMemoryMb - _availableMemoryMb);
-    public string SystemMemoryDescription => $"系统已使用 {SystemUsedMemoryMb:N0} MB";
-    public string MinecraftMemoryDescription => $"Minecraft {Data.ConfigEntry.MinecraftMaxMemory:N0} MB";
+    public string SystemMemoryDescription =>
+        string.Format(CommonLanguageManager.Instance.javaPage_systemMemoryUsed.CurrentValue(), SystemUsedMemoryMb);
+    public string MinecraftMemoryDescription =>
+        string.Format(CommonLanguageManager.Instance.javaPage_minecraftMemory.CurrentValue(),
+            Data.ConfigEntry.MinecraftMaxMemory);
     public bool HasMemoryWarning => HasMemoryStatus && Data.ConfigEntry.MinecraftMaxMemory > _availableMemoryMb;
 
     public void Dispose()
@@ -246,22 +250,27 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
         try
         {
-            topLevel.Notice("正在优化系统内存");
+            topLevel.Notice(CommonLanguageManager.Instance.javaPage_optimizingMemory.CurrentValue());
             var result = await MemoryOptimizationService.OptimizeAsync();
             RefreshMemoryStatus();
-            topLevel.Notice($"内存优化完成，已释放 {FormatMemory(result.ReclaimedBytes)}", NotificationType.Success);
+            topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.javaPage_optimizationComplete.CurrentValue(),
+                FormatMemory(result.ReclaimedBytes)), NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"内存优化失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.javaPage_optimizationFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
     }
 
     private static string FormatMemory(long bytes)
     {
         return bytes >= 1024L * 1024 * 1024
-            ? $"{bytes / 1024d / 1024 / 1024:F1} GB 内存"
-            : $"{bytes / 1024d / 1024:F0} MB 内存";
+            ? string.Format(CommonLanguageManager.Instance.javaPage_memoryGb.CurrentValue(),
+                bytes / 1024d / 1024 / 1024)
+            : string.Format(CommonLanguageManager.Instance.javaPage_memoryMb.CurrentValue(),
+                bytes / 1024d / 1024);
     }
 
     private async void AddJava_Click(object? sender, RoutedEventArgs e)
@@ -279,18 +288,20 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
         try
         {
-            topLevel.Notice("正在扫描中");
+            topLevel.Notice(CommonLanguageManager.Instance.javaPage_scanning.CurrentValue());
             var result = await JavaRuntimeOperations.ScanAndAddAsync(Data.ConfigEntry.JavaRuntimes);
             if (Data.ConfigEntry.DefaultJavaRuntime == null)
                 Data.ConfigEntry.DefaultJavaRuntime = Data.ConfigEntry.JavaRuntimes.FirstOrDefault();
 
             topLevel.Notice(
-                $"扫描完成：新增 {result.AddedCount} 个 Java，重复 {result.DuplicateCount} 个",
+                string.Format(CommonLanguageManager.Instance.javaPage_scanComplete.CurrentValue(),
+                    result.AddedCount, result.DuplicateCount),
                 NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"Java 扫描失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.javaPage_scanFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
     }
 
@@ -305,7 +316,7 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
         {
             var (task, resultTask) = JavaRuntimeOperations.CreateDeepScanTask(Data.ConfigEntry.JavaRuntimes);
             task.Start();
-            topLevel.Notice("强力扫描已启动，可在右上角任务列表中取消");
+            topLevel.Notice(CommonLanguageManager.Instance.javaPage_deepScanStarted.CurrentValue());
 
             (int Added, int Duplicate) result;
             try
@@ -322,16 +333,19 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
             if (task.Status == ManagedTaskStatus.Cancelled)
                 topLevel.Notice(
-                    $"扫描已取消，已找到的 Java 已添加：{result.Added} 个新增，{result.Duplicate} 个重复",
+                    string.Format(CommonLanguageManager.Instance.javaPage_deepScanCancelled.CurrentValue(),
+                        result.Added, result.Duplicate),
                     NotificationType.Warning);
             else
                 topLevel.Notice(
-                    $"强力扫描完成：新增 {result.Added} 个 Java，重复 {result.Duplicate} 个",
+                    string.Format(CommonLanguageManager.Instance.javaPage_deepScanComplete.CurrentValue(),
+                        result.Added, result.Duplicate),
                     NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"强力扫描失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.javaPage_deepScanFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
         finally
         {
@@ -348,7 +362,8 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
             if (!result.IsValid)
             {
-                topLevel.Notice("无法识别该 Java 可执行文件", NotificationType.Error);
+                topLevel.Notice(CommonLanguageManager.Instance.javaPage_unrecognizedJava.CurrentValue(),
+                    NotificationType.Error);
                 return;
             }
 
@@ -357,15 +372,17 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
             if (result.IsDuplicate)
             {
-                topLevel.Notice("该 Java 已在列表中", NotificationType.Warning);
+                topLevel.Notice(CommonLanguageManager.Instance.javaPage_javaDuplicate.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
-            topLevel.Notice("Java 已添加", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.javaPage_javaAdded.CurrentValue(), NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"添加 Java 失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.javaPage_addJavaFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
     }
 
@@ -380,12 +397,13 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
         this.AsTopLevel().Notice(new NotificationOptions
         {
-            Content = $"已移除 Java：{java.DisplayName}",
+            Content = string.Format(CommonLanguageManager.Instance.javaPage_javaRemoved.CurrentValue(),
+                java.DisplayName),
             Type = NotificationType.Success,
             Expiration = TimeSpan.FromSeconds(3),
             OperateButtons =
             [
-                new OperateButtonEntry("撤销", _ =>
+                new OperateButtonEntry(CommonLanguageManager.Instance.titleBar_undo.CurrentValue(), _ =>
                 {
                     JavaRuntimeOperations.Restore(Data.ConfigEntry.JavaRuntimes, java);
                     Data.ConfigEntry.DefaultJavaRuntime = java;

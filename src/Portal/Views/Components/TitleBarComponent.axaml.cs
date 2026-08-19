@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Multiplayer;
+using Portal.Localization;
 using Portal.Views.Components.Operations.Account;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
@@ -117,7 +118,7 @@ public partial class TitleBarComponent : Grid
         var hostId = Root.TryGetHostId();
         _ = OverlayDrawer.ShowStandardAsync(new TaskDrawerView(), null, hostId, new DrawerOptions
         {
-            Title = "任务",
+            Title = CommonLanguageManager.Instance.titleBar_tasks.CurrentValue(),
             TitleCommand = new RelayCommand(OpenTaskTab),
             Buttons = DialogButton.None,
             MinWidth = 500,
@@ -186,12 +187,14 @@ public partial class TitleBarComponent : Grid
 
         Root.GetTopLevel().Notice(new NotificationOptions
         {
-            Content = $"已移除账户：{account.Name} ({account.DisplayAccountNote})",
+            Content = string.Format(
+                CommonLanguageManager.Instance.titleBar_removedAccount.CurrentValue(), account.Name,
+                account.DisplayAccountNote),
             Type = NotificationType.Success,
             Expiration = TimeSpan.FromSeconds(3),
             OperateButtons =
             [
-                new OperateButtonEntry("撤销", _ =>
+                new OperateButtonEntry(CommonLanguageManager.Instance.titleBar_undo.CurrentValue(), _ =>
                 {
                     Data.ConfigEntry.MinecraftAccounts.Add(account);
                     Data.ConfigEntry.UsingMinecraftMinecraftAccount = account;

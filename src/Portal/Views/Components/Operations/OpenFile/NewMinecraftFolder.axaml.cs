@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Data.Sqlite;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Components.Operations.OpenFile;
@@ -91,7 +92,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
     [ObservableProperty]
     public partial string FolderTypeDescription { get; set; }
-        = "请选择 Minecraft 文件夹";
+        = CommonLanguageManager.Instance.minecraft_folderSelectMinecraft.CurrentValue();
 
 
     [ObservableProperty] public partial bool IsFolderRecognized { get; set; }
@@ -128,7 +129,7 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
             NoExist = true;
             Contain = false;
             FolderTypeDescription =
-                "请选择一个存在的 Minecraft 文件夹";
+                CommonLanguageManager.Instance.minecraft_folderSelectExisting.CurrentValue();
             IsFolderRecognized = false;
 
             return;

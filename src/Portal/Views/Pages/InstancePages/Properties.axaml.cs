@@ -8,6 +8,7 @@ using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Bedrock;
+using Portal.Localization;
 using Portal.ViewModels;
 using TioUi.Common.Extensions;
 
@@ -106,7 +107,7 @@ public partial class Properties : Dsc, INotifyPropertyChanged
 
     public IReadOnlyList<GraphicsApiOption> GraphicsApiOptions { get; } = new[]
     {
-        new GraphicsApiOption(GraphicsApi.Default, "默认"),
+        new GraphicsApiOption(GraphicsApi.Default, CommonLanguageManager.Instance.renderer_default.CurrentValue()),
         new GraphicsApiOption(GraphicsApi.OpenGL, "OpenGL"),
         new GraphicsApiOption(GraphicsApi.Vulkan, "Vulkan")
     };

@@ -3,6 +3,7 @@ using Avalonia.Controls.Notifications;
 using MinecraftLaunch.Components.Provider;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -20,12 +21,15 @@ public static class BedrockResourceDownload
         var destination = await BedrockPackageImportDialog.SelectDestinationAsync(topLevel, target.Definition);
         if (destination is null) return;
 
-        var loading = new QuickDownloadLoadingDialogViewModel($"下载{target.Definition.DisplayName}");
+        var loading = new QuickDownloadLoadingDialogViewModel(
+            string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                target.Definition.DisplayName));
         var loadingDialog = OverlayDialog
             .ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
                 object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = $"下载{target.Definition.DisplayName}", Buttons = DialogButton.None,
+                Title = string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                    target.Definition.DisplayName), Buttons = DialogButton.None,
                 CanLightDismiss = false, CanResize = false
             });
         try
@@ -34,7 +38,9 @@ public static class BedrockResourceDownload
             var files = await new CurseforgeProvider().GetModFilesAsync(long.Parse(target.ProjectId));
             var file = files.Select(JavaResourceFileItem.From).OrderByDescending(item => item.Published)
                 .FirstOrDefault();
-            if (file is null) throw new InvalidDataException("未找到可下载的基岩版资源文件。");
+            if (file is null)
+                throw new InvalidDataException(
+                    CommonLanguageManager.Instance.bedrockResourceDownload_noFileFound.CurrentValue());
 
             loading.Close();
             await loadingDialog;
@@ -66,7 +72,8 @@ public static class BedrockResourceDownload
         var extension = Path.GetExtension(file.FileName);
         if (string.IsNullOrWhiteSpace(extension))
         {
-            topLevel.Notice("下载文件缺少基岩版包扩展名。", NotificationType.Error);
+            topLevel.Notice(CommonLanguageManager.Instance.bedrockResourceDownload_missingExtension.CurrentValue(),
+                NotificationType.Error);
             return;
         }
 
@@ -84,7 +91,9 @@ public static class BedrockResourceDownload
         catch (Exception exception)
         {
             Logger.Error(exception);
-            topLevel.Notice($"无法导入基岩版包：{exception.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.bedrockResourceDownload_importFailed.CurrentValue(),
+                exception.Message), NotificationType.Error);
         }
         finally
         {
@@ -105,7 +114,8 @@ public static class BedrockResourceDownload
         var extension = Path.GetExtension(file.FileName);
         if (string.IsNullOrWhiteSpace(extension))
         {
-            topLevel.Notice("下载文件缺少基岩版包扩展名。", NotificationType.Error);
+            topLevel.Notice(CommonLanguageManager.Instance.bedrockResourceDownload_missingExtension.CurrentValue(),
+                NotificationType.Error);
             return;
         }
 
@@ -121,13 +131,17 @@ public static class BedrockResourceDownload
             var inspection = new BedrockPackageImportService().Inspect(temporaryPath);
             await Task.Run(() => new BedrockPackageImportService().Import(temporaryPath, inspection,
                 destination.Instance, destination.WorldUserId));
-            topLevel.Notice($"{file.FileName} 已导入", NotificationType.Success);
+            topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.bedrockResourceDownload_imported.CurrentValue(), file.FileName),
+                NotificationType.Success);
             Logger.Info($"[BedrockDownload] Imported {file.FileName} into {destination.Instance.InstanceName}.");
         }
         catch (Exception exception)
         {
             Logger.Error(exception);
-            topLevel.Notice($"无法导入基岩版包：{exception.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.bedrockResourceDownload_importFailed.CurrentValue(),
+                exception.Message), NotificationType.Error);
         }
         finally
         {

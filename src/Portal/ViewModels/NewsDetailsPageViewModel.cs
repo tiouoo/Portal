@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.News;
+using Portal.Localization;
 
 namespace Portal.ViewModels;
 
@@ -44,7 +45,10 @@ public partial class NewsDetailsPageViewModel : ObservableObject
     [ObservableProperty] public partial bool IsCached { get; set; }
     [ObservableProperty] public partial DateTime? FetchedAt { get; set; }
 
-    public string EditionDisplay => Edition == NewsEdition.Java ? "Java" : "基岩";
+    public string EditionDisplay =>
+        Edition == NewsEdition.Bedrock
+            ? CommonLanguageManager.Instance.news_editionBedrock.CurrentValue()
+            : "Java";
     public bool HasVersion => !string.IsNullOrWhiteSpace(Version);
     public bool HasType => !string.IsNullOrWhiteSpace(Type);
 
@@ -61,7 +65,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
             if (detail == null)
             {
                 HasError = true;
-                ErrorText = "无法加载新闻正文，请检查网络连接后重试。";
+                ErrorText = CommonLanguageManager.Instance.news_loadFailed.CurrentValue();
                 return;
             }
 
@@ -79,7 +83,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         catch (Exception ex)
         {
             HasError = true;
-            ErrorText = $"加载失败：{ex.Message}";
+            ErrorText = string.Format(CommonLanguageManager.Instance.news_loadFailedWithMessage.CurrentValue(), ex.Message);
         }
         finally
         {
@@ -100,7 +104,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
             if (detail == null)
             {
                 HasError = true;
-                ErrorText = "刷新失败，请稍后重试。";
+                ErrorText = CommonLanguageManager.Instance.news_refreshFailed.CurrentValue();
                 return;
             }
 
@@ -116,7 +120,7 @@ public partial class NewsDetailsPageViewModel : ObservableObject
         catch (Exception ex)
         {
             HasError = true;
-            ErrorText = $"刷新失败：{ex.Message}";
+            ErrorText = string.Format(CommonLanguageManager.Instance.news_refreshFailedWithMessage.CurrentValue(), ex.Message);
         }
         finally
         {

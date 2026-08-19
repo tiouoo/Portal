@@ -3,6 +3,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -20,11 +21,12 @@ internal static class LogSharingInteraction
 
         if (string.IsNullOrWhiteSpace(document.Text))
         {
-            topLevel.Notice($"没有可分享的{displayName}", NotificationType.Warning);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.logShare_noShareable.CurrentValue(),
+                displayName), NotificationType.Warning);
             return;
         }
 
-        topLevel.Notice("分享中…");
+        topLevel.Notice(CommonLanguageManager.Instance.logShare_sharing.CurrentValue());
 
         LogShareResult[] results;
         try
@@ -33,7 +35,8 @@ internal static class LogSharingInteraction
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"分享失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.logShare_failedWithMessage.CurrentValue(),
+                ex.Message), NotificationType.Error);
             return;
         }
 
@@ -42,13 +45,14 @@ internal static class LogSharingInteraction
 
         if (succeeded.Length == 0)
         {
-            topLevel.Notice($"分享失败：{string.Join('；', failed.Select(f => $"{f.Platform}：{f.Error}"))}",
-                NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.logShare_failedWithMessage.CurrentValue(),
+                string.Join('；', failed.Select(f => $"{f.Platform}：{f.Error}"))), NotificationType.Error);
             return;
         }
 
         foreach (var f in failed)
-            topLevel.Notice($"{f.Platform} 分享失败：{f.Error}", NotificationType.Warning);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.logShare_platformFailed.CurrentValue(),
+                f.Platform, f.Error), NotificationType.Warning);
 
         await OverlayDialog.ShowCustomAsync<LogShareResultDialog, LogShareResultDialogViewModel, object>(
             new LogShareResultDialogViewModel(results), view.TryGetHostId(), new OverlayDialogOptions
@@ -67,7 +71,8 @@ internal static class LogSharingInteraction
 
         if (string.IsNullOrWhiteSpace(document.Text))
         {
-            topLevel.Notice($"没有可分析的{displayName}", NotificationType.Warning);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.logShare_noAnalyzable.CurrentValue(),
+                displayName), NotificationType.Warning);
             return;
         }
 

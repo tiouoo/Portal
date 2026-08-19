@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Module.Imaging;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -55,8 +56,14 @@ public partial class FavoritesPage : UserControl
     {
         var file = (await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "导入收藏夹", AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("Portal 收藏夹") { Patterns = ["*.json"] }]
+            Title = CommonLanguageManager.Instance.favorite_import.CurrentValue(), AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType(CommonLanguageManager.Instance.favorite_portalCollection.CurrentValue())
+                {
+                    Patterns = ["*.json"]
+                }
+            ]
         })).FirstOrDefault()?.TryGetLocalPath();
         if (!string.IsNullOrWhiteSpace(file)) ((FavoritesPageViewModel)DataContext!).Import(file);
     }
@@ -68,7 +75,11 @@ public partial class FavoritesPage : UserControl
         var result = await OverlayDialog.ShowCustomAsync<FavoriteCollectionEditDialog,
             FavoriteCollectionEditDialogViewModel, FavoriteCollectionEditResult>(
             new FavoriteCollectionEditDialogViewModel(viewModel.SelectedCollection), this.TryGetHostId(),
-            new OverlayDialogOptions { Title = "编辑收藏夹", Buttons = DialogButton.None, CanResize = false });
+            new OverlayDialogOptions
+            {
+                Title = CommonLanguageManager.Instance.favorite_edit.CurrentValue(), Buttons = DialogButton.None,
+                CanResize = false
+            });
         if (result is not null)
             viewModel.ApplyEdit(result);
     }
@@ -79,7 +90,8 @@ public partial class FavoritesPage : UserControl
             return;
         var file = await TopLevel.GetTopLevel(this)!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "导出收藏夹", SuggestedFileName = $"{viewModel.SelectedCollection.Name}.json",
+            Title = CommonLanguageManager.Instance.favorite_export.CurrentValue(),
+            SuggestedFileName = $"{viewModel.SelectedCollection.Name}.json",
             FileTypeChoices = [new FilePickerFileType("JSON") { Patterns = ["*.json"] }]
         });
         var path = file?.TryGetLocalPath();
@@ -93,8 +105,8 @@ public partial class FavoritesPageViewModel : ObservableObject
     private readonly FavoriteCollectionService _service = FavoriteCollectionService.Instance;
     [ObservableProperty] private string searchText = string.Empty;
     [ObservableProperty] private FavoriteCollection? selectedCollection;
-    [ObservableProperty] private string selectedEdition = "全部";
-    [ObservableProperty] private string selectedKind = "全部类型";
+    [ObservableProperty] private string selectedEdition = CommonLanguageManager.Instance.mod_all.CurrentValue();
+    [ObservableProperty] private string selectedKind = CommonLanguageManager.Instance.favorite_allKinds.CurrentValue();
 
     public FavoritesPageViewModel()
     {
@@ -104,9 +116,23 @@ public partial class FavoritesPageViewModel : ObservableObject
 
     public ObservableCollection<FavoriteCollection> Collections { get; } = [];
     public ObservableCollection<FavoriteResourceItem> Items { get; } = [];
-    public IReadOnlyList<string> Editions { get; } = ["全部", "Java 版", "基岩版"];
-    public IReadOnlyList<string> Kinds { get; } = ["全部类型", "模组", "整合包", "材质包", "光影包", "数据包", "存档"];
-    public bool ShowKindFilter => SelectedEdition != "基岩版";
+    public IReadOnlyList<string> Editions { get; } =
+    [
+        CommonLanguageManager.Instance.mod_all.CurrentValue(),
+        CommonLanguageManager.Instance.launch_javaEdition.CurrentValue(),
+        CommonLanguageManager.Instance.launch_bedrockEdition.CurrentValue()
+    ];
+    public IReadOnlyList<string> Kinds { get; } =
+    [
+        CommonLanguageManager.Instance.favorite_allKinds.CurrentValue(),
+        CommonLanguageManager.Instance.favorite_kindMod.CurrentValue(),
+        CommonLanguageManager.Instance.favorite_kindModpack.CurrentValue(),
+        CommonLanguageManager.Instance.favorite_kindResourcePack.CurrentValue(),
+        CommonLanguageManager.Instance.favorite_kindShaderPack.CurrentValue(),
+        CommonLanguageManager.Instance.favorite_kindDataPack.CurrentValue(),
+        CommonLanguageManager.Instance.favorite_kindSave.CurrentValue()
+    ];
+    public bool ShowKindFilter => SelectedEdition != CommonLanguageManager.Instance.launch_bedrockEdition.CurrentValue();
 
     partial void OnSelectedCollectionChanged(FavoriteCollection? value)
     {
@@ -132,7 +158,7 @@ public partial class FavoritesPageViewModel : ObservableObject
     [RelayCommand]
     private void AddCollection()
     {
-        var collection = new FavoriteCollection { Name = "新收藏夹" };
+        var collection = new FavoriteCollection { Name = CommonLanguageManager.Instance.favorite_newCollection.CurrentValue() };
         _service.Document.Collections.Add(collection);
         _service.Save();
         SelectedCollection = collection;
@@ -193,23 +219,37 @@ public partial class FavoritesPageViewModel : ObservableObject
 
     private bool Matches(FavoriteResource resource)
     {
+        var javaEdition = CommonLanguageManager.Instance.launch_javaEdition.CurrentValue();
+        var bedrockEdition = CommonLanguageManager.Instance.launch_bedrockEdition.CurrentValue();
+        var allKinds = CommonLanguageManager.Instance.favorite_allKinds.CurrentValue();
         return (string.IsNullOrWhiteSpace(SearchText) ||
                 resource.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                 resource.Summary.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
-               (SelectedEdition == "全部" || (SelectedEdition == "Java 版"
-                   ? resource.Edition == FavoriteEdition.Java
-                   : resource.Edition == FavoriteEdition.Bedrock)) &&
-               (SelectedEdition == "基岩版" || SelectedKind == "全部类型" ||
+               (SelectedEdition == CommonLanguageManager.Instance.mod_all.CurrentValue() ||
+                (SelectedEdition == javaEdition
+                    ? resource.Edition == FavoriteEdition.Java
+                    : resource.Edition == FavoriteEdition.Bedrock)) &&
+               (SelectedEdition == bedrockEdition || SelectedKind == allKinds ||
                 resource.Kind.ToString() == KindFromDisplay(SelectedKind).ToString());
     }
 
     private static JavaResourceKind KindFromDisplay(string value)
     {
+        var mod = CommonLanguageManager.Instance.favorite_kindMod.CurrentValue();
+        var modpack = CommonLanguageManager.Instance.favorite_kindModpack.CurrentValue();
+        var resourcePack = CommonLanguageManager.Instance.favorite_kindResourcePack.CurrentValue();
+        var shaderPack = CommonLanguageManager.Instance.favorite_kindShaderPack.CurrentValue();
+        var dataPack = CommonLanguageManager.Instance.favorite_kindDataPack.CurrentValue();
+        var save = CommonLanguageManager.Instance.favorite_kindSave.CurrentValue();
         return value switch
         {
-            "模组" => JavaResourceKind.Mod, "整合包" => JavaResourceKind.Modpack, "材质包" => JavaResourceKind.ResourcePack,
-            "光影包" => JavaResourceKind.ShaderPack,
-            "数据包" => JavaResourceKind.DataPack, "存档" => JavaResourceKind.Save, _ => JavaResourceKind.Modpack
+            _ when value == mod => JavaResourceKind.Mod,
+            _ when value == modpack => JavaResourceKind.Modpack,
+            _ when value == resourcePack => JavaResourceKind.ResourcePack,
+            _ when value == shaderPack => JavaResourceKind.ShaderPack,
+            _ when value == dataPack => JavaResourceKind.DataPack,
+            _ when value == save => JavaResourceKind.Save,
+            _ => JavaResourceKind.Modpack
         };
     }
 
@@ -298,5 +338,9 @@ public sealed class FavoriteResourceItem : FavoriteResource
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
 
     public string SourceText =>
-        $"{(Edition == FavoriteEdition.Java ? "Java 版" : "基岩版")}·{(Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth")}";
+        string.Format(CommonLanguageManager.Instance.favorite_sourceText.CurrentValue(),
+            Edition == FavoriteEdition.Java
+                ? CommonLanguageManager.Instance.launch_javaEdition.CurrentValue()
+                : CommonLanguageManager.Instance.launch_bedrockEdition.CurrentValue(),
+            Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth");
 }

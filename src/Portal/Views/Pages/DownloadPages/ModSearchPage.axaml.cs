@@ -13,6 +13,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Module.Imaging;
+using Portal.Localization;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -94,14 +95,17 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     public IReadOnlyList<ModSearchLoader> Loaders { get; } =
     [
-        new("全部加载器", ModLoaderType.Any), new("Forge", ModLoaderType.Forge), new("NeoForge", ModLoaderType.NeoForge),
+        new(CommonLanguageManager.Instance.mod_allLoaders.CurrentValue(), ModLoaderType.Any),
+        new("Forge", ModLoaderType.Forge), new("NeoForge", ModLoaderType.NeoForge),
         new("Fabric", ModLoaderType.Fabric), new("Quilt", ModLoaderType.Quilt)
     ];
 
     public IReadOnlyList<ModSearchSort> SortOptions { get; } =
     [
-        new("相关度", SearchSort.Relevance), new("热度", SearchSort.Popularity), new("最近更新", SearchSort.Updated),
-        new("最新发布", SearchSort.Newest)
+        new(CommonLanguageManager.Instance.mod_sortRelevance.CurrentValue(), SearchSort.Relevance),
+        new(CommonLanguageManager.Instance.mod_sortPopularity.CurrentValue(), SearchSort.Popularity),
+        new(CommonLanguageManager.Instance.mod_sortUpdated.CurrentValue(), SearchSort.Updated),
+        new(CommonLanguageManager.Instance.mod_sortNewest.CurrentValue(), SearchSort.Newest)
     ];
 
     [ObservableProperty] public partial ModSearchSource? SelectedSource { get; set; }
@@ -109,7 +113,8 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     [ObservableProperty] public partial ModSearchLoader? SelectedLoader { get; set; }
     [ObservableProperty] public partial ModSearchSort? SelectedSort { get; set; }
     [ObservableProperty] public partial string GameVersion { get; set; } = string.Empty;
-    [ObservableProperty] public partial string StatusText { get; set; } = "准备搜索...";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.modSearch_preparingSearch.CurrentValue();
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
@@ -225,7 +230,9 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         if (IsCurrent(request))
         {
             HasError = false;
-            StatusText = isDefaultSearch ? "正在获取热门模组..." : "正在搜索...";
+            StatusText = isDefaultSearch
+                ? CommonLanguageManager.Instance.modSearch_fetchingPopular.CurrentValue()
+                : CommonLanguageManager.Instance.modSearch_searching.CurrentValue();
         }
 
         try
@@ -242,7 +249,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         {
             if (!IsCurrent(request)) return;
             HasError = true;
-            StatusText = "网络错误，无法完成搜索。";
+            StatusText = CommonLanguageManager.Instance.modSearch_networkError.CurrentValue();
         }
     }
 
@@ -305,7 +312,9 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
         TotalCount = page.TotalCount;
         HasError = false;
-        StatusText = page.TotalCount == 0 ? "没有找到匹配的模组。" : $"共 {page.TotalCount} 个模组";
+        StatusText = page.TotalCount == 0
+            ? CommonLanguageManager.Instance.modSearch_noResults.CurrentValue()
+            : string.Format(CommonLanguageManager.Instance.modSearch_resultCount.CurrentValue(), page.TotalCount);
         OnPropertyChanged(nameof(HasResults));
     }
 
@@ -363,19 +372,27 @@ public sealed record ModSearchSource(string DisplayName, SearchSource Kind)
     public IReadOnlyList<ModSearchCategory> Categories { get; } = Kind is SearchSource.Modrinth
         ?
         [
-            new ModSearchCategory("全部", ""), new ModSearchCategory("冒险", "adventure"),
-            new ModSearchCategory("装备", "equipment"), new ModSearchCategory("诅咒", "cursed"),
-            new ModSearchCategory("生物魔法", "magic"), new ModSearchCategory("实用", "utility"),
-            new ModSearchCategory("优化", "optimization"), new ModSearchCategory("世界生成", "worldgen"),
-            new ModSearchCategory("科技", "technology")
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), ""),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catAdventure.CurrentValue(), "adventure"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catEquipment.CurrentValue(), "equipment"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catCursed.CurrentValue(), "cursed"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catMagic.CurrentValue(), "magic"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catUtility.CurrentValue(), "utility"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catOptimization.CurrentValue(), "optimization"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catWorldgen.CurrentValue(), "worldgen"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catTechnology.CurrentValue(), "technology")
         ]
         :
         [
-            new ModSearchCategory("全部", "0"), new ModSearchCategory("冒险与探索", "425"),
-            new ModSearchCategory("盔甲、武器与工具", "406"), new ModSearchCategory("魔法", "5191"),
-            new ModSearchCategory("科技", "412"), new ModSearchCategory("红石", "4558"),
-            new ModSearchCategory("地图与信息", "423"), new ModSearchCategory("性能优化", "6821"),
-            new ModSearchCategory("API 与库", "421")
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), "0"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catAdventureExploration.CurrentValue(), "425"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catArmorWeaponsTools.CurrentValue(), "406"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catMagic.CurrentValue(), "5191"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catTechnology.CurrentValue(), "412"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catRedstone.CurrentValue(), "4558"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catMapsInfo.CurrentValue(), "423"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catPerformance.CurrentValue(), "6821"),
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_catApiLibraries.CurrentValue(), "421")
         ];
 }
 
@@ -389,7 +406,8 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Summary = item.Summary;
         var timestamp = sort is SearchSort.Newest ? item.DateModified : item.Updated;
         IconUrl = item.IconUrl;
-        Metadata = $"{RelativeTime.Format(timestamp)}·{item.DownloadCount:N0} 下载";
+        Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
+            RelativeTime.Format(timestamp), item.DownloadCount);
         Target = new ModDetailsTarget(ModDetailsSource.Modrinth, item.ProjectId, gameVersion, loader);
         IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
@@ -401,7 +419,8 @@ public sealed partial class ModSearchResultItem : ObservableObject
         FriendlyName = WikiEntries.FindChineseName(item.Slug) ?? item.Name;
         Summary = item.Summary;
         IconUrl = item.IconUrl;
-        Metadata = $"{RelativeTime.Format(item.DateModified)}·{item.DownloadCount:N0} 下载";
+        Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
+            RelativeTime.Format(item.DateModified), item.DownloadCount);
         Target = new ModDetailsTarget(ModDetailsSource.CurseForge, item.Id.ToString(), gameVersion, loader);
         IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }

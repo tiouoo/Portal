@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 using Minecraft = Portal.Core.Minecraft;
 
@@ -24,11 +25,15 @@ public class SelectAccountTypeViewModel : ObservableObject, IDialogContext
 
     public SelectAccountTypeViewModel()
     {
-        AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Offline, "离线模式"));
-        AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Microsoft, "微软账户"));
-        AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Yggdrasil, "外置登录"));
+        AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Offline,
+            CommonLanguageManager.Instance.account_offlineMode.CurrentValue()));
+        AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Microsoft,
+            CommonLanguageManager.Instance.account_microsoft.CurrentValue()));
+        AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Yggdrasil,
+            CommonLanguageManager.Instance.account_yggdrasil.CurrentValue()));
         if (!OperatingSystem.IsMacOS())
-            AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Bedrock, "关联Xbox"));
+            AuthServers.Add(new Minecraft.Classes.AuthServer(AccountType.Bedrock,
+                CommonLanguageManager.Instance.account_linkXbox.CurrentValue()));
 
         NextCommand = new RelayCommand(Next, CanNext);
         CancelCommand = new RelayCommand(Cancel);

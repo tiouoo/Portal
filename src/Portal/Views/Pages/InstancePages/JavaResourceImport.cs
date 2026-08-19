@@ -5,6 +5,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -72,12 +73,15 @@ internal static class JavaResourceImport
             var result = await OverlayDialog.ShowStandardAsync(new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = $"确定要导入选中的 {files.Length} 个{resourceName}吗？",
+                Text = string.Format(CommonLanguageManager.Instance.javaResourceImport_confirmImport.CurrentValue(),
+                    files.Length, resourceName),
                 TextWrapping = TextWrapping.Wrap
             }, null, owner?.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = $"导入{resourceName}", Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "导入", OverrideNoButtonText = "取消", CanResize = false
+                Title = string.Format(CommonLanguageManager.Instance.javaResourceImport_importTitle.CurrentValue(),
+                    resourceName), Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = CommonLanguageManager.Instance.javaResourceImport_import.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(), CanResize = false
             });
             if (result != DialogResult.Yes)
                 return;
@@ -107,7 +111,10 @@ internal static class JavaResourceImport
             await refresh();
         var type = succeeded == files.Length ? NotificationType.Success :
             succeeded == 0 ? NotificationType.Error : NotificationType.Warning;
-        var message = succeeded == files.Length ? "导入成功" : succeeded == 0 ? "导入失败" : "部分导入成功";
+        var message = succeeded == files.Length
+            ? CommonLanguageManager.Instance.javaResourceImport_importSuccess.CurrentValue()
+            : succeeded == 0 ? CommonLanguageManager.Instance.javaResourceImport_importFailed.CurrentValue()
+            : CommonLanguageManager.Instance.javaResourceImport_partialSuccess.CurrentValue();
         topLevel.Notice(message, type);
     }
 
@@ -122,7 +129,8 @@ internal static class JavaResourceImport
             {
                 var target = Path.GetFullPath(Path.Combine(temporaryPath, entry.FullName));
                 if (!target.StartsWith(temporaryPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("存档压缩包包含无效路径。");
+                    throw new InvalidDataException(
+                        CommonLanguageManager.Instance.javaResourceImport_invalidSaveArchivePath.CurrentValue());
                 if (string.IsNullOrEmpty(entry.Name))
                 {
                     Directory.CreateDirectory(target);
@@ -139,7 +147,8 @@ internal static class JavaResourceImport
                 : Directory.EnumerateDirectories(temporaryPath)
                     .SingleOrDefault(path => File.Exists(Path.Combine(path, "level.dat")));
             if (root == null)
-                throw new InvalidDataException("压缩包中未找到有效的 Minecraft 存档。");
+                throw new InvalidDataException(
+                    CommonLanguageManager.Instance.javaResourceImport_saveNotFound.CurrentValue());
             Directory.CreateDirectory(savesPath);
             var name = Path.GetFileNameWithoutExtension(archivePath);
             var targetPath = Path.Combine(savesPath, name);

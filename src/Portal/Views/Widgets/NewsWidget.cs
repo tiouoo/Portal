@@ -7,6 +7,7 @@ using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
+using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Components;
 using Portal.Views.Pages;
@@ -74,7 +75,7 @@ public sealed class NewsWidget : IWidgetContent
         {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Text = "暂无新闻", MaxLines = 1
+            Text = CommonLanguageManager.Instance.news_noNews.CurrentValue(), MaxLines = 1
         };
         _emptyText.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("InnerForegroundColor"));
 
@@ -295,7 +296,8 @@ public sealed class NewsWidget : IWidgetContent
         _titleText.Text = entry.Title;
         _descText.Text = string.IsNullOrEmpty(entry.ShortText) ? string.Empty : entry.ShortText + "...";
         _dateText.Text = entry.RelativeDate;
-        _editionText.Text = entry.Edition == NewsEdition.Java ? "Java" : "基岩";
+        _editionText.Text = entry.Edition == NewsEdition.Java ? "Java" :
+            CommonLanguageManager.Instance.news_editionBedrock.CurrentValue();
         _typeText.Text = entry.Type;
         _typeTag.IsVisible = !string.IsNullOrEmpty(entry.Type);
     }

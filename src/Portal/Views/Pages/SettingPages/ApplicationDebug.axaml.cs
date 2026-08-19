@@ -3,6 +3,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Ipc;
+using Portal.Localization;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -19,7 +20,9 @@ public partial class ApplicationDebug : Dsc
     }
 
     public bool CanRegisterProtocol => ProtocolRegistration.IsSupported;
-    public string RegisterProtocolButtonText => OperatingSystem.IsWindows() ? "写入注册表" : "注册协议";
+    public string RegisterProtocolButtonText => OperatingSystem.IsWindows()
+        ? CommonLanguageManager.Instance.appDebug_writeRegistry.CurrentValue()
+        : CommonLanguageManager.Instance.appDebug_registerProtocol.CurrentValue();
     public Logger.LogLevel[] LogLevels { get; } = Enum.GetValues<Logger.LogLevel>();
 
     private async void RegisterProtocol_OnClick(object? sender, RoutedEventArgs e)
@@ -28,15 +31,19 @@ public partial class ApplicationDebug : Dsc
         try
         {
             await ProtocolRegistration.RegisterAsync();
-            topLevel?.Notice("portal:// 协议注册成功", NotificationType.Success);
+            topLevel?.Notice(CommonLanguageManager.Instance.appDebug_registerSuccess.CurrentValue(),
+                NotificationType.Success);
         }
         catch (OperationCanceledException)
         {
-            topLevel?.Notice("已取消：写入注册表需要管理员权限", NotificationType.Warning);
+            topLevel?.Notice(CommonLanguageManager.Instance.appDebug_registerCancelled.CurrentValue(),
+                NotificationType.Warning);
         }
         catch (Exception exception)
         {
-            topLevel?.Notice($"portal:// 协议注册失败：{exception.Message}", NotificationType.Error);
+            topLevel?.Notice(string.Format(
+                CommonLanguageManager.Instance.appDebug_registerFailed.CurrentValue(), exception.Message),
+                NotificationType.Error);
         }
     }
 }

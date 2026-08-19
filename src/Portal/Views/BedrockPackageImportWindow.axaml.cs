@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Module.Initialize;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -45,7 +46,7 @@ public partial class BedrockPackageImportWindow : TioWindow
             return;
 
         viewModel.IsBusy = true;
-        viewModel.StatusText = "正在读取包和基岩版实例...";
+        viewModel.StatusText = CommonLanguageManager.Instance.bedrockPackageImportWindow_reading.CurrentValue();
         try
         {
             var inspectionTask = Task.Run(() => new BedrockPackageImportService().Inspect(archivePath));
@@ -56,7 +57,9 @@ public partial class BedrockPackageImportWindow : TioWindow
         catch (Exception exception)
         {
             Logger.Error(exception);
-            viewModel.StatusText = $"初始化失败：{exception.Message}";
+            viewModel.StatusText = string.Format(
+                CommonLanguageManager.Instance.bedrockPackageImportWindow_initFailed.CurrentValue(),
+                exception.Message);
             viewModel.IsBusy = false;
         }
     }
@@ -122,7 +125,9 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
             ViewModel = new BedrockPackageImportDialogViewModel(
                 new BedrockPackageInspection(BedrockPackageArchiveType.Mcpack,
                     Path.GetFileNameWithoutExtension(archivePath), []));
-            StatusText = $"无法读取此文件：{exception.Message}";
+            StatusText = string.Format(
+                CommonLanguageManager.Instance.bedrockPackageImportWindow_cannotRead.CurrentValue(),
+                exception.Message);
         }
     }
 
@@ -137,20 +142,27 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
 
     public BedrockPackageImportDialogViewModel ViewModel { get; }
     public string ImportTitle => GetImportTitle(_inspection);
-    public string WindowTitle => $"Portal - {ImportTitle}";
+    public string WindowTitle =>
+        string.Format(CommonLanguageManager.Instance.bedrockPackageImportWindow_windowTitle.CurrentValue(),
+            ImportTitle);
 
     public string PackageDescription =>
-        string.IsNullOrWhiteSpace(PrimaryContent?.Description) ? "暂无描述" : PrimaryContent!.Description.Trim();
+        string.IsNullOrWhiteSpace(PrimaryContent?.Description)
+            ? CommonLanguageManager.Instance.bedrockServers_noDescription.CurrentValue()
+            : PrimaryContent!.Description.Trim();
 
     public bool HasStatus => !string.IsNullOrWhiteSpace(StatusText);
-    public string ImportButtonText => IsBusy ? "导入中" : "导入";
+    public string ImportButtonText => IsBusy
+        ? CommonLanguageManager.Instance.bedrockPackageImportWindow_importing.CurrentValue()
+        : CommonLanguageManager.Instance.bedrockPackageImportWindow_import.CurrentValue();
     public bool CanImport => !IsBusy && _inspection != null && ViewModel.CanImport;
     public bool IsInitialized { get; }
 
     public BedrockPackageContent? PrimaryContent =>
         _inspection?.Contents.FirstOrDefault();
 
-    public string PackageName => PrimaryContent?.Name ?? _inspection?.DisplayName ?? "暂无信息";
+    public string PackageName => PrimaryContent?.Name ?? _inspection?.DisplayName ??
+                                 CommonLanguageManager.Instance.bedrockPackageImportWindow_noInfo.CurrentValue();
 
     public string PackageVersionText
     {
@@ -166,13 +178,15 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
             {
                 true when hasEngine => $"{version} ({engine})",
                 true => version,
-                _ => hasEngine ? engine : "暂无版本信息"
+                _ => hasEngine ? engine : CommonLanguageManager.Instance.bedrockPackageImportWindow_noVersion.CurrentValue()
             };
         }
     }
 
     public string PackageAuthorsText =>
-        PrimaryContent?.Authors is { Count: > 0 } authors ? $"{string.Join("、", authors)}" : "暂无作者信息";
+        PrimaryContent?.Authors is { Count: > 0 } authors
+            ? $"{string.Join("、", authors)}"
+            : CommonLanguageManager.Instance.bedrockPackageImportWindow_noAuthors.CurrentValue();
 
     public Bitmap? PackageIcon => _packageIcon ??= CreateIcon(PrimaryContent?.IconData);
     public bool HasPackageIcon => PackageIcon != null;
@@ -202,20 +216,24 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
     private static string GetImportTitle(BedrockPackageInspection? inspection)
     {
         if (inspection == null)
-            return "导入基岩版包";
+            return CommonLanguageManager.Instance.bedrockPackageImport_title.CurrentValue();
         if (inspection.ArchiveType == BedrockPackageArchiveType.Mcworld)
-            return "导入世界存档";
+            return CommonLanguageManager.Instance.bedrockPackageImportWindow_importWorld.CurrentValue();
 
         var contentTypes = inspection.Contents.Select(content => content.Type).Distinct().ToArray();
         if (contentTypes.Length != 1)
-            return "导入附加包";
+            return CommonLanguageManager.Instance.bedrockPackageImportWindow_importAddon.CurrentValue();
         return contentTypes[0] switch
         {
-            BedrockPackageContentType.ResourcePack => "导入资源包",
-            BedrockPackageContentType.BehaviorPack => "导入行为包",
-            BedrockPackageContentType.SkinPack => "导入皮肤包",
-            BedrockPackageContentType.WorldTemplate => "导入世界模板",
-            _ => "导入基岩版包"
+            BedrockPackageContentType.ResourcePack =>
+                CommonLanguageManager.Instance.bedrockPackageImportWindow_importResourcePack.CurrentValue(),
+            BedrockPackageContentType.BehaviorPack =>
+                CommonLanguageManager.Instance.bedrockPackageImportWindow_importBehaviorPack.CurrentValue(),
+            BedrockPackageContentType.SkinPack =>
+                CommonLanguageManager.Instance.bedrockPackageImportWindow_importSkinPack.CurrentValue(),
+            BedrockPackageContentType.WorldTemplate =>
+                CommonLanguageManager.Instance.bedrockPackageImportWindow_importWorldTemplate.CurrentValue(),
+            _ => CommonLanguageManager.Instance.bedrockPackageImport_title.CurrentValue()
         };
     }
 
@@ -231,18 +249,20 @@ public partial class BedrockPackageImportWindowViewModel : ObservableObject
             return false;
 
         IsBusy = true;
-        StatusText = "正在导入，请稍候...";
+        StatusText = CommonLanguageManager.Instance.bedrockPackageImportWindow_importingWait.CurrentValue();
         try
         {
             await Task.Run(() => new BedrockPackageImportService().Import(_archivePath, _inspection,
                 ViewModel.SelectedInstance.Instance, ViewModel.SelectedWorldUserId));
-            StatusText = "导入完成";
+            StatusText = CommonLanguageManager.Instance.bedrockPackageImportWindow_importComplete.CurrentValue();
             return true;
         }
         catch (Exception exception)
         {
             Logger.Error(exception);
-            StatusText = $"导入失败：{exception.Message}";
+            StatusText = string.Format(
+                CommonLanguageManager.Instance.bedrockPackageImportWindow_importFailed.CurrentValue(),
+                exception.Message);
             return false;
         }
         finally

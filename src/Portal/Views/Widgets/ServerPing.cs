@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Widgets;
@@ -33,10 +34,10 @@ public sealed class ServerPing
 
     public string StatusText => State switch
     {
-        ServerPingState.Pinging => "检测中",
-        ServerPingState.Online => "在线",
-        ServerPingState.Offline => "无法连接",
-        _ => "未检测"
+        ServerPingState.Pinging => CommonLanguageManager.Instance.servers_pinging.CurrentValue(),
+        ServerPingState.Online => CommonLanguageManager.Instance.servers_online.CurrentValue(),
+        ServerPingState.Offline => CommonLanguageManager.Instance.servers_cannotConnect.CurrentValue(),
+        _ => CommonLanguageManager.Instance.servers_statusUnknown.CurrentValue()
     };
 
     public IBrush StatusBrush => State switch
@@ -58,7 +59,9 @@ public sealed class ServerPing
         _ => PingGoodBrush
     };
 
-    public string PlayersText => HasPlayers ? $"{_onlinePlayers} / {_maxPlayers} 人" : string.Empty;
+    public string PlayersText => HasPlayers
+        ? string.Format(CommonLanguageManager.Instance.servers_players.CurrentValue(), _onlinePlayers, _maxPlayers)
+        : string.Empty;
 
     public bool HasPlayers { get; private set; }
 
@@ -128,7 +131,8 @@ public sealed class ServerPing
         }
         catch (Exception exception)
         {
-            Logger.Warning($"检测服务器状态失败：{address}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.servers_pingFailed.CurrentValue(), address,
+                Environment.NewLine, exception));
             if (!cancellationToken.IsCancellationRequested && ReferenceEquals(_cts, owner))
                 SetState(ServerPingState.Offline);
         }

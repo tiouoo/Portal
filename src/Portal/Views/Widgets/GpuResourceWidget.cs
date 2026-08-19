@@ -1,5 +1,6 @@
 using Portal.Core.Module.Widgets;
 using Portal.Core.Services.SystemResources;
+using Portal.Localization;
 
 namespace Portal.Views.Widgets;
 
@@ -29,6 +30,6 @@ public sealed class GpuResourceWidget : ResourceWidgetBase
             ProgressValue = 0;
         }
 
-        SecondaryText = snapshot.GpuName ?? "不可用";
+        SecondaryText = snapshot.GpuName ?? CommonLanguageManager.Instance.widgets_unavailable.CurrentValue();
     }
 }

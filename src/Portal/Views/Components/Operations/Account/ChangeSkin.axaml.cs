@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiteSkinViewer3D.Shared.Enums;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -94,7 +95,8 @@ public partial class ChangeSkin : UserControl
 
     private void OnSkinViewerRenderingFailed(object? sender, Exception e)
     {
-        TopLevel.GetTopLevel(this)?.Notice("皮肤渲染失败", NotificationType.Error);
+        TopLevel.GetTopLevel(this)?.Notice(CommonLanguageManager.Instance.account_skinRenderFailed.CurrentValue(),
+            NotificationType.Error);
     }
 }
 
@@ -141,15 +143,20 @@ public static class ChangeSkinDialog
         try
         {
             File.Delete(skinPath);
-            Logger.Debug($"已删除皮肤预览临时文件：{skinPath}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.account_skinPreviewTempDeleted.CurrentValue(),
+                skinPath));
         }
         catch (IOException exception)
         {
-            Logger.Warning($"删除皮肤预览临时文件失败：{skinPath}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(
+                LogLanguageManager.Instance.account_skinPreviewTempDeleteFailed.CurrentValue(), skinPath,
+                Environment.NewLine, exception));
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Warning($"没有权限删除皮肤预览临时文件：{skinPath}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(
+                LogLanguageManager.Instance.account_skinPreviewTempDeleteDenied.CurrentValue(), skinPath,
+                Environment.NewLine, exception));
         }
 
         return result;
@@ -172,7 +179,9 @@ public partial class ChangeSkinViewModel : ObservableObject, IDialogContext
 
     [ObservableProperty] public partial bool IsViewLocked { get; set; } = true;
 
-    public string Title => IsPreview ? "预览皮肤" : "更换皮肤";
+    public string Title => IsPreview
+        ? CommonLanguageManager.Instance.account_previewSkin.CurrentValue()
+        : CommonLanguageManager.Instance.account_changeSkin.CurrentValue();
 
     public ICommand ConfirmCommand { get; }
     public ICommand CancelCommand { get; }

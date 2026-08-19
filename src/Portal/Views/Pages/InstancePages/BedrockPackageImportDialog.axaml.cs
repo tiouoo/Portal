@@ -8,6 +8,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -43,11 +44,14 @@ public partial class BedrockPackageImportDialog : UserControl
         {
             await Task.Run(() => new BedrockPackageImportService().Import(archivePath, inspection, result.Instance,
                 result.WorldUserId));
-            topLevel.Notice($"{Path.GetFileName(archivePath)} 已导入", NotificationType.Success);
+            topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.bedrockPackageImport_imported.CurrentValue(),
+                Path.GetFileName(archivePath)), NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"导入失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.bedrockPackageImport_failed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
     }
 
@@ -65,7 +69,8 @@ public partial class BedrockPackageImportDialog : UserControl
             BedrockPackageImportDialogViewModel, BedrockPackageImportDialogResult>(viewModel, topLevel.TryGetHostId(),
             new OverlayDialogOptions
             {
-                Title = "导入基岩版包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.bedrockPackageImport_title.CurrentValue(),
+                Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
             });
     }
 }
@@ -101,16 +106,26 @@ public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDi
     public bool CanImport =>
         SelectedInstance != null && (!RequiresUserId || !string.IsNullOrWhiteSpace(SelectedWorldUserId));
 
-    public string PackageDescription => _definition is not null ? $"将下载并安装{_definition.DisplayName}" :
-        RequiresUserId ? $"{_inspection!.DisplayName}（存档）" :
-        $"{_inspection!.DisplayName}（{string.Join("、", _inspection.Contents.Select(content => content.Type switch
-        {
-            BedrockPackageContentType.ResourcePack => "资源包",
-            BedrockPackageContentType.BehaviorPack => "行为包",
-            BedrockPackageContentType.SkinPack => "皮肤包",
-            BedrockPackageContentType.WorldTemplate => "世界模板",
-            _ => "基岩版包"
-        }).Distinct())}）";
+    public string PackageDescription => _definition is not null
+        ? string.Format(CommonLanguageManager.Instance.bedrockPackageImport_downloadAndInstall.CurrentValue(),
+            _definition.DisplayName)
+        : RequiresUserId
+            ? string.Format(CommonLanguageManager.Instance.bedrockPackageImport_displayNameWithSave.CurrentValue(),
+                _inspection!.DisplayName)
+            : string.Format(CommonLanguageManager.Instance.bedrockPackageImport_displayNameWithContents.CurrentValue(),
+                _inspection!.DisplayName,
+                string.Join("、", _inspection.Contents.Select(content => content.Type switch
+                {
+                    BedrockPackageContentType.ResourcePack =>
+                        CommonLanguageManager.Instance.resourceList_packNameResourcePack.CurrentValue(),
+                    BedrockPackageContentType.BehaviorPack =>
+                        CommonLanguageManager.Instance.resourceList_packNameBehaviorPack.CurrentValue(),
+                    BedrockPackageContentType.SkinPack =>
+                        CommonLanguageManager.Instance.resourceList_packNameSkinPack.CurrentValue(),
+                    BedrockPackageContentType.WorldTemplate =>
+                        CommonLanguageManager.Instance.bedrockPackageImport_worldTemplate.CurrentValue(),
+                    _ => CommonLanguageManager.Instance.bedrockPackageImport_bedrockPackage.CurrentValue()
+                }).Distinct()));
 
     [ObservableProperty] public partial BedrockPackageInstanceItem? SelectedInstance { get; set; }
     [ObservableProperty] public partial string? SelectedWorldUserId { get; set; }

@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Portal.Localization;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -32,7 +33,8 @@ public partial class MultiplayerContentPage : UserControl
             return;
 
         await clipboard.SetTextAsync(_viewModel.CurrentRoomCode);
-        topLevel.Notice("房间码已复制", NotificationType.Success);
+        topLevel.Notice(CommonLanguageManager.Instance.multiplayer_roomCodeCopied.CurrentValue(),
+            NotificationType.Success);
     }
 
     private async void PasteJoinCode_OnClick(object? sender, RoutedEventArgs e)
@@ -47,7 +49,8 @@ public partial class MultiplayerContentPage : UserControl
             new MultiplayerPortDialogViewModel(_viewModel.ManualJavaPort), this.GetTopLevel().TryGetHostId(),
             new OverlayDialogOptions
             {
-                Title = "请输入局域网端口", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.multiplayer_enterLanPort.CurrentValue(), Buttons = DialogButton.None,
+                CanLightDismiss = false, CanResize = false
             });
         if (result is not null) await _viewModel.CreateJavaRoomFromPortAsync(result);
     }

@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -81,7 +82,10 @@ internal static class BedrockResourceImport
 
         if (validFiles.Count == 0)
         {
-            var message = mismatched > 0 ? $"所选文件不是{resourceName}" : "导入失败";
+            var message = mismatched > 0
+                ? string.Format(CommonLanguageManager.Instance.bedrockResourceImport_notResource.CurrentValue(),
+                    resourceName)
+                : CommonLanguageManager.Instance.bedrockResourceImport_importFailed.CurrentValue();
             topLevel.Notice(message, NotificationType.Error);
             return;
         }
@@ -91,12 +95,18 @@ internal static class BedrockResourceImport
             var result = await OverlayDialog.ShowStandardAsync(new TextBlock
                 {
                     Margin = new Thickness(24),
-                    Text = $"确定要导入选中的 {validFiles.Count} 个{resourceName}吗？", TextWrapping = TextWrapping.Wrap
+                    Text = string.Format(
+                        CommonLanguageManager.Instance.bedrockResourceImport_confirmImport.CurrentValue(),
+                        validFiles.Count, resourceName), TextWrapping = TextWrapping.Wrap
                 },
                 null, owner.TryGetHostId(), new OverlayDialogOptions
                 {
-                    Title = $"导入{resourceName}", Buttons = DialogButton.YesNo,
-                    OverrideYesButtonText = "导入", OverrideNoButtonText = "取消", CanResize = false
+                    Title = string.Format(
+                        CommonLanguageManager.Instance.bedrockResourceImport_importTitle.CurrentValue(),
+                        resourceName), Buttons = DialogButton.YesNo,
+                    OverrideYesButtonText = CommonLanguageManager.Instance.bedrockResourceImport_import.CurrentValue(),
+                    OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
+                    CanResize = false
                 });
             if (result != DialogResult.Yes) return;
         }
@@ -116,7 +126,9 @@ internal static class BedrockResourceImport
 
         if (succeeded > 0) await refresh();
         var allSucceeded = succeeded == validFiles.Count && mismatched == 0;
-        topLevel.Notice(allSucceeded ? "导入成功" : succeeded == 0 ? "导入失败" : "部分导入成功",
+        topLevel.Notice(allSucceeded ? CommonLanguageManager.Instance.bedrockResourceImport_importSuccess.CurrentValue()
+                : succeeded == 0 ? CommonLanguageManager.Instance.bedrockResourceImport_importFailed.CurrentValue()
+                : CommonLanguageManager.Instance.bedrockResourceImport_partialSuccess.CurrentValue(),
             allSucceeded ? NotificationType.Success :
             succeeded == 0 ? NotificationType.Error : NotificationType.Warning);
         Logger.Info(

@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
 
@@ -40,7 +41,7 @@ internal partial class LogShareResultDialog : UserControl
         if (topLevel is null)
             return;
         await topLevel.Clipboard!.SetTextAsync(text);
-        topLevel.Notice("链接已复制", NotificationType.Success);
+        topLevel.Notice(CommonLanguageManager.Instance.logShare_linkCopied.CurrentValue(), NotificationType.Success);
     }
 
     private async void Open_OnClick(object? sender, RoutedEventArgs e)
@@ -94,7 +95,9 @@ internal sealed class LogShareResultItemViewModel
 
     public bool HasUrl => Url is not null;
     public bool HasError => Error is not null;
-    public string StatusText => IsSuccess ? "分享成功" : "分享失败";
+    public string StatusText => IsSuccess
+        ? CommonLanguageManager.Instance.logShare_shared.CurrentValue()
+        : CommonLanguageManager.Instance.logShare_failed.CurrentValue();
     public IBrush StatusColor => IsSuccess ? SuccessBrush : ErrorBrush;
 
     public static LogShareResultItemViewModel From(LogShareResult result)

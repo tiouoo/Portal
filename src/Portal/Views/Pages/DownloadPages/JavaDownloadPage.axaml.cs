@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -39,7 +40,9 @@ public partial class JavaDownloadPage : UserControl
                 new JavaVersionDialogViewModel(item), hostId,
                 new OverlayDialogOptions
                 {
-                    Title = $"选择 {item.DisplayName} 版本", Buttons = DialogButton.None,
+                    Title = string.Format(CommonLanguageManager.Instance.javaDownload_selectVersion.CurrentValue(),
+                        item.DisplayName),
+                    Buttons = DialogButton.None,
                     CanLightDismiss = false, CanResize = false
                 });
         if (selected is null) return;
@@ -54,12 +57,15 @@ public partial class JavaDownloadPage : UserControl
             var result = await OverlayDialog.ShowStandardAsync(new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = $"{selected.Vendor} Java {selected.MajorVersion} 已安装，是否再次安装？",
+                Text = string.Format(CommonLanguageManager.Instance.javaDownload_duplicateText.CurrentValue(),
+                    selected.Vendor, selected.MajorVersion),
                 TextWrapping = TextWrapping.Wrap
             }, null, hostId, new OverlayDialogOptions
             {
-                Title = "Java 已安装", Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "再次安装", OverrideNoButtonText = "取消",
+                Title = CommonLanguageManager.Instance.javaDownload_alreadyInstalledTitle.CurrentValue(),
+                Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = CommonLanguageManager.Instance.javaDownload_reinstall.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false, CanResize = false
             });
             if (result != DialogResult.Yes) return;
@@ -72,14 +78,17 @@ public partial class JavaDownloadPage : UserControl
     {
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"安装 Java {version.Vendor} {version.MajorVersion}",
-            Description = "正在准备下载",
+            Name = string.Format(CommonLanguageManager.Instance.javaDownload_installTaskName.CurrentValue(),
+                version.Vendor, version.MajorVersion),
+            Description = CommonLanguageManager.Instance.javaDownload_preparingDownload.CurrentValue(),
             Progress = 0,
             Actions =
             [
                 new TaskActionDefinition
                 {
-                    Name = "取消安装", Description = "取消当前 Java 安装", IconKey = "Cancel",
+                    Name = CommonLanguageManager.Instance.minecraft_cancelInstall.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.javaDownload_cancelInstallDescription.CurrentValue(),
+                    IconKey = "Cancel",
                     ExecuteAsync = (managedTask, _) =>
                     {
                         managedTask.RequestCancellation();
@@ -91,7 +100,7 @@ public partial class JavaDownloadPage : UserControl
             ]
         }, async context =>
         {
-            context.SetRunning("正在下载 Java");
+            context.SetRunning(CommonLanguageManager.Instance.javaDownload_downloadingJava.CurrentValue());
             var runtime = await JavaDistributionService.InstallAsync(version, ConfigPath.JavaRuntimesPath,
                 ConfigPath.TempFolderPath, progress => ReportInstallProgress(context, progress),
                 context.CancellationToken);
@@ -101,7 +110,8 @@ public partial class JavaDownloadPage : UserControl
                 Data.ConfigEntry.DefaultJavaRuntime ??= runtime;
             });
             context.ReportProgress(1);
-            context.SetDescription($"Java {version.MajorVersion} 已安装");
+            context.SetDescription(string.Format(
+                CommonLanguageManager.Instance.javaDownload_installed.CurrentValue(), version.MajorVersion));
         });
         task.Start();
         _ = ObserveInstallAsync(task, topLevel, version);
@@ -117,7 +127,7 @@ public partial class JavaDownloadPage : UserControl
             {
                 context.ReportProgress(progress.Fraction);
                 context.SetDescription(progress.SpeedBytesPerSecond > 0
-                    ? $"{progress.Stage}，下载速度：{DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true)}"
+                    ? $"{progress.Stage}{string.Format(CommonLanguageManager.Instance.minecraft_javaInstallSpeed.CurrentValue(), DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true))}"
                     : progress.Stage);
             }
             catch (InvalidOperationException)
@@ -140,8 +150,10 @@ public partial class JavaDownloadPage : UserControl
         if (topLevel is null) return;
         Dispatcher.UIThread.Post(() => topLevel.Notice(
             task.Status == ManagedTaskStatus.Completed
-                ? $"Java {version.MajorVersion} 安装完成"
-                : $"Java {version.MajorVersion} 安装失败",
+                ? string.Format(CommonLanguageManager.Instance.javaDownload_installComplete.CurrentValue(),
+                    version.MajorVersion)
+                : string.Format(CommonLanguageManager.Instance.javaDownload_installFailed.CurrentValue(),
+                    version.MajorVersion),
             task.Status == ManagedTaskStatus.Completed ? NotificationType.Success : NotificationType.Error));
     }
 }
@@ -151,7 +163,9 @@ public sealed class JavaDistributionItem(JavaDistribution distribution)
     public string DisplayName => distribution.DisplayName;
 
     public string VersionSummary =>
-        $"可用 Java {string.Join(", ", distribution.Versions.Select(x => x.MajorVersion).Distinct().OrderByDescending(x => x))}";
+        string.Format(CommonLanguageManager.Instance.javaDownload_availableJava.CurrentValue(),
+            string.Join(", ",
+                distribution.Versions.Select(x => x.MajorVersion).Distinct().OrderByDescending(x => x)));
 
     public IReadOnlyList<JavaDistributionVersion> Versions => distribution.Versions;
 }
@@ -168,7 +182,8 @@ public partial class JavaDownloadPageViewModel : ObservableObject
     [ObservableProperty] public partial bool IsLoading { get; set; }
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial string ErrorText { get; set; } = string.Empty;
-    [ObservableProperty] public partial string StatusText { get; set; } = "正在获取可用发行版…";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.javaDownload_fetchingDistributions.CurrentValue();
 
     [RelayCommand]
     private async Task ReloadAsync()
@@ -185,13 +200,17 @@ public partial class JavaDownloadPageViewModel : ObservableObject
         {
             foreach (var distribution in await JavaDistributionService.GetDistributionsAsync())
                 Distributions.Add(new JavaDistributionItem(distribution));
-            StatusText = Distributions.Count > 0 ? $"共 {Distributions.Count} 个发行版" : "没有可用的发行版";
+            StatusText = Distributions.Count > 0
+                ? string.Format(CommonLanguageManager.Instance.javaDownload_distributionCount.CurrentValue(),
+                    Distributions.Count)
+                : CommonLanguageManager.Instance.javaDownload_noDistributions.CurrentValue();
         }
         catch (Exception exception)
         {
             HasError = true;
-            ErrorText = $"获取 Java 发行版失败：{exception.Message}";
-            StatusText = "获取失败";
+            ErrorText = string.Format(CommonLanguageManager.Instance.javaDownload_fetchDistributionsFailed.CurrentValue(),
+                exception.Message);
+            StatusText = CommonLanguageManager.Instance.javaDownload_fetchFailed.CurrentValue();
             Logger.Error(exception);
         }
         finally

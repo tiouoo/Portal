@@ -12,6 +12,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.InstancePages;
@@ -91,7 +92,8 @@ public partial class CrashReports : UserControl
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel != null)
-                topLevel.Notice($"无法读取崩溃报告：{ex.Message}", NotificationType.Error);
+                topLevel.Notice(string.Format(CommonLanguageManager.Instance.crashReports_readFailed.CurrentValue(),
+                    ex.Message), NotificationType.Error);
         }
     }
 
@@ -132,12 +134,14 @@ public partial class CrashReports : UserControl
 
     private void Share_OnClick(object? sender, RoutedEventArgs e)
     {
-        _ = LogSharingInteraction.ShareAsync(this, LogEditor.Document, "崩溃报告");
+        _ = LogSharingInteraction.ShareAsync(this, LogEditor.Document,
+            CommonLanguageManager.Instance.crashReports_crashReport.CurrentValue());
     }
 
     private void AnalyseAi_OnClick(object? sender, RoutedEventArgs e)
     {
-        _ = LogSharingInteraction.AnalyseAiAsync(this, LogEditor.Document, "崩溃报告");
+        _ = LogSharingInteraction.AnalyseAiAsync(this, LogEditor.Document,
+            CommonLanguageManager.Instance.crashReports_crashReport.CurrentValue());
     }
 
     private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
@@ -158,18 +162,24 @@ public partial class CrashReports : UserControl
 
         if (string.IsNullOrWhiteSpace(LogEditor.Document.Text))
         {
-            topLevel.Notice("没有可导出的崩溃报告", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.crashReports_noExportable.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         var selectedFileName = (LogFileSelector.SelectedItem as InstanceLogFileItem)?.Name;
-        var suggestedFileName = Path.GetFileNameWithoutExtension(selectedFileName) ?? "Minecraft崩溃报告";
+        var suggestedFileName = Path.GetFileNameWithoutExtension(selectedFileName) ??
+                                CommonLanguageManager.Instance.crashReports_minecraftCrashReport.CurrentValue();
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "导出 Minecraft 崩溃报告",
+            Title = CommonLanguageManager.Instance.crashReports_exportTitle.CurrentValue(),
             DefaultExtension = "txt",
             SuggestedFileName = $"{suggestedFileName}-{DateTime.Now:yyyyMMdd-HHmmss}",
-            FileTypeChoices = [new FilePickerFileType("文本文件") { Patterns = ["*.txt", "*.log"] }]
+            FileTypeChoices =
+                [new FilePickerFileType(CommonLanguageManager.Instance.crashReports_textFile.CurrentValue())
+                {
+                    Patterns = ["*.txt", "*.log"]
+                }]
         });
         if (file == null)
             return;
@@ -179,11 +189,13 @@ public partial class CrashReports : UserControl
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new StreamWriter(stream);
             await writer.WriteAsync(LogEditor.Document.Text);
-            topLevel.Notice("崩溃报告已导出", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.crashReports_exported.CurrentValue(),
+                NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"导出失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.logs_exportFailed.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
     }
 

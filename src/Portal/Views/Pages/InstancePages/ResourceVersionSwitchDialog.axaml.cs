@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using MinecraftLaunch.Components.Provider;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -54,7 +55,7 @@ public partial class ResourceVersionSwitchDialog : UserControl
             .ShowCustomAsync<ModVersionFileItem?>(dialog, dialog.ViewModel, topLevel.TryGetHostId(),
                 new OverlayDialogOptions
                 {
-                    Title = "切换版本",
+                    Title = CommonLanguageManager.Instance.resourceVersionSwitch_switchVersion.CurrentValue(),
                     Buttons = DialogButton.None,
                     CanLightDismiss = false,
                     CanDragMove = true,

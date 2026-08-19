@@ -15,6 +15,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Multiplayer;
+using Portal.Localization;
 using Portal.Views.Components;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -35,8 +36,10 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     {
         InitializeComponent();
         PageInfo.Title = OperatingSystem.IsWindows()
-            ? edition == MinecraftEdition.Java ? "联机 (Java)" : "联机 (基岩)"
-            : "联机";
+            ? edition == MinecraftEdition.Java
+                ? CommonLanguageManager.Instance.multiplayer_titleJava.CurrentValue()
+                : CommonLanguageManager.Instance.multiplayer_titleBedrock.CurrentValue()
+            : CommonLanguageManager.Instance.multiplayer_title.CurrentValue();
         ViewModel = new MultiplayerPageViewModel(edition);
         DataContext = ViewModel;
         Loaded += OnLoaded;
@@ -46,7 +49,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     public PageInfo PageInfo { get; init; } = new()
     {
-        Title = "联机",
+        Title = CommonLanguageManager.Instance.multiplayer_title.CurrentValue(),
         Icon = StreamGeometry.Parse(
             "F1 M640,640z M0,0z M451.5,160C434.9,160 418.8,164.5 404.7,172.7 388.9,156.7 370.5,143.3 350.2,133.2 378.4,109.2 414.3,96 451.5,96 537.9,96 608,166 608,252.5 608,294 591.5,333.8 562.2,363.1L491.1,434.2C461.8,463.5 422,480 380.5,480 294.1,480 224,410 224,323.5 224,305.8 238.3,291.5 256,291.5 273.7,291.5 288,305.8 288,323.5 288,374.6 329.4,416 380.5,416 405,416 428.5,406.3 445.9,388.9L517,317.8C534.3,300.5 544,277 544,252.5 544,201.4 502.6,160 451.5,160z M259.5,224C235,224 211.5,233.7 194.1,251.1L123,322.2C105.7,339.5 96,363 96,387.5 96,438.6 137.4,480 188.5,480 205.1,480 221.2,475.5 235.3,467.3 251.1,483.3 269.5,496.7 289.8,506.8 261.6,530.8 225.7,544 188.5,544 102.1,544 32,474 32,387.5 32,346 48.5,306.2 77.8,276.9L148.9,205.8C178.2,176.5 218,160 259.5,160 345.9,160 416,230 416,316.5 416,334.2 401.7,348.5 384,348.5 366.3,348.5 352,334.2 352,316.5 352,265.4 310.6,224 259.5,224z")
     };
@@ -113,7 +116,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     public bool IsJava => Edition == MinecraftEdition.Java;
     public bool IsBedrock => Edition == MinecraftEdition.Bedrock;
-    public string EditionTitle => "联机";
+    public string EditionTitle => CommonLanguageManager.Instance.multiplayer_title.CurrentValue();
     public bool IsNotBusy => !IsBusy;
     public bool CanOperate => IsReady && !IsBusy;
     public bool IsNotInRoom => !IsInRoom;
@@ -121,7 +124,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     public bool ShowBedrockRoomActions => IsBedrock && IsNotInRoom;
     public bool CanCreateRoom => CanOperate && IsNotInRoom && (IsBedrock || ResolveJavaPort() is not null);
     public bool HasNatSummary => !string.IsNullOrWhiteSpace(NatSummary);
-    public string MemberCountText => $"{Members.Count} 人";
+    public string MemberCountText =>
+        string.Format(CommonLanguageManager.Instance.multiplayer_memberCount.CurrentValue(), Members.Count);
     public bool IsRoomOperationInProgress => IsCreatingRoom || IsJoiningRoom;
 
     [ObservableProperty]
@@ -172,29 +176,43 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     public bool IsComponentBannerVisible => IsComponentMissing || IsComponentOutdated || IsComponentUnverifiable;
 
     public string ComponentTitle => IsComponentMissing
-        ? "需要安装联机组件"
+        ? CommonLanguageManager.Instance.multiplayer_componentMissingTitle.CurrentValue()
         : IsComponentUnverifiable
-            ? "无法确认联机组件版本，请更新"
-            : "联机组件需要更新";
+            ? CommonLanguageManager.Instance.multiplayer_componentUnverifiableTitle.CurrentValue()
+            : CommonLanguageManager.Instance.multiplayer_componentOutdatedTitle.CurrentValue();
 
-    public string InstallActionText => IsComponentOutdated || IsComponentUnverifiable ? "更新并安装" : "下载并安装";
+    public string InstallActionText => IsComponentOutdated || IsComponentUnverifiable
+        ? CommonLanguageManager.Instance.multiplayer_updateAndInstall.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_downloadAndInstall.CurrentValue();
     public bool HasStatusText => !string.IsNullOrWhiteSpace(StatusText);
 
-    public string LanServerCountText => IsDiscoveringJavaServers ? "正在检测中" :
-        LanServers.Count > 0 ? $"检测到{LanServers.Count}个开放的世界" : string.Empty;
+    public string LanServerCountText => IsDiscoveringJavaServers
+        ? CommonLanguageManager.Instance.multiplayer_detecting.CurrentValue()
+        : LanServers.Count > 0
+            ? string.Format(CommonLanguageManager.Instance.multiplayer_lanServerCount.CurrentValue(), LanServers.Count)
+            : string.Empty;
 
-    public string JavaDiscoveryButtonText => IsDiscoveringJavaServers ? "检测中" : "检测";
-    public string NatProbeButtonText => IsProbingNat ? "检测中" : "检测 NAT";
-    public string CreateRoomButtonText => IsCreatingRoom ? "创建中" : "创建房间";
-    public string JoinRoomButtonText => IsJoiningRoom ? "加入中" : "加入";
+    public string JavaDiscoveryButtonText => IsDiscoveringJavaServers
+        ? CommonLanguageManager.Instance.multiplayer_detecting.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_detect.CurrentValue();
+    public string NatProbeButtonText => IsProbingNat
+        ? CommonLanguageManager.Instance.multiplayer_detecting.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_detectNat.CurrentValue();
+    public string CreateRoomButtonText => IsCreatingRoom
+        ? CommonLanguageManager.Instance.multiplayer_creating.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_createRoom.CurrentValue();
+    public string JoinRoomButtonText => IsJoiningRoom
+        ? CommonLanguageManager.Instance.multiplayer_joining.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_join.CurrentValue();
 
     public string JoinCodePlaceholder => IsJava
-        ? "请输入房间码（U/XXXX-XXXX-XXXX-XXXX）"
-        : "请输入房间码（P/XXXX-XXXX-XXXX-XXXX）";
+        ? CommonLanguageManager.Instance.multiplayer_joinCodePlaceholderJava.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_joinCodePlaceholderBedrock.CurrentValue();
 
     public bool CanProbeNat => IsReady && !IsBusy && !IsProbingNat;
 
-    [ObservableProperty] public partial string StatusText { get; set; } = "正在检测联机组件";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.multiplayer_detectingComponent.CurrentValue();
     [ObservableProperty] public partial string PlayerName { get; set; }
     [ObservableProperty] public partial string JoinCode { get; set; } = string.Empty;
     [ObservableProperty] public partial string ManualJavaPort { get; set; } = string.Empty;
@@ -274,7 +292,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (await Task.Run(GravityConeInstaller.FindInstalled) is not { } installation)
         {
             IsComponentMissing = true;
-            StatusText = "联机组件未安装";
+            StatusText = CommonLanguageManager.Instance.multiplayer_componentNotInstalled.CurrentValue();
             Logger.Warning($"[Multiplayer] {Edition} multiplayer component was not found after {stopwatch.Elapsed}.");
             return;
         }
@@ -292,14 +310,15 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 {
                     IsBackendReady = false;
                     Logger.Error(ex);
-                    Notify($"联机服务启动失败：{FriendlyError(ex)}", NotificationType.Error);
+                    Notify(string.Format(CommonLanguageManager.Instance.multiplayer_serviceStartFailed.CurrentValue(),
+                        FriendlyError(ex)), NotificationType.Error);
                 }
 
                 break;
 
             case ComponentUpdateStatus.UpdateRequired:
                 IsComponentOutdated = true;
-                StatusText = "联机组件需要更新";
+                StatusText = CommonLanguageManager.Instance.multiplayer_componentOutdatedTitle.CurrentValue();
                 Logger.Warning(
                     $"[Multiplayer] {Edition} multiplayer component requires an update after {stopwatch.Elapsed}.");
                 await StopSharedClientIfOutdatedAsync();
@@ -307,7 +326,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
             case ComponentUpdateStatus.Unknown:
                 IsComponentUnverifiable = true;
-                StatusText = "联机组件版本校验失败";
+                StatusText = CommonLanguageManager.Instance.multiplayer_componentVerifyFailed.CurrentValue();
                 Logger.Warning(
                     $"[Multiplayer] {Edition} multiplayer component version could not be verified after {stopwatch.Elapsed}.");
                 break;
@@ -351,18 +370,18 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (IsBusy) return;
         Logger.Info($"[Multiplayer] Starting component installation for {Edition} edition.");
         IsBusy = true;
-        StatusText = "正在下载联机组件";
+        StatusText = CommonLanguageManager.Instance.multiplayer_downloadingComponent.CurrentValue();
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = "下载联机组件",
-            Description = "正在准备下载",
+            Name = CommonLanguageManager.Instance.multiplayer_downloadComponent.CurrentValue(),
+            Description = CommonLanguageManager.Instance.multiplayer_preparingDownload.CurrentValue(),
             Progress = 0,
             Actions =
             [
                 new TaskActionDefinition
                 {
-                    Name = "取消下载",
-                    Description = "取消联机组件下载。",
+                    Name = CommonLanguageManager.Instance.multiplayer_cancelDownload.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.multiplayer_cancelComponentDownload.CurrentValue(),
                     IconKey = "Cancel",
                     ExecuteAsync = (managedTask, _) =>
                     {
@@ -384,7 +403,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             var installation = await GravityConeInstaller.EnsureInstalledAsync(progress, context.CancellationToken,
                 IsComponentOutdated || IsComponentUnverifiable);
             context.ReportProgress(1);
-            context.SetDescription("联机组件下载完成");
+            context.SetDescription(CommonLanguageManager.Instance.multiplayer_componentDownloaded.CurrentValue());
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsComponentMissing = false;
@@ -418,22 +437,24 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             {
                 IsBusy = false;
                 StatusText = IsComponentMissing
-                    ? "联机组件未安装"
+                    ? CommonLanguageManager.Instance.multiplayer_componentNotInstalled.CurrentValue()
                     : IsComponentOutdated
-                        ? "联机组件需要更新"
+                        ? CommonLanguageManager.Instance.multiplayer_componentOutdatedTitle.CurrentValue()
                         : IsComponentUnverifiable
-                            ? "联机组件版本校验失败"
+                            ? CommonLanguageManager.Instance.multiplayer_componentVerifyFailed.CurrentValue()
                             : string.Empty;
                 if (task.Status == ManagedTaskStatus.Completed)
                 {
                     Logger.Info($"[Multiplayer] Component installation completed in {stopwatch.Elapsed}.");
-                    Notify("联机组件已安装", NotificationType.Success);
+                    Notify(CommonLanguageManager.Instance.multiplayer_componentInstalled.CurrentValue(),
+                        NotificationType.Success);
                 }
                 else if (task.Status == ManagedTaskStatus.Faulted)
                 {
                     Logger.Warning(
                         $"[Multiplayer] Component installation failed after {stopwatch.Elapsed}: {task.Exception}");
-                    Notify("联机组件下载失败", NotificationType.Error);
+                    Notify(CommonLanguageManager.Instance.multiplayer_componentDownloadFailed.CurrentValue(),
+                        NotificationType.Error);
                 }
             });
         }
@@ -496,7 +517,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         catch (Exception ex)
         {
             Logger.Error(ex);
-            Notify($"局域网世界检测失败：{FriendlyError(ex)}", NotificationType.Error);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_lanDiscoveryFailed.CurrentValue(),
+                FriendlyError(ex)), NotificationType.Error);
         }
         finally
         {
@@ -520,7 +542,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             await RefreshRoomStatusAsync();
             if (IsInRoom)
             {
-                Notify("已有房间正在运行，请先关闭并离开", NotificationType.Warning);
+                Notify(CommonLanguageManager.Instance.multiplayer_roomAlreadyRunning.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
@@ -531,18 +554,20 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 timeout: TimeSpan.FromSeconds(35), cancellationToken: cancellation.Token);
             ApplyRoomData(response.Data, "host", edition);
             Logger.Info($"[Multiplayer] Created {edition} room {CurrentRoomCode} in {stopwatch.Elapsed}.");
-            Notify("房间已创建", NotificationType.Success);
+            Notify(CommonLanguageManager.Instance.multiplayer_roomCreated.CurrentValue(), NotificationType.Success);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
             Logger.Debug($"[Multiplayer] {edition} room creation cancelled after {stopwatch.Elapsed}.");
             await RollbackCancelledRoomOperationAsync(edition);
-            Notify("已取消创建房间", NotificationType.Information);
+            Notify(CommonLanguageManager.Instance.multiplayer_createCancelled.CurrentValue(),
+                NotificationType.Information);
         }
         catch (Exception ex)
         {
             Logger.Error(ex);
-            Notify($"创建失败：{FriendlyError(ex)}", NotificationType.Error);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_createFailed.CurrentValue(),
+                FriendlyError(ex)), NotificationType.Error);
         }
         finally
         {
@@ -557,7 +582,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (_client is null || IsInRoom || IsBusy) return;
         if (!int.TryParse(portText.Trim(), out var port) || port is < 1025 or > 65535)
         {
-            Notify("请输入 1025 到 65535 之间的局域网端口", NotificationType.Warning);
+            Notify(CommonLanguageManager.Instance.multiplayer_portRangeInvalid.CurrentValue(), NotificationType.Warning);
             return;
         }
 
@@ -566,7 +591,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         {
             if (!await IsLocalPortOpenAsync(port, _lifetime.Token))
             {
-                Notify($"端口 {port} 未检测到 Minecraft 服务，请先在游戏中开放局域网世界", NotificationType.Warning);
+                Notify(string.Format(CommonLanguageManager.Instance.multiplayer_portNoService.CurrentValue(), port),
+                    NotificationType.Warning);
                 return;
             }
 
@@ -574,7 +600,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            Notify($"端口检测失败：{FriendlyError(ex)}", NotificationType.Error);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_portCheckFailed.CurrentValue(),
+                FriendlyError(ex)), NotificationType.Error);
             return;
         }
         finally
@@ -595,7 +622,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         var prefix = edition == MinecraftEdition.Java ? "U/" : "P/";
         if (!code.StartsWith(prefix, StringComparison.Ordinal))
         {
-            Notify($"{EditionTitle}房间码必须以 {prefix} 开头", NotificationType.Warning);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_roomCodePrefix.CurrentValue(),
+                EditionTitle, prefix), NotificationType.Warning);
             return;
         }
 
@@ -614,18 +642,22 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 progress, TimeSpan.FromSeconds(60), cancellation.Token);
             ApplyRoomData(response.Data, "guest", edition);
             Logger.Info($"[Multiplayer] Joined {edition} room {CurrentRoomCode} in {stopwatch.Elapsed}.");
-            Notify(edition == MinecraftEdition.Bedrock ? "控制通道已连接，正在建立游戏连接" : "已加入房间", NotificationType.Success);
+            Notify(edition == MinecraftEdition.Bedrock
+                ? CommonLanguageManager.Instance.multiplayer_bedrockChannelConnected.CurrentValue()
+                : CommonLanguageManager.Instance.multiplayer_roomJoined.CurrentValue(), NotificationType.Success);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
             Logger.Debug($"[Multiplayer] Joining {edition} room {code} was cancelled after {stopwatch.Elapsed}.");
             await RollbackCancelledRoomOperationAsync(edition);
-            Notify("已取消加入房间", NotificationType.Information);
+            Notify(CommonLanguageManager.Instance.multiplayer_joinCancelled.CurrentValue(),
+                NotificationType.Information);
         }
         catch (Exception ex)
         {
             Logger.Error(ex);
-            Notify($"加入失败：{FriendlyError(ex)}", NotificationType.Error);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_joinFailed.CurrentValue(),
+                FriendlyError(ex)), NotificationType.Error);
         }
         finally
         {
@@ -640,7 +672,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         if (_roomOperationCancellation is not { IsCancellationRequested: false } cancellation) return;
         cancellation.Cancel();
-        Notify("正在取消联机操作", NotificationType.Information);
+        Notify(CommonLanguageManager.Instance.multiplayer_cancellingOperation.CurrentValue(),
+            NotificationType.Information);
     }
 
     private async Task RollbackCancelledRoomOperationAsync(MinecraftEdition edition)
@@ -677,11 +710,13 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             await _client.RequestAsync("room.confirm_minecraft_ended", timeout: TimeSpan.FromSeconds(8),
                 cancellationToken: _lifetime.Token);
             IsBedrockPortBusy = false;
-            Notify("正在重新建立基岩版游戏连接", NotificationType.Information);
+            Notify(CommonLanguageManager.Instance.multiplayer_reconnectingBedrock.CurrentValue(),
+                NotificationType.Information);
         }
         catch (Exception ex)
         {
-            Notify($"继续连接失败：{FriendlyError(ex)}", NotificationType.Error);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_continueConnectFailed.CurrentValue(),
+                FriendlyError(ex)), NotificationType.Error);
         }
         finally
         {
@@ -705,12 +740,13 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             if (await CanRestartSharedClientAsync(otherEdition)) await RestartClientAsync();
             ClearRoom(Edition);
             Logger.Info($"[Multiplayer] Left {Edition} room in {stopwatch.Elapsed}.");
-            Notify("已离开房间", NotificationType.Success);
+            Notify(CommonLanguageManager.Instance.multiplayer_roomLeft.CurrentValue(), NotificationType.Success);
         }
         catch (Exception ex)
         {
             Logger.Error(ex);
-            Notify($"退出房间失败：{FriendlyError(ex)}", NotificationType.Error);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_leaveFailed.CurrentValue(),
+                FriendlyError(ex)), NotificationType.Error);
         }
         finally
         {
@@ -737,7 +773,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     private async Task RestartClientAsync()
     {
-        if (_installation is null) throw new InvalidOperationException("联机组件安装信息不可用。");
+        if (_installation is null)
+            throw new InvalidOperationException(CommonLanguageManager.Instance.multiplayer_installInfoUnavailable.CurrentValue());
 
         await SharedClientStartLock.WaitAsync(_lifetime.Token);
         try
@@ -766,15 +803,17 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             var ip = response.Data.TryGetProperty("public_ip", out var ipValue) &&
                      ipValue.ValueKind == JsonValueKind.Array
                 ? string.Join(", ", ipValue.EnumerateArray().Select(item => item.GetString()))
-                : "未知";
-            NatSummary = $"公网地址：{ip}·UDP：{NatName(udp)}·TCP：{NatName(tcp)}";
+                : CommonLanguageManager.Instance.account_unknown.CurrentValue();
+            NatSummary = string.Format(CommonLanguageManager.Instance.multiplayer_natSummary.CurrentValue(), ip,
+                NatName(udp), NatName(tcp));
             Logger.Info($"[Multiplayer] NAT probe completed for {Edition} in {stopwatch.Elapsed}: {NatSummary}.");
-            Notify("NAT 检测完成", NotificationType.Success);
+            Notify(CommonLanguageManager.Instance.multiplayer_natComplete.CurrentValue(), NotificationType.Success);
         }
         catch (Exception ex)
         {
             Logger.Error(ex);
-            Notify($"NAT 检测失败：{FriendlyError(ex)}", NotificationType.Error);
+            Notify(string.Format(CommonLanguageManager.Instance.multiplayer_natFailed.CurrentValue(),
+                FriendlyError(ex)), NotificationType.Error);
         }
         finally
         {
@@ -809,26 +848,31 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
                 case "room.closed":
                 case "room.disconnected":
                     ClearRoom(MinecraftEdition.Java);
-                    Notify("房间连接已关闭", NotificationType.Information);
+                    Notify(CommonLanguageManager.Instance.multiplayer_roomConnectionClosed.CurrentValue(),
+                        NotificationType.Information);
                     break;
                 case "paperconnect.room.closed":
                 case "paperconnect.room.disconnected":
                 case "paperconnect.connection.closed":
                 case "paperconnect.connection.disconnected":
                     ClearRoom(MinecraftEdition.Bedrock);
-                    Notify("房间连接已关闭", NotificationType.Information);
+                    Notify(CommonLanguageManager.Instance.multiplayer_roomConnectionClosed.CurrentValue(),
+                        NotificationType.Information);
                     break;
                 case "paperconnect.connection.ready":
                     IsBedrockPortBusy = false;
-                    Notify("游戏连接已就绪，请在基岩版局域网列表中加入", NotificationType.Success);
+                    Notify(CommonLanguageManager.Instance.multiplayer_connectionReady.CurrentValue(),
+                        NotificationType.Success);
                     break;
                 case "paperconnect.connection.port_busy":
                     IsBedrockPortBusy = true;
-                    Notify("UDP 7551 被 Minecraft 占用，请关闭游戏后点击继续连接", NotificationType.Warning);
+                    Notify(CommonLanguageManager.Instance.multiplayer_portBusy.CurrentValue(),
+                        NotificationType.Warning);
                     break;
                 case "paperconnect.connection.error":
                     ClearRoom(MinecraftEdition.Bedrock);
-                    Notify("基岩版游戏连接建立失败", NotificationType.Error);
+                    Notify(CommonLanguageManager.Instance.multiplayer_bedrockConnectionFailed.CurrentValue(),
+                        NotificationType.Error);
                     break;
             }
         });
@@ -881,7 +925,8 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         if (data.TryGetProperty("players", out var players) && players.ValueKind == JsonValueKind.Array)
             foreach (var player in players.EnumerateArray())
             {
-                var name = GetString(player, "name") ?? GetString(player, "player") ?? "未知成员";
+                var name = GetString(player, "name") ?? GetString(player, "player") ??
+                           CommonLanguageManager.Instance.multiplayer_unknownMember.CurrentValue();
                 var vendor = GetString(player, "vendor") ?? GetString(player, "clientId") ?? string.Empty;
                 var kind = GetString(player, "kind") ??
                            (player.TryGetProperty("isRoomHost", out var host) && host.ValueKind == JsonValueKind.True
@@ -910,7 +955,11 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         var ip = GetString(data, "ip") ?? "127.0.0.1";
         if (!data.TryGetProperty("port", out var portValue) || !portValue.TryGetInt32(out var port)) return;
         if (LanServers.Any(item => item.Ip == ip && item.Port == port)) return;
-        LanServers.Add(new LanServerEntry { Motd = GetString(data, "motd") ?? "Minecraft 世界", Ip = ip, Port = port });
+        LanServers.Add(new LanServerEntry
+        {
+            Motd = GetString(data, "motd") ?? CommonLanguageManager.Instance.multiplayer_minecraftWorld.CurrentValue(),
+            Ip = ip, Port = port
+        });
         SelectedLanServer ??= LanServers[^1];
         OnPropertyChanged(nameof(LanServerCountText));
     }
@@ -956,7 +1005,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private bool ValidatePlayerName()
     {
         if (!string.IsNullOrWhiteSpace(PlayerName)) return true;
-        Notify("请输入联机用户名", NotificationType.Warning);
+        Notify(CommonLanguageManager.Instance.multiplayer_enterPlayerName.CurrentValue(), NotificationType.Warning);
         return false;
     }
 
@@ -1004,7 +1053,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         return exception is GravityConeException { Code: "INTERNAL_ERROR" } &&
                exception.Message.Contains("未检测", StringComparison.Ordinal)
-            ? "未检测到已开放的 Minecraft 世界"
+            ? CommonLanguageManager.Instance.multiplayer_noOpenWorld.CurrentValue()
             : exception.Message;
     }
 
@@ -1012,8 +1061,14 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     {
         return type switch
         {
-            1 => "开放网络", 2 => "对称防火墙", 3 => "完全圆锥", 4 => "受限圆锥",
-            5 => "端口受限", 6 => "对称递增", 7 => "对称 NAT", _ => "未知"
+            1 => CommonLanguageManager.Instance.multiplayer_natOpenNetwork.CurrentValue(),
+            2 => CommonLanguageManager.Instance.multiplayer_natSymmetricFirewall.CurrentValue(),
+            3 => CommonLanguageManager.Instance.multiplayer_natFullCone.CurrentValue(),
+            4 => CommonLanguageManager.Instance.multiplayer_natRestrictedCone.CurrentValue(),
+            5 => CommonLanguageManager.Instance.multiplayer_natPortRestricted.CurrentValue(),
+            6 => CommonLanguageManager.Instance.multiplayer_natSymmetricIncrement.CurrentValue(),
+            7 => CommonLanguageManager.Instance.multiplayer_natSymmetric.CurrentValue(),
+            _ => CommonLanguageManager.Instance.account_unknown.CurrentValue()
         };
     }
 

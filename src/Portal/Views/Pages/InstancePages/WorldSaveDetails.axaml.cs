@@ -10,6 +10,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
@@ -165,17 +166,32 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     public ObservableCollection<WorldPlayerDataSetting> Players { get; } = [];
 
     public IReadOnlyList<WorldGameModeOption> GameModeOptions { get; } =
-        [new(0, "生存"), new(1, "创造"), new(2, "冒险"), new(3, "旁观")];
+    [
+        new(0, CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue()),
+        new(1, CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue()),
+        new(2, CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue()),
+        new(3, CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue())
+    ];
 
     public IReadOnlyList<WorldDifficultyOption> DifficultyOptions { get; } =
-        [new(0, "和平"), new(1, "简单"), new(2, "普通"), new(3, "困难")];
+    [
+        new(0, CommonLanguageManager.Instance.worldSave_peaceful.CurrentValue()),
+        new(1, CommonLanguageManager.Instance.worldSave_easy.CurrentValue()),
+        new(2, CommonLanguageManager.Instance.worldSave_normal.CurrentValue()),
+        new(3, CommonLanguageManager.Instance.worldSave_hard.CurrentValue())
+    ];
 
     public string DisplayName => string.IsNullOrWhiteSpace(_info.LevelName) ? _info.FolderName : _info.LevelName;
     public string FolderName => _info.FolderName;
     public string CreationTime => _info.CreationTime.ToString("yyyy-MM-dd HH:mm");
-    public string LastPlayedTime => _info.LastPlayedTime?.ToString("yyyy-MM-dd HH:mm") ?? "未知";
-    public string Version => _info.Version ?? "未知";
-    public string FileStatistics => $"{_info.PlayerDataCount} 个玩家数据，{_info.DataPackArchiveCount} 个数据包";
+    public string LastPlayedTime =>
+        _info.LastPlayedTime?.ToString("yyyy-MM-dd HH:mm") ??
+        CommonLanguageManager.Instance.account_unknown.CurrentValue();
+    public string Version =>
+        _info.Version ?? CommonLanguageManager.Instance.account_unknown.CurrentValue();
+    public string FileStatistics =>
+        string.Format(CommonLanguageManager.Instance.worldSave_fileStatistics.CurrentValue(),
+            _info.PlayerDataCount, _info.DataPackArchiveCount);
     public bool IsLocked => _info.IsLocked;
     public bool IsUnlocked => !IsLocked;
     public bool CanQuickEnter => _instance.MinecraftEntry is { } entry && entry.ReleaseTime > new DateTime(2023, 4, 4);
@@ -254,7 +270,8 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         }
         catch (Exception ex)
         {
-            ShowNotice($"读取世界设置失败：{ex.Message}", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.worldSave_loadFailed.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
         finally
         {
@@ -269,7 +286,8 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         if (!TryGetNumbers(IntegerRules, out var integers)) return;
         if (integers.Any(x => x.Value > int.MaxValue))
         {
-            ShowNotice("游戏规则数值不能超过 2147483647", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_ruleValueTooLarge.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -286,13 +304,15 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
             !TryParseNonNegative(ThunderTime, out var thunderTime) ||
             !TryParseNonNegative(ClearWeatherTime, out var clearWeatherTime))
         {
-            ShowNotice("数值设置必须是非负整数", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_valueNonNegative.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         if (rainTime > int.MaxValue || thunderTime > int.MaxValue || clearWeatherTime > int.MaxValue)
         {
-            ShowNotice("天气时间不能超过 2147483647", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_weatherTimeTooLarge.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -329,13 +349,15 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
             new WorldScoreboardObjective(x.Name.Trim(), x.CriteriaName.Trim(), x.DisplayName.Trim())).ToArray();
         if (objectives.Any(x => string.IsNullOrWhiteSpace(x.Name) || string.IsNullOrWhiteSpace(x.CriteriaName)))
         {
-            ShowNotice("积分榜目标名称和统计条件不能为空", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_objectiveRequired.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         if (objectives.GroupBy(x => x.Name, StringComparer.Ordinal).Any(x => x.Count() > 1))
         {
-            ShowNotice("积分榜目标名称不能重复", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_objectiveDuplicate.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -345,13 +367,15 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
             if (string.IsNullOrWhiteSpace(setting.Objective) || string.IsNullOrWhiteSpace(setting.Name) ||
                 !int.TryParse(setting.Score, out var value))
             {
-                ShowNotice("玩家分数需要目标、玩家名称和有效的 32 位整数分数", NotificationType.Warning);
+                ShowNotice(CommonLanguageManager.Instance.worldSave_scoreInvalid.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
             if (!objectives.Any(x => x.Name == setting.Objective.Trim()))
             {
-                ShowNotice("玩家分数引用了不存在的积分榜目标", NotificationType.Warning);
+                ShowNotice(CommonLanguageManager.Instance.worldSave_scoreUnknownObjective.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
@@ -361,7 +385,8 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
 
         if (scores.GroupBy(x => (x.Objective, x.Name)).Any(x => x.Count() > 1))
         {
-            ShowNotice("同一积分榜目标中的玩家名称不能重复", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_scorePlayerDuplicate.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -374,7 +399,8 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         if (player == null || !await CanSaveAsync()) return;
         if (!player.TryCreate(out var data))
         {
-            ShowNotice("玩家数据包含无效数值：模式为 0-3，饥饿和饱和度为 0-20，经验进度为 0-1。", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_playerDataInvalid.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -387,19 +413,21 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         if (!HasLevelSettings || _levelData == null || !await CanSaveAsync()) return;
         if (SelectedGameMode is < 0 or > 3)
         {
-            ShowNotice("请选择有效的游戏模式", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_selectGameMode.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         if (SelectedDifficulty is < 0 or > 3)
         {
-            ShowNotice("请选择有效的难度", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_selectDifficulty.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         if (!long.TryParse(WorldSeed, out var seed))
         {
-            ShowNotice("世界种子必须是有效的 64 位整数", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_invalidSeed.CurrentValue(), NotificationType.Warning);
             return;
         }
 
@@ -411,7 +439,7 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     {
         if (await _worldSaveService.IsWorldLockedAsync(_info.FolderPath))
         {
-            ShowNotice("世界正在被 Minecraft 使用，不能保存更改", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_worldInUse.CurrentValue(), NotificationType.Warning);
             return false;
         }
 
@@ -426,7 +454,8 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         {
             if (!TryParseNonNegative(setting.Value, out var value))
             {
-                ShowNotice("数值设置必须是非负整数", NotificationType.Warning);
+                ShowNotice(CommonLanguageManager.Instance.worldSave_valueNonNegative.CurrentValue(),
+                    NotificationType.Warning);
                 values = [];
                 return false;
             }
@@ -453,19 +482,21 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
         try
         {
             await save();
-            ShowNotice("设置已保存", NotificationType.Success);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_saved.CurrentValue(), NotificationType.Success);
         }
         catch (IOException ex) when (IsFileLocked(ex))
         {
-            ShowNotice("世界被 Minecraft 实例锁定，不能保存更改", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_lockedCannotSave.CurrentValue(),
+                NotificationType.Warning);
         }
         catch (IOException ex)
         {
-            ShowNotice($"保存失败：{ex.Message}", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.worldSave_saveFailed.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
         catch (UnauthorizedAccessException)
         {
-            ShowNotice("没有修改此世界设置的权限", NotificationType.Error);
+            ShowNotice(CommonLanguageManager.Instance.worldSave_noPermission.CurrentValue(), NotificationType.Error);
         }
     }
 
@@ -504,7 +535,9 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
             RecentPlayTargetType.World,
             _info.FolderName,
             DisplayName,
-            $"存档·{_info.Version ?? "未知版本"}·{GetGameModeText(_info.GameMode)}",
+            string.Format(CommonLanguageManager.Instance.recentPlay_saveDescription.CurrentValue(),
+                _info.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                GetGameModeText(_info.GameMode)),
             _info.LastPlayedTime ?? DateTime.MinValue,
             _info.IconPath);
     }
@@ -521,7 +554,11 @@ public partial class WorldSaveDetailsViewModel : ObservableObject, IDialogContex
     {
         return gameMode switch
         {
-            0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式"
+            0 => CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue(),
+            1 => CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue(),
+            2 => CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue(),
+            3 => CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue(),
+            _ => CommonLanguageManager.Instance.recentPlay_gameModeUnknown.CurrentValue()
         };
     }
 
@@ -615,7 +652,8 @@ public partial class WorldPlayerDataSetting : ObservableObject
     }
 
     public string PlayerId => _source.PlayerId;
-    public string DataVersionDisplay => $"数据版本 {_source.DataVersion}";
+    public string DataVersionDisplay =>
+        string.Format(CommonLanguageManager.Instance.worldSave_dataVersion.CurrentValue(), _source.DataVersion);
 
     public bool TryCreate(out WorldPlayerData player)
     {

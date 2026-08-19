@@ -9,6 +9,7 @@ using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Components.Provider;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common;
@@ -40,7 +41,8 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
     {
         _authServers = authServers;
         _hostId = hostId;
-        BuiltInServers.Add(new Minecraft.Classes.AuthServer(AccountType.Yggdrasil, "自定义"));
+        BuiltInServers.Add(new Minecraft.Classes.AuthServer(AccountType.Yggdrasil,
+            CommonLanguageManager.Instance.account_custom.CurrentValue()));
         BuiltInServers.Add(new Minecraft.Classes.AuthServer(AccountType.Yggdrasil, "LittleSkin")
         {
             ServerUrl = "https://littleskin.cn/api/yggdrasil"
@@ -173,8 +175,11 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
         if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
         if (string.IsNullOrWhiteSpace(value))
-            _errors[propertyName] = new List<string> { "API 地址不能为空" };
-        else if (!UrlHelper.IsValidUrl(value)) _errors[propertyName] = new List<string> { "API 地址格式不正确" };
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_apiUrlEmpty.CurrentValue() };
+        else if (!UrlHelper.IsValidUrl(value))
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_apiUrlInvalid.CurrentValue() };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
@@ -185,7 +190,9 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
 
         if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
-        if (string.IsNullOrWhiteSpace(value)) _errors[propertyName] = new List<string> { "账户不能为空" };
+        if (string.IsNullOrWhiteSpace(value))
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_usernameEmpty.CurrentValue() };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
@@ -196,7 +203,9 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
 
         if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
-        if (string.IsNullOrWhiteSpace(value)) _errors[propertyName] = new List<string> { "密码不能为空" };
+        if (string.IsNullOrWhiteSpace(value))
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_passwordEmpty.CurrentValue() };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
@@ -215,7 +224,7 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
     {
         IsError = false;
         IsAuthing = true;
-        FetchingMsg = "正在验证账户...";
+        FetchingMsg = CommonLanguageManager.Instance.account_verifying.CurrentValue();
         try
         {
             var authenticator = new YggdrasilAuthenticator(ServerUrl, Username, Password);
@@ -224,16 +233,19 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
             {
                 IsError = true;
                 IsAuthing = false;
-                ErrMsg = "验证服务器返回成功，但未接收到账户数据。";
+                ErrMsg = CommonLanguageManager.Instance.account_noAccountData.CurrentValue();
                 return;
             }
 
-            Logger.Info("验证成功 \n" + result!.AsJson());
+            Logger.Info(string.Format(LogLanguageManager.Instance.account_verificationSuccess.CurrentValue(),
+                result!.AsJson()));
 
             var yggdrasilAccounts = result!.ToList();
             if (yggdrasilAccounts.Any())
             {
-                FetchingMsg = $"正在获取账户信息，已完成：(0/{yggdrasilAccounts.Count})";
+                FetchingMsg = string.Format(
+                    CommonLanguageManager.Instance.account_fetchingAccountsFormat.CurrentValue(), 0,
+                    yggdrasilAccounts.Count);
                 List<MinecraftAccount> accounts = [];
                 var i = 0;
                 foreach (var account in yggdrasilAccounts)
@@ -249,7 +261,7 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                     }
                     catch (Exception e)
                     {
-                        Logger.Error("获取皮肤失败。", e);
+                        Logger.Error(LogLanguageManager.Instance.accountRefresher_skinFetchFailed.CurrentValue(), e);
                     }
 
                     var minecraftAccount = new MinecraftAccount(AccountType.Yggdrasil)
@@ -271,7 +283,9 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
                     };
                     accounts.Add(minecraftAccount);
                     i++;
-                    FetchingMsg = $"正在获取账户信息，已完成：({i}/{yggdrasilAccounts.Count})";
+                    FetchingMsg = string.Format(
+                        CommonLanguageManager.Instance.account_fetchingAccountsFormat.CurrentValue(), i,
+                        yggdrasilAccounts.Count);
                 }
 
                 RequestClose?.Invoke(this, accounts.ToArray());
@@ -280,7 +294,7 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
             {
                 IsError = true;
                 IsAuthing = false;
-                ErrMsg = "验证服务器返回成功，但未接收到账户数据。";
+                ErrMsg = CommonLanguageManager.Instance.account_noAccountData.CurrentValue();
             }
         }
         catch (Exception e)

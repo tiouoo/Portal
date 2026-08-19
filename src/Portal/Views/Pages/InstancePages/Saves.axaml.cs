@@ -14,6 +14,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
 using Portal.Module.Imaging;
+using Portal.Localization;
 using SkiaSharp;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -45,7 +46,8 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
         _lockRefreshTimer.Tick += LockRefreshTimer_OnTick;
     }
 
@@ -72,7 +74,9 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string SaveCountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string SaveCountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
 
     public void Dispose()
     {
@@ -188,8 +192,10 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         foreach (var item in SortItems(query))
             FilteredItems.Add(item);
         if (FilterOptions.Count == 0)
-            FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
-        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
+            FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+                CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel(CommonLanguageManager.Instance.mod_all.CurrentValue(),
+            Items.Count);
         RaiseListProperties();
     }
 
@@ -238,8 +244,12 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             await LoadAsync();
         };
         if (drop == null)
-            await JavaResourceImport.SelectAndImportAsync(this, "选择存档", _savesPath, "存档", [".zip"], true, refresh);
-        else await JavaResourceImport.ImportDropAsync(this, drop, _savesPath, "存档", [".zip"], true, refresh);
+            await JavaResourceImport.SelectAndImportAsync(this,
+                CommonLanguageManager.Instance.saves_selectSave.CurrentValue(), _savesPath,
+                CommonLanguageManager.Instance.favorite_kindSave.CurrentValue(), [".zip"], true, refresh);
+        else
+            await JavaResourceImport.ImportDropAsync(this, drop, _savesPath,
+                CommonLanguageManager.Instance.favorite_kindSave.CurrentValue(), [".zip"], true, refresh);
     }
 
     private async void OpenWorldFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -264,10 +274,15 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "选择世界图标",
+            Title = CommonLanguageManager.Instance.saves_selectWorldIcon.CurrentValue(),
             AllowMultiple = false,
             FileTypeFilter =
-                [new FilePickerFileType("图片") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp"] }]
+            [
+                new FilePickerFileType(CommonLanguageManager.Instance.saves_image.CurrentValue())
+                {
+                    Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp"]
+                }
+            ]
         });
         if (files.Count == 0)
             return;
@@ -277,12 +292,15 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         try
         {
             await using var input = await files[0].OpenReadAsync();
-            using var image = SKBitmap.Decode(input) ?? throw new InvalidDataException("无法读取所选图片。");
+            using var image = SKBitmap.Decode(input) ??
+                              throw new InvalidDataException(
+                                  CommonLanguageManager.Instance.saves_cannotReadImage.CurrentValue());
             var cropSize = Math.Min(image.Width, image.Height);
             var source = new SKRectI((image.Width - cropSize) / 2, (image.Height - cropSize) / 2,
                 (image.Width + cropSize) / 2, (image.Height + cropSize) / 2);
             using var surface = SKSurface.Create(new SKImageInfo(64, 64)) ??
-                                throw new InvalidOperationException("无法创建图标。");
+                                throw new InvalidOperationException(
+                                    CommonLanguageManager.Instance.saves_cannotCreateIcon.CurrentValue());
             surface.Canvas.DrawBitmap(image, source, new SKRect(0, 0, 64, 64), new SKSamplingOptions());
             using var snapshot = surface.Snapshot();
             using var png = snapshot.Encode(SKEncodedImageFormat.Png, 100);
@@ -294,7 +312,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             File.Move(temporaryIconPath, iconPath, true);
             RefreshItem(item, item.Info with { IconPath = iconPath });
             await RefreshSavesAsync();
-            ShowNotice("世界图标已更换", NotificationType.Success);
+            ShowNotice(CommonLanguageManager.Instance.saves_worldIconChanged.CurrentValue(), NotificationType.Success);
         }
         catch (IOException ex) when (IsFileLocked(ex))
         {
@@ -302,15 +320,18 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         }
         catch (IOException ex)
         {
-            ShowNotice($"更换世界图标失败：{ex.Message}", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.saves_worldIconChangeFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
         catch (UnauthorizedAccessException)
         {
-            ShowNotice("没有更换此世界图标的权限。", NotificationType.Error);
+            ShowNotice(CommonLanguageManager.Instance.saves_worldIconNoPermission.CurrentValue(),
+                NotificationType.Error);
         }
         catch (Exception ex)
         {
-            ShowNotice($"更换世界图标失败：{ex.Message}", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.saves_worldIconChangeFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
         finally
         {
@@ -349,7 +370,9 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             RecentPlayTargetType.World,
             item.Info.FolderName,
             string.IsNullOrWhiteSpace(item.Info.LevelName) ? item.Info.FolderName : item.Info.LevelName,
-            $"存档·{item.Info.Version ?? "未知版本"}·{GetGameModeText(item.Info.GameMode)}",
+            string.Format(CommonLanguageManager.Instance.recentPlay_saveDescription.CurrentValue(),
+                item.Info.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                GetGameModeText(item.Info.GameMode)),
             item.Info.LastPlayedTime ?? DateTime.MinValue,
             item.Info.IconPath);
 
@@ -372,7 +395,9 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             RecentPlayTargetType.World,
             item.Info.FolderName,
             string.IsNullOrWhiteSpace(item.Info.LevelName) ? item.Info.FolderName : item.Info.LevelName,
-            $"存档·{item.Info.Version ?? "未知版本"}·{GetGameModeText(item.Info.GameMode)}",
+            string.Format(CommonLanguageManager.Instance.recentPlay_saveDescription.CurrentValue(),
+                item.Info.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                GetGameModeText(item.Info.GameMode)),
             item.Info.LastPlayedTime ?? DateTime.MinValue,
             item.Info.IconPath);
 
@@ -381,7 +406,14 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
 
     private static string GetGameModeText(int? gameMode)
     {
-        return gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+        return gameMode switch
+        {
+            0 => CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue(),
+            1 => CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue(),
+            2 => CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue(),
+            3 => CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue(),
+            _ => CommonLanguageManager.Instance.recentPlay_gameModeUnknown.CurrentValue()
+        };
     }
 
     private async void DeleteWorld_OnClick(object? sender, RoutedEventArgs e)
@@ -397,10 +429,13 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         var result = await OverlayDialog.ShowStandardAsync(
             new TextBlock
             {
-                Margin = new Thickness(24), Text = $"确定要永久删除存档“{item.DisplayName}”吗？此操作无法撤销。",
+                Margin = new Thickness(24),
+                Text = string.Format(CommonLanguageManager.Instance.saves_deleteConfirm.CurrentValue(),
+                    item.DisplayName),
                 TextWrapping = TextWrapping.Wrap
             },
-            null, this.TryGetHostId(), CreateDeleteConfirmationOptions("删除存档"));
+            null, this.TryGetHostId(), CreateDeleteConfirmationOptions(
+                CommonLanguageManager.Instance.saves_deleteSaveTitle.CurrentValue()));
         if (result != DialogResult.Yes)
             return;
         try
@@ -408,7 +443,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             Directory.Delete(item.Info.FolderPath, true);
             Items.Remove(item);
             ApplyFilter();
-            ShowNotice("存档已删除", NotificationType.Success);
+            ShowNotice(CommonLanguageManager.Instance.saves_saveDeleted.CurrentValue(), NotificationType.Success);
         }
         catch (IOException ex) when (IsFileLocked(ex))
         {
@@ -416,17 +451,18 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         }
         catch (IOException ex)
         {
-            ShowNotice($"无法删除存档：{ex.Message}", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.saves_deleteFailed.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
         catch (UnauthorizedAccessException)
         {
-            ShowNotice("没有删除此存档的权限。", NotificationType.Error);
+            ShowNotice(CommonLanguageManager.Instance.saves_deleteNoPermission.CurrentValue(), NotificationType.Error);
         }
     }
 
     private Task ShowLockedAsync()
     {
-        ShowNotice("世界被Minecraft实例锁定", NotificationType.Warning);
+        ShowNotice(CommonLanguageManager.Instance.saves_worldLocked.CurrentValue(), NotificationType.Warning);
         return Task.CompletedTask;
     }
 
@@ -444,8 +480,8 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
             Title = title,
             Mode = DialogMode.Error,
             Buttons = DialogButton.YesNo,
-            OverrideYesButtonText = "删除",
-            OverrideNoButtonText = "取消",
+            OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+            OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
             CanLightDismiss = false,
             CanResize = false
         };
@@ -595,17 +631,52 @@ public sealed class SaveItem(WorldSaveInfo info, MinecraftInstance? instance = n
     public bool HasIcon => IconPath != null;
     public IAsyncImageLoader ImageLoader { get; } = new LocalImageLoader(112);
 
-    public string Summary => $"{Info.Version ?? "未知版本"}·{GetGameModeText(Info.GameMode)}" +
-                             (Info.AllowCommands == true ? "·允许作弊" : string.Empty) +
-                             (Info.IsLocked ? "·锁定中" : string.Empty);
+    public string Summary
+    {
+        get
+        {
+            var summary = string.Format(CommonLanguageManager.Instance.saves_summary.CurrentValue(),
+                Info.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                GetGameModeText(Info.GameMode));
+            if (Info.AllowCommands == true)
+                summary += CommonLanguageManager.Instance.saves_allowCheats.CurrentValue();
+            if (Info.IsLocked)
+                summary += CommonLanguageManager.Instance.saves_locked.CurrentValue();
+            return summary;
+        }
+    }
 
-    public string LastPlayedText => $"最近游玩：{Info.LastPlayedTime ?? Info.LastWriteTime:yyyy-MM-dd HH:mm}";
+    public string LastPlayedText =>
+        string.Format(CommonLanguageManager.Instance.saves_lastPlayed.CurrentValue(),
+            Info.LastPlayedTime ?? Info.LastWriteTime);
 
-    public string Details =>
-        $"文件夹：{Info.FolderName}\n创建时间：{Info.CreationTime:yyyy-MM-dd HH:mm}\n修改时间：{Info.LastWriteTime:yyyy-MM-dd HH:mm}\n最近游玩：{Info.LastPlayedTime?.ToString("yyyy-MM-dd HH:mm") ?? "未知"}\n版本：{Info.Version ?? "未知"}\n种子：{Info.Seed?.ToString() ?? "未知"}\n游戏模式：{GetGameModeText(Info.GameMode)}\n允许作弊：{(Info.AllowCommands is null ? "未知" : Info.AllowCommands.Value ? "是" : "否")}\n玩家数据：{Info.PlayerDataCount}\n数据包：{Info.DataPackArchiveCount}";
+    public string Details
+    {
+        get
+        {
+            var unknown = CommonLanguageManager.Instance.account_unknown.CurrentValue();
+            var lastPlayed = Info.LastPlayedTime?.ToString("yyyy-MM-dd HH:mm") ?? unknown;
+            var allowCheats = Info.AllowCommands is null
+                ? unknown
+                : Info.AllowCommands.Value
+                    ? CommonLanguageManager.Instance.common_yes.CurrentValue()
+                    : CommonLanguageManager.Instance.common_no.CurrentValue();
+            return string.Format(CommonLanguageManager.Instance.saves_details.CurrentValue(), Info.FolderName,
+                Info.CreationTime, Info.LastWriteTime, lastPlayed, Info.Version ?? unknown,
+                Info.Seed?.ToString() ?? unknown, GetGameModeText(Info.GameMode), allowCheats,
+                Info.PlayerDataCount, Info.DataPackArchiveCount);
+        }
+    }
 
     private static string GetGameModeText(int? gameMode)
     {
-        return gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+        return gameMode switch
+        {
+            0 => CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue(),
+            1 => CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue(),
+            2 => CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue(),
+            3 => CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue(),
+            _ => CommonLanguageManager.Instance.recentPlay_gameModeUnknown.CurrentValue()
+        };
     }
 }

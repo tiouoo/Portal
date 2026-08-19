@@ -8,6 +8,7 @@ using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Core.Const;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -30,7 +31,7 @@ public partial class CustomDownloadPage : UserControl
 
         var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "选择保存文件夹",
+            Title = CommonLanguageManager.Instance.customDownload_selectFolder.CurrentValue(),
             AllowMultiple = false
         });
         var path = folders.FirstOrDefault()?.TryGetLocalPath();
@@ -47,14 +48,16 @@ public partial class CustomDownloadPage : UserControl
         if (!Uri.TryCreate(viewModel.Url?.Trim(), UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            topLevel.Notice("请输入有效的 HTTP/HTTPS 链接", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.customDownload_invalidUrl.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         var folder = viewModel.FolderPath?.Trim().Trim('"');
         if (string.IsNullOrWhiteSpace(folder))
         {
-            topLevel.Notice("请选择保存文件夹", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.customDownload_selectFolderNotice.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -71,7 +74,8 @@ public partial class CustomDownloadPage : UserControl
         catch (Exception exception)
         {
             Logger.Warning($"[CustomDownload] Invalid destination {folder}/{fileName}: {exception}");
-            topLevel.Notice("保存文件夹或文件名无效", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.customDownload_invalidFolder.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -84,14 +88,16 @@ public partial class CustomDownloadPage : UserControl
         var fileName = Path.GetFileName(destination);
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"自定义下载：{fileName}",
-            Description = "正在连接下载服务器",
+            Name = string.Format(CommonLanguageManager.Instance.customDownload_taskName.CurrentValue(), fileName),
+            Description = CommonLanguageManager.Instance.customDownload_connectingServer.CurrentValue(),
             Progress = 0,
             Actions =
             [
                 new TaskActionDefinition
                 {
-                    Name = "取消下载", Description = "取消此自定义下载", IconKey = "Cancel",
+                    Name = CommonLanguageManager.Instance.customDownload_cancelDownload.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.customDownload_cancelDownloadDescription.CurrentValue(),
+                    IconKey = "Cancel",
                     ExecuteAsync = (managedTask, _) =>
                     {
                         managedTask.RequestCancellation();
@@ -103,7 +109,8 @@ public partial class CustomDownloadPage : UserControl
             ]
         }, async context =>
         {
-            context.SetRunning($"正在下载：{fileName}");
+            context.SetRunning(string.Format(CommonLanguageManager.Instance.customDownload_downloading.CurrentValue(),
+                fileName));
             var request = new DownloadRequest(url, destination)
             {
                 ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
@@ -113,7 +120,9 @@ public partial class CustomDownloadPage : UserControl
                         ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
                         : (double?)null;
                     context.ReportProgress(fraction);
-                    context.SetDescription($"下载速度：{DefaultDownloader.FormatSize(progress.Speed, true)}");
+                    context.SetDescription(string.Format(
+                        CommonLanguageManager.Instance.customDownload_downloadSpeed.CurrentValue(),
+                        DefaultDownloader.FormatSize(progress.Speed, true)));
                 })
             };
 
@@ -126,9 +135,9 @@ public partial class CustomDownloadPage : UserControl
             if (download.Type == DownloadResultType.Cancelled)
                 throw new OperationCanceledException(context.CancellationToken);
             if (download.Type != DownloadResultType.Successful)
-                throw download.Exception ?? new IOException("文件下载失败。");
+                throw download.Exception ?? new IOException(CommonLanguageManager.Instance.customDownload_downloadFailed.CurrentValue());
             context.ReportProgress(1);
-            context.SetDescription("下载完成");
+            context.SetDescription(CommonLanguageManager.Instance.customDownload_complete.CurrentValue());
         });
         task.Start();
         _ = ObserveDownloadAsync(task, topLevel, fileName);
@@ -151,10 +160,14 @@ public partial class CustomDownloadPage : UserControl
 
         if (task.Status == ManagedTaskStatus.Completed)
             Dispatcher.UIThread.Post(() =>
-                topLevel.Notice($"{fileName} 下载完成", NotificationType.Success));
+                topLevel.Notice(string.Format(
+                    CommonLanguageManager.Instance.customDownload_fileDownloaded.CurrentValue(), fileName),
+                    NotificationType.Success));
         else if (task.Status == ManagedTaskStatus.Faulted)
             Dispatcher.UIThread.Post(() =>
-                topLevel.Notice($"{fileName} 下载失败", NotificationType.Error));
+                topLevel.Notice(string.Format(
+                    CommonLanguageManager.Instance.customDownload_fileDownloadFailed.CurrentValue(), fileName),
+                    NotificationType.Error));
         await Task.Delay(TimeSpan.FromSeconds(3));
         Dispatcher.UIThread.Post(() => TaskManager.Instance.RemoveTerminalTask(task));
     }

@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Portal.Core.Minecraft;
 using Portal.Core.Module.Widgets;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages;
 
 namespace Portal.Views.Widgets;
@@ -37,7 +38,7 @@ public partial class InstanceWidget2x1 : InstanceBoundWidgetBase
         if (instance == null)
         {
             if (iconImage != null) iconImage.Source = null;
-            if (titleText != null) titleText.Text = "未选择实例";
+            if (titleText != null) titleText.Text = CommonLanguageManager.Instance.widgets_noInstance.CurrentValue();
             if (folderText != null) folderText.Text = string.Empty;
             if (versionText != null) versionText.Text = string.Empty;
             if (lastPlayText != null) lastPlayText.Text = string.Empty;

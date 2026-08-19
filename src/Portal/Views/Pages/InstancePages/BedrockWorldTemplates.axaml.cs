@@ -11,6 +11,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -55,9 +56,12 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string CountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string CountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
     public int SelectedCount => Items.Count(item => item.IsSelected);
-    public string SelectedCountText => $"批量操作{SelectedCount}个";
+    public string SelectedCountText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_batchSelected.CurrentValue(), SelectedCount);
     public bool HasMultipleSelection => SelectedCount >= 1;
 
     public void Dispose()
@@ -167,14 +171,19 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
     private async void DeleteSelected_OnClick(object? sender, RoutedEventArgs e)
     {
         var selected = Items.Where(item => item.IsSelected).ToArray();
-        if (selected.Length >= 2 && await ConfirmDeleteAsync($"确定要永久删除选中的 {selected.Length} 个世界模板吗？此操作无法撤销。") ==
-            DialogResult.Yes) await DeleteAsync(selected);
+        if (selected.Length >= 2 &&
+            await ConfirmDeleteAsync(string.Format(
+                CommonLanguageManager.Instance.worldTemplates_deleteSelectedConfirm.CurrentValue(),
+                selected.Length)) == DialogResult.Yes)
+            await DeleteAsync(selected);
     }
 
     private async void DeleteWorldTemplate_OnClick(object? sender, RoutedEventArgs e)
     {
         if (GetItem(sender) is { } item &&
-            await ConfirmDeleteAsync($"确定要永久删除世界模板“{item.DisplayName}”吗？此操作无法撤销。") == DialogResult.Yes)
+            await ConfirmDeleteAsync(string.Format(
+                CommonLanguageManager.Instance.worldTemplates_deleteConfirm.CurrentValue(), item.DisplayName)) ==
+            DialogResult.Yes)
             await DeleteAsync([item]);
     }
 
@@ -184,7 +193,11 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
         await OverlayDialog.ShowStandardAsync(
             new TextBlock { Margin = new Thickness(24), Text = item.DetailsText, TextWrapping = TextWrapping.Wrap },
             null, this.TryGetHostId(),
-            new OverlayDialogOptions { Title = "世界模板详情", Buttons = DialogButton.OK, CanResize = false });
+            new OverlayDialogOptions
+            {
+                Title = CommonLanguageManager.Instance.worldTemplates_detailsTitle.CurrentValue(),
+                Buttons = DialogButton.OK, CanResize = false
+            });
     }
 
     private async void OpenWorldTemplateFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -207,8 +220,11 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
             this.TryGetHostId(),
             new OverlayDialogOptions
             {
-                Title = "删除世界模板", Mode = DialogMode.Error, Buttons = DialogButton.YesNo, OverrideYesButtonText = "删除",
-                OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.worldTemplates_deleteTitle.CurrentValue(),
+                Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
+                CanLightDismiss = false, CanResize = false
             });
     }
 
@@ -235,7 +251,9 @@ public partial class BedrockWorldTemplates : UserControl, INotifyPropertyChanged
         _hasLoaded = false;
         await LoadAsync();
         if (TopLevel.GetTopLevel(this) is { } topLevel)
-            topLevel.Notice(failed == 0 ? "已删除所选世界模板" : $"删除完成，但有 {failed} 个世界模板操作失败",
+            topLevel.Notice(failed == 0
+                    ? CommonLanguageManager.Instance.worldTemplates_deletedSelected.CurrentValue()
+                    : string.Format(CommonLanguageManager.Instance.worldTemplates_deleteFailed.CurrentValue(), failed),
                 failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }
 
@@ -275,12 +293,24 @@ public sealed class WorldTemplateItem(WorldTemplateInfo info) : INotifyPropertyC
     public WorldTemplateInfo Info { get; } = info;
     public string DisplayName => Info.DisplayName;
     public string FileName => Info.FileName;
-    public string DescriptionText => string.IsNullOrWhiteSpace(Info.Description) ? "没有可用的世界模板描述" : Info.Description;
-    public string BaseGameVersionText => Info.BaseGameVersion ?? "未知";
-    public string PackSummary => $"资源包 {Info.ResourcePacks.Count} 个，行为包 {Info.BehaviorPacks.Count} 个";
+    public string DescriptionText =>
+        string.IsNullOrWhiteSpace(Info.Description)
+            ? CommonLanguageManager.Instance.worldTemplates_noDescription.CurrentValue()
+            : Info.Description;
+    public string BaseGameVersionText =>
+        Info.BaseGameVersion ?? CommonLanguageManager.Instance.account_unknown.CurrentValue();
+    public string PackSummary =>
+        string.Format(CommonLanguageManager.Instance.bedrockWorlds_packSummary.CurrentValue(),
+            Info.ResourcePacks.Count, Info.BehaviorPacks.Count);
 
     public string DetailsText =>
-        $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{Info.Version ?? "未知"}\n基础游戏版本：{BaseGameVersionText}\n模块 UUID：{(Info.ModuleUuids.Count == 0 ? "未知" : string.Join("、", Info.ModuleUuids.Select(uuid => uuid.ToLowerInvariant())))}\n\n默认资源包：\n{FormatPacks(Info.ResourcePacks)}\n\n默认行为包：\n{FormatPacks(Info.BehaviorPacks)}\n\n{DescriptionText}";
+        string.Format(CommonLanguageManager.Instance.worldTemplates_details.CurrentValue(), DisplayName, FileName,
+            Info.Uuid?.ToLowerInvariant() ?? CommonLanguageManager.Instance.account_unknown.CurrentValue(),
+            Info.Version ?? CommonLanguageManager.Instance.account_unknown.CurrentValue(), BaseGameVersionText,
+            Info.ModuleUuids.Count == 0
+                ? CommonLanguageManager.Instance.account_unknown.CurrentValue()
+                : string.Join("、", Info.ModuleUuids.Select(uuid => uuid.ToLowerInvariant())),
+            FormatPacks(Info.ResourcePacks), FormatPacks(Info.BehaviorPacks), DescriptionText);
 
     public Bitmap? Icon { get; } = CreateIcon(info.IconData);
     public bool HasIcon => Icon != null;
@@ -307,10 +337,14 @@ public sealed class WorldTemplateItem(WorldTemplateInfo info) : INotifyPropertyC
 
     private static string FormatPacks(IReadOnlyList<WorldTemplatePackReference> packs)
     {
+        var unknown = CommonLanguageManager.Instance.account_unknown.CurrentValue();
         return packs.Count == 0
-            ? "无"
+            ? CommonLanguageManager.Instance.worldTemplates_none.CurrentValue()
             : string.Join('\n',
-                packs.Select(pack => $"{pack.PackId} | 子包：{pack.Subpack ?? "默认"} | 版本：{pack.Version ?? "未知"}"));
+                packs.Select(pack => string.Format(
+                    CommonLanguageManager.Instance.worldTemplates_packFormat.CurrentValue(), pack.PackId,
+                    pack.Subpack ?? CommonLanguageManager.Instance.worldTemplates_defaultPack.CurrentValue(),
+                    pack.Version ?? unknown)));
     }
 
     private static Bitmap? CreateIcon(byte[]? data)

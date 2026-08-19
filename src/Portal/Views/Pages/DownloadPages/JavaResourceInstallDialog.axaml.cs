@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common.Interfaces;
 
@@ -78,7 +79,10 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
 
     public JavaResourceDefinition Definition { get; }
     [ObservableProperty] public partial JavaResourceFileItem? File { get; set; }
-    public string Metadata => File is null ? "所选实例没有兼容版本" : $"适用于 {string.Join("/", File.MinecraftVersions)}";
+    public string Metadata => File is null
+        ? CommonLanguageManager.Instance.javaResourceInstall_noCompatibleVersion.CurrentValue()
+        : string.Format(CommonLanguageManager.Instance.javaResourceInstall_appliesTo.CurrentValue(),
+            string.Join("/", File.MinecraftVersions));
     public bool IsDataPack => Definition.Kind == JavaResourceKind.DataPack;
     public ObservableCollection<JavaResourceInstallInstanceItem> Instances { get; } = [];
     public ObservableCollection<JavaResourceInstallWorldItem> Worlds { get; } = [];
@@ -172,7 +176,10 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
             foreach (var world in worlds.Where(world => !world.IsLocked))
             {
                 var name = string.IsNullOrWhiteSpace(world.LevelName) ? world.FolderName : world.LevelName;
-                var description = $"{world.FolderName}·{world.Version ?? "未知版本"}·{world.DataPackArchiveCount} 个数据包";
+                var description = string.Format(
+                    CommonLanguageManager.Instance.javaResourceInstall_worldDescription.CurrentValue(), world.FolderName,
+                    world.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                    world.DataPackArchiveCount);
                 Worlds.Add(new JavaResourceInstallWorldItem(world, name, description));
             }
 

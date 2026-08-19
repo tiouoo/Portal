@@ -11,6 +11,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Module.Imaging;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -61,7 +62,9 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged, IDisposa
     }
 
     public bool IsEmpty => !IsLoading && ScreenshotItems.Count == 0;
-    public string ScreenshotCountText => IsLoading ? string.Empty : $"{ScreenshotItems.Count} 张";
+    public string ScreenshotCountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.screenshots_count.CurrentValue(), ScreenshotItems.Count);
 
     private string? ScreenshotsPath => _instance?.GetSpecialFolder(MinecraftSpecialFolder.ScreenshotsFolder);
 
@@ -208,16 +211,18 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged, IDisposa
         var result = await OverlayDialog.ShowStandardAsync(
             new TextBlock
             {
-                Margin = new Thickness(24), Text = $"确定要永久删除截图“{item.FileName}”吗？此操作无法撤销。",
+                Margin = new Thickness(24),
+                Text = string.Format(CommonLanguageManager.Instance.screenshots_deleteConfirm.CurrentValue(),
+                    item.FileName),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "删除截图",
+                Title = CommonLanguageManager.Instance.screenshots_deleteTitle.CurrentValue(),
                 Mode = DialogMode.Error,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "删除",
-                OverrideNoButtonText = "取消",
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });

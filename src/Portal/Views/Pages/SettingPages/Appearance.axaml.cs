@@ -30,7 +30,11 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
 
     public IList<LinguaCulture> Cultures { get; } =
     [
-        new() { Culture = new CultureInfo("zh-CN"), DisplayName = "简体中文", ShortDisplayName = "中文" },
+        new()
+        {
+            Culture = new CultureInfo("zh-CN"), DisplayName = CommonLanguageManager.Instance.common_languageChinese.CurrentValue(),
+            ShortDisplayName = CommonLanguageManager.Instance.common_languageChineseShort.CurrentValue()
+        },
         new() { Culture = new CultureInfo("en-US"), DisplayName = "English", ShortDisplayName = "EN" }
     ];
 

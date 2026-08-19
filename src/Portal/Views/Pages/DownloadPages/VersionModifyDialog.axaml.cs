@@ -13,6 +13,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using TioUi.Common;
@@ -114,8 +115,9 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             if (entry is null) return string.Empty;
             var current = entry.Version.VersionId;
             return entry is ModifiedMinecraftEntry { InheritedMinecraft: { } inherited }
-                ? $"当前版本：{current}（基于原版 {inherited.Version.VersionId}）"
-                : $"当前版本：{current}";
+                ? string.Format(CommonLanguageManager.Instance.minecraftInstall_currentVersionWithBase.CurrentValue(),
+                    current, inherited.Version.VersionId)
+                : string.Format(CommonLanguageManager.Instance.minecraftInstall_currentVersion.CurrentValue(), current);
         }
     }
 
@@ -123,12 +125,12 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     public IReadOnlyList<VersionFilterOption> VersionFilters { get; } =
     [
-        new("正式版", VersionFilterKind.JavaRelease),
-        new("快照版", VersionFilterKind.JavaSnapshot),
-        new("愚人节版", VersionFilterKind.JavaAprilFools),
-        new("反混淆版", VersionFilterKind.JavaUnobfuscated),
-        new("Beta版", VersionFilterKind.JavaBeta),
-        new("Alpha版", VersionFilterKind.JavaAlpha)
+        new(CommonLanguageManager.Instance.createInstance_versionRelease.CurrentValue(), VersionFilterKind.JavaRelease),
+        new(CommonLanguageManager.Instance.createInstance_versionSnapshot.CurrentValue(), VersionFilterKind.JavaSnapshot),
+        new(CommonLanguageManager.Instance.createInstance_versionAprilFools.CurrentValue(), VersionFilterKind.JavaAprilFools),
+        new(CommonLanguageManager.Instance.createInstance_versionUnobfuscated.CurrentValue(), VersionFilterKind.JavaUnobfuscated),
+        new(CommonLanguageManager.Instance.createInstance_versionBeta.CurrentValue(), VersionFilterKind.JavaBeta),
+        new(CommonLanguageManager.Instance.createInstance_versionAlpha.CurrentValue(), VersionFilterKind.JavaAlpha)
     ];
 
     [ObservableProperty] public partial VersionFilterOption? SelectedVersionFilter { get; set; }
@@ -137,17 +139,23 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
     [ObservableProperty] public partial VersionOption? SelectedVersion { get; set; }
     [ObservableProperty] public partial bool IsVersionsLoading { get; set; }
 
-    [ObservableProperty] public partial string VersionsPlaceholder { get; set; } = "加载中...";
+    [ObservableProperty] public partial string VersionsPlaceholder { get; set; } =
+        CommonLanguageManager.Instance.common_loading.CurrentValue();
     [ObservableProperty] public partial bool IsFabricSelected { get; set; }
     [ObservableProperty] public partial bool IsForgeSelected { get; set; }
     [ObservableProperty] public partial bool IsNeoForgeSelected { get; set; }
     [ObservableProperty] public partial bool IsQuiltSelected { get; set; }
     [ObservableProperty] public partial bool IsOptiFineSelected { get; set; }
-    [ObservableProperty] public partial string FabricStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string ForgeStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string NeoForgeStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string QuiltStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string OptiFineStatus { get; set; } = "不安装";
+    [ObservableProperty] public partial string FabricStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string ForgeStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string NeoForgeStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string QuiltStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string OptiFineStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
 
     public bool HasModLoader => IsFabricSelected || IsForgeSelected || IsNeoForgeSelected || IsQuiltSelected ||
                                 IsOptiFineSelected;
@@ -199,8 +207,8 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         var dependents = VersionModifyService.FindDependentVersionIds(entry.MinecraftFolderPath, entry.Id);
         return dependents.Count == 0
             ? string.Empty
-            : $"该实例被其他版本依赖（{string.Join("、", dependents)}），修改本实例会破坏它们。" +
-              "请改为修改依赖链末端的实例（如加载器实例），或先删除这些依赖版本。";
+            : string.Format(CommonLanguageManager.Instance.minecraftInstall_dependentWarning.CurrentValue(),
+                string.Join("、", dependents));
     }
 
     private void PreselectInstalledLoaders()
@@ -338,7 +346,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         var generation = ++_versionLoadGeneration;
 
         IsVersionsLoading = true;
-        VersionsPlaceholder = "加载中...";
+        VersionsPlaceholder = CommonLanguageManager.Instance.common_loading.CurrentValue();
         Versions.Clear();
         SelectedVersion = null;
         UpdateVersionState();
@@ -372,7 +380,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             Logger.Error(exception);
             if (generation != _versionLoadGeneration || _disposed) return;
             IsVersionsLoading = false;
-            VersionsPlaceholder = "无法获取版本列表，请检查网络连接";
+            VersionsPlaceholder = CommonLanguageManager.Instance.createInstance_fetchVersionsFailed.CurrentValue();
             UpdateVersionState();
         }
     }
@@ -458,12 +466,12 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                 Versions.Add(item);
 
         VersionsPlaceholder = IsVersionsLoading
-            ? "加载中..."
+            ? CommonLanguageManager.Instance.common_loading.CurrentValue()
             : _categoryVersions.Count == 0
-                ? "暂无版本"
+                ? CommonLanguageManager.Instance.createInstance_noVersions.CurrentValue()
                 : Versions.Count == 0
-                    ? "无匹配版本"
-                    : "选择游戏版本";
+                    ? CommonLanguageManager.Instance.createInstance_noMatchVersions.CurrentValue()
+                    : CommonLanguageManager.Instance.createInstance_selectVersion.CurrentValue();
 
         if (!isFiltering)
         {
@@ -516,7 +524,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                 {
                     _selectedLoaders.Remove(loaderKind);
                     _availableLoaderVersions.Remove(loaderKind);
-                    SetStatus(loaderKind, "不安装");
+                    SetStatus(loaderKind, CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue());
                     _loadGenerations[loaderKind] = _loadGenerations.GetValueOrDefault(loaderKind) + 1;
                 }
         }
@@ -534,7 +542,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         var generation = _loadGenerations.GetValueOrDefault(kind) + 1;
         _loadGenerations[kind] = generation;
         _loadingCount++;
-        SetStatus(kind, "正在获取最新版...");
+        SetStatus(kind, CommonLanguageManager.Instance.minecraftInstall_fetchingLatest.CurrentValue());
         UpdateVersionState();
         try
         {
@@ -550,7 +558,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             {
                 _selectedLoaders.Remove(kind);
                 _availableLoaderVersions.Remove(kind);
-                SetStatus(kind, "当前游戏版本不可用");
+                SetStatus(kind, CommonLanguageManager.Instance.minecraftInstall_versionUnavailable.CurrentValue());
             }
             else
             {
@@ -559,8 +567,11 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                 _availableLoaderVersions[kind] = entries;
                 _selectedLoaders[kind] = entry;
                 SetStatus(kind, matched is not null
-                    ? $"已选择当前版本：{MinecraftInstallationViewModel.GetLoaderVersion(kind, entry)}"
-                    : $"最新版：{MinecraftInstallationViewModel.GetLoaderVersion(kind, entry)}");
+                    ? string.Format(
+                        CommonLanguageManager.Instance.minecraftInstall_selectedCurrentVersion.CurrentValue(),
+                        MinecraftInstallationViewModel.GetLoaderVersion(kind, entry))
+                    : string.Format(CommonLanguageManager.Instance.minecraftInstall_latestVersion.CurrentValue(),
+                        MinecraftInstallationViewModel.GetLoaderVersion(kind, entry)));
             }
         }
         catch (Exception exception)
@@ -570,7 +581,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
             {
                 _selectedLoaders.Remove(kind);
                 _availableLoaderVersions.Remove(kind);
-                SetStatus(kind, "获取失败，请取消后重试");
+                SetStatus(kind, CommonLanguageManager.Instance.minecraftInstall_fetchFailedRetry.CurrentValue());
             }
         }
         finally
@@ -637,7 +648,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                 new LoaderVersionDialogViewModel(versions), owner.GetTopLevel().TryGetHostId(),
                 new OverlayDialogOptions
                 {
-                    Title = "选择加载器版本",
+                    Title = CommonLanguageManager.Instance.minecraftInstall_selectLoaderVersion.CurrentValue(),
                     Buttons = DialogButton.None,
                     CanLightDismiss = false,
                     CanResize = false,
@@ -647,7 +658,9 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         if (selected is null || !IsSelected(selected.Kind)) return;
 
         _selectedLoaders[selected.Kind] = selected.Entry;
-        SetStatus(selected.Kind, $"已选择版本：{selected.Version}");
+        SetStatus(selected.Kind,
+            string.Format(CommonLanguageManager.Instance.minecraftInstall_selectedVersion.CurrentValue(),
+                selected.Version));
         UpdateVersionState();
     }
 
@@ -682,7 +695,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                 SetLoaderChecked(kind, false);
                 _selectedLoaders.Remove(kind);
                 _availableLoaderVersions.Remove(kind);
-                SetStatus(kind, "不安装");
+                SetStatus(kind, CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue());
                 _loadGenerations[kind] = _loadGenerations.GetValueOrDefault(kind) + 1;
             }
         }
@@ -721,20 +734,25 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         var currentId = GetCurrentVanillaId();
         if (!string.IsNullOrWhiteSpace(targetId) &&
             !string.Equals(targetId, currentId, StringComparison.OrdinalIgnoreCase))
-            actions.Add($"游戏版本将由 {currentId} 变更为 {targetId}");
+            actions.Add(string.Format(
+                CommonLanguageManager.Instance.minecraftInstall_previewVersionChange.CurrentValue(), currentId, targetId));
 
         var installedKinds = GetInstalledLoaderKinds();
         var selectedKinds = Enum.GetValues<LoaderKind>().Where(IsSelected).ToHashSet();
         if (selectedKinds.Count == 0)
         {
             if (installedKinds.Count > 0)
-                actions.Add($"将卸载全部加载器（{string.Join("、", installedKinds)}）并还原为原版");
+                actions.Add(string.Format(
+                    CommonLanguageManager.Instance.minecraftInstall_previewUninstallAll.CurrentValue(),
+                    string.Join("、", installedKinds)));
         }
         else
         {
             var removedKinds = installedKinds.Where(kind => !selectedKinds.Contains(kind)).ToList();
             if (removedKinds.Count > 0)
-                actions.Add($"将卸载加载器：{string.Join("、", removedKinds)}");
+                actions.Add(string.Format(
+                    CommonLanguageManager.Instance.minecraftInstall_previewUninstallLoaders.CurrentValue(),
+                    string.Join("、", removedKinds)));
 
             var changedKinds = selectedKinds.Where(kind =>
             {
@@ -750,12 +768,14 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                     _selectedLoaders.TryGetValue(kind, out var entry)
                         ? $"{kind} {MinecraftInstallationViewModel.GetLoaderVersion(kind, entry)}"
                         : kind.ToString());
-                actions.Add($"将安装/更新加载器：{string.Join("、", details)}");
+                actions.Add(string.Format(
+                    CommonLanguageManager.Instance.minecraftInstall_previewInstallLoaders.CurrentValue(),
+                    string.Join("、", details)));
             }
         }
 
         ModifyPreviewText = actions.Count == 0
-            ? "当前选择与实例配置一致，无需修改"
+            ? CommonLanguageManager.Instance.minecraftInstall_previewNoChanges.CurrentValue()
             : string.Join("；", actions);
         HasChanges = actions.Count > 0;
         OnPropertyChanged(nameof(ModifyPreviewText));

@@ -12,6 +12,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.InstancePages;
@@ -92,7 +93,8 @@ public partial class Logs : UserControl
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel != null)
-                topLevel.Notice("latest.log 被锁定", NotificationType.Warning);
+                topLevel.Notice(CommonLanguageManager.Instance.logs_latestLocked.CurrentValue(),
+                    NotificationType.Warning);
 
             var nextLog =
                 LogFiles.FirstOrDefault(file => !string.Equals(file.Path, path, StringComparison.OrdinalIgnoreCase));
@@ -103,7 +105,8 @@ public partial class Logs : UserControl
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel != null)
-                topLevel.Notice($"无法读取日志：{ex.Message}", NotificationType.Error);
+                topLevel.Notice(string.Format(CommonLanguageManager.Instance.logs_readFailed.CurrentValue(),
+                    ex.Message), NotificationType.Error);
         }
     }
 
@@ -149,12 +152,14 @@ public partial class Logs : UserControl
 
     private void Share_OnClick(object? sender, RoutedEventArgs e)
     {
-        _ = LogSharingInteraction.ShareAsync(this, LogEditor.Document, "日志");
+        _ = LogSharingInteraction.ShareAsync(this, LogEditor.Document,
+            CommonLanguageManager.Instance.logs_log.CurrentValue());
     }
 
     private void AnalyseAi_OnClick(object? sender, RoutedEventArgs e)
     {
-        _ = LogSharingInteraction.AnalyseAiAsync(this, LogEditor.Document, "日志");
+        _ = LogSharingInteraction.AnalyseAiAsync(this, LogEditor.Document,
+            CommonLanguageManager.Instance.logs_log.CurrentValue());
     }
 
     private void SelectAll_OnClick(object? sender, RoutedEventArgs e)
@@ -175,18 +180,24 @@ public partial class Logs : UserControl
 
         if (string.IsNullOrWhiteSpace(LogEditor.Document.Text))
         {
-            topLevel.Notice("没有可导出的日志", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.logs_noExportableLog.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         var selectedFileName = (LogFileSelector.SelectedItem as InstanceLogFileItem)?.Name;
-        var suggestedFileName = Path.GetFileNameWithoutExtension(selectedFileName) ?? "Minecraft日志";
+        var suggestedFileName = Path.GetFileNameWithoutExtension(selectedFileName) ??
+                                CommonLanguageManager.Instance.logs_minecraftLog.CurrentValue();
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "导出 Minecraft 日志",
+            Title = CommonLanguageManager.Instance.logs_exportTitle.CurrentValue(),
             DefaultExtension = "log",
             SuggestedFileName = $"{suggestedFileName}-{DateTime.Now:yyyyMMdd-HHmmss}",
-            FileTypeChoices = [new FilePickerFileType("日志文件") { Patterns = ["*.log"] }]
+            FileTypeChoices =
+                [new FilePickerFileType(CommonLanguageManager.Instance.logs_logFile.CurrentValue())
+                {
+                    Patterns = ["*.log"]
+                }]
         });
         if (file == null)
             return;
@@ -196,11 +207,12 @@ public partial class Logs : UserControl
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new StreamWriter(stream);
             await writer.WriteAsync(LogEditor.Document.Text);
-            topLevel.Notice("日志已导出", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.logs_exported.CurrentValue(), NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"导出失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.logs_exportFailed.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
     }
 

@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -61,7 +62,9 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string CountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string CountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
 
     public void Dispose()
     {
@@ -111,10 +114,13 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
         var userId = WorldUserIdSelector.SelectedItem as string;
         if (string.IsNullOrWhiteSpace(userId)) return;
         if (drop == null)
-            await BedrockResourceImport.SelectAndImportAsync(this, _instance, "选择基岩版存档", "存档", [".mcworld"], userId,
+            await BedrockResourceImport.SelectAndImportAsync(this, _instance,
+                CommonLanguageManager.Instance.bedrockWorlds_selectBedrockWorld.CurrentValue(),
+                CommonLanguageManager.Instance.favorite_kindSave.CurrentValue(), [".mcworld"], userId,
                 null, LoadAsync);
         else
-            await BedrockResourceImport.ImportDropAsync(this, drop, _instance, "存档", [".mcworld"], userId, null,
+            await BedrockResourceImport.ImportDropAsync(this, drop, _instance,
+                CommonLanguageManager.Instance.favorite_kindSave.CurrentValue(), [".mcworld"], userId, null,
                 LoadAsync);
     }
 
@@ -142,16 +148,17 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
             new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = $"确定要永久删除存档“{item.DisplayName}”吗？此操作无法撤销。",
+                Text = string.Format(CommonLanguageManager.Instance.saves_deleteConfirm.CurrentValue(),
+                    item.DisplayName),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "删除存档",
+                Title = CommonLanguageManager.Instance.saves_deleteSaveTitle.CurrentValue(),
                 Mode = DialogMode.Error,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "删除",
-                OverrideNoButtonText = "取消",
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });
@@ -164,7 +171,8 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
             Items.Remove(item);
             ApplyFilter();
             if (TopLevel.GetTopLevel(this) is { } topLevel)
-                topLevel.Notice("存档已删除", NotificationType.Success);
+                topLevel.Notice(CommonLanguageManager.Instance.saves_saveDeleted.CurrentValue(),
+                    NotificationType.Success);
         }
         catch (IOException ex)
         {
@@ -174,14 +182,15 @@ public partial class BedrockWorlds : UserControl, INotifyPropertyChanged, IDispo
         catch (UnauthorizedAccessException exception)
         {
             Logger.Warning($"[BedrockWorlds] Failed to delete world {item.Info.FolderPath}: {exception}");
-            ShowDeleteFailure("没有删除此存档的权限。");
+            ShowDeleteFailure(CommonLanguageManager.Instance.saves_deleteNoPermission.CurrentValue());
         }
     }
 
     private void ShowDeleteFailure(string message)
     {
         if (TopLevel.GetTopLevel(this) is { } topLevel)
-            topLevel.Notice($"无法删除存档：{message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.saves_deleteFailed.CurrentValue(), message),
+                NotificationType.Error);
     }
 
     private void RefreshWorldUserIds()
@@ -282,9 +291,13 @@ public sealed class BedrockWorldItem(BedrockWorldInfo info) : IDisposable
     public BedrockWorldInfo Info { get; } = info;
     public string DisplayName => Info.DisplayName;
     public string FolderName => Info.FolderName;
-    public string FolderNameText => $"文件夹：{FolderName}";
-    public string PackSummary => $"资源包 {Info.ResourcePacks.Count} 个，行为包 {Info.BehaviorPacks.Count} 个";
-    public string ModifiedText => $"修改时间：{Info.LastWriteTime:yyyy-MM-dd HH:mm}";
+    public string FolderNameText =>
+        string.Format(CommonLanguageManager.Instance.bedrockWorlds_folderName.CurrentValue(), FolderName);
+    public string PackSummary =>
+        string.Format(CommonLanguageManager.Instance.bedrockWorlds_packSummary.CurrentValue(),
+            Info.ResourcePacks.Count, Info.BehaviorPacks.Count);
+    public string ModifiedText =>
+        string.Format(CommonLanguageManager.Instance.bedrockWorlds_modifiedTime.CurrentValue(), Info.LastWriteTime);
     public Bitmap? Icon { get; } = CreateIcon(info.IconData);
     public bool HasIcon => Icon != null;
 

@@ -10,6 +10,7 @@ using Portal.Core.Classes.Config;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Initialize;
+using Portal.Localization;
 using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
@@ -115,7 +116,8 @@ public partial class ShortcutItemViewModel : ObservableObject
     public bool Matches(string query)
     {
         if (string.IsNullOrWhiteSpace(query)) return true;
-        var gestureText = Gesture?.ToString("g", null) ?? "未设置";
+        var gestureText = Gesture?.ToString("g", null) ??
+                          CommonLanguageManager.Instance.shortcuts_notSet.CurrentValue();
         var text = $"{DisplayName} {gestureText}";
         if (MatchesToken(query, text)) return true;
 

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -22,7 +23,8 @@ public partial class QuickDownloadLoadingDialogViewModel(string title) : Observa
 {
     public string Title { get; } = title;
     [ObservableProperty] public partial bool IsLoading { get; set; } = true;
-    [ObservableProperty] public partial string Message { get; set; } = "正在获取可下载文件...";
+    [ObservableProperty] public partial string Message { get; set; } =
+        CommonLanguageManager.Instance.quickDownload_fetchingFiles.CurrentValue();
 
     public void Close()
     {
@@ -34,6 +36,6 @@ public partial class QuickDownloadLoadingDialogViewModel(string title) : Observa
     public void Fail()
     {
         IsLoading = false;
-        Message = "无法获取资源文件，请检查网络后重试。";
+        Message = CommonLanguageManager.Instance.quickDownload_fetchFailed.CurrentValue();
     }
 }

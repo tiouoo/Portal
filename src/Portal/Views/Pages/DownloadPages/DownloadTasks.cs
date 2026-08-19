@@ -5,6 +5,7 @@ using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -37,7 +38,8 @@ internal static class DownloadProgressReporter
                         : null);
                     context.SetDescription(formatSpeed is not null
                         ? formatSpeed(current.Speed)
-                        : $"下载速度：{DefaultDownloader.FormatSize(current.Speed, true)}");
+                        : string.Format(CommonLanguageManager.Instance.download_speed.CurrentValue(),
+                            DefaultDownloader.FormatSize(current.Speed, true)));
                 }
             }, DispatcherPriority.Background);
         };
@@ -50,7 +52,8 @@ internal static class DownloadTasks
     {
         return new TaskActionDefinition
         {
-            Name = "取消下载", Description = description, IconKey = "Cancel",
+            Name = CommonLanguageManager.Instance.download_cancel.CurrentValue(), Description = description,
+            IconKey = "Cancel",
             ExecuteAsync = (managedTask, _) =>
             {
                 managedTask.RequestCancellation();
@@ -63,18 +66,19 @@ internal static class DownloadTasks
 
     public static ManagedTask Download(TopLevel topLevel, string taskName, string cancelDescription, string fileName,
         string downloadUrl, string destination, long fileSize, Func<TaskExecutionContext, Task>? afterDownload = null,
-        string completedText = "下载完成", Func<double, string>? formatSpeed = null,
-        string failureMessage = "下载失败。")
+        string completedText = "", Func<double, string>? formatSpeed = null,
+        string failureMessage = "")
     {
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = taskName,
-            Description = "正在连接下载服务器",
+            Description = CommonLanguageManager.Instance.download_connecting.CurrentValue(),
             Progress = 0,
             Actions = [CreateCancelAction(cancelDescription)]
         }, async context =>
         {
-            context.SetRunning($"正在下载：{fileName}");
+            context.SetRunning(string.Format(CommonLanguageManager.Instance.download_downloading.CurrentValue(),
+                fileName));
             var request = new DownloadRequest(downloadUrl, destination, fileSize)
             {
                 ProgressChanged = DownloadProgressReporter.Create(context, formatSpeed)
@@ -83,10 +87,14 @@ internal static class DownloadTasks
             if (result.Type == DownloadResultType.Cancelled)
                 throw new OperationCanceledException(context.CancellationToken);
             if (result.Type != DownloadResultType.Successful)
-                throw result.Exception ?? new IOException(failureMessage);
+                throw result.Exception ?? new IOException(string.IsNullOrEmpty(failureMessage)
+                    ? CommonLanguageManager.Instance.download_failed.CurrentValue()
+                    : failureMessage);
             if (afterDownload is not null) await afterDownload(context);
             context.ReportProgress(1);
-            context.SetDescription(completedText);
+            context.SetDescription(string.IsNullOrEmpty(completedText)
+                ? CommonLanguageManager.Instance.download_complete.CurrentValue()
+                : completedText);
         });
         task.Start();
         _ = ObserveAsync(task, topLevel, fileName);
@@ -111,12 +119,16 @@ internal static class DownloadTasks
         if (task.Status == ManagedTaskStatus.Completed)
         {
             Logger.Info($"[Download] Download completed for {fileName}.");
-            Dispatcher.UIThread.Post(() => topLevel.Notice($"{fileName} 下载完成", NotificationType.Success));
+            Dispatcher.UIThread.Post(() => topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.download_downloaded.CurrentValue(), fileName),
+                NotificationType.Success));
         }
         else if (task.Status == ManagedTaskStatus.Faulted)
         {
             Logger.Warning($"[Download] Download failed for {fileName}: {task.Exception}");
-            Dispatcher.UIThread.Post(() => topLevel.Notice($"{fileName} 下载失败", NotificationType.Error));
+            Dispatcher.UIThread.Post(() => topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.download_downloadFailed.CurrentValue(), fileName),
+                NotificationType.Error));
         }
 
         await Task.Delay(TimeSpan.FromSeconds(3));

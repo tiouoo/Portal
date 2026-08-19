@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Portal.Localization;
 using Timer = System.Timers.Timer;
 
 namespace Portal.Views.Widgets;
@@ -48,7 +49,7 @@ public abstract class ClockWidgetBase : IWidgetContent
         if (_timeWithSecondsText != null)
             _timeWithSecondsText.Text = now.ToString("HH:mm:ss");
         if (_dateText != null)
-            _dateText.Text = $"{now:yyyy年M月d日}";
+            _dateText.Text = string.Format(CommonLanguageManager.Instance.widgets_dateFormat.CurrentValue(), now);
         if (_weekText != null)
             _weekText.Text = GetWeekday(now);
     }
@@ -57,13 +58,13 @@ public abstract class ClockWidgetBase : IWidgetContent
     {
         return now.DayOfWeek switch
         {
-            DayOfWeek.Monday => "周一",
-            DayOfWeek.Tuesday => "周二",
-            DayOfWeek.Wednesday => "周三",
-            DayOfWeek.Thursday => "周四",
-            DayOfWeek.Friday => "周五",
-            DayOfWeek.Saturday => "周六",
-            _ => "周日"
+            DayOfWeek.Monday => CommonLanguageManager.Instance.overlay_weekdayMonday.CurrentValue(),
+            DayOfWeek.Tuesday => CommonLanguageManager.Instance.overlay_weekdayTuesday.CurrentValue(),
+            DayOfWeek.Wednesday => CommonLanguageManager.Instance.overlay_weekdayWednesday.CurrentValue(),
+            DayOfWeek.Thursday => CommonLanguageManager.Instance.overlay_weekdayThursday.CurrentValue(),
+            DayOfWeek.Friday => CommonLanguageManager.Instance.overlay_weekdayFriday.CurrentValue(),
+            DayOfWeek.Saturday => CommonLanguageManager.Instance.overlay_weekdaySaturday.CurrentValue(),
+            _ => CommonLanguageManager.Instance.overlay_weekdaySunday.CurrentValue()
         };
     }
 }

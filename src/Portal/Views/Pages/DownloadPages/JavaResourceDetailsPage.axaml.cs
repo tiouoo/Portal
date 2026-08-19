@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Core.Minecraft.Models;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -18,7 +19,8 @@ public partial class JavaResourceDetailsPage : ResourceDetailsPageBase
         ViewModel.TargetVersionGroupReady += ScrollToTargetVersionGroup;
         PageInfo = new PageInfo
         {
-            Title = $"{ViewModel.Target.Definition.DisplayName}详情",
+            Title = string.Format(CommonLanguageManager.Instance.javaResourceDetails_title.CurrentValue(),
+                ViewModel.Target.Definition.DisplayName),
             Icon = StreamGeometry.Parse(JavaResourceDetailsIcon.Data)
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();

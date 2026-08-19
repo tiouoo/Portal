@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
@@ -61,8 +62,9 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
         Name = name;
         Address = address;
         _defaultPort = defaultPort;
-        AddressPlaceholder = $"例如：play.example.com 或 play.example.com:{defaultPort}";
-        PortHint = $"支持域名、IP 与 IPv6（[地址]:端口），未填写端口时默认使用 {defaultPort}。";
+        AddressPlaceholder = string.Format(
+            CommonLanguageManager.Instance.serverEdit_addressPlaceholder.CurrentValue(), defaultPort);
+        PortHint = string.Format(CommonLanguageManager.Instance.serverEdit_portHint.CurrentValue(), defaultPort);
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
         CancelCommand = new RelayCommand(Cancel);
         Validate();
@@ -121,9 +123,9 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
     {
         _errors.Remove(nameof(Name));
         if (string.IsNullOrWhiteSpace(Name))
-            _errors[nameof(Name)] = ["服务器名称不能为空"];
+            _errors[nameof(Name)] = [CommonLanguageManager.Instance.account_serverNameEmpty.CurrentValue()];
         else if (Name.Length > 100)
-            _errors[nameof(Name)] = ["服务器名称过长（最多 100 个字符）"];
+            _errors[nameof(Name)] = [CommonLanguageManager.Instance.serverEdit_nameTooLong.CurrentValue()];
     }
 
     private void ValidateAddress()
@@ -132,13 +134,13 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
         var value = Address?.Trim();
         if (string.IsNullOrWhiteSpace(value))
         {
-            _errors[nameof(Address)] = ["服务器地址不能为空"];
+            _errors[nameof(Address)] = [CommonLanguageManager.Instance.serverEdit_addressEmpty.CurrentValue()];
             return;
         }
 
         if (value.Length > 255)
         {
-            _errors[nameof(Address)] = ["服务器地址过长（最多 255 个字符）"];
+            _errors[nameof(Address)] = [CommonLanguageManager.Instance.serverEdit_addressTooLong.CurrentValue()];
             return;
         }
 
@@ -146,7 +148,7 @@ public partial class ServerEditDialogViewModel : ObservableObject, IDialogContex
             ? BedrockServerManager.ParseAddress(value)
             : JavaServerManager.ParseAddress(value);
         if (string.IsNullOrWhiteSpace(host) || port is < 1 or > 65535)
-            _errors[nameof(Address)] = ["服务器地址格式无效"];
+            _errors[nameof(Address)] = [CommonLanguageManager.Instance.serverEdit_addressInvalid.CurrentValue()];
     }
 
     private bool CanConfirm()

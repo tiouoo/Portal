@@ -8,6 +8,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Components.Operations.Account;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -42,11 +43,14 @@ public partial class Account : Dsc
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(
             new FilePickerSaveOptions
             {
-                Title = "保存皮肤",
+                Title = CommonLanguageManager.Instance.accountPage_saveSkin.CurrentValue(),
                 SuggestedFileName = $"{account.Name}.png",
                 FileTypeChoices =
                 [
-                    new FilePickerFileType("PNG 图片") { Patterns = ["*.png"] }
+                    new FilePickerFileType(CommonLanguageManager.Instance.dashboard_pngImage.CurrentValue())
+                    {
+                        Patterns = ["*.png"]
+                    }
                 ]
             });
 
@@ -57,11 +61,13 @@ public partial class Account : Dsc
             var skinBytes = Convert.FromBase64String(account.Skin);
             await using var stream = await file.OpenWriteAsync();
             await stream.WriteAsync(skinBytes);
-            topLevel.Notice("皮肤已保存", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.accountPage_skinSaved.CurrentValue(),
+                NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"保存失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.accountPage_saveFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
     }
 
@@ -78,7 +84,7 @@ public partial class Account : Dsc
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
-        topLevel.Notice("正在更新中");
+        topLevel.Notice(CommonLanguageManager.Instance.accountPage_updating.CurrentValue());
 
         try
         {
@@ -87,7 +93,8 @@ public partial class Account : Dsc
                 var refreshed = await AccountRefresher.RefreshMicrosoft(account);
                 if (refreshed == null)
                 {
-                    topLevel.Notice("更新失败", NotificationType.Error);
+                    topLevel.Notice(CommonLanguageManager.Instance.accountPage_updateFailed.CurrentValue(),
+                        NotificationType.Error);
                     return;
                 }
 
@@ -95,14 +102,16 @@ public partial class Account : Dsc
                 if (index >= 0) Data.ConfigEntry.MinecraftAccounts[index] = refreshed;
 
                 Data.ConfigEntry.UsingMinecraftMinecraftAccount = refreshed;
-                topLevel.Notice("账户信息已更新", NotificationType.Success);
+                topLevel.Notice(CommonLanguageManager.Instance.accountPage_accountUpdated.CurrentValue(),
+                    NotificationType.Success);
             }
             else if (account.AccountType == AccountType.Yggdrasil)
             {
                 var result = await AccountRefresher.RefreshYggdrasil(account, Data.ConfigEntry.MinecraftAccounts);
                 if (result == null)
                 {
-                    topLevel.Notice("重新登录失败", NotificationType.Error);
+                    topLevel.Notice(CommonLanguageManager.Instance.accountPage_reloginFailed.CurrentValue(),
+                        NotificationType.Error);
                     return;
                 }
 
@@ -119,20 +128,30 @@ public partial class Account : Dsc
 
                 var changes = new List<string>();
                 if (result.Added.Count > 0)
-                    changes.Add($"新增：{string.Join("、", result.Added.Select(item => item.Name))}");
+                    changes.Add(string.Format(
+                        CommonLanguageManager.Instance.accountPage_changesAdded.CurrentValue(),
+                        string.Join("、", result.Added.Select(item => item.Name))));
                 if (result.Removed.Count > 0)
-                    changes.Add($"删除：{string.Join("、", result.Removed.Select(item => item.Name))}");
+                    changes.Add(string.Format(
+                        CommonLanguageManager.Instance.accountPage_changesRemoved.CurrentValue(),
+                        string.Join("、", result.Removed.Select(item => item.Name))));
                 if (result.Updated.Count > 0)
-                    changes.Add($"更新：{string.Join("、", result.Updated.Select(item => item.Name))}");
+                    changes.Add(string.Format(
+                        CommonLanguageManager.Instance.accountPage_changesUpdated.CurrentValue(),
+                        string.Join("、", result.Updated.Select(item => item.Name))));
 
                 topLevel.Notice(
-                    changes.Count == 0 ? "重新登录完成，账户未变化" : string.Join("\n", changes),
+                    changes.Count == 0
+                        ? CommonLanguageManager.Instance.accountPage_reloginNoChanges.CurrentValue()
+                        : string.Join("\n", changes),
                     NotificationType.Success);
             }
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"更新失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.accountPage_updateFailedWithMessage.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
     }
 
@@ -155,7 +174,7 @@ public partial class Account : Dsc
 
         if (account.Uuid is not { } uuid)
         {
-            topLevel.Notice("此账户没有 uuid", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.accountPage_noUuid.CurrentValue(), NotificationType.Warning);
             return;
         }
 
@@ -164,7 +183,8 @@ public partial class Account : Dsc
             return;
 
         await clipboard.SetTextAsync(uuidText);
-        topLevel.Notice($"复制成功：{uuidText}", NotificationType.Success);
+        topLevel.Notice(string.Format(CommonLanguageManager.Instance.accountPage_copied.CurrentValue(), uuidText),
+            NotificationType.Success);
     }
 
     private async Task RenameAccountAsync(MinecraftAccount account, Control target)
@@ -197,12 +217,13 @@ public partial class Account : Dsc
 
         this.AsTopLevel().Notice(new NotificationOptions
         {
-            Content = $"已移除账户：{account.Name} ({account.DisplayAccountNote})",
+            Content = string.Format(CommonLanguageManager.Instance.titleBar_removedAccount.CurrentValue(),
+                account.Name, account.DisplayAccountNote),
             Type = NotificationType.Success,
             Expiration = TimeSpan.FromSeconds(3),
             OperateButtons =
             [
-                new OperateButtonEntry("撤销", _ =>
+                new OperateButtonEntry(CommonLanguageManager.Instance.titleBar_undo.CurrentValue(), _ =>
                 {
                     Data.ConfigEntry.MinecraftAccounts.Add(account);
                     Data.ConfigEntry.UsingMinecraftMinecraftAccount = account;
@@ -238,11 +259,14 @@ public partial class Account : Dsc
             var index = Data.ConfigEntry.BedrockAccounts.IndexOf(account);
             if (index >= 0) Data.ConfigEntry.BedrockAccounts[index] = refreshed;
             Data.ConfigEntry.UsingBedrockAccount = refreshed;
-            topLevel?.Notice("基岩账户信息已更新", NotificationType.Success);
+            topLevel?.Notice(CommonLanguageManager.Instance.accountPage_bedrockAccountUpdated.CurrentValue(),
+                NotificationType.Success);
         }
         catch (Exception exception)
         {
-            topLevel?.Notice($"更新失败：{exception.Message}", NotificationType.Error);
+            topLevel?.Notice(string.Format(
+                CommonLanguageManager.Instance.accountPage_updateFailedWithMessage.CurrentValue(),
+                exception.Message), NotificationType.Error);
         }
     }
 
@@ -301,7 +325,8 @@ public partial class Account : Dsc
         if (!string.IsNullOrEmpty(newSkinPath) && File.Exists(newSkinPath))
         {
             account.Skin = Convert.ToBase64String(await File.ReadAllBytesAsync(newSkinPath));
-            this.AsTopLevel().Notice("皮肤已更新", NotificationType.Success);
+            this.AsTopLevel().Notice(CommonLanguageManager.Instance.accountPage_skinUpdated.CurrentValue(),
+                NotificationType.Success);
         }
     }
 }

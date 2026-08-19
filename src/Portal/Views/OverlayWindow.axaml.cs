@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Multiplayer;
 using Portal.Core.Services;
+using Portal.Localization;
 using Portal.Views.Pages;
 
 namespace Portal.Views;
@@ -41,18 +42,64 @@ public partial class OverlayWindow : Window
 
     private static readonly string[] LunarMonths =
     {
-        "正月", "二月", "三月", "四月", "五月", "六月",
-        "七月", "八月", "九月", "十月", "冬月", "腊月"
+        CommonLanguageManager.Instance.overlay_lunarMonth1.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth2.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth3.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth4.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth5.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth6.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth7.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth8.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth9.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth10.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth11.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarMonth12.CurrentValue()
     };
 
     private static readonly string[] LunarDays =
     {
-        "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
-        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
-        "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
+        CommonLanguageManager.Instance.overlay_lunarDay1.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay2.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay3.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay4.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay5.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay6.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay7.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay8.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay9.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay10.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay11.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay12.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay13.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay14.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay15.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay16.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay17.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay18.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay19.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay20.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay21.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay22.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay23.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay24.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay25.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay26.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay27.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay28.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay29.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_lunarDay30.CurrentValue()
     };
 
-    private static readonly string[] WeekDays = { "周日", "周一", "周二", "周三", "周四", "周五", "周六" };
+    private static readonly string[] WeekDays =
+    {
+        CommonLanguageManager.Instance.overlay_weekdaySunday.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_weekdayMonday.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_weekdayTuesday.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_weekdayWednesday.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_weekdayThursday.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_weekdayFriday.CurrentValue(),
+        CommonLanguageManager.Instance.overlay_weekdaySaturday.CurrentValue()
+    };
     private readonly DispatcherTimer _clockTimer;
     private readonly TextBlock _dateBlock;
     private readonly MinecraftInstance _instance;
@@ -111,7 +158,8 @@ public partial class OverlayWindow : Window
         {
             var now = DateTime.Now;
             _timeBlock.Text = now.ToString("HH:mm:ss");
-            _dateBlock.Text = $"{now.Month}月{now.Day}日";
+            _dateBlock.Text = string.Format(CommonLanguageManager.Instance.overlay_dateFormat.CurrentValue(), now.Month,
+                now.Day);
             _lunarBlock.Text = GetLunarDate(now);
             _weekBlock.Text = WeekDays[(int)now.DayOfWeek];
         };
@@ -238,7 +286,10 @@ public partial class OverlayWindow : Window
             }
 
             if (_targetHwnd == IntPtr.Zero)
-                Dispatcher.UIThread.Invoke(() => { Debug.WriteLine("无法找到目标进程的窗口"); });
+                Dispatcher.UIThread.Invoke(() =>
+                {
+                    Debug.WriteLine(LogLanguageManager.Instance.overlay_targetWindowNotFound.CurrentValue());
+                });
         });
     }
 
@@ -656,7 +707,8 @@ public partial class OverlayWindow : Window
         var leapMonth = LunarCalendar.GetLeapMonth(lunarYear);
 
         var monthName = lunarMonth == leapMonth
-            ? $"闰{LunarMonths[lunarMonth - 1]}"
+            ? string.Format(CommonLanguageManager.Instance.overlay_leapMonth.CurrentValue(),
+                LunarMonths[lunarMonth - 1])
             : LunarMonths[lunarMonth - 1];
 
         return $"{monthName}{LunarDays[lunarDay - 1]}";

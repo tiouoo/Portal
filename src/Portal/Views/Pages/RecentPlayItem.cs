@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Widgets;
 
 namespace Portal.Views.Pages;
@@ -67,8 +68,12 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
         Target.Instance.Config.RecentPlayFavorites?.TryGetValue(Target.Id, out var favorite) == true && favorite;
 
     public bool IsBlocked => BlockListService.Instance.IsRecentPlayBlocked(Target);
-    public string BlockHeaderText => IsBlocked ? "取消屏蔽" : "屏蔽";
-    public string FavoriteHeaderText => IsFavorite ? "取消收藏" : "收藏";
+    public string BlockHeaderText => IsBlocked
+        ? CommonLanguageManager.Instance.minecraft_unblock.CurrentValue()
+        : CommonLanguageManager.Instance.minecraft_block.CurrentValue();
+    public string FavoriteHeaderText => IsFavorite
+        ? CommonLanguageManager.Instance.minecraft_unfavorite.CurrentValue()
+        : CommonLanguageManager.Instance.minecraft_favorite.CurrentValue();
 
     public Bitmap Icon
     {
@@ -175,9 +180,15 @@ public sealed class RecentPlayItem : INotifyPropertyChanged, IDisposable
     private static string GetRelativeTime(DateTime time)
     {
         var elapsed = DateTime.Now - time;
-        if (elapsed.TotalMinutes < 1) return "刚刚";
+        if (elapsed.TotalMinutes < 1) return CommonLanguageManager.Instance.relativeTime_justNow.CurrentValue();
         if (elapsed.TotalDays >= 30) return time.ToString("yyyy-MM-dd HH:mm");
-        if (elapsed.TotalDays >= 1) return $"{(int)elapsed.TotalDays} 天前";
-        return elapsed.TotalHours >= 1 ? $"{(int)elapsed.TotalHours} 小时前" : $"{(int)elapsed.TotalMinutes} 分钟前";
+        if (elapsed.TotalDays >= 1)
+            return string.Format(CommonLanguageManager.Instance.relativeTime_daysAgo.CurrentValue(),
+                (int)elapsed.TotalDays);
+        return elapsed.TotalHours >= 1
+            ? string.Format(CommonLanguageManager.Instance.relativeTime_hoursAgo.CurrentValue(),
+                (int)elapsed.TotalHours)
+            : string.Format(CommonLanguageManager.Instance.relativeTime_minutesAgo.CurrentValue(),
+                (int)elapsed.TotalMinutes);
     }
 }

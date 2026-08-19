@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Components.Operations.OpenFile;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -56,7 +57,7 @@ public partial class GameFolder : Dsc
                                     Data.ConfigEntry.InstallableMinecraftFolders.Count() == 1;
         Data.ConfigEntry.MinecraftFolders.Remove(folder);
         if (restoresDefaultFolder)
-            Dispatcher.UIThread.Post(() => this.GetTopLevel().Notice("至少保留一个 Portal MC 游戏目录",
-                NotificationType.Warning));
+            Dispatcher.UIThread.Post(() => this.GetTopLevel().Notice(
+                CommonLanguageManager.Instance.gameFolder_keepAtLeastOne.CurrentValue(), NotificationType.Warning));
     }
 }

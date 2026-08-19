@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Components.Operations.Account;
@@ -87,13 +88,17 @@ public partial class OfflineAccountViewModel : ObservableObject, IDialogContext,
 
         if (string.IsNullOrWhiteSpace(value))
         {
-            _errors[propertyName] = new List<string> { "玩家名称不能为空" };
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_playerNameEmpty.CurrentValue() };
         }
         else if (!IgnoreStandard)
         {
             if (value.Length < 3 || value.Length > 15)
-                _errors[propertyName] = new List<string> { "玩家名称必须为3~15位字符" };
-            else if (!Regex().IsMatch(value)) _errors[propertyName] = new List<string> { "玩家名称只能包含数字、大小写字母和下划线" };
+                _errors[propertyName] =
+                    new List<string> { CommonLanguageManager.Instance.account_playerNameLength.CurrentValue() };
+            else if (!Regex().IsMatch(value))
+                _errors[propertyName] =
+                    new List<string> { CommonLanguageManager.Instance.account_playerNameCharset.CurrentValue() };
         }
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
@@ -106,7 +111,8 @@ public partial class OfflineAccountViewModel : ObservableObject, IDialogContext,
         if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
         if (!string.IsNullOrWhiteSpace(value) && !IsValidUuid(value))
-            _errors[propertyName] = new List<string> { "UUID 格式不正确" };
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_uuidInvalid.CurrentValue() };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }

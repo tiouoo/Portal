@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using Portal.Localization;
 
 namespace Portal.Views.Pages.InstancePages;
 
@@ -52,7 +53,13 @@ public sealed class ResourceFilterOption(string label) : INotifyPropertyChanged
 
 public static class ResourceListUi
 {
-    public static string[] SortOptions { get; } = ["文件名称", "资源名称", "加入时间", "文件大小"];
+    public static string[] SortOptions { get; } =
+    [
+        CommonLanguageManager.Instance.resourceList_sortFileName.CurrentValue(),
+        CommonLanguageManager.Instance.resourceList_sortResourceName.CurrentValue(),
+        CommonLanguageManager.Instance.resourceList_sortAddedTime.CurrentValue(),
+        CommonLanguageManager.Instance.resourceList_sortFileSize.CurrentValue()
+    ];
 
     public static string FormatSize(long size)
     {

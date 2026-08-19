@@ -9,6 +9,7 @@ using Portal.Core.App.Helpers;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Module.Imaging;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
@@ -28,19 +29,24 @@ public sealed record JavaResourceDefinition(
 public static class JavaResourceDefinitions
 {
     public static JavaResourceDefinition Modpack { get; } =
-        new(JavaResourceKind.Modpack, "整合包", "modpack", 4471, false, true, ShowIconPlaceholder: true);
+        new(JavaResourceKind.Modpack, CommonLanguageManager.Instance.javaResourceSearch_modpack.CurrentValue(),
+            "modpack", 4471, false, true, ShowIconPlaceholder: true);
 
     public static JavaResourceDefinition ResourcePack { get; } =
-        new(JavaResourceKind.ResourcePack, "材质包", "resourcepack", 12, true, false);
+        new(JavaResourceKind.ResourcePack, CommonLanguageManager.Instance.javaResourceSearch_resourcePack.CurrentValue(),
+            "resourcepack", 12, true, false);
 
     public static JavaResourceDefinition ShaderPack { get; } =
-        new(JavaResourceKind.ShaderPack, "光影包", "shader", 6552, true, false);
+        new(JavaResourceKind.ShaderPack, CommonLanguageManager.Instance.javaResourceSearch_shaderPack.CurrentValue(),
+            "shader", 6552, true, false);
 
     public static JavaResourceDefinition DataPack { get; } =
-        new(JavaResourceKind.DataPack, "数据包", "datapack", 6945, true, false);
+        new(JavaResourceKind.DataPack, CommonLanguageManager.Instance.javaResourceSearch_dataPack.CurrentValue(),
+            "datapack", 6945, true, false);
 
     public static JavaResourceDefinition Save { get; } =
-        new(JavaResourceKind.Save, "存档", "world", 17, true, false, false);
+        new(JavaResourceKind.Save, CommonLanguageManager.Instance.javaResourceSearch_save.CurrentValue(), "world", 17,
+            true, false, false);
 }
 
 public abstract partial class JavaResourceSearchViewModel : ObservableObject, IDisposable, ISearchPageViewModel
@@ -69,8 +75,10 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     }
 
     public JavaResourceDefinition Definition { get; }
-    public string PageTitle => $"{Definition.DisplayName}搜索";
-    public string SearchPlaceholder => $"搜索{Definition.DisplayName}";
+    public string PageTitle => string.Format(CommonLanguageManager.Instance.startPage_searchModeTitle.CurrentValue(),
+        Definition.DisplayName);
+    public string SearchPlaceholder => string.Format(
+        CommonLanguageManager.Instance.startPage_searchPlaceholderMode.CurrentValue(), Definition.DisplayName);
     public bool ShowLoaderFilter => Definition.SupportsLoaderFilter;
     public ObservableCollection<JavaResourceSearchResultItem> Results { get; } = [];
     public ObservableCollection<string> MinecraftVersions { get; } = [];
@@ -78,22 +86,26 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
     public IReadOnlyList<ModSearchLoader> Loaders { get; } =
     [
-        new("全部加载器", ModLoaderType.Any), new("Forge", ModLoaderType.Forge),
+        new(CommonLanguageManager.Instance.mod_allLoaders.CurrentValue(), ModLoaderType.Any),
+        new("Forge", ModLoaderType.Forge),
         new("NeoForge", ModLoaderType.NeoForge), new("Fabric", ModLoaderType.Fabric),
         new("Quilt", ModLoaderType.Quilt)
     ];
 
     public IReadOnlyList<ModSearchSort> SortOptions { get; } =
     [
-        new("相关度", SearchSort.Relevance), new("热度", SearchSort.Popularity),
-        new("最近更新", SearchSort.Updated), new("最新发布", SearchSort.Newest)
+        new(CommonLanguageManager.Instance.mod_sortRelevance.CurrentValue(), SearchSort.Relevance),
+        new(CommonLanguageManager.Instance.mod_sortPopularity.CurrentValue(), SearchSort.Popularity),
+        new(CommonLanguageManager.Instance.mod_sortUpdated.CurrentValue(), SearchSort.Updated),
+        new(CommonLanguageManager.Instance.mod_sortNewest.CurrentValue(), SearchSort.Newest)
     ];
 
     [ObservableProperty] public partial JavaResourceSearchSource? SelectedSource { get; set; }
     [ObservableProperty] public partial ModSearchLoader? SelectedLoader { get; set; }
     [ObservableProperty] public partial ModSearchSort? SelectedSort { get; set; }
     [ObservableProperty] public partial string GameVersion { get; set; } = string.Empty;
-    [ObservableProperty] public partial string StatusText { get; set; } = "准备搜索...";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.modSearch_preparingSearch.CurrentValue();
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
@@ -192,7 +204,10 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         if (IsCurrent(request))
         {
             HasError = false;
-            StatusText = isDefaultSearch ? $"正在获取热门{Definition.DisplayName}..." : "正在搜索...";
+            StatusText = isDefaultSearch
+                ? string.Format(CommonLanguageManager.Instance.javaResourceSearch_fetchingPopular.CurrentValue(),
+                    Definition.DisplayName)
+                : CommonLanguageManager.Instance.modSearch_searching.CurrentValue();
         }
 
         try
@@ -210,7 +225,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             Logger.Error(exception);
             if (!IsCurrent(request)) return;
             HasError = true;
-            StatusText = "网络错误，无法完成搜索。";
+            StatusText = CommonLanguageManager.Instance.modSearch_networkError.CurrentValue();
         }
     }
 
@@ -279,8 +294,10 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         TotalCount = page.TotalCount;
         HasError = false;
         StatusText = page.TotalCount == 0
-            ? $"没有找到匹配的{Definition.DisplayName}。"
-            : $"共 {page.TotalCount} 个{Definition.DisplayName}";
+            ? string.Format(CommonLanguageManager.Instance.javaResourceSearch_noResults.CurrentValue(),
+                Definition.DisplayName)
+            : string.Format(CommonLanguageManager.Instance.javaResourceSearch_resultCount.CurrentValue(),
+                page.TotalCount, Definition.DisplayName);
         OnPropertyChanged(nameof(HasResults));
     }
 
@@ -321,7 +338,8 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Name = item.Name;
         Summary = item.Summary;
         IconUrl = item.IconUrl;
-        Metadata = $"{RelativeTime.Format(item.Updated)}·{item.DownloadCount:N0} 下载";
+        Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
+            RelativeTime.Format(item.Updated), item.DownloadCount);
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.Modrinth, item.ProjectId,
             gameVersion, loader);
         IsFavorite =
@@ -334,7 +352,8 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Name = item.Name;
         Summary = item.Summary;
         IconUrl = item.IconUrl;
-        Metadata = $"{RelativeTime.Format(item.DateModified)}·{item.DownloadCount:N0} 下载";
+        Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
+            RelativeTime.Format(item.DateModified), item.DownloadCount);
         Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.CurseForge, item.Id.ToString(),
             gameVersion, loader);
         IsFavorite =

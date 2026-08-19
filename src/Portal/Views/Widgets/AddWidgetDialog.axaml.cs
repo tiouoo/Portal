@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
+using Portal.Localization;
 using Portal.Module;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -134,7 +135,8 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
         if (host != null)
         {
             var topLevel = TopLevel.GetTopLevel(_workspace);
-            topLevel?.Notice($"已添加 {definition.Name}", NotificationType.Success);
+            topLevel?.Notice(string.Format(CommonLanguageManager.Instance.widgets_added.CurrentValue(),
+                definition.Name), NotificationType.Success);
             RequestClose?.Invoke(this, true);
         }
     }
@@ -201,11 +203,11 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "选择图片",
+            Title = CommonLanguageManager.Instance.widgets_selectImage.CurrentValue(),
             AllowMultiple = false,
             FileTypeFilter =
             [
-                new FilePickerFileType("图片")
+                new FilePickerFileType(CommonLanguageManager.Instance.saves_image.CurrentValue())
                 {
                     Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp", "*.ico"]
                 }

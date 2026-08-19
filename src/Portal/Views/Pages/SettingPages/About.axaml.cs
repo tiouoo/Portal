@@ -9,6 +9,7 @@ using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Update;
 using Portal.Core.Services;
+using Portal.Localization;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Extensions;
@@ -46,10 +47,10 @@ public partial class About : Dsc
         var channel = Data.UiProperty.OverrideUpdateChannel;
         if (channel != "release" && channel != "nightly" && channel != "commit" && channel != "dev") return;
 
-        HyperlinkButton.Content = "检查更新中";
+        HyperlinkButton.Content = CommonLanguageManager.Instance.about_checkingUpdate.CurrentValue();
         HyperlinkButton.IsEnabled = false;
         var result = await UpdateChecker.Check(sender!.AsTopLevel());
-        HyperlinkButton.Content = "检查更新";
+        HyperlinkButton.Content = CommonLanguageManager.Instance.about_checkUpdate.CurrentValue();
         HyperlinkButton.IsEnabled = true;
         if (result == null)
         {
@@ -61,7 +62,8 @@ public partial class About : Dsc
         if (result == "latest")
         {
             Data.UiProperty.IsLatestVersion = true;
-            sender!.AsTopLevel().Notice("当前是最新版本", NotificationType.Success);
+            sender!.AsTopLevel().Notice(CommonLanguageManager.Instance.update_alreadyLatest.CurrentValue(),
+                NotificationType.Success);
             return;
         }
 
@@ -87,9 +89,9 @@ public partial class About : Dsc
     {
         if (sender is not Control control) return;
         UpdateHyperlinkButton.IsEnabled = false;
-        UpdateHyperlinkButton.Content = "正在准备更新";
+        UpdateHyperlinkButton.Content = CommonLanguageManager.Instance.about_preparingUpdate.CurrentValue();
         var update = await UpdateApp.Prepare(control.GetTopLevel()!);
-        UpdateHyperlinkButton.Content = "下载新版本";
+        UpdateHyperlinkButton.Content = CommonLanguageManager.Instance.about_downloadNewVersion.CurrentValue();
         UpdateHyperlinkButton.IsEnabled = true;
         if (update is null) return;
 
@@ -98,17 +100,19 @@ public partial class About : Dsc
             {
                 Margin = new Thickness(24),
                 Text = update.RunsInstaller
-                    ? "更新安装程序已下载并校验完成。是否立即退出 Portal 并运行安装程序？"
-                    : "更新已下载并准备完成。是否立即重启 Portal 并安装更新？",
+                    ? CommonLanguageManager.Instance.about_installerReadyText.CurrentValue()
+                    : CommonLanguageManager.Instance.about_restartReadyText.CurrentValue(),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "更新准备完成",
+                Title = CommonLanguageManager.Instance.about_updateReadyTitle.CurrentValue(),
                 Mode = DialogMode.Question,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = update.RunsInstaller ? "退出并安装" : "立即重启",
-                OverrideNoButtonText = "稍后",
+                OverrideYesButtonText = update.RunsInstaller
+                    ? CommonLanguageManager.Instance.about_exitAndInstall.CurrentValue()
+                    : CommonLanguageManager.Instance.about_restartNow.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.about_later.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });
@@ -119,8 +123,10 @@ public partial class About : Dsc
         }
         catch (Exception exception)
         {
-            Logger.Error("启动应用更新失败。", exception);
-            this.AsTopLevel().Notice($"无法启动更新：{exception.Message}", NotificationType.Error);
+            Logger.Error(LogLanguageManager.Instance.about_updateStartFailed.CurrentValue(), exception);
+            this.AsTopLevel().Notice(string.Format(
+                CommonLanguageManager.Instance.about_cannotStartUpdate.CurrentValue(), exception.Message),
+                NotificationType.Error);
         }
     }
 
@@ -168,7 +174,8 @@ public class AboutViewModel : ObservableObject
         new("Uwp.Injector", "Apache License 2.0", "https://github.com/Round-Studio/Uwp.Injector"),
         new("GravityCone", "MIT License", "https://github.com/Tianpao/GravityCone"),
         new("EasyTier", "GNU LGPL v3.0", "https://github.com/EasyTier/EasyTier"),
-        new("GDK-Proton", "未声明许可证", "https://github.com/Weather-OS/GDK-Proton")
+        new("GDK-Proton", CommonLanguageManager.Instance.about_noLicense.CurrentValue(),
+            "https://github.com/Weather-OS/GDK-Proton")
     ];
 }
 

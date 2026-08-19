@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -68,7 +69,9 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string CountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string CountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
 
     public bool IsRefreshing
     {
@@ -206,7 +209,10 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
     private async void RefreshAll_OnClick(object? sender, RoutedEventArgs e)
     {
         await ReloadAsyncSilently();
-        Notify(_instance == null ? "刷新失败" : "服务器状态已刷新", NotificationType.Success);
+        Notify(_instance == null
+                ? CommonLanguageManager.Instance.bedrockServers_refreshFailed.CurrentValue()
+                : CommonLanguageManager.Instance.bedrockServers_statusRefreshed.CurrentValue(),
+            NotificationType.Success);
     }
 
     private async Task PingAllAsync()
@@ -233,7 +239,8 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         }
         catch (Exception exception)
         {
-            Logger.Warning($"批量检测基岩版服务器状态失败。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.bedrockServers_batchPingFailed.CurrentValue(),
+                Environment.NewLine, exception));
         }
         finally
         {
@@ -262,7 +269,8 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         }
         catch (Exception exception)
         {
-            Logger.Warning($"检测基岩版服务器状态失败：{item.Entry.Address}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.bedrockServers_pingFailed.CurrentValue(),
+                item.Entry.Address, Environment.NewLine, exception));
             await Dispatcher.UIThread.InvokeAsync(() => item.ApplyStatus(null));
         }
         finally
@@ -282,19 +290,21 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         if (_instance?.BedrockConfig is not { } config)
             return;
 
-        var result = await ServerEditDialogHelper.ShowAsync("添加服务器", string.Empty, string.Empty,
+        var result = await ServerEditDialogHelper.ShowAsync(
+            CommonLanguageManager.Instance.bedrockServers_addServer.CurrentValue(), string.Empty, string.Empty,
             this.TryGetHostId(), BedrockServerManager.DefaultPort);
         if (result == null)
             return;
 
         if (BedrockServerManager.Add(config, GetSelectedUserId(), result.Name, result.Address))
         {
-            Notify($"服务器“{result.Name}”已添加", NotificationType.Success);
+            Notify(string.Format(CommonLanguageManager.Instance.bedrockServers_serverAdded.CurrentValue(),
+                result.Name), NotificationType.Success);
             await ReloadAsyncSilently();
         }
         else
         {
-            Notify("添加服务器失败", NotificationType.Error);
+            Notify(CommonLanguageManager.Instance.bedrockServers_addFailed.CurrentValue(), NotificationType.Error);
         }
     }
 
@@ -303,7 +313,8 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         if (_instance?.BedrockConfig is not { } config || (sender as Control)?.Tag is not BedrockServerItem item)
             return;
 
-        var result = await ServerEditDialogHelper.ShowAsync("编辑服务器", item.Name, item.Entry.Address,
+        var result = await ServerEditDialogHelper.ShowAsync(
+            CommonLanguageManager.Instance.bedrockServers_editServer.CurrentValue(), item.Name, item.Entry.Address,
             this.TryGetHostId(), BedrockServerManager.DefaultPort);
         if (result == null)
             return;
@@ -311,12 +322,12 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         if (BedrockServerManager.Update(config, GetSelectedUserId(), item.Entry.LineIndex,
                 result.Name, result.Address))
         {
-            Notify("服务器已更新", NotificationType.Success);
+            Notify(CommonLanguageManager.Instance.bedrockServers_serverUpdated.CurrentValue(), NotificationType.Success);
             await ReloadAsyncSilently();
         }
         else
         {
-            Notify("编辑服务器失败", NotificationType.Error);
+            Notify(CommonLanguageManager.Instance.bedrockServers_editFailed.CurrentValue(), NotificationType.Error);
         }
     }
 
@@ -333,16 +344,17 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
             new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = $"确定要从服务器列表中删除“{item.Name}”吗？此操作不会影响已经连接的存档。",
+                Text = string.Format(CommonLanguageManager.Instance.bedrockServers_deleteConfirm.CurrentValue(),
+                    item.Name),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "删除服务器",
+                Title = CommonLanguageManager.Instance.bedrockServers_deleteServer.CurrentValue(),
                 Mode = DialogMode.Error,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "删除",
-                OverrideNoButtonText = "取消",
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });
@@ -351,12 +363,13 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
 
         if (BedrockServerManager.Remove(config, GetSelectedUserId(), item.Entry.LineIndex))
         {
-            Notify($"服务器“{item.Name}”已删除", NotificationType.Success);
+            Notify(string.Format(CommonLanguageManager.Instance.bedrockServers_serverDeleted.CurrentValue(),
+                item.Name), NotificationType.Success);
             await ReloadAsyncSilently();
         }
         else
         {
-            Notify("删除服务器失败", NotificationType.Error);
+            Notify(CommonLanguageManager.Instance.bedrockServers_deleteFailed.CurrentValue(), NotificationType.Error);
         }
     }
 
@@ -370,7 +383,8 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         {
             using var session = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
             await PingOneAsync(item, session.Token);
-            Notify($"“{item.Name}”状态已刷新", NotificationType.Success);
+            Notify(string.Format(CommonLanguageManager.Instance.bedrockServers_statusRefreshedNamed.CurrentValue(),
+                item.Name), NotificationType.Success);
         }
         finally
         {
@@ -386,7 +400,8 @@ public partial class BedrockServers : UserControl, INotifyPropertyChanged, IDisp
         if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
             await clipboard.SetTextAsync(item.Entry.CopyAddress);
 
-        Notify($"已复制地址 {item.Entry.CopyAddress}", NotificationType.Success);
+        Notify(string.Format(CommonLanguageManager.Instance.bedrockServers_addressCopied.CurrentValue(),
+            item.Entry.CopyAddress), NotificationType.Success);
     }
 
     private void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -484,7 +499,8 @@ public sealed partial class BedrockServerItem : ObservableObject, IDisposable
 
     [ObservableProperty] public partial BedrockServerItemStatus Status { get; set; }
 
-    [ObservableProperty] public partial string StatusText { get; set; } = "未检测";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.bedrockServers_statusUnknown.CurrentValue();
 
     [ObservableProperty] public partial IBrush StatusBrush { get; set; } = PendingBrush;
 
@@ -502,7 +518,8 @@ public sealed partial class BedrockServerItem : ObservableObject, IDisposable
 
     [ObservableProperty] public partial bool HasVersion { get; set; }
 
-    [ObservableProperty] public partial string DescriptionText { get; set; } = "等待检测...";
+    [ObservableProperty] public partial string DescriptionText { get; set; } =
+        CommonLanguageManager.Instance.bedrockServers_waitingDetection.CurrentValue();
 
     public void Dispose()
     {
@@ -517,7 +534,7 @@ public sealed partial class BedrockServerItem : ObservableObject, IDisposable
     public void ApplyPinging()
     {
         Status = BedrockServerItemStatus.Pinging;
-        StatusText = "检测中";
+        StatusText = CommonLanguageManager.Instance.bedrockServers_pinging.CurrentValue();
         StatusBrush = PendingBrush;
     }
 
@@ -526,17 +543,17 @@ public sealed partial class BedrockServerItem : ObservableObject, IDisposable
         if (status == null)
         {
             Status = BedrockServerItemStatus.Offline;
-            StatusText = "无法连接";
+            StatusText = CommonLanguageManager.Instance.bedrockServers_cannotConnect.CurrentValue();
             StatusBrush = OfflineBrush;
             HasPing = false;
             HasPlayers = false;
             HasVersion = false;
-            DescriptionText = "无法连接到服务器，请检查地址或稍后再试";
+            DescriptionText = CommonLanguageManager.Instance.bedrockServers_cannotConnectDescription.CurrentValue();
             return;
         }
 
         Status = BedrockServerItemStatus.Online;
-        StatusText = "在线";
+        StatusText = CommonLanguageManager.Instance.bedrockServers_online.CurrentValue();
         StatusBrush = OnlineBrush;
 
         PingText = $"{status.Latency} ms";
@@ -546,13 +563,18 @@ public sealed partial class BedrockServerItem : ObservableObject, IDisposable
             : PingPoorBrush;
 
         var hasPlayerCount = status.MaxPlayers > 0 || status.OnlinePlayers > 0;
-        PlayersText = hasPlayerCount ? $"{status.OnlinePlayers} / {status.MaxPlayers} 人" : string.Empty;
+        PlayersText = hasPlayerCount
+            ? string.Format(CommonLanguageManager.Instance.bedrockServers_players.CurrentValue(),
+                status.OnlinePlayers, status.MaxPlayers)
+            : string.Empty;
         HasPlayers = hasPlayerCount;
 
         VersionText = string.IsNullOrWhiteSpace(status.Version) ? string.Empty : status.Version;
         HasVersion = !string.IsNullOrWhiteSpace(status.Version);
 
-        DescriptionText = string.IsNullOrWhiteSpace(status.Motd) ? "暂无描述" : status.Motd;
+        DescriptionText = string.IsNullOrWhiteSpace(status.Motd)
+            ? CommonLanguageManager.Instance.bedrockServers_noDescription.CurrentValue()
+            : status.Motd;
     }
 
     private void SetIcon(Bitmap? bitmap)

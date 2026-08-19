@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -44,8 +45,10 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         ClearSelectionCommand = new RelayCommand(() => SetSelection(item => false));
         InvertSelectionCommand = new RelayCommand(() => SetSelection(item => !item.IsSelected));
         DataContext = this;
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("可更新", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), 0)));
 
         KeyBindings.Add(new KeyBinding
         {
@@ -82,9 +85,12 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string ShaderPackCountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string ShaderPackCountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
     public int SelectedCount => Items.Count(item => item.IsSelected);
-    public string SelectedCountText => $"批量操作{SelectedCount}个";
+    public string SelectedCountText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_batchSelected.CurrentValue(), SelectedCount);
     public bool HasMultipleSelection => SelectedCount >= 1;
 
     public new event PropertyChangedEventHandler? PropertyChanged;
@@ -184,8 +190,10 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     {
         while (FilterOptions.Count < 2)
             FilterOptions.Add(new ResourceFilterOption(""));
-        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
-        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("可更新", Items.Count(item => item.HasUpdate));
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel(CommonLanguageManager.Instance.mod_all.CurrentValue(),
+            Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), Items.Count(item => item.HasUpdate));
     }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -228,9 +236,12 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
             await LoadAsync();
         };
         var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ShaderPacksFolder);
+        var packName = CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue();
         if (drop == null)
-            await JavaResourceImport.SelectAndImportAsync(this, "选择光影包", destination, "光影包", [".zip"], false, refresh);
-        else await JavaResourceImport.ImportDropAsync(this, drop, destination, "光影包", [".zip"], false, refresh);
+            await JavaResourceImport.SelectAndImportAsync(this,
+                string.Format(CommonLanguageManager.Instance.resourceList_selectPack.CurrentValue(), packName),
+                destination, packName, [".zip"], false, refresh);
+        else await JavaResourceImport.ImportDropAsync(this, drop, destination, packName, [".zip"], false, refresh);
     }
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -283,11 +294,15 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
 
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
-            Margin = new Thickness(24), Text = $"确定要永久删除选中的 {selected.Length} 个光影包吗？此操作无法撤销。",
+            Margin = new Thickness(24),
+            Text = string.Format(CommonLanguageManager.Instance.resourceList_deleteSelectedConfirmPack.CurrentValue(),
+                selected.Length,
+                CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue()),
             TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
-            await RunSelectedFileActionAsync(selected, item => File.Delete(item.FilePath), "删除");
+            await RunSelectedFileActionAsync(selected, item => File.Delete(item.FilePath),
+                CommonLanguageManager.Instance.dashboard_delete.CurrentValue());
     }
 
     private void ShowShaderPackDetails_OnClick(object? sender, RoutedEventArgs e)
@@ -305,11 +320,14 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
 
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
-            Margin = new Thickness(24), Text = $"确定要永久删除光影包“{item.FileName}”吗？此操作无法撤销。",
+            Margin = new Thickness(24),
+            Text = string.Format(CommonLanguageManager.Instance.resourceList_deleteConfirmPack.CurrentValue(),
+                CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue(), item.FileName),
             TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
-            await RunSelectedFileActionAsync([item], shaderPack => File.Delete(shaderPack.FilePath), "删除");
+            await RunSelectedFileActionAsync([item], shaderPack => File.Delete(shaderPack.FilePath),
+                CommonLanguageManager.Instance.dashboard_delete.CurrentValue());
     }
 
     private async void OpenShaderPackFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -345,7 +363,11 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
 
         _hasLoaded = false;
         await LoadAsync();
-        ShowNotice(failed == 0 ? $"已{actionName}所选光影包" : $"{actionName}完成，但有 {failed} 个光影包操作失败",
+        ShowNotice(failed == 0
+                ? string.Format(CommonLanguageManager.Instance.resourceList_actionCompletedShader.CurrentValue(),
+                    actionName)
+                : string.Format(CommonLanguageManager.Instance.resourceList_actionFailedWithCountShader.CurrentValue(),
+                    actionName, failed),
             failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }
 
@@ -407,7 +429,8 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         var result = item.UpdateResult;
         if (result?.HasIdentity != true || result.Source is not { } source)
         {
-            ShowNotice("尚未识别此资源的平台信息，暂时无法切换版本", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_platformUnknownSwitchResource.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -436,7 +459,11 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         try
         {
             var tempPath = Path.Combine(destination, $".portal-update-{Guid.NewGuid():N}.zip");
-            var task = DownloadTasks.Download(topLevel, $"更新光影包：{file.DisplayName}", "取消此更新",
+            var packName = CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue();
+            var task = DownloadTasks.Download(topLevel,
+                string.Format(CommonLanguageManager.Instance.resourceList_updatePack.CurrentValue(), packName,
+                    file.DisplayName),
+                CommonLanguageManager.Instance.resourceList_cancelUpdate.CurrentValue(),
                 file.FileName, file.DownloadUrl, tempPath, file.FileSize,
                 afterDownload: _ =>
                 {
@@ -445,19 +472,24 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
                     ResourceUpdateService.InvalidateCache(oldPath);
                     ResourceUpdateService.InvalidateCache(newPath);
                     return Task.CompletedTask;
-                }, completedText: "光影包已更新");
+                }, completedText: string.Format(
+                    CommonLanguageManager.Instance.resourceList_packUpdated.CurrentValue(), packName));
             await task.Completion;
             await ReloadAsync();
             _ = CheckUpdatesAsync(true);
         }
         catch (OperationCanceledException)
         {
-            ShowNotice("光影包更新已取消", NotificationType.Warning);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packUpdateCancelled.CurrentValue(),
+                CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue()),
+                NotificationType.Warning);
         }
         catch (Exception exception)
         {
             Logger.Warning($"[ShaderPacks] Update failed for {item.FilePath}: {exception}");
-            ShowNotice("光影包更新失败", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packUpdateFailed.CurrentValue(),
+                CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue()),
+                NotificationType.Error);
         }
         finally
         {
@@ -482,18 +514,23 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
             });
             if (newPath == null)
             {
-                ShowNotice("没有可回滚的版本", NotificationType.Warning);
+                ShowNotice(CommonLanguageManager.Instance.resourceList_noRollback.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
             await ReloadAsync();
             _ = CheckUpdatesAsync(true);
-            ShowNotice("光影包已回滚", NotificationType.Success);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packRolledBack.CurrentValue(),
+                CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue()),
+                NotificationType.Success);
         }
         catch (Exception exception)
         {
             Logger.Warning($"[ShaderPacks] Rollback failed for {item.FilePath}: {exception}");
-            ShowNotice("光影包回滚失败", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packRollbackFailed.CurrentValue(),
+                CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue()),
+                NotificationType.Error);
         }
         finally
         {
@@ -522,8 +559,12 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
     {
         return new OverlayDialogOptions
         {
-            Title = "删除光影包", Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
-            OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
+            Title = string.Format(CommonLanguageManager.Instance.resourceList_deletePackTitle.CurrentValue(),
+                CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue()),
+            Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
+            OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+            OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
+            CanLightDismiss = false, CanResize = false
         };
     }
 

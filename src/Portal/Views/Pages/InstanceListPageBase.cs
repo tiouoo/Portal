@@ -6,6 +6,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Components.Operations.OpenFile;
 using Portal.Views.Pages.DownloadPages;
@@ -77,9 +78,12 @@ public abstract partial class InstanceListPageBase : Dsc, ITioTabPage
         var topLevel = TopLevel.GetTopLevel(this);
         var file = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "导入整合包",
+            Title = CommonLanguageManager.Instance.modpack_importTitle.CurrentValue(),
             AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("整合包") { Patterns = ["*.mrpack", "*.zip"] }]
+            FileTypeFilter = [new FilePickerFileType(CommonLanguageManager.Instance.modpack_fileType.CurrentValue())
+            {
+                Patterns = ["*.mrpack", "*.zip"]
+            }]
         });
         var archivePath = file.FirstOrDefault()?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(archivePath))

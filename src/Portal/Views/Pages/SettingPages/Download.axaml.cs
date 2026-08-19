@@ -3,6 +3,7 @@ using MinecraftLaunch.Base.Enums;
 using Portal.Core.Classes.Config;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Localization;
 using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
@@ -24,10 +25,10 @@ public partial class Download : Dsc, INotifyPropertyChanged, IDisposable
 
     public IReadOnlyList<DownloadSourceOption> SourceOptions { get; } =
     [
-        new(DownloadSourceMode.Auto, "自动（动态选择较快源）"),
-        new(DownloadSourceMode.OfficialPreferred, "官方优先（失败后使用镜像）"),
-        new(DownloadSourceMode.MirrorPreferred, "镜像优先（失败后使用官方）"),
-        new(DownloadSourceMode.OfficialOnly, "仅原始源")
+        new(DownloadSourceMode.Auto, CommonLanguageManager.Instance.download_auto.CurrentValue()),
+        new(DownloadSourceMode.OfficialPreferred, CommonLanguageManager.Instance.download_officialPreferred.CurrentValue()),
+        new(DownloadSourceMode.MirrorPreferred, CommonLanguageManager.Instance.download_mirrorPreferred.CurrentValue()),
+        new(DownloadSourceMode.OfficialOnly, CommonLanguageManager.Instance.download_officialOnly.CurrentValue())
     ];
 
     public void Dispose()

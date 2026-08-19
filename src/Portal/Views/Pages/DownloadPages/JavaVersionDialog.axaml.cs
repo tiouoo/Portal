@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -46,7 +47,9 @@ public partial class JavaVersionDialogViewModel : ObservableObject, IDialogConte
 {
     public JavaVersionDialogViewModel(JavaDistributionItem distribution)
     {
-        HeaderText = $"选择要安装的 {distribution.DisplayName} 版本";
+        HeaderText = string.Format(
+            CommonLanguageManager.Instance.javaDownload_selectVersionToInstall.CurrentValue(),
+            distribution.DisplayName);
         var installedMajors = Data.ConfigEntry.JavaRuntimes
             .Where(x => x.JavaPath.StartsWith(ConfigPath.JavaRuntimesPath, StringComparison.OrdinalIgnoreCase))
             .Select(x => x.MajorVersion)

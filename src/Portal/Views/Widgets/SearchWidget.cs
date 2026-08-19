@@ -10,6 +10,7 @@ using Avalonia.VisualTree;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Widgets;
+using Portal.Localization;
 using Portal.Module;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
@@ -79,7 +80,7 @@ public sealed class SearchWidget : IWidgetContent
         {
             FilterMode = AutoCompleteFilterMode.None,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            PlaceholderText = "搜索",
+            PlaceholderText = CommonLanguageManager.Instance.common_search.CurrentValue(),
             MaxDropDownHeight = 336
         };
 
@@ -199,7 +200,9 @@ public sealed class SearchWidget : IWidgetContent
             var keyword = _searchBox.Text?.Trim();
             if (string.IsNullOrWhiteSpace(keyword))
                 return;
-            OpenDownloadSearchTab(mode.PageType, keyword, $"{mode.DisplayText}搜索");
+            OpenDownloadSearchTab(mode.PageType, keyword,
+                string.Format(CommonLanguageManager.Instance.startPage_searchModeTitle.CurrentValue(),
+                    mode.DisplayText));
             _searchBox.Text = null;
             _searchBox.SelectedItem = null;
             _searchBox.IsDropDownOpen = false;

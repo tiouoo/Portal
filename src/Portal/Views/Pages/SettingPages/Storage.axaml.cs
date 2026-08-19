@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using TioUi.Common.Extensions;
@@ -81,18 +82,18 @@ public partial class StorageViewModel : ObservableObject
 
         PortalFolders.Clear();
         PortalFolders.Add(new GameFolderStorageItem(
-            "Portal 数据文件夹",
-            "Portal 用户数据，删除将丢失所有账户信息、游戏设置等。",
+            CommonLanguageManager.Instance.storage_portalDataFolder.CurrentValue(),
+            CommonLanguageManager.Instance.storage_portalDataFolderDescription.CurrentValue(),
             portalPath,
             0));
         PortalFolders.Add(new GameFolderStorageItem(
-            "Portal 缓存文件夹",
-            "Portal 下载与运行产生的缓存数据，删除后会在需要时重新生成。",
+            CommonLanguageManager.Instance.storage_portalCacheFolder.CurrentValue(),
+            CommonLanguageManager.Instance.storage_portalCacheFolderDescription.CurrentValue(),
             _cachePath,
             0));
         PortalFolders.Add(new GameFolderStorageItem(
-            "运行时文件夹",
-            "Portal 管理的 Java 运行时，不计入游戏或 Portal 分类。",
+            CommonLanguageManager.Instance.storage_runtimeFolder.CurrentValue(),
+            CommonLanguageManager.Instance.storage_runtimeFolderDescription.CurrentValue(),
             _javaRuntimesPath,
             0));
 
@@ -100,8 +101,8 @@ public partial class StorageViewModel : ObservableObject
 
         if (OperatingSystem.IsWindows())
             GameFolders.Add(new GameFolderStorageItem(
-                "基岩版数据共享文件夹",
-                "基岩版实例共享的游戏数据，包括世界、资源包和行为包等。",
+                CommonLanguageManager.Instance.storage_bedrockSharedFolder.CurrentValue(),
+                CommonLanguageManager.Instance.storage_bedrockSharedFolderDescription.CurrentValue(),
                 _bedrockDataPath,
                 0));
 

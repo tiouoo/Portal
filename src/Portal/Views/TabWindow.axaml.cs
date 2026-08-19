@@ -16,6 +16,7 @@ using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
+using Portal.Localization;
 using Portal.Module;
 using Portal.Module.DefaultPage;
 using Portal.Views.Components;
@@ -733,7 +734,8 @@ public partial class TabWindow : TioTabWindowBase
 
     private SKBitmap DecodeBackground(string path)
     {
-        using var codec = SKCodec.Create(path) ?? throw new InvalidDataException("无法读取背景图片。");
+        using var codec = SKCodec.Create(path) ?? throw new InvalidDataException(
+            CommonLanguageManager.Instance.tabWindow_cannotReadBackground.CurrentValue());
         var source = codec.Info;
         var renderScale = RenderScaling;
         var targetWidth = Math.Max(1, Bounds.Width * renderScale * 1.25);
@@ -748,6 +750,7 @@ public partial class TabWindow : TioTabWindowBase
             return bitmap;
 
         bitmap.Dispose();
-        throw new InvalidDataException($"背景图片解码失败：{result}");
+        throw new InvalidDataException(string.Format(
+            CommonLanguageManager.Instance.tabWindow_backgroundDecodeFailed.CurrentValue(), result));
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Views.Components.Operations.Java;
@@ -14,14 +15,14 @@ public static class JavaRuntimeOperations
     {
         var options = new FilePickerOpenOptions
         {
-            Title = "选择 Java 可执行文件",
+            Title = CommonLanguageManager.Instance.javaRuntime_selectExecutable.CurrentValue(),
             AllowMultiple = false
         };
 
         if (OperatingSystem.IsWindows())
             options.FileTypeFilter =
             [
-                new FilePickerFileType("Java 可执行文件")
+                new FilePickerFileType(CommonLanguageManager.Instance.javaRuntime_executableFileType.CurrentValue())
                 {
                     Patterns = ["java", "java.exe", "javaw", "javaw.exe"]
                 }
@@ -84,8 +85,8 @@ public static class JavaRuntimeOperations
         var task = TaskManager.Instance.CreateTask(
             new TaskOptions
             {
-                Name = "强力扫描 Java",
-                Description = "准备扫描…",
+                Name = CommonLanguageManager.Instance.javaRuntime_forceScanName.CurrentValue(),
+                Description = CommonLanguageManager.Instance.javaRuntime_preparingScan.CurrentValue(),
                 Progress = 0.0,
                 Actions = []
             },
@@ -95,7 +96,7 @@ public static class JavaRuntimeOperations
                 var duplicateCount = 0;
                 try
                 {
-                    ctx.SetRunning("准备扫描磁盘中的 Java 运行时…");
+                    ctx.SetRunning(CommonLanguageManager.Instance.javaRuntime_preparingDiskScan.CurrentValue());
 
                     var progress = new Progress<DeepScanProgress>(p =>
                     {
@@ -107,7 +108,9 @@ public static class JavaRuntimeOperations
                                 : null as double?;
 
                             ctx.ReportProgress(progressRatio);
-                            ctx.SetDescription($"{p.CurrentStatus}（已找到 {p.JavasFound} 个）");
+                            ctx.SetDescription(string.Format(
+                                CommonLanguageManager.Instance.javaRuntime_scanProgress.CurrentValue(),
+                                p.CurrentStatus, p.JavasFound));
                         }
                         catch (InvalidOperationException)
                         {
@@ -137,8 +140,10 @@ public static class JavaRuntimeOperations
 
                     var cancelled = ctx.CancellationToken.IsCancellationRequested;
                     var finishText = cancelled
-                        ? $"已取消，已找到的新增 {addedCount} 个 Java，重复 {duplicateCount} 个"
-                        : $"扫描完成：新增 {addedCount} 个 Java，重复 {duplicateCount} 个";
+                        ? string.Format(CommonLanguageManager.Instance.javaRuntime_scanCancelled.CurrentValue(),
+                            addedCount, duplicateCount)
+                        : string.Format(CommonLanguageManager.Instance.javaPage_scanComplete.CurrentValue(),
+                            addedCount, duplicateCount);
 
 
                     if (!cancelled)
@@ -152,7 +157,8 @@ public static class JavaRuntimeOperations
                 catch (Exception ex)
                 {
                     resultSource.TrySetException(ex);
-                    ctx.SetDescription($"扫描失败：{ex.Message}");
+                    ctx.SetDescription(string.Format(
+                        CommonLanguageManager.Instance.javaRuntime_scanFailed.CurrentValue(), ex.Message));
                     throw;
                 }
             });

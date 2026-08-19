@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.ViewModels;
@@ -28,9 +29,9 @@ public partial class NewsPageViewModel : ObservableObject
 
     public List<NewsFilterOption> FilterOptions { get; } =
     [
-        new() { DisplayText = "全部", Type = NewsFilterType.All },
-        new() { DisplayText = "Java 版", Type = NewsFilterType.Java },
-        new() { DisplayText = "基岩版", Type = NewsFilterType.Bedrock }
+        new() { DisplayText = CommonLanguageManager.Instance.news_filterAll.CurrentValue(), Type = NewsFilterType.All },
+        new() { DisplayText = CommonLanguageManager.Instance.news_filterJava.CurrentValue(), Type = NewsFilterType.Java },
+        new() { DisplayText = CommonLanguageManager.Instance.news_filterBedrock.CurrentValue(), Type = NewsFilterType.Bedrock }
     ];
 
     [ObservableProperty] public partial bool IsVisible { get; set; }

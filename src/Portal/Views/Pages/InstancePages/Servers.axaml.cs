@@ -17,6 +17,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -69,7 +70,9 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
     }
 
     public bool IsEmpty => !IsLoading && Items.Count == 0;
-    public string ServerCountText => IsLoading ? string.Empty : $"{Items.Count} 个";
+    public string ServerCountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), Items.Count);
 
     public bool IsRefreshing
     {
@@ -180,7 +183,10 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
     private async Task RefreshAllAsync()
     {
         await ReloadAsync();
-        Notify(_instance == null ? "刷新失败" : "服务器状态已刷新", NotificationType.Success);
+        Notify(_instance == null
+                ? CommonLanguageManager.Instance.servers_refreshFailed.CurrentValue()
+                : CommonLanguageManager.Instance.servers_statusRefreshed.CurrentValue(),
+            NotificationType.Success);
     }
 
     private async Task PingAllAsync()
@@ -207,7 +213,8 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         }
         catch (Exception exception)
         {
-            Logger.Warning($"批量检测服务器状态失败。{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.servers_batchPingFailed.CurrentValue(),
+                Environment.NewLine, exception));
         }
         finally
         {
@@ -236,7 +243,8 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         }
         catch (Exception exception)
         {
-            Logger.Warning($"检测服务器状态失败：{item.Entry.Address}{Environment.NewLine}{exception}");
+            Logger.Warning(string.Format(LogLanguageManager.Instance.servers_pingFailed.CurrentValue(),
+                item.Entry.Address, Environment.NewLine, exception));
             await Dispatcher.UIThread.InvokeAsync(() => item.ApplyStatus(null));
         }
         finally
@@ -261,19 +269,21 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         if (_instance == null)
             return;
 
-        var result = await ServerEditDialogHelper.ShowAsync("添加服务器", string.Empty, string.Empty,
+        var result = await ServerEditDialogHelper.ShowAsync(
+            CommonLanguageManager.Instance.servers_addServer.CurrentValue(), string.Empty, string.Empty,
             this.TryGetHostId());
         if (result == null)
             return;
 
         if (JavaServerManager.Add(_instance, result.Name, result.Address))
         {
-            Notify($"服务器“{result.Name}”已添加", NotificationType.Success);
+            Notify(string.Format(CommonLanguageManager.Instance.servers_serverAdded.CurrentValue(), result.Name),
+                NotificationType.Success);
             await ReloadAsync();
         }
         else
         {
-            Notify("添加服务器失败", NotificationType.Error);
+            Notify(CommonLanguageManager.Instance.servers_addFailed.CurrentValue(), NotificationType.Error);
         }
     }
 
@@ -286,19 +296,20 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         if (index < 0)
             return;
 
-        var result = await ServerEditDialogHelper.ShowAsync("编辑服务器", item.Name, item.Entry.Address,
+        var result = await ServerEditDialogHelper.ShowAsync(
+            CommonLanguageManager.Instance.servers_editServer.CurrentValue(), item.Name, item.Entry.Address,
             this.TryGetHostId());
         if (result == null)
             return;
 
         if (JavaServerManager.Update(_instance, index, result.Name, result.Address))
         {
-            Notify("服务器已更新", NotificationType.Success);
+            Notify(CommonLanguageManager.Instance.servers_serverUpdated.CurrentValue(), NotificationType.Success);
             await ReloadAsync();
         }
         else
         {
-            Notify("编辑服务器失败", NotificationType.Error);
+            Notify(CommonLanguageManager.Instance.servers_editFailed.CurrentValue(), NotificationType.Error);
         }
     }
 
@@ -319,16 +330,16 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
             new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = $"确定要从服务器列表中删除“{item.Name}”吗？此操作不会影响已经连接的存档。",
+                Text = string.Format(CommonLanguageManager.Instance.servers_deleteConfirm.CurrentValue(), item.Name),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "删除服务器",
+                Title = CommonLanguageManager.Instance.servers_deleteServer.CurrentValue(),
                 Mode = DialogMode.Error,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "删除",
-                OverrideNoButtonText = "取消",
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });
@@ -337,12 +348,13 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
 
         if (JavaServerManager.Remove(_instance, index))
         {
-            Notify($"服务器“{item.Name}”已删除", NotificationType.Success);
+            Notify(string.Format(CommonLanguageManager.Instance.servers_serverDeleted.CurrentValue(), item.Name),
+                NotificationType.Success);
             await ReloadAsync();
         }
         else
         {
-            Notify("删除服务器失败", NotificationType.Error);
+            Notify(CommonLanguageManager.Instance.servers_deleteFailed.CurrentValue(), NotificationType.Error);
         }
     }
 
@@ -356,7 +368,8 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         {
             using var session = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
             await PingOneAsync(item, session.Token);
-            Notify($"“{item.Name}”状态已刷新", NotificationType.Success);
+            Notify(string.Format(CommonLanguageManager.Instance.servers_statusRefreshedNamed.CurrentValue(),
+                item.Name), NotificationType.Success);
         }
         finally
         {
@@ -399,7 +412,8 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
             RecentPlayTargetType.Server,
             $"{entry.Host}:{entry.Port}",
             entry.Name,
-            $"服务器·{entry.DisplayAddress}",
+            string.Format(CommonLanguageManager.Instance.recentPlay_serverDescription.CurrentValue(),
+                entry.DisplayAddress),
             DateTime.Now,
             ServerIconData: entry.IconData,
             ServerAddress: entry.Host,
@@ -427,7 +441,8 @@ public partial class Servers : UserControl, INotifyPropertyChanged, IDisposable
         if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
             await clipboard.SetTextAsync(item.Entry.DisplayAddress);
 
-        Notify($"已复制地址 {item.Entry.DisplayAddress}", NotificationType.Success);
+        Notify(string.Format(CommonLanguageManager.Instance.servers_addressCopied.CurrentValue(),
+            item.Entry.DisplayAddress), NotificationType.Success);
     }
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -497,7 +512,8 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
 
     [ObservableProperty] public partial ServerItemStatus Status { get; set; }
 
-    [ObservableProperty] public partial string StatusText { get; set; } = "未检测";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.servers_statusUnknown.CurrentValue();
 
     [ObservableProperty] public partial IBrush StatusBrush { get; set; } = PendingBrush;
 
@@ -515,7 +531,8 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
 
     [ObservableProperty] public partial bool HasVersion { get; set; }
 
-    [ObservableProperty] public partial string DescriptionText { get; set; } = "等待检测...";
+    [ObservableProperty] public partial string DescriptionText { get; set; } =
+        CommonLanguageManager.Instance.servers_waitingDetection.CurrentValue();
 
     public void Dispose()
     {
@@ -530,7 +547,7 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
     public void ApplyPinging()
     {
         Status = ServerItemStatus.Pinging;
-        StatusText = "检测中";
+        StatusText = CommonLanguageManager.Instance.servers_pinging.CurrentValue();
         StatusBrush = PendingBrush;
     }
 
@@ -539,17 +556,17 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
         if (status == null)
         {
             Status = ServerItemStatus.Offline;
-            StatusText = "无法连接";
+            StatusText = CommonLanguageManager.Instance.servers_cannotConnect.CurrentValue();
             StatusBrush = OfflineBrush;
             HasPing = false;
             HasPlayers = false;
             HasVersion = false;
-            DescriptionText = "无法连接到服务器，请检查地址或稍后再试";
+            DescriptionText = CommonLanguageManager.Instance.servers_cannotConnectDescription.CurrentValue();
             return;
         }
 
         Status = ServerItemStatus.Online;
-        StatusText = "在线";
+        StatusText = CommonLanguageManager.Instance.servers_online.CurrentValue();
         StatusBrush = OnlineBrush;
 
         PingText = $"{status.Latency} ms";
@@ -559,14 +576,17 @@ public sealed partial class ServerItem : ObservableObject, IDisposable
             : PingPoorBrush;
 
         var hasPlayerCount = status.MaxPlayers > 0 || status.OnlinePlayers > 0;
-        PlayersText = hasPlayerCount ? $"{status.OnlinePlayers} / {status.MaxPlayers} 人" : string.Empty;
+        PlayersText = hasPlayerCount
+            ? string.Format(CommonLanguageManager.Instance.servers_players.CurrentValue(), status.OnlinePlayers,
+                status.MaxPlayers)
+            : string.Empty;
         HasPlayers = hasPlayerCount;
 
         VersionText = string.IsNullOrWhiteSpace(status.Version) ? string.Empty : status.Version;
         HasVersion = !string.IsNullOrWhiteSpace(status.Version);
 
         DescriptionText = string.IsNullOrWhiteSpace(status.Description)
-            ? "暂无描述"
+            ? CommonLanguageManager.Instance.servers_noDescription.CurrentValue()
             : status.Description;
 
         if (!string.IsNullOrWhiteSpace(status.Favicon))

@@ -19,6 +19,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -37,7 +38,8 @@ internal static class ModpackInstallation
             ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(viewModel.Name),
             topLevel.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "下载整合包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.modpack_downloadStep.CurrentValue(),
+                Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
             });
         if (result is null) return;
         if (result.Destination == ModpackDownloadDestination.SaveAs)
@@ -61,7 +63,8 @@ internal static class ModpackInstallation
                 false),
             topLevel.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "安装整合包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.modpack_installTitle.CurrentValue(),
+                Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
             });
         if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
 
@@ -70,7 +73,9 @@ internal static class ModpackInstallation
             $"[Modpack] Queuing local {source} modpack installation from {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
         var task = TaskManager.Instance.CreateTask(new TaskOptions
             {
-                Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
+                Name = string.Format(CommonLanguageManager.Instance.modpack_installTaskName.CurrentValue(),
+                    displayName), Description = CommonLanguageManager.Instance.modpack_preparingInstall.CurrentValue(),
+                Progress = 0,
                 Actions =
                 [
                     CreateCancelInstallAction()
@@ -87,7 +92,7 @@ internal static class ModpackInstallation
         if (!TryGetModpack(path, out var archivePath, out var source, out var suggestedInstanceId))
         {
             Logger.Warning($"[Modpack] Rejected invalid local modpack archive {path}.");
-            topLevel.Notice("无效整合包文件", NotificationType.Error);
+            topLevel.Notice(CommonLanguageManager.Instance.modpack_invalidFile.CurrentValue(), NotificationType.Error);
             return;
         }
 
@@ -99,7 +104,8 @@ internal static class ModpackInstallation
                 false),
             topLevel.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "安装整合包", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.modpack_installTitle.CurrentValue(),
+                Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
             });
         if (result?.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
 
@@ -108,7 +114,9 @@ internal static class ModpackInstallation
             $"[Modpack] Queuing imported {source} modpack {archivePath} to {result.Folder.FolderPath} as {result.InstanceId}.");
         var task = TaskManager.Instance.CreateTask(new TaskOptions
             {
-                Name = $"安装整合包：{displayName}", Description = "正在准备安装", Progress = 0,
+                Name = string.Format(CommonLanguageManager.Instance.modpack_installTaskName.CurrentValue(),
+                    displayName), Description = CommonLanguageManager.Instance.modpack_preparingInstall.CurrentValue(),
+                Progress = 0,
                 Actions =
                 [
                     CreateCancelInstallAction()
@@ -139,7 +147,9 @@ internal static class ModpackInstallation
     {
         return new TaskActionDefinition
         {
-            Name = "取消安装", Description = "取消此整合包安装", IconKey = "Cancel",
+            Name = CommonLanguageManager.Instance.modpack_cancelInstall.CurrentValue(),
+            Description = CommonLanguageManager.Instance.modpack_cancelInstallDescription.CurrentValue(),
+            IconKey = "Cancel",
             ExecuteAsync = (managedTask, _) =>
             {
                 managedTask.RequestCancellation();
@@ -154,8 +164,12 @@ internal static class ModpackInstallation
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "另存为整合包", SuggestedFileName = file.FileName,
-            FileTypeChoices = [new FilePickerFileType("整合包") { Patterns = ["*.mrpack", "*.zip"] }]
+            Title = CommonLanguageManager.Instance.modpack_saveAsTitle.CurrentValue(),
+            SuggestedFileName = file.FileName,
+            FileTypeChoices = [new FilePickerFileType(CommonLanguageManager.Instance.modpack_fileType.CurrentValue())
+            {
+                Patterns = ["*.mrpack", "*.zip"]
+            }]
         });
         var destination = selected?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(destination)) return;
@@ -168,7 +182,9 @@ internal static class ModpackInstallation
     {
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"安装整合包：{file.DisplayName}", Description = "正在准备安装", Progress = 0,
+            Name = string.Format(CommonLanguageManager.Instance.modpack_installTaskName.CurrentValue(),
+                file.DisplayName), Description = CommonLanguageManager.Instance.modpack_preparingInstall.CurrentValue(),
+            Progress = 0,
             Actions =
             [
                 CreateCancelInstallAction()
@@ -188,7 +204,9 @@ internal static class ModpackInstallation
         var installFolder = isPortalMc ? Path.Combine(portalMcRoot, "meta") : folder;
         var instancesRoot = isPortalMc ? Path.Combine(portalMcRoot, "instances") : null;
         var instancePath = Path.Combine(instancesRoot ?? Path.Combine(folder, "versions"), instanceId);
-        if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
+        if (Directory.Exists(instancePath))
+            throw new InvalidOperationException(string.Format(
+                CommonLanguageManager.Instance.modpack_instanceIdExists.CurrentValue(), instanceId));
         var temporaryFolder = Path.Combine(Path.GetTempPath(), "Portal", "modpacks", Guid.NewGuid().ToString("N"));
         var archivePath = Path.Combine(temporaryFolder, Path.GetFileName(file.FileName));
         var stopwatch = Stopwatch.StartNew();
@@ -196,7 +214,8 @@ internal static class ModpackInstallation
         try
         {
             await Task.Run(() => Directory.CreateDirectory(temporaryFolder));
-            await RunStepAsync(context, "下载整合包安装包", $"正在下载：{file.FileName}",
+            await RunStepAsync(context, CommonLanguageManager.Instance.modpack_downloadArchiveStep.CurrentValue(),
+                string.Format(CommonLanguageManager.Instance.modpack_downloading.CurrentValue(), file.FileName),
                 step => DownloadArchiveAsync(step, file, archivePath));
             var minecraft = source switch
             {
@@ -205,17 +224,20 @@ internal static class ModpackInstallation
                 ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId,
                     archivePath,
                     GetForgeJavaPath(), instancesRoot),
-                _ => throw new NotSupportedException("不支持的整合包来源。")
+                _ => throw new NotSupportedException(CommonLanguageManager.Instance.modpack_unsupportedSource.CurrentValue())
             };
             await TrySaveProjectIconAsync(iconUrl, instancePath, context.CancellationToken);
-            await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_refreshInstancesStep.CurrentValue(),
+                CommonLanguageManager.Instance.minecraft_scanningNewInstances.CurrentValue(), step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-                step.SetDescription($"已刷新实例列表，{instanceId} 已可用");
+                step.SetDescription(string.Format(
+                    CommonLanguageManager.Instance.minecraft_instancesRefreshed.CurrentValue(), instanceId));
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            context.SetDescription($"整合包 {instanceId} 安装完成");
+            context.SetDescription(string.Format(
+                CommonLanguageManager.Instance.modpack_installComplete.CurrentValue(), instanceId));
             Logger.Info(
                 $"[Modpack] Installed remote modpack {file.FileName} as {minecraft.Id} in {stopwatch.Elapsed}.");
         }
@@ -255,7 +277,9 @@ internal static class ModpackInstallation
         var installFolder = isPortalMc ? Path.Combine(portalMcRoot, "meta") : folder;
         var instancesRoot = isPortalMc ? Path.Combine(portalMcRoot, "instances") : null;
         var instancePath = Path.Combine(instancesRoot ?? Path.Combine(folder, "versions"), instanceId);
-        if (Directory.Exists(instancePath)) throw new InvalidOperationException($"实例 ID “{instanceId}”已存在。");
+        if (Directory.Exists(instancePath))
+            throw new InvalidOperationException(string.Format(
+                CommonLanguageManager.Instance.modpack_instanceIdExists.CurrentValue(), instanceId));
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[Modpack] Installing local {source} modpack {archivePath} to {instancePath}.");
 
@@ -267,22 +291,26 @@ internal static class ModpackInstallation
                     GetForgeJavaPath(), instancesRoot),
                 ModDetailsSource.CurseForge => await InstallCurseForgeAsync(context, installFolder, instanceId,
                     archivePath, GetForgeJavaPath(), instancesRoot),
-                _ => throw new NotSupportedException("不支持的整合包来源。")
+                _ => throw new NotSupportedException(CommonLanguageManager.Instance.modpack_unsupportedSource.CurrentValue())
             };
-            await RunStepAsync(context, "导入实例设置", "正在恢复整合包附带的 Portal 实例设置", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.modpack_importSettingsStep.CurrentValue(),
+                CommonLanguageManager.Instance.modpack_importSettingsDescription.CurrentValue(), step =>
             {
                 ImportPortalSettings(instancePath, instancesRoot is not null);
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_refreshInstancesStep.CurrentValue(),
+                CommonLanguageManager.Instance.minecraft_scanningNewInstances.CurrentValue(), step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
-                step.SetDescription($"已刷新实例列表，{instanceId} 已可用");
+                step.SetDescription(string.Format(
+                    CommonLanguageManager.Instance.minecraft_instancesRefreshed.CurrentValue(), instanceId));
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            context.SetDescription($"整合包 {instanceId} 安装完成");
+            context.SetDescription(string.Format(
+                CommonLanguageManager.Instance.modpack_installComplete.CurrentValue(), instanceId));
             Logger.Info($"[Modpack] Installed local modpack {archivePath} as {minecraft.Id} in {stopwatch.Elapsed}.");
             return instancePath;
         }
@@ -321,16 +349,19 @@ internal static class ModpackInstallation
     private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file,
         string destination)
     {
-        context.SetRunning($"正在下载：{file.FileName}");
+        context.SetRunning(string.Format(CommonLanguageManager.Instance.modpack_downloading.CurrentValue(),
+            file.FileName));
         var request = new DownloadRequest(file.DownloadUrl, destination, file.FileSize)
         {
             ProgressChanged = DownloadProgressReporter.Create(context,
-                speed => $"正在下载安装包：{DefaultDownloader.FormatSize(speed, true)}")
+                speed => string.Format(CommonLanguageManager.Instance.modpack_downloadingArchiveSpeed.CurrentValue(),
+                    DefaultDownloader.FormatSize(speed, true)))
         };
         var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
         if (result.Type == DownloadResultType.Cancelled)
             throw new OperationCanceledException(context.CancellationToken);
-        if (result.Type != DownloadResultType.Successful) throw result.Exception ?? new IOException("整合包下载失败。");
+        if (result.Type != DownloadResultType.Successful)
+            throw result.Exception ?? new IOException(CommonLanguageManager.Instance.modpack_downloadFailed.CurrentValue());
     }
 
     internal static async Task TrySaveProjectIconAsync(string? iconUrl, string instancePath,
@@ -370,7 +401,8 @@ internal static class ModpackInstallation
         string id,
         string archivePath, string? javaPath, string? instancesRoot)
     {
-        var entry = await RunStepAsync(context, "解析整合包", "正在读取 Modrinth 整合包清单", step =>
+        var entry = await RunStepAsync(context, CommonLanguageManager.Instance.modpack_parseModpackStep.CurrentValue(),
+            CommonLanguageManager.Instance.modpack_readingModrinthManifest.CurrentValue(), step =>
         {
             return Task.Run(() =>
             {
@@ -379,7 +411,8 @@ internal static class ModpackInstallation
                 return parsed;
             }, step.CancellationToken);
         });
-        var loaderTask = RunStepAsync(context, "准备模组加载器", "正在获取整合包指定的加载器", step =>
+        var loaderTask = RunStepAsync(context, CommonLanguageManager.Instance.modpack_prepareLoaderStep.CurrentValue(),
+            CommonLanguageManager.Instance.modpack_fetchingLoader.CurrentValue(), step =>
             ModrinthModpackInstaller.ParseModLoaderEntryAsync(entry, step.CancellationToken));
         var vanillaTask = GetVanillaEntryAsync(context, entry.McVersion);
         await Task.WhenAll(loaderTask, vanillaTask);
@@ -401,14 +434,19 @@ internal static class ModpackInstallation
             });
         var vanillaInstaller = VanillaInstaller.Create(folder, vanilla, hasLoader ? null : id);
         vanillaInstaller.SourceRootDirectories = sourceRoots;
-        var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
+        var vanillaInstallation = RunInstallerStepAsync(context,
+            CommonLanguageManager.Instance.minecraft_installVanillaStep.CurrentValue(),
+            string.Format(CommonLanguageManager.Instance.minecraft_installingMinecraft.CurrentValue(),
+                entry.McVersion),
             vanillaInstaller);
         var modpackWorkingPath = hasLoader
             ? Path.Combine(folder, "versions", effectiveLoaderId)
             : instancesRoot is not null
                 ? Path.Combine(instancesRoot, id)
                 : Path.Combine(folder, "versions", id);
-        var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行下载整合包模组",
+        var filesInstallation = RunModpackFilesStepAsync(context,
+            CommonLanguageManager.Instance.modpack_installFilesStep.CurrentValue(),
+            CommonLanguageManager.Instance.modpack_downloadingMods.CurrentValue(),
             new ModrinthModpackInstaller
             {
                 MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
@@ -416,7 +454,10 @@ internal static class ModpackInstallation
             });
         var minecraft = await vanillaInstallation;
         if (loader is not null)
-            minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
+            minecraft = await RunInstallerStepAsync(context,
+                string.Format(CommonLanguageManager.Instance.minecraft_installLoaderStep.CurrentValue(),
+                    GetLoaderName(loader)),
+                CommonLanguageManager.Instance.modpack_installingLoader.CurrentValue(),
                 CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft, sourceRoots));
         await filesInstallation;
         if (instancesRoot is not null)
@@ -453,7 +494,8 @@ internal static class ModpackInstallation
         string id,
         string archivePath, string? javaPath, string? instancesRoot)
     {
-        var entry = await RunStepAsync(context, "解析整合包", "正在读取 CurseForge 整合包清单", step =>
+        var entry = await RunStepAsync(context, CommonLanguageManager.Instance.modpack_parseModpackStep.CurrentValue(),
+            CommonLanguageManager.Instance.modpack_readingCurseForgeManifest.CurrentValue(), step =>
         {
             return Task.Run(() =>
             {
@@ -462,7 +504,8 @@ internal static class ModpackInstallation
                 return parsed;
             }, step.CancellationToken);
         });
-        var loadersTask = RunStepAsync(context, "准备模组加载器", "正在获取整合包指定的加载器", async step =>
+        var loadersTask = RunStepAsync(context, CommonLanguageManager.Instance.modpack_prepareLoaderStep.CurrentValue(),
+            CommonLanguageManager.Instance.modpack_fetchingLoader.CurrentValue(), async step =>
         {
             var result = new List<IInstallEntry>();
             await foreach (var loader in CurseforgeModpackInstaller.ParseModLoaderEntryByManifestAsync(entry,
@@ -491,14 +534,19 @@ internal static class ModpackInstallation
             });
         var vanillaInstaller = VanillaInstaller.Create(folder, vanilla, loaders.Count > 0 ? null : id);
         vanillaInstaller.SourceRootDirectories = sourceRoots;
-        var vanillaInstallation = RunInstallerStepAsync(context, "安装原版 Minecraft", $"正在安装 Minecraft {entry.McVersion}",
+        var vanillaInstallation = RunInstallerStepAsync(context,
+            CommonLanguageManager.Instance.minecraft_installVanillaStep.CurrentValue(),
+            string.Format(CommonLanguageManager.Instance.minecraft_installingMinecraft.CurrentValue(),
+                entry.McVersion),
             vanillaInstaller);
         var modpackWorkingPath = loaders.Count > 0
             ? Path.Combine(folder, "versions", effectiveLoaderId)
             : instancesRoot is not null
                 ? Path.Combine(instancesRoot, id)
                 : Path.Combine(folder, "versions", id);
-        var filesInstallation = RunModpackFilesStepAsync(context, "安装整合包文件", "正在并行解析并下载整合包模组",
+        var filesInstallation = RunModpackFilesStepAsync(context,
+            CommonLanguageManager.Instance.modpack_installFilesStep.CurrentValue(),
+            CommonLanguageManager.Instance.modpack_parsingMods.CurrentValue(),
             new CurseforgeModpackInstaller
             {
                 MinecraftFolder = folder, ModpackPath = archivePath, Entry = entry, Minecraft = null!,
@@ -507,7 +555,10 @@ internal static class ModpackInstallation
         var minecraft = await vanillaInstallation;
         var hasLoader = loaders.Count > 0;
         foreach (var loader in loaders)
-            minecraft = await RunInstallerStepAsync(context, $"安装 {GetLoaderName(loader)}", "正在安装整合包指定的加载器",
+            minecraft = await RunInstallerStepAsync(context,
+                string.Format(CommonLanguageManager.Instance.minecraft_installLoaderStep.CurrentValue(),
+                    GetLoaderName(loader)),
+                CommonLanguageManager.Instance.modpack_installingLoader.CurrentValue(),
                 CreateModLoaderInstaller(loader, folder, effectiveLoaderId, javaPath, minecraft, sourceRoots));
         await filesInstallation;
         if (instancesRoot is not null)
@@ -570,7 +621,8 @@ internal static class ModpackInstallation
     private static Task MovePortalMcInstanceAsync(TaskExecutionContext context, string metadataRoot,
         string effectiveLoaderId, string instanceId, string instancesRoot)
     {
-        return RunStepAsync(context, "创建游戏实例", "正在生成实例配置", step =>
+        return RunStepAsync(context, CommonLanguageManager.Instance.minecraft_createInstanceStep.CurrentValue(),
+            CommonLanguageManager.Instance.minecraft_generatingInstanceConfig.CurrentValue(), step =>
         {
             var loaderVersionDirectory = Path.Combine(metadataRoot, "versions", effectiveLoaderId);
             Directory.CreateDirectory(instancesRoot);
@@ -601,7 +653,8 @@ internal static class ModpackInstallation
         var runtime = await JavaAutoInstallCoordinator.EnsureAsync(
             MinecraftInstallationViewModel.GetRecommendedJavaVersion(minecraftVersion),
             progress => MinecraftInstallationTasks.ReportJavaInstallProgress(context, progress), cancellationToken);
-        return runtime?.JavaPath ?? throw new InvalidOperationException("该整合包使用 Forge 或 NeoForge，需要有效的 Java 运行时。");
+        return runtime?.JavaPath ?? throw new InvalidOperationException(
+            CommonLanguageManager.Instance.modpack_forgeJavaRequired.CurrentValue());
     }
 
     private static string? GetForgeJavaPath()
@@ -614,11 +667,15 @@ internal static class ModpackInstallation
     private static async Task<VersionManifestEntry> GetVanillaEntryAsync(TaskExecutionContext context,
         string minecraftVersion)
     {
-        return await RunStepAsync(context, "准备原版 Minecraft", $"正在查找 Minecraft {minecraftVersion}", async step =>
+        return await RunStepAsync(context, CommonLanguageManager.Instance.modpack_prepareVanillaStep.CurrentValue(),
+            string.Format(CommonLanguageManager.Instance.modpack_findingMinecraft.CurrentValue(), minecraftVersion),
+            async step =>
         {
             var version = (await VanillaInstaller.EnumerableMinecraftAsync(step.CancellationToken))
                 .FirstOrDefault(candidate => candidate.Id == minecraftVersion);
-            if (version is null) throw new InvalidOperationException("未找到整合包要求的 Minecraft 版本。");
+            if (version is null)
+                throw new InvalidOperationException(
+                    CommonLanguageManager.Instance.modpack_minecraftVersionNotFound.CurrentValue());
             step.ReportProgress(1);
             return version;
         });
@@ -643,7 +700,8 @@ internal static class ModpackInstallation
             {
                 MinecraftFolder = folder, Entry = quilt, CustomId = id, InheritedMinecraft = inheritedMinecraft
             },
-            _ => throw new NotSupportedException($"不支持整合包加载器：{entry.GetType().Name}")
+            _ => throw new NotSupportedException(string.Format(
+                CommonLanguageManager.Instance.modpack_unsupportedLoader.CurrentValue(), entry.GetType().Name))
         };
         installer.SourceRootDirectories = sourceRoots;
         return installer;
@@ -656,7 +714,7 @@ internal static class ModpackInstallation
             ForgeInstallEntry forge => forge.IsNeoforge ? "NeoForge" : "Forge",
             FabricInstallEntry => "Fabric",
             QuiltInstallEntry => "Quilt",
-            _ => "模组加载器"
+            _ => CommonLanguageManager.Instance.modpack_genericLoaderName.CurrentValue()
         };
     }
 
@@ -672,18 +730,24 @@ internal static class ModpackInstallation
             {
                 if (!completed.IsSuccessful)
                     installationFailure ??= completed.Exception ??
-                                            new InvalidOperationException("MinecraftLaunch 安装器未返回失败原因。");
+                                            new InvalidOperationException(
+                                                CommonLanguageManager.Instance.modpack_installerNoFailureReason
+                                                    .CurrentValue());
             };
             try
             {
                 var minecraft = await RunInBackgroundAsync(installer.InstallAsync, step.CancellationToken);
                 if (installationFailure is not null)
-                    throw new InvalidOperationException($"{name}失败。", installationFailure);
+                    throw new InvalidOperationException(
+                        string.Format(CommonLanguageManager.Instance.modpack_stepFailed.CurrentValue(), name),
+                        installationFailure);
                 return minecraft;
             }
             catch when (installationFailure is not null)
             {
-                throw new InvalidOperationException($"{name}失败。", installationFailure);
+                throw new InvalidOperationException(
+                    string.Format(CommonLanguageManager.Instance.modpack_stepFailed.CurrentValue(), name),
+                    installationFailure);
             }
         });
     }
@@ -704,7 +768,9 @@ internal static class ModpackInstallation
                     await RunInBackgroundAsync(curseforge.InstallFilesAsync, step.CancellationToken);
                     break;
                 default:
-                    throw new NotSupportedException($"不支持预下载的整合包安装器：{installer.GetType().Name}");
+                    throw new NotSupportedException(string.Format(
+                        CommonLanguageManager.Instance.modpack_unsupportedInstaller.CurrentValue(),
+                        installer.GetType().Name));
             }
         });
     }
@@ -751,7 +817,8 @@ internal static class ModpackInstallation
         step.Start();
         await step.Completion;
         if (step.Exception is null) return;
-        context.LogError($"子任务“{name}”失败。", step.Exception);
+        context.LogError(string.Format(LogLanguageManager.Instance.modpack_subtaskFailed.CurrentValue(), name),
+            step.Exception);
         throw new InvalidOperationException(step.Exception.Message, step.Exception);
     }
 
@@ -779,21 +846,25 @@ internal static class ModpackInstallation
     {
         return step switch
         {
-            InstallStep.DownloadVersionJson => "正在下载版本元数据",
-            InstallStep.ParseMinecraft => "正在解析 Minecraft 版本",
-            InstallStep.DownloadAssetIndexFile => "正在下载资源索引",
-            InstallStep.DownloadLibraries => "正在下载游戏依赖",
-            InstallStep.CopyLibraries => "正在复制本地资源",
-            InstallStep.DownloadPackage => "正在下载加载器安装包",
-            InstallStep.ParsePackage => "正在解析加载器安装包",
-            InstallStep.WriteVersionJsonAndSomeDependencies => "正在写入加载器配置",
-            InstallStep.RunInstallProcessor => "正在运行加载器安装处理器",
-            InstallStep.ParseDownloadUrls => "正在解析模组下载地址",
-            InstallStep.RedirectInvalidMod => "正在处理模组下载地址",
-            InstallStep.DownloadMods => "正在下载整合包模组",
-            InstallStep.ExtractModpack => "正在释放整合包文件",
+            InstallStep.DownloadVersionJson => CommonLanguageManager.Instance.minecraft_stepDownloadingVersionJson
+                .CurrentValue(),
+            InstallStep.ParseMinecraft => CommonLanguageManager.Instance.modpack_stepParsingMinecraft.CurrentValue(),
+            InstallStep.DownloadAssetIndexFile => CommonLanguageManager.Instance.minecraft_stepDownloadingAssetIndex
+                .CurrentValue(),
+            InstallStep.DownloadLibraries => CommonLanguageManager.Instance.modpack_stepDownloadingLibraries.CurrentValue(),
+            InstallStep.CopyLibraries => CommonLanguageManager.Instance.modpack_stepCopyingLibraries.CurrentValue(),
+            InstallStep.DownloadPackage => CommonLanguageManager.Instance.minecraft_stepDownloadingPackage.CurrentValue(),
+            InstallStep.ParsePackage => CommonLanguageManager.Instance.minecraft_stepParsingPackage.CurrentValue(),
+            InstallStep.WriteVersionJsonAndSomeDependencies => CommonLanguageManager.Instance
+                .modpack_stepWritingLoaderConfig.CurrentValue(),
+            InstallStep.RunInstallProcessor => CommonLanguageManager.Instance.minecraft_stepRunningInstallProcessor
+                .CurrentValue(),
+            InstallStep.ParseDownloadUrls => CommonLanguageManager.Instance.modpack_stepParsingModUrls.CurrentValue(),
+            InstallStep.RedirectInvalidMod => CommonLanguageManager.Instance.modpack_stepProcessingModUrls.CurrentValue(),
+            InstallStep.DownloadMods => CommonLanguageManager.Instance.modpack_stepDownloadingMods.CurrentValue(),
+            InstallStep.ExtractModpack => CommonLanguageManager.Instance.modpack_stepExtractingModpack.CurrentValue(),
             _ when primaryStep != InstallStep.Undefined => GetInstallStepDescription(primaryStep),
-            _ => "正在安装整合包"
+            _ => CommonLanguageManager.Instance.modpack_stepInstalling.CurrentValue()
         };
     }
 
@@ -816,13 +887,16 @@ internal static class ModpackInstallation
         if (task.Status == ManagedTaskStatus.Completed)
         {
             Logger.Info($"[Modpack] Installation {name} completed in {stopwatch.Elapsed}.");
-            Dispatcher.UIThread.Post(() => topLevel.Notice($"{name} 安装完成", NotificationType.Success));
+            Dispatcher.UIThread.Post(() => topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.modpack_installCompleteNotice.CurrentValue(), name),
+                NotificationType.Success));
         }
         else if (task.Status == ManagedTaskStatus.Faulted)
         {
             Dispatcher.UIThread.Post(() =>
-                topLevel.Notice($"{name} 安装失败：{GetRootCauseMessage(task.Exception) ?? task.ErrorMessage ?? "请查看任务日志"}",
-                    NotificationType.Error));
+                topLevel.Notice(string.Format(CommonLanguageManager.Instance.modpack_installFailedNotice.CurrentValue(),
+                    name, GetRootCauseMessage(task.Exception) ?? task.ErrorMessage ??
+                    CommonLanguageManager.Instance.modpack_checkTaskLog.CurrentValue()), NotificationType.Error));
         }
     }
 

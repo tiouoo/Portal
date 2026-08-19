@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.InstancePages;
@@ -18,11 +19,14 @@ public partial class Files : UserControl
         Instance = instance;
         foreach (var (name, folder) in new[]
                  {
-                     ("模组", MinecraftSpecialFolder.ModsFolder),
-                     ("存档", MinecraftSpecialFolder.SavesFolder),
-                     ("资源包", MinecraftSpecialFolder.ResourcePacksFolder),
-                     ("光影包", MinecraftSpecialFolder.ShaderPacksFolder),
-                     ("截图", MinecraftSpecialFolder.ScreenshotsFolder)
+                     (CommonLanguageManager.Instance.resourceList_mods.CurrentValue(), MinecraftSpecialFolder.ModsFolder),
+                     (CommonLanguageManager.Instance.favorite_kindSave.CurrentValue(), MinecraftSpecialFolder.SavesFolder),
+                     (CommonLanguageManager.Instance.resourceList_packNameResourcePack.CurrentValue(),
+                         MinecraftSpecialFolder.ResourcePacksFolder),
+                     (CommonLanguageManager.Instance.resourceList_packNameShaderPack.CurrentValue(),
+                         MinecraftSpecialFolder.ShaderPacksFolder),
+                     (CommonLanguageManager.Instance.files_screenshots.CurrentValue(),
+                         MinecraftSpecialFolder.ScreenshotsFolder)
                  })
             Folders.Add(new InstanceFolderItem(name, Instance.GetSpecialFolder(folder)));
 

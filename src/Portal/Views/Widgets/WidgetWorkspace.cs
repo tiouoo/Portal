@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Module.Widgets;
+using Portal.Localization;
 using Portal.Module;
 using Portal.ViewModels;
 
@@ -80,7 +81,7 @@ public class WidgetWorkspace : UserControl
 
         var deleteItem = new MenuItem
         {
-            Header = "删除组件", Icon = new PathIcon
+            Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
                     "F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403,56.8,407.4,69.9L416,96 512,96C529.7,96 544,110.3 544,128 544,145.7 529.7,160 512,160L128,160C110.3,160 96,145.7 96,128 96,110.3 110.3,96 128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3 202.7,512 216,512 229.3,512 240,501.3 240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3 306.7,512 320,512 333.3,512 344,501.3 344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3 410.7,512 424,512 437.3,512 448,501.3 448,488L448,296C448,282.7,437.3,272,424,272z"),
@@ -92,18 +93,18 @@ public class WidgetWorkspace : UserControl
 
         var backgroundMenu = new MenuItem
         {
-            Header = "背景", Icon = new PathIcon
+            Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
                     "F1 M640,640z M0,0z M512,128C547.3,128,576,156.7,576,192L576,341.5C576,358.5,569.3,374.8,557.3,386.8L450.7,493.3C438.7,505.3,422.4,512,405.4,512L128,512C92.7,512,64,483.3,64,448L64,192C64,156.7,92.7,128,128,128L512,128z M517.5,336L424,336C410.7,336,400,346.7,400,360L400,453.5 517.5,336z M160,256C177.7,256 192,241.7 192,224 192,206.3 177.7,192 160,192 142.3,192 128,206.3 128,224 128,241.7 142.3,256 160,256z"),
                 Width = 16, Height = 16
             }
         };
-        var followItem = new MenuItem { Header = "跟随全局", Classes = { "hide-icon" } };
+        var followItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_backgroundFollow.CurrentValue(), Classes = { "hide-icon" } };
         followItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, null);
-        var showItem = new MenuItem { Header = "始终显示", Classes = { "hide-icon" } };
+        var showItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_backgroundShow.CurrentValue(), Classes = { "hide-icon" } };
         showItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, true);
-        var hideItem = new MenuItem { Header = "始终隐藏", Classes = { "hide-icon" } };
+        var hideItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_backgroundHide.CurrentValue(), Classes = { "hide-icon" } };
         hideItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, false);
         backgroundMenu.Items.Add(followItem);
         backgroundMenu.Items.Add(showItem);
@@ -112,7 +113,7 @@ public class WidgetWorkspace : UserControl
 
         var memoryModeItem = new MenuItem
         {
-            Header = "切换显示模式",
+            Header = CommonLanguageManager.Instance.widgets_toggleDisplayMode.CurrentValue(),
             Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
@@ -134,7 +135,7 @@ public class WidgetWorkspace : UserControl
 
         var newsFilterMenu = new MenuItem
         {
-            Header = "新闻过滤",
+            Header = CommonLanguageManager.Instance.widgets_newsFilter.CurrentValue(),
             Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
@@ -143,11 +144,11 @@ public class WidgetWorkspace : UserControl
             },
             IsVisible = false
         };
-        var newsAllItem = new MenuItem { Header = "全部", Classes = { "hide-icon" } };
+        var newsAllItem = new MenuItem { Header = CommonLanguageManager.Instance.news_filterAll.CurrentValue(), Classes = { "hide-icon" } };
         newsAllItem.Click += (_, _) => SetNewsFilter(NewsFilterType.All);
-        var newsJavaItem = new MenuItem { Header = "仅 Java 版", Classes = { "hide-icon" } };
+        var newsJavaItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_newsJavaOnly.CurrentValue(), Classes = { "hide-icon" } };
         newsJavaItem.Click += (_, _) => SetNewsFilter(NewsFilterType.Java);
-        var newsBedrockItem = new MenuItem { Header = "仅基岩版", Classes = { "hide-icon" } };
+        var newsBedrockItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_newsBedrockOnly.CurrentValue(), Classes = { "hide-icon" } };
         newsBedrockItem.Click += (_, _) => SetNewsFilter(NewsFilterType.Bedrock);
         newsFilterMenu.Items.Add(newsAllItem);
         newsFilterMenu.Items.Add(newsJavaItem);
@@ -156,7 +157,7 @@ public class WidgetWorkspace : UserControl
 
         var imageChangeItem = new MenuItem
         {
-            Header = "更换图片",
+            Header = CommonLanguageManager.Instance.widgets_changeImage.CurrentValue(),
             Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
@@ -170,7 +171,7 @@ public class WidgetWorkspace : UserControl
 
         var imageStretchItem = new MenuItem
         {
-            Header = "切换填充方式",
+            Header = CommonLanguageManager.Instance.widgets_toggleStretchMode.CurrentValue(),
             Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
@@ -191,7 +192,7 @@ public class WidgetWorkspace : UserControl
 
         var sizeMenu = new MenuItem
         {
-            Header = "切换尺寸", Icon = new PathIcon
+            Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
                     "F1 M640,640z M0,0z M241.1,580.2C222.4,598.9,192,598.9,173.2,580.2L60.1,467.1C41.4,448.4,41.4,418,60.1,399.2L77.1,382.2 150.6,455.7C160,465.1 175.2,465.1 184.5,455.7 193.8,446.3 193.9,431.1 184.5,421.8L111,348.3 144.9,314.4 195.8,365.3C205.2,374.7 220.4,374.7 229.7,365.3 239,355.9 239.1,340.7 229.7,331.4L178.8,280.5 212.7,246.6 286.2,320.1C295.6,329.5 310.8,329.5 320.1,320.1 329.4,310.7 329.5,295.5 320.1,286.2L246.6,212.7 280.5,178.8 331.4,229.7C340.8,239.1 356,239.1 365.3,229.7 374.6,220.3 374.7,205.1 365.3,195.8L314.4,144.9 348.3,111 421.8,184.5C431.2,193.9 446.4,193.9 455.7,184.5 465,175.1 465.1,159.9 455.7,150.6L382.2,77.1 399.2,60.1C417.9,41.4,448.3,41.4,467.1,60.1L580.5,172.9C599.2,191.6,599.2,222,580.5,240.8L241.1,580.2z"),
@@ -245,7 +246,7 @@ public class WidgetWorkspace : UserControl
         _emptyContextMenu = new ContextMenu();
         var addItem = new MenuItem
         {
-            Header = "添加组件", Icon = new PathIcon
+            Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = new PathIcon
             {
                 Data = StreamGeometry.Parse(
                     "F1 M640,640z M0,0z M352,128C352,110.3 337.7,96 320,96 302.3,96 288,110.3 288,128L288,288 128,288C110.3,288 96,302.3 96,320 96,337.7 110.3,352 128,352L288,352 288,512C288,529.7 302.3,544 320,544 337.7,544 352,529.7 352,512L352,352 512,352C529.7,352 544,337.7 544,320 544,302.3 529.7,288 512,288L352,288 352,128z"),
@@ -299,11 +300,11 @@ public class WidgetWorkspace : UserControl
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "选择图片",
+            Title = CommonLanguageManager.Instance.widgets_selectImage.CurrentValue(),
             AllowMultiple = false,
             FileTypeFilter =
             [
-                new FilePickerFileType("图片")
+                new FilePickerFileType(CommonLanguageManager.Instance.widgets_image.CurrentValue())
                 {
                     Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp", "*.ico"]
                 }

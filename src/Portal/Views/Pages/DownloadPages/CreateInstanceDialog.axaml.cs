@@ -16,6 +16,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -144,18 +145,19 @@ public sealed record LoaderVersionOption(string DisplayText, IInstallEntry Entry
 
 public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogContext, IDisposable
 {
-    private const string StableFallbackNotice = "该加载器当前没有稳定版，已选用最新版。";
+    private static readonly string StableFallbackNotice =
+        CommonLanguageManager.Instance.createInstance_stableFallbackNotice.CurrentValue();
     private static readonly string DefaultIconResource = "Portal.Core.Assets.McIcons.01_grass_block_side.png";
 
 
     private static readonly IReadOnlyList<VersionFilterOption> JavaVersionFilters =
     [
-        new("正式版", VersionFilterKind.JavaRelease),
-        new("快照版", VersionFilterKind.JavaSnapshot),
-        new("愚人节版", VersionFilterKind.JavaAprilFools),
-        new("反混淆版", VersionFilterKind.JavaUnobfuscated),
-        new("Beta版", VersionFilterKind.JavaBeta),
-        new("Alpha版", VersionFilterKind.JavaAlpha)
+        new(CommonLanguageManager.Instance.createInstance_versionRelease.CurrentValue(), VersionFilterKind.JavaRelease),
+        new(CommonLanguageManager.Instance.createInstance_versionSnapshot.CurrentValue(), VersionFilterKind.JavaSnapshot),
+        new(CommonLanguageManager.Instance.createInstance_versionAprilFools.CurrentValue(), VersionFilterKind.JavaAprilFools),
+        new(CommonLanguageManager.Instance.createInstance_versionUnobfuscated.CurrentValue(), VersionFilterKind.JavaUnobfuscated),
+        new(CommonLanguageManager.Instance.createInstance_versionBeta.CurrentValue(), VersionFilterKind.JavaBeta),
+        new(CommonLanguageManager.Instance.createInstance_versionAlpha.CurrentValue(), VersionFilterKind.JavaAlpha)
     ];
 
     private static readonly IReadOnlyList<VersionFilterOption> BedrockVersionFilters = BuildBedrockVersionFilters();
@@ -205,7 +207,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     public IReadOnlyList<PlatformOption> Platforms { get; } =
     [
         new("Java", InstancePlatform.Java),
-        new("基岩", InstancePlatform.Bedrock)
+        new(CommonLanguageManager.Instance.createInstance_bedrock.CurrentValue(), InstancePlatform.Bedrock)
     ];
 
     public IReadOnlyList<VersionFilterOption> VersionFilters =>
@@ -213,7 +215,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     public IReadOnlyList<LoaderOption> LoaderOptions { get; } =
     [
-        new("不安装", null),
+        new(CommonLanguageManager.Instance.createInstance_noLoader.CurrentValue(), null),
         new("Fabric", LoaderKind.Fabric),
         new("NeoForge", LoaderKind.NeoForge),
         new("Forge", LoaderKind.Forge),
@@ -222,9 +224,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     public IReadOnlyList<LoaderVersionFilterOption> LoaderVersionFilters { get; } =
     [
-        new("稳定版", LoaderVersionFilterKind.Stable),
-        new("最新版", LoaderVersionFilterKind.Latest),
-        new("其他", LoaderVersionFilterKind.Other)
+        new(CommonLanguageManager.Instance.createInstance_loaderStable.CurrentValue(), LoaderVersionFilterKind.Stable),
+        new(CommonLanguageManager.Instance.createInstance_loaderLatest.CurrentValue(), LoaderVersionFilterKind.Latest),
+        new(CommonLanguageManager.Instance.createInstance_loaderOther.CurrentValue(), LoaderVersionFilterKind.Other)
     ];
 
     public IReadOnlyList<MinecraftFolderEntry> MinecraftFolders { get; }
@@ -239,21 +241,24 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     [ObservableProperty] public partial bool IsVersionDropDownOpen { get; set; }
     [ObservableProperty] public partial VersionOption? SelectedVersion { get; set; }
     [ObservableProperty] public partial bool IsVersionsLoading { get; set; }
-    [ObservableProperty] public partial string VersionsPlaceholder { get; set; } = "加载中...";
+    [ObservableProperty] public partial string VersionsPlaceholder { get; set; } =
+        CommonLanguageManager.Instance.common_loading.CurrentValue();
     [ObservableProperty] public partial bool IsLoaderVisible { get; set; }
     [ObservableProperty] public partial LoaderOption? SelectedLoader { get; set; }
     [ObservableProperty] public partial LoaderVersionFilterOption? SelectedLoaderVersionFilter { get; set; }
     [ObservableProperty] public partial LoaderVersionOption? SelectedCustomLoaderVersion { get; set; }
     [ObservableProperty] public partial bool IsLoaderVersionAreaVisible { get; set; }
     [ObservableProperty] public partial bool IsCustomLoaderVersionsLoading { get; set; }
-    [ObservableProperty] public partial string CustomLoaderVersionsPlaceholder { get; set; } = "加载中...";
+    [ObservableProperty] public partial string CustomLoaderVersionsPlaceholder { get; set; } =
+        CommonLanguageManager.Instance.common_loading.CurrentValue();
     [ObservableProperty] public partial string LoaderStatus { get; set; } = string.Empty;
     [ObservableProperty] public partial bool IsOptiFineSelected { get; set; }
     [ObservableProperty] public partial LoaderVersionFilterOption? SelectedOptiFineVersionFilter { get; set; }
     [ObservableProperty] public partial LoaderVersionOption? SelectedCustomOptiFineVersion { get; set; }
     [ObservableProperty] public partial bool IsOptiFineLoaderVersionAreaVisible { get; set; }
     [ObservableProperty] public partial bool IsCustomOptiFineVersionsLoading { get; set; }
-    [ObservableProperty] public partial string CustomOptiFineVersionsPlaceholder { get; set; } = "加载中...";
+    [ObservableProperty] public partial string CustomOptiFineVersionsPlaceholder { get; set; } =
+        CommonLanguageManager.Instance.common_loading.CurrentValue();
     [ObservableProperty] public partial string OptiFineStatus { get; set; } = string.Empty;
     [ObservableProperty] public partial string ErrorText { get; set; } = string.Empty;
     [ObservableProperty] public partial Bitmap? IconPreview { get; set; }
@@ -468,7 +473,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             if (SelectedVersion?.Value is VersionManifestEntry vanilla)
                 _ = EnsurePrimaryLoaderVersionsAsync(loaderKind, vanilla.Id);
             else
-                LoaderStatus = "请先选择游戏版本";
+                LoaderStatus = CommonLanguageManager.Instance.createInstance_selectGameVersionFirst.CurrentValue();
         }
 
         UpdateRecommendedInstanceId();
@@ -518,7 +523,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             if (SelectedVersion?.Value is VersionManifestEntry vanilla)
                 _ = EnsureOptifineLoaderVersionsAsync(LoaderKind.OptiFine, vanilla.Id);
             else
-                OptiFineStatus = "请先选择游戏版本";
+                OptiFineStatus = CommonLanguageManager.Instance.createInstance_selectGameVersionFirst.CurrentValue();
         }
         else
         {
@@ -669,13 +674,15 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     {
         var filters = new List<VersionFilterOption>
         {
-            new("GDK正式版", VersionFilterKind.BedrockGdkRelease),
-            new("GDK预览版", VersionFilterKind.BedrockGdkPreview)
+            new(CommonLanguageManager.Instance.createInstance_gdkRelease.CurrentValue(), VersionFilterKind.BedrockGdkRelease),
+            new(CommonLanguageManager.Instance.createInstance_gdkPreview.CurrentValue(), VersionFilterKind.BedrockGdkPreview)
         };
         if (OperatingSystem.IsWindows())
         {
-            filters.Add(new VersionFilterOption("UWP正式版", VersionFilterKind.BedrockUwpRelease));
-            filters.Add(new VersionFilterOption("UWP预览版", VersionFilterKind.BedrockUwpPreview));
+            filters.Add(new VersionFilterOption(CommonLanguageManager.Instance.createInstance_uwpRelease.CurrentValue(),
+                VersionFilterKind.BedrockUwpRelease));
+            filters.Add(new VersionFilterOption(CommonLanguageManager.Instance.createInstance_uwpPreview.CurrentValue(),
+                VersionFilterKind.BedrockUwpPreview));
         }
 
         return filters;
@@ -690,7 +697,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         IsVersionsLoading = true;
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[CreateInstance] Loading {filter.Kind} version list.");
-        VersionsPlaceholder = "加载中...";
+        VersionsPlaceholder = CommonLanguageManager.Instance.common_loading.CurrentValue();
         Versions.Clear();
         SelectedVersion = null;
         UpdateVersionState();
@@ -716,7 +723,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
             Logger.Error(exception);
             if (generation != _versionLoadGeneration || _disposed) return;
             IsVersionsLoading = false;
-            VersionsPlaceholder = "无法获取版本列表，请检查网络连接";
+            VersionsPlaceholder = CommonLanguageManager.Instance.createInstance_fetchVersionsFailed.CurrentValue();
             UpdateVersionState();
         }
     }
@@ -829,12 +836,12 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
                 Versions.Add(item);
 
         VersionsPlaceholder = IsVersionsLoading
-            ? "加载中..."
+            ? CommonLanguageManager.Instance.common_loading.CurrentValue()
             : _categoryVersions.Count == 0
-                ? "暂无版本"
+                ? CommonLanguageManager.Instance.createInstance_noVersions.CurrentValue()
                 : Versions.Count == 0
-                    ? "无匹配版本"
-                    : "选择游戏版本";
+                    ? CommonLanguageManager.Instance.createInstance_noMatchVersions.CurrentValue()
+                    : CommonLanguageManager.Instance.createInstance_selectVersion.CurrentValue();
 
         if (!isFiltering)
         {
@@ -879,7 +886,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         IsCustomLoaderVersionsLoading = true;
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion}.");
-        CustomLoaderVersionsPlaceholder = "加载中...";
+        CustomLoaderVersionsPlaceholder = CommonLanguageManager.Instance.common_loading.CurrentValue();
         UpdateVersionState();
         try
         {
@@ -902,7 +909,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         {
             Logger.Error(exception);
             if (generation != _primaryState.LoadGeneration || _disposed) return;
-            LoaderStatus = "获取加载器版本失败，请重试";
+            LoaderStatus = CommonLanguageManager.Instance.createInstance_fetchLoaderVersionsFailed.CurrentValue();
         }
         finally
         {
@@ -931,7 +938,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         IsCustomOptiFineVersionsLoading = true;
         var stopwatch = Stopwatch.StartNew();
         Logger.Info($"[CreateInstance] Loading {kind} versions for Minecraft {mcVersion}.");
-        CustomOptiFineVersionsPlaceholder = "加载中...";
+        CustomOptiFineVersionsPlaceholder = CommonLanguageManager.Instance.common_loading.CurrentValue();
         UpdateVersionState();
         try
         {
@@ -954,7 +961,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         {
             Logger.Error(exception);
             if (generation != _optifineState.LoadGeneration || _disposed) return;
-            OptiFineStatus = "获取 OptiFine 版本失败，请重试";
+            OptiFineStatus = CommonLanguageManager.Instance.createInstance_fetchOptifineVersionsFailed.CurrentValue();
         }
         finally
         {
@@ -999,7 +1006,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         else
             SelectedCustomLoaderVersion = state.Options.FirstOrDefault();
         state.CustomVersion = SelectedCustomLoaderVersion;
-        LoaderStatus = state.Options.Count == 0 ? "当前游戏版本没有可用的加载器版本" : string.Empty;
+        LoaderStatus = state.Options.Count == 0
+            ? CommonLanguageManager.Instance.createInstance_noLoaderVersions.CurrentValue()
+            : string.Empty;
         UpdateLoaderVersionStatus();
         UpdateRecommendedInstanceId();
         UpdateVersionState();
@@ -1022,7 +1031,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         else
             SelectedCustomOptiFineVersion = state.Options.FirstOrDefault();
         state.CustomVersion = SelectedCustomOptiFineVersion;
-        OptiFineStatus = state.Options.Count == 0 ? "当前游戏版本没有可用的 OptiFine 版本" : string.Empty;
+        OptiFineStatus = state.Options.Count == 0
+            ? CommonLanguageManager.Instance.createInstance_noOptifineVersions.CurrentValue()
+            : string.Empty;
         UpdateOptiFineVersionStatus();
         UpdateRecommendedInstanceId();
         UpdateVersionState();
@@ -1123,7 +1134,9 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
 
     private void UpdateRecommendedInstanceId()
     {
-        Title = $"{(IsBedrockFilter ? "基岩" : "Java")} {SelectedVersion?.DisplayText}";
+        Title = string.Format(CommonLanguageManager.Instance.createInstance_titleFormat.CurrentValue(),
+            IsBedrockFilter ? CommonLanguageManager.Instance.createInstance_bedrock.CurrentValue() : "Java",
+            SelectedVersion?.DisplayText);
         if (IsBedrockFilter) return;
 
         if (SelectedVersion?.Value is not VersionManifestEntry) return;
@@ -1158,18 +1171,20 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
     {
         if (SelectedVersion is null)
             return string.IsNullOrWhiteSpace(VersionSearchText)
-                ? "请选择一个游戏版本"
-                : $"未找到游戏版本“{VersionSearchText.Trim()}”，请从列表中选择一个有效版本";
+                ? CommonLanguageManager.Instance.createInstance_selectVersion.CurrentValue()
+                : string.Format(
+                    CommonLanguageManager.Instance.createInstance_versionNotFound.CurrentValue(),
+                    VersionSearchText.Trim());
         if (SelectedMinecraftFolder is null)
-            return "请先在设置中添加一个标准游戏目录";
+            return CommonLanguageManager.Instance.createInstance_addStandardFolder.CurrentValue();
         if (SelectedVersion.Value is not VersionManifestEntry) return null;
 
         var id = InstanceId.Trim();
-        if (string.IsNullOrWhiteSpace(id)) return "实例 ID 不能为空";
+        if (string.IsNullOrWhiteSpace(id)) return CommonLanguageManager.Instance.createInstance_idEmpty.CurrentValue();
         if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            return "实例 ID 包含文件夹名称不允许的字符";
+            return CommonLanguageManager.Instance.createInstance_idInvalidChars.CurrentValue();
         if (Directory.Exists(Path.Combine(SelectedMinecraftFolder.FolderPath, "versions", id)))
-            return "该实例 ID 已存在，请更换名称";
+            return CommonLanguageManager.Instance.createInstance_idExists.CurrentValue();
         return null;
     }
 

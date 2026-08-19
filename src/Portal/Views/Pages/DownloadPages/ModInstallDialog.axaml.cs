@@ -8,6 +8,7 @@ using MinecraftLaunch.Components.Provider;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common.Interfaces;
 
@@ -102,7 +103,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
             var versions = string.Join("/", File.MinecraftVersions);
 
             var loaders = File.GroupKeys
-                .Select(key => key.Loader == "通用" ? "通用加载器" : key.Loader)
+                .Select(key => key.Loader == "通用" ? CommonLanguageManager.Instance.modInstall_universalLoader.CurrentValue() : key.Loader)
                 .Where(loader => !string.IsNullOrWhiteSpace(loader))
                 .Distinct()
                 .ToList();
@@ -110,10 +111,12 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
             if (loaders.Count > 0)
             {
                 var loaderText = string.Join("/", loaders);
-                return $"适用于 {versions}·{loaderText}";
+                return string.Format(
+                    CommonLanguageManager.Instance.modInstall_appliesToWithLoader.CurrentValue(), versions,
+                    loaderText);
             }
 
-            return $"适用于 {versions}";
+            return string.Format(CommonLanguageManager.Instance.javaResourceInstall_appliesTo.CurrentValue(), versions);
         }
     }
 
@@ -126,7 +129,8 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     public bool HasSkippedDependencies => SkippedDependenciesCount > 0;
 
     public string SkippedDependenciesText => HasSkippedDependencies
-        ? $"已检测到 {SkippedDependenciesCount} 个依赖已存在于目标实例，将自动跳过下载"
+        ? string.Format(CommonLanguageManager.Instance.modInstall_skippedDependencies.CurrentValue(),
+            SkippedDependenciesCount)
         : string.Empty;
 
     public bool ShowDependencyActions =>

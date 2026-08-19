@@ -6,6 +6,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Widgets;
+using Portal.Localization;
 using Portal.Views.Pages;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -99,7 +100,9 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
         if (world == null)
         {
             if (titleText != null)
-                titleText.Text = _loading ? "加载中…" : folderName ?? "未选择存档";
+                titleText.Text = _loading
+                    ? CommonLanguageManager.Instance.widgets_loading.CurrentValue()
+                    : folderName ?? CommonLanguageManager.Instance.widgets_noSave.CurrentValue();
             return;
         }
 
@@ -153,7 +156,11 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
             RecentPlayTargetType.World,
             folderName,
             world != null && !string.IsNullOrWhiteSpace(world.LevelName) ? world.LevelName : folderName,
-            world != null ? $"存档·{world.Version ?? "未知版本"}·{GetGameModeText(world.GameMode)}" : "存档",
+            world != null
+                ? string.Format(CommonLanguageManager.Instance.recentPlay_saveDescription.CurrentValue(),
+                    world.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                    GetGameModeText(world.GameMode))
+                : CommonLanguageManager.Instance.favorite_kindSave.CurrentValue(),
             world?.LastPlayedTime ?? DateTime.MinValue,
             world?.IconPath);
 
@@ -164,6 +171,13 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
 
     private static string GetGameModeText(int? gameMode)
     {
-        return gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+        return gameMode switch
+        {
+            0 => CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue(),
+            1 => CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue(),
+            2 => CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue(),
+            3 => CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue(),
+            _ => CommonLanguageManager.Instance.recentPlay_gameModeUnknown.CurrentValue()
+        };
     }
 }

@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Widgets;
@@ -21,7 +22,8 @@ public partial class ServerConnectDialogViewModel(MinecraftInstance instance) : 
     [ObservableProperty] private string _address = string.Empty;
     [ObservableProperty] private string _portText = "25565";
 
-    public string InstanceHint => $"实例：{_instance.InstanceName}";
+    public string InstanceHint =>
+        string.Format(CommonLanguageManager.Instance.widgets_instanceHint.CurrentValue(), _instance.InstanceName);
 
     public void Close()
     {

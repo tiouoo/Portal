@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Widgets;
@@ -43,7 +44,8 @@ public partial class WorldPickerDialogViewModel : ObservableObject, IDialogConte
 
     public ObservableCollection<WorldPickItem> FilteredItems { get; } = [];
 
-    public string InstanceHint => $"实例：{_instance.InstanceName}";
+    public string InstanceHint =>
+        string.Format(CommonLanguageManager.Instance.widgets_instanceHint.CurrentValue(), _instance.InstanceName);
 
     public void Close()
     {
@@ -95,8 +97,13 @@ public sealed class WorldPickItem(WorldSaveInfo info)
     public WorldSaveInfo Info { get; } = info;
     public string FolderName => Info.FolderName;
     public string DisplayName => string.IsNullOrWhiteSpace(Info.LevelName) ? Info.FolderName : Info.LevelName;
-    public string Summary => $"{Info.Version ?? "未知版本"}·{GetGameModeText(Info.GameMode)}";
-    public string LastPlayedText => $"最近游玩：{Info.LastPlayedTime ?? Info.LastWriteTime:yyyy-MM-dd HH:mm}";
+    public string Summary =>
+        string.Format(CommonLanguageManager.Instance.saves_summary.CurrentValue(),
+            Info.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+            GetGameModeText(Info.GameMode));
+    public string LastPlayedText =>
+        string.Format(CommonLanguageManager.Instance.saves_lastPlayed.CurrentValue(),
+            Info.LastPlayedTime ?? Info.LastWriteTime);
 
     public Bitmap? Icon
     {
@@ -109,6 +116,13 @@ public sealed class WorldPickItem(WorldSaveInfo info)
 
     private static string GetGameModeText(int? gameMode)
     {
-        return gameMode switch { 0 => "生存", 1 => "创造", 2 => "冒险", 3 => "旁观", _ => "未知模式" };
+        return gameMode switch
+        {
+            0 => CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue(),
+            1 => CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue(),
+            2 => CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue(),
+            3 => CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue(),
+            _ => CommonLanguageManager.Instance.recentPlay_gameModeUnknown.CurrentValue()
+        };
     }
 }

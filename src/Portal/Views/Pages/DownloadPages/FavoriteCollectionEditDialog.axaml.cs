@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;
@@ -33,7 +34,8 @@ public partial class FavoriteCollectionEditDialog : UserControl
     {
         var file = await TopLevel.GetTopLevel(this)!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "分享收藏夹", SuggestedFileName = "Portal 收藏夹.json",
+            Title = CommonLanguageManager.Instance.favorite_share.CurrentValue(),
+            SuggestedFileName = $"{CommonLanguageManager.Instance.favorite_portalCollection.CurrentValue()}.json",
             FileTypeChoices = [new FilePickerFileType("JSON") { Patterns = ["*.json"] }]
         });
         var path = file?.TryGetLocalPath();

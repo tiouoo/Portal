@@ -16,6 +16,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Module;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Services;
 using Portal.ViewModels;
 using Portal.Views.Pages.DownloadPages;
@@ -75,8 +76,13 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
         get
         {
             var seconds = Instance.GetTotalPlayTimeSeconds();
-            return seconds < 60 ? $"{seconds} 秒" :
-                seconds < 3600 ? $"{seconds / 60.0:F1} 分钟" : $"{seconds / 3600.0:F1} 小时";
+            return seconds < 60
+                ? string.Format(CommonLanguageManager.Instance.dashboard_playTimeSeconds.CurrentValue(), seconds)
+                : seconds < 3600
+                    ? string.Format(CommonLanguageManager.Instance.dashboard_playTimeMinutes.CurrentValue(),
+                        seconds / 60.0)
+                    : string.Format(CommonLanguageManager.Instance.dashboard_playTimeHours.CurrentValue(),
+                        seconds / 3600.0);
         }
     }
 
@@ -133,16 +139,17 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
             new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = $"确定要永久删除实例“{Instance.InstanceName}”吗？此操作无法撤销。",
+                Text = string.Format(CommonLanguageManager.Instance.dashboard_deleteConfirm.CurrentValue(),
+                    Instance.InstanceName),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "删除实例",
+                Title = CommonLanguageManager.Instance.dashboard_deleteTitle.CurrentValue(),
                 Mode = DialogMode.Error,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "删除",
-                OverrideNoButtonText = "取消",
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });
@@ -151,7 +158,8 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
 
         if (!InstanceDeletionCoordinator.TryBegin(Instance))
         {
-            topLevel.Notice("该实例正在删除中。", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_deletingInProgress.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -169,17 +177,20 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
             var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
             var instances = await Task.Run(() => InstanceManager.Instance.ScanAll(folders));
             InstanceManager.Instance.ApplyInstances(instances);
-            topLevel.Notice("实例已删除", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_instanceDeleted.CurrentValue(),
+                NotificationType.Success);
         }
         catch (IOException ex)
         {
             topLevel.Notice(IsFileInUse(ex)
-                ? "无法删除实例：实例文件正在被其他程序占用。请先关闭正在运行的游戏、文件管理器或占用该实例文件夹的程序，再重试删除。"
-                : $"无法删除实例：{ex.Message}", NotificationType.Error);
+                ? CommonLanguageManager.Instance.dashboard_deleteFileInUse.CurrentValue()
+                : string.Format(CommonLanguageManager.Instance.dashboard_deleteFailed.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
         catch (UnauthorizedAccessException)
         {
-            topLevel.Notice("无法删除实例：没有删除此实例的权限。", NotificationType.Error);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_deleteNoPermission.CurrentValue(),
+                NotificationType.Error);
         }
         finally
         {
@@ -223,7 +234,9 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
     private void ToggleChartDays_Click(object? sender, RoutedEventArgs e)
     {
         RecentPlayTimeChart.Days = RecentPlayTimeChart.Days == 7 ? 30 : 7;
-        Block.Text = RecentPlayTimeChart.Days != 7 ? "30 天" : "7 天";
+        Block.Text = RecentPlayTimeChart.Days != 7
+            ? CommonLanguageManager.Instance.dashboard_30days.CurrentValue()
+            : CommonLanguageManager.Instance.dashboard_7days.CurrentValue();
     }
 
     private void RefreshWorldUserIds()
@@ -258,9 +271,9 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "将图标另存为",
+            Title = CommonLanguageManager.Instance.dashboard_saveIconAs.CurrentValue(),
             SuggestedFileName = "Icon.png",
-            FileTypeChoices = [new FilePickerFileType("PNG 图片") { Patterns = ["*.png"] }]
+            FileTypeChoices = [new FilePickerFileType(CommonLanguageManager.Instance.dashboard_pngImage.CurrentValue()) { Patterns = ["*.png"] }]
         });
         if (file == null) return;
 
@@ -268,11 +281,12 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
         {
             await using var stream = await file.OpenWriteAsync();
             Instance.sourceIcon.Save(stream, PngBitmapEncoderOptions.Default);
-            topLevel.Notice("图标已保存", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_iconSaved.CurrentValue(), NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"保存失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.dashboard_saveFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
 
         Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
@@ -309,15 +323,17 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
                 ? await result.CustomImageFile.OpenReadAsync()
                 : typeof(MinecraftInstance).Assembly.GetManifestResourceStream(result.BuiltInResourceName!);
             if (stream == null)
-                throw new FileNotFoundException("未找到所选的内置图标。");
+                throw new FileNotFoundException(
+                    CommonLanguageManager.Instance.dashboard_builtinIconNotFound.CurrentValue());
 
             using var icon = new Bitmap(stream);
             Instance.SetIcon(icon);
-            topLevel.Notice("图标已更换", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_iconChanged.CurrentValue(), NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"更换失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.dashboard_changeFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
 
         Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
@@ -331,11 +347,12 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
         try
         {
             Instance.ResetIcon();
-            topLevel.Notice("图标已重置", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_iconReset.CurrentValue(), NotificationType.Success);
         }
         catch (Exception ex)
         {
-            topLevel.Notice($"重置失败：{ex.Message}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.dashboard_resetFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
         }
 
         Dispatcher.UIThread.Post(() => InstanceIcon.Source = Instance[72]);
@@ -375,7 +392,7 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
         var result = await OverlayDialog.ShowCustomAsync<VersionModifyDialogResult>(dialog, dialog.DataContext,
             this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "修改版本",
+                Title = CommonLanguageManager.Instance.dashboard_modifyVersionTitle.CurrentValue(),
                 Buttons = DialogButton.None,
                 CanLightDismiss = false,
                 CanResize = false
@@ -417,11 +434,14 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "导出整合包",
+            Title = CommonLanguageManager.Instance.dashboard_exportModpackTitle.CurrentValue(),
             SuggestedFileName = $"{options.PackName} {options.PackVersion}".Trim(),
             FileTypeChoices =
             [
-                new FilePickerFileType("Modrinth 整合包") { Patterns = ["*.mrpack"] }
+                new FilePickerFileType(CommonLanguageManager.Instance.dashboard_modrinthModpack.CurrentValue())
+                {
+                    Patterns = ["*.mrpack"]
+                }
             ]
         });
         if (file is null)
@@ -437,11 +457,15 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
         if (topLevel is null) return;
         await task.Completion;
         if (task.Status is ManagedTaskStatus.Faulted)
-            topLevel.Notice($"导出整合包失败：{task.ErrorMessage}", NotificationType.Error);
+            topLevel.Notice(string.Format(
+                CommonLanguageManager.Instance.dashboard_exportModpackFailed.CurrentValue(), task.ErrorMessage),
+                NotificationType.Error);
         else if (task.Status is ManagedTaskStatus.Cancelled)
-            topLevel.Notice("导出整合包已取消。", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_exportModpackCancelled.CurrentValue(),
+                NotificationType.Warning);
         else
-            topLevel.Notice("整合包已导出", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_exportModpackComplete.CurrentValue(),
+                NotificationType.Success);
     }
 
     private static async Task NotifyRenameOutcomeAsync(ManagedTask task, TopLevel? topLevel)
@@ -449,11 +473,13 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
         if (topLevel is null) return;
         await task.Completion;
         if (task.Status is ManagedTaskStatus.Faulted)
-            topLevel.Notice($"实例重命名失败：{task.ErrorMessage}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.dashboard_renameFailed.CurrentValue(),
+                task.ErrorMessage), NotificationType.Error);
         else if (task.Status is ManagedTaskStatus.Cancelled)
-            topLevel.Notice("实例重命名已取消，未发生改动。", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_renameCancelled.CurrentValue(),
+                NotificationType.Warning);
         else
-            topLevel.Notice("实例已重命名", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_renamed.CurrentValue(), NotificationType.Success);
     }
 
     private static async Task NotifyModifyOutcomeAsync(ManagedTask? task, TopLevel? topLevel)
@@ -461,8 +487,10 @@ public partial class Dashboard : Dsc, INotifyPropertyChanged, IDisposable
         if (task is null || topLevel is null) return;
         await task.Completion;
         if (task.Status is ManagedTaskStatus.Faulted)
-            topLevel.Notice($"版本修改失败：{task.ErrorMessage}", NotificationType.Error);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.dashboard_modifyFailed.CurrentValue(),
+                task.ErrorMessage), NotificationType.Error);
         else if (task.Status is ManagedTaskStatus.Cancelled)
-            topLevel.Notice("版本修改已取消，实例未发生改动。", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.dashboard_modifyCancelled.CurrentValue(),
+                NotificationType.Warning);
     }
 }

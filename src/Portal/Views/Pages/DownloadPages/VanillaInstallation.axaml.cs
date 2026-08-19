@@ -6,6 +6,7 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -54,14 +55,20 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
 
     public IReadOnlyList<MinecraftVersionFilterOption> FilterOptions { get; } =
     [
-        new("全部类型", null), new("正式版", "release"), new("快照版", "snapshot"),
-        new("愚人节版", MinecraftVersionListItem.AprilFoolsType), new("反混淆版", "unobfuscated"),
-        new("旧 Beta", "old_beta"), new("旧 Alpha", "old_alpha")
+        new(CommonLanguageManager.Instance.vanillaInstall_allTypes.CurrentValue(), null),
+        new(CommonLanguageManager.Instance.createInstance_versionRelease.CurrentValue(), "release"),
+        new(CommonLanguageManager.Instance.createInstance_versionSnapshot.CurrentValue(), "snapshot"),
+        new(CommonLanguageManager.Instance.createInstance_versionAprilFools.CurrentValue(),
+            MinecraftVersionListItem.AprilFoolsType),
+        new(CommonLanguageManager.Instance.createInstance_versionUnobfuscated.CurrentValue(), "unobfuscated"),
+        new(CommonLanguageManager.Instance.vanillaInstall_oldBeta.CurrentValue(), "old_beta"),
+        new(CommonLanguageManager.Instance.vanillaInstall_oldAlpha.CurrentValue(), "old_alpha")
     ];
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
     [ObservableProperty] public partial MinecraftVersionFilterOption? SelectedFilter { get; set; }
-    [ObservableProperty] public partial string StatusText { get; set; } = "正在获取版本列表...";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.vanillaInstall_fetchingVersions.CurrentValue();
 
     public void Dispose()
     {
@@ -95,7 +102,7 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
         }
         catch (Exception)
         {
-            StatusText = "无法获取版本列表，请检查网络连接后重新打开下载页。";
+            StatusText = CommonLanguageManager.Instance.vanillaInstall_fetchFailed.CurrentValue();
         }
     }
 
@@ -128,7 +135,8 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
         var results = versions.OrderByDescending(x => x.ReleaseTime).ToList();
         FilteredVersions.Clear();
         foreach (var version in results) FilteredVersions.Add(version);
-        StatusText = $"共 {results.Count} 个版本";
+        StatusText = string.Format(CommonLanguageManager.Instance.vanillaInstall_versionCount.CurrentValue(),
+            results.Count);
     }
 }
 
@@ -167,11 +175,15 @@ public sealed record MinecraftVersionListItem(
     public static MinecraftVersionListItem FromEntry(VersionManifestEntry entry)
     {
         return new MinecraftVersionListItem(entry.Id, entry.Type, IsAprilFoolsVersion(entry.Id)
-            ? "愚人节版"
+            ? CommonLanguageManager.Instance.createInstance_versionAprilFools.CurrentValue()
             : entry.Type switch
             {
-                "release" => "正式版", "snapshot" => "快照版", "unobfuscated" => "反混淆版",
-                "pending" => "快照版", "old_beta" => "旧 Beta", "old_alpha" => "旧 Alpha",
+                "release" => CommonLanguageManager.Instance.createInstance_versionRelease.CurrentValue(),
+                "snapshot" => CommonLanguageManager.Instance.createInstance_versionSnapshot.CurrentValue(),
+                "unobfuscated" => CommonLanguageManager.Instance.createInstance_versionUnobfuscated.CurrentValue(),
+                "pending" => CommonLanguageManager.Instance.createInstance_versionSnapshot.CurrentValue(),
+                "old_beta" => CommonLanguageManager.Instance.vanillaInstall_oldBeta.CurrentValue(),
+                "old_alpha" => CommonLanguageManager.Instance.vanillaInstall_oldAlpha.CurrentValue(),
                 _ => entry.Type
             }, entry.ReleaseTime, entry);
     }
@@ -187,8 +199,13 @@ public sealed record MinecraftVersionListItem(
         var days = (DateTime.Today - published.Date).Days;
         return days switch
         {
-            <= 0 => "今天", 1 => "昨天", < 30 => $"{days} 天前",
-            < 365 => $"{Math.Max(1, days / 30)} 个月前", < 730 => "去年", _ => $"{days / 365} 年前"
+            <= 0 => CommonLanguageManager.Instance.relativeTime_today.CurrentValue(),
+            1 => CommonLanguageManager.Instance.relativeTime_yesterday.CurrentValue(),
+            < 30 => string.Format(CommonLanguageManager.Instance.relativeTime_daysAgo.CurrentValue(), days),
+            < 365 => string.Format(CommonLanguageManager.Instance.relativeTime_monthsAgo.CurrentValue(),
+                Math.Max(1, days / 30)),
+            < 730 => CommonLanguageManager.Instance.relativeTime_lastYear.CurrentValue(),
+            _ => string.Format(CommonLanguageManager.Instance.relativeTime_yearsAgo.CurrentValue(), days / 365)
         };
     }
 }

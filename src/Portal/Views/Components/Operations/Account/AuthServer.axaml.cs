@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 using Minecraft = Portal.Core.Minecraft;
 
@@ -73,7 +74,9 @@ public partial class AuthServerViewModel : ObservableObject, IDialogContext, INo
 
         if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
-        if (string.IsNullOrWhiteSpace(value)) _errors[propertyName] = new List<string> { "服务器名称不能为空" };
+        if (string.IsNullOrWhiteSpace(value))
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_serverNameEmpty.CurrentValue() };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
@@ -85,10 +88,14 @@ public partial class AuthServerViewModel : ObservableObject, IDialogContext, INo
         if (_errors.ContainsKey(propertyName)) _errors.Remove(propertyName);
 
         if (string.IsNullOrWhiteSpace(value))
-            _errors[propertyName] = new List<string> { "服务器 URL 不能为空" };
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_serverUrlEmpty.CurrentValue() };
         else if (!UrlHelper.IsValidUrl(value))
-            _errors[propertyName] = new List<string> { "URL 地址格式不正确" };
-        else if (IsUrlExists(value)) _errors[propertyName] = new List<string> { "该验证服务器已存在" };
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_urlInvalid.CurrentValue() };
+        else if (IsUrlExists(value))
+            _errors[propertyName] =
+                new List<string> { CommonLanguageManager.Instance.account_authServerExists.CurrentValue() };
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }

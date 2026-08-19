@@ -4,6 +4,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
 
@@ -24,7 +25,7 @@ internal partial class AiAnalysisDialog : UserControl
         if (topLevel is null)
             return;
         await topLevel.Clipboard!.SetTextAsync(viewModel.ResultText);
-        topLevel.Notice("分析结果已复制", NotificationType.Success);
+        topLevel.Notice(CommonLanguageManager.Instance.aiAnalysis_copied.CurrentValue(), NotificationType.Success);
     }
 
     private void Close_OnClick(object? sender, RoutedEventArgs e)
@@ -40,7 +41,8 @@ internal partial class AiAnalysisDialogViewModel : ObservableObject, IDialogCont
     private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#4CAF50"));
     private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#F44336"));
     [ObservableProperty] public partial string ResultText { get; set; } = string.Empty;
-    [ObservableProperty] public partial string StatusText { get; set; } = "AI 分析中…";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.aiAnalysis_analyzing.CurrentValue();
     [ObservableProperty] public partial bool IsComplete { get; set; }
     [ObservableProperty] public partial bool IsFailed { get; set; }
 
@@ -61,14 +63,14 @@ internal partial class AiAnalysisDialogViewModel : ObservableObject, IDialogCont
     public void Complete()
     {
         IsComplete = true;
-        StatusText = "分析完成";
+        StatusText = CommonLanguageManager.Instance.aiAnalysis_complete.CurrentValue();
     }
 
     public void Fail(string message)
     {
         IsFailed = true;
         IsComplete = true;
-        StatusText = $"分析失败：{message}";
+        StatusText = string.Format(CommonLanguageManager.Instance.aiAnalysis_failed.CurrentValue(), message);
     }
 
     partial void OnIsCompleteChanged(bool value)

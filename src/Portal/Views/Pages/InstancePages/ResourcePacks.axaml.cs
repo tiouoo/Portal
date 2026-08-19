@@ -13,6 +13,7 @@ using Avalonia.Threading;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -45,11 +46,14 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("可更新", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), 0)));
     }
 
-    public ResourcePacks(MinecraftInstance instance) : this(instance, MinecraftSpecialFolder.ResourcePacksFolder, "资源包")
+    public ResourcePacks(MinecraftInstance instance) : this(instance, MinecraftSpecialFolder.ResourcePacksFolder,
+        CommonLanguageManager.Instance.resourceList_packNameResourcePack.CurrentValue())
     {
     }
 
@@ -85,15 +89,22 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string ResourcePackCountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string ResourcePackCountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
     public int SelectedCount => Items.Count(item => item.IsSelected);
-    public string SelectedCountText => $"批量操作{SelectedCount}个";
+    public string SelectedCountText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_batchSelected.CurrentValue(), SelectedCount);
     public bool HasMultipleSelection => SelectedCount >= 1;
-    public string PackName { get; } = "资源包";
+    public string PackName { get; } =
+        CommonLanguageManager.Instance.resourceList_packNameResourcePack.CurrentValue();
 
-    public string SearchPlaceholder => $"搜索{PackName}";
-    public string LoadingText => $"正在读取{PackName}...";
-    public string EmptyText => $"此实例没有可识别的{PackName}";
+    public string SearchPlaceholder =>
+        string.Format(CommonLanguageManager.Instance.resourceList_searchPlaceholder.CurrentValue(), PackName);
+    public string LoadingText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_loadingPack.CurrentValue(), PackName);
+    public string EmptyText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_emptyPack.CurrentValue(), PackName);
     public int CardMinHeight => 117;
 
     public void Dispose()
@@ -196,8 +207,9 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
                     ? BedrockPackageContentType.SkinPack
                     : BedrockPackageContentType.ResourcePack;
             if (drop == null)
-                await BedrockResourceImport.SelectAndImportAsync(this, _instance, $"选择{PackName}", PackName,
-                    [".mcpack", ".mcaddon"], null, expectedType, refresh);
+                await BedrockResourceImport.SelectAndImportAsync(this, _instance,
+                    string.Format(CommonLanguageManager.Instance.resourceList_selectPack.CurrentValue(), PackName),
+                    PackName, [".mcpack", ".mcaddon"], null, expectedType, refresh);
             else
                 await BedrockResourceImport.ImportDropAsync(this, drop, _instance, PackName, [".mcpack", ".mcaddon"],
                     null, expectedType, refresh);
@@ -206,8 +218,9 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
 
         var destination = _instance.GetSpecialFolder(_folder);
         if (drop == null)
-            await JavaResourceImport.SelectAndImportAsync(this, $"选择{PackName}", destination, PackName, [".zip"], false,
-                refresh);
+            await JavaResourceImport.SelectAndImportAsync(this,
+                string.Format(CommonLanguageManager.Instance.resourceList_selectPack.CurrentValue(), PackName),
+                destination, PackName, [".zip"], false, refresh);
         else await JavaResourceImport.ImportDropAsync(this, drop, destination, PackName, [".zip"], false, refresh);
     }
 
@@ -236,8 +249,10 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             FilteredItems.Add(item);
         while (FilterOptions.Count < 2)
             FilterOptions.Add(new ResourceFilterOption(""));
-        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
-        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("可更新", Items.Count(item => item.HasUpdate));
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel(CommonLanguageManager.Instance.mod_all.CurrentValue(),
+            Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), Items.Count(item => item.HasUpdate));
         RaiseListProperties();
     }
 
@@ -322,14 +337,18 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     {
         var selected = Items.Where(item => item.IsSelected).ToArray();
         if (selected.Length < 2) return;
-        if (await ConfirmDeleteAsync($"确定要永久删除选中的 {selected.Length} 个{PackName}吗？此操作无法撤销。") == DialogResult.Yes)
+        if (await ConfirmDeleteAsync(string.Format(
+                CommonLanguageManager.Instance.resourceList_deleteSelectedConfirmPack.CurrentValue(), selected.Length,
+                PackName)) == DialogResult.Yes)
             await DeleteAsync(selected);
     }
 
     private async void DeleteResourcePack_OnClick(object? sender, RoutedEventArgs e)
     {
         if (GetItem(sender) is not { } item) return;
-        if (await ConfirmDeleteAsync($"确定要永久删除{PackName}“{item.DisplayName}”吗？此操作无法撤销。") == DialogResult.Yes)
+        if (await ConfirmDeleteAsync(string.Format(
+                CommonLanguageManager.Instance.resourceList_deleteConfirmPack.CurrentValue(), PackName,
+                item.DisplayName)) == DialogResult.Yes)
             await DeleteAsync([item]);
     }
 
@@ -344,7 +363,12 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
                     Text = item.DetailsText,
                     TextWrapping = TextWrapping.Wrap
                 }, null, this.TryGetHostId(),
-                new OverlayDialogOptions { Title = $"{PackName}详情", Buttons = DialogButton.OK, CanResize = false });
+                new OverlayDialogOptions
+                {
+                    Title = string.Format(CommonLanguageManager.Instance.resourceList_packDetailsTitle.CurrentValue(),
+                        PackName),
+                    Buttons = DialogButton.OK, CanResize = false
+                });
             return;
         }
 
@@ -381,8 +405,10 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             Margin = new Thickness(24), Text = message, TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), new OverlayDialogOptions
         {
-            Title = $"删除{PackName}", Mode = DialogMode.Error,
-            Buttons = DialogButton.YesNo, OverrideYesButtonText = "删除", OverrideNoButtonText = "取消",
+            Title = string.Format(CommonLanguageManager.Instance.resourceList_deletePackTitle.CurrentValue(), PackName),
+            Mode = DialogMode.Error,
+            Buttons = DialogButton.YesNo, OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+            OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
             CanLightDismiss = false, CanResize = false
         });
     }
@@ -410,7 +436,11 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         _hasLoaded = false;
         await LoadAsync();
         if (TopLevel.GetTopLevel(this) is { } topLevel)
-            topLevel.Notice(failed == 0 ? $"已删除所选{PackName}" : $"删除完成，但有 {failed} 个{PackName}操作失败",
+            topLevel.Notice(failed == 0
+                    ? string.Format(CommonLanguageManager.Instance.resourceList_deletedSelectedPacks.CurrentValue(),
+                        PackName)
+                    : string.Format(CommonLanguageManager.Instance.resourceList_deleteSelectedPacksFailed.CurrentValue(),
+                        PackName, failed),
                 failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }
 
@@ -478,7 +508,8 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         var result = item.UpdateResult;
         if (result?.HasIdentity != true || result.Source is not { } source)
         {
-            ShowNotice("尚未识别此资源的平台信息，暂时无法切换版本", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_platformUnknownSwitchResource.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -510,7 +541,10 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         try
         {
             var tempPath = Path.Combine(destination, $".portal-update-{Guid.NewGuid():N}.zip");
-            var task = DownloadTasks.Download(topLevel, $"更新{PackName}：{file.DisplayName}", "取消此更新",
+            var task = DownloadTasks.Download(topLevel,
+                string.Format(CommonLanguageManager.Instance.resourceList_updatePack.CurrentValue(), PackName,
+                    file.DisplayName),
+                CommonLanguageManager.Instance.resourceList_cancelUpdate.CurrentValue(),
                 file.FileName, file.DownloadUrl, tempPath, file.FileSize,
                 afterDownload: _ =>
                 {
@@ -519,19 +553,22 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
                     ResourceUpdateService.InvalidateCache(oldPath);
                     ResourceUpdateService.InvalidateCache(newPath);
                     return Task.CompletedTask;
-                }, completedText: $"{PackName}已更新");
+                }, completedText: string.Format(
+                    CommonLanguageManager.Instance.resourceList_packUpdated.CurrentValue(), PackName));
             await task.Completion;
             await ReloadAsync();
             _ = CheckUpdatesAsync(true);
         }
         catch (OperationCanceledException)
         {
-            ShowNotice($"{PackName}更新已取消", NotificationType.Warning);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packUpdateCancelled.CurrentValue(),
+                PackName), NotificationType.Warning);
         }
         catch (Exception exception)
         {
             Logger.Warning($"[ResourcePacks] Update failed for {item.Info.FilePath}: {exception}");
-            ShowNotice($"{PackName}更新失败", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packUpdateFailed.CurrentValue(),
+                PackName), NotificationType.Error);
         }
         finally
         {
@@ -556,18 +593,21 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             });
             if (newPath == null)
             {
-                ShowNotice("没有可回滚的版本", NotificationType.Warning);
+                ShowNotice(CommonLanguageManager.Instance.resourceList_noRollback.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
             await ReloadAsync();
             _ = CheckUpdatesAsync(true);
-            ShowNotice($"{PackName}已回滚", NotificationType.Success);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packRolledBack.CurrentValue(),
+                PackName), NotificationType.Success);
         }
         catch (Exception exception)
         {
             Logger.Warning($"[ResourcePacks] Rollback failed for {item.Info.FilePath}: {exception}");
-            ShowNotice($"{PackName}回滚失败", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.resourceList_packRollbackFailed.CurrentValue(),
+                PackName), NotificationType.Error);
         }
         finally
         {
@@ -618,10 +658,12 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
 }
 
 public sealed class BehaviorPacks(MinecraftInstance instance) : ResourcePacks(instance,
-    MinecraftSpecialFolder.BehaviorPacksFolder, "行为包");
+    MinecraftSpecialFolder.BehaviorPacksFolder,
+    CommonLanguageManager.Instance.resourceList_packNameBehaviorPack.CurrentValue());
 
 public sealed class SkinPacks(MinecraftInstance instance) : ResourcePacks(instance,
-    MinecraftSpecialFolder.SkinPacksFolder, "皮肤包", true);
+    MinecraftSpecialFolder.SkinPacksFolder,
+    CommonLanguageManager.Instance.resourceList_packNameSkinPack.CurrentValue(), true);
 
 public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout = false)
     : INotifyPropertyChanged, IDisposable
@@ -646,20 +688,52 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
     public bool IsUpdating => _isUpdating;
 
     public string SecondaryText => IsCompactLayout
-        ? $"{ResourceListUi.FormatSize(Info.FileSize)}·{(Info.SkinCount is int count ? $"包含 {count} 个皮肤" : "皮肤数量未知")}"
+        ? string.Format(CommonLanguageManager.Instance.resourceList_secondaryFormat.CurrentValue(),
+            ResourceListUi.FormatSize(Info.FileSize),
+            Info.SkinCount is int count
+                ? string.Format(CommonLanguageManager.Instance.resourceList_skinCount.CurrentValue(), count)
+                : CommonLanguageManager.Instance.resourceList_skinCountUnknown.CurrentValue())
         : Info.IsBedrock
-            ? $"{ResourceListUi.FormatSize(Info.FileSize)}·最低支持版本：{Info.MinEngineVersion ?? "未知"}"
+            ? string.Format(CommonLanguageManager.Instance.resourceList_secondaryFormat.CurrentValue(),
+                ResourceListUi.FormatSize(Info.FileSize),
+                string.Format(CommonLanguageManager.Instance.resourceList_minEngineVersion.CurrentValue(),
+                    Info.MinEngineVersion ?? CommonLanguageManager.Instance.account_unknown.CurrentValue()))
             : SizeAndNameText;
 
-    public string DescriptionText => string.IsNullOrWhiteSpace(Info.Description) ? "没有可用的资源包描述" : Info.Description;
-    public string SupportedFormatsText => Info.SupportedFormats ?? "未知";
-    public string VersionLabel => Info.IsBedrock ? "版本:" : "支持格式:";
+    public string DescriptionText =>
+        string.IsNullOrWhiteSpace(Info.Description)
+            ? CommonLanguageManager.Instance.resourceList_noResourcePackDescription.CurrentValue()
+            : Info.Description;
+    public string SupportedFormatsText =>
+        Info.SupportedFormats ?? CommonLanguageManager.Instance.account_unknown.CurrentValue();
+    public string VersionLabel => Info.IsBedrock
+        ? CommonLanguageManager.Instance.resourceList_versionLabel.CurrentValue()
+        : CommonLanguageManager.Instance.resourceList_supportedFormatsLabel.CurrentValue();
 
-    public string DetailsText => IsCompactLayout
-        ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{SupportedFormatsText}\n皮肤：{DescriptionText}"
-        : Info.IsBedrock
-            ? $"名称：{DisplayName}\n文件夹：{FileName}\nUUID：{Info.Uuid?.ToLowerInvariant() ?? "未知"}\n版本：{SupportedFormatsText}\n最低引擎版本：{Info.MinEngineVersion ?? "未知"}\n作者：{(Info.Authors.Count == 0 ? "未知" : string.Join("、", Info.Authors))}\n模块：{(Info.Modules.Count == 0 ? "无" : string.Join("、", Info.Modules))}\n依赖：{(Info.Dependencies.Count == 0 ? "无" : string.Join("、", Info.Dependencies))}\n子包：{(Info.Subpacks.Count == 0 ? "无" : string.Join("、", Info.Subpacks))}\n能力：{(Info.Capabilities.Count == 0 ? "无" : string.Join("、", Info.Capabilities))}\n\n{DescriptionText}"
-            : $"名称：{DisplayName}\n文件：{FileName}\n支持格式：{SupportedFormatsText}\n\n{DescriptionText}";
+    public string DetailsText
+    {
+        get
+        {
+            var unknown = CommonLanguageManager.Instance.account_unknown.CurrentValue();
+            var none = CommonLanguageManager.Instance.resourceList_none.CurrentValue();
+            var uuid = Info.Uuid?.ToLowerInvariant() ?? unknown;
+            if (IsCompactLayout)
+                return string.Format(CommonLanguageManager.Instance.resourceList_detailsCompact.CurrentValue(),
+                    DisplayName, FileName, uuid, SupportedFormatsText, DescriptionText);
+
+            if (Info.IsBedrock)
+                return string.Format(CommonLanguageManager.Instance.resourceList_detailsBedrock.CurrentValue(),
+                    DisplayName, FileName, uuid, SupportedFormatsText, Info.MinEngineVersion ?? unknown,
+                    Info.Authors.Count == 0 ? none : string.Join("、", Info.Authors),
+                    Info.Modules.Count == 0 ? none : string.Join("、", Info.Modules),
+                    Info.Dependencies.Count == 0 ? none : string.Join("、", Info.Dependencies),
+                    Info.Subpacks.Count == 0 ? none : string.Join("、", Info.Subpacks),
+                    Info.Capabilities.Count == 0 ? none : string.Join("、", Info.Capabilities), DescriptionText);
+
+            return string.Format(CommonLanguageManager.Instance.resourceList_detailsJava.CurrentValue(), DisplayName,
+                FileName, SupportedFormatsText, DescriptionText);
+        }
+    }
 
     public Bitmap? Icon { get; } = CreateIcon(info.IconData);
     public bool HasIcon => Icon != null;

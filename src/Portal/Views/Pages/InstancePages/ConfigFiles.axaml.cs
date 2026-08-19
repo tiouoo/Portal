@@ -17,6 +17,7 @@ using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -215,7 +216,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         }
         catch (Exception exception)
         {
-            await ShowErrorAsync($"无法打开文件：{exception.Message}");
+            await ShowErrorAsync(string.Format(CommonLanguageManager.Instance.configFiles_openFailed.CurrentValue(),
+                exception.Message));
         }
     }
 
@@ -265,7 +267,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
     {
         if (tab.IsDirty)
         {
-            var action = await ConfirmUnsavedAsync($"“{tab.FileName}”包含未保存的更改。是否在关闭前保存？");
+            var action = await ConfirmUnsavedAsync(string.Format(
+                CommonLanguageManager.Instance.configFiles_unsavedChanges.CurrentValue(), tab.FileName));
             if (action == UnsavedFilesAction.Cancel) return false;
             if (action == UnsavedFilesAction.Save && !await SaveAsync(tab)) return false;
         }
@@ -354,11 +357,13 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         }
         catch (JsonException exception)
         {
-            await ShowErrorAsync($"JSON 格式错误：{exception.Message}");
+            await ShowErrorAsync(string.Format(CommonLanguageManager.Instance.configFiles_jsonError.CurrentValue(),
+                exception.Message));
         }
         catch (TomlException exception)
         {
-            await ShowErrorAsync($"TOML 格式错误：{exception.Message}");
+            await ShowErrorAsync(string.Format(CommonLanguageManager.Instance.configFiles_tomlError.CurrentValue(),
+                exception.Message));
         }
     }
 
@@ -438,7 +443,8 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         }
         catch (Exception exception)
         {
-            await ShowErrorAsync($"保存失败：{exception.Message}");
+            await ShowErrorAsync(string.Format(CommonLanguageManager.Instance.configFiles_saveFailed.CurrentValue(),
+                exception.Message));
             return false;
         }
     }
@@ -449,8 +455,10 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
         if (dirtyTabs.Count == 0) return true;
 
         var message = dirtyTabs.Count == 1
-            ? $"“{dirtyTabs[0].FileName}”包含未保存的更改。是否在关闭前保存？"
-            : $"有 {dirtyTabs.Count} 个文件包含未保存的更改。是否在关闭前全部保存？";
+            ? string.Format(CommonLanguageManager.Instance.configFiles_unsavedChanges.CurrentValue(),
+                dirtyTabs[0].FileName)
+            : string.Format(CommonLanguageManager.Instance.configFiles_unsavedChangesMultiple.CurrentValue(),
+                dirtyTabs.Count);
         var action = await ConfirmUnsavedAsync(message);
         if (action == UnsavedFilesAction.Cancel) return false;
         if (action == UnsavedFilesAction.Discard) return true;
@@ -484,7 +492,7 @@ public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChan
             this.TryGetHostId(),
             new OverlayDialogOptions
             {
-                Title = "配置文件",
+                Title = CommonLanguageManager.Instance.configFiles_title.CurrentValue(),
                 Mode = DialogMode.Error,
                 Buttons = DialogButton.OK,
                 CanLightDismiss = false

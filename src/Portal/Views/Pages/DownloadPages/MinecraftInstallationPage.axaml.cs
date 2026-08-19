@@ -13,6 +13,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using TioUi.Common;
@@ -84,11 +85,16 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     [ObservableProperty] public partial bool IsNeoForgeSelected { get; set; }
     [ObservableProperty] public partial bool IsQuiltSelected { get; set; }
     [ObservableProperty] public partial bool IsOptiFineSelected { get; set; }
-    [ObservableProperty] public partial string FabricStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string ForgeStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string NeoForgeStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string QuiltStatus { get; set; } = "不安装";
-    [ObservableProperty] public partial string OptiFineStatus { get; set; } = "不安装";
+    [ObservableProperty] public partial string FabricStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string ForgeStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string NeoForgeStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string QuiltStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
+    [ObservableProperty] public partial string OptiFineStatus { get; set; } =
+        CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue();
 
     public bool HasModLoader => IsFabricSelected || IsForgeSelected || IsNeoForgeSelected || IsQuiltSelected ||
                                 IsOptiFineSelected;
@@ -187,7 +193,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
                 {
                     _selectedLoaders.Remove(loaderKind);
                     _availableLoaderVersions.Remove(loaderKind);
-                    SetStatus(loaderKind, "不安装");
+                    SetStatus(loaderKind, CommonLanguageManager.Instance.minecraftInstall_noLoader.CurrentValue());
                     _loadGenerations[loaderKind] = _loadGenerations.GetValueOrDefault(loaderKind) + 1;
                 }
         }
@@ -206,7 +212,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         var generation = _loadGenerations.GetValueOrDefault(kind) + 1;
         _loadGenerations[kind] = generation;
         _loadingCount++;
-        SetStatus(kind, "正在获取最新版...");
+        SetStatus(kind, CommonLanguageManager.Instance.minecraftInstall_fetchingLatest.CurrentValue());
         OnPropertyChanged(nameof(CanInstall));
         try
         {
@@ -221,14 +227,15 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             {
                 _selectedLoaders.Remove(kind);
                 _availableLoaderVersions.Remove(kind);
-                SetStatus(kind, "当前游戏版本不可用");
+                SetStatus(kind, CommonLanguageManager.Instance.minecraftInstall_versionUnavailable.CurrentValue());
             }
             else
             {
                 var entry = entries[0];
                 _availableLoaderVersions[kind] = entries;
                 _selectedLoaders[kind] = entry;
-                SetStatus(kind, $"最新版：{GetLoaderVersion(kind, entry)}");
+                SetStatus(kind, string.Format(CommonLanguageManager.Instance.minecraftInstall_latestVersion.CurrentValue(),
+                    GetLoaderVersion(kind, entry)));
                 CustomVersionId = CreateRecommendedVersionId();
             }
         }
@@ -239,7 +246,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             {
                 _selectedLoaders.Remove(kind);
                 _availableLoaderVersions.Remove(kind);
-                SetStatus(kind, "获取失败，请取消后重试");
+                SetStatus(kind, CommonLanguageManager.Instance.minecraftInstall_fetchFailedRetry.CurrentValue());
             }
         }
         finally
@@ -278,13 +285,15 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
             LoaderVersionItem>(new LoaderVersionDialogViewModel(versions), owner.GetTopLevel().TryGetHostId(),
             new OverlayDialogOptions
             {
-                Title = "选择加载器版本", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false,
+                Title = CommonLanguageManager.Instance.minecraftInstall_selectLoaderVersion.CurrentValue(),
+                Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false,
                 VerticalAnchor = VerticalPosition.Top, VerticalOffset = 80
             });
         if (selected is null || !IsSelected(selected.Kind)) return;
 
         _selectedLoaders[selected.Kind] = selected.Entry;
-        SetStatus(selected.Kind, $"已选择：{selected.Version}");
+        SetStatus(selected.Kind, string.Format(CommonLanguageManager.Instance.minecraftInstall_selected.CurrentValue(),
+            selected.Version));
         CustomVersionId = CreateRecommendedVersionId();
         UpdateVersionState();
     }
@@ -421,11 +430,11 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     {
         var id = EffectiveVersionId();
         var error = string.IsNullOrWhiteSpace(id)
-            ? "实例 id 不能为空"
+            ? CommonLanguageManager.Instance.minecraftInstall_idEmpty.CurrentValue()
             : id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
-                ? "实例 id 包含文件夹名称不允许的字符"
+                ? CommonLanguageManager.Instance.minecraftInstall_idInvalidChars.CurrentValue()
                 : SelectedMinecraftFolder is not null && VersionDirectoryExists(id)
-                    ? "该实例 id 已存在，请更换名称"
+                    ? CommonLanguageManager.Instance.minecraftInstall_idExists.CurrentValue()
                     : null;
         SetError(nameof(CustomVersionId), error);
         OnPropertyChanged(nameof(HasModLoader));

@@ -9,6 +9,7 @@ using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using TioUi.Common;
@@ -36,7 +37,7 @@ public partial class BedrockInstallation : UserControl
         var folders = _viewModel.GetTraditionalInstallFolders();
         if (folders.Count == 0)
         {
-            _viewModel.StatusText = "请先在设置中添加一个 Portal 游戏目录。";
+            _viewModel.StatusText = CommonLanguageManager.Instance.minecraft_addPortalFolderFirst.CurrentValue();
             return;
         }
 
@@ -67,7 +68,8 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
     [ObservableProperty] public partial bool IsInstalling { get; set; }
     [ObservableProperty] public partial bool IsLoading { get; set; }
-    [ObservableProperty] public partial string StatusText { get; set; } = "正在获取基岩版版本列表...";
+    [ObservableProperty] public partial string StatusText { get; set; } =
+        CommonLanguageManager.Instance.bedrock_fetchingVersions.CurrentValue();
 
     public bool CanInstall => !IsInstalling && !IsLoading && BedrockInstallationService.DefaultInstaller is not null &&
                               GetTraditionalInstallFolders().Count > 0;
@@ -112,7 +114,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
         IsLoading = true;
         var loaded = false;
-        StatusText = "正在从版本源获取基岩版版本列表...";
+        StatusText = CommonLanguageManager.Instance.bedrock_fetchingVersionsFromSource.CurrentValue();
         try
         {
             var versions = await installer.GetVersionsAsync(false, _pageCancellation.Token);
@@ -128,7 +130,8 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         catch (Exception exception)
         {
             Logger.Error(exception);
-            StatusText = $"无法获取基岩版版本列表：{exception.Message}";
+            StatusText = string.Format(
+                CommonLanguageManager.Instance.bedrock_fetchVersionsFailed.CurrentValue(), exception.Message);
         }
         finally
         {
@@ -154,15 +157,15 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = $"安装 Minecraft 基岩版 {instanceName}",
-            Description = $"正在准备 {buildLabel} 安装包",
+            Name = string.Format(CommonLanguageManager.Instance.bedrock_installTaskName.CurrentValue(), instanceName),
+            Description = string.Format(CommonLanguageManager.Instance.bedrock_preparingPackage.CurrentValue(), buildLabel),
             Progress = 0,
             Actions =
             [
                 new TaskActionDefinition
                 {
-                    Name = "取消安装",
-                    Description = "取消当前安装任务。",
+                    Name = CommonLanguageManager.Instance.minecraft_cancelInstall.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.minecraft_cancelInstallDescription.CurrentValue(),
                     IconKey = "Cancel",
                     ExecuteAsync = (managedTask, _) =>
                     {
@@ -176,10 +179,12 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         }, async context =>
         {
             context.CancellationToken.ThrowIfCancellationRequested();
-            await RunStepAsync(context, "准备安装", "正在检查安装目录", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.bedrock_preparingStep.CurrentValue(),
+                CommonLanguageManager.Instance.bedrock_checkingDirectory.CurrentValue(), step =>
             {
                 if (Directory.Exists(destination))
-                    throw new InvalidOperationException("目标实例已存在，请更换实例名称。");
+                    throw new InvalidOperationException(
+                        CommonLanguageManager.Instance.bedrock_instanceExists.CurrentValue());
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
@@ -188,8 +193,8 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
             TaskExecutionContext? downloadContext = null;
             var downloadStep = context.CreateChild(new TaskOptions
             {
-                Name = $"下载并校验 {buildLabel} 安装包",
-                Description = "正在连接下载服务器",
+                Name = string.Format(CommonLanguageManager.Instance.bedrock_downloadAndVerify.CurrentValue(), buildLabel),
+                Description = CommonLanguageManager.Instance.bedrock_connectingServer.CurrentValue(),
                 Progress = 0
             }, async step =>
             {
@@ -209,8 +214,8 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
                     extractionFinished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                     extractionStep = context.CreateChild(new TaskOptions
                     {
-                        Name = $"解压 {buildLabel} 安装包",
-                        Description = "正在解压",
+                        Name = string.Format(CommonLanguageManager.Instance.bedrock_extractPackage.CurrentValue(), buildLabel),
+                        Description = CommonLanguageManager.Instance.bedrock_extracting.CurrentValue(),
                         Progress = 0
                     }, async step => { await extractionFinished.Task.WaitAsync(step.CancellationToken); });
                     extractionStep.Start();
@@ -228,9 +233,10 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
                 {
                     downloadingState.SetDescription(update.State switch
                     {
-                        "Selecting source" => "正在测速并选择最快下载源",
-                        "Using cached package" => "正在校验并使用本地安装包缓存",
-                        _ => $"安装状态：{update.State}"
+                        "Selecting source" => CommonLanguageManager.Instance.bedrock_selectingSource.CurrentValue(),
+                        "Using cached package" => CommonLanguageManager.Instance.bedrock_usingCachedPackage.CurrentValue(),
+                        _ => string.Format(CommonLanguageManager.Instance.bedrock_installState.CurrentValue(),
+                            update.State)
                     });
                 }
             });
@@ -265,13 +271,15 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
                 if (extractionStep is not null && !extractionStep.IsTerminal) await extractionStep.Completion;
             }
 
-            await RunStepAsync(context, "刷新已安装实例", "正在扫描安装目录中的新实例", step =>
+            await RunStepAsync(context, CommonLanguageManager.Instance.minecraft_refreshInstancesStep.CurrentValue(),
+                CommonLanguageManager.Instance.minecraft_scanningNewInstances.CurrentValue(), step =>
             {
                 InstanceManager.Instance.RefreshAll(Data.ConfigEntry.MinecraftFolders);
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
-            context.SetDescription($"已完成 Minecraft 基岩版 {instanceName} 的安装");
+            context.SetDescription(string.Format(
+                CommonLanguageManager.Instance.bedrock_installComplete.CurrentValue(), instanceName));
         });
 
         task.Start();
@@ -302,11 +310,11 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
     private void UpdateInstallState()
     {
         if (BedrockInstallationService.DefaultInstaller is null)
-            StatusText = "基岩版安装仅支持 Windows。";
+            StatusText = CommonLanguageManager.Instance.bedrock_windowsOnly.CurrentValue();
         else if (GetTraditionalInstallFolders().Count == 0)
-            StatusText = "请先在设置中添加一个 Portal 游戏目录。";
+            StatusText = CommonLanguageManager.Instance.minecraft_addPortalFolderFirst.CurrentValue();
         else if (!IsLoading && !IsInstalling && _allVersions.Count == 0)
-            StatusText = "没有可用的基岩版版本。";
+            StatusText = CommonLanguageManager.Instance.bedrock_noVersions.CurrentValue();
 
         OnPropertyChanged(nameof(CanInstall));
     }
@@ -331,12 +339,14 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         Versions.Clear();
         foreach (var version in versions) Versions.Add(version);
         if (!IsLoading && !IsInstalling)
-            StatusText = $"共 {Versions.Count} 个版本";
+            StatusText = string.Format(CommonLanguageManager.Instance.bedrock_versionCount.CurrentValue(),
+                Versions.Count);
     }
 
     public string GetInstallDetails(BedrockGdkVersion version, MinecraftFolderEntry folder)
     {
-        return $"版本：{version.Id}\n渠道：{version.ChannelLabel}\n构建：{version.BuildLabel} x64\n发布日期：{version.ReleaseTime:g}";
+        return string.Format(CommonLanguageManager.Instance.bedrock_installDetails.CurrentValue(), version.Id,
+            version.ChannelLabel, version.BuildLabel, version.ReleaseTime);
     }
 
     public string GetDestinationPath(BedrockGdkVersion version, MinecraftFolderEntry folder)
@@ -381,11 +391,15 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
     private static string FormatDownloadDescription(BedrockInstallProgress update, double? progress)
     {
         var percentage = progress is { } value ? $" ({value:P0})" : string.Empty;
-        var speed = update.Speed > 0 ? $"，{DefaultDownloader.FormatSize(update.Speed, true)}" : string.Empty;
-        var remaining = update.EstimatedRemaining is { } eta && eta > TimeSpan.Zero
-            ? $"，剩余约 {eta:mm\\:ss}"
+        var speed = update.Speed > 0
+            ? string.Format(CommonLanguageManager.Instance.launch_speedSuffix.CurrentValue(),
+                DefaultDownloader.FormatSize(update.Speed, true))
             : string.Empty;
-        return $"正在下载 {update.Item}{percentage}{speed}{remaining}";
+        var remaining = update.EstimatedRemaining is { } eta && eta > TimeSpan.Zero
+            ? string.Format(CommonLanguageManager.Instance.bedrock_remainingFormat.CurrentValue(), eta)
+            : string.Empty;
+        return string.Format(CommonLanguageManager.Instance.bedrock_downloadingWithDetails.CurrentValue(),
+            update.Item, percentage, speed, remaining);
     }
 
     private static Task DeleteDirectoryAsync(string directory)

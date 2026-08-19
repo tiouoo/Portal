@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
@@ -104,18 +105,20 @@ public partial class RenameInstanceDialogViewModel : ObservableObject, IDialogCo
 
         var value = NewId?.Trim();
         if (string.IsNullOrWhiteSpace(value))
-            _errors[propertyName] = ["实例名称不能为空"];
+            _errors[propertyName] = [CommonLanguageManager.Instance.instanceRename_nameEmpty.CurrentValue()];
         else if (value.Length > 100)
-            _errors[propertyName] = ["实例名称过长（最多 100 个字符）"];
+            _errors[propertyName] = [CommonLanguageManager.Instance.instanceRename_nameTooLong.CurrentValue()];
         else if (value.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            _errors[propertyName] = ["实例名称不能包含 \\ / : * ? \" < > | 等字符"];
+            _errors[propertyName] =
+                [CommonLanguageManager.Instance.instanceRename_nameInvalidChars.CurrentValue()];
         else if (value.EndsWith(' ') || value.EndsWith('.'))
-            _errors[propertyName] = ["实例名称不能以空格或句点结尾"];
+            _errors[propertyName] = [CommonLanguageManager.Instance.instanceRename_nameEndsWithSpace.CurrentValue()];
         else if (ReservedNames.Contains(value))
-            _errors[propertyName] = ["该名称为系统保留名称，无法作为文件夹名"];
+            _errors[propertyName] = [CommonLanguageManager.Instance.instanceRename_nameReserved.CurrentValue()];
         else if (string.Equals(value, _instance.MinecraftEntry?.Id, StringComparison.OrdinalIgnoreCase))
-            _errors[propertyName] = ["新名称与原名称相同"];
-        else if (InstanceFolderExists(value)) _errors[propertyName] = ["已存在同名实例，请更换名称"];
+            _errors[propertyName] = [CommonLanguageManager.Instance.instanceRename_nameSameAsOriginal.CurrentValue()];
+        else if (InstanceFolderExists(value))
+            _errors[propertyName] = [CommonLanguageManager.Instance.instanceRename_nameExists.CurrentValue()];
 
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }

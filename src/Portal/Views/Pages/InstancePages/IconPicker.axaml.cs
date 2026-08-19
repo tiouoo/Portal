@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Portal.Module.Imaging;
 using TioUi.Common.Interfaces;
 
@@ -29,10 +30,13 @@ public partial class IconPicker : UserControl
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "选择图标图片",
+            Title = CommonLanguageManager.Instance.iconPicker_selectIconImage.CurrentValue(),
             AllowMultiple = false,
             FileTypeFilter =
-                [new FilePickerFileType("图片") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp"] }]
+                [new FilePickerFileType(CommonLanguageManager.Instance.saves_image.CurrentValue())
+                {
+                    Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp"]
+                }]
         });
 
         if (files.Count > 0)

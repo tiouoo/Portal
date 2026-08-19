@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Portal.Localization;
 using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Components;
@@ -48,7 +49,8 @@ public partial class ScaleInputDialogViewModel(double currentScale) : Observable
         if (!int.TryParse(trimmed, NumberStyles.None, CultureInfo.InvariantCulture, out var percent)
             || percent < 50 || percent > 500)
         {
-            ErrorText = $"请输入 50 ~ 500 之间的整数百分比（当前输入：\"{trimmed}\"）。";
+            ErrorText = string.Format(
+                CommonLanguageManager.Instance.scale_inputInvalid.CurrentValue(), trimmed);
             return;
         }
 

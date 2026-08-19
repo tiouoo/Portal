@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Avalonia.Interactivity;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Portal.Styles;
 using Portal.Views.Components.Operations.Account;
 using Portal.Views.Components.Operations.Java;
@@ -89,10 +90,10 @@ public partial class OobeWindow : TioWindow
         FinishButton.IsVisible = step == STEP_COUNT - 1;
         StepTitle.Text = step switch
         {
-            0 => "主题样式",
-            1 => "Minecraft 文件夹",
-            2 => "账户",
-            3 => "Java",
+            0 => CommonLanguageManager.Instance.oobe_stepTheme.CurrentValue(),
+            1 => CommonLanguageManager.Instance.oobe_stepMinecraftFolder.CurrentValue(),
+            2 => CommonLanguageManager.Instance.oobe_stepAccount.CurrentValue(),
+            3 => CommonLanguageManager.Instance.oobe_stepJava.CurrentValue(),
             _ => string.Empty
         };
         UpdateStepDots(step);
@@ -205,17 +206,19 @@ public partial class OobeWindow : TioWindow
     private async void ScanJava_OnClick(object? sender, RoutedEventArgs e)
     {
         SetJavaBusy(true);
-        this.Notice("正在扫描中");
-        ShowJavaStatus("正在扫描 Java，请稍候…");
+        this.Notice(CommonLanguageManager.Instance.javaPage_scanning.CurrentValue());
+        ShowJavaStatus(CommonLanguageManager.Instance.oobe_scanningJava.CurrentValue());
         try
         {
             var result = await JavaRuntimeOperations.ScanAndAddAsync(Data.ConfigEntry.JavaRuntimes);
             Data.ConfigEntry.DefaultJavaRuntime ??= Data.ConfigEntry.JavaRuntimes.FirstOrDefault();
-            ShowJavaStatus($"扫描完成：新增 {result.AddedCount} 个 Java，重复 {result.DuplicateCount} 个");
+            ShowJavaStatus(string.Format(CommonLanguageManager.Instance.javaPage_scanComplete.CurrentValue(),
+                result.AddedCount, result.DuplicateCount));
         }
         catch (Exception ex)
         {
-            ShowJavaStatus($"Java 扫描失败：{ex.Message}");
+            ShowJavaStatus(string.Format(CommonLanguageManager.Instance.javaPage_scanFailed.CurrentValue(),
+                ex.Message));
         }
         finally
         {
@@ -233,16 +236,20 @@ public partial class OobeWindow : TioWindow
 
             if (!result.IsValid)
             {
-                ShowJavaStatus("无法识别该 Java 可执行文件");
+                ShowJavaStatus(CommonLanguageManager.Instance.javaPage_unrecognizedJava.CurrentValue());
                 return;
             }
 
             Data.ConfigEntry.DefaultJavaRuntime ??= result.JavaRuntime;
-            ShowJavaStatus(result.IsDuplicate ? "该 Java 已在列表中" : $"已添加 {result.JavaRuntime!.DisplayName}");
+            ShowJavaStatus(result.IsDuplicate
+                ? CommonLanguageManager.Instance.javaPage_javaDuplicate.CurrentValue()
+                : string.Format(CommonLanguageManager.Instance.oobe_javaAdded.CurrentValue(),
+                    result.JavaRuntime!.DisplayName));
         }
         catch (Exception ex)
         {
-            ShowJavaStatus($"添加 Java 失败：{ex.Message}");
+            ShowJavaStatus(string.Format(CommonLanguageManager.Instance.javaPage_addJavaFailed.CurrentValue(),
+                ex.Message));
         }
         finally
         {

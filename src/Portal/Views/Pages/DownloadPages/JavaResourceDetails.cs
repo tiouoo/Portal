@@ -15,6 +15,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Module.Imaging;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
@@ -66,14 +67,19 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
     [ObservableProperty] public partial int SelectedScreenshotIndex { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
     public IAsyncImageLoader ScreenshotLoader { get; } = new ModScreenshotLoader();
-    public string LoadingText => $"正在加载{Target.Definition.DisplayName}详情与所有版本...";
-    public string ErrorText => $"无法加载{Target.Definition.DisplayName}详情，请检查网络";
+    public string LoadingText => string.Format(
+        CommonLanguageManager.Instance.javaResourceDetails_loading.CurrentValue(),
+        Target.Definition.DisplayName);
+    public string ErrorText => string.Format(
+        CommonLanguageManager.Instance.javaResourceDetails_error.CurrentValue(), Target.Definition.DisplayName);
     public bool HasScreenshots => Screenshots.Count > 0;
     public bool HasVersions => VersionFilters.Count > 0;
     public bool IsEmpty => !IsLoading && !HasError && VersionGroups.Count == 0;
     public bool SupportsDownload => Target.Definition.SupportsDownload;
     public bool HasMoreVersionGroups => _nextVersionGroupIndex < _allVersionGroups.Count;
-    public string LoadMoreVersionGroupsText => $"显示更多版本（剩余 {_allVersionGroups.Count - _nextVersionGroupIndex} 个）";
+    public string LoadMoreVersionGroupsText => string.Format(
+        CommonLanguageManager.Instance.modDetails_loadMoreVersionGroups.CurrentValue(),
+        _allVersionGroups.Count - _nextVersionGroupIndex);
     private IReadOnlyList<JavaResourceFileItem> AllFiles { get; set; } = [];
 
     public void Dispose()
@@ -114,7 +120,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 Summary = translations.GetValueOrDefault(project.ProjectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata =
-                    $"{RelativeTime.Format(project.Updated)}·{project.DownloadCount:N0} 下载";
+                    string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
+                        RelativeTime.Format(project.Updated), project.DownloadCount);
                 AddScreenshots(project.Screenshots);
                 AllFiles = await Task.Run(async () => (await _modrinth.GetModFilesByProjectIdAsync(Target.ProjectId,
                     cancellationToken)).Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
@@ -131,7 +138,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                 Summary = translations.GetValueOrDefault(projectId) ?? project.Summary;
                 IconUrl = project.IconUrl;
                 Metadata =
-                    $"{RelativeTime.Format(project.DateModified)}·{project.DownloadCount:N0} 下载";
+                    string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
+                        RelativeTime.Format(project.DateModified), project.DownloadCount);
                 AddScreenshots(project.Screenshots);
                 AllFiles = await Task.Run(async () =>
                     (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
@@ -165,7 +173,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         if (_disposed || cancellationToken.IsCancellationRequested) return;
         _buildingFilters = true;
         VersionFilters.Clear();
-        VersionFilters.Add(new JavaResourceVersionFilter("全部", null));
+        VersionFilters.Add(new JavaResourceVersionFilter(
+            CommonLanguageManager.Instance.mod_all.CurrentValue(), null));
         foreach (var family in families) VersionFilters.Add(new JavaResourceVersionFilter(family, family));
         SelectedVersionFilter =
             VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(Target.GameVersion)) ??
@@ -192,7 +201,8 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
             var groups = await Task.Run(() => AllFiles.Where(file => selectedFamily is null ||
                                                                      file.MinecraftVersions.Any(version =>
                                                                          GetVersionFamily(version) == selectedFamily))
-                .SelectMany(file => file.MinecraftVersions.DefaultIfEmpty("未知版本")
+                .SelectMany(file => file.MinecraftVersions.DefaultIfEmpty(
+                    CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue())
                     .Where(version => selectedFamily is null || GetVersionFamily(version) == selectedFamily)
                     .Select(version => (Version: version, File: file)))
                 .GroupBy(item => item.Version)
@@ -272,9 +282,11 @@ public sealed partial class JavaResourceVersionGroup : ObservableObject
     public string Title { get; }
     public string MinecraftVersion { get; }
     public ObservableCollection<JavaResourceFileItem> VisibleFiles { get; } = [];
-    public string FileCountText => $"{_files.Count} 个文件";
+    public string FileCountText => string.Format(CommonLanguageManager.Instance.mod_fileCount.CurrentValue(),
+        _files.Count);
     public bool HasMore => VisibleFiles.Count < _files.Count;
-    public string LoadMoreText => $"显示更多（剩余 {_files.Count - VisibleFiles.Count} 个）";
+    public string LoadMoreText => string.Format(CommonLanguageManager.Instance.mod_loadMore.CurrentValue(),
+        _files.Count - VisibleFiles.Count);
     [ObservableProperty] public partial bool IsExpanded { get; set; }
 
     [RelayCommand]
@@ -323,10 +335,10 @@ public sealed record JavaResourceFileItem(
     {
         return type switch
         {
-            FileReleaseType.Release => "正式版",
-            FileReleaseType.Beta => "测试B版",
-            FileReleaseType.Alpha => "测试A版",
-            _ => "测试版"
+            FileReleaseType.Release => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
+            FileReleaseType.Beta => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
+            FileReleaseType.Alpha => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
+            _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
         };
     }
 
@@ -341,12 +353,15 @@ public static class JavaResourceDownload
 {
     public static async Task QuickDownloadAsync(TopLevel topLevel, JavaResourceDetailsTarget target)
     {
-        var loading = new QuickDownloadLoadingDialogViewModel($"下载{target.Definition.DisplayName}");
+        var loading = new QuickDownloadLoadingDialogViewModel(
+            string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                target.Definition.DisplayName));
         var loadingDialog = OverlayDialog
             .ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
                 object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = $"下载{target.Definition.DisplayName}", Buttons = DialogButton.None,
+                Title = string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                    target.Definition.DisplayName), Buttons = DialogButton.None,
                 CanLightDismiss = false, CanResize = false
             });
         try
@@ -363,7 +378,9 @@ public static class JavaResourceDownload
                     .Select(JavaResourceFileItem.From).ToArray(),
                 _ => []
             };
-            if (files.Count == 0) throw new InvalidDataException("未找到可下载的资源文件。");
+            if (files.Count == 0)
+                throw new InvalidDataException(
+                    CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());
             loading.Close();
             await loadingDialog;
 
@@ -374,7 +391,8 @@ public static class JavaResourceDownload
                         InstanceManager.Instance.Instances),
                     topLevel.TryGetHostId(), new OverlayDialogOptions
                     {
-                        Title = $"下载{target.Definition.DisplayName}", Buttons = DialogButton.None,
+                        Title = string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                            target.Definition.DisplayName), Buttons = DialogButton.None,
                         CanLightDismiss = false, CanResize = false
                     });
             if (result?.File is not { } file) return;
@@ -411,7 +429,8 @@ public static class JavaResourceDownload
                 new JavaResourceInstallDialogViewModel(definition, file, InstanceManager.Instance.Instances),
                 topLevel.TryGetHostId(), new OverlayDialogOptions
                 {
-                    Title = $"下载{definition.DisplayName}", Buttons = DialogButton.None,
+                    Title = string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                        definition.DisplayName), Buttons = DialogButton.None,
                     CanLightDismiss = false, CanResize = false
                 });
         if (result?.File is not { } selectedFile) return;
@@ -440,7 +459,8 @@ public static class JavaResourceDownload
         {
             if (world is null || await new WorldSaveService().IsWorldLockedAsync(world.FolderPath))
             {
-                topLevel.Notice("存档正在使用，无法安装数据包", NotificationType.Warning);
+                topLevel.Notice(CommonLanguageManager.Instance.javaResourceInstall_saveInUse.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
@@ -462,7 +482,8 @@ public static class JavaResourceDownload
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = $"下载{definition.DisplayName}",
+            Title = string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                definition.DisplayName),
             SuggestedFileName = file.FileName,
             FileTypeChoices = [new FilePickerFileType(definition.DisplayName) { Patterns = Patterns(definition.Kind) }]
         });
@@ -478,7 +499,9 @@ public static class JavaResourceDownload
     {
         Directory.CreateDirectory(folder);
         var fileName = Path.GetFileName(file.FileName);
-        if (string.IsNullOrWhiteSpace(fileName)) throw new InvalidDataException("资源文件名无效。");
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new InvalidDataException(
+                CommonLanguageManager.Instance.javaResourceDownload_invalidResourceFileName.CurrentValue());
         StartDownload(topLevel, definition, file, Path.Combine(folder, fileName));
     }
 
@@ -487,7 +510,9 @@ public static class JavaResourceDownload
     {
         Directory.CreateDirectory(savesFolder);
         var fileName = Path.GetFileName(file.FileName);
-        if (string.IsNullOrWhiteSpace(fileName)) throw new InvalidDataException("存档文件名无效。");
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new InvalidDataException(
+                CommonLanguageManager.Instance.javaResourceDownload_invalidSaveFileName.CurrentValue());
         var temporaryPath = Path.Combine(savesFolder, $".{Guid.NewGuid():N}.zip");
         StartDownload(topLevel, definition, file, temporaryPath, true);
     }
@@ -499,14 +524,19 @@ public static class JavaResourceDownload
         if (extractSave)
             afterDownload = async context =>
             {
-                context.SetDescription("正在解压存档");
+                context.SetDescription(
+                    CommonLanguageManager.Instance.javaResourceDownload_extractingSave.CurrentValue());
                 await ExtractSaveAsync(destination, file.FileName, context.CancellationToken);
             };
         Logger.Info(
             $"[Download] Starting {definition.DisplayName} download {file.FileName} from {file.DownloadUrl} to {destination}; extractSave={extractSave}.");
-        return DownloadTasks.Download(topLevel, $"下载{definition.DisplayName}：{file.FileName}",
-            $"取消此{definition.DisplayName}下载", file.FileName, file.DownloadUrl, destination, file.FileSize,
-            afterDownload, extractSave ? "存档已安装" : "下载完成");
+        return DownloadTasks.Download(topLevel,
+            string.Format(CommonLanguageManager.Instance.javaResourceDownload_taskName.CurrentValue(),
+                definition.DisplayName, file.FileName),
+            string.Format(CommonLanguageManager.Instance.javaResourceDownload_cancelDownload.CurrentValue(),
+                definition.DisplayName), file.FileName, file.DownloadUrl, destination, file.FileSize,
+            afterDownload, extractSave ? CommonLanguageManager.Instance.javaResourceDownload_saveInstalled.CurrentValue()
+            : CommonLanguageManager.Instance.download_complete.CurrentValue());
     }
 
     private static IReadOnlyList<string> Patterns(JavaResourceKind kind)
@@ -526,7 +556,8 @@ public static class JavaResourceDownload
 
     private static void ExtractSave(string archivePath, string fileName, CancellationToken cancellationToken)
     {
-        var savesFolder = Path.GetDirectoryName(archivePath) ?? throw new InvalidDataException("存档目录无效。");
+        var savesFolder = Path.GetDirectoryName(archivePath) ?? throw new InvalidDataException(
+            CommonLanguageManager.Instance.javaResourceDownload_invalidSaveDirectory.CurrentValue());
         var stagingFolder = Path.Combine(savesFolder, $".portal-{Guid.NewGuid():N}");
         try
         {
@@ -539,7 +570,8 @@ public static class JavaResourceDownload
                 cancellationToken.ThrowIfCancellationRequested();
                 var entryPath = Path.GetFullPath(Path.Combine(stagingFolder, entry.FullName));
                 if (!entryPath.StartsWith(stagingRoot, StringComparison.Ordinal))
-                    throw new InvalidDataException("存档压缩包包含无效路径。");
+                    throw new InvalidDataException(
+                        CommonLanguageManager.Instance.javaResourceDownload_invalidSaveArchivePath.CurrentValue());
                 if (string.IsNullOrEmpty(entry.Name))
                 {
                     Directory.CreateDirectory(entryPath);
@@ -558,7 +590,9 @@ public static class JavaResourceDownload
                 : Directory.EnumerateFiles(stagingFolder, "level.dat", SearchOption.AllDirectories)
                     .Select(Path.GetDirectoryName)
                     .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path));
-            if (worldFolder is null) throw new InvalidDataException("下载的压缩包不包含有效的 Minecraft 存档。");
+            if (worldFolder is null)
+                throw new InvalidDataException(
+                    CommonLanguageManager.Instance.javaResourceDownload_invalidSaveArchive.CurrentValue());
 
             var baseName = Path.GetFileNameWithoutExtension(Path.GetFileName(fileName));
             if (string.IsNullOrWhiteSpace(baseName)) baseName = "World";

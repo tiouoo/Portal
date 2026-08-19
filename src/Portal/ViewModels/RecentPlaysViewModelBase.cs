@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages;
 
 namespace Portal.ViewModels;
@@ -27,7 +28,10 @@ public abstract partial class RecentPlaysViewModelBase : InstanceListViewModelBa
     public bool CanExpandRecentPlays => GetVisibleRecentPlays().Count > _recentPlayCapacity;
 
     public string ToggleRecentPlaysText =>
-        RecentPlaysExpanded ? "收起" : $"展开全部 ({GetVisibleRecentPlays().Count})";
+        RecentPlaysExpanded
+            ? CommonLanguageManager.Instance.recentPlay_collapse.CurrentValue()
+            : string.Format(CommonLanguageManager.Instance.recentPlay_expandAll.CurrentValue(),
+                GetVisibleRecentPlays().Count);
 
     protected abstract bool RecentPlaysExpanded { get; set; }
 

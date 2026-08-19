@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Views.Pages.InstancePages;
 
@@ -169,7 +170,9 @@ public sealed class RecentPlayTimeChart : Control
             new Point(hoveredPosition.X, TopPadding), new Point(hoveredPosition.X, TopPadding + graphHeight));
         context.DrawEllipse(lineBrush, null, hoveredPosition, 5, 5);
 
-        var tooltip = CreateText($"{hoveredEntry.Date:yyyy-MM-dd}\n游玩时长: {FormatDuration(hoveredEntry.Seconds)}", 14,
+        var tooltip = CreateText(
+            string.Format(CommonLanguageManager.Instance.recentPlay_durationTooltip.CurrentValue(),
+                hoveredEntry.Date.ToString("yyyy-MM-dd"), FormatDuration(hoveredEntry.Seconds)), 14,
             TooltipForeground);
         var tooltipX = Math.Clamp(hoveredPosition.X + 12, 4, bounds.Width - tooltip.Width - 12);
         var tooltipY = Math.Max(4, hoveredPosition.Y - tooltip.Height - 14);
@@ -221,9 +224,13 @@ public sealed class RecentPlayTimeChart : Control
 
     private static string FormatDuration(double seconds)
     {
-        return seconds < 60 ? $"{seconds:F0} 秒" :
-            seconds < 3600 ? $"{seconds / 60:F0} 分" :
-            seconds < 86400 ? $"{seconds / 3600:F1} 小时" : $"{seconds / 86400:F1} 天";
+        return seconds < 60
+            ? string.Format(CommonLanguageManager.Instance.recentPlay_seconds.CurrentValue(), seconds)
+            : seconds < 3600
+                ? string.Format(CommonLanguageManager.Instance.recentPlay_minutes.CurrentValue(), seconds / 60)
+                : seconds < 86400
+                    ? string.Format(CommonLanguageManager.Instance.recentPlay_hours.CurrentValue(), seconds / 3600)
+                    : string.Format(CommonLanguageManager.Instance.recentPlay_days.CurrentValue(), seconds / 86400);
     }
 
     private FormattedText CreateText(string text, double size, IBrush brush)

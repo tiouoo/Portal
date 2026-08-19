@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
 
@@ -29,7 +30,8 @@ public partial class BedrockMicrosoft : UserControl
     {
         var viewModel = (BedrockMicrosoftViewModel)DataContext!;
         _ = TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(viewModel.Code);
-        TopLevel.GetTopLevel(this)!.Notice("已复制到剪贴板", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice(CommonLanguageManager.Instance.account_copiedToClipboard.CurrentValue(),
+            NotificationType.Success);
     }
 
     private void OpenBrowser(object? sender, RoutedEventArgs e)
@@ -44,7 +46,8 @@ public partial class BedrockMicrosoftViewModel : ObservableObject, IDialogContex
     private readonly CancellationTokenSource _cancellation = new();
     [ObservableProperty] public partial bool IsReady { get; set; }
     [ObservableProperty] public partial bool IsError { get; set; }
-    [ObservableProperty] public partial string Message { get; set; } = "正在请求微软设备验证码...";
+    [ObservableProperty] public partial string Message { get; set; } =
+        CommonLanguageManager.Instance.account_fetchingDeviceCode.CurrentValue();
     [ObservableProperty] public partial string Error { get; set; } = string.Empty;
     [ObservableProperty] public partial string Code { get; set; } = string.Empty;
     [ObservableProperty] public partial string Url { get; set; } = string.Empty;
@@ -66,7 +69,7 @@ public partial class BedrockMicrosoftViewModel : ObservableObject, IDialogContex
             {
                 Url = url;
                 Code = code;
-                Message = "打开微软验证页面并输入下方代码，完成 Xbox 账户关联。";
+                Message = CommonLanguageManager.Instance.account_openVerificationPage.CurrentValue();
                 IsReady = true;
             }, _cancellation.Token);
             RequestClose?.Invoke(this, account);

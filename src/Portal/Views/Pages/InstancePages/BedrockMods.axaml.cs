@@ -11,6 +11,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
@@ -31,9 +32,12 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_enabled.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_disabled.CurrentValue(), 0)));
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, Resource_OnDragOver);
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
@@ -63,9 +67,12 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string CountText => IsLoading ? string.Empty : $"{FilteredItems.Count} 个";
+    public string CountText => IsLoading
+        ? string.Empty
+        : string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
     public int SelectedCount => Items.Count(item => item.IsSelected);
-    public string SelectedCountText => $"批量操作{SelectedCount}个";
+    public string SelectedCountText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_batchSelected.CurrentValue(), SelectedCount);
     public bool HasSelection => SelectedCount > 0;
 
     private BedrockInstanceConfig? Config => _instance?.BedrockConfig;
@@ -132,7 +139,8 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
                                               or NotSupportedException)
         {
-            ShowNotice($"读取模组失败：{exception.Message}", NotificationType.Error);
+            ShowNotice(string.Format(CommonLanguageManager.Instance.bedrockMods_readFailed.CurrentValue(),
+                exception.Message), NotificationType.Error);
         }
         finally
         {
@@ -182,9 +190,12 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
 
     private void RefreshFilterOptions()
     {
-        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
-        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("启用", Items.Count(item => item.IsEnabled));
-        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel("禁用", Items.Count(item => item.IsDisabled));
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel(CommonLanguageManager.Instance.mod_all.CurrentValue(),
+            Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_enabled.CurrentValue(), Items.Count(item => item.IsEnabled));
+        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_disabled.CurrentValue(), Items.Count(item => item.IsDisabled));
     }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -218,9 +229,12 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         if (Config == null) return;
         var folder = BedrockModManager.GetModsFolder(Config);
         if (drop == null)
-            await JavaResourceImport.SelectAndImportAsync(this, "选择 DLL 模组", folder, "DLL 模组", [".dll"], false,
-                RefreshAsync);
-        else await JavaResourceImport.ImportDropAsync(this, drop, folder, "DLL 模组", [".dll"], false, RefreshAsync);
+            await JavaResourceImport.SelectAndImportAsync(this,
+                CommonLanguageManager.Instance.bedrockMods_selectDllMod.CurrentValue(), folder,
+                CommonLanguageManager.Instance.bedrockMods_dllMod.CurrentValue(), [".dll"], false, RefreshAsync);
+        else
+            await JavaResourceImport.ImportDropAsync(this, drop, folder,
+                CommonLanguageManager.Instance.bedrockMods_dllMod.CurrentValue(), [".dll"], false, RefreshAsync);
     }
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -284,13 +298,20 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         if (Config == null) return;
         foreach (var item in items) BedrockModManager.Update(Config, item.FileName, entry => entry.Enabled = enabled);
         await RefreshAsync();
-        ShowNotice($"已{(enabled ? "启用" : "禁用")}所选模组", NotificationType.Success);
+        ShowNotice(enabled
+                ? CommonLanguageManager.Instance.bedrockMods_enabledSelected.CurrentValue()
+                : CommonLanguageManager.Instance.bedrockMods_disabledSelected.CurrentValue(),
+            NotificationType.Success);
     }
 
     private async void ShowDetails_OnClick(object? sender, RoutedEventArgs e)
     {
         if (Item(sender) is not { } item || Config == null) return;
-        var preload = new CheckBox { Content = "预加载（在游戏初始化早期加载）", IsChecked = item.Info.Config.Preload };
+        var preload = new CheckBox
+        {
+            Content = CommonLanguageManager.Instance.bedrockMods_preloadLabel.CurrentValue(),
+            IsChecked = item.Info.Config.Preload
+        };
         var delay = new NumericUpDown
         {
             Minimum = 0, Maximum = BedrockModManager.MaximumDelayMs, Value = item.Info.Config.DelayMs,
@@ -304,13 +325,16 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
             {
                 new TextBlock
                 {
-                    Text = $"文件名：{item.FileName}\n大小：{item.FileSizeText}",
+                    Text = string.Format(CommonLanguageManager.Instance.bedrockMods_fileInfo.CurrentValue(),
+                        item.FileName, item.FileSizeText),
                     TextWrapping = TextWrapping.Wrap
                 },
-                preload, new TextBlock { Text = "延迟加载时间（毫秒）" }, delay,
+                preload,
+                new TextBlock { Text = CommonLanguageManager.Instance.bedrockMods_delayMsLabel.CurrentValue() }, delay,
                 new TextBlock
                 {
-                    Text = "预加载模组不使用延迟时间。", Foreground = Brushes.Gray,
+                    Text = CommonLanguageManager.Instance.bedrockMods_preloadNoDelay.CurrentValue(),
+                    Foreground = Brushes.Gray,
                     TextWrapping = TextWrapping.Wrap
                 }
             }
@@ -318,7 +342,9 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         var result = await OverlayDialog.ShowStandardAsync(panel, null, this.TryGetHostId(),
             new OverlayDialogOptions
             {
-                Title = "模组详情", Buttons = DialogButton.YesNo, OverrideYesButtonText = "保存", OverrideNoButtonText = "取消",
+                Title = CommonLanguageManager.Instance.bedrockMods_modDetailsTitle.CurrentValue(),
+                Buttons = DialogButton.YesNo, OverrideYesButtonText = CommonLanguageManager.Instance.common_save.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanResize = false
             });
         if (result != DialogResult.Yes) return;
@@ -328,7 +354,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
             entry.DelayMs = (int)(delay.Value ?? BedrockModManager.DefaultDelayMs);
         });
         await RefreshAsync();
-        ShowNotice("模组设置已保存", NotificationType.Success);
+        ShowNotice(CommonLanguageManager.Instance.bedrockMods_settingsSaved.CurrentValue(), NotificationType.Success);
     }
 
     private async void DeleteSelected_OnClick(object? sender, RoutedEventArgs e)
@@ -347,13 +373,18 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         var result = await OverlayDialog.ShowStandardAsync(
             new TextBlock
             {
-                Margin = new Thickness(24), Text = $"确定永久删除选中的 {items.Length} 个模组吗？此操作无法撤销。",
+                Margin = new Thickness(24),
+                Text = string.Format(CommonLanguageManager.Instance.bedrockMods_deleteConfirm.CurrentValue(),
+                    items.Length),
                 TextWrapping = TextWrapping.Wrap
             }, null, this.TryGetHostId(),
             new OverlayDialogOptions
             {
-                Title = "删除模组", Mode = DialogMode.Error, Buttons = DialogButton.YesNo, OverrideYesButtonText = "删除",
-                OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.resourceList_deleteModsTitle.CurrentValue(),
+                Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
+                CanLightDismiss = false, CanResize = false
             });
         if (result != DialogResult.Yes) return;
         var failed = 0;
@@ -368,7 +399,9 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
             }
 
         await RefreshAsync();
-        ShowNotice(failed == 0 ? "已删除所选模组" : $"删除完成，但有 {failed} 个模组操作失败",
+        ShowNotice(failed == 0
+                ? CommonLanguageManager.Instance.bedrockMods_deletedSelected.CurrentValue()
+                : string.Format(CommonLanguageManager.Instance.bedrockMods_deleteFailed.CurrentValue(), failed),
             failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }
 
@@ -433,7 +466,8 @@ public sealed class BedrockModItem(BedrockModInfo info) : INotifyPropertyChanged
     public string FileSizeText => ResourceListUi.FormatSize(Info.FileSize);
     public string SizeAndNameText => $"{FileSizeText}·{FileName}";
     public DateTime LastWriteTime => ReadLastWriteTime(Info.FilePath);
-    public string LastWriteTimeText => $"加入于 {LastWriteTime:yyyy-MM-dd HH:mm}";
+    public string LastWriteTimeText =>
+        string.Format(CommonLanguageManager.Instance.bedrockMods_addedAt.CurrentValue(), LastWriteTime);
     public bool IsEnabled => Info.Config.Enabled;
     public bool IsDisabled => !IsEnabled;
     public bool IsPreload => Info.Config.Preload;

@@ -9,6 +9,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Extensions;
 
 namespace Portal.ViewModels;
@@ -64,13 +65,17 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
         BlockListService.Instance.HasBlockedInstances(InstanceManager.Instance.Instances);
 
     public string ToggleBlockedInstancesText =>
-        BlockListService.Instance.ShowBlockedInstances ? "隐藏屏蔽项" : "显示屏蔽项";
+        BlockListService.Instance.ShowBlockedInstances
+            ? CommonLanguageManager.Instance.instanceList_hideBlocked.CurrentValue()
+            : CommonLanguageManager.Instance.instanceList_showBlocked.CurrentValue();
 
     public bool HasBlockedRecentPlaysOnly =>
         BlockListService.Instance.HasBlockedRecentPlays(GetRecentPlayTargets());
 
     public string ToggleBlockedRecentPlaysText =>
-        BlockListService.Instance.ShowBlockedRecentPlays ? "隐藏屏蔽项" : "显示屏蔽项";
+        BlockListService.Instance.ShowBlockedRecentPlays
+            ? CommonLanguageManager.Instance.instanceList_hideBlocked.CurrentValue()
+            : CommonLanguageManager.Instance.instanceList_showBlocked.CurrentValue();
 
     public long TotalPlayTimeSeconds
     {
@@ -100,11 +105,11 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
 
     public List<SortOption> SortOptions { get; } =
     [
-        new() { DisplayText = "名称", SortType = InstanceSortType.Name },
-        new() { DisplayText = "最近游玩", SortType = InstanceSortType.PlayTime },
-        new() { DisplayText = "文件夹名称", SortType = InstanceSortType.FolderName },
-        new() { DisplayText = "加载器", SortType = InstanceSortType.Loader },
-        new() { DisplayText = "版本", SortType = InstanceSortType.Version }
+        new() { DisplayText = CommonLanguageManager.Instance.instanceList_sortName.CurrentValue(), SortType = InstanceSortType.Name },
+        new() { DisplayText = CommonLanguageManager.Instance.instanceList_sortRecentPlay.CurrentValue(), SortType = InstanceSortType.PlayTime },
+        new() { DisplayText = CommonLanguageManager.Instance.instanceList_sortFolderName.CurrentValue(), SortType = InstanceSortType.FolderName },
+        new() { DisplayText = CommonLanguageManager.Instance.instanceList_sortLoader.CurrentValue(), SortType = InstanceSortType.Loader },
+        new() { DisplayText = CommonLanguageManager.Instance.instanceList_sortVersion.CurrentValue(), SortType = InstanceSortType.Version }
     ];
 
     public List<FolderFilterOption> FolderFilterOptions { get; set; } = [];
@@ -263,7 +268,7 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
     {
         var currentSelection = _selectedFolderFilter;
         FolderFilterOptions.Clear();
-        FolderFilterOptions.Add(new FolderFilterOption { DisplayText = "所有文件夹", FolderName = null });
+        FolderFilterOptions.Add(new FolderFilterOption { DisplayText = CommonLanguageManager.Instance.instanceList_allFolders.CurrentValue(), FolderName = null });
         foreach (var folder in Data.ConfigEntry.MinecraftFolders)
             FolderFilterOptions.Add(new FolderFilterOption
                 { DisplayText = folder.FolderName, FolderName = folder.FolderName });
@@ -451,17 +456,23 @@ public partial class InstanceListViewModelBase : ObservableObject, IDisposable
             if (string.IsNullOrEmpty(selectedFolder))
             {
                 var folderCount = list.Select(x => x.FolderName).Distinct().Count();
-                SummaryText = $"找到{folderCount}个文件夹的{totalCount}个实例\nJava版{javaCount}个，基岩版{bedrockCount}个";
+                SummaryText = string.Format(
+                    CommonLanguageManager.Instance.instanceList_summaryWithFolders.CurrentValue(),
+                    folderCount, totalCount, javaCount, bedrockCount);
             }
             else
             {
-                SummaryText = $"找到{totalCount}个实例\nJava版{javaCount}个，基岩版{bedrockCount}个";
+                SummaryText = string.Format(
+                    CommonLanguageManager.Instance.instanceList_summaryWithoutFolders.CurrentValue(),
+                    totalCount, javaCount, bedrockCount);
             }
         }
         else
         {
             var folderCount = list.Select(x => x.FolderName).Distinct().Count();
-            SummaryText = $"找到{folderCount}个文件夹的{totalCount}个实例\nJava版{javaCount}个，基岩版{bedrockCount}个";
+            SummaryText = string.Format(
+                CommonLanguageManager.Instance.instanceList_summaryWithFolders.CurrentValue(),
+                folderCount, totalCount, javaCount, bedrockCount);
         }
     }
 

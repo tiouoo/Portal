@@ -11,6 +11,7 @@ using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Const;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -45,7 +46,8 @@ public partial class BedrockToolsPage : UserControl
         if (topLevel is null) return;
         if (BedrockToolsService.Default is null)
         {
-            topLevel.Notice("SDK 1.8 检测仅支持 Windows", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.bedrockTools_sdkWindowsOnly.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -54,22 +56,23 @@ public partial class BedrockToolsPage : UserControl
             var installed = await BedrockToolsService.Default.IsWindowsAppSdk18InstalledAsync();
             if (installed)
             {
-                this.GetTopLevel().Notice("当前系统已安装完整的 Windows App SDK 1.8，无需再次安装", NotificationType.Success);
+                this.GetTopLevel().Notice(CommonLanguageManager.Instance.bedrockTools_sdkInstalled.CurrentValue(),
+                    NotificationType.Success);
                 return;
             }
 
             var result = await OverlayDialog.ShowStandardAsync(new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = "当前系统未检测到完整的 Windows App SDK 1.8 (8000.x)。\n缺少 Main、Singleton 或 DDLM 组件可能导致游戏无法启动，是否立即下载安装？",
+                Text = CommonLanguageManager.Instance.bedrockTools_sdkMissingText.CurrentValue(),
                 TextWrapping = TextWrapping.Wrap
             }, null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "未安装 SDK 1.8",
+                Title = CommonLanguageManager.Instance.bedrockTools_sdkMissingTitle.CurrentValue(),
                 Mode = DialogMode.Warning,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "安装",
-                OverrideNoButtonText = "取消",
+                OverrideYesButtonText = CommonLanguageManager.Instance.bedrockTools_install.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });
@@ -78,7 +81,8 @@ public partial class BedrockToolsPage : UserControl
         catch (Exception exception)
         {
             Logger.Error(exception);
-            topLevel.Notice("SDK 1.8 检测失败", NotificationType.Error);
+            topLevel.Notice(CommonLanguageManager.Instance.bedrockTools_sdkCheckFailed.CurrentValue(),
+                NotificationType.Error);
         }
     }
 
@@ -88,15 +92,15 @@ public partial class BedrockToolsPage : UserControl
             $"windows-app-sdk-1.8-{Guid.NewGuid():N}.exe");
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = "安装 Windows App SDK 1.8",
-            Description = "正在准备下载",
+            Name = CommonLanguageManager.Instance.bedrockTools_installSdkTaskName.CurrentValue(),
+            Description = CommonLanguageManager.Instance.bedrockTools_preparingDownload.CurrentValue(),
             Progress = 0,
             Actions =
             [
                 new TaskActionDefinition
                 {
-                    Name = "取消安装",
-                    Description = "取消 SDK 1.8 下载和安装",
+                    Name = CommonLanguageManager.Instance.minecraft_cancelInstall.CurrentValue(),
+                    Description = CommonLanguageManager.Instance.bedrockTools_cancelInstallDescription.CurrentValue(),
                     IconKey = "Cancel",
                     ExecuteAsync = (managedTask, _) =>
                     {
@@ -112,7 +116,7 @@ public partial class BedrockToolsPage : UserControl
             Directory.CreateDirectory(ConfigPath.TempFolderPath);
             try
             {
-                context.SetRunning("正在下载 Windows App SDK 1.8");
+                context.SetRunning(CommonLanguageManager.Instance.bedrockTools_downloadingSdk.CurrentValue());
                 var request = new DownloadRequest(WindowsAppSdk18InstallerUrl, installerPath)
                 {
                     ProgressChanged = progress => Dispatcher.UIThread.Post(() =>
@@ -121,7 +125,9 @@ public partial class BedrockToolsPage : UserControl
                         context.ReportProgress(progress.TotalBytes > 0
                             ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
                             : null);
-                        context.SetDescription($"正在下载，速度：{DefaultDownloader.FormatSize(progress.Speed, true)}");
+                        context.SetDescription(string.Format(
+                            CommonLanguageManager.Instance.bedrockTools_downloadingSpeed.CurrentValue(),
+                            DefaultDownloader.FormatSize(progress.Speed, true)));
                     })
                 };
                 var downloader = new DefaultDownloader
@@ -133,24 +139,31 @@ public partial class BedrockToolsPage : UserControl
                 if (download.Type == DownloadResultType.Cancelled)
                     throw new OperationCanceledException(context.CancellationToken);
                 if (download.Type != DownloadResultType.Successful)
-                    throw download.Exception ?? new IOException("Windows App SDK 1.8 下载失败。");
+                    throw download.Exception ??
+                          new IOException(CommonLanguageManager.Instance.bedrockTools_downloadFailed.CurrentValue());
 
-                context.SetDescription("等待管理员权限并安装");
+                context.SetDescription(CommonLanguageManager.Instance.bedrockTools_waitingAdmin.CurrentValue());
                 using var process = Process.Start(new ProcessStartInfo
                 {
                     FileName = installerPath,
                     UseShellExecute = true,
                     Verb = "runas"
-                }) ?? throw new InvalidOperationException("无法启动 Windows App SDK 安装程序。");
+                }) ?? throw new InvalidOperationException(
+                    CommonLanguageManager.Instance.bedrockTools_cannotStartInstaller.CurrentValue());
                 await process.WaitForExitAsync(context.CancellationToken);
                 if (process.ExitCode is not (0 or 3010))
-                    throw new InvalidOperationException($"Windows App SDK 安装程序退出码：{process.ExitCode}。");
+                    throw new InvalidOperationException(string.Format(
+                        CommonLanguageManager.Instance.bedrockTools_installerExitCode.CurrentValue(),
+                        process.ExitCode));
                 context.ReportProgress(1);
-                context.SetDescription(process.ExitCode == 3010 ? "安装完成，重启系统后生效" : "安装完成");
+                context.SetDescription(process.ExitCode == 3010
+                    ? CommonLanguageManager.Instance.bedrockTools_installCompleteRestart.CurrentValue()
+                    : CommonLanguageManager.Instance.bedrockTools_installComplete.CurrentValue());
             }
             catch (Win32Exception exception) when (exception.NativeErrorCode is 1223 or 5)
             {
-                throw new OperationCanceledException("用户取消了管理员权限授权。", exception,
+                throw new OperationCanceledException(
+                    CommonLanguageManager.Instance.bedrockTools_adminCancelled.CurrentValue(), exception,
                     context.CancellationToken);
             }
             finally
@@ -161,7 +174,8 @@ public partial class BedrockToolsPage : UserControl
                 }
                 catch (IOException exception)
                 {
-                    Logger.Warning($"[BedrockTools] 无法删除 SDK 安装程序：{exception}");
+                    Logger.Warning(string.Format(
+                        LogLanguageManager.Instance.bedrockTools_deleteInstallerFailed.CurrentValue(), exception));
                 }
             }
         });
@@ -177,7 +191,8 @@ public partial class BedrockToolsPage : UserControl
         }
         catch (OperationCanceledException exception)
         {
-            Logger.Debug($"[BedrockTools] SDK 1.8 安装已取消：{exception.Message}");
+            Logger.Debug(string.Format(
+                LogLanguageManager.Instance.bedrockTools_installCancelled.CurrentValue(), exception.Message));
         }
         catch (Exception exception)
         {
@@ -187,9 +202,11 @@ public partial class BedrockToolsPage : UserControl
         Dispatcher.UIThread.Post(() =>
         {
             if (task.Status == ManagedTaskStatus.Completed)
-                topLevel.Notice("Windows App SDK 1.8 安装完成", NotificationType.Success);
+                topLevel.Notice(CommonLanguageManager.Instance.bedrockTools_sdkInstallComplete.CurrentValue(),
+                    NotificationType.Success);
             else if (task.Status == ManagedTaskStatus.Faulted)
-                topLevel.Notice("Windows App SDK 1.8 安装失败", NotificationType.Error);
+                topLevel.Notice(CommonLanguageManager.Instance.bedrockTools_sdkInstallFailed.CurrentValue(),
+                    NotificationType.Error);
         });
     }
 
@@ -199,22 +216,23 @@ public partial class BedrockToolsPage : UserControl
         if (topLevel is null) return;
         if (BedrockToolsService.Default is null)
         {
-            topLevel.Notice("卸载 Microsoft Store Minecraft 仅支持 Windows", NotificationType.Warning);
+            topLevel.Notice(CommonLanguageManager.Instance.bedrockTools_uninstallWindowsOnly.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
             Margin = new Thickness(24),
-            Text = "确定要卸载本机从 Microsoft Store 安装的 Minecraft 基岩版吗？\n此操作不会删除 Portal 管理的独立实例。",
+            Text = CommonLanguageManager.Instance.bedrockTools_uninstallConfirm.CurrentValue(),
             TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), new OverlayDialogOptions
         {
-            Title = "卸载 Minecraft",
+            Title = CommonLanguageManager.Instance.bedrockTools_uninstallTitle.CurrentValue(),
             Mode = DialogMode.Error,
             Buttons = DialogButton.YesNo,
-            OverrideYesButtonText = "卸载",
-            OverrideNoButtonText = "取消",
+            OverrideYesButtonText = CommonLanguageManager.Instance.bedrockTools_uninstall.CurrentValue(),
+            OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
             CanLightDismiss = false,
             CanResize = false
         });
@@ -223,12 +241,14 @@ public partial class BedrockToolsPage : UserControl
         try
         {
             await BedrockToolsService.Default.UninstallMinecraftAsync();
-            topLevel.Notice("Minecraft 卸载完成", NotificationType.Success);
+            topLevel.Notice(CommonLanguageManager.Instance.bedrockTools_uninstallComplete.CurrentValue(),
+                NotificationType.Success);
         }
         catch (Exception exception)
         {
             Logger.Error(exception);
-            topLevel.Notice("Minecraft 卸载失败", NotificationType.Error);
+            topLevel.Notice(CommonLanguageManager.Instance.bedrockTools_uninstallFailed.CurrentValue(),
+                NotificationType.Error);
         }
     }
 }

@@ -8,6 +8,7 @@ using MinecraftLaunch.Components.Authenticator;
 using MinecraftLaunch.Components.Provider;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Interfaces;
@@ -33,21 +34,24 @@ public partial class Microsoft : UserControl
     {
         var clipboard = TopLevel.GetTopLevel(this).Clipboard;
         clipboard?.SetTextAsync((DataContext as MicrosoftAccountViewModel).Url);
-        TopLevel.GetTopLevel(this)!.Notice("已复制到剪切板", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice(CommonLanguageManager.Instance.account_copiedToClipboardVariant.CurrentValue(),
+            NotificationType.Success);
     }
 
     private void CopyCode(object? sender, RoutedEventArgs e)
     {
         var clipboard = TopLevel.GetTopLevel(this).Clipboard;
         clipboard?.SetTextAsync((DataContext as MicrosoftAccountViewModel)._code);
-        TopLevel.GetTopLevel(this)!.Notice("已复制到剪切板", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice(CommonLanguageManager.Instance.account_copiedToClipboardVariant.CurrentValue(),
+            NotificationType.Success);
     }
 
     private void OpenBrowser(object? sender, RoutedEventArgs e)
     {
         var launcher = TopLevel.GetTopLevel(this).Launcher;
         launcher.LaunchUriAsync(new Uri((DataContext as MicrosoftAccountViewModel).Url));
-        TopLevel.GetTopLevel(this)!.Notice("已打开浏览器", NotificationType.Success);
+        TopLevel.GetTopLevel(this)!.Notice(CommonLanguageManager.Instance.account_browserOpened.CurrentValue(),
+            NotificationType.Success);
     }
 }
 
@@ -57,7 +61,8 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
     [ObservableProperty] public partial bool IsReady { get; set; }
     [ObservableProperty] public partial bool IsError { get; set; }
     [ObservableProperty] public partial bool IsAuthing { get; set; }
-    [ObservableProperty] public partial string Msg { get; set; } = "打开微软账户的验证页面，并输入下方的验证码。";
+    [ObservableProperty] public partial string Msg { get; set; } =
+        CommonLanguageManager.Instance.account_openVerification.CurrentValue();
     [ObservableProperty] public partial string Error { get; set; }
     [ObservableProperty] public partial string Code { get; set; }
     [ObservableProperty] public partial string Url { get; set; }
@@ -80,13 +85,15 @@ public partial class MicrosoftAccountViewModel : ObservableObject, IDialogContex
             var oAuth2Token = await authenticator.DeviceFlowAuthAsync(deviceCode =>
             {
                 IsReady = true;
-                Console.WriteLine($"请访问以登录: {deviceCode.VerificationUrl}");
-                Console.WriteLine($"输入一次性代码: {deviceCode.UserCode}");
+                Console.WriteLine(string.Format(LogLanguageManager.Instance.microsoft_visitToLogin.CurrentValue(),
+                    deviceCode.VerificationUrl));
+                Console.WriteLine(string.Format(LogLanguageManager.Instance.microsoft_enterOneTimeCode.CurrentValue(),
+                    deviceCode.UserCode));
                 Code = deviceCode.UserCode;
                 _code = deviceCode.UserCode;
                 Url = deviceCode.VerificationUrl;
             });
-            Msg = "登录完成，正在获取账户信息。";
+            Msg = CommonLanguageManager.Instance.account_loginComplete.CurrentValue();
             IsAuthing = true;
             var account = await authenticator.AuthenticateAsync(oAuth2Token);
 

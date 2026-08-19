@@ -20,6 +20,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Module.Imaging;
+using Portal.Localization;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -99,7 +100,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     }
 
     public bool IsEmpty => !IsLoading && FilteredItems.Count == 0;
-    public string ModCountText => $"{FilteredItems.Count} 个";
+    public string ModCountText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_count.CurrentValue(), FilteredItems.Count);
 
     public bool IsLoadingMetadata
     {
@@ -113,7 +115,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     }
 
     public int SelectedCount => Items.Count(item => item.IsSelected);
-    public string SelectedCountText => $"批量操作{SelectedCount}个";
+    public string SelectedCountText =>
+        string.Format(CommonLanguageManager.Instance.resourceList_batchSelected.CurrentValue(), SelectedCount);
     public bool HasMultipleSelection => SelectedCount >= 1;
     public IRelayCommand SelectAllCommand { get; }
     public IRelayCommand ClearSelectionCommand { get; }
@@ -279,11 +282,16 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private void InitializeFilterOptions()
     {
         FilterOptions.Clear();
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("重复", 0)));
-        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("可更新", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_enabled.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_disabled.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_duplicates.CurrentValue(), 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), 0)));
     }
 
     private void ApplyFilter()
@@ -365,11 +373,16 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             InitializeFilterOptions();
         while (FilterOptions.Count < 5)
             FilterOptions.Add(new ResourceFilterOption(""));
-        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
-        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("启用", Items.Count(item => item.IsEnabled));
-        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel("禁用", Items.Count(item => item.IsDisabled));
-        FilterOptions[3].Label = ResourceListUi.BuildFilterLabel("重复", Items.Count(IsDuplicate));
-        FilterOptions[4].Label = ResourceListUi.BuildFilterLabel("可更新", Items.Count(item => item.HasUpdate));
+        FilterOptions[0].Label = ResourceListUi.BuildFilterLabel(CommonLanguageManager.Instance.mod_all.CurrentValue(),
+            Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_enabled.CurrentValue(), Items.Count(item => item.IsEnabled));
+        FilterOptions[2].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_disabled.CurrentValue(), Items.Count(item => item.IsDisabled));
+        FilterOptions[3].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_duplicates.CurrentValue(), Items.Count(IsDuplicate));
+        FilterOptions[4].Label = ResourceListUi.BuildFilterLabel(
+            CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), Items.Count(item => item.HasUpdate));
     }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -414,8 +427,12 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
         Logger.Info($"[Mods] Importing mod(s) into {destination} for {_instance.InstanceName}.");
         if (drop == null)
-            await JavaResourceImport.SelectAndImportAsync(this, "选择模组", destination, "模组", [".jar"], false, refresh);
-        else await JavaResourceImport.ImportDropAsync(this, drop, destination, "模组", [".jar"], false, refresh);
+            await JavaResourceImport.SelectAndImportAsync(this,
+                CommonLanguageManager.Instance.resourceList_selectMods.CurrentValue(), destination,
+                CommonLanguageManager.Instance.resourceList_mods.CurrentValue(), [".jar"], false, refresh);
+        else
+            await JavaResourceImport.ImportDropAsync(this, drop, destination,
+                CommonLanguageManager.Instance.resourceList_mods.CurrentValue(), [".jar"], false, refresh);
     }
 
     private void Title_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -474,18 +491,24 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         var result = await OverlayDialog.ShowStandardAsync(
             new TextBlock
             {
-                Margin = new Thickness(24), Text = $"确定要永久删除选中的 {selected.Length} 个模组吗？此操作无法撤销。",
+                Margin = new Thickness(24),
+                Text = string.Format(CommonLanguageManager.Instance.resourceList_deleteSelectedConfirm.CurrentValue(),
+                    selected.Length),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "删除模组", Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.resourceList_deleteModsTitle.CurrentValue(),
+                Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
+                CanLightDismiss = false, CanResize = false
             });
         if (result != DialogResult.Yes)
             return;
 
-        await RunSelectedFileActionAsync(selected, item => File.Delete(item.Info.FilePath), null, "删除");
+        await RunSelectedFileActionAsync(selected, item => File.Delete(item.Info.FilePath), null,
+            CommonLanguageManager.Instance.dashboard_delete.CurrentValue());
     }
 
     private void ShowModDetails_OnClick(object? sender, RoutedEventArgs e)
@@ -498,7 +521,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             source == "CurseForge" ? ModDetailsSource.CurseForge : (ModDetailsSource?)null;
         if (detailSource is null)
         {
-            ShowNotice("尚未识别此模组的平台信息，暂时无法查看详情", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_platformUnknown.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -523,11 +547,14 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
         var result = await OverlayDialog.ShowStandardAsync(new TextBlock
         {
-            Margin = new Thickness(24), Text = $"确定要永久删除模组“{item.DisplayName}”吗？此操作无法撤销。",
+            Margin = new Thickness(24),
+            Text = string.Format(CommonLanguageManager.Instance.resourceList_deleteConfirm.CurrentValue(),
+                item.DisplayName),
             TextWrapping = TextWrapping.Wrap
         }, null, this.TryGetHostId(), CreateDeleteConfirmationOptions());
         if (result == DialogResult.Yes)
-            await RunSelectedFileActionAsync([item], mod => File.Delete(mod.Info.FilePath), null, "删除");
+            await RunSelectedFileActionAsync([item], mod => File.Delete(mod.Info.FilePath), null,
+                CommonLanguageManager.Instance.dashboard_delete.CurrentValue());
     }
 
     private async void OpenModFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -559,7 +586,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         {
             FilePath = disabled ? item.Info.FilePath + ".disabled" : item.Info.FilePath[..^".disabled".Length],
             IsDisabled = disabled
-        }, disabled ? "禁用" : "启用");
+        }, disabled ? CommonLanguageManager.Instance.resourceList_disabled.CurrentValue()
+            : CommonLanguageManager.Instance.resourceList_enabled.CurrentValue());
     }
 
     private Task SetModDisabledAsync(ModItem? item, bool disabled)
@@ -572,7 +600,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                 {
                     FilePath = disabled ? mod.Info.FilePath + ".disabled" : mod.Info.FilePath[..^".disabled".Length],
                     IsDisabled = disabled
-                }, disabled ? "禁用" : "启用");
+                }, disabled ? CommonLanguageManager.Instance.resourceList_disabled.CurrentValue()
+                    : CommonLanguageManager.Instance.resourceList_enabled.CurrentValue());
     }
 
     private Task RunSelectedFileActionAsync(IEnumerable<ModItem> selected, Action<ModItem> action,
@@ -609,7 +638,10 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
 
         ApplyFilter();
         RaiseSelectionProperties();
-        ShowNotice(failed == 0 ? $"已{actionName}所选模组" : $"{actionName}完成，但有 {failed} 个模组操作失败",
+        ShowNotice(failed == 0
+                ? string.Format(CommonLanguageManager.Instance.resourceList_actionCompleted.CurrentValue(), actionName)
+                : string.Format(CommonLanguageManager.Instance.resourceList_actionFailedWithCount.CurrentValue(),
+                    actionName, failed),
             failed == 0 ? NotificationType.Success : NotificationType.Warning);
         Logger.Info($"[Mods] {actionName} completed for {selectedItems.Length} mod(s): {failed} failure(s).");
         return Task.CompletedTask;
@@ -686,7 +718,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             item.Info.Source == "Modrinth" ? ModDetailsSource.Modrinth : (ModDetailsSource?)null;
         if (source is null || string.IsNullOrEmpty(item.Info.ProjectId))
         {
-            ShowNotice("尚未识别此模组的平台信息，暂时无法切换版本", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_platformUnknownSwitch.CurrentValue(),
+                NotificationType.Warning);
             return;
         }
 
@@ -715,7 +748,9 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         try
         {
             var tempPath = Path.Combine(destination, $".portal-update-{Guid.NewGuid():N}.jar");
-            var task = DownloadTasks.Download(topLevel, $"更新模组：{file.DisplayName}", "取消此模组更新",
+            var task = DownloadTasks.Download(topLevel,
+                string.Format(CommonLanguageManager.Instance.resourceList_updateMod.CurrentValue(), file.DisplayName),
+                CommonLanguageManager.Instance.resourceList_cancelModUpdate.CurrentValue(),
                 file.FileName, file.DownloadUrl, tempPath, file.FileSize,
                 afterDownload: _ =>
                 {
@@ -733,17 +768,18 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
                         ApplyFilter();
                     }, DispatcherPriority.Background);
                     return Task.CompletedTask;
-                }, completedText: "模组已更新");
+                }, completedText: CommonLanguageManager.Instance.resourceList_modUpdated.CurrentValue());
             await task.Completion;
         }
         catch (OperationCanceledException)
         {
-            ShowNotice("模组更新已取消", NotificationType.Warning);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_updateCancelled.CurrentValue(),
+                NotificationType.Warning);
         }
         catch (Exception exception)
         {
             Logger.Warning($"[Mods] Update failed for {item.Info.FilePath}: {exception}");
-            ShowNotice("模组更新失败", NotificationType.Error);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_updateFailed.CurrentValue(), NotificationType.Error);
         }
         finally
         {
@@ -769,7 +805,8 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             });
             if (newPath == null)
             {
-                ShowNotice("没有可回滚的版本", NotificationType.Warning);
+                ShowNotice(CommonLanguageManager.Instance.resourceList_noRollback.CurrentValue(),
+                    NotificationType.Warning);
                 return;
             }
 
@@ -778,12 +815,12 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             item.SetUpdateResult(null);
             RefreshRollbackStates();
             ApplyFilter();
-            ShowNotice("已回滚模组", NotificationType.Success);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_rolledBack.CurrentValue(), NotificationType.Success);
         }
         catch (Exception exception)
         {
             Logger.Warning($"[Mods] Rollback failed for {item.Info.FilePath}: {exception}");
-            ShowNotice("模组回滚失败", NotificationType.Error);
+            ShowNotice(CommonLanguageManager.Instance.resourceList_rollbackFailed.CurrentValue(), NotificationType.Error);
         }
         finally
         {
@@ -847,8 +884,11 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     {
         return new OverlayDialogOptions
         {
-            Title = "删除模组", Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
-            OverrideYesButtonText = "删除", OverrideNoButtonText = "取消", CanLightDismiss = false, CanResize = false
+            Title = CommonLanguageManager.Instance.resourceList_deleteModsTitle.CurrentValue(),
+            Mode = DialogMode.Error, Buttons = DialogButton.YesNo,
+            OverrideYesButtonText = CommonLanguageManager.Instance.dashboard_delete.CurrentValue(),
+            OverrideNoButtonText = CommonLanguageManager.Instance.common_cancel.CurrentValue(),
+            CanLightDismiss = false, CanResize = false
         };
     }
 
@@ -961,7 +1001,8 @@ public sealed class ModItem : INotifyPropertyChanged, IDisposable
     public string FriendlyName => Info.FriendlyName ?? Info.DisplayName;
     public string FileName => Info.FileName + ".jar";
     public string SizeAndNameText => $"{ResourceListUi.FormatSize(Info.FileSize)}·{FileName}";
-    public string DescriptionText => Info.Description ?? "没有可用的模组描述";
+    public string DescriptionText =>
+        Info.Description ?? CommonLanguageManager.Instance.resourceList_noDescription.CurrentValue();
     public string? IconUrl => Info.IconUrl;
     public Bitmap? Icon => _icon;
     public bool HasIcon => _icon is not null;

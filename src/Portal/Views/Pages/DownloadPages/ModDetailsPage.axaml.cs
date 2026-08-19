@@ -17,6 +17,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Module.Imaging;
+using Portal.Localization;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -47,7 +48,7 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
         ViewModel.TargetVersionGroupReady += OnTargetVersionGroupReady;
         PageInfo = new PageInfo
         {
-            Title = "模组详情",
+            Title = CommonLanguageManager.Instance.modDetails_title.CurrentValue(),
             Icon = StreamGeometry.Parse(
                 "F1 M640,640z M0,0z M560.3,301.2C570.7,313 588.6,315.6 602.1,306.7 616.8,296.9 620.8,277 611,262.3L563,190.3C560.2,186.1,556.4,182.6,551.9,180.1L351.4,68.7C332.1,58,308.6,58,289.2,68.7L88.8,180C83.4,183,79.1,187.4,76.2,192.8L27.7,282.7C15.1,306.1,23.9,335.2,47.3,347.8L80.3,365.5 80.3,418.8C80.3,441.8,92.7,463.1,112.7,474.5L288.7,574.2C308.3,585.3,332.2,585.3,351.8,574.2L527.8,474.5C547.9,463.1,560.2,441.9,560.2,418.8L560.2,301.3z M320.3,291.4L170.2,208 320.3,124.6 470.4,208 320.3,291.4z M278.8,341.6L257.5,387.8 91.7,299 117.1,251.8 278.8,341.6z")
         };
@@ -78,7 +79,8 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
             .ShowCustomAsync<ModInstallDialog, ModInstallDialogViewModel, ModInstallDialogResult>(
                 new ModInstallDialogViewModel(file, InstanceManager.Instance.Instances), topLevel.TryGetHostId(),
                 new OverlayDialogOptions
-                    { Title = "下载模组", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false });
+                    { Title = CommonLanguageManager.Instance.modDetails_downloadMod.CurrentValue(),
+                        Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false });
         if (result is null)
             return;
 
@@ -100,12 +102,13 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
 
     public static async Task QuickDownloadAsync(TopLevel topLevel, ModDetailsTarget target)
     {
-        var loading = new QuickDownloadLoadingDialogViewModel("下载模组");
+        var loading = new QuickDownloadLoadingDialogViewModel(CommonLanguageManager.Instance.modDetails_downloadMod.CurrentValue());
         var loadingDialog = OverlayDialog
             .ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
                 object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
             {
-                Title = "下载模组", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+                Title = CommonLanguageManager.Instance.modDetails_downloadMod.CurrentValue(),
+                Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
             });
         try
         {
@@ -119,7 +122,8 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
                     .Select(ModVersionFileItem.From).ToArray(),
                 _ => []
             };
-            if (files.Count == 0) throw new InvalidDataException("未找到可下载的模组文件。");
+            if (files.Count == 0)
+                throw new InvalidDataException(CommonLanguageManager.Instance.modDetails_noModFiles.CurrentValue());
             loading.Close();
             await loadingDialog;
 
@@ -145,7 +149,8 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
             .ShowCustomAsync<ModInstallDialog, ModInstallDialogViewModel, ModInstallDialogResult>(
                 new ModInstallDialogViewModel(files, InstanceManager.Instance.Instances), topLevel.TryGetHostId(),
                 new OverlayDialogOptions
-                    { Title = "下载模组", Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false });
+                    { Title = CommonLanguageManager.Instance.modDetails_downloadMod.CurrentValue(),
+                        Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false });
         if (result is null) return;
         var file = result.File;
 
@@ -168,17 +173,24 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "另存为模组",
+            Title = CommonLanguageManager.Instance.modDetails_saveModAs.CurrentValue(),
             SuggestedFileName = file.FileName,
-            FileTypeChoices = [new FilePickerFileType("Java 模组") { Patterns = ["*.jar"] }]
+            FileTypeChoices =
+                [new FilePickerFileType(CommonLanguageManager.Instance.modDetails_javaMod.CurrentValue())
+                {
+                    Patterns = ["*.jar"]
+                }]
         });
         return selected?.TryGetLocalPath();
     }
 
     private static void StartDownload(TopLevel topLevel, ModVersionFileItem file, string destination)
     {
-        DownloadTasks.Download(topLevel, $"下载模组：{file.FileName}", "取消此模组下载", file.FileName,
-            file.DownloadUrl, destination, file.FileSize, failureMessage: "模组下载失败。");
+        DownloadTasks.Download(topLevel,
+            string.Format(CommonLanguageManager.Instance.modDetails_downloadModFormat.CurrentValue(), file.FileName),
+            CommonLanguageManager.Instance.modDetails_cancelModDownload.CurrentValue(), file.FileName,
+            file.DownloadUrl, destination, file.FileSize,
+            failureMessage: CommonLanguageManager.Instance.modDetails_modDownloadFailed.CurrentValue());
     }
 
     public static void Open(TopLevel sender, ModDetailsTarget target, string? title = null)
@@ -228,7 +240,9 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
     public bool HasScreenshots => Screenshots.Count > 0;
     public bool IsEmpty => !IsLoading && !HasError && VersionGroups.Count == 0;
     public bool HasMoreVersionGroups => _nextVersionGroupIndex < _allVersionGroups.Count;
-    public string LoadMoreVersionGroupsText => $"显示更多版本（剩余 {_allVersionGroups.Count - _nextVersionGroupIndex} 个）";
+    public string LoadMoreVersionGroupsText =>
+        string.Format(CommonLanguageManager.Instance.modDetails_loadMoreVersionGroups.CurrentValue(),
+            _allVersionGroups.Count - _nextVersionGroupIndex);
     private IReadOnlyList<ModVersionFileItem> Files { get; set; } = [];
 
     public void Dispose()
@@ -360,10 +374,10 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
         _buildingFilters = true;
         VersionFilters.Clear();
-        VersionFilters.Add(new ModMinecraftVersionFilter("全部", null));
+        VersionFilters.Add(new ModMinecraftVersionFilter(CommonLanguageManager.Instance.mod_all.CurrentValue(), null));
         foreach (var family in filterData.Families) VersionFilters.Add(new ModMinecraftVersionFilter(family, family));
         LoaderFilters.Clear();
-        LoaderFilters.Add(new ModLoaderFilter("全部", null));
+        LoaderFilters.Add(new ModLoaderFilter(CommonLanguageManager.Instance.mod_all.CurrentValue(), null));
         foreach (var loader in filterData.Loaders) LoaderFilters.Add(new ModLoaderFilter(loader, loader));
         SelectedVersionFilter =
             VersionFilters.FirstOrDefault(filter => filter.Family == GetVersionFamily(target.GameVersion)) ??
@@ -451,7 +465,8 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
 
     private static string FormatMetadata(DateTime updated, int downloadCount, string source)
     {
-        return $"{source}·{RelativeTime.Format(updated)}·{downloadCount:N0} 下载";
+        return string.Format(CommonLanguageManager.Instance.modDetails_metadataWithSource.CurrentValue(), source,
+            RelativeTime.Format(updated), downloadCount);
     }
 
     private static string? GetVersionFamily(string version)
@@ -493,9 +508,11 @@ public sealed partial class ModVersionGroup : ObservableObject
     public string Loader { get; }
     public string MinecraftVersion { get; }
     public ObservableCollection<ModVersionFileItem> VisibleFiles { get; } = [];
-    public string FileCountText => $"{_files.Count} 个文件";
+    public string FileCountText => string.Format(CommonLanguageManager.Instance.mod_fileCount.CurrentValue(), _files.Count);
     public bool HasMore => VisibleFiles.Count < _files.Count;
-    public string LoadMoreText => $"显示更多（剩余 {_files.Count - VisibleFiles.Count} 个）";
+    public string LoadMoreText =>
+        string.Format(CommonLanguageManager.Instance.mod_loadMore.CurrentValue(),
+            _files.Count - VisibleFiles.Count);
 
     [ObservableProperty] public partial bool IsExpanded { get; set; }
 

@@ -6,6 +6,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Widgets;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Pages;
 
 namespace Portal.Views.Widgets;
@@ -80,7 +81,7 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
         {
             if (addressText != null)
                 addressText.Text = string.IsNullOrEmpty(instance?.InstanceName)
-                    ? "未配置服务器"
+                    ? CommonLanguageManager.Instance.widgets_serverNotConfigured.CurrentValue()
                     : instance.InstanceName!;
             if (hintText != null) hintText.Text = string.Empty;
             return;
@@ -94,7 +95,7 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
         }
 
         if (addressText != null) addressText.Text = ServerPing.BuildDisplayAddress(address, port);
-        if (hintText != null) hintText.Text = "点击右侧按钮快速进入";
+        if (hintText != null) hintText.Text = CommonLanguageManager.Instance.widgets_quickEnterHint.CurrentValue();
     }
 
     private void LaunchButton_OnClick(object? sender, RoutedEventArgs e)
@@ -113,7 +114,8 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
             RecentPlayTargetType.Server,
             $"{address}:{port}",
             address,
-            $"服务器·{Instance.InstanceName}",
+            string.Format(CommonLanguageManager.Instance.recentPlay_serverDescription.CurrentValue(),
+                Instance.InstanceName),
             DateTime.MinValue,
             ServerAddress: address,
             ServerPort: port);

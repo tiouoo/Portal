@@ -10,6 +10,7 @@ using Portal.LitematicaViewer.Enums;
 using Portal.LitematicaViewer.Helpers;
 using Portal.LitematicaViewer.Parsers;
 using Portal.LitematicaViewer.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Extensions;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -30,7 +31,7 @@ public partial class LitematicaPage : UserControl, ITioTabPage
 
     public PageInfo PageInfo { get; init; } = new()
     {
-        Title = "Litematica 分析",
+        Title = CommonLanguageManager.Instance.litematica_pageTitle.CurrentValue(),
         Icon = StreamGeometry.Parse(
             "F1 M640,640z M0,0z M96.5,160L96.5,309.5C96.5,326.5,103.2,342.8,115.2,354.8L307.2,546.8C332.2,571.8,372.7,571.8,397.7,546.8L547.2,397.3C572.2,372.3,572.2,331.8,547.2,306.8L355.2,114.8C343.2,102.7,327,96,310,96L160.5,96C125.2,96,96.5,124.7,96.5,160z M208.5,176C226.2,176 240.5,190.3 240.5,208 240.5,225.7 226.2,240 208.5,240 190.8,240 176.5,225.7 176.5,208 176.5,190.3 190.8,176 208.5,176z")
     };
@@ -129,7 +130,7 @@ public partial class LitematicaPageViewModel : ObservableObject
             BlockTypes = list.Count;
 
             Categories = new ObservableCollection<BlockCategoryFilter>(
-                new[] { new BlockCategoryFilter(null, "全部") }
+                new[] { new BlockCategoryFilter(null, CommonLanguageManager.Instance.litematica_all.CurrentValue()) }
                     .Concat(list.Select(b => b.Category).Distinct().OrderBy(c => c)
                         .Select(c => new BlockCategoryFilter(c, GetCategoryDisplayName(c))))
             );
@@ -159,25 +160,25 @@ public partial class LitematicaPageViewModel : ObservableObject
     {
         return category switch
         {
-            BlockCategory.Wool => "羊毛",
-            BlockCategory.Wood => "木材",
-            BlockCategory.Stone => "石料",
-            BlockCategory.Concrete => "混凝土",
-            BlockCategory.Glass => "玻璃",
-            BlockCategory.Terracotta => "陶瓦",
-            BlockCategory.Redstone => "红石",
-            BlockCategory.Container => "容器",
-            BlockCategory.Ore => "矿石",
-            BlockCategory.Iron => "铁制品",
-            BlockCategory.Quartz => "石英",
-            BlockCategory.Clay => "黏土",
-            BlockCategory.Prismarine => "海晶石",
-            BlockCategory.End => "末地",
-            BlockCategory.Nether => "下界",
-            BlockCategory.Liquid => "液体",
-            BlockCategory.Entity => "实体",
-            BlockCategory.Natural => "自然",
-            BlockCategory.OtherRock => "其他石料",
+            BlockCategory.Wool => CommonLanguageManager.Instance.litematica_categoryWool.CurrentValue(),
+            BlockCategory.Wood => CommonLanguageManager.Instance.litematica_categoryWood.CurrentValue(),
+            BlockCategory.Stone => CommonLanguageManager.Instance.litematica_categoryStone.CurrentValue(),
+            BlockCategory.Concrete => CommonLanguageManager.Instance.litematica_categoryConcrete.CurrentValue(),
+            BlockCategory.Glass => CommonLanguageManager.Instance.litematica_categoryGlass.CurrentValue(),
+            BlockCategory.Terracotta => CommonLanguageManager.Instance.litematica_categoryTerracotta.CurrentValue(),
+            BlockCategory.Redstone => CommonLanguageManager.Instance.litematica_categoryRedstone.CurrentValue(),
+            BlockCategory.Container => CommonLanguageManager.Instance.litematica_categoryContainer.CurrentValue(),
+            BlockCategory.Ore => CommonLanguageManager.Instance.litematica_categoryOre.CurrentValue(),
+            BlockCategory.Iron => CommonLanguageManager.Instance.litematica_categoryIron.CurrentValue(),
+            BlockCategory.Quartz => CommonLanguageManager.Instance.litematica_categoryQuartz.CurrentValue(),
+            BlockCategory.Clay => CommonLanguageManager.Instance.litematica_categoryClay.CurrentValue(),
+            BlockCategory.Prismarine => CommonLanguageManager.Instance.litematica_categoryPrismarine.CurrentValue(),
+            BlockCategory.End => CommonLanguageManager.Instance.litematica_categoryEnd.CurrentValue(),
+            BlockCategory.Nether => CommonLanguageManager.Instance.litematica_categoryNether.CurrentValue(),
+            BlockCategory.Liquid => CommonLanguageManager.Instance.litematica_categoryLiquid.CurrentValue(),
+            BlockCategory.Entity => CommonLanguageManager.Instance.litematica_categoryEntity.CurrentValue(),
+            BlockCategory.Natural => CommonLanguageManager.Instance.litematica_categoryNatural.CurrentValue(),
+            BlockCategory.OtherRock => CommonLanguageManager.Instance.litematica_categoryOtherRock.CurrentValue(),
             _ => category.ToString()
         };
     }
@@ -185,19 +186,23 @@ public partial class LitematicaPageViewModel : ObservableObject
     public async Task ExportTxtAsync(Control sender)
     {
         if (_analysisResult == null) return;
-        var path = await PickSavePath(sender, "txt", "文本文件", _projectName);
+        var path = await PickSavePath(sender, "txt", CommonLanguageManager.Instance.litematica_textFile.CurrentValue(),
+            _projectName);
         if (path == null) return;
         new ExportService().Export(_analysisResult, path, ExportFormat.Txt);
-        sender.AsTopLevel().Notice("已导出 TXT 文件", NotificationType.Success);
+        sender.AsTopLevel().Notice(CommonLanguageManager.Instance.litematica_exportedTxt.CurrentValue(),
+            NotificationType.Success);
     }
 
     public async Task ExportCsvAsync(Control sender)
     {
         if (_analysisResult == null) return;
-        var path = await PickSavePath(sender, "csv", "CSV 文件", _projectName);
+        var path = await PickSavePath(sender, "csv", CommonLanguageManager.Instance.litematica_csvFile.CurrentValue(),
+            _projectName);
         if (path == null) return;
         new ExportService().Export(_analysisResult, path, ExportFormat.Csv);
-        sender.AsTopLevel().Notice("已导出 CSV 文件", NotificationType.Success);
+        sender.AsTopLevel().Notice(CommonLanguageManager.Instance.litematica_exportedCsv.CurrentValue(),
+            NotificationType.Success);
     }
 
     private static async Task<string?> PickSavePath(Control sender, string ext, string display,
@@ -207,7 +212,7 @@ public partial class LitematicaPageViewModel : ObservableObject
         if (storage == null) return null;
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = $"导出 {display}",
+            Title = string.Format(CommonLanguageManager.Instance.litematica_exportTitle.CurrentValue(), display),
             DefaultExtension = ext,
             SuggestedFileName = suggestedFileName ?? "export",
             FileTypeChoices = [new FilePickerFileType(display) { Patterns = [$"*.{ext}"] }]

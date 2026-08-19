@@ -7,6 +7,7 @@ using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Modpack;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
@@ -193,59 +194,97 @@ public partial class ModpackExportDialogViewModel : ObservableObject, IDialogCon
         }
 
 
-        Add("游戏本体", "包含 Minecraft 本体与启动必要文件", null);
+        Add(CommonLanguageManager.Instance.modpackExport_game.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_gameDescription.CurrentValue(), null);
 
 
-        Add("游戏设置", "包含游戏画面、控制等设置（options.txt 等）", "options.txt|configureddefaults/");
-        Add("个人信息", "包含玩家的快捷栏与指令历史", "hotbar.nbt|command_history.txt", defaultChecked: false);
-        Add("OptiFine 设置", "包含 OptiFine 的画面与光影设置", "optionsof.txt|optionsshaders.txt",
+        Add(CommonLanguageManager.Instance.modpackExport_settings.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_settingsDescription.CurrentValue(),
+            "options.txt|configureddefaults/");
+        Add(CommonLanguageManager.Instance.modpackExport_personalInfo.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_personalInfoDescription.CurrentValue(),
+            "hotbar.nbt|command_history.txt", defaultChecked: false);
+        Add(CommonLanguageManager.Instance.modpackExport_optifineSettings.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_optifineSettingsDescription.CurrentValue(),
+            "optionsof.txt|optionsshaders.txt",
             requireOptiFine: true);
 
 
-        Add("模组文件", "包含模组及其核心、库文件",
+        Add(CommonLanguageManager.Instance.modpackExport_modFiles.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_modFilesDescription.CurrentValue(),
             "mods/|!mods/*.disabled|!mods/*.old|!mods/.connector/|coremods/|lib/|!mods/mcef-libraries/|!mods/mcef-cache/",
             requireModLoader: true);
-        Add("被禁用的模组", "包含被停用的模组文件（*.disabled）", "mods/*.disabled|mods/*.old",
+        Add(CommonLanguageManager.Instance.modpackExport_disabledMods.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_disabledModsDescription.CurrentValue(),
+            "mods/*.disabled|mods/*.old",
             defaultChecked: false, requireModLoader: true, indent: 1);
 
 
-        Add("整合包重要数据", "包含整合包的数据文件、数据包与自定义内容",
+        Add(CommonLanguageManager.Instance.modpackExport_packData.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_packDataDescription.CurrentValue(),
             "addons/|multiblocked/|modpack-update-checker/|global_packs/|global_resource_packs/|global_data_packs/|optional_data_packs/|maps/|icon.png|mods-resourcepacks/|matmos/|resource_assorts/|resource_assorts.json|patchouli_books/|datapacks/|kubejs*/|!kubejs*/probe/|!kubejs*/exported/|!kubejs*/jsconfig.json|!kubejs*/README.txt|openloader/|worldshape/|resources/|scripts/|structures/|fontfiles/|oresources/|packmenu/|craftpresence/|pointblanks/|template*/|!template*/playerdata/|!template*/stats/");
-        Add("模组设置", "包含模组的配置文件与默认配置",
+        Add(CommonLanguageManager.Instance.modpackExport_modSettings.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_modSettingsDescription.CurrentValue(),
             "config/|!config/accountsx/|!config/jei/world/|!config/worldedit/|config/worldedit/worldedit.properties|!config/spark/|config/spark/config.json|defaultconfigs/|journeymap/config/|journeymap/server/|TrashSlotSaveState.json|customfov.txt|gg.essential.mod/|essential/|!essential/*/|!essential/*.jar*|!essential/screenshot-checksum-caches.json|!essential/microsoft_accounts.json|paragliderSettings.nbt|local/client_config.json|local/ftbl.json|local/client/sidebar_buttons.json|local/client/ftbutilities.cfg|local/client/ftblib.cfg|local/client/xencraft.cfg|liteloader.properties|default_reference.xml|CustomSkinLoader/CustomSkinLoader.json");
 
 
-        Add("地图与航点", "包含小地图数据与航点", "journeymap/data/|xaero/|XaeroWaypoints/|XaeroWorldMap/",
+        Add(CommonLanguageManager.Instance.modpackExport_mapsWaypoints.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_mapsWaypointsDescription.CurrentValue(),
+            "journeymap/data/|xaero/|XaeroWaypoints/|XaeroWorldMap/",
             defaultChecked: false);
-        Add("JEI 书签", "包含 JEI 物品管理器保存的书签", "config/jei/world/", defaultChecked: false);
-        Add("EMI 书签", "包含 EMI 物品管理器保存的书签", "emi.json", defaultChecked: false);
-        Add("帕秋莉手册数据", "包含帕秋莉手册的阅读进度", "patchouli_data.json", defaultChecked: false);
+        Add(CommonLanguageManager.Instance.modpackExport_jeiBookmarks.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_jeiBookmarksDescription.CurrentValue(),
+            "config/jei/world/", defaultChecked: false);
+        Add(CommonLanguageManager.Instance.modpackExport_emiBookmarks.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_emiBookmarksDescription.CurrentValue(),
+            "emi.json", defaultChecked: false);
+        Add(CommonLanguageManager.Instance.modpackExport_patchouliData.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_patchouliDataDescription.CurrentValue(),
+            "patchouli_data.json", defaultChecked: false);
 
 
         var resourcePacks = BuildSubOptions(gameRoot, ["resourcepacks", "texturepacks"], true);
         if (resourcePacks.Count > 0)
-            Add("资源包", "包含选中的资源包与纹理包", null, "resourcepacks/|texturepacks/",
+            Add(CommonLanguageManager.Instance.modpackExport_resourcePacks.CurrentValue(),
+                CommonLanguageManager.Instance.modpackExport_resourcePacksDescription.CurrentValue(), null,
+                "resourcepacks/|texturepacks/",
                 children: resourcePacks);
 
         var shaderPacks = BuildSubOptions(gameRoot, ["shaderpacks"], true);
         if (shaderPacks.Count > 0)
-            Add("光影包", "包含选中的光影包及其配置文件", null, "shaderpacks/",
+            Add(CommonLanguageManager.Instance.modpackExport_shaderPacks.CurrentValue(),
+                CommonLanguageManager.Instance.modpackExport_shaderPacksDescription.CurrentValue(), null,
+                "shaderpacks/",
                 requireModLoaderOrOptiFine: true, children: shaderPacks);
 
-        Add("截图", "包含游戏内截图（screenshots 文件夹）", "screenshots/", defaultChecked: false);
-        Add("建筑蓝图", "包含小木斧等导出的建筑蓝图（schematics）", "schematics/", defaultChecked: false);
-        Add("录像", "包含回放模组的录像文件", "replay_recordings/|replay_videos/", defaultChecked: false,
+        Add(CommonLanguageManager.Instance.modpackExport_screenshots.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_screenshotsDescription.CurrentValue(),
+            "screenshots/", defaultChecked: false);
+        Add(CommonLanguageManager.Instance.modpackExport_schematics.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_schematicsDescription.CurrentValue(),
+            "schematics/", defaultChecked: false);
+        Add(CommonLanguageManager.Instance.modpackExport_recordings.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_recordingsDescription.CurrentValue(),
+            "replay_recordings/|replay_videos/", defaultChecked: false,
             requireModLoader: true);
 
 
         var saves = BuildSubOptions(gameRoot, ["saves"], false);
-        if (saves.Count > 0) Add("存档", "包含选中的世界存档", null, "saves/", false, children: saves);
+        if (saves.Count > 0)
+            Add(CommonLanguageManager.Instance.modpackExport_saves.CurrentValue(),
+                CommonLanguageManager.Instance.modpackExport_savesDescription.CurrentValue(), null, "saves/", false,
+                children: saves);
 
-        Add("服务器列表", "包含已保存的服务器列表（servers.dat）", "servers.dat", defaultChecked: false);
+        Add(CommonLanguageManager.Instance.modpackExport_serverList.CurrentValue(),
+            CommonLanguageManager.Instance.modpackExport_serverListDescription.CurrentValue(),
+            "servers.dat", defaultChecked: false);
 
 
         var others = BuildOtherFolders(gameRoot);
-        if (others.Count > 0) Add("其他文件夹", "包含实例目录中未归类的大容量文件夹", null, defaultChecked: false, children: others);
+        if (others.Count > 0)
+            Add(CommonLanguageManager.Instance.modpackExport_otherFolders.CurrentValue(),
+                CommonLanguageManager.Instance.modpackExport_otherFoldersDescription.CurrentValue(), null,
+                defaultChecked: false, children: others);
     }
 
     private static List<ExportOptionItem> BuildSubOptions(string gameRoot, IReadOnlyList<string> folders,
