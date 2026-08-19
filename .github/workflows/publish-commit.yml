@@ -345,14 +345,13 @@ jobs:
           GITCODE_BODY_FILE: RELEASE_SYNC_BODY.md
         run: bash .github/scripts/publish-gitcode.sh
 
-  # AUR publishing is currently disabled.
-  # aur:
-  #   needs: [prepare, publish]
-  #   uses: ./.github/workflows/publish-aur.yml
-  #   with:
-  #     pkgname: portal-mc-commit-bin
-  #     tag: publish-commit
-  #     app_version: ${{ needs.prepare.outputs.app_version }}
-  #   secrets:
-  #     AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-  #     AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+  aur:
+    needs: [prepare, publish]
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      pkgname: portal-mc-commit-bin
+      tag: publish-commit
+      app_version: ${{ needs.prepare.outputs.app_version }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
