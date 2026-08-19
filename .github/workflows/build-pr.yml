@@ -24,7 +24,7 @@ jobs:
       - name: Update Submodules
         run: |
           git submodule update --init --recursive
-          git submodule foreach --recursive 'git fetch origin main && git checkout -B main origin/main'
+          git submodule foreach --recursive 'branch=$(git config -f "$toplevel/.gitmodules" --get "submodule.$name.branch" || echo main); git fetch origin "$branch" && git checkout -B "$branch" "origin/$branch"'
 
       - name: Generate Meta and JSON
         id: meta
@@ -64,7 +64,7 @@ jobs:
       - name: Update Submodules
         run: |
           git submodule update --init --recursive
-          git submodule foreach --recursive "git fetch origin main && git checkout -B main origin/main"
+          git submodule foreach --recursive 'branch=$(git config -f "$toplevel/.gitmodules" --get "submodule.$name.branch" || echo main); git fetch origin "$branch" && git checkout -B "$branch" "origin/$branch"'
         shell: bash
 
       - name: Write CI Config
@@ -105,7 +105,7 @@ jobs:
       - name: Update Submodules
         run: |
           git submodule update --init --recursive
-          git submodule foreach --recursive 'git fetch origin main && git checkout -B main origin/main'
+          git submodule foreach --recursive 'branch=$(git config -f "$toplevel/.gitmodules" --get "submodule.$name.branch" || echo main); git fetch origin "$branch" && git checkout -B "$branch" "origin/$branch"'
 
       - name: Build Linux x64
         run: dotnet build ./src/Portal.Desktop/Portal.Desktop.csproj -c Release -r linux-x64
