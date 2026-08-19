@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,6 +11,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
@@ -934,14 +936,26 @@ public static class WikiEntries
     }
 }
 
-public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
+public sealed class ModItem : INotifyPropertyChanged, IDisposable
 {
+    private static readonly SemaphoreSlim IconLoadThrottle = new(8);
+    private readonly IAsyncImageLoader _imageLoader = new ModImageLoader();
+    private Bitmap? _icon;
     private bool _hasRollback;
+    private bool _iconLoadDisposed;
+    private int _iconVersion;
     private bool _isDuplicate;
     private bool _isSelected;
     private bool _isUpdating;
     private ResourceUpdateResult? _updateResult;
-    public ModInfo Info { get; private set; } = info;
+
+    public ModItem(ModInfo info)
+    {
+        Info = info;
+        LoadIcon(info.IconUrl);
+    }
+
+    public ModInfo Info { get; private set; }
 
     public string DisplayName => Info.DisplayName;
     public string FriendlyName => Info.FriendlyName ?? Info.DisplayName;
@@ -949,8 +963,8 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
     public string SizeAndNameText => $"{ResourceListUi.FormatSize(Info.FileSize)}·{FileName}";
     public string DescriptionText => Info.Description ?? "没有可用的模组描述";
     public string? IconUrl => Info.IconUrl;
-    public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
-    public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
+    public Bitmap? Icon => _icon;
+    public bool HasIcon => _icon is not null;
     public bool IsDisabled => Info.IsDisabled;
     public bool IsEnabled => !IsDisabled;
 
@@ -986,22 +1000,27 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
 
     public void Dispose()
     {
-        ImageLoader.Dispose();
+        _iconLoadDisposed = true;
+        _iconVersion++;
+        _imageLoader.Dispose();
+        Interlocked.Exchange(ref _icon, null)?.Dispose();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public void Update(ModInfo info)
     {
+        var oldIconUrl = Info.IconUrl;
         Info = info;
         foreach (var propertyName in new[]
                  {
                      nameof(DisplayName), nameof(FriendlyName), nameof(FileName), nameof(SizeAndNameText),
                      nameof(DescriptionText),
-                     nameof(IconUrl), nameof(HasIcon), nameof(IsDisabled), nameof(IsEnabled),
-                     nameof(HasIdentity)
+                     nameof(IconUrl), nameof(IsDisabled), nameof(IsEnabled), nameof(HasIdentity)
                  })
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        if (!string.Equals(oldIconUrl, info.IconUrl, StringComparison.Ordinal))
+            LoadIcon(info.IconUrl);
     }
 
     public void SetUpdateResult(ResourceUpdateResult? result)
@@ -1026,6 +1045,63 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
         if (_isUpdating == isUpdating) return;
         _isUpdating = isUpdating;
         Raise(nameof(IsUpdating));
+    }
+
+    private void LoadIcon(string? url)
+    {
+        var version = ++_iconVersion;
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            ApplyIcon(null, version);
+            return;
+        }
+
+        _ = LoadIconAsync(url, version);
+    }
+
+    private async Task LoadIconAsync(string url, int version)
+    {
+        Bitmap? bitmap;
+        try
+        {
+            await IconLoadThrottle.WaitAsync();
+            try
+            {
+                bitmap = await Task.Run(() => _imageLoader.ProvideImageAsync(url));
+            }
+            finally
+            {
+                IconLoadThrottle.Release();
+            }
+        }
+        catch
+        {
+            bitmap = null;
+        }
+
+        if (_iconLoadDisposed || version != _iconVersion ||
+            !string.Equals(Info.IconUrl, url, StringComparison.Ordinal))
+        {
+            bitmap?.Dispose();
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() => ApplyIcon(bitmap, version), DispatcherPriority.Background);
+    }
+
+    private void ApplyIcon(Bitmap? bitmap, int version)
+    {
+        if (_iconLoadDisposed || version != _iconVersion)
+        {
+            bitmap?.Dispose();
+            return;
+        }
+
+        var old = _icon;
+        _icon = bitmap;
+        if (!ReferenceEquals(old, bitmap)) old?.Dispose();
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Icon)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasIcon)));
     }
 
     private void Raise(string propertyName)

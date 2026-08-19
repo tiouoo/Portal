@@ -62,14 +62,16 @@
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
                 <ListBox.Styles>
                     <Style Selector="ListBoxItem">
-                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Margin" Value="0,2" />
                         <Setter Property="Padding" Value="0" />
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                     </Style>
                 </ListBox.Styles>
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="instancePages:ResourceVersionItem">
-                        <Border CornerRadius="6" Padding="8,4">
+                        <Border
+                            CornerRadius="6"
+                            Padding="8,5">
                             <StackPanel Spacing="1">
                                 <DockPanel>
                                     <Border
