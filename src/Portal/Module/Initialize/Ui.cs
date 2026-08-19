@@ -65,7 +65,8 @@ public static partial class Initializer
     {
         var stopwatch = Stopwatch.StartNew();
         Logger.Info(LogLanguageManager.Instance.ui_initStart.CurrentValue());
-        Logger.Info($"正在写入当前应用程序路径：{ConfigPath.AppPathDataPath}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ui_writingAppPath.CurrentValue(),
+            ConfigPath.AppPathDataPath));
         File.WriteAllText(ConfigPath.AppPathDataPath,
             Process.GetCurrentProcess().MainModule.FileName);
 
@@ -106,14 +107,15 @@ public static partial class Initializer
 
         if (Data.ConfigEntry.EnableCheckAutoUpdate && AppVersionService.Instance.Version.Type != "dev")
         {
-            Logger.Info("已启用自动更新检查，正在后台检查更新。");
-            CheckUpdate().Forget("检查应用更新");
+            Logger.Info(LogLanguageManager.Instance.update_autoUpdateCheckEnabled.CurrentValue());
+            CheckUpdate().Forget(CommonLanguageManager.Instance.update_checkForUpdatesForget.CurrentValue());
         }
 
-        Logger.Info("正在后台预取联机中继节点列表。");
-        GravityConeRelayClient.Instance.PrefetchAsync().Forget("预取联机中继节点列表");
+        Logger.Info(LogLanguageManager.Instance.multiplayer_prefetchRelaysStart.CurrentValue());
+        GravityConeRelayClient.Instance.PrefetchAsync().Forget(
+            CommonLanguageManager.Instance.multiplayer_prefetchRelaysForget.CurrentValue());
 
-        Logger.Info("正在初始化最近游玩、屏蔽列表和系统资源服务。");
+        Logger.Info(LogLanguageManager.Instance.ui_initializingServices.CurrentValue());
         RecentPlayListService.Initialize();
         BlockListService.Initialize();
         SystemResourceService.Initialize();
@@ -127,10 +129,11 @@ public static partial class Initializer
     {
         var stopwatch = Stopwatch.StartNew();
         var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
-        Logger.Info($"开始扫描基岩版实例，目标文件夹数量：{folders.Length}。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ui_scanBedrockStart.CurrentValue(), folders.Length));
         var instances = await Task.Run(() => InstanceManager.Instance.ScanBedrock(folders));
         InstanceManager.Instance.ApplyInstances(instances);
-        Logger.Info($"基岩版实例扫描完成，共加载 {instances.Count} 个实例，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.ui_bedrockScanComplete.CurrentValue(),
+            instances.Count, stopwatch.ElapsedMilliseconds));
     }
 
     private static async Task LoadUiDataAsync()
@@ -146,16 +149,18 @@ public static partial class Initializer
         Logger.Info(string.Format(LogLanguageManager.Instance.ui_instancesLoaded.CurrentValue(), instances.Count, stopwatch.ElapsedMilliseconds));
 
         await newsTask;
-        Logger.Info("新闻缓存加载完成，正在通知界面刷新并后台获取最新新闻。");
+        Logger.Info(LogLanguageManager.Instance.ui_newsCacheLoadedNotify.CurrentValue());
         NewsService.RaiseNewsUpdated();
-        Task.Run(NewsService.FetchAndRefreshAsync).Forget("刷新最新新闻");
+        Task.Run(NewsService.FetchAndRefreshAsync).Forget(CommonLanguageManager.Instance.news_refreshNewsForget.CurrentValue());
     }
 
     private static async Task CheckUpdate()
     {
         var stopwatch = Stopwatch.StartNew();
         var result = await UpdateChecker.Check(null, true);
-        Logger.Info($"应用更新检查完成，结果：{result ?? "无可用结果"}，耗时 {stopwatch.ElapsedMilliseconds} ms。");
+        Logger.Info(string.Format(LogLanguageManager.Instance.update_checkComplete.CurrentValue(),
+            result ?? CommonLanguageManager.Instance.update_noResult.CurrentValue(),
+            stopwatch.ElapsedMilliseconds));
         switch (result)
         {
             case null:

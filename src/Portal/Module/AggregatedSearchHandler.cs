@@ -5,6 +5,7 @@ using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Minecraft.Services;
+using Portal.Localization;
 using Portal.Views.Components.Operations.Account;
 using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -40,7 +41,8 @@ public class AggregatedSearchHandler
         {
             var minecraftAccount = entry.Data as MinecraftAccount;
             Data.ConfigEntry.UsingMinecraftMinecraftAccount = minecraftAccount;
-            sender.Notice($"已切换到 {minecraftAccount.Name}", NotificationType.Success);
+            sender.Notice(string.Format(CommonLanguageManager.Instance.aggregatedSearch_accountSwitched.CurrentValue(),
+                minecraftAccount.Name), NotificationType.Success);
         }
         else if (entry.Type == AggregatedSearchEntryType.AuthServer)
         {
@@ -119,12 +121,15 @@ public class AggregatedSearchHandler
             if (result.IsDeleted)
             {
                 Data.ConfigEntry.AuthServers.Remove(result.Server);
-                sender.Notice($"已删除验证服务器：{result.Server.DisplayText}", NotificationType.Success);
+                sender.Notice(string.Format(
+                    CommonLanguageManager.Instance.aggregatedSearch_authServerDeleted.CurrentValue(),
+                    result.Server.DisplayText), NotificationType.Success);
             }
             else
             {
                 ConfigSaver.SaveConfig();
-                sender.Notice("验证服务器已更新", NotificationType.Success);
+                sender.Notice(CommonLanguageManager.Instance.aggregatedSearch_authServerUpdated.CurrentValue(),
+                    NotificationType.Success);
             }
         }
     }

@@ -3,6 +3,7 @@ using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Classes.Config;
 using Portal.Core.Const;
+using Portal.Localization;
 using Portal.Views;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -60,7 +61,8 @@ public static class ShortcutManager
             }
             catch (Exception exception)
             {
-                Logger.Warning($"快捷键「{definition.DisplayName}」配置无效（{gestureText}）：{exception.Message}");
+                Logger.Warning(string.Format(LogLanguageManager.Instance.shortcuts_invalidGestureConfig.CurrentValue(),
+                    definition.DisplayName, gestureText, exception.Message));
             }
         }
 

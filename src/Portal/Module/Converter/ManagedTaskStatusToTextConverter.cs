@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Tasks;
 
 namespace Portal.Module.Converter;
@@ -10,14 +11,14 @@ public sealed class ManagedTaskStatusToTextConverter : IValueConverter
     {
         return value switch
         {
-            ManagedTaskStatus.Faulted => "失败",
-            ManagedTaskStatus.Running => "执行中",
-            ManagedTaskStatus.Cancelling => "正在取消",
-            ManagedTaskStatus.Pending => "等待中",
-            ManagedTaskStatus.Waiting => "等待中",
-            ManagedTaskStatus.Cancelled => "已取消",
-            ManagedTaskStatus.Completed => "已完成",
-            _ => "暂无任务"
+            ManagedTaskStatus.Faulted => CommonLanguageManager.Instance.taskStatus_failed.CurrentValue(),
+            ManagedTaskStatus.Running => CommonLanguageManager.Instance.taskStatus_running.CurrentValue(),
+            ManagedTaskStatus.Cancelling => CommonLanguageManager.Instance.taskStatus_cancelling.CurrentValue(),
+            ManagedTaskStatus.Pending => CommonLanguageManager.Instance.taskStatus_waiting.CurrentValue(),
+            ManagedTaskStatus.Waiting => CommonLanguageManager.Instance.taskStatus_waiting.CurrentValue(),
+            ManagedTaskStatus.Cancelled => CommonLanguageManager.Instance.taskStatus_cancelled.CurrentValue(),
+            ManagedTaskStatus.Completed => CommonLanguageManager.Instance.taskStatus_completed.CurrentValue(),
+            _ => CommonLanguageManager.Instance.taskStatus_none.CurrentValue()
         };
     }
 

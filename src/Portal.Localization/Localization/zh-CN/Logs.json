@@ -22,13 +22,33 @@
     "uiConfigComplete": "UI配置完成",
     "uiLoadComplete": "UI加载完成",
     "uiDataLoadComplete": "后台 UI 数据加载完成，耗时 {0} ms。",
-    "uiDataLoadFailed": "后台加载 UI 数据失败。"
+    "uiDataLoadFailed": "后台加载 UI 数据失败。",
+    "attachDevtools": "挂载 Devtools",
+    "registerGlobalExceptionHandling": "注册全局异常处理",
+    "notInitializedShowOobe": "尚未完成初始化，进入初始化窗口",
+    "initCompleteShowMainWindow": "初始化完成，进入主窗口",
+    "protocolReceived": "收到协议激活：{0}",
+    "protocolLinkInvalid": "协议激活链接无效：{0}",
+    "windowShowElapsed": "窗口显示完成，从程序启动到窗口显示耗时 {0} ms。",
+    "servicesInitStart": "开始初始化应用服务",
+    "servicesInitComplete": "应用服务初始化完成",
+    "bedrockImportInitStart": "开始初始化基岩版包导入服务",
+    "bedrockImportInitComplete": "基岩版包导入服务初始化完成",
+    "crashDomainException": "AppDomain 异常。",
+    "crashDomainExceptionWithObject": "AppDomain 异常：{0}",
+    "crashUiThreadException": "UI线程异常。",
+    "crashWindowShowFailed": "显示崩溃窗口失败。"
   },
   "ui": {
     "initStart": "开始初始化主界面数据和后台服务。",
     "initComplete": "主界面数据和后台服务初始化完成，耗时 {0} ms。",
     "scanInstances": "开始扫描全部 Minecraft 实例，目标文件夹数量：{0}。",
-    "instancesLoaded": "实例数据加载完成，共加载 {0} 个实例，耗时 {1} ms。"
+    "instancesLoaded": "实例数据加载完成，共加载 {0} 个实例，耗时 {1} ms。",
+    "writingAppPath": "正在写入当前应用程序路径：{0}",
+    "initializingServices": "正在初始化最近游玩、屏蔽列表和系统资源服务。",
+    "scanBedrockStart": "开始扫描基岩版实例，目标文件夹数量：{0}。",
+    "bedrockScanComplete": "基岩版实例扫描完成，共加载 {0} 个实例，耗时 {1} ms。",
+    "newsCacheLoadedNotify": "新闻缓存加载完成，正在通知界面刷新并后台获取最新新闻。"
   },
   "desktop": {
     "bedrockFileAssociation_registerFailed": "注册基岩版包文件关联失败：{0}",
@@ -63,6 +83,11 @@
     "startup_osWindows": "操作系统：Windows",
     "shortcutCreated": "已创建桌面快捷方式：{0}",
     "iconWriteFailed": "写入快捷方式图标失败。"
+  },
+  "dragDrop": {
+    "handleDragDropFailed": "处理拖放内容失败：{0}",
+    "identifyDragDropFailed": "识别拖放内容失败：{0}{1}{2}",
+    "inspectBedrockPackageFailed": "检查拖放基岩版包失败：{0}"
   },
   "accountRefresher": {
     "microsoftRefreshStart": "开始刷新微软账户：{0}",
@@ -127,6 +152,15 @@
     "usingSwitcheroo": "正在使用 switcheroo-control 提供的高性能显卡环境变量",
     "switcherooQueryFailed": "查询 switcheroo-control 失败，将回退到 PRIME 渲染卸载变量。{0}{1}"
   },
+  "imaging": {
+    "readImageDiskCache": "读取图片磁盘缓存：{0}",
+    "downloadImageWriteCache": "下载远程图片并写入缓存：{0} -> {1}",
+    "downloadRemoteImageFailed": "下载远程图片失败：{0}",
+    "readWriteImageCacheFailed": "读写图片缓存失败：{0}",
+    "accessImageCacheDenied": "访问图片缓存被拒绝：{0}",
+    "parseRemoteImageFailed": "解析远程图片失败：{0}",
+    "handleRemoteImageUrlFailed": "处理远程图片地址失败：{0}"
+  },
   "instanceManager": {
     "folderMissing": "Minecraft 文件夹不存在，跳过扫描：{0}",
     "folderScanStart": "正在扫描 Minecraft 文件夹：{0}",
@@ -147,7 +181,9 @@
     "queueCommandEnqueued": "外部命令已入队，等待执行数量：{0}。",
     "linuxAutoRegisterFailed": "Linux portal:// 协议自动注册失败，可在设置中重试。{0}{1}",
     "scriptWritten": "已写出协议注册脚本：{0}",
-    "desktopHandlerWritten": "已写出协议处理器：{0}"
+    "desktopHandlerWritten": "已写出协议处理器：{0}",
+    "commandExecuting": "执行外部命令：{0}",
+    "commandExecuteFailed": "外部命令执行失败：{0}"
   },
   "javaRuntime": {
     "deepScanReadFailed": "读取深度扫描发现的 Java 运行时失败：{0}"
@@ -221,7 +257,10 @@
     "copyPortalSettingsFailed": "[Export] 复制 Portal 实例设置失败：{0}",
     "copyPortalIconFailed": "[Export] 复制 Portal 实例图标失败：{0}",
     "fetchModrinthFailed": "[Export] 从 Modrinth 获取下载地址失败：{0}",
-    "fetchCurseForgeFailed": "[Export] 从 CurseForge 获取下载地址失败：{0}"
+    "fetchCurseForgeFailed": "[Export] 从 CurseForge 获取下载地址失败：{0}",
+    "cleanupExternalCommandTempDir": "清理外部命令整合包临时目录：{0}",
+    "cleanupExternalCommandTempDirFailed": "清理外部命令整合包临时目录失败：{0}",
+    "subtaskFailed": "子任务“{0}”失败。"
   },
   "multiplayer": {
     "fetch1tmcPeersFailed": "获取 1TMC 联机节点失败，将尝试读取本地缓存。{0}{1}",
@@ -231,7 +270,8 @@
     "cleanupOldVersionFailed": "清理旧版联机组件失败：{0}{1}",
     "fetchNodeUrlFailed": "获取联机节点 {0} 地址失败。{1}{2}",
     "readNodeCacheFailed": "读取联机节点缓存失败。{0}{1}",
-    "readRelayCacheFailed": "读取 Portal 中继节点缓存失败。{0}{1}"
+    "readRelayCacheFailed": "读取 Portal 中继节点缓存失败。{0}{1}",
+    "prefetchRelaysStart": "正在后台预取联机中继节点列表。"
   },
   "news": {
     "cacheLoadStart": "开始加载新闻缓存。",
@@ -298,6 +338,9 @@
     "workingSetTrimmed": "进程工作集修剪完成：{0} MiB -> {1} MiB。",
     "workingSetTrimException": "进程工作集自动修剪发生异常。"
   },
+  "shortcuts": {
+    "invalidGestureConfig": "快捷键「{0}」配置无效（{1}）：{2}"
+  },
   "update": {
     "prepareStart": "开始检查并准备应用更新。",
     "packageSelected": "已选择更新包：{0}，下载目录：{1}",
@@ -305,7 +348,9 @@
     "prepareFailed": "准备应用更新失败。",
     "cleanupOldDirectoryFailed": "删除过期更新目录失败：{0}",
     "cleanupOldDirectoriesFailed": "清理过期更新目录失败。",
-    "writePermissionCheckFailed": "检测目录写入权限失败：{0}{1}"
+    "writePermissionCheckFailed": "检测目录写入权限失败：{0}{1}",
+    "autoUpdateCheckEnabled": "已启用自动更新检查，正在后台检查更新。",
+    "checkComplete": "应用更新检查完成，结果：{0}，耗时 {1} ms。"
   },
   "versionModify": {
     "failedRestoring": "[VersionModify] 修改实例“{0}”失败，正在恢复原版本文件。{1}{2}"

@@ -1,4 +1,5 @@
 using Portal.Core.Module.Widgets;
+using Portal.Localization;
 using Portal.Views.Widgets;
 
 namespace Portal.Module;
@@ -80,7 +81,8 @@ public static class WidgetRegistry
     public static void Register(WidgetDefinition definition)
     {
         if (_definitions.ContainsKey(definition.Kind))
-            throw new InvalidOperationException($"组件类型 {definition.Kind} 已注册");
+            throw new InvalidOperationException(string.Format(
+                CommonLanguageManager.Instance.widgets_alreadyRegistered.CurrentValue(), definition.Kind));
         _definitions[definition.Kind] = definition;
     }
 
@@ -92,7 +94,8 @@ public static class WidgetRegistry
 
     public static IWidgetContent Create(WidgetKind kind, WidgetCellSize size)
     {
-        var definition = Get(kind) ?? throw new InvalidOperationException($"组件类型 {kind} 未注册");
+        var definition = Get(kind) ?? throw new InvalidOperationException(string.Format(
+            CommonLanguageManager.Instance.widgets_notRegistered.CurrentValue(), kind));
         return definition.Create(size);
     }
 
@@ -101,8 +104,8 @@ public static class WidgetRegistry
         Register(new WidgetDefinition
             {
                 Kind = WidgetKind.Clock,
-                Name = "时钟",
-                Description = "时间与日期",
+                Name = CommonLanguageManager.Instance.widgets_clock.CurrentValue(),
+                Description = CommonLanguageManager.Instance.widgets_clockDescription.CurrentValue(),
                 Category = WidgetCategory.Utility,
                 DefaultSize = new WidgetCellSize(1, 1)
             }
@@ -113,8 +116,8 @@ public static class WidgetRegistry
         var imageDef = new WidgetDefinition
         {
             Kind = WidgetKind.Image,
-            Name = "图片",
-            Description = "显示一张本地图片，完全占满组件",
+            Name = CommonLanguageManager.Instance.widgets_image.CurrentValue(),
+            Description = CommonLanguageManager.Instance.widgets_imageDescription.CurrentValue(),
             Category = WidgetCategory.Utility,
             DefaultSize = new WidgetCellSize(2, 2)
         };
@@ -130,8 +133,8 @@ public static class WidgetRegistry
         var searchDef = new WidgetDefinition
         {
             Kind = WidgetKind.Search,
-            Name = "搜索框",
-            Description = "聚合搜索实例、存档、服务器、页面及下载站资源",
+            Name = CommonLanguageManager.Instance.widgets_search.CurrentValue(),
+            Description = CommonLanguageManager.Instance.widgets_searchDescription.CurrentValue(),
             Category = WidgetCategory.Utility,
             DefaultSize = new WidgetCellSize(1, 4)
         };
@@ -146,8 +149,8 @@ public static class WidgetRegistry
         Register(new WidgetDefinition
             {
                 Kind = WidgetKind.Instance,
-                Name = "实例",
-                Description = "快速查看与启动实例",
+                Name = CommonLanguageManager.Instance.widgets_instance.CurrentValue(),
+                Description = CommonLanguageManager.Instance.widgets_instanceDescription.CurrentValue(),
                 Category = WidgetCategory.Game,
                 DefaultSize = new WidgetCellSize(2, 1)
             }
@@ -157,8 +160,8 @@ public static class WidgetRegistry
         Register(new WidgetDefinition
             {
                 Kind = WidgetKind.QuickWorld,
-                Name = "快速进入世界",
-                Description = "选择实例与存档，一键进入",
+                Name = CommonLanguageManager.Instance.widgets_quickWorld.CurrentValue(),
+                Description = CommonLanguageManager.Instance.widgets_quickWorldDescription.CurrentValue(),
                 Category = WidgetCategory.Game,
                 DefaultSize = new WidgetCellSize(2, 1)
             }
@@ -168,8 +171,8 @@ public static class WidgetRegistry
         Register(new WidgetDefinition
             {
                 Kind = WidgetKind.QuickServer,
-                Name = "快速进入服务器",
-                Description = "选择实例并输入地址，一键进入",
+                Name = CommonLanguageManager.Instance.widgets_quickServer.CurrentValue(),
+                Description = CommonLanguageManager.Instance.widgets_quickServerDescription.CurrentValue(),
                 Category = WidgetCategory.Game,
                 DefaultSize = new WidgetCellSize(2, 1)
             }
@@ -180,8 +183,8 @@ public static class WidgetRegistry
         var newsDef = new WidgetDefinition
         {
             Kind = WidgetKind.News,
-            Name = "新闻",
-            Description = "展示最新 Minecraft 新闻（Java 版 / 基岩版）",
+            Name = CommonLanguageManager.Instance.widgets_news.CurrentValue(),
+            Description = CommonLanguageManager.Instance.widgets_newsDescription.CurrentValue(),
             Category = WidgetCategory.Game,
             DefaultSize = new WidgetCellSize(2, 2)
         };
@@ -195,15 +198,20 @@ public static class WidgetRegistry
         Register(newsDef);
 
 
-        RegisterResourceWidget(WidgetKind.CpuResource, "CPU 占用", "处理器使用率",
+        RegisterResourceWidget(WidgetKind.CpuResource, CommonLanguageManager.Instance.widgets_cpu.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_cpuDescription.CurrentValue(),
             size => new CpuResourceWidget(size));
-        RegisterResourceWidget(WidgetKind.MemoryResource, "内存占用", "物理内存使用情况",
+        RegisterResourceWidget(WidgetKind.MemoryResource, CommonLanguageManager.Instance.widgets_memory.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_memoryDescription.CurrentValue(),
             size => new MemoryResourceWidget(size));
-        RegisterResourceWidget(WidgetKind.DiskResource, "磁盘占用", "系统盘使用情况",
+        RegisterResourceWidget(WidgetKind.DiskResource, CommonLanguageManager.Instance.widgets_disk.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_diskDescription.CurrentValue(),
             size => new DiskResourceWidget(size));
-        RegisterResourceWidget(WidgetKind.NetworkResource, "网络占用", "上下行传输速率",
+        RegisterResourceWidget(WidgetKind.NetworkResource, CommonLanguageManager.Instance.widgets_network.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_networkDescription.CurrentValue(),
             size => new NetworkResourceWidget(size));
-        RegisterResourceWidget(WidgetKind.GpuResource, "GPU 占用", "显卡使用率",
+        RegisterResourceWidget(WidgetKind.GpuResource, CommonLanguageManager.Instance.widgets_gpu.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_gpuDescription.CurrentValue(),
             size => new GpuResourceWidget(size));
     }
 

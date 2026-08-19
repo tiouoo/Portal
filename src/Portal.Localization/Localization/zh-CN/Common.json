@@ -74,7 +74,10 @@
     "account": "账户",
     "page": "页面",
     "gameProfile": "游戏档案",
-    "authServer": "认证服务器"
+    "authServer": "认证服务器",
+    "accountSwitched": "已切换到 {0}",
+    "authServerDeleted": "已删除验证服务器：{0}",
+    "authServerUpdated": "验证服务器已更新"
   },
   "bedrock": {
     "manifestNotFound": "未找到 {0} 文件",
@@ -105,6 +108,15 @@
   },
   "config": {
     "noAccount": "无账户"
+  },
+  "dragDrop": {
+    "handleDragDropFailed": "处理拖放内容失败：{0}",
+    "detectedFolder": "识别到文件夹",
+    "detectedAuthServer": "识别到验证服务器",
+    "detectedModpack": "识别到整合包",
+    "detectedBedrockPackage": "识别到基岩版包",
+    "unsupportedDragDrop": "不支持的拖放内容",
+    "authServerAdded": "验证服务器已添加"
   },
   "favorite": {
     "defaultCollectionName": "默认收藏夹",
@@ -140,7 +152,8 @@
     "unsupportedProtocolRegistration": "当前系统暂不支持注册 portal:// 协议。",
     "cannotStartRegistrationScript": "无法启动协议注册脚本。",
     "adminPrivilegeNotObtained": "未获得管理员权限。",
-    "scriptExecutionFailed": "注册脚本执行失败（退出码 {0}）。"
+    "scriptExecutionFailed": "注册脚本执行失败（退出码 {0}）。",
+    "commandExecuteFailed": "命令执行失败：{0}"
   },
   "instanceRename": {
     "taskName": "重命名实例 {0}",
@@ -363,7 +376,25 @@
     "traditionalFolder": "传统 .minecraft 文件夹",
     "curseForgeInstance": "CurseForge 实例",
     "modrinthInstance": "Modrinth 实例",
-    "unknown": "未知"
+    "unknown": "未知",
+    "fetchingVersionInfo": "正在获取 Minecraft {0} 的版本信息...",
+    "versionNotFound": "未找到 Minecraft 版本“{0}”。",
+    "loaderNeedsJava": "所选加载器需要 Java 运行时，请先在设置中添加有效的 Java。",
+    "invalidInstanceId": "实例 ID“{0}”包含文件夹名称不允许的字符。",
+    "installStartedToFolder": "已开始安装 Minecraft {0} 到“{1}”",
+    "loaderDuplicate": "加载器 {0} 重复指定。",
+    "loaderNotAvailableForVersion": "Minecraft {0} 没有可用的 {1}。",
+    "loaderVersionNotFound": "未找到 {0} 版本“{1}”（Minecraft {2}）。",
+    "loadersCannotInstallTogether": "加载器 {0} 不能同时安装。",
+    "optifineCombinationInvalid": "OptiFine 只能单独安装或与 Forge 组合，不支持与 {0} 组合。",
+    "unknownLoader": "未知的加载器“{0}”，支持：fabric / forge / neoforge / quilt / optifine。",
+    "instanceNotFound": "未找到实例“{0}”。",
+    "instanceNotFoundInFolder": "文件夹“{0}”中未找到实例“{1}”。",
+    "worldFolderNotFound": "实例“{0}”的存档目录中未找到世界文件夹“{1}”。",
+    "noInstallableFolder": "启动器中没有可用于安装的 Minecraft 文件夹，请先在设置中添加。",
+    "folderNotInstallable": "文件夹“{0}”不是可安装的 Portal MC 文件夹。",
+    "minecraftFolderNotFound": "未找到 Minecraft 文件夹“{0}”，请先在设置中添加或检查名称/路径。",
+    "minecraftFolderNotFoundShort": "未找到 Minecraft 文件夹“{0}”。"
   },
   "mod": {
     "releaseTypeRelease": "正式版",
@@ -377,7 +408,33 @@
     "fetchingDownloads": "正在从平台获取下载地址",
     "buildingArchive": "正在生成整合包",
     "exportComplete": "导出完成",
-    "copiedCount": "已复制 {0} 个文件"
+    "copiedCount": "已复制 {0} 个文件",
+    "installTaskName": "安装整合包：{0}",
+    "preparingInstall": "正在准备安装",
+    "cancelInstall": "取消安装",
+    "cancelInstallDescription": "取消此整合包安装",
+    "installStartedToFolder": "已开始安装整合包到“{0}”",
+    "fileNotFound": "整合包文件不存在：{0}",
+    "downloadStep": "下载整合包",
+    "downloading": "正在下载：{0}",
+    "resolveProjectStep": "解析整合包项目",
+    "findingModpack": "正在查找整合包：{0}",
+    "parseModpackStep": "解析整合包",
+    "identifyingModpackType": "正在识别整合包类型",
+    "unrecognizedModpack": "无法识别的整合包：仅支持 Modrinth（.mrpack）与 CurseForge（.zip）整合包。",
+    "searchingOn": "正在 {0} 查找：{1}",
+    "found": "已找到：{0}",
+    "modrinthPackNotFound": "Modrinth 上未找到整合包“{0}”。",
+    "packVersionNotFound": "整合包“{0}”没有版本“{1}”。",
+    "packNoDownloadableVersion": "整合包“{0}”没有可下载的版本。",
+    "curseForgePackNotFound": "CurseForge 上未找到整合包“{0}”。",
+    "packNoDownloadableFile": "整合包“{0}”没有可下载的文件。",
+    "packFileNotFound": "整合包“{0}”没有文件“{1}”。",
+    "curseForgeDownloadUrlFailed": "无法获取 CurseForge 文件“{0}”的下载地址。",
+    "downloadingModpack": "正在下载整合包",
+    "downloadingModpackWithSpeed": "正在下载整合包：{0}",
+    "downloadFailed": "整合包下载失败。",
+    "cleanupTempDirForget": "清理外部命令整合包临时目录"
   },
   "modpackExport": {
     "taskName": "导出整合包 {0}",
@@ -423,7 +480,8 @@
     "relaysNoUsableNodes": "Portal 中继节点列表未包含可用节点。",
     "relayResponseTooLarge": "Portal 中继节点响应过大。",
     "roleHost": "房主",
-    "roleMember": "成员"
+    "roleMember": "成员",
+    "prefetchRelaysForget": "预取联机中继节点列表"
   },
   "news": {
     "justNow": "刚刚",
@@ -433,7 +491,8 @@
     "daysAgo": "{0}天前",
     "weeksAgo": "{0}周前",
     "monthsAgo": "{0}个月前",
-    "yearsAgo": "{0}年前"
+    "yearsAgo": "{0}年前",
+    "refreshNewsForget": "刷新最新新闻"
   },
   "recentPlay": {
     "saveDescription": "存档·{0}·{1}",
@@ -444,7 +503,8 @@
     "gameModeCreative": "创造",
     "gameModeAdventure": "冒险",
     "gameModeSpectator": "旁观",
-    "gameModeUnknown": "未知模式"
+    "gameModeUnknown": "未知模式",
+    "worldDescription": "存档·{0}"
   },
   "relativeTime": {
     "justNow": "刚刚",
@@ -476,12 +536,56 @@
   "serverPing": {
     "varIntTooLong": "VarInt 长度超出限制。"
   },
+  "shortcuts": {
+    "categoryTabs": "标签页",
+    "categoryPages": "页面",
+    "categoryDialogs": "对话框",
+    "categoryApp": "应用",
+    "newTab": "新建标签页",
+    "closeTab": "关闭当前标签页",
+    "closeOtherTabs": "关闭其他标签页",
+    "closeAllTabs": "关闭所有标签页",
+    "openInNewWindow": "在新窗口打开",
+    "nextTab": "切换到下一个标签页",
+    "previousTab": "切换到上一个标签页",
+    "moveTabForward": "标签页向前移动",
+    "moveTabBackward": "标签页向后移动",
+    "openStartPage": "打开起始页",
+    "openNewTabPage": "打开新标签页",
+    "openWidgetsPage": "打开小组件",
+    "openDownloadPage": "打开下载中心",
+    "openInstancesPage": "打开实例",
+    "openMultiplayerJava": "打开联机（Java）",
+    "openMultiplayerBedrock": "打开联机（基岩）",
+    "openNewsPage": "打开新闻",
+    "openToolsPage": "打开实用工具",
+    "openTaskPage": "打开任务",
+    "openSettingsPage": "打开设置",
+    "openAggregatedSearch": "打开聚合搜索",
+    "createInstance": "创建新实例",
+    "addMinecraftFolder": "添加文件夹（游戏目录）",
+    "toggleTheme": "切换主题",
+    "openDebugPage": "打开调试页面",
+    "restartApp": "重启应用",
+    "exitApp": "退出应用",
+    "minimizeWindow": "最小化窗口",
+    "selectTab": "切换到第 {0} 个标签页"
+  },
   "systemResources": {
     "cannotLocateExecutable": "无法定位 Portal 可执行文件。",
     "adminPrivilegeRequestFailed": "无法申请管理员权限以执行内存优化。",
     "adminPrivilegeRejected": "管理员权限被拒绝或内存优化未完成。",
     "missingPrivilege": "当前进程没有内存优化所需的权限。",
     "memoryOptimizationNeedsAdmin": "内存优化需要管理员权限。"
+  },
+  "taskStatus": {
+    "failed": "失败",
+    "running": "执行中",
+    "cancelling": "正在取消",
+    "waiting": "等待中",
+    "cancelled": "已取消",
+    "completed": "已完成",
+    "none": "暂无任务"
   },
   "update": {
     "alreadyLatest": "当前是最新版本",
@@ -531,7 +635,37 @@
     "cnbSourceNotConfigured": "CNB 更新源未配置 {0}。请使用包含该变量的正式构建。",
     "releaseMissingTitle": "更新发布缺少版本名称。",
     "noStableRelease": "远程仓库中未找到正式版发布。",
-    "unsupportedChannel": "不支持更新通道“{0}”。"
+    "unsupportedChannel": "不支持更新通道“{0}”。",
+    "noResult": "无可用结果",
+    "checkForUpdatesForget": "检查应用更新"
+  },
+  "widgets": {
+    "clock": "时钟",
+    "clockDescription": "时间与日期",
+    "image": "图片",
+    "imageDescription": "显示一张本地图片，完全占满组件",
+    "search": "搜索框",
+    "searchDescription": "聚合搜索实例、存档、服务器、页面及下载站资源",
+    "instance": "实例",
+    "instanceDescription": "快速查看与启动实例",
+    "quickWorld": "快速进入世界",
+    "quickWorldDescription": "选择实例与存档，一键进入",
+    "quickServer": "快速进入服务器",
+    "quickServerDescription": "选择实例并输入地址，一键进入",
+    "news": "新闻",
+    "newsDescription": "展示最新 Minecraft 新闻（Java 版 / 基岩版）",
+    "cpu": "CPU 占用",
+    "cpuDescription": "处理器使用率",
+    "memory": "内存占用",
+    "memoryDescription": "物理内存使用情况",
+    "disk": "磁盘占用",
+    "diskDescription": "系统盘使用情况",
+    "network": "网络占用",
+    "networkDescription": "上下行传输速率",
+    "gpu": "GPU 占用",
+    "gpuDescription": "显卡使用率",
+    "alreadyRegistered": "组件类型 {0} 已注册",
+    "notRegistered": "组件类型 {0} 未注册"
   },
   "versionModify": {
     "uninstallTaskName": "卸载实例 {0} 的加载器",

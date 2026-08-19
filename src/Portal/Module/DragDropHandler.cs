@@ -8,6 +8,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Initialize;
+using Portal.Localization;
 using Portal.Views.Components.Operations.Account;
 using Portal.Views.Components.Operations.OpenFile;
 using Portal.Views.Pages.DownloadPages;
@@ -75,8 +76,9 @@ public class DragDropHandler
         }
         catch (Exception ex)
         {
-            Logger.Error($"处理拖放内容失败：{ex}");
-            window.GetTopLevel().Notice($"处理拖放内容失败：{ex.Message}",
+            Logger.Error(string.Format(LogLanguageManager.Instance.dragDrop_handleDragDropFailed.CurrentValue(), ex));
+            window.GetTopLevel().Notice(string.Format(
+                CommonLanguageManager.Instance.dragDrop_handleDragDropFailed.CurrentValue(), ex.Message),
                 NotificationType.Error);
         }
     }
@@ -167,14 +169,14 @@ public class DragDropHandler
     {
         if (paths is [var folderPath] && Directory.Exists(folderPath))
         {
-            message = "识别到文件夹";
+            message = CommonLanguageManager.Instance.dragDrop_detectedFolder.CurrentValue();
             effects = DragDropEffects.Copy;
             return true;
         }
 
         if (!string.IsNullOrWhiteSpace(text) && TryParseAuthlibUrl(text, out _, out _))
         {
-            message = "识别到验证服务器";
+            message = CommonLanguageManager.Instance.dragDrop_detectedAuthServer.CurrentValue();
             effects = DragDropEffects.Link;
             return true;
         }
@@ -194,7 +196,7 @@ public class DragDropHandler
                 if (_inFlightSignature != signature) return;
                 _inFlightSignature = null;
                 _activeSignature = signature;
-                _activeMessage = message ?? "不支持的拖放内容";
+                _activeMessage = message ?? CommonLanguageManager.Instance.dragDrop_unsupportedDragDrop.CurrentValue();
                 _activeEffects = effects;
             }
         }
@@ -205,11 +207,12 @@ public class DragDropHandler
                 if (_inFlightSignature != signature) return;
                 _inFlightSignature = null;
                 _activeSignature = signature;
-                _activeMessage = "不支持的拖放内容";
+                _activeMessage = CommonLanguageManager.Instance.dragDrop_unsupportedDragDrop.CurrentValue();
                 _activeEffects = DragDropEffects.None;
             }
 
-            Logger.Debug($"识别拖放内容失败：{signature}{Environment.NewLine}{exception}");
+            Logger.Debug(string.Format(LogLanguageManager.Instance.dragDrop_identifyDragDropFailed.CurrentValue(),
+                signature, Environment.NewLine, exception));
         }
     }
 
@@ -248,26 +251,26 @@ public class DragDropHandler
 
         if (!string.IsNullOrWhiteSpace(text) && TryParseAuthlibUrl(text, out _, out _))
         {
-            message = "识别到验证服务器";
+            message = CommonLanguageManager.Instance.dragDrop_detectedAuthServer.CurrentValue();
             effects = DragDropEffects.Link;
         }
 
         if (paths is [var modpackPath] && ModpackSniffer.TrySniff(modpackPath, out _, out _))
         {
-            message = "识别到整合包";
+            message = CommonLanguageManager.Instance.dragDrop_detectedModpack.CurrentValue();
             effects = DragDropEffects.Copy;
         }
 
         if (BedrockInstallationService.DefaultInstaller is not null && paths is [var bedrockPath] &&
             IsBedrockPackage(bedrockPath))
         {
-            message = "识别到基岩版包";
+            message = CommonLanguageManager.Instance.dragDrop_detectedBedrockPackage.CurrentValue();
             effects = DragDropEffects.Copy;
         }
 
         if (paths is [var folderPath] && Directory.Exists(folderPath))
         {
-            message = "识别到文件夹";
+            message = CommonLanguageManager.Instance.dragDrop_detectedFolder.CurrentValue();
             effects = DragDropEffects.Copy;
         }
     }
@@ -335,7 +338,8 @@ public class DragDropHandler
         {
             Data.ConfigEntry.AuthServers.Add(result);
             ConfigSaver.SaveConfig();
-            window.GetTopLevel().Notice("验证服务器已添加", NotificationType.Success);
+            window.GetTopLevel().Notice(CommonLanguageManager.Instance.dragDrop_authServerAdded.CurrentValue(),
+                NotificationType.Success);
         }
     }
 
@@ -469,7 +473,8 @@ public class DragDropHandler
         }
         catch (Exception exception)
         {
-            Logger.Error($"检查拖放基岩版包失败：{path}", exception);
+            Logger.Error(string.Format(LogLanguageManager.Instance.dragDrop_inspectBedrockPackageFailed.CurrentValue(),
+                path), exception);
             return false;
         }
     }

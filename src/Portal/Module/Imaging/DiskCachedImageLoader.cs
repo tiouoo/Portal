@@ -5,6 +5,7 @@ using AsyncImageLoader;
 using Avalonia.Media.Imaging;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Const;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Imaging;
@@ -32,7 +33,8 @@ public class DiskCachedImageLoader : IAsyncImageLoader
             var cachePath = GetCachePath(url);
             if (File.Exists(cachePath))
             {
-                Logger.Debug($"读取图片磁盘缓存：{cachePath}");
+                Logger.Debug(string.Format(
+                    LogLanguageManager.Instance.imaging_readImageDiskCache.CurrentValue(), cachePath));
                 return Decode(cachePath);
             }
 
@@ -45,7 +47,8 @@ public class DiskCachedImageLoader : IAsyncImageLoader
 
                 using var response = await HttpUtil.Client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
-                Logger.Debug($"下载远程图片并写入缓存：{url} -> {cachePath}");
+                Logger.Debug(string.Format(
+                    LogLanguageManager.Instance.imaging_downloadImageWriteCache.CurrentValue(), url, cachePath));
                 await using var stream = await response.Content.ReadAsStreamAsync();
                 using var bitmap = Bitmap.DecodeToWidth(stream, _decodeWidth);
                 Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
@@ -68,27 +71,32 @@ public class DiskCachedImageLoader : IAsyncImageLoader
         }
         catch (HttpRequestException exception)
         {
-            Logger.Error($"下载远程图片失败：{url}", exception);
+            Logger.Error(string.Format(
+                LogLanguageManager.Instance.imaging_downloadRemoteImageFailed.CurrentValue(), url), exception);
             return null;
         }
         catch (IOException exception)
         {
-            Logger.Error($"读写图片缓存失败：{url}", exception);
+            Logger.Error(string.Format(
+                LogLanguageManager.Instance.imaging_readWriteImageCacheFailed.CurrentValue(), url), exception);
             return null;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Logger.Error($"访问图片缓存被拒绝：{url}", exception);
+            Logger.Error(string.Format(
+                LogLanguageManager.Instance.imaging_accessImageCacheDenied.CurrentValue(), url), exception);
             return null;
         }
         catch (InvalidDataException exception)
         {
-            Logger.Error($"解析远程图片失败：{url}", exception);
+            Logger.Error(string.Format(
+                LogLanguageManager.Instance.imaging_parseRemoteImageFailed.CurrentValue(), url), exception);
             return null;
         }
         catch (ArgumentException exception)
         {
-            Logger.Error($"处理远程图片地址失败：{url}", exception);
+            Logger.Error(string.Format(
+                LogLanguageManager.Instance.imaging_handleRemoteImageUrlFailed.CurrentValue(), url), exception);
             return null;
         }
     }

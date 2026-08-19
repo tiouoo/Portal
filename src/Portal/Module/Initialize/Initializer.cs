@@ -5,6 +5,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Services;
+using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Module.Initialize;
@@ -13,15 +14,15 @@ public static partial class Initializer
 {
     public static void BedrockPackageImport()
     {
-        Logger.Info("开始初始化基岩版包导入服务");
+        Logger.Info(LogLanguageManager.Instance.app_bedrockImportInitStart.CurrentValue());
         Config.Initialize();
         ShortcutManager.Initialize();
-        Logger.Info("基岩版包导入服务初始化完成");
+        Logger.Info(LogLanguageManager.Instance.app_bedrockImportInitComplete.CurrentValue());
     }
 
     public static void App()
     {
-        Logger.Info("开始初始化应用服务");
+        Logger.Info(LogLanguageManager.Instance.app_servicesInitStart.CurrentValue());
         Config.Initialize();
         ShortcutManager.Initialize();
         BedrockNetworkConfiguration.Configure(Data.ConfigEntry.DisableSystemProxy,
@@ -44,6 +45,6 @@ public static partial class Initializer
             MinecraftFileSource = Data.ConfigEntry.MinecraftFileSource,
             IsEnableFragment = Data.ConfigEntry.EnableFragmentDownload
         });
-        Logger.Info("应用服务初始化完成");
+        Logger.Info(LogLanguageManager.Instance.app_servicesInitComplete.CurrentValue());
     }
 }

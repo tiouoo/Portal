@@ -49,10 +49,10 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
 #if DEBUG
-            Logger.Debug("挂载 Devtools");
+            Logger.Debug(LogLanguageManager.Instance.app_attachDevtools.CurrentValue());
             this.AttachDeveloperTools();
 #else
-            Logger.Info("注册全局异常处理");
+            Logger.Info(LogLanguageManager.Instance.app_registerGlobalExceptionHandling.CurrentValue());
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Dispatcher.UIThread.UnhandledException += UIThread_UnhandledException;
 #endif
@@ -71,14 +71,14 @@ public partial class App : Application
             }
             else
             {
-                Logger.Info("尚未完成初始化，进入初始化窗口");
+                Logger.Info(LogLanguageManager.Instance.app_notInitializedShowOobe.CurrentValue());
                 Initializer.Oobe();
                 var oobe = new OobeWindow();
                 LogWindowShowElapsed(oobe);
                 desktop.MainWindow = oobe;
                 oobe.Completed += () =>
                 {
-                    Logger.Info("初始化完成，进入主窗口");
+                    Logger.Info(LogLanguageManager.Instance.app_initCompleteShowMainWindow.CurrentValue());
                     Data.ConfigEntry.IsInitialized = true;
                     ConfigSaver.FlushConfig();
                     ShowMainWindow(desktop);
@@ -87,7 +87,7 @@ public partial class App : Application
                 };
             }
 
-            Logger.Info("UI配置完成");
+            Logger.Info(LogLanguageManager.Instance.app_uiConfigComplete.CurrentValue());
         }
 
         if (BedrockPackagePath == null)
@@ -105,12 +105,12 @@ public partial class App : Application
     private void OnActivated(object? sender, ActivatedEventArgs e)
     {
         if (e is not ProtocolActivatedEventArgs { Uri: { } uri }) return;
-        Logger.Info($"收到协议激活：{uri}");
+        Logger.Info(string.Format(LogLanguageManager.Instance.app_protocolReceived.CurrentValue(), uri));
         if (PortalCommandParser.Parse([uri.ToString()], out var command, out var error) ==
             PortalCliParseStatus.Command && command is not null)
             PortalCommandQueue.Enqueue(command);
         else if (error is not null)
-            Logger.Error($"协议激活链接无效：{error}");
+            Logger.Error(string.Format(LogLanguageManager.Instance.app_protocolLinkInvalid.CurrentValue(), error));
     }
 
     private void ShowMainWindow(IClassicDesktopStyleApplicationLifetime desktop)
@@ -128,7 +128,10 @@ public partial class App : Application
     private static void LogWindowShowElapsed(Window window)
     {
         window.Opened += (_, _) =>
-            Logger.Info($"窗口显示完成，从程序启动到窗口显示耗时 {Stopwatch.GetElapsedTime(StartupTimestamp).TotalMilliseconds:F0} ms。");
+        {
+            var elapsed = Stopwatch.GetElapsedTime(StartupTimestamp).TotalMilliseconds.ToString("F0");
+            Logger.Info(string.Format(LogLanguageManager.Instance.app_windowShowElapsed.CurrentValue(), elapsed));
+        };
     }
 
     private async void Function(object? sender, RoutedEventArgs e)
@@ -157,9 +160,9 @@ public partial class App : Application
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is Exception exception)
-            Logger.Fatal("AppDomain 异常。", exception);
+            Logger.Fatal(LogLanguageManager.Instance.app_crashDomainException.CurrentValue(), exception);
         else
-            Logger.Fatal($"AppDomain 异常：{e.ExceptionObject}");
+            Logger.Fatal(string.Format(LogLanguageManager.Instance.app_crashDomainExceptionWithObject.CurrentValue(), e.ExceptionObject));
         try
         {
             var win = new CrashWindow(e.ToString() ?? "Unhandled Exception");
@@ -167,13 +170,13 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Logger.Fatal("显示崩溃窗口失败。", ex);
+            Logger.Fatal(LogLanguageManager.Instance.app_crashWindowShowFailed.CurrentValue(), ex);
         }
     }
 
     private void UIThread_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        Logger.Fatal("UI线程异常。", e.Exception);
+        Logger.Fatal(LogLanguageManager.Instance.app_crashUiThreadException.CurrentValue(), e.Exception);
         try
         {
             var win = new CrashWindow(e.Exception.ToString());
@@ -181,7 +184,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Logger.Fatal("显示崩溃窗口失败。", ex);
+            Logger.Fatal(LogLanguageManager.Instance.app_crashWindowShowFailed.CurrentValue(), ex);
         }
         finally
         {
