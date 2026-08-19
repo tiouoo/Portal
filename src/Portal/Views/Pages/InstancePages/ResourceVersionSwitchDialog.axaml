@@ -1,0 +1,112 @@
+<UserControl
+    d:DesignHeight="520"
+    d:DesignWidth="560"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstancePages.ResourceVersionSwitchDialog"
+    x:DataType="instancePages:ResourceVersionSwitchDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        MaxHeight="620"
+        RowDefinitions="Auto, Auto, Auto, *, Auto"
+        Width="560">
+        <DockPanel Grid.Row="0">
+            <Panel DockPanel.Dock="Left">
+                <TextBlock
+                    FontSize="16"
+                    FontWeight="600"
+                    HorizontalAlignment="Left"
+                    Text="切换版本" />
+            </Panel>
+            <TextBlock
+                DockPanel.Dock="Right"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoading}"
+                Text="正在加载版本..." />
+            <TextBlock
+                DockPanel.Dock="Right"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasError}"
+                Text="加载失败，请检查网络" />
+        </DockPanel>
+        <CheckBox
+            Content="显示所有项目"
+            Grid.Row="1"
+            IsChecked="{Binding ShowAll}"
+            Margin="0,10,0,0" />
+        <TextBox
+            Grid.Row="2"
+            Margin="0,8,0,0"
+            PlaceholderText="搜索..."
+            Text="{Binding SearchText}">
+            <TextBox.InnerRightContent>
+                <PathIcon
+                    Data="F1 M512,512z M0,0z M416,208C416,253.9,401.1,296.3,376,330.7L502.6,457.4C515.1,469.9 515.1,490.2 502.6,502.7 490.1,515.2 469.8,515.2 457.3,502.7L330.7,376C296.3,401.1 253.9,416 208,416 93.1,416 0,322.9 0,208 0,93.1 93.1,0 208,0 322.9,0 416,93.1 416,208z M208,352A144,144,0,1,0,208,64A144,144,0,1,0,208,352z"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Height="14"
+                    Width="14" />
+            </TextBox.InnerRightContent>
+        </TextBox>
+        <Border
+            Grid.Row="3"
+            Margin="0,8,0,8"
+            Padding="1">
+            <ListBox
+                ItemsSource="{Binding VisibleItems}"
+                MaxHeight="380"
+                Name="VersionListBox"
+                SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="instancePages:ResourceVersionItem">
+                        <Border CornerRadius="6" Padding="8,4">
+                            <StackPanel Spacing="1">
+                                <DockPanel>
+                                    <Border
+                                        Background="{DynamicResource SystemAccentColor}"
+                                        CornerRadius="8"
+                                        DockPanel.Dock="Left"
+                                        IsVisible="{Binding IsCurrent}"
+                                        Margin="0,0,6,1"
+                                        Padding="5,1,5,0">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="White"
+                                            Text="当前版本"
+                                            VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        MaxLines="1"
+                                        Text="{Binding File.DisplayName}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    MaxLines="1"
+                                    Text="{Binding File.Details}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+        <StackPanel
+            Grid.Row="4"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button
+                Command="{Binding ConfirmCommand}"
+                Content="切换到此版本"
+                IsEnabled="{Binding CanConfirm}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

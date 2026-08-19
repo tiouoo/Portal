@@ -9,8 +9,11 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -26,11 +29,13 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     private readonly MinecraftInstance? _instance;
     private readonly bool _isCompactLayout;
     private readonly ResourcePackService _resourcePackService = new();
+    private readonly ResourceUpdateService _updateService = new();
     private string _filter = string.Empty;
     private ResourceFilterMode _filterMode = ResourceFilterMode.All;
     private bool _hasLoaded;
     private bool _isDisposed;
     private bool _isLoading;
+    private bool _updateCheckRunning;
     private ResourceSortMode _sortMode = ResourceSortMode.FileName;
 
     public ResourcePacks()
@@ -41,6 +46,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         AddHandler(DragDrop.DropEvent, Resource_OnDrop);
         DataContext = this;
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("可更新", 0)));
     }
 
     public ResourcePacks(MinecraftInstance instance) : this(instance, MinecraftSpecialFolder.ResourcePacksFolder, "资源包")
@@ -123,6 +129,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             RaiseSelectionProperties();
             foreach (var pack in packs) Items.Add(new ResourcePackItem(pack, _isCompactLayout));
             ApplyFilter();
+            _ = CheckUpdatesAsync();
         }
         catch (OperationCanceledException exception)
         {
@@ -144,6 +151,11 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             return;
 
         await topLevel.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(_instance.GetSpecialFolder(_folder)));
+    }
+
+    private void CheckUpdates_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = CheckUpdatesAsync(true);
     }
 
     private async void Import_OnClick(object? sender, RoutedEventArgs e)
@@ -220,12 +232,22 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
                 item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
                 item.DescriptionText.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
-        foreach (var item in SortItems(query))
+        foreach (var item in SortItems(query).Where(MatchesStateFilter))
             FilteredItems.Add(item);
-        if (FilterOptions.Count == 0)
-            FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("全部", 0)));
+        while (FilterOptions.Count < 2)
+            FilterOptions.Add(new ResourceFilterOption(""));
         FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
+        FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("可更新", Items.Count(item => item.HasUpdate));
         RaiseListProperties();
+    }
+
+    private bool MatchesStateFilter(ResourcePackItem item)
+    {
+        return _filterMode switch
+        {
+            ResourceFilterMode.CanUpdate => item.HasUpdate,
+            _ => true
+        };
     }
 
     private void EnsureDefaultSelections()
@@ -256,9 +278,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             return;
         _filterMode = combo.SelectedIndex switch
         {
-            1 => ResourceFilterMode.Enabled,
-            2 => ResourceFilterMode.Disabled,
-            3 => ResourceFilterMode.Duplicates,
+            1 => ResourceFilterMode.CanUpdate,
             _ => ResourceFilterMode.All
         };
         ApplyFilter();
@@ -384,9 +404,182 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
                 failed == 0 ? NotificationType.Success : NotificationType.Warning);
     }
 
+    private async Task CheckUpdatesAsync(bool forceRefresh = false)
+    {
+        if (_updateCheckRunning || _instance == null || _isDisposed) return;
+        _updateCheckRunning = true;
+        try
+        {
+            var kind = _folder == MinecraftSpecialFolder.ShaderPacksFolder
+                ? ResourceKind.ShaderPack
+                : _folder == MinecraftSpecialFolder.ResourcePacksFolder
+                    ? ResourceKind.ResourcePack
+                    : ResourceKind.ResourcePack;
+            var candidates = Items.Select(item => new ResourceUpdateCandidate(item.Info.FilePath, kind)).ToArray();
+            var results = await _updateService.CheckUpdatesAsync(_instance, candidates, forceRefresh,
+                _disposeCancellation.Token);
+            if (_isDisposed) return;
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (_isDisposed) return;
+                foreach (var item in Items)
+                    if (results.TryGetValue(item.Info.FilePath, out var result))
+                        item.SetUpdateResult(result);
+                RefreshRollbackStates();
+                ApplyFilter();
+            }, DispatcherPriority.Background);
+        }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[ResourcePacks] Update check cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[ResourcePacks] Update check failed: {exception}");
+        }
+        finally
+        {
+            _updateCheckRunning = false;
+        }
+    }
+
+    private void RefreshRollbackStates()
+    {
+        if (_instance == null) return;
+        var folder = _instance.GetSpecialFolder(_folder);
+        var targets = ResourceBackupStore.FindRollbackTargets(folder, Items.Select(item => item.Info.FilePath));
+        foreach (var item in Items)
+            item.SetRollback(targets.Contains(item.Info.FilePath));
+    }
+
+    private async void UpdateResourcePack_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetItem(sender) is not { } item || item.UpdateFile is not { } file)
+            return;
+        await UpdateToVersionAsync(item, file);
+    }
+
+    private async void SwitchVersionResourcePack_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetItem(sender) is not { } item || TopLevel.GetTopLevel(this) is not { } topLevel || _instance == null)
+            return;
+
+        var result = item.UpdateResult;
+        if (result?.HasIdentity != true || result.Source is not { } source)
+        {
+            ShowNotice("尚未识别此资源的平台信息，暂时无法切换版本", NotificationType.Warning);
+            return;
+        }
+
+        var kind = _folder == MinecraftSpecialFolder.ShaderPacksFolder
+            ? ResourceKind.ShaderPack
+            : ResourceKind.ResourcePack;
+        var file = await ResourceVersionSwitchDialog.ShowAsync(topLevel,
+            new ResourceVersionSwitchTarget(source, result.ProjectId!, result.CurrentVersionId ?? string.Empty,
+                kind, _instance));
+        if (file is null)
+            return;
+        await UpdateToVersionAsync(item, file);
+    }
+
+    private async void RollbackResourcePack_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetItem(sender) is not { } item)
+            return;
+        await RollbackAsync(item);
+    }
+
+    private async Task UpdateToVersionAsync(ResourcePackItem item, ModVersionFileItem file)
+    {
+        if (_instance == null || TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
+        if (item.IsUpdating) return;
+        item.SetIsUpdating(true);
+        var destination = _instance.GetSpecialFolder(_folder);
+        try
+        {
+            var tempPath = Path.Combine(destination, $".portal-update-{Guid.NewGuid():N}.zip");
+            var task = DownloadTasks.Download(topLevel, $"更新{PackName}：{file.DisplayName}", "取消此更新",
+                file.FileName, file.DownloadUrl, tempPath, file.FileSize,
+                afterDownload: _ =>
+                {
+                    var oldPath = item.Info.FilePath;
+                    var newPath = ResourceUpdateService.ApplyUpdateFile(oldPath, tempPath, file.FileName);
+                    ResourceUpdateService.InvalidateCache(oldPath);
+                    ResourceUpdateService.InvalidateCache(newPath);
+                    return Task.CompletedTask;
+                }, completedText: $"{PackName}已更新");
+            await task.Completion;
+            await ReloadAsync();
+            _ = CheckUpdatesAsync(true);
+        }
+        catch (OperationCanceledException)
+        {
+            ShowNotice($"{PackName}更新已取消", NotificationType.Warning);
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[ResourcePacks] Update failed for {item.Info.FilePath}: {exception}");
+            ShowNotice($"{PackName}更新失败", NotificationType.Error);
+        }
+        finally
+        {
+            item.SetIsUpdating(false);
+        }
+    }
+
+    private async Task RollbackAsync(ResourcePackItem item)
+    {
+        if (_instance == null || item.IsUpdating) return;
+        item.SetIsUpdating(true);
+        try
+        {
+            var newPath = await Task.Run(() =>
+            {
+                var path = ResourceBackupStore.Rollback(item.Info.FilePath);
+                if (path == null)
+                    return null;
+                ResourceUpdateService.InvalidateCache(item.Info.FilePath);
+                ResourceUpdateService.InvalidateCache(path);
+                return path;
+            });
+            if (newPath == null)
+            {
+                ShowNotice("没有可回滚的版本", NotificationType.Warning);
+                return;
+            }
+
+            await ReloadAsync();
+            _ = CheckUpdatesAsync(true);
+            ShowNotice($"{PackName}已回滚", NotificationType.Success);
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[ResourcePacks] Rollback failed for {item.Info.FilePath}: {exception}");
+            ShowNotice($"{PackName}回滚失败", NotificationType.Error);
+        }
+        finally
+        {
+            item.SetIsUpdating(false);
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _hasLoaded = false;
+        await LoadAsync();
+    }
+
     private static ResourcePackItem? GetItem(object? sender)
     {
         return (sender as Control)?.Tag as ResourcePackItem;
+    }
+
+    private void ShowNotice(string message, NotificationType type)
+    {
+        if (TopLevel.GetTopLevel(this) is { } topLevel)
+            topLevel.Notice(message, type);
     }
 
     private void SetSelection(Func<ResourcePackItem, bool> selection)
@@ -423,12 +616,23 @@ public sealed class SkinPacks(MinecraftInstance instance) : ResourcePacks(instan
 public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout = false)
     : INotifyPropertyChanged, IDisposable
 {
+    private bool _hasRollback;
     private bool _isSelected;
+    private bool _isUpdating;
+    private ResourceUpdateResult? _updateResult;
     public ResourcePackInfo Info { get; } = info;
     public string DisplayName => Info.DisplayName;
     public string FileName => Info.FileName;
     public string SizeAndNameText => $"{ResourceListUi.FormatSize(Info.FileSize)}·{FileName}";
     public bool IsCompactLayout { get; } = isCompactLayout;
+
+    public ResourceUpdateResult? UpdateResult => _updateResult;
+    public bool HasUpdate => _updateResult?.HasUpdate == true;
+    public bool IsUpdatable => HasUpdate;
+    public bool HasIdentity => _updateResult?.HasIdentity == true;
+    public ModVersionFileItem? UpdateFile => _updateResult?.TargetFile;
+    public bool HasRollback => _hasRollback;
+    public bool IsUpdating => _isUpdating;
 
     public string SecondaryText => IsCompactLayout
         ? $"{ResourceListUi.FormatSize(Info.FileSize)}·{(Info.SkinCount is int count ? $"包含 {count} 个皮肤" : "皮肤数量未知")}"
@@ -468,6 +672,36 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public void SetUpdateResult(ResourceUpdateResult? result)
+    {
+        if (ReferenceEquals(_updateResult, result)) return;
+        _updateResult = result;
+        Raise(nameof(HasUpdate));
+        Raise(nameof(IsUpdatable));
+        Raise(nameof(HasIdentity));
+        Raise(nameof(UpdateFile));
+        Raise(nameof(UpdateResult));
+    }
+
+    public void SetRollback(bool hasRollback)
+    {
+        if (_hasRollback == hasRollback) return;
+        _hasRollback = hasRollback;
+        Raise(nameof(HasRollback));
+    }
+
+    public void SetIsUpdating(bool isUpdating)
+    {
+        if (_isUpdating == isUpdating) return;
+        _isUpdating = isUpdating;
+        Raise(nameof(IsUpdating));
+    }
+
+    private void Raise(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
     private static Bitmap? CreateIcon(byte[]? data)
     {

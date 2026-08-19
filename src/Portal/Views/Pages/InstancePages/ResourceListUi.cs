@@ -22,7 +22,9 @@ public enum ResourceFilterMode
 
     Disabled = 2,
 
-    Duplicates = 3
+    Duplicates = 3,
+
+    CanUpdate = 4
 }
 
 public sealed class ResourceFilterOption(string label) : INotifyPropertyChanged

@@ -35,12 +35,14 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     private readonly HashSet<string> _duplicateProjectIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly MinecraftInstance? _instance;
     private readonly ModService _modService = new();
+    private readonly ResourceUpdateService _updateService = new();
     private string _filter = string.Empty;
     private ResourceFilterMode _filterMode = ResourceFilterMode.All;
     private bool _hasLoaded;
     private bool _isDisposed;
     private bool _isLoading;
     private bool _isLoadingMetadata;
+    private bool _updateCheckRunning;
     private int _loadVersion;
     private ResourceSortMode _sortMode = ResourceSortMode.FileName;
 
@@ -170,6 +172,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             1 => ResourceFilterMode.Enabled,
             2 => ResourceFilterMode.Disabled,
             3 => ResourceFilterMode.Duplicates,
+            4 => ResourceFilterMode.CanUpdate,
             _ => ResourceFilterMode.All
         };
         ApplyFilter();
@@ -207,7 +210,9 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         RaiseListProperties();
         Logger.Info($"[Mods] Scanned {Items.Count} mod(s) for {_instance.InstanceName} in {stopwatch.Elapsed}.");
         _ = Task.Run(() => RefreshMetadataAndFriendlyNamesAsync(mods, _disposeCancellation.Token),
-            _disposeCancellation.Token);
+            _disposeCancellation.Token).ContinueWith(_ =>
+            Dispatcher.UIThread.Post(() => _ = CheckUpdatesAsync(), DispatcherPriority.Background),
+            CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
     }
 
     private async Task RefreshMetadataAndFriendlyNamesAsync(IReadOnlyList<ModInfo> mods,
@@ -276,6 +281,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("启用", 0)));
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("禁用", 0)));
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("重复", 0)));
+        FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel("可更新", 0)));
     }
 
     private void ApplyFilter()
@@ -310,6 +316,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
             ResourceFilterMode.Enabled => item.IsEnabled,
             ResourceFilterMode.Disabled => item.IsDisabled,
             ResourceFilterMode.Duplicates => IsDuplicate(item),
+            ResourceFilterMode.CanUpdate => item.HasUpdate,
             _ => true
         };
     }
@@ -354,10 +361,13 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
     {
         if (FilterOptions.Count == 0)
             InitializeFilterOptions();
+        while (FilterOptions.Count < 5)
+            FilterOptions.Add(new ResourceFilterOption(""));
         FilterOptions[0].Label = ResourceListUi.BuildFilterLabel("全部", Items.Count);
         FilterOptions[1].Label = ResourceListUi.BuildFilterLabel("启用", Items.Count(item => item.IsEnabled));
         FilterOptions[2].Label = ResourceListUi.BuildFilterLabel("禁用", Items.Count(item => item.IsDisabled));
         FilterOptions[3].Label = ResourceListUi.BuildFilterLabel("重复", Items.Count(IsDuplicate));
+        FilterOptions[4].Label = ResourceListUi.BuildFilterLabel("可更新", Items.Count(item => item.HasUpdate));
     }
 
     private async void OpenFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -365,6 +375,11 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (TopLevel.GetTopLevel(this) is not { } topLevel || _instance == null) return;
         await topLevel.Launcher.LaunchDirectoryInfoAsync(
             new DirectoryInfo(_instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder)));
+    }
+
+    private void CheckUpdates_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = CheckUpdatesAsync(true);
     }
 
     private async void Import_OnClick(object? sender, RoutedEventArgs e)
@@ -603,6 +618,218 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         return Items.Where(item => item.IsSelected).ToArray();
     }
 
+    private async Task CheckUpdatesAsync(bool forceRefresh = false)
+    {
+        if (_updateCheckRunning || _instance == null || _isDisposed) return;
+        _updateCheckRunning = true;
+        try
+        {
+            var candidates = Items.Select(item => new ResourceUpdateCandidate(
+                    item.Info.FilePath, ResourceKind.Mod, item.Info.Sha1, item.Info.Fingerprint,
+                    item.Info.Source, item.Info.ProjectId, item.Info.VersionId))
+                .ToArray();
+            var results = await _updateService.CheckUpdatesAsync(_instance, candidates, forceRefresh,
+                _disposeCancellation.Token);
+            if (_isDisposed) return;
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (_isDisposed) return;
+                foreach (var item in Items)
+                    if (results.TryGetValue(item.Info.FilePath, out var result))
+                        item.SetUpdateResult(result);
+                RefreshRollbackStates();
+                RefreshFilterOptions();
+                RaiseListProperties();
+                if (_filterMode == ResourceFilterMode.CanUpdate)
+                    ApplyFilter();
+            }, DispatcherPriority.Background);
+        }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[Mods] Update check cancelled: {exception}");
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Mods] Update check failed: {exception}");
+        }
+        finally
+        {
+            _updateCheckRunning = false;
+        }
+    }
+
+    private void RefreshRollbackStates()
+    {
+        if (_instance == null) return;
+        var folder = _instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
+        var targets = ResourceBackupStore.FindRollbackTargets(folder, Items.Select(item => item.Info.FilePath));
+        foreach (var item in Items)
+            item.SetRollback(targets.Contains(item.Info.FilePath));
+    }
+
+    private async void UpdateMod_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetModItem(sender) is not { } item || item.UpdateFile is not { } file)
+            return;
+        await UpdateToVersionAsync(item, file);
+    }
+
+    private async void SwitchVersionMod_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetModItem(sender) is not { } item || TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
+
+        var source = item.Info.Source == "CurseForge" ? ModDetailsSource.CurseForge :
+            item.Info.Source == "Modrinth" ? ModDetailsSource.Modrinth : (ModDetailsSource?)null;
+        if (source is null || string.IsNullOrEmpty(item.Info.ProjectId))
+        {
+            ShowNotice("尚未识别此模组的平台信息，暂时无法切换版本", NotificationType.Warning);
+            return;
+        }
+
+        var file = await ResourceVersionSwitchDialog.ShowAsync(topLevel,
+            new ResourceVersionSwitchTarget(source.Value, item.Info.ProjectId, item.Info.VersionId ?? string.Empty,
+                ResourceKind.Mod, _instance!));
+        if (file is null)
+            return;
+        await UpdateToVersionAsync(item, file);
+    }
+
+    private async void RollbackMod_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GetModItem(sender) is not { } item)
+            return;
+        await RollbackModAsync(item);
+    }
+
+    private async Task UpdateToVersionAsync(ModItem item, ModVersionFileItem file)
+    {
+        if (_instance == null || TopLevel.GetTopLevel(this) is not { } topLevel)
+            return;
+        if (item.IsUpdating) return;
+        item.SetIsUpdating(true);
+        var destination = _instance.GetSpecialFolder(MinecraftSpecialFolder.ModsFolder);
+        try
+        {
+            var tempPath = Path.Combine(destination, $".portal-update-{Guid.NewGuid():N}.jar");
+            var task = DownloadTasks.Download(topLevel, $"更新模组：{file.DisplayName}", "取消此模组更新",
+                file.FileName, file.DownloadUrl, tempPath, file.FileSize,
+                afterDownload: _ =>
+                {
+                    var oldPath = item.Info.FilePath;
+                    var newPath = ResourceUpdateService.ApplyUpdateFile(oldPath, tempPath, file.FileName);
+                    ResourceUpdateService.InvalidateCache(oldPath);
+                    ResourceUpdateService.InvalidateCache(newPath);
+                    var info = BuildUpdatedModInfo(item.Info, newPath, file);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (_isDisposed) return;
+                        item.Update(info);
+                        item.SetUpdateResult(null);
+                        RefreshRollbackStates();
+                        ApplyFilter();
+                    }, DispatcherPriority.Background);
+                    return Task.CompletedTask;
+                }, completedText: "模组已更新");
+            await task.Completion;
+        }
+        catch (OperationCanceledException)
+        {
+            ShowNotice("模组更新已取消", NotificationType.Warning);
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Mods] Update failed for {item.Info.FilePath}: {exception}");
+            ShowNotice("模组更新失败", NotificationType.Error);
+        }
+        finally
+        {
+            item.SetIsUpdating(false);
+            _ = CheckUpdatesAsync(true);
+        }
+    }
+
+    private async Task RollbackModAsync(ModItem item)
+    {
+        if (_instance == null || item.IsUpdating) return;
+        item.SetIsUpdating(true);
+        try
+        {
+            var newPath = await Task.Run(() =>
+            {
+                var path = ResourceBackupStore.Rollback(item.Info.FilePath);
+                if (path == null)
+                    return null;
+                ResourceUpdateService.InvalidateCache(item.Info.FilePath);
+                ResourceUpdateService.InvalidateCache(path);
+                return path;
+            });
+            if (newPath == null)
+            {
+                ShowNotice("没有可回滚的版本", NotificationType.Warning);
+                return;
+            }
+
+            var info = BuildRolledBackModInfo(item.Info, newPath);
+            item.Update(info);
+            item.SetUpdateResult(null);
+            RefreshRollbackStates();
+            ApplyFilter();
+            ShowNotice("已回滚模组", NotificationType.Success);
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Mods] Rollback failed for {item.Info.FilePath}: {exception}");
+            ShowNotice("模组回滚失败", NotificationType.Error);
+        }
+        finally
+        {
+            item.SetIsUpdating(false);
+            _ = CheckUpdatesAsync(true);
+        }
+    }
+
+    private static ModInfo BuildUpdatedModInfo(ModInfo oldInfo, string newPath, ModVersionFileItem file)
+    {
+        return oldInfo with
+        {
+            FilePath = newPath,
+            FileName = GetModFileName(newPath),
+            DisplayName = file.DisplayName,
+            Description = null,
+            FileSize = new FileInfo(newPath).Length,
+            LastWriteTime = File.GetLastWriteTime(newPath),
+            Source = file.Source.ToString(),
+            ProjectId = file.ProjectId,
+            VersionId = file.Id,
+            Sha1 = null,
+            Fingerprint = null
+        };
+    }
+
+    private static ModInfo BuildRolledBackModInfo(ModInfo oldInfo, string newPath)
+    {
+        return oldInfo with
+        {
+            FilePath = newPath,
+            FileName = GetModFileName(newPath),
+            FileSize = new FileInfo(newPath).Length,
+            LastWriteTime = File.GetLastWriteTime(newPath),
+            VersionId = null,
+            Sha1 = null,
+            Fingerprint = null
+        };
+    }
+
+    private static string GetModFileName(string path)
+    {
+        var name = Path.GetFileName(path);
+        return name.EndsWith(".jar.disabled", StringComparison.OrdinalIgnoreCase)
+            ? name[..^".jar.disabled".Length]
+            : Path.GetFileNameWithoutExtension(name);
+    }
+
     private bool IsTextInputFocused()
     {
         return TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox
@@ -709,8 +936,11 @@ public static class WikiEntries
 
 public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
 {
+    private bool _hasRollback;
     private bool _isDuplicate;
     private bool _isSelected;
+    private bool _isUpdating;
+    private ResourceUpdateResult? _updateResult;
     public ModInfo Info { get; private set; } = info;
 
     public string DisplayName => Info.DisplayName;
@@ -723,6 +953,14 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
     public bool IsDisabled => Info.IsDisabled;
     public bool IsEnabled => !IsDisabled;
+
+    public bool HasUpdate => _updateResult?.HasUpdate == true;
+    public bool IsUpdatable => HasUpdate;
+    public bool HasIdentity => !string.IsNullOrEmpty(Info.Source) && !string.IsNullOrEmpty(Info.ProjectId) ||
+                               _updateResult?.HasIdentity == true;
+    public ModVersionFileItem? UpdateFile => _updateResult?.TargetFile;
+    public bool HasRollback => _hasRollback;
+    public bool IsUpdating => _isUpdating;
 
     public bool IsDuplicate
     {
@@ -760,8 +998,38 @@ public sealed class ModItem(ModInfo info) : INotifyPropertyChanged, IDisposable
                  {
                      nameof(DisplayName), nameof(FriendlyName), nameof(FileName), nameof(SizeAndNameText),
                      nameof(DescriptionText),
-                     nameof(IconUrl), nameof(HasIcon), nameof(IsDisabled), nameof(IsEnabled)
+                     nameof(IconUrl), nameof(HasIcon), nameof(IsDisabled), nameof(IsEnabled),
+                     nameof(HasIdentity)
                  })
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public void SetUpdateResult(ResourceUpdateResult? result)
+    {
+        if (ReferenceEquals(_updateResult, result)) return;
+        _updateResult = result;
+        Raise(nameof(HasUpdate));
+        Raise(nameof(IsUpdatable));
+        Raise(nameof(HasIdentity));
+        Raise(nameof(UpdateFile));
+    }
+
+    public void SetRollback(bool hasRollback)
+    {
+        if (_hasRollback == hasRollback) return;
+        _hasRollback = hasRollback;
+        Raise(nameof(HasRollback));
+    }
+
+    public void SetIsUpdating(bool isUpdating)
+    {
+        if (_isUpdating == isUpdating) return;
+        _isUpdating = isUpdating;
+        Raise(nameof(IsUpdating));
+    }
+
+    private void Raise(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
