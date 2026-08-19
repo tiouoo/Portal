@@ -1,4 +1,5 @@
 using Portal.Bedrock.Xbox;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -13,7 +14,7 @@ internal sealed class PortalXUserLauncher(string instancePath)
         Directory.CreateDirectory(preloadDirectory);
         var hookPath = Path.Combine(preloadDirectory, "Portal.XUserHook.dll");
         using var input = typeof(PortalXUserLauncher).Assembly.GetManifestResourceStream(HookResourceName)
-                          ?? throw new InvalidOperationException("Portal.Bedrock.Windows 未包含 Portal.XUserHook.dll。");
+                          ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockAuth_missingXUserHookDll.CurrentValue());
         using var output = new FileStream(hookPath, FileMode.Create, FileAccess.Write, FileShare.Read);
         input.CopyTo(output);
     }
@@ -22,7 +23,7 @@ internal sealed class PortalXUserLauncher(string instancePath)
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
-            throw new InvalidDataException("基岩账户缺少 Microsoft access token。");
+            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockAuth_missingAccessToken.CurrentValue());
 
         var identity = DeviceIdentity.Create();
         try

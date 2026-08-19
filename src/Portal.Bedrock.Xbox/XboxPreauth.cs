@@ -5,6 +5,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Xbox;
 
@@ -128,7 +129,7 @@ public sealed class XboxPreauth : IDisposable
 		{
 			return value;
 		}
-		throw new InvalidDataException("Xbox " + name + " 缺失。");
+		throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockAuth_missingRequired.CurrentValue(), name));
 	}
 
 	public void Dispose()

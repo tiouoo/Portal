@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Portal.Bedrock.Core\Portal.Bedrock.Core.csproj" />
+    <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj" />
   </ItemGroup>
 
 </Project>

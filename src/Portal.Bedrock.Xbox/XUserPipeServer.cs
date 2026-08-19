@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Xbox;
 
@@ -124,7 +125,7 @@ public class XUserPipeServer : IDisposable
 				}
 				continue;
 			default:
-				throw new Win32Exception((int)lastPInvokeError, "等待 XUser 管道客户端失败。");
+				throw new Win32Exception((int)lastPInvokeError, CommonLanguageManager.Instance.bedrockAuth_waitXUserClientFailed.CurrentValue());
 			case ErrorPipeConnected:
 				break;
 			}
@@ -133,12 +134,12 @@ public class XUserPipeServer : IDisposable
 		}
 		if (!flag)
 		{
-			throw new TimeoutException($"XUser 注入组件未在 {_timeout.TotalSeconds:0} 秒内连接会话管道。");
+			throw new TimeoutException(string.Format(CommonLanguageManager.Instance.bedrockAuth_xUserConnectTimeout.CurrentValue(), _timeout.TotalSeconds));
 		}
 		uint num = 0u;
 		if (GetNamedPipeClientProcessId(_pipe, &num) == 0 || num != _targetPid)
 		{
-			throw new InvalidOperationException("XUser 会话管道连接者不是目标进程。");
+			throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockAuth_xUserNotTargetProcess.CurrentValue());
 		}
 		ulong num2 = (ulong)Math.Max(0L, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 		ulong value = num2 + SessionLifetimeSeconds;
@@ -162,7 +163,7 @@ public class XUserPipeServer : IDisposable
 				uint lastWin32Error = (uint)Marshal.GetLastWin32Error();
 				if (lastWin32Error != ErrorBrokenPipe)
 				{
-					throw new Win32Exception((int)lastWin32Error, "刷新 XUser 管道失败。");
+					throw new Win32Exception((int)lastWin32Error, CommonLanguageManager.Instance.bedrockAuth_xUserFlushFailed.CurrentValue());
 				}
 			}
 			DisconnectNamedPipe(_pipe);
@@ -184,7 +185,7 @@ public class XUserPipeServer : IDisposable
 		nint num = 0;
 		if (ConvertStringSecurityDescriptorToSecurityDescriptorW("D:P(A;;GA;;;SY)(A;;GA;;;OW)", SddlRevision1, &num, null) == 0 || num == 0)
 		{
-			throw new Win32Exception(Marshal.GetLastPInvokeError(), "创建 XUser 管道安全描述符失败。");
+			throw new Win32Exception(Marshal.GetLastPInvokeError(), CommonLanguageManager.Instance.bedrockAuth_xUserCreateSecurityFailed.CurrentValue());
 		}
 		try
 		{
@@ -204,7 +205,7 @@ public class XUserPipeServer : IDisposable
 		if (num2 == 0 || num2 == -1)
 		{
 			_pipe = 0;
-			throw new Win32Exception(Marshal.GetLastPInvokeError(), "创建 XUser 一次性命名管道失败。");
+			throw new Win32Exception(Marshal.GetLastPInvokeError(), CommonLanguageManager.Instance.bedrockAuth_xUserCreatePipeFailed.CurrentValue());
 		}
 	}
 
@@ -218,7 +219,7 @@ public class XUserPipeServer : IDisposable
 			{
 				if (WriteFile(_pipe, buffer, (uint)(bytes.Length - i), &num, 0) == 0 || num == 0)
 				{
-					throw new Win32Exception(Marshal.GetLastPInvokeError(), "命名管道提前关闭。");
+					throw new Win32Exception(Marshal.GetLastPInvokeError(), CommonLanguageManager.Instance.bedrockAuth_xUserPipeClosedEarly.CurrentValue());
 				}
 			}
 		}

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -24,7 +25,7 @@ internal static class BedrockNativeLogMonitor
                 await Task.Delay(100).ConfigureAwait(false);
             if (!File.Exists(logPath))
             {
-                log("未找到 Portal 预加载运行日志文件", BedrockLogLevel.Warning);
+                log(LogLanguageManager.Instance.bedrock_nativeLogNotFound.CurrentValue(), BedrockLogLevel.Warning);
                 return;
             }
 
@@ -37,7 +38,7 @@ internal static class BedrockNativeLogMonitor
                 var line = await reader.ReadLineAsync().ConfigureAwait(false);
                 if (line != null)
                 {
-                    log($"[Portal 预加载] {line}", GetLevel(line));
+                    log(string.Format(LogLanguageManager.Instance.bedrock_nativeLogLine.CurrentValue(), line), GetLevel(line));
                     continue;
                 }
 
@@ -54,7 +55,7 @@ internal static class BedrockNativeLogMonitor
                 {
                     await Task.Delay(100).ConfigureAwait(false);
                     if (await reader.ReadLineAsync().ConfigureAwait(false) is not { } finalLine) break;
-                    log($"[Portal 预加载] {finalLine}", GetLevel(finalLine));
+                    log(string.Format(LogLanguageManager.Instance.bedrock_nativeLogLine.CurrentValue(), finalLine), GetLevel(finalLine));
                     continue;
                 }
                 waitingForProcess = 0;
@@ -63,8 +64,8 @@ internal static class BedrockNativeLogMonitor
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"读取 Portal 预加载日志失败：{logPath}{Environment.NewLine}{exception}");
-            log($"读取 Portal 预加载日志失败：{exception}", BedrockLogLevel.Warning);
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_nativeLogReadFailed.CurrentValue(), logPath, Environment.NewLine, exception));
+            log(string.Format(LogLanguageManager.Instance.bedrock_nativeLogReadFailedShort.CurrentValue(), exception), BedrockLogLevel.Warning);
         }
     }
 
@@ -80,7 +81,7 @@ internal static class BedrockNativeLogMonitor
         try { return !process.HasExited; }
         catch (InvalidOperationException exception)
         {
-            Trace.TraceError($"检查 Minecraft 进程状态失败。{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_checkProcessStateFailed.CurrentValue(), Environment.NewLine, exception));
             return false;
         }
     }

@@ -9,6 +9,7 @@ using Portal.Bedrock.Core;
 using Portal.Bedrock.Core.Windows;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -24,12 +25,12 @@ public class BedrockLaunch : IBedrockLaunch
 
     public override async Task Launch(CancellationToken cancellationToken)
     {
-        Log(BedrockLogLevel.Information, $"开始准备实例 {_instanceConfig.Name} 的基岩版启动环境");
+        Log(BedrockLogLevel.Information, string.Format(LogLanguageManager.Instance.bedrockLaunch_preparingEnvironment.CurrentValue(), _instanceConfig.Name));
         BedrockWindowsPrerequisites.Validate(_instanceConfig);
         await BedrockWindowsPrerequisites.EnsureDependenciesAsync(_instanceConfig.InstancePath,
             _instanceConfig.BuildType, UpdateProgress, LogReceived, cancellationToken);
         var nativeLogPath = BedrockDataIsolation.Prepare(_instanceConfig, LogReceived);
-        Log(BedrockLogLevel.Information, "基岩版数据隔离和预加载环境准备完成");
+        Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_environmentReady.CurrentValue());
         Process? launchedProcess = null;
         BedrockNativeLogMonitor.Start(nativeLogPath, () => launchedProcess, LogReceived);
 
@@ -51,21 +52,21 @@ public class BedrockLaunch : IBedrockLaunch
             RegisterProgress = new Progress<DeploymentProgress>(progress =>
             {
                 Console.WriteLine($@"registerProcess_percent: {progress.percentage} - {progress.state}");
-                Log(BedrockLogLevel.Debug, $"注册游戏包：{progress.state}，进度 {progress.percentage}%");
+                Log(BedrockLogLevel.Debug, string.Format(LogLanguageManager.Instance.bedrockLaunch_registeringPackage.CurrentValue(), progress.state, progress.percentage));
 
                 
-                UpdateProgress?.Invoke($"步骤：{progress.state}", progress.percentage);
+                UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_stepFormat.CurrentValue(), progress.state), progress.percentage);
             }),
             Progress = new Progress<LaunchState>(state =>
             {
                 Console.WriteLine(state);
-                Log(BedrockLogLevel.Information, $"游戏启动状态：{state}");
-                UpdateProgress?.Invoke($"状态：{state}", 0);
+                Log(BedrockLogLevel.Information, string.Format(LogLanguageManager.Instance.bedrockLaunch_gameLaunchState.CurrentValue(), state));
+                UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_statusFormat.CurrentValue(), state), 0);
 
                 
                 if (state == LaunchState.Launched)
                 {
-                    UpdateProgress?.Invoke("状态：游戏启动完成，开始计时", 100);
+                    UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_gameLaunchComplete.CurrentValue(), 100);
                 }
             }),
             LaunchArgs = BuildLaunchArguments()
@@ -75,7 +76,7 @@ public class BedrockLaunch : IBedrockLaunch
         
         var existingProcessIds = Process.GetProcessesByName("Minecraft.Windows").Select(process => process.Id).ToHashSet();
         var launchStarted = DateTime.Now;
-        Log(BedrockLogLevel.Information, $"启动 Minecraft.Windows，实例目录：{_instanceConfig.InstancePath}");
+        Log(BedrockLogLevel.Information, string.Format(LogLanguageManager.Instance.bedrockLaunch_launchingMinecraftWindows.CurrentValue(), _instanceConfig.InstancePath));
         if (Authentication != null && _instanceConfig.BuildType == BedrockBuildType.GDK)
         {
             launchedProcess = await LaunchWithXboxAccountAsync(Authentication).ConfigureAwait(false);
@@ -86,12 +87,12 @@ public class BedrockLaunch : IBedrockLaunch
         }
         if (launchedProcess == null)
         {
-            Log(BedrockLogLevel.Warning, "Portal.Bedrock.Core 未在 5 秒内返回 Minecraft 进程，继续等待进程启动");
+            Log(BedrockLogLevel.Warning, LogLanguageManager.Instance.bedrockLaunch_waitingForProcess.CurrentValue());
             launchedProcess = await FindLaunchedProcessAsync(existingProcessIds, launchStarted).ConfigureAwait(false);
         }
         MinecraftProcess = launchedProcess ?? throw new InvalidOperationException(
-            "基岩版启动状态已完成，但未找到 Minecraft 进程。游戏可能在启动时提前退出。");
-        Log(BedrockLogLevel.Information, $"已获取 Minecraft 进程，PID：{MinecraftProcess.Id}");
+            CommonLanguageManager.Instance.bedrockLaunch_processNotFoundAfterLaunch.CurrentValue());
+        Log(BedrockLogLevel.Information, string.Format(LogLanguageManager.Instance.bedrockLaunch_processObtained.CurrentValue(), MinecraftProcess.Id));
         BedrockPreloadTrigger.Trigger(MinecraftProcess, LogReceived);
         try
         {
@@ -102,7 +103,7 @@ public class BedrockLaunch : IBedrockLaunch
                 MinecraftProcess.EnableRaisingEvents = true;
                 MinecraftProcess.Exited += (_, _) => DisposeMouseLocker();
                 Log(BedrockLogLevel.Information,
-                    $"Windows 鼠标锁定已启用，解锁热键：{_instanceConfig.MouseLockHotkey}");
+                    string.Format(LogLanguageManager.Instance.bedrockLaunch_mouseLockEnabled.CurrentValue(), _instanceConfig.MouseLockHotkey));
             }
 
             BedrockModInjector.Start(_instanceConfig, MinecraftProcess, LogReceived);
@@ -119,7 +120,7 @@ public class BedrockLaunch : IBedrockLaunch
 
     private async Task<Process> LaunchWithXboxAccountAsync(BedrockAuthentication account)
     {
-        Log(BedrockLogLevel.Information, $"正在关联 Xbox 账户 {account.Gamertag}");
+        Log(BedrockLogLevel.Information, string.Format(LogLanguageManager.Instance.bedrockLaunch_linkingXboxAccount.CurrentValue(), account.Gamertag));
         var launcher = new PortalXUserLauncher(_instanceConfig.InstancePath);
         launcher.DeployHook();
         using var authentication = await PortalXUserLauncher.AuthenticateAsync(account.AccessToken);
@@ -133,7 +134,7 @@ public class BedrockLaunch : IBedrockLaunch
                 ProcessStarted?.Invoke(MinecraftProcess);
             });
         var process = Process.GetProcessById((int)result.ProcessId);
-        Log(BedrockLogLevel.Information, "Xbox 账户已注入基岩版游戏进程");
+        Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_xboxAccountInjected.CurrentValue());
         return process;
     }
 
@@ -178,7 +179,7 @@ public class BedrockLaunch : IBedrockLaunch
         try { return process.StartTime; }
         catch (Exception exception)
         {
-            Trace.TraceError($"读取 Minecraft 进程启动时间失败：{process.Id}{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_readStartTimeFailed.CurrentValue(), process.Id, Environment.NewLine, exception));
             return DateTime.MinValue;
         }
     }
@@ -188,7 +189,7 @@ public class BedrockLaunch : IBedrockLaunch
         try { return process.MainModule?.FileName; }
         catch (Exception exception)
         {
-            Trace.TraceError($"读取 Minecraft 进程路径失败：{process.Id}{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_readProcessPathFailed.CurrentValue(), process.Id, Environment.NewLine, exception));
             return null;
         }
     }

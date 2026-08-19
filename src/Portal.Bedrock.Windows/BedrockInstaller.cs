@@ -14,6 +14,7 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -46,7 +47,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
             if (!refresh && _cachedVersions is not null) return _cachedVersions;
 
             var database = await VersionsHelper.GetBuildDatabaseAsync(VersionDatabaseUrl, cancellationToken)
-                           ?? throw new InvalidOperationException("未获取到基岩版版本数据。");
+                           ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_noVersionData.CurrentValue());
             var builds = new List<BedrockVersion>();
 
             await foreach (var (_, build) in database.Builds.WithCancellation(cancellationToken))
@@ -87,7 +88,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
         var destination = Path.GetFullPath(request.DestinationPath);
         if (Directory.Exists(destination))
-            throw new InvalidOperationException("目标实例目录已存在。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_destinationExists.CurrentValue());
 
         var core = new BedrockWindowsCore();
         await core.InitAsync();
@@ -129,7 +130,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         }
         catch (Exception exception)
         {
-            Console.WriteLine($"基岩版运行依赖安装失败（忽略，启动时会再次尝试）：{exception.Message}");
+            Console.WriteLine(string.Format(CommonLanguageManager.Instance.bedrockInstall_dependencyInstallFailedIgnored.CurrentValue(), exception.Message));
         }
     }
 
@@ -139,7 +140,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
     private static async Task<BuildInfo> FindBuildAsync(BedrockVersion version, CancellationToken cancellationToken)
     {
         var database = await VersionsHelper.GetBuildDatabaseAsync(VersionDatabaseUrl, cancellationToken)
-                       ?? throw new InvalidOperationException("未获取到基岩版版本数据。");
+                       ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_noVersionData.CurrentValue());
         var type = version.IsPreview ? MinecraftGameTypeVersion.Preview : MinecraftGameTypeVersion.Release;
 
         await foreach (var (_, build) in database.Builds.WithCancellation(cancellationToken))
@@ -152,7 +153,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
                 return build;
         }
 
-        throw new InvalidOperationException("所选基岩版版本已不可用，请刷新列表后重试。");
+        throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_versionUnavailable.CurrentValue());
     }
 
     private static async Task DownloadPackageAsync(string url, string packagePath, BuildInfo build,
@@ -164,7 +165,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         var expectedMd5 = build.Variations
             .First(variation => variation.Arch == Architecture.X64 && variation.MetaData.Count > 0).MD5;
         if (string.IsNullOrWhiteSpace(expectedMd5))
-            throw new InvalidOperationException("所选基岩版缺少安装包校验值，无法安全安装。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_missingPackageHash.CurrentValue());
         if (File.Exists(packagePath) && await MatchesMd5Async(packagePath, expectedMd5, cancellationToken))
         {
             progress?.Report(new BedrockInstallProgress(1, 1, Path.GetFileName(packagePath), "Using cached package"));
@@ -198,7 +199,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
             }
         }
 
-        throw new InvalidOperationException($"无法下载或验证 {buildType} 安装包。");
+        throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.bedrockInstall_cannotDownloadOrVerifyPackage.CurrentValue(), buildType));
     }
 
     private static IEnumerable<string> GetGdkDownloadUrls(string url)
@@ -326,7 +327,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
         request.Headers.Range = new RangeHeaderValue(start, end);
         using var response = await GetDownloadClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode != HttpStatusCode.PartialContent)
-            throw new HttpRequestException("下载源不支持分段下载。");
+            throw new HttpRequestException(CommonLanguageManager.Instance.bedrockInstall_sourceNoRangeDownload.CurrentValue());
         await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var output = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Write, DownloadBufferSize, true);
         output.Seek(start, SeekOrigin.Begin);

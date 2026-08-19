@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Linux;
 
@@ -137,7 +138,7 @@ internal sealed class XboxPreauthService
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException($"Xbox 预认证失败（{(int)response.StatusCode}）：{SafeError(error)}");
+            throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.bedrockAuth_preauthFailed.CurrentValue(), (int)response.StatusCode, SafeError(error)));
         }
         return await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: cancellationToken);
     }
@@ -214,7 +215,7 @@ internal sealed class XboxPreauthService
     }
 
     private static string RequiredString(JsonElement element, string property) =>
-        OptionalString(element, property) ?? throw new InvalidOperationException($"Xbox 响应缺少 {property}。");
+        OptionalString(element, property) ?? throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.bedrockAuth_responseMissingXboxProperty.CurrentValue(), property));
     private static string? OptionalString(JsonElement element, string property) =>
         element.TryGetProperty(property, out var value) ? value.GetString() : null;
     private static byte[] BigEndian(byte[] value) { Array.Reverse(value); return value; }
@@ -223,9 +224,9 @@ internal sealed class XboxPreauthService
         try
         {
             using var json = JsonDocument.Parse(value);
-            return json.RootElement.TryGetProperty("XErr", out var xerr) ? $"XErr {xerr.GetInt64()}" : "服务拒绝请求";
+            return json.RootElement.TryGetProperty("XErr", out var xerr) ? $"XErr {xerr.GetInt64()}" : CommonLanguageManager.Instance.bedrockAuth_serviceRejectedRequest.CurrentValue();
         }
-        catch (JsonException) { return "服务拒绝请求"; }
+        catch (JsonException) { return CommonLanguageManager.Instance.bedrockAuth_serviceRejectedRequest.CurrentValue(); }
     }
 
     private static void SetPrivatePermissions(string path, bool directory = false)

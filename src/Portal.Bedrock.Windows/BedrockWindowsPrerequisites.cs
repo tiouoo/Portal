@@ -12,6 +12,7 @@ using Microsoft.Win32;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 using Windows.Management.Deployment;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -27,17 +28,17 @@ internal static class BedrockWindowsPrerequisites
     public static void Validate(BedrockInstanceConfig config)
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
-            throw new PlatformNotSupportedException("基岩版启动需要 Windows 10 2004 (19041) 或更高版本。");
+            throw new PlatformNotSupportedException(CommonLanguageManager.Instance.bedrockLaunch_windowsVersionRequired.CurrentValue());
 
         if (config.BuildType == BedrockBuildType.UWP && !IsDeveloperModeEnabled())
             throw new InvalidOperationException(
-                "启动解包 UWP 基岩版需要启用 Windows 开发人员模式。请打开“设置 > 系统 > 开发者选项”后重试。");
+                CommonLanguageManager.Instance.bedrockLaunch_developerModeRequired.CurrentValue());
 
         var packages = new PackageManager().FindPackagesForUser(string.Empty,
             "Microsoft.GamingServices_8wekyb3d8bbwe");
         if (!packages.Any())
             throw new InvalidOperationException(
-                "未检测到 Microsoft Gaming Services。请先从 Microsoft Store 安装“游戏服务”后重试。");
+                CommonLanguageManager.Instance.bedrockLaunch_gamingServicesMissing.CurrentValue());
     }
 
     public static async Task EnsureDependenciesAsync(string instancePath, BedrockBuildType buildType,
@@ -46,14 +47,14 @@ internal static class BedrockWindowsPrerequisites
         CancellationToken cancellationToken = default)
     {
         var state = LoadState();
-        log?.Invoke($"开始检查基岩版依赖：实例 {instancePath}，构建类型 {buildType}", BedrockLogLevel.Information);
+        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrockLaunch_checkingDependencies.CurrentValue(), instancePath, buildType), BedrockLogLevel.Information);
         var architecture = RuntimeInformation.OSArchitecture;
         var core = new BedrockWindowsCore();
         var (hasVcUwp, hasVcWin32) = core.IsHasVCRuntime(architecture);
 
         if (!hasVcWin32)
         {
-            progress?.Invoke("正在检查基岩版系统运行环境…", null);
+            progress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_checkingSystemEnvironment.CurrentValue(), null);
             await EnsureVcWin32Async(architecture, progress, log, cancellationToken).ConfigureAwait(false);
         }
 
@@ -69,7 +70,7 @@ internal static class BedrockWindowsPrerequisites
             }
             else
             {
-                log?.Invoke("UWP VC++ 运行库上次安装失败，本次启动已跳过", BedrockLogLevel.Warning);
+                log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_uwpVcSkipped.CurrentValue(), BedrockLogLevel.Warning);
             }
         }
         else if (hasVcUwp)
@@ -91,7 +92,7 @@ internal static class BedrockWindowsPrerequisites
             }
             else
             {
-                log?.Invoke("GameInput 运行组件上次安装失败，本次启动已跳过", BedrockLogLevel.Warning);
+                log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_gameInputSkipped.CurrentValue(), BedrockLogLevel.Warning);
             }
         }
         else
@@ -101,14 +102,14 @@ internal static class BedrockWindowsPrerequisites
         }
 
         SaveState(state);
-        log?.Invoke("基岩版依赖检查完成", BedrockLogLevel.Information);
-        progress?.Invoke("系统运行环境检查完成", 100);
+        log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_dependenciesCheckComplete.CurrentValue(), BedrockLogLevel.Information);
+        progress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_systemEnvironmentChecked.CurrentValue(), 100);
     }
 
     private static async Task EnsureVcWin32Async(Architecture architecture, Action<string, double?>? progress,
         Action<string, BedrockLogLevel>? log, CancellationToken cancellationToken)
     {
-        log?.Invoke("检测到缺少 Microsoft Visual C++ 2015-2022 运行库，正在安装…", BedrockLogLevel.Information);
+        log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_vcMissingInstalling.CurrentValue(), BedrockLogLevel.Information);
         var tempFolder = Path.Combine(Path.GetTempPath(), "Portal", "VCRuntime");
         Directory.CreateDirectory(tempFolder);
         var fileName = architecture switch
@@ -122,14 +123,14 @@ internal static class BedrockWindowsPrerequisites
             .ConfigureAwait(false);
         if (exitCode is not (0 or 3010 or 1638))
             throw new InvalidOperationException(
-                $"VC++ 运行库安装失败（退出码 {exitCode}）。请手动安装 Microsoft Visual C++ 2015-2022 运行库后重试。");
-        log?.Invoke("Microsoft Visual C++ 2015-2022 运行库安装完成", BedrockLogLevel.Information);
+                string.Format(CommonLanguageManager.Instance.bedrockLaunch_vcInstallFailedManual.CurrentValue(), exitCode));
+        log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_vcInstalled.CurrentValue(), BedrockLogLevel.Information);
     }
 
     private static async Task EnsureVcUwpAsync(Architecture architecture, PrerequisitesState state,
         Action<string, double?>? progress, Action<string, BedrockLogLevel>? log, CancellationToken cancellationToken)
     {
-        log?.Invoke("检测到缺少 UWP VC++ 运行库组件，正在安装…", BedrockLogLevel.Information);
+        log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_uwpVcMissingInstalling.CurrentValue(), BedrockLogLevel.Information);
         var appxUrl = architecture switch
         {
             Architecture.X86 => VCRuntimeHelper.VCUri.Uwpx86,
@@ -142,9 +143,9 @@ internal static class BedrockWindowsPrerequisites
         try
         {
             await DownloadFileAsync(appxUrl, appxPath, cancellationToken,
-                    p => progress?.Invoke($"正在下载 UWP VC++ 运行库组件… ({p:F0}%)", p))
+                    p => progress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingUwpVcProgress.CurrentValue(), p), p))
                 .ConfigureAwait(false);
-            progress?.Invoke("正在安装 UWP VC++ 运行库组件…", null);
+            progress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_installingUwpVc.CurrentValue(), null);
             var result = await UwpRegister.AddAppxAsync(new DeploymentOptionsConfig
             {
                 PackagePath = appxPath,
@@ -154,27 +155,27 @@ internal static class BedrockWindowsPrerequisites
             {
                 state.VcUwp = true;
                 state.VcUwpFailedAt = null;
-                log?.Invoke("UWP VC++ 运行库组件安装完成", BedrockLogLevel.Information);
+                log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_uwpVcInstalled.CurrentValue(), BedrockLogLevel.Information);
             }
             else
             {
                 state.VcUwpFailedAt = DateTime.UtcNow;
-                log?.Invoke($"UWP VC++ 运行库安装失败：{result.ErrorText}", BedrockLogLevel.Warning);
+                log?.Invoke(string.Format(LogLanguageManager.Instance.bedrockLaunch_uwpVcInstallFailed.CurrentValue(), result.ErrorText), BedrockLogLevel.Warning);
             }
         }
         catch (Exception exception)
         {
             state.VcUwpFailedAt = DateTime.UtcNow;
-            Trace.TraceError($"UWP VC++ 运行库安装异常。{Environment.NewLine}{exception}");
-            log?.Invoke($"UWP VC++ 运行库安装异常：{exception}", BedrockLogLevel.Warning);
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_uwpVcInstallException.CurrentValue(), Environment.NewLine, exception));
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrockLaunch_uwpVcInstallExceptionShort.CurrentValue(), exception), BedrockLogLevel.Warning);
         }
     }
 
     private static async Task EnsureGameInputAsync(string instancePath, PrerequisitesState state,
         Action<string, double?>? progress, Action<string, BedrockLogLevel>? log, CancellationToken cancellationToken)
     {
-        log?.Invoke("检测到缺少 GameInput 运行组件，正在安装…", BedrockLogLevel.Information);
-        progress?.Invoke("正在安装 GameInput 运行组件…", null);
+        log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_gameInputMissingInstalling.CurrentValue(), BedrockLogLevel.Information);
+        progress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_installingGameInput.CurrentValue(), null);
         var bundled = Path.Combine(instancePath, "Installers", "GameInputRedist.msi");
         if (File.Exists(bundled))
         {
@@ -183,11 +184,11 @@ internal static class BedrockWindowsPrerequisites
             if (exitCode is 0 or 3010 or 3019)
             {
                 MarkGameInputInstalled(state);
-                log?.Invoke("GameInput 运行组件安装完成", BedrockLogLevel.Information);
+                log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_gameInputInstalled.CurrentValue(), BedrockLogLevel.Information);
                 return;
             }
 
-            log?.Invoke($"使用游戏目录内的 GameInput 安装程序失败（退出码 {exitCode}），正在尝试在线安装…",
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrockLaunch_bundledGameInputFailed.CurrentValue(), exitCode),
                 BedrockLogLevel.Warning);
         }
 
@@ -197,27 +198,27 @@ internal static class BedrockWindowsPrerequisites
         try
         {
             await DownloadFileAsync(VCRuntimeHelper.VCUri.GameInputRedist, msiPath, cancellationToken,
-                    p => progress?.Invoke($"正在下载 GameInput 运行组件… ({p:F0}%)", p))
+                    p => progress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingGameInputProgress.CurrentValue(), p), p))
                 .ConfigureAwait(false);
-            progress?.Invoke("正在安装 GameInput 运行组件…", null);
+            progress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_installingGameInput.CurrentValue(), null);
             var exitCode = await RunElevatedAsync("msiexec.exe", $"/i \"{msiPath}\" /qn /norestart")
                 .ConfigureAwait(false);
             if (exitCode is 0 or 3010 or 3019)
             {
                 MarkGameInputInstalled(state);
-                log?.Invoke("GameInput 运行组件安装完成", BedrockLogLevel.Information);
+                log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_gameInputInstalled.CurrentValue(), BedrockLogLevel.Information);
             }
             else
             {
                 state.GameInputFailedAt = DateTime.UtcNow;
-                log?.Invoke($"GameInput 运行组件安装失败（退出码 {exitCode}）。", BedrockLogLevel.Warning);
+                log?.Invoke(string.Format(LogLanguageManager.Instance.bedrockLaunch_gameInputInstallFailed.CurrentValue(), exitCode), BedrockLogLevel.Warning);
             }
         }
         catch (Exception exception)
         {
             state.GameInputFailedAt = DateTime.UtcNow;
-            Trace.TraceError($"GameInput 运行组件安装失败。{Environment.NewLine}{exception}");
-            log?.Invoke($"GameInput 运行组件安装失败：{exception}", BedrockLogLevel.Warning);
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_gameInputInstallException.CurrentValue(), Environment.NewLine, exception));
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrockLaunch_gameInputInstallExceptionShort.CurrentValue(), exception), BedrockLogLevel.Warning);
         }
     }
 
@@ -255,21 +256,21 @@ internal static class BedrockWindowsPrerequisites
             try
             {
                 await DownloadFileAsync(url, vcPath, cancellationToken,
-                        p => progress?.Invoke($"正在下载 Microsoft Visual C++ 2015-2022 运行库… ({p:F0}%)", p))
+                        p => progress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingVcProgress.CurrentValue(), p), p))
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 lastError = exception;
-                Trace.TraceError($"下载 VC++ 运行库失败：{url}{Environment.NewLine}{exception}");
+                Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_vcDownloadFailed.CurrentValue(), url, Environment.NewLine, exception));
                 continue;
             }
 
-            progress?.Invoke("正在安装 Microsoft Visual C++ 2015-2022 运行库…", null);
+            progress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_installingVc.CurrentValue(), null);
             return await RunElevatedAsync(vcPath, "/install /quiet /norestart").ConfigureAwait(false);
         }
 
-        throw new InvalidOperationException("VC++ 运行库下载失败，请检查网络连接后重试。", lastError);
+        throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_vcDownloadFailedManual.CurrentValue(), lastError);
     }
 
     private static bool IsGameInputInstalled()
@@ -282,7 +283,7 @@ internal static class BedrockWindowsPrerequisites
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"检查 GameInput 安装状态失败。{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_checkGameInputStatusFailed.CurrentValue(), Environment.NewLine, exception));
             return false;
         }
     }
@@ -296,7 +297,7 @@ internal static class BedrockWindowsPrerequisites
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"检查 UWP VC++ 运行库状态失败。{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_checkUwpVcStatusFailed.CurrentValue(), Environment.NewLine, exception));
             return false;
         }
     }
@@ -323,7 +324,7 @@ internal static class BedrockWindowsPrerequisites
         }
         catch (Win32Exception exception) when (exception.NativeErrorCode is 1223 or 5)
         {
-            throw new InvalidOperationException("用户取消了管理员权限授权，依赖安装未完成。");
+            throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_adminPermissionCancelled.CurrentValue());
         }
     }
 
@@ -331,7 +332,7 @@ internal static class BedrockWindowsPrerequisites
         Action<double>? onProgress = null)
     {
         using var client = new HttpClient();
-        Trace.TraceInformation($"下载基岩版运行依赖：{url} -> {path}。");
+        Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_downloadingDependency.CurrentValue(), url, path));
         using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -360,7 +361,7 @@ internal static class BedrockWindowsPrerequisites
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"读取基岩版依赖状态失败：{StateFilePath}{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_readDependencyStateFailed.CurrentValue(), StateFilePath, Environment.NewLine, exception));
             return new PrerequisitesState();
         }
     }
@@ -374,7 +375,7 @@ internal static class BedrockWindowsPrerequisites
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"写入基岩版依赖状态失败：{StateFilePath}{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_writeDependencyStateFailed.CurrentValue(), StateFilePath, Environment.NewLine, exception));
         }
     }
 

@@ -13,6 +13,7 @@
       <ProjectReference Include="..\Portal.Bedrock.Xbox\Portal.Bedrock.Xbox.csproj" />
       <ProjectReference Include="..\Portal.Bedrock.Standard\Portal.Bedrock.Standard.csproj" />
       <ProjectReference Include="..\Portal.Bedrock.PeNet\src\PeNet\Portal.Bedrock.PeNet.csproj" />
+      <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -22,15 +23,15 @@ internal static class BedrockModInjector
 
     private static string GetInjectError(int result) => result switch
     {
-        -1 => "参数无效",
-        -2 => "DLL 路径不是存在的绝对文件路径",
-        -3 => "无法打开目标进程",
-        -4 => "无法解析 LoadLibraryA",
-        -5 => "无法在目标进程分配内存",
-        -6 => "无法向目标进程写入 DLL 路径",
-        -7 => "无法创建远程线程",
-        -8 => "等待远程线程或加载 DLL 失败",
-        _ => $"未知错误 ({result})"
+        -1 => LogLanguageManager.Instance.bedrock_injectErrorInvalidArgument.CurrentValue(),
+        -2 => LogLanguageManager.Instance.bedrock_injectErrorDllNotAbsolute.CurrentValue(),
+        -3 => LogLanguageManager.Instance.bedrock_injectErrorCannotOpenProcess.CurrentValue(),
+        -4 => LogLanguageManager.Instance.bedrock_injectErrorCannotResolveLoadLibrary.CurrentValue(),
+        -5 => LogLanguageManager.Instance.bedrock_injectErrorCannotAllocateMemory.CurrentValue(),
+        -6 => LogLanguageManager.Instance.bedrock_injectErrorCannotWriteDllPath.CurrentValue(),
+        -7 => LogLanguageManager.Instance.bedrock_injectErrorCannotCreateRemoteThread.CurrentValue(),
+        -8 => LogLanguageManager.Instance.bedrock_injectErrorRemoteThreadFailed.CurrentValue(),
+        _ => string.Format(LogLanguageManager.Instance.bedrock_injectErrorUnknown.CurrentValue(), result)
     };
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -49,15 +50,15 @@ internal static class BedrockModInjector
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"读取基岩版 DLL 模组失败：{exception}");
-            log?.Invoke($"读取 DLL 模组失败：{exception}", BedrockLogLevel.Error);
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_readDllModsFailed.CurrentValue(), exception));
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_readDllModsFailedShort.CurrentValue(), exception), BedrockLogLevel.Error);
             return;
         }
 
-        log?.Invoke($"发现 {mods.Count} 个等待注入的模组", BedrockLogLevel.Information);
+        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_foundPendingInjectMods.CurrentValue(), mods.Count), BedrockLogLevel.Information);
         foreach (var mod in mods)
         {
-            log?.Invoke($"已安排模组注入：{mod.FileName}，延迟 {mod.Config.DelayMs} ms",
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_modInjectScheduled.CurrentValue(), mod.FileName, mod.Config.DelayMs),
                 BedrockLogLevel.Information);
             _ = Task.Run(() => Inject(process, mod, log)); 
         }
@@ -69,7 +70,7 @@ internal static class BedrockModInjector
         {
             if (process.HasExited)
             {
-                log?.Invoke($"已跳过模组 {mod.FileName}：Minecraft 进程已经退出", BedrockLogLevel.Warning);
+                log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_modInjectSkippedProcessExited.CurrentValue(), mod.FileName), BedrockLogLevel.Warning);
                 return;
             }
 
@@ -82,13 +83,13 @@ internal static class BedrockModInjector
                 if (result != 0)
                 {
                     var error = GetInjectError(result);
-                    Trace.TraceError($"Portal 注入基岩版模组失败：{mod.FileName}，{error}，返回值 {result}");
-                    log?.Invoke($"模组注入失败：{mod.FileName}，{error}（{result}）", BedrockLogLevel.Error);
+                    Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_modInjectFailedWithCode.CurrentValue(), mod.FileName, error, result));
+                    log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_modInjectFailed.CurrentValue(), mod.FileName, error, result), BedrockLogLevel.Error);
                 }
                 else
                 {
-                    Trace.TraceInformation($"Portal 已注入基岩版模组：{mod.FileName}");
-                    log?.Invoke($"模组注入成功：{mod.FileName}", BedrockLogLevel.Information);
+                    Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_modInjected.CurrentValue(), mod.FileName));
+                    log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_modInjectSuccess.CurrentValue(), mod.FileName), BedrockLogLevel.Information);
                 }
             }
             finally
@@ -98,8 +99,8 @@ internal static class BedrockModInjector
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"Portal 注入基岩版模组失败：{mod.FileName}，{exception}");
-            log?.Invoke($"模组注入异常：{mod.FileName}，{exception}", BedrockLogLevel.Error);
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_modInjectException.CurrentValue(), mod.FileName, exception));
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_modInjectExceptionShort.CurrentValue(), mod.FileName, exception), BedrockLogLevel.Error);
         }
     }
 
@@ -107,14 +108,14 @@ internal static class BedrockModInjector
     {
         var portalFolder = Directory.GetParent(Path.GetDirectoryName(mod.FilePath)!)!.FullName;
         var runtimeFolder = Path.Combine(portalFolder, "runtime", "mods");
-        Trace.TraceInformation($"准备基岩版模组运行时副本：{mod.FilePath} -> {runtimeFolder}。");
+        Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_preparingModRuntimeCopy.CurrentValue(), mod.FilePath, runtimeFolder));
         Directory.CreateDirectory(runtimeFolder);
         using var stream = File.OpenRead(mod.FilePath);
         var fileName = $"{Convert.ToHexString(SHA256.HashData(stream))[..16]}.dll";
         var destination = Path.GetFullPath(Path.Combine(runtimeFolder, fileName));
         if (!File.Exists(destination))
         {
-            Trace.TraceInformation($"复制基岩版模组到运行时目录：{destination}。");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_copyingModToRuntime.CurrentValue(), destination));
             File.Copy(mod.FilePath, destination);
         }
         return destination;
@@ -123,7 +124,7 @@ internal static class BedrockModInjector
     private static InjectDelegate GetInjector()
     {
         if (!Environment.Is64BitProcess)
-            throw new PlatformNotSupportedException("Portal 基岩版模组注入器仅支持 x64 进程。");
+            throw new PlatformNotSupportedException(CommonLanguageManager.Instance.bedrock_modInjectorX64Only.CurrentValue());
 
         lock (SyncRoot)
         {
@@ -136,7 +137,7 @@ internal static class BedrockModInjector
             var assembly = Assembly.GetExecutingAssembly();
             byte[] bytes;
             using (var stream = assembly.GetManifestResourceStream(ResourceName)
-                                ?? throw new InvalidOperationException("未找到内嵌的基岩版模组注入组件。"))
+                                ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrock_missingEmbeddedInjector.CurrentValue()))
             using (var memory = new MemoryStream())
             {
                 stream.CopyTo(memory);
@@ -157,7 +158,7 @@ internal static class BedrockModInjector
             }
             catch (Exception exception)
             {
-                Trace.TraceError($"加载基岩版模组注入器失败。{Environment.NewLine}{exception}");
+                Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_loadModInjectorFailed.CurrentValue(), Environment.NewLine, exception));
                 NativeLibrary.Free(module);
                 throw;
             }

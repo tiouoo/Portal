@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Standard.Interface;
 
@@ -23,7 +24,7 @@ public interface IBedrockInstaller
     Task InstallAsync(BedrockInstallRequest request, IProgress<BedrockInstallProgress>? progress = null)
     {
         if (request.Version.BuildType != BedrockBuildType.GDK)
-            throw new NotSupportedException("当前平台不支持安装 UWP 基岩版。");
+            throw new NotSupportedException(CommonLanguageManager.Instance.bedrockInstall_uwpUnsupported.CurrentValue());
         return InstallGdkAsync(new BedrockOnlineInstallRequest(request.Version, request.DestinationPath,
             request.CancellationToken), progress);
     }
@@ -31,7 +32,9 @@ public interface IBedrockInstaller
 
 public record BedrockGdkVersion(string Id, DateTime ReleaseTime, bool IsPreview)
 {
-    public string ChannelLabel => IsPreview ? "预览版" : "正式版";
+    public string ChannelLabel => IsPreview
+        ? CommonLanguageManager.Instance.bedrockInstall_channelPreview.CurrentValue()
+        : CommonLanguageManager.Instance.bedrockInstall_channelRelease.CurrentValue();
     public virtual string BuildLabel => BedrockBuildType.GDK.ToString();
     public string RelativeReleaseTime => FormatRelativeReleaseTime(ReleaseTime);
 
@@ -41,14 +44,14 @@ public record BedrockGdkVersion(string Id, DateTime ReleaseTime, bool IsPreview)
         var days = (DateTime.Today - published.Date).Days;
         return days switch
         {
-            <= 0 => "今天",
-            1 => "昨天",
-            < 7 => $"{days} 天前",
-            < 14 => "上周",
-            < 30 => $"{Math.Max(1, days / 7)} 周前",
-            < 365 => $"{Math.Max(1, days / 30)} 个月前",
-            < 730 => "去年",
-            _ => $"{days / 365} 年前"
+            <= 0 => CommonLanguageManager.Instance.relativeTime_today.CurrentValue(),
+            1 => CommonLanguageManager.Instance.relativeTime_yesterday.CurrentValue(),
+            < 7 => string.Format(CommonLanguageManager.Instance.relativeTime_daysAgo.CurrentValue(), days),
+            < 14 => CommonLanguageManager.Instance.bedrockInstall_lastWeek.CurrentValue(),
+            < 30 => string.Format(CommonLanguageManager.Instance.relativeTime_weeksAgo.CurrentValue(), Math.Max(1, days / 7)),
+            < 365 => string.Format(CommonLanguageManager.Instance.relativeTime_monthsAgo.CurrentValue(), Math.Max(1, days / 30)),
+            < 730 => CommonLanguageManager.Instance.relativeTime_lastYear.CurrentValue(),
+            _ => string.Format(CommonLanguageManager.Instance.relativeTime_yearsAgo.CurrentValue(), days / 365)
         };
     }
 }

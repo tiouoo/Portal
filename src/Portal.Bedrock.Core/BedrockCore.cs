@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Core;
 
@@ -39,7 +40,7 @@ public class BedrockCore
 			}, options.CancellationToken ?? CancellationToken.None);
 			return new InstallResult();
 		}
-		throw new PlatformNotSupportedException("UWP 安装需要 Windows 平台实现。");
+		throw new PlatformNotSupportedException(CommonLanguageManager.Instance.bedrockInstall_uwpWindowsOnly.CurrentValue());
 	}
 
 	public async Task<string> GetPackageUri(BuildInfo buildInfo, Architecture devicesArch)

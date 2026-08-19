@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -77,14 +78,14 @@ internal static class BedrockPreloadTrigger
             {
                 if (process.HasExited)
                 {
-                    lastWarning = $"游戏进程已退出（{process.Id}），跳过预加载触发";
+                    lastWarning = string.Format(LogLanguageManager.Instance.bedrock_preloadGameProcessExited.CurrentValue(), process.Id);
                     break;
                 }
 
                 nint processHandle = NativeMethods.OpenProcess(ProcessAccess, inheritHandle: false, process.Id);
                 if (processHandle == 0)
                 {
-                    lastWarning = $"打开游戏进程失败（{Marshal.GetLastWin32Error()}），跳过预加载触发";
+                    lastWarning = string.Format(LogLanguageManager.Instance.bedrock_preloadOpenProcessFailed.CurrentValue(), Marshal.GetLastWin32Error());
                     break;
                 }
 
@@ -103,17 +104,17 @@ internal static class BedrockPreloadTrigger
                         nint loadRva = ReadLoadExportRva(dllPath);
                         if (loadRva == 0)
                         {
-                            lastWarning = $"未能解析 {dllName} 的 Load 导出，跳过预加载触发";
+                            lastWarning = string.Format(LogLanguageManager.Instance.bedrock_preloadResolveLoadFailed.CurrentValue(), dllName);
                             break;
                         }
 
                         if (CallRemote(processHandle, moduleBase + loadRva))
                         {
-                            log?.Invoke($"已触发预加载组件初始化（{dllName} @ 0x{moduleBase:X}）", BedrockLogLevel.Information);
+                            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_preloadTriggered.CurrentValue(), dllName, moduleBase), BedrockLogLevel.Information);
                             return;
                         }
 
-                        lastWarning = $"远程调用 Load 失败（{Marshal.GetLastWin32Error()}）";
+                        lastWarning = string.Format(LogLanguageManager.Instance.bedrock_preloadRemoteCallFailed.CurrentValue(), Marshal.GetLastWin32Error());
                         break;
                     }
                 }
@@ -124,7 +125,7 @@ internal static class BedrockPreloadTrigger
             }
             catch (Exception exception)
             {
-                lastWarning = $"触发预加载初始化失败：{exception.Message}";
+                lastWarning = string.Format(LogLanguageManager.Instance.bedrock_preloadTriggerFailed.CurrentValue(), exception.Message);
             }
 
             if (attempt + 1 < MaxAttempts)

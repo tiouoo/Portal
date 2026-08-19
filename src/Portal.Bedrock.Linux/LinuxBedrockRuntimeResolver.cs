@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Linux;
 
@@ -45,7 +46,7 @@ public sealed class LinuxBedrockRuntimeResolver
     {
         EnsureSupportedPlatform();
 
-        Trace.TraceInformation("开始解析 Linux 基岩版 Proton 运行时。");
+        Trace.TraceInformation(LogLanguageManager.Instance.bedrockLaunch_resolvingProtonRuntime.CurrentValue());
         var protonScript = await ResolveProtonScriptAsync(progress, cancellationToken).ConfigureAwait(false);
         var protonRoot = Path.GetDirectoryName(protonScript)!;
         ApplyManagedRuntimePatch(protonRoot, progress);
@@ -53,7 +54,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var steamClientPath = ResolveSteamCompatPath();
 
         Directory.CreateDirectory(prefixPath);
-        Trace.TraceInformation($"Linux 基岩版 Proton 运行时已就绪：{protonScript}，前缀：{prefixPath}。");
+        Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_protonRuntimeReady.CurrentValue(), protonScript, prefixPath));
         return new LinuxBedrockRuntime(protonScript, protonRoot, prefixPath, steamClientPath);
     }
 
@@ -62,7 +63,7 @@ public sealed class LinuxBedrockRuntimeResolver
     {
         if (!IsManagedProtonRoot(protonRoot)) return;
         if (GdkRuntimePatcher.PatchCombaseRoOriginateErrorW(protonRoot))
-            progress?.Invoke(new LinuxBedrockRuntimeProgress("已应用运行时兼容补丁（combase.RoOriginateErrorW）"));
+            progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_runtimePatchApplied.CurrentValue()));
     }
 
     private static bool IsManagedProtonRoot(string protonRoot)
@@ -77,7 +78,7 @@ public sealed class LinuxBedrockRuntimeResolver
     {
         if (!OperatingSystem.IsLinux() || RuntimeInformation.ProcessArchitecture != Architecture.X64)
             throw new PlatformNotSupportedException(
-                "Portal Bedrock Linux 仅支持 Linux x64，且只能启动 GDK 构建。");
+                CommonLanguageManager.Instance.bedrockLaunch_linuxPlatformOnlyX64Gdk.CurrentValue());
     }
 
     private static async Task<string> ResolveProtonScriptAsync(Action<LinuxBedrockRuntimeProgress>? progress,
@@ -89,26 +90,26 @@ public sealed class LinuxBedrockRuntimeResolver
             var configuredScript = NormalizeProtonScript(configuredPath);
             if (File.Exists(configuredScript))
             {
-                Trace.TraceInformation($"使用 PORTAL_PROTON_PATH 指定的 Proton：{configuredScript}。");
+                Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_usingConfiguredProton.CurrentValue(), configuredScript));
                 return configuredScript;
             }
 
             throw new FileNotFoundException(
-                $"{ProtonPathVariable} 未指向可用的 Proton 脚本。请将它设置为 proton 文件或包含 proton 文件的目录。",
+                string.Format(CommonLanguageManager.Instance.bedrockLaunch_protonPathInvalid.CurrentValue(), ProtonPathVariable),
                 configuredScript);
         }
 
         var discovered = FindSteamProton();
         if (discovered is not null)
         {
-            Trace.TraceInformation($"发现 Steam 安装的 Proton：{discovered}。");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_steamProtonDiscovered.CurrentValue(), discovered));
             return discovered;
         }
 
         var installed = FindInstalledProton();
         if (installed is not null)
         {
-            Trace.TraceInformation($"使用 Portal 已安装的 Proton：{installed}。");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_usingInstalledProton.CurrentValue(), installed));
             return installed;
         }
 
@@ -118,7 +119,7 @@ public sealed class LinuxBedrockRuntimeResolver
             installed = FindInstalledProton();
             if (installed is not null)
             {
-                Trace.TraceInformation($"等待安装锁期间 Proton 已安装：{installed}。");
+                Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_protonInstalledWhileWaiting.CurrentValue(), installed));
                 return installed;
             }
 
@@ -132,10 +133,9 @@ public sealed class LinuxBedrockRuntimeResolver
             }
             catch (Exception exception)
             {
-                Trace.TraceError($"自动下载 Linux 基岩版 GDK-Proton 失败。{Environment.NewLine}{exception}");
+                Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_autoDownloadProtonFailed.CurrentValue(), Environment.NewLine, exception));
                 throw new InvalidOperationException(
-                    $"自动下载 GDK-Proton 失败：{exception.Message}。可手动下载兼容的 Linux x64 GDK-Proton，" +
-                    $"并将 {ProtonPathVariable} 设置为其 proton 脚本或安装目录。", exception);
+                    string.Format(CommonLanguageManager.Instance.bedrockLaunch_autoDownloadProtonFailedManual.CurrentValue(), exception.Message, ProtonPathVariable), exception);
             }
         }
         finally
@@ -183,8 +183,8 @@ public sealed class LinuxBedrockRuntimeResolver
     private static async Task<string> DownloadAndInstallAsync(Action<LinuxBedrockRuntimeProgress>? progress,
         CancellationToken cancellationToken)
     {
-        progress?.Invoke(new LinuxBedrockRuntimeProgress("正在查询 GDK-Proton x64 release"));
-        Trace.TraceInformation("查询 Linux 基岩版 GDK-Proton release。");
+        progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_queryingGdkProtonReleaseProgress.CurrentValue()));
+        Trace.TraceInformation(LogLanguageManager.Instance.bedrockLaunch_queryingGdkProtonRelease.CurrentValue());
         var release = await GetReleaseAsync(cancellationToken).ConfigureAwait(false);
         var tag = SafePathSegment(release.TagName);
         var installRoot = GetProtonInstallRoot();
@@ -192,7 +192,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var existing = FindProtonInDirectory(destination);
         if (existing is not null)
         {
-            Trace.TraceInformation($"GDK-Proton 已安装：{existing}。");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_gdkProtonAlreadyInstalled.CurrentValue(), existing));
             return existing;
         }
 
@@ -204,33 +204,33 @@ public sealed class LinuxBedrockRuntimeResolver
 
         if (!await IsCachedArchiveValidAsync(archivePath, expectedHash, cancellationToken).ConfigureAwait(false))
         {
-            Trace.TraceInformation($"GDK-Proton 缓存不存在或校验失败，开始下载：{archivePath}。");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_gdkProtonCacheInvalid.CurrentValue(), archivePath));
             await DownloadArchiveAsync(release.Asset.BrowserDownloadUrl, archivePath, expectedHash, progress,
                 cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            Trace.TraceInformation($"使用已校验的 GDK-Proton 缓存：{archivePath}。");
-            progress?.Invoke(new LinuxBedrockRuntimeProgress($"使用已校验的 Proton 缓存：{release.Asset.Name}"));
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_usingValidatedProtonCache.CurrentValue(), archivePath));
+            progress?.Invoke(new LinuxBedrockRuntimeProgress(string.Format(CommonLanguageManager.Instance.bedrockLaunch_usingValidatedProtonCacheProgress.CurrentValue(), release.Asset.Name)));
         }
 
         var staging = Path.Combine(installRoot, $".install-{tag}-{Guid.NewGuid():N}");
         try
         {
-            progress?.Invoke(new LinuxBedrockRuntimeProgress($"正在验证并解压 GDK-Proton {release.TagName}"));
-            Trace.TraceInformation($"验证并解压 GDK-Proton：{archivePath} -> {staging}。");
+            progress?.Invoke(new LinuxBedrockRuntimeProgress(string.Format(CommonLanguageManager.Instance.bedrockLaunch_verifyingAndExtractingProgress.CurrentValue(), release.TagName)));
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_verifyingAndExtractingProton.CurrentValue(), archivePath, staging));
             Directory.CreateDirectory(staging);
             await ValidateArchiveAsync(archivePath, staging, cancellationToken).ConfigureAwait(false);
             await ExtractArchiveAsync(archivePath, staging, progress, cancellationToken).ConfigureAwait(false);
 
             var proton = FindProtonInDirectory(staging)
-                         ?? throw new InvalidDataException("GDK-Proton 归档中缺少 proton 启动脚本");
+                         ?? throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_archiveMissingProtonScript.CurrentValue());
             var extractedRoot = Path.GetDirectoryName(proton)!;
             if (Directory.Exists(destination))
             {
                 existing = FindProtonInDirectory(destination);
                 if (existing is not null) return existing;
-                throw new IOException($"Proton 安装目录已存在但不完整：{destination}");
+                throw new IOException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_protonInstallIncomplete.CurrentValue(), destination));
             }
 
             try
@@ -245,15 +245,15 @@ public sealed class LinuxBedrockRuntimeResolver
             }
             proton = Path.Combine(destination, "proton");
             EnsureExecutable(proton);
-            progress?.Invoke(new LinuxBedrockRuntimeProgress($"GDK-Proton {release.TagName} 已安装", 1, 1));
-            Trace.TraceInformation($"GDK-Proton 安装完成：{destination}。");
+            progress?.Invoke(new LinuxBedrockRuntimeProgress(string.Format(CommonLanguageManager.Instance.bedrockLaunch_gdkProtonInstalledProgress.CurrentValue(), release.TagName), 1, 1));
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_gdkProtonInstalled.CurrentValue(), destination));
             return proton;
         }
         finally
         {
             if (Directory.Exists(staging))
             {
-                Trace.TraceInformation($"清理 GDK-Proton 临时解压目录：{staging}。");
+                Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_cleaningProtonStaging.CurrentValue(), staging));
                 Directory.Delete(staging, true);
             }
         }
@@ -267,21 +267,21 @@ public sealed class LinuxBedrockRuntimeResolver
             try
             {
                 var release = await GetDownloadClient().GetFromJsonAsync<GitHubRelease>(apiUrl, cancellationToken)
-                    .ConfigureAwait(false) ?? throw new InvalidDataException("GitHub API 返回空响应");
+                    .ConfigureAwait(false) ?? throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_githubApiEmptyResponse.CurrentValue());
                 var asset = release.Assets.FirstOrDefault(IsX64TarGzAsset)
-                            ?? throw new InvalidDataException("release 中没有 Linux x64 GDK-Proton tar.gz 资产");
+                            ?? throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_releaseNoX64Asset.CurrentValue());
                 if (string.IsNullOrWhiteSpace(release.TagName) || string.IsNullOrWhiteSpace(asset.BrowserDownloadUrl))
-                    throw new InvalidDataException("release 元数据缺少 tag 或下载 URL");
+                    throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_releaseMissingTagOrUrl.CurrentValue());
                 return new ProtonRelease(release.TagName, asset);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                Trace.TraceError($"查询 GDK-Proton release 失败：{apiUrl}{Environment.NewLine}{exception}");
+                Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_queryProtonReleaseFailed.CurrentValue(), apiUrl, Environment.NewLine, exception));
                 errors.Add($"{new Uri(apiUrl).Host}: {exception.Message}");
             }
         }
 
-        throw new HttpRequestException(string.Join("；", errors));
+        throw new HttpRequestException(string.Join(CommonLanguageManager.Instance.bedrockLaunch_errorListSeparator.CurrentValue(), errors));
     }
 
     private static bool IsX64TarGzAsset(GitHubAsset asset)
@@ -299,7 +299,7 @@ public sealed class LinuxBedrockRuntimeResolver
         var temporaryPath = archivePath + $".{Guid.NewGuid():N}.download";
         try
         {
-            progress?.Invoke(new LinuxBedrockRuntimeProgress("正在测速 GitHub 镜像和官方源"));
+            progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_rankingDownloadSources.CurrentValue()));
             var sources = await RankDownloadSourcesAsync(url, cancellationToken).ConfigureAwait(false);
             var errors = new List<string>();
             foreach (var source in sources)
@@ -310,7 +310,7 @@ public sealed class LinuxBedrockRuntimeResolver
                     {
                         if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
                         Trace.TraceInformation(
-                            $"下载 GDK-Proton：source={source.Url}，range={source.SupportsRange}，attempt={attempt}。");
+                            string.Format(LogLanguageManager.Instance.bedrockLaunch_downloadingProtonSource.CurrentValue(), source.Url, source.SupportsRange, attempt));
                         if (BedrockNetworkConfiguration.EnableFragmentDownload && source.SupportsRange && source.Total > 0)
                         {
                             try
@@ -320,7 +320,7 @@ public sealed class LinuxBedrockRuntimeResolver
                             }
                             catch (HttpRequestException exception)
                             {
-                                Trace.TraceWarning($"GDK-Proton 分片下载不可用，回退单流：{exception.Message}");
+                                Trace.TraceWarning(string.Format(LogLanguageManager.Instance.bedrockLaunch_protonFragmentFallback.CurrentValue(), exception.Message));
                                 if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
                                 await DownloadSinglePartAsync(source.Url, temporaryPath, source.Total, progress,
                                     cancellationToken).ConfigureAwait(false);
@@ -335,12 +335,12 @@ public sealed class LinuxBedrockRuntimeResolver
                             await SHA256.HashDataAsync(downloaded, cancellationToken).ConfigureAwait(false));
                         if (expectedHash is not null &&
                             !string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase))
-                            throw new InvalidDataException("GDK-Proton 归档 SHA256 与 GitHub digest 不一致");
+                            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_sha256Mismatch.CurrentValue());
 
                         File.Move(temporaryPath, archivePath, true);
                         await File.WriteAllTextAsync(GetHashSidecarPath(archivePath), actualHash.ToLowerInvariant() + "\n",
                             cancellationToken).ConfigureAwait(false);
-                        progress?.Invoke(new LinuxBedrockRuntimeProgress("GDK-Proton 下载及 SHA256 校验完成",
+                        progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_protonDownloadVerified.CurrentValue(),
                             source.Total, source.Total));
                         return;
                     }
@@ -350,20 +350,20 @@ public sealed class LinuxBedrockRuntimeResolver
                     }
                     catch (Exception exception)
                     {
-                        errors.Add($"{new Uri(source.Url).Host} 第 {attempt} 次：{exception.Message}");
-                        Trace.TraceError($"GDK-Proton 下载失败。{Environment.NewLine}{exception}");
+                        errors.Add(string.Format(CommonLanguageManager.Instance.bedrockLaunch_attemptError.CurrentValue(), new Uri(source.Url).Host, attempt, exception.Message));
+                        Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrockLaunch_protonDownloadFailed.CurrentValue(), Environment.NewLine, exception));
                         if (attempt < BedrockNetworkConfiguration.MaxRetryCount)
                             await Task.Delay(TimeSpan.FromSeconds(attempt), cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
-            throw new HttpRequestException($"所有 GDK-Proton 下载源均失败：{string.Join("；", errors)}");
+            throw new HttpRequestException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_allSourcesFailed.CurrentValue(), string.Join(CommonLanguageManager.Instance.bedrockLaunch_errorListSeparator.CurrentValue(), errors)));
         }
         finally
         {
             if (File.Exists(temporaryPath))
             {
-                Trace.TraceInformation($"清理 GDK-Proton 临时下载文件：{temporaryPath}。");
+                Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_cleaningProtonTempDownload.CurrentValue(), temporaryPath));
                 File.Delete(temporaryPath);
             }
         }
@@ -377,7 +377,7 @@ public sealed class LinuxBedrockRuntimeResolver
             .ConfigureAwait(false);
         var available = probes.Where(source => source is not null).Select(source => source!).ToList();
         if (available.Count == 0)
-            throw new HttpRequestException("GitHub 镜像和官方源均无法访问。");
+            throw new HttpRequestException(CommonLanguageManager.Instance.bedrockLaunch_noSourcesAccessible.CurrentValue());
         return available.OrderByDescending(source => source.SupportsRange)
             .ThenByDescending(source => source.Speed).ToArray();
     }
@@ -418,7 +418,7 @@ public sealed class LinuxBedrockRuntimeResolver
         }
         catch (Exception exception)
         {
-            Trace.TraceWarning($"GDK-Proton 下载源探测失败：{url}，{exception.Message}");
+            Trace.TraceWarning(string.Format(LogLanguageManager.Instance.bedrockLaunch_protonSourceProbeFailed.CurrentValue(), url, exception.Message));
             return null;
         }
     }
@@ -446,7 +446,7 @@ public sealed class LinuxBedrockRuntimeResolver
                 cancellationToken).ConfigureAwait(false);
             var range = response.Content.Headers.ContentRange;
             if (response.StatusCode != HttpStatusCode.PartialContent || range?.From != start || range.To != end)
-                throw new HttpRequestException($"下载源返回了无效分片：{start}-{end}。");
+                throw new HttpRequestException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_invalidFragmentRange.CurrentValue(), start, end));
             await using var input = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             await using var output = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Write,
                 DownloadBufferSize, FileOptions.Asynchronous | FileOptions.RandomAccess);
@@ -458,15 +458,15 @@ public sealed class LinuxBedrockRuntimeResolver
             {
                 segmentReceived += read;
                 if (segmentReceived > end - start + 1)
-                    throw new HttpRequestException($"下载分片超过预期长度：{start}-{end}。");
+                    throw new HttpRequestException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_fragmentExceedsLength.CurrentValue(), start, end));
                 await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
                 Interlocked.Add(ref downloaded, read);
                 reporter();
             }
             if (segmentReceived != end - start + 1)
-                throw new EndOfStreamException($"下载分片不完整：{start}-{end}。");
+                throw new EndOfStreamException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_fragmentIncomplete.CurrentValue(), start, end));
         })).ConfigureAwait(false);
-        progress?.Invoke(new LinuxBedrockRuntimeProgress("正在下载 GDK-Proton", total, total));
+        progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_downloadingGdkProton.CurrentValue(), total, total));
     }
 
     private static async Task DownloadSinglePartAsync(string url, string path, long expectedTotal,
@@ -489,7 +489,7 @@ public sealed class LinuxBedrockRuntimeResolver
             Interlocked.Add(ref downloaded, read);
             reporter();
         }
-        if (total > 0 && downloaded != total) throw new EndOfStreamException("GDK-Proton 下载不完整。");
+        if (total > 0 && downloaded != total) throw new EndOfStreamException(CommonLanguageManager.Instance.bedrockLaunch_downloadIncomplete.CurrentValue());
     }
 
     private static Action CreateProgressReporter(Action<LinuxBedrockRuntimeProgress>? progress, long total,
@@ -508,7 +508,7 @@ public sealed class LinuxBedrockRuntimeResolver
                 if (percentage == lastPercentage && Stopwatch.GetElapsedTime(lastReport) < TimeSpan.FromSeconds(1)) return;
                 lastPercentage = percentage;
                 lastReport = Stopwatch.GetTimestamp();
-                progress(new LinuxBedrockRuntimeProgress("正在下载 GDK-Proton", downloaded, total));
+                progress(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_downloadingGdkProton.CurrentValue(), downloaded, total));
             }
         };
     }
@@ -568,7 +568,7 @@ public sealed class LinuxBedrockRuntimeResolver
         CancellationToken cancellationToken)
     {
         await using var file = File.OpenRead(archivePath);
-        Trace.TraceInformation($"校验 GDK-Proton 归档路径：{archivePath}。");
+        Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_validatingProtonArchive.CurrentValue(), archivePath));
         await using var gzip = new GZipStream(file, CompressionMode.Decompress);
         using var reader = new TarReader(gzip);
         TarEntry? entry;
@@ -578,7 +578,7 @@ public sealed class LinuxBedrockRuntimeResolver
             if (type is 'g' or 'x') continue;
             ValidateArchivePath(extractionRoot, entry.Name, extractionRoot);
             if (type is not ('\0' or '0' or '1' or '2' or '5' or '7'))
-                throw new InvalidDataException($"归档包含不允许的 tar 项类型：{entry.EntryType}");
+                throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_archiveUnsupportedEntryType.CurrentValue(), entry.EntryType));
             if (type == '1') ValidateArchivePath(extractionRoot, entry.LinkName, extractionRoot);
             if (type == '2')
             {
@@ -592,7 +592,7 @@ public sealed class LinuxBedrockRuntimeResolver
         Action<LinuxBedrockRuntimeProgress>? progress, CancellationToken cancellationToken)
     {
         await using var file = File.OpenRead(archivePath);
-        Trace.TraceInformation($"解压 GDK-Proton 归档：{archivePath} -> {extractionRoot}。");
+        Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_extractingProtonArchive.CurrentValue(), archivePath, extractionRoot));
         var total = file.Length;
         await using var counting = new CountingStream(file);
         await using var gzip = new GZipStream(counting, CompressionMode.Decompress);
@@ -603,7 +603,7 @@ public sealed class LinuxBedrockRuntimeResolver
             while (!extraction.IsCompleted &&
                    await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
-                progress?.Invoke(new LinuxBedrockRuntimeProgress("正在解压 GDK-Proton", counting.BytesRead, total));
+                progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_extractingGdkProton.CurrentValue(), counting.BytesRead, total));
             }
 
             await extraction.ConfigureAwait(false);
@@ -615,17 +615,17 @@ public sealed class LinuxBedrockRuntimeResolver
             throw;
         }
 
-        progress?.Invoke(new LinuxBedrockRuntimeProgress("正在解压 GDK-Proton", total, total));
+        progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_extractingGdkProton.CurrentValue(), total, total));
     }
 
     private static void ValidateArchivePath(string extractionRoot, string? archivePath, string relativeRoot)
     {
         if (string.IsNullOrWhiteSpace(archivePath) || Path.IsPathRooted(archivePath))
-            throw new InvalidDataException("归档包含空路径或绝对路径");
+            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_archiveInvalidPath.CurrentValue());
         var root = Path.GetFullPath(extractionRoot);
         var candidate = Path.GetFullPath(Path.Combine(relativeRoot, archivePath));
         if (candidate != root && !candidate.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-            throw new InvalidDataException($"归档路径越出安装目录：{archivePath}");
+            throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_archivePathOutOfRoot.CurrentValue(), archivePath));
     }
 
     private static string ResolvePrefixPath()
@@ -698,7 +698,7 @@ public sealed class LinuxBedrockRuntimeResolver
             .Append(Path.AltDirectorySeparatorChar).ToHashSet();
         var safe = new string(value.Select(character => invalid.Contains(character) ? '_' : character).ToArray());
         if (string.IsNullOrWhiteSpace(safe) || safe is "." or "..")
-            throw new InvalidDataException("release 名称不能安全映射到本地路径");
+            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_releaseNameUnsafe.CurrentValue());
         return safe;
     }
 
@@ -707,7 +707,7 @@ public sealed class LinuxBedrockRuntimeResolver
         if (string.IsNullOrWhiteSpace(digest)) return null;
         const string prefix = "sha256:";
         if (!digest.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) || digest.Length != prefix.Length + 64)
-            throw new InvalidDataException("GitHub release 提供了不支持的 digest 格式");
+            throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_unsupportedDigestFormat.CurrentValue());
         return digest[prefix.Length..];
     }
 

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Standard.Manifest;
 
@@ -32,7 +33,7 @@ public static class BedrockModManager
         lock (GetLock(config))
         {
             var folder = GetModsFolder(config);
-            Trace.TraceInformation($"扫描基岩版 DLL 模组：{folder}");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_scanningDllMods.CurrentValue(), folder));
             Directory.CreateDirectory(folder);
             var manifest = LoadCore(config);
             var configured = manifest.Mods
@@ -61,7 +62,7 @@ public static class BedrockModManager
             }
 
             SaveCore(config, manifest);
-            Trace.TraceInformation($"基岩版 DLL 模组扫描完成：{folder}，发现 {result.Count} 个有效模组。");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_dllModsScanComplete.CurrentValue(), folder, result.Count));
             return result;
         }
     }
@@ -89,7 +90,7 @@ public static class BedrockModManager
         }
         catch (JsonException)
         {
-            Trace.TraceWarning($"基岩版 DLL 模组配置无效，正在备份：{path}");
+            Trace.TraceWarning(string.Format(LogLanguageManager.Instance.bedrock_dllModsConfigInvalidBackingUp.CurrentValue(), path));
             File.Copy(path, path + ".bak", true);
             return new BedrockModConfig();
         }
@@ -107,7 +108,7 @@ public static class BedrockModManager
         var path = GetConfigPath(config);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var temporaryPath = path + ".tmp";
-        Trace.TraceInformation($"写入基岩版 DLL 模组配置：{path}");
+        Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_writingDllModsConfig.CurrentValue(), path));
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(manifest, JsonOptions));
         File.Move(temporaryPath, path, true);
     }
@@ -159,12 +160,12 @@ public static class BedrockModManager
         }
         catch (IOException exception)
         {
-            Trace.TraceError($"读取基岩版 DLL 模组失败：{path}{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_readDllModsFileFailed.CurrentValue(), path, Environment.NewLine, exception));
             return false;
         }
         catch (UnauthorizedAccessException exception)
         {
-            Trace.TraceError($"读取基岩版 DLL 模组被拒绝：{path}{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_readDllModsDenied.CurrentValue(), path, Environment.NewLine, exception));
             return false;
         }
     }

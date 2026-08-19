@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -74,12 +75,12 @@ internal sealed class ProcessMouseLocker : IDisposable
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
         {
-            Trace.TraceInformation($"基岩版鼠标锁定监视已取消：进程 {_processId}。");
+            Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_mouseLockMonitorCancelled.CurrentValue(), _processId));
         }
         catch (Exception exception)
         {
             
-            Trace.TraceError($"基岩版鼠标锁定监视失败：进程 {_processId}。{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_mouseLockMonitorFailed.CurrentValue(), _processId, Environment.NewLine, exception));
         }
         finally
         {
@@ -155,7 +156,7 @@ internal sealed class ProcessMouseLocker : IDisposable
         }
         catch (Exception exception)
         {
-            Trace.TraceError($"检查基岩版鼠标锁定目标进程失败：进程 {_processId}。{Environment.NewLine}{exception}");
+            Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_mouseLockCheckTargetFailed.CurrentValue(), _processId, Environment.NewLine, exception));
             return true;
         }
     }

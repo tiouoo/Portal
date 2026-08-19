@@ -15,4 +15,8 @@
     </ItemGroup>
   </Target>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj" />
+  </ItemGroup>
+
 </Project>

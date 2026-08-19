@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using PeNet;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -23,9 +24,9 @@ internal static class BedrockDataIsolation
     {
         var gameExecutable = Path.Combine(config.InstancePath, "Minecraft.Windows.exe");
         if (!File.Exists(gameExecutable))
-            throw new FileNotFoundException("未找到用于启用数据隔离的基岩版主程序。", gameExecutable);
+            throw new FileNotFoundException(CommonLanguageManager.Instance.bedrockLaunch_mainExecutableNotFound.CurrentValue(), gameExecutable);
 
-        log?.Invoke($"准备基岩版数据隔离：{gameExecutable}", BedrockLogLevel.Information);
+        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_preparingDataIsolation.CurrentValue(), gameExecutable), BedrockLogLevel.Information);
         SyncPreloadMods(config, log);
         var preloadDllName = DeployPreloadDll(config.InstancePath);
         var nativeLogPath = WritePreloadConfiguration(config);
@@ -48,7 +49,7 @@ internal static class BedrockDataIsolation
         Directory.CreateDirectory(runtimeFolder);
         var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var preloadMods = BedrockModManager.Scan(config).Where(mod => mod.Config.Enabled && mod.Config.Preload).ToArray();
-        log?.Invoke($"发现 {preloadMods.Length} 个已启用的预加载模组", BedrockLogLevel.Information);
+        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_foundEnabledPreloadMods.CurrentValue(), preloadMods.Length), BedrockLogLevel.Information);
         foreach (var mod in preloadMods)
         {
             using var stream = File.OpenRead(mod.FilePath);
@@ -57,7 +58,7 @@ internal static class BedrockDataIsolation
             activeFiles.Add(fileName);
             if (!File.Exists(destination))
                 File.Copy(mod.FilePath, destination);
-            log?.Invoke($"已准备预加载模组：{mod.FileName}", BedrockLogLevel.Information);
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_preloadModReady.CurrentValue(), mod.FileName), BedrockLogLevel.Information);
         }
 
         var manifestPath = Path.Combine(runtimeFolder, "mods.txt");
@@ -68,8 +69,8 @@ internal static class BedrockDataIsolation
         {
             if (activeFiles.Contains(Path.GetFileName(path))) continue;
             try { File.Delete(path); }
-            catch (IOException exception) { log?.Invoke($"删除过期预加载模组失败：{path}，{exception}", BedrockLogLevel.Warning); }
-            catch (UnauthorizedAccessException exception) { log?.Invoke($"删除过期预加载模组被拒绝：{path}，{exception}", BedrockLogLevel.Warning); }
+            catch (IOException exception) { log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_deleteStalePreloadModFailed.CurrentValue(), path, exception), BedrockLogLevel.Warning); }
+            catch (UnauthorizedAccessException exception) { log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_deleteStalePreloadModDenied.CurrentValue(), path, exception), BedrockLogLevel.Warning); }
         }
     }
 
@@ -100,7 +101,7 @@ internal static class BedrockDataIsolation
 
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream(PreloadResourceName)
-                           ?? throw new InvalidOperationException("未找到内嵌的基岩版数据隔离组件。请重新安装 Portal。");
+                           ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_missingEmbeddedIsolationComponent.CurrentValue());
 
         using var file = new FileStream(nativePath, FileMode.Create, FileAccess.Write, FileShare.Read);
         stream.CopyTo(file);
@@ -134,7 +135,7 @@ internal static class BedrockDataIsolation
         };
 
         var configPath = Path.Combine(configFolder, "config.json");
-        Trace.TraceInformation($"写入基岩版数据隔离配置：{configPath}。");
+        Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_writingDataIsolationConfig.CurrentValue(), configPath));
         File.WriteAllText(configPath, JsonSerializer.Serialize(preloadConfig));
         return Path.Combine(logFolder, nativeLogFile);
     }
@@ -187,12 +188,12 @@ internal static class BedrockDataIsolation
                         peFile.RawFile.ReadAsciiString(item.Name.RvaToOffset(peFile.ImageSectionHeaders!)),
                         currentDllName, StringComparison.OrdinalIgnoreCase));
             if (descriptor == null)
-                throw new InvalidDataException("无法更新基岩版数据隔离组件的 DLL 导入项。");
+                throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_cannotUpdatePreloadImport.CurrentValue());
 
             var originalNameLength = currentDllName.Length;
             if (preloadDllName.Length > originalNameLength)
                 throw new InvalidOperationException(
-                    $"无法将预加载组件导入名改为 {preloadDllName}：超出 PE 导入项可用长度。");
+                    string.Format(CommonLanguageManager.Instance.bedrockLaunch_preloadImportNameTooLong.CurrentValue(), preloadDllName));
 
             var nameBuffer = new byte[originalNameLength + 1];
             var nameBytes = System.Text.Encoding.ASCII.GetBytes(preloadDllName);
@@ -203,7 +204,7 @@ internal static class BedrockDataIsolation
         catch (Exception exception) when (exception is not InvalidOperationException and not InvalidDataException)
         {
             throw new InvalidOperationException(
-                $"无法修补基岩版游戏导入表（{preloadDllName}）。游戏可能已损坏，请重新安装该版本。", exception);
+                string.Format(CommonLanguageManager.Instance.bedrockLaunch_cannotPatchImportTable.CurrentValue(), preloadDllName), exception);
         }
     }
 
@@ -216,7 +217,7 @@ internal static class BedrockDataIsolation
                 return name;
         }
 
-        throw new IOException("无法创建可用的数据隔离组件备用文件。");
+        throw new IOException(CommonLanguageManager.Instance.bedrockLaunch_cannotCreateFallbackFile.CurrentValue());
     }
 
     private static void CleanupUnusedFallbackDlls(string instancePath, string activeDllName)
@@ -237,12 +238,12 @@ internal static class BedrockDataIsolation
             catch (IOException exception)
             {
                 
-                Trace.TraceError($"删除过期基岩版数据隔离组件失败：{path}{Environment.NewLine}{exception}");
+                Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_deleteStaleIsolationComponentFailed.CurrentValue(), path, Environment.NewLine, exception));
             }
             catch (UnauthorizedAccessException exception)
             {
                 
-                Trace.TraceError($"删除过期基岩版数据隔离组件被拒绝：{path}{Environment.NewLine}{exception}");
+                Trace.TraceError(string.Format(LogLanguageManager.Instance.bedrock_deleteStaleIsolationComponentDenied.CurrentValue(), path, Environment.NewLine, exception));
             }
         }
     }
@@ -271,7 +272,7 @@ internal static class BedrockDataIsolation
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                log?.Invoke($"删除过期的预加载组件失败：{stalePath}，{exception}", BedrockLogLevel.Warning);
+                log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_deleteStalePreloadComponentFailed.CurrentValue(), stalePath, exception), BedrockLogLevel.Warning);
             }
         }
 
@@ -283,7 +284,7 @@ internal static class BedrockDataIsolation
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            log?.Invoke($"删除过期的 Xbox 账户 Hook 失败：{staleHookPath}，{exception}", BedrockLogLevel.Warning);
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_deleteStaleXboxHookFailed.CurrentValue(), staleHookPath, exception), BedrockLogLevel.Warning);
         }
     }
 }

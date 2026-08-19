@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Xbox;
 
@@ -83,7 +84,7 @@ public sealed class SuspendedProcess : IDisposable
 		string fullPath = Path.GetFullPath(executable);
 		if (!File.Exists(fullPath))
 		{
-			throw new FileNotFoundException("目标程序不存在：" + fullPath, fullPath);
+			throw new FileNotFoundException(string.Format(CommonLanguageManager.Instance.bedrockAuth_targetNotFound.CurrentValue(), fullPath), fullPath);
 		}
 		string fullPath2 = Path.GetFullPath(workingDirectory ?? Path.GetDirectoryName(fullPath)!);
 		char[] array = string.Concat(Quote(fullPath) + (string.IsNullOrWhiteSpace(arguments) ? string.Empty : (" " + arguments)), "\0").ToCharArray();
@@ -97,7 +98,7 @@ public sealed class SuspendedProcess : IDisposable
 		{
 			if (CreateProcessW(fullPath, commandLine, 0, 0, 0, creationFlags, 0, fullPath2, &startupInfo, &information) == 0)
 			{
-				throw new Win32Exception(Marshal.GetLastPInvokeError(), "CreateProcessW 失败。");
+				throw new Win32Exception(Marshal.GetLastPInvokeError(), CommonLanguageManager.Instance.bedrockAuth_createProcessFailed.CurrentValue());
 			}
 		}
 		return new SuspendedProcess(information);
@@ -109,7 +110,7 @@ public sealed class SuspendedProcess : IDisposable
 		{
 			if (ResumeThread(_thread) == uint.MaxValue)
 			{
-				throw new Win32Exception(Marshal.GetLastPInvokeError(), "ResumeThread 失败。");
+				throw new Win32Exception(Marshal.GetLastPInvokeError(), CommonLanguageManager.Instance.bedrockAuth_resumeThreadFailed.CurrentValue());
 			}
 			_resumed = true;
 		}

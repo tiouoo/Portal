@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net.Http;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Linux;
 
@@ -22,31 +23,31 @@ public sealed class BedrockLaunch : IBedrockLaunch
     {
         LinuxBedrockRuntimeResolver.EnsureSupportedPlatform();
         if (_instanceConfig.BuildType != BedrockBuildType.GDK)
-            throw new PlatformNotSupportedException("Linux 平台仅支持 GDK 构建；UWP 无法通过此启动器运行。");
+            throw new PlatformNotSupportedException(CommonLanguageManager.Instance.bedrockLaunch_linuxGdkOnly.CurrentValue());
 
         var executablePath = Path.GetFullPath(Path.Combine(_instanceConfig.InstancePath, "Minecraft.Windows.exe"));
         if (!File.Exists(executablePath))
-            throw new FileNotFoundException("实例中缺少 Minecraft.Windows.exe，请先安装 GDK x64 版本。", executablePath);
+            throw new FileNotFoundException(CommonLanguageManager.Instance.bedrockLaunch_missingMinecraftExe.CurrentValue(), executablePath);
 
         var runtime = await _runtimeResolver.ResolveAsync(runtimeProgress =>
         {
             Log(BedrockLogLevel.Information, runtimeProgress.Message +
                 (runtimeProgress.TotalBytes > 0 ? $" ({runtimeProgress.Percentage}%)" : string.Empty));
-            UpdateProgress?.Invoke($"状态：{runtimeProgress.Message}", runtimeProgress.TotalBytes > 0
+            UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_statusFormat.CurrentValue(), runtimeProgress.Message), runtimeProgress.TotalBytes > 0
                 ? runtimeProgress.Percentage
                 : null);
         }, cancellationToken).ConfigureAwait(false);
         string? preauthDevice = null;
         if (Authentication != null)
         {
-            Log(BedrockLogLevel.Information, $"正在为 Xbox 账户 {Authentication.Gamertag} 准备 WineGDK 预认证");
+            Log(BedrockLogLevel.Information, string.Format(LogLanguageManager.Instance.bedrockLaunch_preparingWineGdkPreauth.CurrentValue(), Authentication.Gamertag));
             preauthDevice = await new XboxPreauthService(runtime.PrefixPath)
                 .PrepareAsync(Authentication, cancellationToken).ConfigureAwait(false);
             await SetRefreshTokenAsync(runtime, Authentication.RefreshToken, cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            Log(BedrockLogLevel.Warning, "未收到基岩版 Xbox 账户，跳过登录注入；请启用基岩版账户注入并选择账户");
+            Log(BedrockLogLevel.Warning, LogLanguageManager.Instance.bedrockLaunch_noXboxAccountSkipped.CurrentValue());
         }
         await EnsureGameInputAsync(runtime, cancellationToken).ConfigureAwait(false);
         await EnsureGamePatchAsync(executablePath, cancellationToken).ConfigureAwait(false);
@@ -75,19 +76,19 @@ public sealed class BedrockLaunch : IBedrockLaunch
         process.ErrorDataReceived += (_, args) => ForwardLog(args.Data, BedrockLogLevel.Error);
 
         Log(BedrockLogLevel.Information,
-            $"使用 Proton 启动 GDK 实例；runtime={runtime.ProtonRoot}，prefix={runtime.PrefixPath}");
-        if (!process.Start()) throw new InvalidOperationException("Proton 进程未能启动。");
+            string.Format(LogLanguageManager.Instance.bedrockLaunch_launchingWithProton.CurrentValue(), runtime.ProtonRoot, runtime.PrefixPath));
+        if (!process.Start()) throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_protonStartFailed.CurrentValue());
 
         MinecraftProcess = process;
         ProcessStarted?.Invoke(process);
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        Log(BedrockLogLevel.Information, $"Proton 已启动，PID：{process.Id}");
-        UpdateProgress?.Invoke("状态：游戏启动命令已提交", 100);
+        Log(BedrockLogLevel.Information, string.Format(LogLanguageManager.Instance.bedrockLaunch_protonStarted.CurrentValue(), process.Id));
+        UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_gameLaunchCommandSubmitted.CurrentValue(), 100);
         LaunchFinish?.Invoke();
     }
 
-    public override Process GetProcess() => MinecraftProcess ?? throw new InvalidOperationException("游戏尚未启动。");
+    public override Process GetProcess() => MinecraftProcess ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_gameNotStarted.CurrentValue());
 
     private static string BuildLibraryPath(string protonRoot)
     {
@@ -120,10 +121,10 @@ public sealed class BedrockLaunch : IBedrockLaunch
     }
 
     private static string FormatDuration(TimeSpan duration) => duration.TotalHours >= 1
-        ? $"{(int)duration.TotalHours}小时{duration.Minutes:D2}分"
+        ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_durationHoursFormat.CurrentValue(), (int)duration.TotalHours, duration.Minutes)
         : duration.TotalMinutes >= 1
-            ? $"{(int)duration.TotalMinutes}分{duration.Seconds:D2}秒"
-            : $"{Math.Max(1, (int)duration.TotalSeconds)}秒";
+            ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_durationMinutesFormat.CurrentValue(), (int)duration.TotalMinutes, duration.Seconds)
+            : string.Format(CommonLanguageManager.Instance.bedrockLaunch_durationSecondsFormat.CurrentValue(), Math.Max(1, (int)duration.TotalSeconds));
 
     private async Task EnsureGamePatchAsync(string executablePath, CancellationToken cancellationToken)
     {
@@ -143,7 +144,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         {
             if (!File.Exists(archivePath))
             {
-                Log(BedrockLogLevel.Information, "正在下载基岩版窗口兼容补丁");
+                Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_downloadingGamePatch.CurrentValue());
                 using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Portal-Bedrock-Linux/1.0");
                 using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
@@ -177,10 +178,11 @@ public sealed class BedrockLaunch : IBedrockLaunch
                         ? TimeSpan.FromSeconds(Math.Max(0, totalBytes - downloadedBytes) / speed)
                         : null;
                     var text = totalBytes > 0
-                        ? $"下载窗口兼容补丁 {percentage:F1}% ({FormatBytes(downloadedBytes)}/{FormatBytes(totalBytes)})，速度 {FormatBytes(speed)}/s" +
-                          (remaining is { } time ? $"，剩余 {FormatDuration(time)}" : string.Empty)
-                        : $"下载窗口兼容补丁 ({FormatBytes(downloadedBytes)})，速度 {FormatBytes(speed)}/s";
-                    UpdateProgress?.Invoke($"状态：{text}", percentage);
+                        ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingPatchWithProgress.CurrentValue(),
+                              percentage, FormatBytes(downloadedBytes), FormatBytes(totalBytes), FormatBytes(speed)) +
+                          (remaining is { } time ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_remainingSuffix.CurrentValue(), FormatDuration(time)) : string.Empty)
+                        : string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingPatchNoProgress.CurrentValue(), FormatBytes(downloadedBytes), FormatBytes(speed));
+                    UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_statusFormat.CurrentValue(), text), percentage);
                     var integerPercentage = totalBytes > 0 ? (int)percentage!.Value : -1;
                     if (integerPercentage != lastLoggedPercentage)
                     {
@@ -189,21 +191,21 @@ public sealed class BedrockLaunch : IBedrockLaunch
                     }
                     lastReport = stopwatch.Elapsed;
                 }
-                UpdateProgress?.Invoke("状态：窗口兼容补丁下载完成", 100);
+                UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_gamePatchDownloadComplete.CurrentValue(), 100);
             }
 
             using var archive = ZipFile.OpenRead(archivePath);
             var entry = archive.Entries.FirstOrDefault(item =>
                 item.FullName.Replace('\\', '/').Equals("gdk/mcpatcher_core.dll",
                     StringComparison.OrdinalIgnoreCase));
-            if (entry is null) throw new InvalidDataException("GamePatch.zip 中缺少 gdk/mcpatcher_core.dll。");
+            if (entry is null) throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_gamePatchMissingMcpatcher.CurrentValue());
 
             Directory.CreateDirectory(preload);
             await using var source = entry.Open();
             await using var destination = new FileStream(patch, FileMode.Create, FileAccess.Write,
                 FileShare.Read, 1024 * 64, FileOptions.Asynchronous | FileOptions.SequentialScan);
             await source.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
-            Log(BedrockLogLevel.Information, "基岩版窗口兼容补丁已部署");
+            Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_gamePatchDeployed.CurrentValue());
         }
         catch (OperationCanceledException)
         {
@@ -211,7 +213,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         }
         catch (Exception exception)
         {
-            Log(BedrockLogLevel.Warning, $"窗口兼容补丁不可用，继续启动游戏：{exception.Message}");
+            Log(BedrockLogLevel.Warning, string.Format(LogLanguageManager.Instance.bedrockLaunch_gamePatchUnavailable.CurrentValue(), exception.Message));
         }
     }
 
@@ -230,8 +232,8 @@ public sealed class BedrockLaunch : IBedrockLaunch
         if (File.Exists(marker) || HasGameInput(runtime.PrefixPath)) return;
 
         cancellationToken.ThrowIfCancellationRequested();
-        Log(BedrockLogLevel.Information, "正在通过 Proton 安装 GameInput 运行组件");
-        UpdateProgress?.Invoke("状态：正在安装 GameInput", null);
+        Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_installingGameInputViaProton.CurrentValue());
+        UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusInstallingGameInput.CurrentValue(), null);
         var startInfo = new ProcessStartInfo
         {
             FileName = runtime.ProtonScript,
@@ -260,7 +262,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
             errorBuffer.AppendLine(args.Data);
             Log(BedrockLogLevel.Warning, args.Data);
         };
-        if (!process.Start()) throw new InvalidOperationException("无法启动 GameInput 安装程序。");
+        if (!process.Start()) throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_cannotStartGameInputInstaller.CurrentValue());
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
@@ -276,28 +278,28 @@ public sealed class BedrockLaunch : IBedrockLaunch
             KillProcess(process);
             if (cancellationToken.IsCancellationRequested)
             {
-                Log(BedrockLogLevel.Warning, "GameInput 安装已取消，安装进程已被终止");
-                UpdateProgress?.Invoke("状态：GameInput 安装已取消", null);
+                Log(BedrockLogLevel.Warning, LogLanguageManager.Instance.bedrockLaunch_gameInputInstallCancelled.CurrentValue());
+                UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusGameInputCancelled.CurrentValue(), null);
                 throw;
             }
 
-            Log(BedrockLogLevel.Warning, "GameInput 安装超时，安装进程已被终止；继续启动游戏");
-            UpdateProgress?.Invoke("状态：GameInput 安装超时，继续启动游戏", null);
+            Log(BedrockLogLevel.Warning, LogLanguageManager.Instance.bedrockLaunch_gameInputInstallTimeout.CurrentValue());
+            UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusGameInputTimeout.CurrentValue(), null);
             return;
         }
         var errorText = errorBuffer.ToString().Trim();
         if (process.ExitCode != 0)
         {
             Log(BedrockLogLevel.Warning,
-                $"GameInput 安装失败（退出码 {process.ExitCode}），继续启动游戏。{errorText}");
-            UpdateProgress?.Invoke("状态：GameInput 安装失败，继续启动游戏", null);
+                string.Format(LogLanguageManager.Instance.bedrockLaunch_gameInputInstallFailedContinue.CurrentValue(), process.ExitCode, errorText));
+            UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusGameInputFailed.CurrentValue(), null);
             return;
         }
 
         Directory.CreateDirectory(runtime.PrefixPath);
         await File.WriteAllTextAsync(marker, DateTimeOffset.UtcNow.ToString("O")).ConfigureAwait(false);
-        UpdateProgress?.Invoke("状态：GameInput 运行组件安装完成", 100);
-        Log(BedrockLogLevel.Information, "GameInput 运行组件安装完成");
+        UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusGameInputInstalled.CurrentValue(), 100);
+        Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_gameInputInstalled.CurrentValue());
     }
 
     private async Task InstallGameInputOfflineAsync(LinuxBedrockRuntime runtime,
@@ -306,7 +308,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         var installer = Path.Combine(_instanceConfig.InstancePath, "Installers", "GameInputRedist.msi");
         if (!File.Exists(installer))
         {
-            Log(BedrockLogLevel.Warning, "未找到 GameInputRedist.msi，无法安装 GameInput 运行组件");
+            Log(BedrockLogLevel.Warning, LogLanguageManager.Instance.bedrockLaunch_gameInputRedistNotFound.CurrentValue());
             return;
         }
 
@@ -314,13 +316,13 @@ public sealed class BedrockLaunch : IBedrockLaunch
         if (File.Exists(marker) && HasGameInput(runtime.PrefixPath)) return;
 
         cancellationToken.ThrowIfCancellationRequested();
-        Log(BedrockLogLevel.Information, "正在离线提取 GameInput 运行组件");
-        UpdateProgress?.Invoke("状态：正在安装 GameInput", null);
+        Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_extractingGameInputOffline.CurrentValue());
+        UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusInstallingGameInput.CurrentValue(), null);
         InstallCryptbase(runtime);
         var cab = ExtractEmbeddedCab(installer);
-        if (cab is null) throw new InvalidDataException("GameInput MSI 中没有内嵌 CAB。");
+        if (cab is null) throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_gameInputMsiNoCab.CurrentValue());
         var extractor = Path.Combine(runtime.ProtonRoot, "protonfixes", "files", "bin", "cabextract");
-        if (!File.Exists(extractor)) throw new FileNotFoundException("当前 Proton 缺少 cabextract。", extractor);
+        if (!File.Exists(extractor)) throw new FileNotFoundException(CommonLanguageManager.Instance.bedrockLaunch_missingCabextract.CurrentValue(), extractor);
 
         var temp = Path.Combine(Path.GetTempPath(), $"portal-gameinput-{Guid.NewGuid():N}");
         Directory.CreateDirectory(temp);
@@ -332,16 +334,16 @@ public sealed class BedrockLaunch : IBedrockLaunch
             {
                 UseShellExecute = false, RedirectStandardError = true, CreateNoWindow = true
             };
-            using var process = Process.Start(extract) ?? throw new InvalidOperationException("无法启动 cabextract。");
+            using var process = Process.Start(extract) ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_cannotStartCabextract.CurrentValue());
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             if (process.ExitCode != 0)
-                throw new InvalidDataException($"GameInput CAB 提取失败：{await process.StandardError.ReadToEndAsync(cancellationToken)}");
+                throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_gameInputCabExtractFailed.CurrentValue(), await process.StandardError.ReadToEndAsync(cancellationToken)));
 
             var dlls = Directory.EnumerateFiles(temp, "*", SearchOption.AllDirectories)
                 .Where(path => IsPe(path, dll: true)).OrderByDescending(path => new FileInfo(path).Length).ToList();
             var exes = Directory.EnumerateFiles(temp, "*", SearchOption.AllDirectories)
                 .Where(path => IsPe(path, dll: false)).OrderByDescending(path => new FileInfo(path).Length).ToList();
-            if (dlls.Count == 0 || exes.Count == 0) throw new InvalidDataException("GameInput CAB 中没有有效组件。");
+            if (dlls.Count == 0 || exes.Count == 0) throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_gameInputCabNoComponents.CurrentValue());
 
             var x64 = Path.Combine(runtime.PrefixPath, "pfx", "drive_c", "Program Files", "Microsoft GameInput", "x64");
             var x86 = Path.Combine(runtime.PrefixPath, "pfx", "drive_c", "Program Files", "Microsoft GameInput", "x86");
@@ -364,8 +366,8 @@ public sealed class BedrockLaunch : IBedrockLaunch
         Directory.CreateDirectory(runtime.PrefixPath);
         await File.WriteAllTextAsync(marker, DateTimeOffset.UtcNow.ToString("O"), cancellationToken)
             .ConfigureAwait(false);
-        UpdateProgress?.Invoke("状态：GameInput 运行组件安装完成", 100);
-        Log(BedrockLogLevel.Information, "GameInput 运行组件安装完成");
+        UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusGameInputInstalled.CurrentValue(), 100);
+        Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_gameInputInstalled.CurrentValue());
     }
 
     private static bool IsPe(string path, bool dll)
@@ -398,9 +400,9 @@ public sealed class BedrockLaunch : IBedrockLaunch
             var info = new ProcessStartInfo(runtime.ProtonScript, $"run reg import \"{ToWinePath(reg)}\"")
             { UseShellExecute = false, CreateNoWindow = true };
             ApplyRuntimeEnvironment(info, runtime);
-            using var process = Process.Start(info) ?? throw new InvalidOperationException("无法注册 GameInput 服务。");
+            using var process = Process.Start(info) ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_cannotRegisterGameInputService.CurrentValue());
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-            if (process.ExitCode != 0) throw new InvalidOperationException("GameInput 服务注册失败。");
+            if (process.ExitCode != 0) throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_gameInputServiceRegisterFailed.CurrentValue());
         }
         finally { File.Delete(reg); }
     }
@@ -477,11 +479,11 @@ public sealed class BedrockLaunch : IBedrockLaunch
         try
         {
             using var process = Process.Start(startInfo)
-                                ?? throw new InvalidOperationException("无法写入 WineGDK 账户配置。");
+                                ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_cannotWriteWineGdkConfig.CurrentValue());
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             if (process.ExitCode != 0)
-                throw new InvalidOperationException("写入 WineGDK 账户配置失败。");
-            Log(BedrockLogLevel.Information, "Xbox 刷新令牌已写入 WineGDK machine registry");
+                throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_writeWineGdkConfigFailed.CurrentValue());
+            Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_refreshTokenWritten.CurrentValue());
         }
         finally
         {
@@ -524,7 +526,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
             }
             current.Append(character);
         }
-        if (quoted) throw new FormatException("基岩版启动参数包含未闭合的双引号。");
+        if (quoted) throw new FormatException(CommonLanguageManager.Instance.bedrockLaunch_unclosedQuote.CurrentValue());
         if (current.Length > 0) yield return current.ToString();
     }
 }

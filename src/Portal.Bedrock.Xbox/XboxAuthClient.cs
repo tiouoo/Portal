@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Xbox;
 
@@ -79,7 +80,7 @@ public sealed class XboxAuthClient : IDisposable
 		}
 		catch (Exception ex)
 		{
-			Console.Error.WriteLine("警告：Achievements token 不可用：" + ex.Message);
+			Console.Error.WriteLine(string.Format(CommonLanguageManager.Instance.bedrockAuth_achievementsTokenWarning.CurrentValue(), ex.Message));
 		}
 		XboxTokenWithClaims profileToken = await SisuAsync(identity, msaAccessToken, device, proofKey, ProfileRelyingParty, "sisu-profile", cancellationToken);
 		XboxTokenWithClaims playFab = await SisuAsync(identity, msaAccessToken, device, proofKey, "https://b980a380.minecraft.playfabapi.com/", "sisu-playfab", cancellationToken);
@@ -92,7 +93,7 @@ public sealed class XboxAuthClient : IDisposable
 		}
 		catch (Exception ex2)
 		{
-			Console.Error.WriteLine("警告：Licensing token 不可用：" + ex2.Message);
+			Console.Error.WriteLine(string.Format(CommonLanguageManager.Instance.bedrockAuth_licensingTokenWarning.CurrentValue(), ex2.Message));
 		}
 		string xuid = Required(profileToken.Claims.Xuid, "profile token XUID");
 		return new XboxPreauth(await FetchProfileAsync(identity, xuid, profileToken, cancellationToken), identity, device, user, profileToken, achievements, playFab, multiplayer, realms, licensing);
@@ -137,9 +138,9 @@ public sealed class XboxAuthClient : IDisposable
 		{
 			userIds = new string[1] { xuid },
 			settings = new string[4] { "GameDisplayName", "GameDisplayPicRaw", "Gamerscore", "Gamertag" }
-		}, "xbox-profile", cancellationToken)).ProfileUsers.FirstOrDefault((XboxProfileUser candidate) => candidate.Id == xuid)?.Settings.ToDictionary<XboxProfileSetting, string, string>((XboxProfileSetting item) => item.Id, (XboxProfileSetting item) => item.Value, StringComparer.Ordinal) ?? throw new InvalidDataException("Xbox Profile API 未返回当前用户。");
+		}, "xbox-profile", cancellationToken)).ProfileUsers.FirstOrDefault((XboxProfileUser candidate) => candidate.Id == xuid)?.Settings.ToDictionary<XboxProfileSetting, string, string>((XboxProfileSetting item) => item.Id, (XboxProfileSetting item) => item.Value, StringComparer.Ordinal) ?? throw new InvalidDataException(CommonLanguageManager.Instance.bedrockAuth_profileApiNoUser.CurrentValue());
 		string valueOrDefault = dictionary.GetValueOrDefault("Gamertag");
-		string text2 = ((!string.IsNullOrEmpty(valueOrDefault)) ? valueOrDefault : (token.Claims.Gamertag ?? throw new InvalidDataException("Xbox Profile API 缺少 gamertag。")));
+		string text2 = ((!string.IsNullOrEmpty(valueOrDefault)) ? valueOrDefault : (token.Claims.Gamertag ?? throw new InvalidDataException(CommonLanguageManager.Instance.bedrockAuth_profileApiNoGamertag.CurrentValue())));
 		string valueOrDefault2 = dictionary.GetValueOrDefault("GameDisplayName");
 		string displayName = ((!string.IsNullOrEmpty(valueOrDefault2)) ? valueOrDefault2 : text2);
 		string text3 = dictionary.GetValueOrDefault("GameDisplayPicRaw");
@@ -178,9 +179,9 @@ public sealed class XboxAuthClient : IDisposable
 			{
 				if (!response.IsSuccessStatusCode)
 				{
-					throw new InvalidOperationException($"{stage} 返回 HTTP {(int)response.StatusCode}，XErr={ReadXboxError(array)?.ToString() ?? "unknown"}。");
+					throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.bedrockAuth_stageHttpError.CurrentValue(), stage, (int)response.StatusCode, ReadXboxError(array)?.ToString() ?? "unknown"));
 				}
-				return JsonSerializer.Deserialize<T>(array) ?? throw new InvalidDataException(stage + " 返回空 JSON。");
+				return JsonSerializer.Deserialize<T>(array) ?? throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockAuth_stageEmptyJson.CurrentValue(), stage));
 			}
 			finally
 			{
@@ -263,11 +264,11 @@ public sealed class XboxAuthClient : IDisposable
 	{
 		if (string.IsNullOrEmpty(response.Token))
 		{
-			throw new InvalidDataException("Xbox 服务响应缺少 token。");
+			throw new InvalidDataException(CommonLanguageManager.Instance.bedrockAuth_responseMissingToken.CurrentValue());
 		}
 		if (string.IsNullOrEmpty(response.NotAfter))
 		{
-			throw new InvalidDataException("Xbox 服务响应缺少过期时间。");
+			throw new InvalidDataException(CommonLanguageManager.Instance.bedrockAuth_responseMissingExpiry.CurrentValue());
 		}
 		return new XboxToken(response.Token, response.NotAfter);
 	}
@@ -354,7 +355,7 @@ public sealed class XboxAuthClient : IDisposable
 		{
 			return value;
 		}
-		throw new InvalidDataException("Xbox " + name + " 缺失。");
+		throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockAuth_missingRequired.CurrentValue(), name));
 	}
 
 	public void Dispose()

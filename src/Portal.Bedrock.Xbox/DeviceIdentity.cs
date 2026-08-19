@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using Portal.Localization;
 
 namespace Portal.Bedrock.Xbox;
 
@@ -29,7 +30,7 @@ public sealed class DeviceIdentity : IDisposable
 	{
 		if (blob.Length != 104 || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(0, 4)) != BcryptEcdsaPrivateP256Magic || BinaryPrimitives.ReadUInt32LittleEndian(blob.AsSpan(4, 4)) != 32)
 		{
-			throw new InvalidDataException("保存的 Xbox P-256 私钥 blob 无效。");
+			throw new InvalidDataException(CommonLanguageManager.Instance.bedrockAuth_invalidPrivateKeyBlob.CurrentValue());
 		}
 		byte[] array = blob.AsSpan(8, 32).ToArray();
 		byte[] array2 = blob.AsSpan(40, 32).ToArray();
@@ -79,7 +80,7 @@ public sealed class DeviceIdentity : IDisposable
 				["y"] = Convert.ToBase64String(y)
 			};
 		}
-		throw new CryptographicException("P-256 公钥坐标无效。");
+		throw new CryptographicException(CommonLanguageManager.Instance.bedrockAuth_invalidPublicKey.CurrentValue());
 	}
 
 	public byte[] ExportBcryptPrivateBlob()
@@ -98,7 +99,7 @@ public sealed class DeviceIdentity : IDisposable
 			d.CopyTo(array, 72);
 			return array;
 		}
-		throw new CryptographicException("P-256 私钥参数不完整。");
+		throw new CryptographicException(CommonLanguageManager.Instance.bedrockAuth_incompletePrivateKey.CurrentValue());
 	}
 
 	public byte[] SignP1363(ReadOnlySpan<byte> data)

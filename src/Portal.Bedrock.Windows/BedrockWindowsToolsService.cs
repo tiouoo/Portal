@@ -3,6 +3,7 @@ using System.Text;
 using Portal.Bedrock.Core;
 using Portal.Bedrock.Core.Windows;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Localization;
 
 namespace Portal.Bedrock;
 
@@ -25,14 +26,14 @@ public sealed class BedrockWindowsToolsService : IBedrockToolsService
         startInfo.ArgumentList.Add("-Command");
         startInfo.ArgumentList.Add(script);
 
-        using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("无法启动 PowerShell。");
+        using var process = Process.Start(startInfo) ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockTools_cannotStartPowerShell.CurrentValue());
         var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
         var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
         var output = await outputTask.ConfigureAwait(false);
         var error = await errorTask.ConfigureAwait(false);
         if (process.ExitCode != 0)
-            throw new InvalidOperationException($"检测 Windows App SDK 失败：{error.Trim()}");
+            throw new InvalidOperationException(string.Format(CommonLanguageManager.Instance.bedrockTools_windowsAppSdkCheckFailed.CurrentValue(), error.Trim()));
         return output.Contains("TRUE", StringComparison.OrdinalIgnoreCase);
     }
 
