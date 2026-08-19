@@ -293,6 +293,12 @@ jobs:
       - name: List Files
         run: ls -la ./Portal.Release/
 
+      - name: Tag AppImage with Version
+        run: |
+          cd ./Portal.Release
+          cp -f Portal.linux.x64.AppImage "Portal.linux.x64.${{ needs.prepare.outputs.app_version }}.AppImage"
+          ls -la *.AppImage
+
       - name: Generate Changelog
         run: |
           REPO_URL="${{ github.server_url }}/${{ github.repository }}"
