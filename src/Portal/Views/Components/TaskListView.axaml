@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tasks="clr-namespace:Tio.Avalonia.Standard.Modules.Tasks;assembly=Tio.Avalonia.Standard"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <converter:ManagedTaskStatusToBrushConverter x:Key="TaskStatusBrush" />
         <converter:ManagedTaskStatusToTextConverter x:Key="TaskStatusText" />
@@ -111,7 +111,7 @@
                                         VerticalAlignment="Center" />
                                     <HyperlinkButton
                                         Click="RemoveTerminalTask"
-                                        Content="移除"
+                                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.tasklistview_0}}"
                                         FontSize="12"
                                         Foreground="{DynamicResource SystemAccentColor}"
                                         Grid.Column="3"

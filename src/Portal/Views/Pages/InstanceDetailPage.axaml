@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <controls:ScrollView
             Classes="Flat"
@@ -25,102 +25,102 @@
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Dashboard}"
-                    Header="仪表盘"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_0}}"
                     IsSelected="True" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Files}"
-                    Header="存储"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_1}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Mods}"
-                    Header="模组"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_2}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:ResourcePacks}"
-                    Header="资源包"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_3}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:ShaderPacks}"
-                    Header="光影包"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_4}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Saves}"
-                    Header="存档"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_5}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Servers}"
-                    Header="服务器"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_6}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Screenshots}"
-                    Header="截图"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_7}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Logs}"
-                    Header="日志"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_8}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:CrashReports}"
-                    Header="崩溃报告"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_9}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockMods}"
-                    Header="模组"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_2}}"
                     IsVisible="{Binding SupportsBedrockMods}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockResourcePacks}"
-                    Header="资源包"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_3}}"
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockBehaviorPacks}"
-                    Header="行为包"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_10}}"
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockWorlds}"
-                    Header="存档"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_5}}"
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockServers}"
-                    Header="服务器"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_6}}"
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockWorldTemplates}"
-                    Header="世界模板"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_11}}"
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:BedrockSkins}"
-                    Header="皮肤包"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_12}}"
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Screenshots}"
-                    Header="截图"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_7}}"
                     IsVisible="{Binding IsBedrock}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:ConfigFiles}"
-                    Header="配置文件"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_13}}"
                     IsVisible="{Binding IsJava}" />
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type instancePages:Properties}"
-                    Header="配置管理" />
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.instancedetailpage_14}}" />
             </tio:NavMenu>
         </controls:ScrollView>
         <Rectangle

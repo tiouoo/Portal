@@ -9,12 +9,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto,*,Auto"
         Width="480">
-        <TextBlock Text="选择要安装的加载器版本" />
+        <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_0}}" />
         <controls:ScrollView
             Grid.Row="1"
             Margin="0,12,0,0"
@@ -33,10 +33,10 @@
             Margin="0,18,0,0"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Click="Cancel_OnClick" Content="取消" />
+            <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_1}}" />
             <Button
                 Click="Confirm_OnClick"
-                Content="确定"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.loaderversiondialog_2}}"
                 IsEnabled="{Binding CanConfirm}" />
         </StackPanel>
     </Grid>

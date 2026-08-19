@@ -8,12 +8,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="其他设置" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_0}}" />
         <StackPanel IsVisible="{Binding CanRegisterProtocol}" Spacing="5">
             <Label
-                Content="Portal 协议"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_1}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Button
@@ -24,11 +24,11 @@
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *注册后，可在浏览器通过协议调起启动器" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_2}}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="日志等级"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_3}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -38,14 +38,14 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="调试模式"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_4}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableDebugConsole}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *显示应用启动和运行日志，需要重启程序后生效。" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_5}}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

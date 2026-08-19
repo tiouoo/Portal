@@ -9,14 +9,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid Margin="0" RowDefinitions="Auto,Auto,*">
         <DockPanel Margin="10,10,10,8">
             <TextBlock
                 Cursor="Hand"
                 FontSize="24"
                 PointerPressed="Title_OnPointerPressed"
-                Text="崩溃报告" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_0}}" />
         </DockPanel>
         <StackPanel
             HorizontalAlignment="Right"
@@ -29,24 +29,24 @@
                 MinWidth="220"
                 Name="LogFileSelector"
                 SelectionChanged="LogFileSelector_OnSelectionChanged"
-                ToolTip.Tip="选择崩溃报告"
+                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_1}}"
                 VerticalAlignment="Center" />
             <Button
                 Click="AnalyseAi_OnClick"
-                Content="AI 分析"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_2}}"
                 IsVisible="False"
                 VerticalAlignment="Center" />
             <Button
                 Click="Share_OnClick"
-                Content="分享"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_3}}"
                 VerticalAlignment="Center" />
             <Button
                 Click="Export_OnClick"
-                Content="导出"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_4}}"
                 VerticalAlignment="Center" />
             <Button
                 Click="OpenFolder_OnClick"
-                Content="打开文件夹"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_5}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Center" />
         </StackPanel>
@@ -73,27 +73,27 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="全选"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_6}}"
                             InputGesture="ctrl+a" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Copy_OnClick"
-                            Header="复制"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_7}}"
                             InputGesture="ctrl+c" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Share_OnClick"
-                            Header="分享" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_3}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="AnalyseAi_OnClick"
-                            Header="AI 分析" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_2}}" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Export_OnClick"
-                            Header="导出" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_4}}" />
                     </MenuFlyout>
                 </avaloniaEdit:TextEditor.ContextFlyout>
             </avaloniaEdit:TextEditor>

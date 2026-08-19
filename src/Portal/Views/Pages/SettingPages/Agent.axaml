@@ -8,71 +8,71 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="网络代理" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_0}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="GitHub 镜像加速"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_1}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableGithubMirror}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableGithubMirror}" Spacing="5">
             <Label
-                Content="镜像模式"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_2}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.GithubMirrorMode}">
-                <ComboBoxItem Content="前缀代理 - 在原地址前拼接镜像站" />
-                <ComboBoxItem Content="直接访问 - 替换域名为镜像站" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_3}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_4}}" />
             </ComboBox>
             <Label
-                Content="镜像源地址"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_5}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox PlaceholderText="https://ghfast.top" Text="{Binding Data.ConfigEntry.GithubMirrorUrl}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *前缀代理模式：填写镜像站地址，如 https://ghfast.top 或 ghproxy.net" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_6}}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *直接访问模式：填写镜像站域名，如 bgithub.xyz" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_7}}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *两种模式均可用 {url} 占位符代表原始下载地址，如 https://example.com/?q={url}" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_proxyUrlPlaceholder}}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="使用代理服务器"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_8}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableProxyServer}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="禁用系统代理"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_9}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.DisableSystemProxy}" IsEnabled="{Binding Data.ConfigEntry.CanDisableSystemProxy}" />
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *单独启用时，所有网络请求将直接连接，不使用系统代理" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_10}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableProxyServer}" Spacing="5">
             <Label
-                Content="代理服务器地址"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_11}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox PlaceholderText="http://127.0.0.1:7890" Text="{Binding Data.ConfigEntry.ProxyServer}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="自定义 UserAgent"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_12}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.EnableCustomUserAgent}" />
@@ -87,7 +87,7 @@
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text=" *默认UserAgent: " />
+                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_13}}" />
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"

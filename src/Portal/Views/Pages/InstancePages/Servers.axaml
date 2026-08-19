@@ -10,17 +10,17 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="AddServer_OnClick"
-                Content="添加服务器"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_0}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="Refresh_OnClick"
-                Content="刷新"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_1}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
@@ -30,7 +30,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="服务器"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_2}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -42,19 +42,19 @@
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsRefreshing}"
                     Margin="0,8,0,0"
-                    Text="·正在检测服务器状态"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_3}}"
                     TextWrapping="NoWrap" />
             </DockPanel>
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取服务器..." />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_4}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例没有服务器" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_5}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding Items}" Margin="0,0,10,0">
@@ -79,7 +79,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="RefreshServer_OnClick"
-                                        Header="刷新数据"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_6}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -90,7 +90,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="LaunchServer_OnClick"
-                                        Header="快速游玩"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_7}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -102,7 +102,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="CopyAddress_OnClick"
-                                        Header="复制地址"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_8}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -113,7 +113,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="CreateShortcut_OnClick"
-                                        Header="快捷方式"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_9}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -125,7 +125,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="EditServer_OnClick"
-                                        Header="编辑"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_10}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -136,7 +136,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RemoveServer_OnClick"
-                                        Header="删除"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_11}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -233,7 +233,7 @@
                                             Padding="4,-2,2,0"
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
-                                            ToolTip.Tip="启动服务器"
+                                            ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_12}}"
                                             VerticalAlignment="Bottom"
                                             VerticalContentAlignment="Bottom">
                                             <PathIcon

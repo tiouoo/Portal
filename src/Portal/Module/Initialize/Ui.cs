@@ -38,6 +38,13 @@ public static partial class Initializer
         LocalizationService.Register(LogLanguageManager.Instance);
         LocalizationService.Register(AppLanguageManager.Instance);
         LocalizationService.Register(WidgetsLanguageManager.Instance);
+        LocalizationService.Register(PagesLanguageManager.Instance);
+        LocalizationService.Register(InstancesLanguageManager.Instance);
+        LocalizationService.Register(DownloadsLanguageManager.Instance);
+        LocalizationService.Register(SettingsLanguageManager.Instance);
+        LocalizationService.Register(ToolsLanguageManager.Instance);
+        LocalizationService.Register(StaticPagesLanguageManager.Instance);
+        LocalizationService.Register(ComponentsLanguageManager.Instance);
 
         LocalizationService.CultureChanged += culture =>
         {

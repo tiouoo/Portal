@@ -8,14 +8,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto,Auto,Auto,Auto"
         Width="480">
         <StackPanel Spacing="4">
             <TextBlock>
-                <Run FontSize="16" Text="安装" />
+                <Run FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_0}}" />
                 <Run FontSize="16" Text="{Binding Definition.DisplayName}" />
                 <Run FontSize="16" Text="：" />
                 <Run FontSize="16" Text="{Binding File.DisplayName}" />
@@ -33,10 +33,10 @@
             Spacing="6">
             <DockPanel LastChildFill="False">
                 <CheckBox
-                    Content="显示所有实例"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_1}}"
                     DockPanel.Dock="Right"
                     IsChecked="{Binding ShowAllInstances}" />
-                <TextBlock Text="安装目标实例" VerticalAlignment="Center" />
+                <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_2}}" VerticalAlignment="Center" />
             </DockPanel>
             <ComboBox
                 HorizontalAlignment="Stretch"
@@ -58,14 +58,14 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoInstances}"
-                Text="没有兼容的 Java 版实例" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_3}}" />
         </StackPanel>
         <StackPanel
             Grid.Row="2"
             IsVisible="{Binding IsDataPack}"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="安装目标存档" />
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_4}}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 IsEnabled="{Binding !IsLoadingWorlds}"
@@ -87,11 +87,11 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoadingWorlds}"
-                Text="正在读取存档..." />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_5}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoWorlds}"
-                Text="该实例没有可安装数据包的存档" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_6}}" />
         </StackPanel>
         <DockPanel
             Grid.Row="3"
@@ -99,16 +99,16 @@
             Margin="0,22,0,0">
             <Button
                 Click="SaveAs_Click"
-                Content="另存为"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_7}}"
                 DockPanel.Dock="Left" />
             <StackPanel
                 DockPanel.Dock="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Click="Cancel_Click" Content="取消" />
+                <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_8}}" />
                 <Button
                     Click="Install_Click"
-                    Content="确定"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourceinstalldialog_9}}"
                     IsEnabled="{Binding CanInstall}" />
             </StackPanel>
         </DockPanel>

@@ -9,19 +9,19 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="controls|ShortcutKeyGestureInput /template/ Button#PART_ClearButton">
             <Setter Property="IsVisible" Value="False" />
         </Style>
     </UserControl.Styles>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="按键绑定" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_0}}" />
         <TextBox
             HorizontalAlignment="Stretch"
             Margin="0,0,0,-10"
             MaxWidth="560"
-            PlaceholderText="搜索操作名称或快捷键，例如：切换主题、Ctrl+Shift+Q"
+            PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_1}}"
             Text="{Binding SearchText}">
             <TextBox.InnerRightContent>
                 <PathIcon
@@ -36,7 +36,7 @@
             FontSize="12"
             Foreground="{DynamicResource InnerForegroundColor}"
             IsVisible="False"
-            Text="按 Esc 清空当前快捷键,组合键需至少包含一个修饰键（Ctrl / Shift / Alt / Win）"
+            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_2}}"
             TextWrapping="Wrap" />
         <ItemsControl ItemsSource="{Binding Categories}">
             <ItemsControl.ItemTemplate>
@@ -68,18 +68,18 @@
                                                     IsHitTestVisible="False"
                                                     IsVisible="{Binding IsEmpty}"
                                                     Margin="8,0,0,0"
-                                                    Text="（无）"
+                                                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_3}}"
                                                     VerticalAlignment="Center" />
                                             </Grid>
                                             <Button
                                                 Click="ResetOne_OnClick"
-                                                Content="恢复默认"
+                                                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_4}}"
                                                 Grid.Column="1"
                                                 IsVisible="{Binding IsNotDefault}"
                                                 Margin="6,0,0,0"
                                                 Padding="8,2"
                                                 Tag="{Binding}"
-                                                ToolTip.Tip="恢复为该操作的默认快捷键"
+                                                ToolTip.Tip="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_5}}"
                                                 VerticalAlignment="Center" />
                                         </Grid>
                                     </Grid>

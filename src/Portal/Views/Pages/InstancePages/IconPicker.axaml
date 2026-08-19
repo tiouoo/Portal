@@ -10,7 +10,7 @@
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto,*,Auto"
@@ -18,7 +18,7 @@
         <TextBlock
             FontSize="15"
             FontWeight="600"
-            Text="更换图标"
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_0}}"
             VerticalAlignment="Center" />
         <controls:ScrollView
             Grid.Row="1"
@@ -57,11 +57,11 @@
         <DockPanel Grid.Row="2" LastChildFill="False">
             <Button
                 Click="Cancel_Click"
-                Content="取消"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_1}}"
                 DockPanel.Dock="Left" />
             <Button
                 Click="ChooseFile_Click"
-                Content="选择本地图片"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.iconpicker_2}}"
                 DockPanel.Dock="Right"
                 HorizontalAlignment="Right" />
         </DockPanel>

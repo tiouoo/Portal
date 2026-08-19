@@ -20,7 +20,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
     </tio:TioWindow.Resources>
@@ -102,14 +102,14 @@
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="导入到哪里"
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_0}}"
                         TextTrimming="CharacterEllipsis" />
                     <TextBlock
                         DockPanel.Dock="Right"
                         FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding ViewModel.HasNoInstances}"
-                        Text="没有可用的基岩版实例"
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_1}}"
                         TextTrimming="CharacterEllipsis" />
                 </DockPanel>
                 <ComboBox
@@ -135,7 +135,7 @@
                 <TextBlock
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="导入到哪个存档用户" />
+                    Text="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_2}}" />
                 <ComboBox
                     HorizontalAlignment="Stretch"
                     IsEnabled="{Binding !IsBusy}"
@@ -159,7 +159,7 @@
             Spacing="10">
             <Button
                 Click="Cancel_OnClick"
-                Content="取消"
+                Content="{Translate {x:Static loc:AppLanguageManager+Keys.bedrockpackageimportwindow_3}}"
                 IsEnabled="{Binding !IsBusy}" />
             <tio:IconButton
                 Background="{DynamicResource SystemAccentColor}"

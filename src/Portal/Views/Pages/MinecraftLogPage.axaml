@@ -9,16 +9,16 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid Margin="12,0,12,12" RowDefinitions="Auto,Auto,*">
         <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
             <TextBlock
                 FontSize="17"
                 FontWeight="SemiBold"
-                Text="Minecraft 日志"
+                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_0}}"
                 VerticalAlignment="Center" />
             <CheckBox
-                Content="自动滚动到底部"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_1}}"
                 Grid.Column="1"
                 IsChecked="True"
                 Name="AutoScrollCheckBox"
@@ -38,35 +38,35 @@
                     LineSpacing="8">
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="显示级别"
+                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_2}}"
                         VerticalAlignment="Center" />
                     <CheckBox
-                        Content="信息"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_3}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="InformationFilter" />
                     <CheckBox
-                        Content="警告"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_4}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="WarningFilter" />
                     <CheckBox
-                        Content="错误"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_5}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="ErrorFilter" />
                     <CheckBox
-                        Content="调试"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_6}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="DebugFilter" />
                     <CheckBox
-                        Content="跟踪"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_7}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="TraceFilter" />
                     <CheckBox
-                        Content="其他"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_8}}"
                         IsChecked="True"
                         IsCheckedChanged="FilterChanged"
                         Name="OtherFilter" />
@@ -77,7 +77,7 @@
                     Foreground="{DynamicResource SystemAccentColor}"
                     HorizontalAlignment="Right"
                     PointerPressed="InputElement_OnPointerPressed"
-                    Text="导出"
+                    Text="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_9}}"
                     VerticalAlignment="Center" />
             </DockPanel>
         </Border>
@@ -106,18 +106,18 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="全选"
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_10}}"
                             InputGesture="ctrl+a" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Copy_OnClick"
-                            Header="复制"
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_11}}"
                             InputGesture="ctrl+c" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="Export_OnClick"
-                            Header="导出" />
+                            Header="{Translate {x:Static loc:PagesLanguageManager+Keys.minecraftlogpage_9}}" />
                     </MenuFlyout>
                 </avaloniaEdit:TextEditor.ContextFlyout>
             </avaloniaEdit:TextEditor>

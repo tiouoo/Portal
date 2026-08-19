@@ -4,7 +4,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="Border.world-template-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -21,18 +21,18 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="打开文件夹"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_0}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="搜索世界模板"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_1}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
-                Content="选择"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_2}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top">
@@ -41,15 +41,15 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="全选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_3}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="ClearSelection_OnClick"
-                            Header="全不选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_4}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="InvertSelection_OnClick"
-                            Header="反选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_5}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -63,7 +63,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="删除所选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_6}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -73,7 +73,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="世界模板"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_7}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -85,13 +85,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取世界模板..." />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_8}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例没有可识别的世界模板" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_9}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -116,16 +116,16 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowWorldTemplateDetails_OnClick"
-                                        Header="查看详情"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_10}}"
                                         Tag="{Binding}" />
                                     <Separator />
                                     <MenuItem
                                         Click="OpenWorldTemplateFolder_OnClick"
-                                        Header="在文件夹中打开"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_11}}"
                                         Tag="{Binding}" />
                                     <MenuItem
                                         Click="DeleteWorldTemplate_OnClick"
-                                        Header="删除"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_12}}"
                                         Tag="{Binding}" />
                                 </MenuFlyout>
                             </Border.ContextFlyout>
@@ -174,7 +174,7 @@
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Margin="3,1,3,0">
-                                        <Run Text="基础游戏版本：" /><Run Text="{Binding BaseGameVersionText}" />
+                                        <Run Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_13}}" /><Run Text="{Binding BaseGameVersionText}" />
                                     </TextBlock>
                                     <TextBlock
                                         FontSize="13"

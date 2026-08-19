@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto,Auto,Auto"
@@ -16,22 +16,22 @@
         <TextBlock
             FontSize="17"
             FontWeight="SemiBold"
-            Text="文件尚未保存" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_0}}" />
         <TextBlock
             Grid.Row="1"
             Margin="0,10,0,22"
             Text="{Binding Message}"
             TextWrapping="Wrap" />
         <Grid ColumnDefinitions="Auto,*,Auto,Auto" Grid.Row="2">
-            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_1}}" />
             <Button
                 Command="{Binding DiscardCommand}"
-                Content="不保存"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_2}}"
                 Grid.Column="2"
                 Margin="0,0,8,0" />
             <Button
                 Command="{Binding SaveCommand}"
-                Content="保存"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.unsavedfilesdialog_3}}"
                 Grid.Column="3" />
         </Grid>
     </Grid>

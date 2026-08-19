@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -8,12 +8,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="默认行为" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_0}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="默认页面"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_1}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -24,42 +24,42 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="新标签页内容"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_2}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.NewTabContent}">
-                <ComboBoxItem Content="新标签页" />
-                <ComboBoxItem Content="起始页" />
-                <ComboBoxItem Content="小组件" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_3}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_4}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_5}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="启动器可见性"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_6}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.PortalVisibleMode}">
-                <ComboBoxItem Content="游戏启动后保持不变" />
-                <ComboBoxItem Content="游戏启动后退出启动器" />
-                <ComboBoxItem Content="游戏启动后隐藏，游戏退出后重新显示" />
-                <ComboBoxItem Content="游戏启动后最小化" />
-                <ComboBoxItem Content="游戏启动后最小化，游戏退出后恢复" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_7}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_8}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_9}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_10}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_11}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="文件选择器"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_12}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.FilePicker}">
-                <ComboBoxItem Content="系统对话框" />
-                <ComboBoxItem Content="接管对话框" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_13}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_14}}" />
 
             </ComboBox>
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *需要重启程序" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_15}}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

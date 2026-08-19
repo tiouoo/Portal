@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="Border.shader-pack-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -26,18 +26,18 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="打开文件夹"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_0}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="CheckUpdates_OnClick"
-                Content="检查更新"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_1}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <Button
                 Click="Import_OnClick"
-                Content="添加光影包"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_2}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
@@ -66,12 +66,12 @@
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="搜索光影包"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_3}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
-                Content="选择"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_4}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top">
@@ -80,17 +80,17 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="全选"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_5}}"
                             InputGesture="ctrl+A" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="ClearSelection_OnClick"
-                            Header="全不选"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_6}}"
                             InputGesture="ctrl+shift+A" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="InvertSelection_OnClick"
-                            Header="反选"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_7}}"
                             InputGesture="ctrl+I" />
                     </MenuFlyout>
                 </Button.Flyout>
@@ -105,7 +105,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="删除所选光影包" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_8}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -115,7 +115,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="光影包"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_9}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -129,13 +129,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取光影包..." />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_10}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例没有可识别的光影包" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_11}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -160,7 +160,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowShaderPackDetails_OnClick"
-                                        Header="查看详情"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_12}}"
                                         IsVisible="{Binding HasDetails}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -172,7 +172,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="UpdateShaderPack_OnClick"
-                                        Header="更新"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_13}}"
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -184,7 +184,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="SwitchVersionShaderPack_OnClick"
-                                        Header="切换版本"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_14}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -196,7 +196,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RollbackShaderPack_OnClick"
-                                        Header="回滚更新"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_15}}"
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -209,7 +209,7 @@
                                     <Separator IsVisible="{Binding HasIdentity}" />
                                     <MenuItem
                                         Click="OpenShaderPackFolder_OnClick"
-                                        Header="在文件夹中打开"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_16}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -220,7 +220,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteShaderPack_OnClick"
-                                        Header="删除"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_17}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -251,7 +251,7 @@
                                         <TextBlock
                                             FontSize="11"
                                             Foreground="White"
-                                            Text="可更新" />
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_18}}" />
                                     </Border>
                                     <TextBlock
                                         FontSize="16"

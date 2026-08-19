@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         MaxHeight="625"
@@ -20,28 +20,28 @@
                     FontSize="16"
                     FontWeight="600"
                     HorizontalAlignment="Left"
-                    Text="切换版本" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_0}}" />
             </Panel>
             <TextBlock
                 DockPanel.Dock="Right"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
-                Text="正在加载版本..." />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_1}}" />
             <TextBlock
                 DockPanel.Dock="Right"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasError}"
-                Text="加载失败，请检查网络" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_2}}" />
         </DockPanel>
         <CheckBox
-            Content="显示所有项目"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_3}}"
             Grid.Row="1"
             IsChecked="{Binding ShowAll}"
             Margin="0,10,0,0" />
         <TextBox
             Grid.Row="2"
             Margin="0,8,0,0"
-            PlaceholderText="搜索..."
+            PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_4}}"
             Text="{Binding SearchText}">
             <TextBox.InnerRightContent>
                 <PathIcon
@@ -84,7 +84,7 @@
                                         <TextBlock
                                             FontSize="11"
                                             Foreground="White"
-                                            Text="当前版本"
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_5}}"
                                             VerticalAlignment="Center" />
                                     </Border>
                                     <TextBlock
@@ -111,10 +111,10 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_6}}" />
             <Button
                 Command="{Binding ConfirmCommand}"
-                Content="切换到此版本"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourceversionswitchdialog_7}}"
                 IsEnabled="{Binding CanConfirm}" />
         </StackPanel>
     </Grid>

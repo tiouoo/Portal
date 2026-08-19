@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -11,7 +11,7 @@
     xmlns:p="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <controls:ScrollView
             Classes="Flat"
@@ -23,65 +23,65 @@
                 Margin="0,0,10,0"
                 Name="NavMenu"
                 Theme="{StaticResource FlatScrollBarTheme}">
-                <tio:NavMenuItem Header="通用">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_0}}">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Appearance}"
-                        Header="界面外观"
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_1}}"
                         IsSelected="True" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:DefaultBehavior}"
-                        Header="默认行为" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_2}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Shortcuts}"
-                        Header="按键绑定" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_3}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
-                        Header="通知选项" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_4}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Storage}"
-                        Header="存储空间" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_5}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:ApplicationDebug}"
-                        Header="其他设置" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_6}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:About}"
-                        Header="关于应用"
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_7}}"
                         Name="AboutItem" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="游戏">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_8}}">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Account}"
-                        Header="账户档案" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_9}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Java}"
-                        Header="运行环境" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_10}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:GameFolder}"
-                        Header="游戏目录" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_11}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Advanced}"
-                        Header="高级选项" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_12}}" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="网络">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_13}}">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Download}"
-                        Header="下载设置" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_14}}" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Agent}"
-                        Header="网络代理" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_15}}" />
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>

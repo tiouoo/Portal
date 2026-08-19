@@ -10,17 +10,17 @@
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="打开文件夹"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_0}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="Import_OnClick"
-                Content="添加存档"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_1}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
@@ -50,7 +50,7 @@
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 Name="SearchBox"
-                PlaceholderText="搜索存档"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_2}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
@@ -59,7 +59,7 @@
                     Cursor="Hand"
                     FontSize="24"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="存档" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_3}}" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Margin="10,8,0,0"
@@ -70,13 +70,13 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取存档..." />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_4}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例没有可识别的存档" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_5}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -103,7 +103,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="OpenWorldFolder_OnClick"
-                                        Header="打开文件夹"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_0}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -114,7 +114,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="ChangeIcon_OnClick"
-                                        Header="更换图标"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_6}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -125,7 +125,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="ShowInfo_OnClick"
-                                        Header="查看详情"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_7}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -136,7 +136,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="QuickEnter_OnClick"
-                                        Header="快速进入"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_8}}"
                                         IsVisible="{Binding CanQuickEnter}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -148,7 +148,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="CreateShortcut_OnClick"
-                                        Header="快捷方式"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_9}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -160,7 +160,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="DeleteWorld_OnClick"
-                                        Header="删除存档"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_10}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

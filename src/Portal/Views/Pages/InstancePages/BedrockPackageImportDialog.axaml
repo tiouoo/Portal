@@ -8,13 +8,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto,Auto,Auto,Auto"
         Width="480">
         <StackPanel Spacing="4">
-            <TextBlock FontSize="16" Text="导入基岩版包" />
+            <TextBlock FontSize="16" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockpackageimportdialog_0}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Text="{Binding PackageDescription}"
@@ -24,7 +24,7 @@
             Grid.Row="1"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="基岩版实例" />
+            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockpackageimportdialog_1}}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 ItemsSource="{Binding Instances}"
@@ -45,14 +45,14 @@
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoInstances}"
-                Text="没有可用的基岩版实例" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockpackageimportdialog_2}}" />
         </StackPanel>
         <StackPanel
             Grid.Row="2"
             IsVisible="{Binding RequiresUserId}"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="存档用户 ID" />
+            <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockpackageimportdialog_3}}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 ItemsSource="{Binding WorldUserIds}"
@@ -64,10 +64,10 @@
             Margin="0,22,0,0"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Click="Cancel_Click" Content="取消" />
+            <Button Click="Cancel_Click" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockpackageimportdialog_4}}" />
             <Button
                 Click="Import_Click"
-                Content="导入"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockpackageimportdialog_5}}"
                 IsEnabled="{Binding CanImport}" />
         </StackPanel>
     </Grid>

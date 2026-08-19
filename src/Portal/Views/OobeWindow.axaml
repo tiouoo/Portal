@@ -6,7 +6,7 @@
     IsMaxBtnShow="False"
     IsMinBtnShow="{OnPlatform Default=True,
                               macOS=False}"
-    Title="欢迎使用 Portal"
+    Title="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_0}}"
     Width="780"
     WindowStartupLocation="CenterScreen"
     d:DesignHeight="540"
@@ -24,7 +24,7 @@
     xmlns:styles="clr-namespace:Portal.Styles"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
@@ -89,19 +89,19 @@
                         Click="Back_OnClick"
                         Content="←"
                         Name="BackButton"
-                        ToolTip.Tip="上一步"
+                        ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_1}}"
                         Width="60" />
                     <Button
                         Classes="Float"
                         Click="Next_OnClick"
                         Content="→"
                         Name="NextButton"
-                        ToolTip.Tip="下一步"
+                        ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_2}}"
                         Width="60" />
                     <tio:IconButton
                         Background="{DynamicResource SystemAccentColor}"
                         Click="Finish_OnClick"
-                        Content="进入 Portal"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_3}}"
                         Foreground="White"
                         IsVisible="False"
                         Name="FinishButton" />
@@ -123,15 +123,15 @@
 
             <StackPanel Margin="25,5,25,10" Spacing="15">
                 <StackPanel Spacing="6">
-                    <TextBlock FontSize="26" Text="欢迎使用" />
+                    <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_4}}" />
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="先从挑一个喜欢的外观开始吧"
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_5}}"
                         TextWrapping="Wrap" />
                 </StackPanel>
                 <StackPanel Spacing="5">
                     <Label
-                        Content="主题样式"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_6}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <ListBox Name="ThemeListBox" Theme="{DynamicResource BorderListBox}">
@@ -144,7 +144,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="系统" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_7}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -156,7 +156,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="浅色" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_8}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -168,7 +168,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="深色" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_9}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
@@ -180,7 +180,7 @@
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="幻影" />
+                                <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_10}}" />
                             </StackPanel>
                         </ListBoxItem>
                     </ListBox>
@@ -188,7 +188,7 @@
                 <StackPanel Spacing="5">
                     <Panel>
                         <Label
-                            Content="主题色"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_11}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             HorizontalAlignment="Left" />
@@ -214,22 +214,22 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
-                        <TextBlock FontSize="26" Text="添加 Minecraft 文件夹" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_12}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="支持Modrinth/CurseForge/MultiMC等多种格式哦"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_13}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="文件夹列表"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_14}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center" />
                         <HyperlinkButton
                             Click="AddFolder_OnClick"
-                            Content="添加文件夹"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_15}}"
                             FontSize="13"
                             HorizontalAlignment="Right"
                             Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -291,22 +291,22 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="6">
-                        <TextBlock FontSize="26" Text="添加账户" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_16}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="登录微软账户、使用外置登录，或创建一个离线账户 ovo"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_17}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="账户列表"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_18}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center" />
                         <HyperlinkButton
                             Click="AddAccount_OnClick"
-                            Content="添加账户"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_16}}"
                             FontSize="13"
                             HorizontalAlignment="Right"
                             Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -317,7 +317,7 @@
                         HorizontalAlignment="Center"
                         IsVisible="{Binding !Data.ConfigEntry.MinecraftAccounts.Count}"
                         Margin="0,20,0,0"
-                        Text="还没有账户，点击「添加账户」开始" />
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_19}}" />
                 </StackPanel>
                 <controls:ScrollView
                     Classes="Flat"
@@ -369,15 +369,15 @@
             <DockPanel Margin="25,5,25,10">
                 <StackPanel DockPanel.Dock="Top" Spacing="15">
                     <StackPanel Spacing="4">
-                        <TextBlock FontSize="26" Text="添加 Java" />
+                        <TextBlock FontSize="26" Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_20}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="运行 Minecraft 当然是需要 Java 滴"
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_21}}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <DockPanel Margin="0,4,0,0">
                         <Label
-                            Content="Java 列表"
+                            Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_22}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Margin="5,0,0,0"
@@ -389,13 +389,13 @@
                             Spacing="10">
                             <HyperlinkButton
                                 Click="ScanJava_OnClick"
-                                Content="自动扫描"
+                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_23}}"
                                 FontSize="13"
                                 Name="ScanJavaButton"
                                 Theme="{StaticResource TransparentHyperlinkButton}" />
                             <HyperlinkButton
                                 Click="AddJava_OnClick"
-                                Content="手动添加"
+                                Content="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_24}}"
                                 FontSize="13"
                                 Name="AddJavaButton"
                                 Theme="{StaticResource TransparentHyperlinkButton}" />
@@ -413,7 +413,7 @@
                         HorizontalAlignment="Center"
                         IsVisible="{Binding !Data.ConfigEntry.JavaRuntimes.Count}"
                         Margin="0,20,0,0"
-                        Text="还没有 Java，点击「自动扫描」试试" />
+                        Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_25}}" />
                 </StackPanel>
                 <controls:ScrollView
                     Classes="Flat"

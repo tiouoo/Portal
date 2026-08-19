@@ -9,13 +9,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <ScrollViewer Classes="Flat" Margin="12">
         <StackPanel
             Margin="8"
             MaxWidth="900"
             Spacing="15">
-            <TextBlock FontSize="22" Text="Litematica 投影分析" />
+            <TextBlock FontSize="22" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_0}}" />
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -26,11 +26,11 @@
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="投影文件" />
+                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_1}}" />
                     <DockPanel>
                         <Button
                             Command="{Binding LoadAndAnalyzeCommand}"
-                            Content="分析"
+                            Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_2}}"
                             DockPanel.Dock="Right"
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"
@@ -38,7 +38,7 @@
                         <tio:PathPicker
                             FileFilter="[Litematica, *.litematic]"
                             SelectedPathsText="{Binding FilePath}"
-                            Title="选择 Litematica 投影文件"
+                            Title="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_3}}"
                             UsePickerType="OpenFile" />
                     </DockPanel>
                     <ProgressBar
@@ -61,7 +61,7 @@
                             <Run
                                 FontSize="14"
                                 Foreground="{DynamicResource InnerForegroundColor}"
-                                Text="方块总数：" />
+                                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_4}}" />
                             <Run
                                 FontSize="14"
                                 FontWeight="DemiBold"
@@ -71,7 +71,7 @@
                             <Run
                                 FontSize="14"
                                 Foreground="{DynamicResource InnerForegroundColor}"
-                                Text="方块种类：" />
+                                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_5}}" />
                             <Run
                                 FontSize="14"
                                 FontWeight="DemiBold"
@@ -106,23 +106,23 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn
                                     Binding="{Binding NameCn}"
-                                    Header="方块名称"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_6}}"
                                     Width="180" />
                                 <DataGridTextColumn
                                     Binding="{Binding Count, StringFormat={}{0:N0}}"
-                                    Header="数量"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_7}}"
                                     Width="100" />
                                 <DataGridTextColumn
                                     Binding="{Binding CategoryDisplay}"
-                                    Header="类别"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_8}}"
                                     Width="100" />
                                 <DataGridTextColumn
                                     Binding="{Binding Percent, StringFormat={}{0:P1}}"
-                                    Header="百分比"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_9}}"
                                     Width="80" />
                                 <DataGridTextColumn
                                     Binding="{Binding Units}"
-                                    Header="换算"
+                                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_10}}"
                                     Width="250" />
                             </DataGrid.Columns>
                         </DataGrid>
@@ -132,11 +132,11 @@
             <WrapPanel HorizontalAlignment="Stretch" IsVisible="{Binding HasData}">
                 <Button
                     Click="ExportTxt_Click"
-                    Content="导出 TXT"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_11}}"
                     Width="100" />
                 <Button
                     Click="ExportCsv_Click"
-                    Content="导出 CSV"
+                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.litematicapage_12}}"
                     Width="100" />
             </WrapPanel>
         </StackPanel>

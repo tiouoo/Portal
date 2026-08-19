@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto, *, Auto"
@@ -18,7 +18,7 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="验证微软账户" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_0}}" />
         <StackPanel
             Grid.Row="1"
             HorizontalAlignment="Stretch"
@@ -62,8 +62,8 @@
             <TextBlock
                 Foreground="Red"
                 IsVisible="{Binding IsError}"
-                Text="出现错误! 请检查网络连接。" />
-            <TextBlock IsVisible="{Binding IsError}" Text="错误信息: " />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_1}}" />
+            <TextBlock IsVisible="{Binding IsError}" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_2}}" />
             <TextBlock IsVisible="{Binding IsError}" Text="{Binding Error}" />
         </StackPanel>
         <StackPanel
@@ -71,24 +71,24 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding Cancel}" Content="取消" />
+            <Button Command="{Binding Cancel}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_3}}" />
             <Button
                 Command="{Binding Retry}"
-                Content="重试"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_4}}"
                 IsVisible="{Binding IsError}" />
             <Button
                 Click="CopyUrl"
-                Content="复制网址"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_5}}"
                 IsEnabled="{Binding IsReady}"
                 IsVisible="{Binding !IsError}" />
             <Button
                 Click="CopyCode"
-                Content="复制验证码"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_6}}"
                 IsEnabled="{Binding IsReady}"
                 IsVisible="{Binding !IsError}" />
             <Button
                 Click="OpenBrowser"
-                Content="打开浏览器"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.microsoft_7}}"
                 IsEnabled="{Binding IsReady}"
                 IsVisible="{Binding !IsError}" />
         </StackPanel>

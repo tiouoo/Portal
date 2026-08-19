@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="600"
     d:DesignWidth="550"
     mc:Ignorable="d"
@@ -10,7 +10,7 @@
     xmlns:lsv="clr-namespace:LiteSkinViewer3D.Avalonia.Controls;assembly=LiteSkinViewer.3D"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto, Auto, *, Auto"
@@ -29,11 +29,11 @@
             <TextBlock
                 FontSize="12"
                 Foreground="{DynamicResource SukiMuteText}"
-                Text="选择皮肤文件（PNG）" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_0}}" />
             <tio:PathPicker
-                FileFilter="[皮肤图片, *.png]"
+                FileFilter="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_6}}"
                 SelectedPathsText="{Binding SkinPath}"
-                Title="选择皮肤图片"
+                Title="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_1}}"
                 UsePickerType="OpenFile" />
         </StackPanel>
         <Border
@@ -54,7 +54,7 @@
         </Border>
         <DockPanel Grid.Row="3">
             <CheckBox
-                Content="锁定视角"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_2}}"
                 DockPanel.Dock="Left"
                 IsChecked="{Binding IsViewLocked}"
                 IsCheckedChanged="OnIsViewLockedChanged"
@@ -65,12 +65,12 @@
                 IsVisible="{Binding IsPreview, Converter={x:Static BoolConverters.Not}}"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Command="{Binding CancelCommand}" Content="取消" />
-                <Button Command="{Binding ConfirmCommand}" Content="确定" />
+                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_3}}" />
+                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_4}}" />
             </StackPanel>
             <Button
                 Command="{Binding CancelCommand}"
-                Content="关闭"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.changeskin_5}}"
                 HorizontalAlignment="Right"
                 IsVisible="{Binding IsPreview}"
                 Width="80" />

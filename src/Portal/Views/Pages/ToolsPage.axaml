@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -11,7 +11,7 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:toolsPages="clr-namespace:Portal.Views.Pages.ToolsPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <controls:ScrollView
             Classes="Flat"
@@ -23,7 +23,7 @@
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type toolsPages:BedrockToolsPage}"
-                    Header="基岩版"
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.toolspage_0}}"
                     IsSelected="True"
                     IsVisible="{Binding IsWindows}">
                     <tio:NavMenuItem.Icon>

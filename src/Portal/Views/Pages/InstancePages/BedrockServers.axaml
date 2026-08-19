@@ -9,30 +9,30 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="AddServer_OnClick"
-                Content="添加服务器"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_0}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="RefreshAll_OnClick"
-                Content="刷新"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_1}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <Button
                 Click="OpenFolder_OnClick"
-                Content="打开文件夹"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_2}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                PlaceholderText="搜索服务器"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_3}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
@@ -44,13 +44,13 @@
                 MinWidth="180"
                 Name="UserIdSelector"
                 SelectionChanged="UserIdSelector_OnSelectionChanged"
-                ToolTip.Tip="选择基岩版数据用户 ID"
+                ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_4}}"
                 VerticalAlignment="Top" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     FontSize="24"
                     MaxLines="1"
-                    Text="服务器"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_5}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -62,19 +62,19 @@
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsRefreshing}"
                     Margin="0,8,0,0"
-                    Text="·正在检测服务器状态"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_6}}"
                     TextWrapping="NoWrap" />
             </DockPanel>
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取服务器..." />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_7}}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="所选用户 ID 下没有服务器" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_8}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -99,7 +99,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="RefreshServer_OnClick"
-                                        Header="刷新数据"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_9}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -111,7 +111,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="CopyAddress_OnClick"
-                                        Header="复制地址"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_10}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -123,7 +123,7 @@
                                     <Separator />
                                     <MenuItem
                                         Click="EditServer_OnClick"
-                                        Header="编辑"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_11}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -134,7 +134,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RemoveServer_OnClick"
-                                        Header="删除"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_12}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon

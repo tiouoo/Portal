@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         MaxHeight="560"
@@ -18,7 +18,7 @@
         <TextBlock
             FontSize="20"
             FontWeight="SemiBold"
-            Text="分享结果" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_0}}" />
         <ScrollViewer
             Grid.Row="2"
             Margin="0,14,0,0"
@@ -74,7 +74,7 @@
                                         <TextBlock
                                             FontSize="13"
                                             Foreground="{DynamicResource SystemAccentColor}"
-                                            Text="复制链接" />
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_1}}" />
                                     </Button>
                                     <Button
                                         Background="Transparent"
@@ -84,7 +84,7 @@
                                         <TextBlock
                                             FontSize="13"
                                             Foreground="{DynamicResource SystemAccentColor}"
-                                            Text="打开链接" />
+                                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_2}}" />
                                     </Button>
                                 </StackPanel>
                             </StackPanel>
@@ -99,11 +99,11 @@
             Margin="0,14,0,0">
             <Button
                 Click="Close_OnClick"
-                Content="完成"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_3}}"
                 DockPanel.Dock="Right" />
             <Button
                 Click="CopyAll_OnClick"
-                Content="复制全部链接"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.logshareresultdialog_4}}"
                 DockPanel.Dock="Right"
                 IsEnabled="{Binding HasAnyUrl}"
                 Margin="0,0,8,0" />

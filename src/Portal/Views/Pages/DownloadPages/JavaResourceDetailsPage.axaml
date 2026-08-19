@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top">
             <DockPanel>
@@ -188,7 +188,7 @@
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding IsEmpty}"
                         Margin="2,2,0,0"
-                        Text="没有可用文件" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourcedetailspage_0}}" />
                 </Border>
             </Border>
         </Grid>

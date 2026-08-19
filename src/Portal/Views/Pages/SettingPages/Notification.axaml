@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -8,25 +8,25 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="通知选项" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_0}}" />
         <StackPanel Spacing="5">
             <Label
-                Content="通知方式"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_1}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 SelectedIndex="{Binding Data.ConfigEntry.NoticeWay}"
                 SelectionChanged="SelectingItemsControl_OnSelectionChanged">
-                <ComboBoxItem Content="气泡" />
-                <ComboBoxItem Content="卡片" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_2}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_3}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="15">
             <Label
-                Content="通知权限"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_4}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <StackPanel Spacing="10">
@@ -35,7 +35,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="显示选中账户" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_5}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -46,7 +46,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="文件拖入提示" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_6}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -57,7 +57,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="更新提示" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_7}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -67,7 +67,7 @@
         </StackPanel>
         <StackPanel Spacing="15">
             <Label
-                Content="可选项"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_8}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <StackPanel Spacing="10">
@@ -76,7 +76,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="在新标签页中显示Minecraft新闻" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_9}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -87,7 +87,7 @@
                         DockPanel.Dock="Left"
                         FontSize="14"
                         HorizontalAlignment="Left"
-                        Text="在新标签页中显示最近游戏" />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.notification_10}}" />
                     <ToggleSwitch
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"

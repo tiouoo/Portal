@@ -11,13 +11,13 @@
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:java="clr-namespace:Portal.Core.Minecraft.Instance.Java;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="10,10,0,10">
         <TextBlock
             DockPanel.Dock="Top"
             FontSize="24"
             Margin="0,0,0,5"
-            Text="配置管理" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_0}}" />
         <controls:ScrollView>
             <Border
                 Background="Transparent"
@@ -29,33 +29,33 @@
                 <StackPanel Spacing="15">
                     <StackPanel Spacing="5">
                         <Label
-                            Content="备注"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_1}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
-                        <TextBox PlaceholderText="请输入备注" Text="{Binding Instance.Config.Note}" />
+                        <TextBox PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_2}}" Text="{Binding Instance.Config.Note}" />
                     </StackPanel>
                     <StackPanel IsVisible="{Binding IsUwpBedrock}" Spacing="5">
                         <Label
-                            Content="鼠标锁"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_3}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
                         <ToggleSwitch IsChecked="{Binding EnableMouseLock}" />
                         <TextBlock
                             FontSize="11"
                             Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="*在游戏中使用 ctrl+alt 切换鼠标锁定" />
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_4}}" />
                     </StackPanel>
                     <StackPanel IsVisible="{Binding IsGdkBedrock}" Spacing="12">
                         <StackPanel Spacing="5">
                             <Label
-                                Content="独立数据"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_5}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.EnableIndependentBedrockVersion}" />
                         </StackPanel>
                         <StackPanel Spacing="5">
                             <Label
-                                Content="启动器间共享数据"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_6}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.EnableLauncherSharedBedrockData}" />
@@ -64,7 +64,7 @@
                     <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
                         <StackPanel Spacing="5">
                             <Label
-                                Content="独立实例"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_7}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableIndependentInstance}" IsEnabled="{Binding Instance.CanDisableIndependentInstance}" />
@@ -72,18 +72,18 @@
                                 FontSize="11"
                                 Foreground="{DynamicResource InnerForegroundColor}"
                                 IsVisible="{Binding Instance.RequiresIndependentInstance}"
-                                Text=" *此类型文件夹强制独立实例" />
+                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_8}}" />
                         </StackPanel>
                         <StackPanel Spacing="5">
                             <Label
-                                Content="使用特定Java"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_9}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableSpecificJava}" />
                         </StackPanel>
                         <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableSpecificJava}" Spacing="5">
                             <Label
-                                Content="选择Java"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_10}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ComboBox
@@ -107,14 +107,14 @@
                         </StackPanel>
                         <StackPanel Spacing="5">
                             <Label
-                                Content="覆盖全局最大内存"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_11}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" />
                         </StackPanel>
                         <StackPanel IsVisible="{Binding Instance.JavaConfig.EnableOverrideMaxMemory}" Spacing="5">
                             <Label
-                                Content="最大内存"
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_12}}"
                                 FontSize="13"
                                 Foreground="{DynamicResource InnerForegroundColor}" />
                             <Grid ColumnDefinitions="*,Auto">
@@ -139,7 +139,7 @@
                         <StackPanel Spacing="12">
                             <StackPanel IsVisible="{Binding CanChooseGraphicsBackend}" Spacing="5">
                                 <Label
-                                    Content="图形 API"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_13}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ComboBox
@@ -149,7 +149,7 @@
                             </StackPanel>
                             <StackPanel IsVisible="{Binding IsOpenGlRendererVisible}" Spacing="5">
                                 <Label
-                                    Content="OpenGL 渲染器"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_14}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ComboBox
@@ -165,7 +165,7 @@
                             </StackPanel>
                             <StackPanel IsVisible="{Binding IsVulkanRendererVisible}" Spacing="5">
                                 <Label
-                                    Content="Vulkan 渲染器"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_15}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ComboBox
@@ -184,10 +184,10 @@
                             <TextBlock
                                 FontSize="16"
                                 Margin="0,5,0,0"
-                                Text="高级选项" />
+                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_16}}" />
                             <StackPanel Spacing="5">
                                 <Label
-                                    Content="使用本实例的高级选项"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_17}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
                                 <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" />
@@ -195,12 +195,12 @@
                                     FontSize="11"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     Margin="0,-3,0,0"
-                                    Text=" *开启后，本实例将优先使用下方的高级选项；关闭则使用全局高级选项" />
+                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_18}}" />
                             </StackPanel>
                             <StackPanel IsEnabled="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" Spacing="12">
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="自动设置中文"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_19}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.AutoSetChineseLanguage}" />
@@ -208,11 +208,11 @@
                                         FontSize="11"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Margin="0,-3,0,0"
-                                        Text=" *启动游戏时自动将游戏语言切换为简体中文" />
+                                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_20}}" />
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsWindows}" Spacing="5">
                                     <Label
-                                        Content="游戏内覆盖层"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_21}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableGameOverlay}" />
@@ -220,29 +220,29 @@
                                         FontSize="11"
                                         Foreground="{DynamicResource InnerForegroundColor}"
                                         Margin="0,-3,0,0"
-                                        Text=" *在游戏内按下 Shift+Tab 显示或隐藏覆盖层" />
+                                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_22}}" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="游戏全屏"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_23}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableFullscreen}" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="Minecraft窗口标题"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_24}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="留空默认"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_25}}"
                                         Text="{Binding Instance.JavaConfig.OverrideMinecraftWindowTitle}"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="Minecraft窗口大小"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_26}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <Grid
@@ -252,7 +252,7 @@
                                         <TextBox
                                             AcceptsReturn="True"
                                             Grid.Column="0"
-                                            InnerLeftContent="宽度 "
+                                            InnerLeftContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_34}}"
                                             Margin="0,0,10,0"
                                             Text="{Binding Instance.JavaConfig.MinecraftWindowWidth}"
                                             TextWrapping="Wrap"
@@ -260,7 +260,7 @@
                                         <TextBox
                                             AcceptsReturn="True"
                                             Grid.Column="1"
-                                            InnerLeftContent="高度 "
+                                            InnerLeftContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_35}}"
                                             Margin="10,0,0,0"
                                             Text="{Binding Instance.JavaConfig.MinecraftWindowHeight}"
                                             TextWrapping="Wrap"
@@ -269,48 +269,48 @@
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="JVM虚拟机参数"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_27}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="默认留空 留空时使用全局 JVM 参数"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_28}}"
                                         Text="{Binding Instance.JavaConfig.JvmArgs}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Top" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="启动前执行命令"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_29}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="默认留空 在游戏启动前执行并等待其完成"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_30}}"
                                         Text="{Binding Instance.JavaConfig.BeforeLaunchCommand}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Top" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="启动后执行命令"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_31}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="默认留空 在游戏进程创建后于后台执行"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_32}}"
                                         Text="{Binding Instance.JavaConfig.AfterLaunchCommand}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Top" />
                                 </StackPanel>
                                 <StackPanel Spacing="5">
                                     <Label
-                                        Content="包装命令"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_33}}"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}" />
                                     <TextBox
                                         AcceptsReturn="True"
-                                        PlaceholderText="默认留空 例：cmd /c {command}"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launchCommandPlaceholder}}"
                                         Text="{Binding Instance.JavaConfig.PackagedCommand}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Top" />

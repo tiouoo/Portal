@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,7 +9,7 @@
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto, *, Auto"
@@ -18,11 +18,11 @@
             <TextBlock
                 FontSize="16"
                 FontWeight="600"
-                Text="添加完成" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_0}}" />
             <TextBlock
                 FontSize="13"
                 Foreground="{DynamicResource TextControlForegroundDisabled}"
-                Text="以下账户已成功添加" />
+                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_1}}" />
         </StackPanel>
         <Border
             BorderBrush="{DynamicResource PopupBorderBrush}"
@@ -59,7 +59,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="5">
                                     <TextBlock FontSize="11" VerticalAlignment="Bottom">
-                                        <Run Text="添加时间" />
+                                        <Run Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_2}}" />
                                         <Run Text=": " />
                                         <Run Text="{Binding CreateAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" />
                                     </TextBlock>
@@ -75,7 +75,7 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CompleteCommand}" Content="完成" />
+            <Button Command="{Binding CompleteCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.viewresult_3}}" />
         </StackPanel>
     </Grid>
 </UserControl>

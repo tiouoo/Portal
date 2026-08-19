@@ -11,7 +11,7 @@
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid.Styles>
         <Style Selector="Button.custom-title-bar-button">
             <Setter Property="Background" Value="Transparent" />
@@ -98,7 +98,7 @@
                 <Panel>
                     <TextBlock
                         FontSize="13"
-                        Text="发现新版本"
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_0}}"
                         VerticalAlignment="Center" />
                 </Panel>
             </Border>
@@ -108,7 +108,7 @@
             IsVisible="{Binding Tasks.CurrentTaskTitle, Converter={StaticResource StringIsNotWriteSpaceOrNullConverter}}"
             Margin="3,0"
             Theme="{StaticResource TransparentButton}"
-            ToolTip.Tip="任务"
+            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_1}}"
             VerticalAlignment="Center">
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
@@ -165,7 +165,7 @@
             Click="OpenSearch"
             Margin="3,0,-2,0"
             ToolTip.ShowDelay="900"
-            ToolTip.Tip="搜索">
+            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_2}}">
             <PathIcon
                 Data="F1 M640,640z M0,0z M480,272C480,317.9,465.1,360.3,440,394.7L566.6,521.4C579.1,533.9 579.1,554.2 566.6,566.7 554.1,579.2 533.8,579.2 521.3,566.7L394.7,440C360.3,465.1 317.9,480 272,480 157.1,480 64,386.9 64,272 64,157.1 157.1,64 272,64 386.9,64 480,157.1 480,272z M272,416C351.5,416 416,351.5 416,272 416,192.5 351.5,128 272,128 192.5,128 128,192.5 128,272 128,351.5 192.5,416 272,416z"
                 Height="16"
@@ -178,12 +178,12 @@
             IsVisible="{Binding IsWindows}"
             Margin="2,0,0,0"
             ToolTip.ShowDelay="900"
-            ToolTip.Tip="联机">
+            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_3}}">
             <Button.Flyout>
                 <MenuFlyout>
                     <MenuItem
                         Click="OpenMultiplayerEdition"
-                        Header="Java版"
+                        Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_4}}"
                         Tag="Java">
                         <MenuItem.Icon>
                             <PathIcon
@@ -194,7 +194,7 @@
                     </MenuItem>
                     <MenuItem
                         Click="OpenMultiplayerEdition"
-                        Header="基岩版"
+                        Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_5}}"
                         Tag="Bedrock">
                         <MenuItem.Icon>
                             <PathIcon
@@ -218,7 +218,7 @@
             IsVisible="{Binding !IsWindows}"
             Margin="2,0,0,0"
             ToolTip.ShowDelay="900"
-            ToolTip.Tip="联机">
+            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_3}}">
             <PathIcon
                 Data="F1 M640,640z M0,0z M451.5,160C434.9,160 418.8,164.5 404.7,172.7 388.9,156.7 370.5,143.3 350.2,133.2 378.4,109.2 414.3,96 451.5,96 537.9,96 608,166 608,252.5 608,294 591.5,333.8 562.2,363.1L491.1,434.2C461.8,463.5 422,480 380.5,480 294.1,480 224,410 224,323.5 224,322 224,320.5 224.1,319 224.6,301.3 239.3,287.4 257,287.9 274.7,288.4 288.6,303.1 288.1,320.8 288.1,321.7 288.1,322.6 288.1,323.4 288.1,374.5 329.5,415.9 380.6,415.9 405.1,415.9 428.6,406.2 446,388.8L517.1,317.7C534.4,300.4 544.2,276.8 544.2,252.3 544.2,201.2 502.8,159.8 451.7,159.8z M307.2,237.3C305.3,236.5 303.4,235.4 301.7,234.2 289.1,227.7 274.7,224 259.6,224 235.1,224 211.6,233.7 194.2,251.1L123.1,322.2C105.8,339.5 96,363.1 96,387.6 96,438.7 137.4,480.1 188.5,480.1 205,480.1 221.1,475.7 235.2,467.5 251,483.5 269.4,496.9 289.8,507 261.6,530.9 225.8,544.2 188.5,544.2 102.1,544.2 32,474.2 32,387.7 32,346.2 48.5,306.4 77.8,277.1L148.9,206C178.2,176.7 218,160.2 259.5,160.2 346.1,160.2 416,230.8 416,317.1 416,318.4 416,319.7 416,321 415.6,338.7 400.9,352.6 383.2,352.2 365.5,351.8 351.6,337.1 352,319.4 352,318.6 352,317.9 352,317.1 352,283.4 334,253.8 307.2,237.5z"
                 Height="16"
@@ -230,10 +230,10 @@
             Classes="custom-title-bar-button"
             Margin="2,0,0,0"
             ToolTip.ShowDelay="900"
-            ToolTip.Tip="更多">
+            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_6}}">
             <Button.Flyout>
                 <MenuFlyout>
-                    <MenuItem Click="OpenCreateInstance" Header="创建新实例">
+                    <MenuItem Click="OpenCreateInstance" Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_7}}">
                         <MenuItem.Icon>
                             <PathIcon
                                 Data="F1 M640,640z M0,0z M352,128C352,110.3 337.7,96 320,96 302.3,96 288,110.3 288,128L288,288 128,288C110.3,288 96,302.3 96,320 96,337.7 110.3,352 128,352L288,352 288,512C288,529.7 302.3,544 320,544 337.7,544 352,529.7 352,512L352,352 512,352C529.7,352 544,337.7 544,320 544,302.3 529.7,288 512,288L352,288 352,128z"
@@ -243,7 +243,7 @@
                                 Width="16" />
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Click="ToolsButton_OnClick" Header="实用工具">
+                    <MenuItem Click="ToolsButton_OnClick" Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_8}}">
                         <MenuItem.Icon>
                             <PathIcon
                                 Data="F1 M640,640z M0,0z M256,320L216.5,359.5C203.9,354.6 190.3,352 176,352 114.1,352 64,402.1 64,464 64,525.9 114.1,576 176,576 237.9,576 288,525.9 288,464 288,449.7 285.3,436.1 280.5,423.5L563.2,140.8C570.3,133.7 570.3,122.3 563.2,115.2 534.9,86.9 489.1,86.9 460.8,115.2L320,256 280.5,216.5C285.4,203.9 288,190.3 288,176 288,114.1 237.9,64 176,64 114.1,64 64,114.1 64,176 64,237.9 114.1,288 176,288 190.3,288 203.9,285.3 216.5,280.5L256,320z M353.9,417.9L460.8,524.8C489.1,553.1 534.9,553.1 563.2,524.8 570.3,517.7 570.3,506.3 563.2,499.2L417.9,353.9 353.9,417.9z M128,176C128,149.5 149.5,128 176,128 202.5,128 224,149.5 224,176 224,202.5 202.5,224 176,224 149.5,224 128,202.5 128,176z M176,416C202.5,416 224,437.5 224,464 224,490.5 202.5,512 176,512 149.5,512 128,490.5 128,464 128,437.5 149.5,416 176,416z"
@@ -266,7 +266,7 @@
             Classes="custom-title-bar-button"
             Click="DownloadButton_OnClick"
             ToolTip.ShowDelay="900"
-            ToolTip.Tip="下载">
+            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_9}}">
             <PathIcon
                 Data="F1 M640,640z M0,0z M352,96C352,78.3 337.7,64 320,64 302.3,64 288,78.3 288,96L288,306.7 246.6,265.3C234.1,252.8 213.8,252.8 201.3,265.3 188.8,277.8 188.8,298.1 201.3,310.6L297.3,406.6C309.8,419.1,330.1,419.1,342.6,406.6L438.6,310.6C451.1,298.1 451.1,277.8 438.6,265.3 426.1,252.8 405.8,252.8 393.3,265.3L352,306.7 352,96z M160,384C124.7,384,96,412.7,96,448L96,480C96,515.3,124.7,544,160,544L480,544C515.3,544,544,515.3,544,480L544,448C544,412.7,515.3,384,480,384L433.1,384 376.5,440.6C345.3,471.8,294.6,471.8,263.4,440.6L206.9,384 160,384z M464,440C477.3,440 488,450.7 488,464 488,477.3 477.3,488 464,488 450.7,488 440,477.3 440,464 440,450.7 450.7,440 464,440z"
                 Height="18"
@@ -279,7 +279,7 @@
             Classes="custom-title-bar-button"
             Click="SettingMenuItem_OnClick"
             ToolTip.ShowDelay="900"
-            ToolTip.Tip="设置">
+            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_10}}">
             <PathIcon
                 Data="F1 M640,640z M0,0z M259.1,73.5C262.1,58.7,275.2,48,290.4,48L350.2,48C365.4,48,378.5,58.7,381.5,73.5L396,143.5C410.1,149.5,423.3,157.2,435.3,166.3L503.1,143.8C517.5,139,533.3,145,540.9,158.2L570.8,210C578.4,223.2,575.7,239.8,564.3,249.9L511,297.3C511.9,304.7 512.3,312.3 512.3,320 512.3,327.7 511.8,335.3 511,342.7L564.4,390.2C575.8,400.3,578.4,417,570.9,430.1L541,481.9C533.4,495,517.6,501.1,503.2,496.3L435.4,473.8C423.3,482.9,410.1,490.5,396.1,496.6L381.7,566.5C378.6,581.4,365.5,592,350.4,592L290.6,592C275.4,592,262.3,581.3,259.3,566.5L244.9,496.6C230.8,490.6,217.7,482.9,205.6,473.8L137.5,496.3C123.1,501.1,107.3,495.1,99.7,481.9L69.8,430.1C62.2,416.9,64.9,400.3,76.3,390.2L129.7,342.7C128.8,335.3 128.4,327.7 128.4,320 128.4,312.3 128.9,304.7 129.7,297.3L76.3,249.8C64.9,239.7,62.3,223,69.8,209.9L99.7,158.1C107.3,144.9,123.1,138.9,137.5,143.7L205.3,166.2C217.4,157.1,230.6,149.5,244.6,143.4L259.1,73.5z M320.3,400C364.5,399.8 400.2,363.9 400,319.7 399.8,275.5 363.9,239.8 319.7,240 275.5,240.2 239.8,276.1 240,320.3 240.2,364.5 276.1,400.2 320.3,400z"
                 Height="16"
@@ -308,9 +308,7 @@
                                 FontSize="14"
                                 HorizontalAlignment="Left"
                                 Margin="0,5,0,7"
-                                PointerPressed="InputElement_OnPointerPressed">
-                                切换账户
-                            </TextBlock>
+                                PointerPressed="InputElement_OnPointerPressed" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_11}}" />
                             <Button
                                 Click="AddAcountButton_OnClick"
                                 DockPanel.Dock="Right"

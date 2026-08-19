@@ -11,7 +11,7 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources />
     <UserControl.Styles>
         <Style Selector="widgets|RecentPlayCard">
@@ -48,7 +48,7 @@
                                 <TextBlock
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     HorizontalAlignment="Center"
-                                    Text="暂无最近游戏" />
+                                    Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_0}}" />
                             </StackPanel>
                             <Panel>
                                 <DockPanel
@@ -109,7 +109,7 @@
                                 </DockPanel>
                                 <HyperlinkButton
                                     Click="ContinueGame_Click"
-                                    Content="继续游戏"
+                                    Content="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_1}}"
                                     FontSize="13"
                                     HorizontalAlignment="Right"
                                     IsVisible="{Binding HasRecentInstance}"
@@ -138,7 +138,7 @@
                                 <TextBlock
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     HorizontalAlignment="Center"
-                                    Text="暂无最近存档或服务器" />
+                                    Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_2}}" />
                             </StackPanel>
                             <Panel>
                                 <DockPanel
@@ -227,7 +227,7 @@
                                                 Text="{Binding RecentPlayTargetItem.RelativeTime}" />
                                             <HyperlinkButton
                                                 Click="ContinueTargetGame_Click"
-                                                Content="继续游戏"
+                                                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_1}}"
                                                 DockPanel.Dock="Right"
                                                 FontSize="13"
                                                 HorizontalAlignment="Right"
@@ -258,7 +258,7 @@
                                     Width="20" />
                                 <TextBlock
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="游戏时长"
+                                    Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_3}}"
                                     VerticalAlignment="Center" />
                             </StackPanel>
                             <StackPanel
@@ -281,7 +281,7 @@
                                     <Run
                                         FontSize="14"
                                         Foreground="{DynamicResource InnerForegroundColor}"
-                                        Text="次会话" />
+                                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_4}}" />
                                 </TextBlock>
                             </StackPanel>
                         </StackPanel>
@@ -363,26 +363,26 @@
                                         IsVisible="{Binding !HasFilter}"
                                         Orientation="Horizontal"
                                         Spacing="5">
-                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="暂无实例，请前往" />
+                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_5}}" />
                                         <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
-                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="添加文件夹" />
+                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_6}}" />
                                         </Button>
-                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="或" />
+                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_7}}" />
                                         <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
-                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="创建新实例" />
+                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_8}}" />
                                         </Button>
                                     </StackPanel>
                                     <StackPanel
                                         IsVisible="{Binding HasFilter}"
                                         Orientation="Horizontal"
                                         Spacing="5">
-                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="暂无匹配实例，请修改筛选条件，前往" />
+                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_9}}" />
                                         <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
-                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="添加文件夹" />
+                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_6}}" />
                                         </Button>
-                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="或" />
+                                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_7}}" />
                                         <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
-                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="创建新实例" />
+                                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_8}}" />
                                         </Button>
                                     </StackPanel>
                                 </Panel>

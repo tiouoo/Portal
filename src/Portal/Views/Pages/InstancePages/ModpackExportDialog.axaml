@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="640"
     d:DesignWidth="820"
     mc:Ignorable="d"
@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto, *"
@@ -18,13 +18,13 @@
             <TextBlock
                 FontSize="16"
                 FontWeight="600"
-                Text="导出整合包" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_0}}" />
             <DockPanel>
                 <StackPanel
                     DockPanel.Dock="Right"
                     Margin="0,0,0,0"
                     Width="160">
-                    <TextBlock Margin="5,0,0,2" Text="整合包版本" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_1}}" />
                     <TextBox
                         MaxLength="100"
                         PlaceholderText="1.0.0"
@@ -33,7 +33,7 @@
 
 
                 <StackPanel DockPanel.Dock="Left" Margin="0,0,16,0">
-                    <TextBlock Margin="5,0,0,2" Text="整合包名称" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_2}}" />
                     <TextBox
                         MaxLength="100"
                         PlaceholderText="{Binding DefaultPackName}"
@@ -54,7 +54,7 @@
                 FontSize="15"
                 FontWeight="SemiBold"
                 Margin="5,8,0,0"
-                Text="包含的内容" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_3}}" />
             <Border
                 Background="{DynamicResource PureCardBackground}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -107,19 +107,19 @@
                 FontSize="15"
                 FontWeight="SemiBold"
                 Margin="5,8,0,0"
-                Text="高级选项" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_4}}" />
             <StackPanel
                 Margin="5,0,0,0"
                 Orientation="Vertical"
                 Spacing="4">
-                <CheckBox Content="打包所有文件（避免联网下载）" IsChecked="{Binding BundleAllFiles, Mode=TwoWay}" />
+                <CheckBox Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_5}}" IsChecked="{Binding BundleAllFiles, Mode=TwoWay}" />
                 <CheckBox
-                    Content="Modrinth 上传模式（仅向 Modrinth 查询下载地址）"
+                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_6}}"
                     IsChecked="{Binding ModrinthOnly, Mode=TwoWay}"
                     IsEnabled="{Binding CanUseModrinthMode}" />
-                <CheckBox Content="包含 Portal 实例设置" IsChecked="{Binding IncludePortalSettings, Mode=TwoWay}" />
+                <CheckBox Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_7}}" IsChecked="{Binding IncludePortalSettings, Mode=TwoWay}" />
                 <CheckBox
-                    Content="包含实例图标"
+                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_8}}"
                     IsChecked="{Binding IncludePortalIcon, Mode=TwoWay}"
                     IsEnabled="{Binding CanExportPortalIcon}" />
             </StackPanel>
@@ -128,8 +128,8 @@
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Command="{Binding CancelCommand}" Content="取消" />
-                <Button Command="{Binding ConfirmCommand}" Content="开始导出" />
+                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_9}}" />
+                <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.modpackexportdialog_10}}" />
             </StackPanel>
         </StackPanel>
     </Grid>

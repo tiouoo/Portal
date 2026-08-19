@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto,Auto"
@@ -22,7 +22,7 @@
                     FontWeight="600"
                     HorizontalAlignment="Left"
                     Margin="0,2,0,0">
-                    <Run Text="安装 Java " />
+                    <Run Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_0}}" />
                     <Run Text="{Binding VanillaVersion}" />
                 </TextBlock>
             </DockPanel>
@@ -32,7 +32,7 @@
                     HorizontalAlignment="Right"
                     Margin="10,0,0,0"
                     MinWidth="200">
-                    <TextBlock Margin="5,0,0,2" Text="安装目录" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_1}}" />
                     <ComboBox
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding MinecraftFolders}"
@@ -45,10 +45,10 @@
                     </ComboBox>
                 </StackPanel>
                 <StackPanel>
-                    <TextBlock Margin="5,0,0,2" Text="实例 id" />
+                    <TextBlock Margin="5,0,0,2" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_2}}" />
                     <TextBox
                         IsEnabled="{Binding CanCustomizeVersionId}"
-                        PlaceholderText="输入实例 id"
+                        PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_3}}"
                         Text="{Binding CustomVersionId}" />
                 </StackPanel>
             </DockPanel>
@@ -61,7 +61,7 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Margin="5,0,0,0"
-                Text="选择加载器" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_4}}" />
             <WrapPanel>
                 <CheckBox
                     IsChecked="{Binding IsForgeSelected, Mode=TwoWay}"
@@ -132,7 +132,7 @@
             <Panel>
                 <Button
                     Click="SelectLoaderVersion_OnClick"
-                    Content="选择版本"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_5}}"
                     DockPanel.Dock="Left"
                     HorizontalAlignment="Left"
                     IsEnabled="{Binding CanSelectLoaderVersion}" />
@@ -141,10 +141,10 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal"
                     Spacing="8">
-                    <Button Click="Cancel_OnClick" Content="取消" />
+                    <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_6}}" />
                     <Button
                         Click="Install_OnClick"
-                        Content="开始安装"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.minecraftinstallationpage_7}}"
                         IsEnabled="{Binding CanInstall}" />
                 </StackPanel>
             </Panel>

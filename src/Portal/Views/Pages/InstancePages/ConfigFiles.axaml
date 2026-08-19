@@ -11,7 +11,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <common:NavScrollOpacityMaskConverter x:Key="NavScrollOpacityMaskConverter" />
     </UserControl.Resources>
@@ -38,7 +38,7 @@
             <DockPanel>
                 <TextBox
                     DockPanel.Dock="Right"
-                    PlaceholderText="搜索文件或文件夹"
+                    PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_0}}"
                     Text="{Binding SearchText}"
                     Width="170">
                     <TextBox.InnerRightContent>
@@ -55,7 +55,7 @@
                     FontWeight="SemiBold"
                     Name="Title"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="配置文件"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_1}}"
                     TextWrapping="NoWrap"
                     VerticalAlignment="Center" />
             </DockPanel>
@@ -156,7 +156,7 @@
                                         MinHeight="14"
                                         Tag="{Binding}"
                                         Theme="{StaticResource TransparentButton}"
-                                        ToolTip.Tip="关闭文件"
+                                        ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_2}}"
                                         Width="20">
                                         <PathIcon
                                             Data="M13.41 12l4.3-4.29a1 1 0 1 0-1.42-1.42L12 10.59l-4.29-4.3a1 1 0 0 0-1.42 1.42l4.3 4.29-4.3 4.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l4.29-4.3 4.29 4.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z"
@@ -182,7 +182,7 @@
                 Padding="10,5">
                 <DockPanel>
                     <CheckBox
-                        Content="自动换行"
+                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_3}}"
                         DockPanel.Dock="Right"
                         IsChecked="{Binding IsWordWrap}"
                         VerticalAlignment="Center" />
@@ -208,12 +208,12 @@
                     <TextBlock
                         FontSize="16"
                         HorizontalAlignment="Center"
-                        Text="选择左侧文件开始编辑" />
+                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_4}}" />
                     <TextBlock
                         HorizontalAlignment="Center"
                         Margin="0,6,0,0"
                         Opacity="0.6"
-                        Text="Ctrl+S 保存当前文件" />
+                        Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_5}}" />
                 </StackPanel>
                 <Border
                     Background="{DynamicResource TranslucentBackgroundColor}"
@@ -235,44 +235,44 @@
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Undo_OnClick"
-                                    Header="撤销"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_6}}"
                                     InputGesture="Ctrl+Z" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Redo_OnClick"
-                                    Header="重做"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_7}}"
                                     InputGesture="Ctrl+Y" />
                                 <Separator />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Cut_OnClick"
-                                    Header="剪切"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_8}}"
                                     InputGesture="Ctrl+X" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Copy_OnClick"
-                                    Header="复制"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_9}}"
                                     InputGesture="Ctrl+C" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Paste_OnClick"
-                                    Header="粘贴"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_10}}"
                                     InputGesture="Ctrl+V" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="SelectAll_OnClick"
-                                    Header="全选"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_11}}"
                                     InputGesture="Ctrl+A" />
                                 <Separator />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Save_OnClick"
-                                    Header="保存"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_12}}"
                                     InputGesture="Ctrl+S" />
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Format_OnClick"
-                                    Header="格式化"
+                                    Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_13}}"
                                     InputGesture="Shift+Alt+F" />
                             </ContextMenu>
                         </avaloniaEdit:TextEditor.ContextMenu>

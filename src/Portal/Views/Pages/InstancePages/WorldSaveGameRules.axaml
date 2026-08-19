@@ -4,18 +4,18 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid RowDefinitions="Auto,*,Auto">
         <StackPanel Spacing="8">
             <TextBlock
                 FontSize="22"
                 FontWeight="SemiBold"
-                Text="游戏规则" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_0}}" />
         </StackPanel>
         <controls:ScrollView Grid.Row="1" Margin="0,2,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="8">
-                <TextBlock IsVisible="{Binding IsLoading}" Text="正在读取设置..." />
-                <TextBlock IsVisible="{Binding !HasGameRules}" Text="此世界未找到可编辑的游戏规则文件。" />
+                <TextBlock IsVisible="{Binding IsLoading}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_1}}" />
+                <TextBlock IsVisible="{Binding !HasGameRules}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_2}}" />
                 <ItemsRepeater ItemsSource="{Binding BooleanRules}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="local:WorldBooleanSetting">
@@ -37,7 +37,7 @@
                                 <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
                                 <TextBox
                                     Grid.Column="1"
-                                    PlaceholderText="非负整数"
+                                    PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_3}}"
                                     Text="{Binding Value}"
                                     Width="130" />
                             </Grid>
@@ -48,7 +48,7 @@
         </controls:ScrollView>
         <Button
             Command="{Binding SaveGameRulesCommand}"
-            Content="保存"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavegamerules_4}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasGameRules}"

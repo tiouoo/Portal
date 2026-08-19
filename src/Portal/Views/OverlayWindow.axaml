@@ -12,7 +12,7 @@
     x:Class="Portal.Views.OverlayWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid Name="OverlayRoot" Opacity="0">
         <Grid Background="#66000000" Opacity="1" />
 
@@ -102,7 +102,7 @@
                         <TextBlock
                             FontSize="18"
                             Foreground="#FFFFFF"
-                            Text="实例详情" />
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.overlaywindow_0}}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -124,7 +124,7 @@
                         <TextBlock
                             FontSize="18"
                             Foreground="#FFFFFF"
-                            Text="联机大厅" />
+                            Text="{Translate {x:Static loc:AppLanguageManager+Keys.overlaywindow_1}}" />
                     </StackPanel>
                 </StackPanel>
             </Border>

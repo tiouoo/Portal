@@ -7,7 +7,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Border
         Background="Transparent"
         CornerRadius="10"
@@ -59,7 +59,7 @@
                     HorizontalAlignment="Right"
                     Padding="2,-2,0,1"
                     Theme="{StaticResource TransparentButton}"
-                    ToolTip.Tip="启动实例"
+                    ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancewidget1x1_0}}"
                     VerticalAlignment="Bottom"
                     x:Name="LaunchButton">
                     <PathIcon

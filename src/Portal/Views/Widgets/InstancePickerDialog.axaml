@@ -13,7 +13,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="20"
         RowDefinitions="Auto,*,Auto"
@@ -22,9 +22,9 @@
             <TextBlock
                 FontSize="22"
                 FontWeight="SemiBold"
-                Text="选择实例" />
+                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancepickerdialog_0}}" />
             <TextBox
-                PlaceholderText="搜索实例"
+                PlaceholderText="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancepickerdialog_1}}"
                 Text="{Binding SearchText}"
                 Width="300">
                 <TextBox.InnerRightContent>
@@ -103,7 +103,7 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancepickerdialog_2}}" />
         </StackPanel>
     </Grid>
 </UserControl>

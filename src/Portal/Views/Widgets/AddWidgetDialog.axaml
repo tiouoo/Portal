@@ -16,7 +16,7 @@
     xmlns:modulecore1="clr-namespace:Portal.Core.Module.Widgets;assembly=Portal.Core"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="6,12,12,10"
         RowDefinitions="Auto,*"
@@ -43,12 +43,12 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Margin="12,0,0,0"
-                Text="添加小组件"
+                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_0}}"
                 VerticalAlignment="Center" />
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="10,0,0,0"
-                PlaceholderText="搜索组件"
+                PlaceholderText="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_1}}"
                 Text="{Binding SearchText}"
                 Width="300">
                 <TextBox.InnerRightContent>
@@ -69,16 +69,16 @@
                     <tio:NavMenuItem
                         Command="{Binding SelectCategoryCommand}"
                         CommandParameter="{x:Static modulecore1:WidgetCategory.Game}"
-                        Header="游戏"
+                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_2}}"
                         IsSelected="True" />
                     <tio:NavMenuItem
                         Command="{Binding SelectCategoryCommand}"
                         CommandParameter="{x:Static modulecore1:WidgetCategory.Resource}"
-                        Header="系统资源" />
+                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_3}}" />
                     <tio:NavMenuItem
                         Command="{Binding SelectCategoryCommand}"
                         CommandParameter="{x:Static modulecore1:WidgetCategory.Utility}"
-                        Header="实用工具" />
+                        Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_4}}" />
                 </tio:NavMenu>
             </controls:ScrollView>
             <Rectangle
@@ -126,7 +126,7 @@
                                     </StackPanel>
                                     <Button
                                         Click="Add_OnClick"
-                                        Content="添加"
+                                        Content="{Translate {x:Static loc:WidgetsLanguageManager+Keys.addwidgetdialog_5}}"
                                         FontSize="12"
                                         HorizontalAlignment="Right"
                                         Margin="0,0,-10,0"

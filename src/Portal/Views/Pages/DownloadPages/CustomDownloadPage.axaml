@@ -8,59 +8,59 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="12,0,12,12">
         <TextBlock
             DockPanel.Dock="Top"
             FontSize="24"
-            Text="自定义下载" />
+            Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_0}}" />
         <ScrollViewer Classes="Flat" Margin="0,10,0,0">
             <StackPanel Spacing="15">
                 <StackPanel Spacing="5">
                     <Label
-                        Content="下载链接"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_1}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <TextBox PlaceholderText="https://example.com/file.zip" Text="{Binding Url}" />
                 </StackPanel>
                 <StackPanel Spacing="5">
                     <Label
-                        Content="保存文件夹"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_2}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <DockPanel>
                         <Button
                             Click="Browse_OnClick"
-                            Content="浏览"
+                            Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_3}}"
                             DockPanel.Dock="Right" />
                         <TextBox
                             Margin="0,0,10,0"
-                            PlaceholderText="选择或输入保存文件夹"
+                            PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_4}}"
                             Text="{Binding FolderPath}" />
                     </DockPanel>
                 </StackPanel>
                 <StackPanel Spacing="5">
                     <Label
-                        Content="保存文件名"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_5}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}" />
-                    <TextBox PlaceholderText="填写下载链接后自动获取，可修改" Text="{Binding FileName}" />
+                    <TextBox PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_6}}" Text="{Binding FileName}" />
                 </StackPanel>
                 <Button
                     Click="Download_OnClick"
-                    Content="开始下载"
+                    Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_7}}"
                     HorizontalAlignment="Left" />
                 <StackPanel Margin="0,10,0,0" Spacing="5">
-                    <TextBlock FontSize="16" Text="下载配置" />
+                    <TextBlock FontSize="16" Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_8}}" />
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="以下配置仅对自定义下载生效，与全局下载设置相互独立"
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_9}}"
                         TextWrapping="Wrap" />
                 </StackPanel>
                 <StackPanel Spacing="5">
                     <Label
-                        Content="最大文件分片数（单个文件的并行分片连接数）"
+                        Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.customdownloadpage_10}}"
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}" />
                     <Grid ColumnDefinitions="*,Auto">

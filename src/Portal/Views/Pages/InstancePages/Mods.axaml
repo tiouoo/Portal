@@ -10,7 +10,7 @@
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="Border.mod-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -27,18 +27,18 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="打开文件夹"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_0}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="CheckUpdates_OnClick"
-                Content="检查更新"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_1}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <Button
                 Click="Import_OnClick"
-                Content="添加模组"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_2}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
@@ -68,12 +68,12 @@
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 Name="SearchBox"
-                PlaceholderText="搜索模组"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_3}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
-                Content="选择"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_4}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top">
@@ -82,17 +82,17 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="全选"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_5}}"
                             InputGesture="ctrl+A" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="ClearSelection_OnClick"
-                            Header="全不选"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_6}}"
                             InputGesture="ctrl+shift+A" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="InvertSelection_OnClick"
-                            Header="反选"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_7}}"
                             InputGesture="ctrl+I" />
                     </MenuFlyout>
                 </Button.Flyout>
@@ -108,16 +108,16 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="EnableSelected_OnClick"
-                            Header="启用所选模组" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_8}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="DisableSelected_OnClick"
-                            Header="禁用所选模组" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_9}}" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="删除所选模组" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_10}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -127,7 +127,7 @@
                     FontSize="24"
                     MaxLines="1"
                     PointerPressed="Title_OnPointerPressed"
-                    Text="模组"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_11}}"
                     TextWrapping="NoWrap" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -139,20 +139,20 @@
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLoadingMetadata}"
                     Margin="0,8,0,0"
-                    Text="·元数据加载中" />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_12}}" />
             </DockPanel>
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsLoading}"
                 Margin="0,8,0,0"
-                Text="正在读取模组..." />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_13}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding IsEmpty}"
                 Margin="0,8,0,0"
-                Text="此实例没有可识别的模组" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_14}}" />
         </DockPanel>
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
@@ -178,7 +178,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowModDetails_OnClick"
-                                        Header="查看详情"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_15}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -190,7 +190,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="EnableMod_OnClick"
-                                        Header="启用模组"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_16}}"
                                         IsVisible="{Binding IsDisabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -202,7 +202,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DisableMod_OnClick"
-                                        Header="禁用模组"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_17}}"
                                         IsVisible="{Binding IsEnabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -214,7 +214,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="UpdateMod_OnClick"
-                                        Header="更新"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_18}}"
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -226,7 +226,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="SwitchVersionMod_OnClick"
-                                        Header="切换版本"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_19}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -238,7 +238,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RollbackMod_OnClick"
-                                        Header="回滚更新"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_20}}"
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -251,7 +251,7 @@
                                     <Separator IsVisible="{Binding HasIdentity}" />
                                     <MenuItem
                                         Click="OpenModFolder_OnClick"
-                                        Header="在文件夹中打开"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_21}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -262,7 +262,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteMod_OnClick"
-                                        Header="删除"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_22}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -331,7 +331,7 @@
                                                     IsVisible="{Binding IsDisabled}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="已禁用"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_23}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     DockPanel.Dock="Left"
@@ -341,7 +341,7 @@
                                                     IsVisible="{Binding IsDuplicate}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="重复"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_24}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     DockPanel.Dock="Left"
@@ -351,7 +351,7 @@
                                                     IsVisible="{Binding HasUpdate}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="可更新"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_25}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     FontSize="16"

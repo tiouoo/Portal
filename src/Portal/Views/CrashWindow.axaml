@@ -1,4 +1,4 @@
-﻿<tio:TioWindow
+<tio:TioWindow
     Height="535"
     IsCloseBtnShow="{OnPlatform Default=True,
                                 macOS=False}"
@@ -6,7 +6,7 @@
                               macOS=False}"
     IsMinBtnShow="{OnPlatform Default=True,
                               macOS=False}"
-    Title="崩溃窗口"
+    Title="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_0}}"
     Topmost="True"
     Width="880"
     d:DesignHeight="524"
@@ -16,7 +16,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
     </tio:TioWindow.Resources>
@@ -33,11 +33,11 @@
             DockPanel.Dock="Top"
             FontSize="24"
             Margin="25,0,0,0"
-            Text="崩溃啦！ヾ(•ω•`)o" />
+            Text="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_1}}" />
         <TextBlock
             DockPanel.Dock="Top"
             Margin="25,2,0,0"
-            Text="Portal 遇到了没有处理的异常，可能无法继续运行，下方为异常的详细信息" />
+            Text="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_2}}" />
         <StackPanel
             DockPanel.Dock="Bottom"
             Margin="10"
@@ -47,7 +47,7 @@
                 <tio:IconButton
                     Classes="Float"
                     Click="Button_OnClick"
-                    Content="复制到剪贴板"
+                    Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_3}}"
                     HorizontalAlignment="Left">
                     <tio:IconButton.Icon>
                         <PathIcon
@@ -64,7 +64,7 @@
                     <tio:IconButton
                         Classes="Float"
                         Click="Continue_OnClick"
-                        Content="忽略错误，继续运行"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_4}}"
                         Name="Continue">
                         <tio:IconButton.Icon>
                             <PathIcon
@@ -76,7 +76,7 @@
                     <tio:IconButton
                         Classes="Float"
                         Click="Exit_OnClick"
-                        Content="退出"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_5}}"
                         Name="Exit">
                         <tio:IconButton.Icon>
                             <PathIcon
@@ -90,7 +90,7 @@
                         Background="{DynamicResource SystemAccentColor}"
                         Classes="Float"
                         Click="Restart_OnClick"
-                        Content="重新打开"
+                        Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_6}}"
                         Foreground="White"
                         Name="Restart">
                         <tio:IconButton.Icon>

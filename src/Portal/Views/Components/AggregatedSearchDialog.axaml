@@ -12,7 +12,7 @@
     xmlns:entries1="clr-namespace:Portal.Core.Classes.Entries;assembly=Portal.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
@@ -75,7 +75,7 @@
             DockPanel.Dock="Top"
             Margin="10,8,10,5"
             Name="SearchBox"
-            PlaceholderText="输入搜索内容"
+            PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.aggregatedsearchdialog_0}}"
             Text="{Binding Data.UiProperty.AggregatedSearchQuery}" />
         <controls:ScrollView Classes="Flat" Margin="10,0,5,10">
             <ListBox

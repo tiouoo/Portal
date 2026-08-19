@@ -4,42 +4,42 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid RowDefinitions="Auto,*,Auto">
         <TextBlock
             FontSize="22"
             FontWeight="SemiBold"
-            Text="概览" />
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_0}}" />
         <controls:ScrollView Grid.Row="1" Margin="0,5,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="12">
                 <Grid
                     ColumnDefinitions="120,*"
                     RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                     RowSpacing="9">
-                    <TextBlock Text="文件夹" />
+                    <TextBlock Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_1}}" />
                     <TextBlock Grid.Column="1" Text="{Binding FolderName}" />
-                    <TextBlock Grid.Row="1" Text="创建时间" />
+                    <TextBlock Grid.Row="1" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_2}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="1"
                         Text="{Binding CreationTime}" />
-                    <TextBlock Grid.Row="2" Text="最近游玩" />
+                    <TextBlock Grid.Row="2" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_3}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="2"
                         Text="{Binding LastPlayedTime}" />
-                    <TextBlock Grid.Row="3" Text="游戏版本" />
+                    <TextBlock Grid.Row="3" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_4}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="3"
                         Text="{Binding Version}" />
-                    <TextBlock Grid.Row="4" Text="世界种子" />
+                    <TextBlock Grid.Row="4" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_5}}" />
                     <TextBox
                         Grid.Column="1"
                         Grid.Row="4"
                         IsEnabled="{Binding IsUnlocked}"
                         Text="{Binding WorldSeed}" />
-                    <TextBlock Grid.Row="5" Text="游戏模式" />
+                    <TextBlock Grid.Row="5" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_6}}" />
                     <ComboBox
                         Grid.Column="1"
                         Grid.Row="5"
@@ -53,7 +53,7 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <TextBlock Grid.Row="6" Text="难度" />
+                    <TextBlock Grid.Row="6" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_7}}" />
                     <ComboBox
                         Grid.Column="1"
                         Grid.Row="6"
@@ -67,16 +67,16 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <TextBlock Grid.Row="7" Text="允许作弊" />
+                    <TextBlock Grid.Row="7" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_8}}" />
                     <ToggleSwitch
                         Grid.Column="1"
                         Grid.Row="7"
                         HorizontalAlignment="Left"
                         IsChecked="{Binding AllowCheats}"
                         IsEnabled="{Binding IsUnlocked}"
-                        OffContent="关闭"
-                        OnContent="开启" />
-                    <TextBlock Grid.Row="8" Text="玩家 / 数据包" />
+                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_13}}"
+                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_14}}" />
+                    <TextBlock Grid.Row="8" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_9}}" />
                     <TextBlock
                         Grid.Column="1"
                         Grid.Row="8"
@@ -85,17 +85,17 @@
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLoading}"
-                    Text="正在读取世界设置..." />
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_10}}" />
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
                     IsVisible="{Binding IsLocked}"
-                    Text="世界正在被 Minecraft 使用，无法修改。"
+                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_11}}"
                     TextWrapping="Wrap" />
             </StackPanel>
         </controls:ScrollView>
         <Button
             Command="{Binding SaveLevelSettingsCommand}"
-            Content="保存"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsaveoverview_12}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasLevelSettings}"

@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:openFile="clr-namespace:Portal.Views.Components.Operations.OpenFile"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto, *, Auto"
@@ -18,27 +18,27 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="添加 Minecraft 文件夹" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_0}}" />
         <tio:Form
             Grid.Row="1"
             HorizontalAlignment="Stretch"
             LabelPosition="Top"
             Margin="0,10,0,15">
-            <tio:FormItem Label="文件夹名称">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_11}}">
                 <StackPanel Spacing="4">
                     <TextBox
-                        PlaceholderText="输入名称 (例如: 整合包)"
+                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_1}}"
                         Text="{Binding FolderName}"
                         tio:FocusHelper.DialogFocusHint="True" />
                 </StackPanel>
             </tio:FormItem>
-            <tio:FormItem Label="文件夹路径">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_12}}">
                 <StackPanel Spacing="4">
                     <tio:PathPicker
                         Command="{Binding FolderPickedCommand}"
-                        PlaceholderText="输入文件夹路径"
+                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_2}}"
                         SelectedPathsText="{Binding FolderPath}"
-                        Title="选择Minecraft文件夹"
+                        Title="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_3}}"
                         UsePickerType="OpenFolder">
                         <tio:PathPicker.ButtonContent>
                             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -47,7 +47,7 @@
                                     Height="16"
                                     VerticalAlignment="Center"
                                     Width="16" />
-                                <TextBlock Text="浏览" VerticalAlignment="Center" />
+                                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_4}}" VerticalAlignment="Center" />
                             </StackPanel>
                         </tio:PathPicker.ButtonContent>
                     </tio:PathPicker>
@@ -61,19 +61,19 @@
                         Foreground="Red"
                         IsVisible="{Binding Warning}"
                         Margin="1,0,0,0"
-                        Text="*未发现 versions 或 .minecraft 子目录，可能选择了错误的文件夹，或该文件夹结构存在问题" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_5}}" />
                     <TextBlock
                         FontSize="12"
                         Foreground="Red"
                         IsVisible="{Binding NoExist}"
                         Margin="1,0,0,0"
-                        Text="*不存在此文件夹" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_6}}" />
                     <TextBlock
                         FontSize="12"
                         Foreground="Red"
                         IsVisible="{Binding Contain}"
                         Margin="1,0,0,0"
-                        Text="*已包含此文件夹" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_7}}" />
                 </StackPanel>
             </tio:FormItem>
         </tio:Form>
@@ -83,11 +83,11 @@
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Spacing="8">
-                <Button Command="{Binding CancelCommand}" Content="取消" />
-                <Button Command="{Binding NextCommand}" Content="添加" />
+                <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_8}}" />
+                <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_9}}" />
             </StackPanel>
             <DropDownButton
-                Content="导入"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_10}}"
                 DockPanel.Dock="Left"
                 HorizontalAlignment="Left"
                 IsVisible="{Binding HasImports}"

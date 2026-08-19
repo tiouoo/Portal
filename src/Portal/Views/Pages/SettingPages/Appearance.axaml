@@ -133,7 +133,7 @@
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         Margin="12,0,0,0"
-                        Text="实际缩放: " />
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_0}}" />
                     <TextBlock
                         FontSize="13"
                         FontWeight="SemiBold"
@@ -196,7 +196,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='SolidColor'}" Spacing="5">
             <Label
-                Content="背景颜色"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_1}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -211,13 +211,13 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label
-                Content="背景图片"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_2}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:PathPicker
                 FileFilter="[ImageAll]"
                 SelectedPathsText="{Binding BackgroundImagePath, Source={x:Static const1:Data.ConfigEntry}}"
-                Title="选择背景图片"
+                Title="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_3}}"
                 UsePickerType="OpenFile" />
             <TextBlock
                 FontSize="12"
@@ -228,7 +228,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label
-                Content="模糊程度"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_4}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -247,7 +247,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label
-                Content="启用背景遮罩"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_5}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableImageMask, Source={x:Static const1:Data.ConfigEntry}}" />
@@ -264,7 +264,7 @@
                 </MultiBinding>
             </StackPanel.IsVisible>
             <Label
-                Content="遮罩颜色"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_6}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -289,7 +289,7 @@
                 </MultiBinding>
             </StackPanel.IsVisible>
             <Label
-                Content="遮罩透明度"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_7}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -308,7 +308,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}" Spacing="5">
             <Label
-                Content="亚克力颜色"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_8}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -323,7 +323,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Acrylic'}" Spacing="5">
             <Label
-                Content="透明度"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_9}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -342,7 +342,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Blur'}" Spacing="5">
             <Label
-                Content="模糊颜色"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_10}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -357,7 +357,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Blur'}" Spacing="5">
             <Label
-                Content="透明度"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_9}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -376,7 +376,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Mica'}" Spacing="5">
             <Label
-                Content="云母颜色"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_11}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -391,7 +391,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Mica'}" Spacing="5">
             <Label
-                Content="透明度"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_9}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -410,7 +410,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
             <Label
-                Content="控件不透明度"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_12}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -429,7 +429,7 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='!Default'}" Spacing="5">
             <Label
-                Content="半透明控件不透明度"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_13}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <Grid ColumnDefinitions="*,Auto">
@@ -448,14 +448,14 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="使用自定义字体颜色"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_14}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableCustomForegroundColor, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding EnableCustomForegroundColor, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
             <Label
-                Content="全局字体颜色"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_15}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <tio:TioColorPicker
@@ -470,14 +470,14 @@
         </StackPanel>
         <StackPanel IsVisible="{Binding IsWindows}" Spacing="5">
             <Label
-                Content="禁用系统边框"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_16}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
             <Label
-                Content="显示边框"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_17}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
@@ -488,7 +488,7 @@
                 Margin="0,5,0,0"
                 Spacing="5">
                 <Label
-                    Content="边框颜色"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_18}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}" />
                 <tio:TioColorPicker
@@ -504,7 +504,7 @@
         </Border>
         <StackPanel Spacing="5">
             <Label
-                Content="小组件背景"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_19}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding ShowWidgetBackground, Source={x:Static const1:Data.ConfigEntry}}" />

@@ -4,27 +4,27 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid RowDefinitions="Auto,*,Auto">
         <StackPanel Spacing="8">
             <TextBlock
                 FontSize="22"
                 FontWeight="SemiBold"
-                Text="积分榜管理" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_0}}" />
         </StackPanel>
         <controls:ScrollView Grid.Row="1" Margin="0,7,0,0">
             <StackPanel Margin="0,7,0,0" Spacing="12">
-                <TextBlock IsVisible="{Binding IsLoading}" Text="正在读取积分榜..." />
-                <TextBlock IsVisible="{Binding !HasScoreboard}" Text="此世界未找到积分榜数据文件。" />
+                <TextBlock IsVisible="{Binding IsLoading}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_1}}" />
+                <TextBlock IsVisible="{Binding !HasScoreboard}" Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_2}}" />
                 <StackPanel IsVisible="{Binding HasScoreboard}" Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Text="积分榜目标" />
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_3}}" />
                         <Button
                             Command="{Binding AddObjectiveCommand}"
-                            Content="新增目标"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_4}}"
                             Grid.Column="1" />
                     </Grid>
                     <ItemsRepeater ItemsSource="{Binding ScoreboardObjectives}">
@@ -35,22 +35,22 @@
                                     ColumnSpacing="8"
                                     Margin="0,0,0,4">
                                     <TextBox
-                                        PlaceholderText="名称"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_5}}"
                                         Text="{Binding Name}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="1"
-                                        PlaceholderText="统计条件"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_6}}"
                                         Text="{Binding CriteriaName}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="2"
-                                        PlaceholderText="显示名称"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_7}}"
                                         Text="{Binding DisplayName}"
                                         TextWrapping="NoWrap" />
                                     <Button
                                         Click="RemoveObjective_OnClick"
-                                        Content="删除"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_8}}"
                                         Grid.Column="3" />
                                 </Grid>
                             </DataTemplate>
@@ -60,10 +60,10 @@
                         <TextBlock
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Text="玩家分数" />
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_9}}" />
                         <Button
                             Command="{Binding AddScoreCommand}"
-                            Content="新增分数"
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_10}}"
                             Grid.Column="1" />
                     </Grid>
                     <ItemsRepeater ItemsSource="{Binding ScoreboardScores}">
@@ -74,32 +74,32 @@
                                     ColumnSpacing="8"
                                     Margin="0,0,0,4">
                                     <TextBox
-                                        PlaceholderText="目标"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_11}}"
                                         Text="{Binding Objective}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="1"
-                                        PlaceholderText="玩家名称"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_12}}"
                                         Text="{Binding Name}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="2"
-                                        PlaceholderText="显示名称"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_7}}"
                                         Text="{Binding DisplayName}"
                                         TextWrapping="NoWrap" />
                                     <TextBox
                                         Grid.Column="3"
-                                        PlaceholderText="分数"
+                                        PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_13}}"
                                         Text="{Binding Score}"
                                         TextWrapping="NoWrap" />
                                     <ToggleSwitch
                                         Grid.Column="4"
                                         IsChecked="{Binding Locked}"
-                                        OffContent="未锁定"
-                                        OnContent="锁定" />
+                                        OffContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_15}}"
+                                        OnContent="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_16}}" />
                                     <Button
                                         Click="RemoveScore_OnClick"
-                                        Content="删除"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_8}}"
                                         Grid.Column="5" />
                                 </Grid>
                             </DataTemplate>
@@ -110,7 +110,7 @@
         </controls:ScrollView>
         <Button
             Command="{Binding SaveScoreboardCommand}"
-            Content="保存"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.worldsavescoreboard_14}}"
             Grid.Row="2"
             HorizontalAlignment="Right"
             IsEnabled="{Binding HasScoreboard}"

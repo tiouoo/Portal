@@ -4,7 +4,7 @@
     x:Class="Portal.App"
     xmlns="https://github.com/avaloniaui"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -29,14 +29,14 @@
     </Application.Styles>
     <NativeMenu.Menu>
         <NativeMenu>
-            <NativeMenuItem Click="OpenSetting_OnClick" Header="设置" />
-            <NativeMenuItem Header="主题">
+            <NativeMenuItem Click="OpenSetting_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_0}}" />
+            <NativeMenuItem Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_1}}">
                 <NativeMenuItem.Menu>
                     <NativeMenu>
-                        <NativeMenuItem Click="ThemeDefault_OnClick" Header="跟随系统" />
-                        <NativeMenuItem Click="ThemeLight_OnClick" Header="浅色" />
-                        <NativeMenuItem Click="ThemeDark_OnClick" Header="深色" />
-                        <NativeMenuItem Click="ThemeMirage_OnClick" Header="幻影" />
+                        <NativeMenuItem Click="ThemeDefault_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_2}}" />
+                        <NativeMenuItem Click="ThemeLight_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_3}}" />
+                        <NativeMenuItem Click="ThemeDark_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_4}}" />
+                        <NativeMenuItem Click="ThemeMirage_OnClick" Header="{Translate {x:Static loc:AppLanguageManager+Keys.app_5}}" />
                     </NativeMenu>
                 </NativeMenuItem.Menu>
             </NativeMenuItem>

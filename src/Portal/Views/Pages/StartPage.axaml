@@ -12,7 +12,7 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <DataTemplate DataType="entries1:AggregatedSearchEntry" x:Key="SearchItemTemplate">
             <StackPanel Margin="4,0">
@@ -142,26 +142,26 @@
                             IsVisible="{Binding !HasFilter}"
                             Orientation="Horizontal"
                             Spacing="5">
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="暂无实例，请前往" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_0}}" />
                             <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="添加文件夹" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_1}}" />
                             </Button>
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="或" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_2}}" />
                             <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="创建新实例" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_3}}" />
                             </Button>
                         </StackPanel>
                         <StackPanel
                             IsVisible="{Binding HasFilter}"
                             Orientation="Horizontal"
                             Spacing="5">
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="暂无匹配实例，请修改筛选条件，前往" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_4}}" />
                             <Button Click="AddFolder_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="添加文件夹" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_1}}" />
                             </Button>
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="或" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_2}}" />
                             <Button Click="ToDownload_Click" Theme="{StaticResource TransparentButton}">
-                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="创建新实例" />
+                                <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:PagesLanguageManager+Keys.startpage_3}}" />
                             </Button>
                         </StackPanel>
                     </Panel>

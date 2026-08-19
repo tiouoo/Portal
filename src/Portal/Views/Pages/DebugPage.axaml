@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,36 +9,36 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <WrapPanel ItemSpacing="20" Margin="10,5,10,10">
         <StackPanel>
             <Label
-                Content="操作"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_0}}"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left"
                 Margin="0,0,0,10" />
-            <Button Click="Click1" Content="触发崩溃 (除以0)" />
+            <Button Click="Click1" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_1}}" />
         </StackPanel>
         <StackPanel MaxWidth="260" Spacing="8">
             <Label
-                Content="任务管理测试"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_2}}"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left" />
             <TextBlock
                 FontSize="12"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text="创建任务后可通过标题栏圆点打开抽屉，或从抽屉打开任务标签页。"
+                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_3}}"
                 TextWrapping="Wrap" />
-            <Button Click="StartWorkflowTest" Content="开始完整下载流程" />
-            <Button Click="StartNestedWorkflowTest" Content="开始嵌套子任务流程" />
-            <Button Click="StartWaitingTest" Content="创建等待中的任务" />
-            <Button Click="StartFaultedTest" Content="创建失败任务" />
-            <Button Click="StartCancellableTest" Content="创建可取消任务" />
-            <Button Click="StartActionTest" Content="创建带操作按钮的任务" />
+            <Button Click="StartWorkflowTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_4}}" />
+            <Button Click="StartNestedWorkflowTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_5}}" />
+            <Button Click="StartWaitingTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_6}}" />
+            <Button Click="StartFaultedTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_7}}" />
+            <Button Click="StartCancellableTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_8}}" />
+            <Button Click="StartActionTest" Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_9}}" />
         </StackPanel>
         <StackPanel>
             <Label
-                Content="版本信息"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_10}}"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left" />
             <tio:Form HorizontalAlignment="Stretch" LabelPosition="Top">
@@ -47,19 +47,19 @@
                         <StackPanel Spacing="-4" />
                     </ItemsPanelTemplate>
                 </tio:Form.ItemsPanel>
-                <tio:FormItem Label="构建类型">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_11}}">
                     <TextBox Text="{Binding Data.Version.Type}" />
                 </tio:FormItem>
-                <tio:FormItem Label="构建时间">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_12}}">
                     <TextBox Text="{Binding Data.Version.BuildTime}" />
                 </tio:FormItem>
-                <tio:FormItem Label="构建版本">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_13}}">
                     <TextBox Text="{Binding Data.Version.Version}" />
                 </tio:FormItem>
-                <tio:FormItem Label="构建Action">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_14}}">
                     <TextBox Text="{Binding Data.Version.Action}" />
                 </tio:FormItem>
-                <tio:FormItem Label="构建提交">
+                <tio:FormItem Label="{Translate {x:Static loc:PagesLanguageManager+Keys.debugpage_15}}">
                     <TextBox Text="{Binding Data.Version.Commit}" />
                 </tio:FormItem>
                 <tio:FormItem Label="OverrideUpdateChannel">

@@ -12,7 +12,7 @@
     xmlns:models="clr-namespace:Portal.Core.Minecraft.Models;assembly=Portal.Core"
     xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top">
             <DockPanel>
@@ -213,14 +213,14 @@
                 HorizontalAlignment="Left"
                 IsVisible="{Binding IsLoading}"
                 Margin="2,2,0,0"
-                Text="正在加载模组详情与所有版本..."
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_0}}"
                 VerticalAlignment="Top" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left"
                 IsVisible="{Binding HasError}"
                 Margin="2,2,0,0"
-                Text="无法加载模组详情，请检查网络"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_1}}"
                 VerticalAlignment="Top" />
             <Border
                 HorizontalAlignment="Left"
@@ -231,7 +231,7 @@
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding IsEmpty}"
                         Margin="2,2,0,0"
-                        Text="该筛选条件下没有可用文件" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.moddetailspage_2}}" />
                 </Border>
             </Border>
         </Grid>

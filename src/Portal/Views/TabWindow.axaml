@@ -27,7 +27,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <common:NavScrollOpacityMaskConverter x:Key="NavScrollOpacityMaskConverter" />
@@ -35,20 +35,20 @@
     </tio:TioWindow.Resources>
     <NativeMenu.Menu>
         <NativeMenu>
-            <NativeMenuItem Header="标签页">
+            <NativeMenuItem Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_0}}">
                 <NativeMenu>
-                    <NativeMenuItem Click="NM_NewTab" Header="新建标签页" />
+                    <NativeMenuItem Click="NM_NewTab" Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_1}}" />
                     <NativeMenuItem
                         Click="NM_CloseTab"
-                        Header="关闭当前标签页"
+                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_2}}"
                         IsEnabled="{Binding SelectedTab.IsCloseable}" />
                     <NativeMenuItem
                         Click="NM_CloseOtherTab"
-                        Header="关闭其他标签页"
+                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_3}}"
                         IsEnabled="{Binding Tabs.Count, Converter={StaticResource IntCompareConverter}, ConverterParameter='> 1'}" />
                     <NativeMenuItem
                         Click="NM_OpenInNewWindow"
-                        Header="在新窗口打开"
+                        Header="{Translate {x:Static loc:AppLanguageManager+Keys.tabwindow_4}}"
                         IsEnabled="{Binding Tabs.Count, Converter={StaticResource IntCompareConverter}, ConverterParameter='> 1'}" />
                 </NativeMenu>
             </NativeMenuItem>
@@ -205,8 +205,7 @@
                                             Name="CloseButton"
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.ShowDelay="900"
-                                            ToolTip.Tip="{OnPlatform Default=关闭标签页 (Ctrl + W),
-                                                                     macOS=关闭标签页 (⌃ + W)}"
+                                            ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.app_tooltips_closeTab}}"
                                             VerticalAlignment="Center"
                                             Width="20">
                                             <Button.Transitions>
@@ -234,8 +233,7 @@
                     Margin="3,0,25,0"
                     Theme="{StaticResource TransparentButton}"
                     ToolTip.ShowDelay="900"
-                    ToolTip.Tip="{OnPlatform Default=新建标签页 (Ctrl + T),
-                                             macOS=新建标签页 (⌃ + T)}"
+                    ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.app_tooltips_newTab}}"
                     Width="30">
                     <PathIcon
                         Data="F1 M1024,1024z M0,0z M512,832A32,32,0,0,0,544,800L544,544 800,544A32,32,0,0,0,800,480L544,480 544,224A32,32,0,0,0,480,224L480,480 224,480A32,32,0,0,0,224,544L480,544 480,800A32,32,0,0,0,512,832"

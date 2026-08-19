@@ -10,7 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:multiplayer="clr-namespace:Portal.Core.Module.Multiplayer;assembly=Portal.Core"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <controls:ScrollView Margin="5,0,5,0">
         <StackPanel Margin="10,10,10,20" Spacing="15">
             <DockPanel>
@@ -62,19 +62,19 @@
                         <TextBlock
                             FontSize="17"
                             FontWeight="SemiBold"
-                            Text="身份与网络" />
+                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_0}}" />
                         <Label
-                            Content="联机用户名"
+                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_1}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             IsVisible="{Binding IsNotInRoom}" />
                         <TextBox
                             IsVisible="{Binding IsNotInRoom}"
                             Margin="0,-4,0,0"
-                            PlaceholderText="默认使用当前 Minecraft 账户名"
+                            PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_2}}"
                             Text="{Binding PlayerName}" />
                         <Label
-                            Content="NAT 类型"
+                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_3}}"
                             FontSize="13"
                             Foreground="{DynamicResource InnerForegroundColor}" />
                         <Button
@@ -107,7 +107,7 @@
                                 <TextBlock
                                     FontSize="17"
                                     FontWeight="SemiBold"
-                                    Text="创建房间" />
+                                    Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_4}}" />
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -123,7 +123,7 @@
                                     Spacing="8">
                                     <Button
                                         Click="EnterJavaPort_OnClick"
-                                        Content="手动输入端口"
+                                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_5}}"
                                         HorizontalAlignment="Left"
                                         Margin="8,0,0,0" />
                                     <Button
@@ -136,13 +136,13 @@
                                         IsEnabled="{Binding CanCreateRoom}" />
                                     <Button
                                         Command="{Binding CancelRoomOperationCommand}"
-                                        Content="取消"
+                                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_6}}"
                                         IsVisible="{Binding IsRoomOperationInProgress}" />
                                 </StackPanel>
                                 <ComboBox
                                     HorizontalAlignment="Stretch"
                                     ItemsSource="{Binding LanServers}"
-                                    PlaceholderText="尚未检测到已开放的世界"
+                                    PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_7}}"
                                     SelectedItem="{Binding SelectedLanServer}">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate DataType="multiplayer:LanServerEntry">
@@ -166,8 +166,8 @@
                         <TextBlock
                             FontSize="17"
                             FontWeight="SemiBold"
-                            Text="创建房间" />
-                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="请先在 Minecraft 中开启局域网游戏，然后创建房间。" />
+                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_4}}" />
+                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_8}}" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button
                                 Command="{Binding CreateRoomCommand}"
@@ -175,7 +175,7 @@
                                 IsEnabled="{Binding CanCreateRoom}" />
                             <Button
                                 Command="{Binding CancelRoomOperationCommand}"
-                                Content="取消"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_6}}"
                                 IsVisible="{Binding IsRoomOperationInProgress}" />
                         </StackPanel>
                     </StackPanel>
@@ -192,19 +192,19 @@
                         <TextBlock
                             FontSize="17"
                             FontWeight="SemiBold"
-                            Text="加入房间" />
+                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_9}}" />
                         <TextBlock
                             Foreground="{DynamicResource InnerForegroundColor}"
                             IsVisible="{Binding ShowBedrockRoomActions}"
-                            Text="先进入房间，再打开游戏；如已打开游戏，请先关闭。" />
+                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_10}}" />
                         <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                             <Button
                                 Command="{Binding ClearJoinCodeCommand}"
-                                Content="清除"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_11}}"
                                 Grid.Column="0" />
                             <Button
                                 Click="PasteJoinCode_OnClick"
-                                Content="粘贴"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_12}}"
                                 Grid.Column="1"
                                 Margin="8,0,8,0" />
                             <TextBox
@@ -219,7 +219,7 @@
                                 IsEnabled="{Binding CanOperate}" />
                             <Button
                                 Command="{Binding CancelRoomOperationCommand}"
-                                Content="取消"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_6}}"
                                 Grid.Column="4"
                                 IsVisible="{Binding IsRoomOperationInProgress}"
                                 Margin="8,0,0,0" />
@@ -238,13 +238,13 @@
                         <TextBlock
                             FontSize="17"
                             FontWeight="SemiBold"
-                            Text="当前房间" />
+                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_13}}" />
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Top">
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="当前房间码" />
+                                    Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_14}}" />
                                 <TextBlock FontSize="20" Text="{Binding CurrentRoomCode}" />
                             </StackPanel>
                             <StackPanel
@@ -252,14 +252,14 @@
                                 Margin="0,10,0,0"
                                 Orientation="Horizontal"
                                 Spacing="8">
-                                <Button Click="CopyRoomCode_OnClick" Content="复制房间码" />
+                                <Button Click="CopyRoomCode_OnClick" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_15}}" />
                                 <Button
                                     Command="{Binding LeaveRoomCommand}"
-                                    Content="关闭或离开"
+                                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_16}}"
                                     IsEnabled="{Binding CanOperate}" />
                                 <Button
                                     Command="{Binding ConfirmMinecraftEndedCommand}"
-                                    Content="已关闭游戏，继续连接"
+                                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_17}}"
                                     HorizontalAlignment="Left"
                                     IsVisible="{Binding IsBedrockPortBusy}" />
                             </StackPanel>
@@ -279,7 +279,7 @@
                             <TextBlock
                                 FontSize="17"
                                 FontWeight="SemiBold"
-                                Text="房间成员" />
+                                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_18}}" />
                             <TextBlock
                                 DockPanel.Dock="Right"
                                 Foreground="{DynamicResource InnerForegroundColor}"

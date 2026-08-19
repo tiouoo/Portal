@@ -9,10 +9,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Panel>
         <DropDownButton
-            Content="打开文件夹"
+            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_0}}"
             HorizontalAlignment="Right"
             Margin="0,10,10,0"
             VerticalAlignment="Top">
@@ -21,52 +21,52 @@
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="根文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_1}}"
                         Tag="root" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="实例文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_2}}"
                         Tag="version" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="模组文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_3}}"
                         Tag="mods" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="资源包文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_4}}"
                         Tag="resource" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="光影包文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_5}}"
                         Tag="shader" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="存档文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_6}}"
                         Tag="saves" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="截图文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_7}}"
                         Tag="screenshot" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="日志文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_8}}"
                         Tag="logs" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="崩溃报告文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_9}}"
                         Tag="crashreports" />
                     <MenuItem
                         Classes="hide-icon"
                         Click="MenuItem_OnClick"
-                        Header="配置文件夹"
+                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_10}}"
                         Tag="config" />
                 </MenuFlyout>
             </DropDownButton.Flyout>
@@ -76,7 +76,7 @@
                 DockPanel.Dock="Top"
                 FontSize="24"
                 Margin="10,0"
-                Text="存储" />
+                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_11}}" />
             <TextBlock
                 DockPanel.Dock="Top"
                 FontSize="38"
@@ -100,7 +100,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="模组"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_12}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -149,7 +149,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="资源包"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_13}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -202,7 +202,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="光影包"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_14}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -251,7 +251,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="存档"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_15}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -300,7 +300,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="截图"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_16}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -353,7 +353,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="日志"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_17}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -402,7 +402,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="配置"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_18}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -448,7 +448,7 @@
                             <StackPanel Margin="10">
                                 <DockPanel>
                                     <Label
-                                        Content="崩溃报告"
+                                        Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.files_19}}"
                                         DockPanel.Dock="Left"
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"

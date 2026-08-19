@@ -12,7 +12,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:viewModels="clr-namespace:Portal.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <converters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
     </UserControl.Resources>
@@ -44,7 +44,7 @@
                         Foreground="{DynamicResource InnerForegroundColor}"
                         Margin="5,0,0,0"
                         Name="TextBlock"
-                        Text="Minecraft新闻"
+                        Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newspage_0}}"
                         VerticalAlignment="Center" />
                 </StackPanel>
             </Button>

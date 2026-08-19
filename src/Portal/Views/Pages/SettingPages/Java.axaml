@@ -10,13 +10,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="运行环境" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_0}}" />
         <StackPanel Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Label
-                    Content="最大内存"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_1}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}" />
                 <Button
@@ -24,7 +24,7 @@
                     FontSize="13"
                     IsVisible="{Binding IsWindows}"
                     Theme="{StaticResource TransparentButton}">
-                    <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="内存优化" />
+                    <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_2}}" />
                 </Button>
             </StackPanel>
             <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasMemoryStatus}">
@@ -80,19 +80,19 @@
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasMemoryWarning}"
-                Text=" *超出当前系统可用内存" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_3}}" />
         </StackPanel>
         <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsWindows}">
             <StackPanel Spacing="2">
                 <Label
-                    Content="游戏启动前自动清理内存"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_4}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Padding="0" />
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="游戏启动时将申请管理员权限以清理内存，可能会弹出 UAC 提示。" />
+                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_5}}" />
             </StackPanel>
             <ToggleSwitch
                 Grid.Column="1"
@@ -102,14 +102,14 @@
         <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsWindowsOrLinux}">
             <StackPanel Spacing="2">
                 <Label
-                    Content="自动为 Java 使用高性能显卡"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_6}}"
                     FontSize="13"
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Padding="0" />
                 <TextBlock
                     FontSize="11"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="启动游戏时，自动为 Java 选择高性能独立显卡" />
+                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_7}}" />
             </StackPanel>
             <ToggleSwitch
                 Grid.Column="1"
@@ -118,7 +118,7 @@
         </Grid>
         <StackPanel Spacing="5">
             <Label
-                Content="默认 Java"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_8}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -134,11 +134,11 @@
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                Text=" *启动游戏时会自动选择适合的Java运行时，与此设置无关" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_9}}" />
         </StackPanel>
         <DockPanel Margin="0,4,0,0">
             <Label
-                Content="Java 管理"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_10}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Margin="0,0,0,0" />
@@ -149,18 +149,18 @@
                 Spacing="10">
                 <HyperlinkButton
                     Click="DeepScan_Click"
-                    Content="强力扫描"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_11}}"
                     FontSize="13"
                     Name="DeepScanButton"
                     Theme="{StaticResource TransparentHyperlinkButton}" />
                 <HyperlinkButton
                     Click="AutoScan_Click"
-                    Content="自动扫描"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_12}}"
                     FontSize="13"
                     Theme="{StaticResource TransparentHyperlinkButton}" />
                 <HyperlinkButton
                     Click="AddJava_Click"
-                    Content="手动添加"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_13}}"
                     FontSize="13"
                     Theme="{StaticResource TransparentHyperlinkButton}" />
             </StackPanel>

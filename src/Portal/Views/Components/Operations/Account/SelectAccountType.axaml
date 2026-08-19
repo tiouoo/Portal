@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,13 +9,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid Margin="24" RowDefinitions="Auto, *, Auto">
         <TextBlock
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="添加新账户" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_0}}" />
         <tio:Form
             Grid.Row="1"
             HorizontalAlignment="Center"
@@ -44,9 +44,9 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="取消" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_1}}" />
 
-            <Button Command="{Binding NextCommand}" Content="下一步" />
+            <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.selectaccounttype_2}}" />
         </StackPanel>
     </Grid>
 </UserControl>

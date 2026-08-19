@@ -1,0 +1,85 @@
+{
+  "widgets": {
+    "clock": {
+      "currentTime": "当前时间"
+    }
+  },
+  "addwidgetdialog": {
+    "0": "添加小组件",
+    "1": "搜索组件",
+    "2": "游戏",
+    "3": "系统资源",
+    "4": "实用工具",
+    "5": "添加"
+  },
+  "instancecard": {
+    "0": "游玩",
+    "1": "快捷方式",
+    "2": "启动实例",
+    "3": "已收藏",
+    "4": "已屏蔽"
+  },
+  "instancelisttoolbar": {
+    "0": "实例",
+    "1": "添加",
+    "2": "导入整合包",
+    "3": "添加文件夹",
+    "4": "创建新实例",
+    "5": "搜索"
+  },
+  "instancepickerdialog": {
+    "0": "选择实例",
+    "1": "搜索实例",
+    "2": "取消"
+  },
+  "instancewidget1x1": {
+    "0": "启动实例"
+  },
+  "instancewidget2x1": {
+    "0": "启动实例"
+  },
+  "quickserverwidget1x1": {
+    "0": "快速进入服务器"
+  },
+  "quickserverwidget2x1": {
+    "0": "快速进入服务器"
+  },
+  "quickworldwidget1x1": {
+    "0": "快速进入世界"
+  },
+  "quickworldwidget2x1": {
+    "0": "快速进入世界"
+  },
+  "recentplaycard": {
+    "0": "游玩",
+    "1": "快捷方式",
+    "2": "快速进入",
+    "3": "已收藏",
+    "4": "已屏蔽"
+  },
+  "recentplayssection": {
+    "0": "最近游玩"
+  },
+  "serverconnectdialog": {
+    "0": "输入服务器地址",
+    "1": "服务器地址",
+    "2": "例如 127.0.0.1 或 play.example.net",
+    "3": "端口",
+    "4": "默认 25565",
+    "5": "连接后会通过所选实例启动游戏，并自动加入该服务器。",
+    "6": "取消",
+    "7": "确定"
+  },
+  "worldpickerdialog": {
+    "0": "选择存档",
+    "1": "搜索存档",
+    "2": "此实例没有可识别的存档",
+    "3": "取消"
+  },
+  "clock1x1": {},
+  "clock2x1": {},
+  "resourcewidgetview1x1": {},
+  "resourcewidgetview2x1": {},
+  "resourcewidgetview2x2": {},
+  "widgethost": {}
+}

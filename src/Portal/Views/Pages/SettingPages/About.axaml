@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,14 +9,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <converter:UpdateChannelToIndexConverter x:Key="UpdateChannelToIndexConverter" />
         <converter:UpdateSourceCompareConverter x:Key="UpdateSourceCompareConverter" />
         <converter:UpdateSourceToIndexConverter x:Key="UpdateSourceToIndexConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="关于应用" />
+        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_0}}" />
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -41,7 +41,7 @@
                                 <TextBlock
                                     FontSize="11"
                                     Foreground="#17be74"
-                                    Text="最新版" />
+                                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_1}}" />
                                 <Border.Background>
                                     <SolidColorBrush Color="#18e086" Opacity="0.3" />
                                 </Border.Background>
@@ -74,7 +74,7 @@
                     </StackPanel>
                     <HyperlinkButton
                         Click="Button_OnClick"
-                        Content="检查更新"
+                        Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_2}}"
                         FontSize="12"
                         HorizontalAlignment="Right"
                         Margin="0,2,5,0"
@@ -88,10 +88,10 @@
                         <TextBlock
                             FontSize="13"
                             Margin="5,0,0,0"
-                            Text="发现新版本" />
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_3}}" />
                         <HyperlinkButton
                             Click="UpdateHyperlinkButton_OnClickButton_OnClick"
-                            Content="下载新版本"
+                            Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_4}}"
                             FontSize="12"
                             HorizontalAlignment="Right"
                             Margin="0,2,5,0"
@@ -108,14 +108,14 @@
         </Border>
         <StackPanel Spacing="5">
             <Label
-                Content="自动检查更新"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_5}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch HorizontalAlignment="Stretch" IsChecked="{Binding Data.ConfigEntry.EnableCheckAutoUpdate}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="更新源"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_6}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -130,11 +130,11 @@
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Github}"
-                Text=" *前往 设置-网络代理 开启 GitHub 镜像加速可加快更新速度" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_7}}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="更新通道"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_8}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ComboBox
@@ -142,15 +142,15 @@
                 Name="UpdateChannel"
                 SelectedIndex="{Binding Data.UiProperty.OverrideUpdateChannel, Converter={StaticResource UpdateChannelToIndexConverter}, Mode=TwoWay}"
                 SelectionChanged="UpdateChannel_OnSelectionChanged">
-                <ComboBoxItem Content="正式版" />
-                <ComboBoxItem Content="每日构建版本" />
-                <ComboBoxItem Content="提交构建版本" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_9}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_10}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_11}}" />
             </ComboBox>
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Cnb}"
-                Text=" * Cnb 通道仅提供正式版" />
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_12}}" />
         </StackPanel>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
         <StackPanel Margin="5,0,0,0" Spacing="5">
@@ -197,7 +197,7 @@
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
             BorderThickness="1"
-            Header="第三方组件库"
+            Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_13}}"
             HorizontalAlignment="Stretch">
             <StackPanel>
                 <ItemsRepeater ItemsSource="{Binding OpenSourceProjects}" Margin="16,0,12,16">

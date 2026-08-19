@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:toolsPages="clr-namespace:Portal.Views.Pages.ToolsPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <ScrollViewer Classes="Flat">
         <StackPanel
             Margin="10,2,10,20"
@@ -18,7 +18,7 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Margin="4,4,0,6"
-                Text="基岩版工具" />
+                Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_0}}" />
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -39,11 +39,11 @@
                                 DockPanel.Dock="Right"
                                 Height="20" />
                             <StackPanel Spacing="3">
-                                <TextBlock FontWeight="SemiBold" Text="下载UWP游戏框架" />
+                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_1}}" />
                                 <TextBlock
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="打开 MC Appx 的游戏框架下载页面"
+                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_2}}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>
@@ -62,11 +62,11 @@
                                 DockPanel.Dock="Right"
                                 Height="20" />
                             <StackPanel Spacing="3">
-                                <TextBlock FontWeight="SemiBold" Text="检测 SDK 1.8 的安装" />
+                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_3}}" />
                                 <TextBlock
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="检查 Windows App SDK 1.8 (8000.x) 的 Main、Singleton 和 DDLM 组件"
+                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_4}}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>
@@ -85,11 +85,11 @@
                                 DockPanel.Dock="Right"
                                 Height="20" />
                             <StackPanel Spacing="3">
-                                <TextBlock FontWeight="SemiBold" Text="卸载本机已安装的 Minecraft" />
+                                <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_5}}" />
                                 <TextBlock
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="移除从 Microsoft Store 安装的 Minecraft 基岩版"
+                                    Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_6}}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>

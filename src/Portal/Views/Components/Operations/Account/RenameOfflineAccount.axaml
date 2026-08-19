@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto, *, Auto"
@@ -18,16 +18,16 @@
             FontSize="16"
             FontWeight="600"
             Grid.Row="0"
-            Text="修改离线账户信息" />
+            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_0}}" />
         <tio:Form
             Grid.Row="1"
             HorizontalAlignment="Stretch"
             LabelPosition="Top"
             Margin="0,10,0,15">
-            <tio:FormItem Label="角色名称">
+            <tio:FormItem Label="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_7}}">
                 <DataValidationErrors>
                     <TextBox
-                        PlaceholderText="输入角色名称"
+                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_1}}"
                         Text="{Binding RoleName}"
                         tio:FocusHelper.DialogFocusHint="True" />
                 </DataValidationErrors>
@@ -37,17 +37,17 @@
                     <DataValidationErrors>
                         <TextBox PlaceholderText="uuid" Text="{Binding Uuid}" />
                     </DataValidationErrors>
-                    <CheckBox Content="修改名称时自动更新uuid" IsChecked="{Binding SyncUuid}" />
+                    <CheckBox Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_2}}" IsChecked="{Binding SyncUuid}" />
                 </StackPanel>
             </tio:FormItem>
             <tio:Banner
                 Classes="Bordered"
-                Content="uuid 可用于同步其他启动器的角色身份，以保留原有的背包和游戏进度。但如果修改不当，会导致游戏无法识别角色，从而丢失背包物品。除非明确知晓后果，否则请保持默认。"
+                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_3}}"
                 CornerRadius="10"
                 Margin="0,0,0,0"
                 Type="Warning">
                 <tio:Banner.Header>
-                    <TextBlock FontSize="15" Text="警告" />
+                    <TextBlock FontSize="15" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_4}}" />
                 </tio:Banner.Header>
             </tio:Banner>
         </tio:Form>
@@ -56,8 +56,8 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Command="{Binding CancelCommand}" Content="取消" />
-            <Button Command="{Binding ConfirmCommand}" Content="完成" />
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_5}}" />
+            <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.renameofflineaccount_6}}" />
         </StackPanel>
     </Grid>
 </UserControl>

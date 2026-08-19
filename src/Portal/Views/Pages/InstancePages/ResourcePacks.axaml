@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="Border.resource-pack-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -26,21 +26,26 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
                 Click="OpenFolder_OnClick"
-                Content="打开文件夹"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_0}}"
                 DockPanel.Dock="Right"
                 VerticalAlignment="Top" />
             <Button
                 Click="CheckUpdates_OnClick"
-                Content="检查更新"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_1}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top" />
             <Button
                 Click="Import_OnClick"
-                Content="{Binding PackName, StringFormat='添加{0}'}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
-                VerticalAlignment="Top" />
+                VerticalAlignment="Top">
+                <Button.Content>
+                    <FormatTranslate FormatKey="{x:Static loc:InstancesLanguageManager+Keys.resourcepacks_add}">
+                        <TranslateEntry Binding="{Binding PackName}" />
+                    </FormatTranslate>
+                </Button.Content>
+            </Button>
             <ComboBox
                 DockPanel.Dock="Right"
                 ItemsSource="{Binding SortOptions}"
@@ -71,7 +76,7 @@
                 VerticalAlignment="Top"
                 Width="180" />
             <DropDownButton
-                Content="选择"
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_2}}"
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top">
@@ -80,15 +85,15 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="SelectAll_OnClick"
-                            Header="全选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_3}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="ClearSelection_OnClick"
-                            Header="全不选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_4}}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="InvertSelection_OnClick"
-                            Header="反选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_5}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -102,7 +107,7 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="DeleteSelected_OnClick"
-                            Header="删除所选" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_6}}" />
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
@@ -155,7 +160,7 @@
                                 <MenuFlyout>
                                     <MenuItem
                                         Click="ShowResourcePackDetails_OnClick"
-                                        Header="查看详情"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_7}}"
                                         IsVisible="{Binding HasDetails}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -167,7 +172,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="UpdateResourcePack_OnClick"
-                                        Header="更新"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_8}}"
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -179,7 +184,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="SwitchVersionResourcePack_OnClick"
-                                        Header="切换版本"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_9}}"
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -191,7 +196,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="RollbackResourcePack_OnClick"
-                                        Header="回滚更新"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_10}}"
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
@@ -204,7 +209,7 @@
                                     <Separator IsVisible="{Binding HasDetails}" />
                                     <MenuItem
                                         Click="OpenResourcePackFolder_OnClick"
-                                        Header="在文件夹中打开"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_11}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -215,7 +220,7 @@
                                     </MenuItem>
                                     <MenuItem
                                         Click="DeleteResourcePack_OnClick"
-                                        Header="删除"
+                                        Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_12}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -268,7 +273,7 @@
                                                     IsVisible="{Binding HasUpdate}"
                                                     Margin="0,0,5,0"
                                                     MaxLines="1"
-                                                    Text="可更新"
+                                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.resourcepacks_13}}"
                                                     VerticalAlignment="Center" />
                                                 <TextBlock
                                                     FontSize="16"

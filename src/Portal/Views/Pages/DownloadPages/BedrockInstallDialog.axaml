@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid
         Margin="24"
         RowDefinitions="Auto,Auto,Auto"
@@ -17,14 +17,14 @@
             <TextBlock
                 FontSize="16"
                 FontWeight="SemiBold"
-                Text="安装 Minecraft 基岩版" />
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstalldialog_0}}" />
             <TextBlock Text="{Binding Details}" TextWrapping="Wrap" />
         </StackPanel>
         <StackPanel
             Grid.Row="1"
             Margin="0,18,0,0"
             Spacing="6">
-            <TextBlock Text="安装目录" />
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstalldialog_1}}" />
             <ComboBox
                 HorizontalAlignment="Stretch"
                 ItemsSource="{Binding Folders}"
@@ -51,10 +51,10 @@
             Margin="0,22,0,0"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Click="Cancel_Click" Content="取消" />
+            <Button Click="Cancel_Click" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstalldialog_2}}" />
             <Button
                 Click="Install_Click"
-                Content="开始安装"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockinstalldialog_3}}"
                 IsEnabled="{Binding CanInstall}" />
         </StackPanel>
     </Grid>
