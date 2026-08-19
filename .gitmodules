@@ -1,3 +1,7 @@
+[submodule "module/Iridium"]
+	path = module/Iridium
+	url = https://github.com/tiouoo/Iridium.git
+	branch = master
 [submodule "module/Tio.Avalonia.Standard"]
 	path = module/Tio.Avalonia.Standard
 	url = https://github.com/tiouoo/Tio.Avalonia.Standard.git
@@ -10,3 +14,6 @@
 	path = module/MinecraftLaunch
 	url = https://github.com/tiouoo/MinecraftLaunch.git
 	branch = main
+[submodule "module/Iridium"]
+	path = module/Iridium
+	url = https://github.com/tiouoo/Iridium.git

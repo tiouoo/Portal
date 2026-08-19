@@ -15,6 +15,10 @@
     <Project Path="src/Portal.Bedrock.Windows/Portal.Bedrock.Windows.csproj" />
     <Project Path="src/Portal.Bedrock.Xbox/Portal.Bedrock.Xbox.csproj" />
   </Folder>
+  <Folder Name="/Module/Iridium/">
+    <Project Path="module/Iridium/src/Iridium.Sample/Iridium.Sample.csproj" />
+    <Project Path="module/Iridium/src/Iridium/Iridium.csproj" />
+  </Folder>
   <Folder Name="/Module/LiteSkinViewer/">
     <Project Path="module/LiteSkinViewer/LiteSkinViewer.2D/LiteSkinViewer.2D.csproj" />
     <Project Path="module/LiteSkinViewer/LiteSkinViewer.3D/LiteSkinViewer.3D.csproj" />
