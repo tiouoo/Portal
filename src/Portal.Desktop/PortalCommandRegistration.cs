@@ -20,6 +20,7 @@ internal static class PortalCommandRegistration
         if /I "%1"=="list" goto :headless
         if /I "%1"=="--search" goto :headless
         if /I "%1"=="search" goto :headless
+        if /I "%1"=="--launch" goto :headless
         if /I "%1"=="help" goto :headless
         if /I "%1"=="--help" goto :headless
         if /I "%1"=="-h" goto :headless

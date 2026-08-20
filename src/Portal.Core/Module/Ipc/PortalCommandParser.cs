@@ -30,7 +30,7 @@ public static class PortalCommandParser
         return first.ToLowerInvariant() switch
         {
             "install" or "download" => ParseInstallCli(args, out command, out error),
-            "launch" => ParseLaunchCli(args, out command, out error),
+            "launch" or "--launch" => ParseLaunchCli(args, out command, out error),
             _ => PortalCliParseStatus.NotACommand
         };
     }
