@@ -1546,7 +1546,7 @@
     "scanning": "Scanning",
     "scanComplete": "Scan complete: {0} new Java runtimes, {1} duplicates",
     "scanFailed": "Java scan failed: {0}",
-    "deepScanStarted": "Force scan started; you can cancel it from the task list in the top-right",
+    "deepScanStarted": "Force scan started",
     "deepScanCancelled": "Scan cancelled; found Java runtimes have been added: {0} new, {1} duplicates",
     "deepScanComplete": "Force scan complete: {0} new Java runtimes, {1} duplicates",
     "deepScanFailed": "Force scan failed: {0}",

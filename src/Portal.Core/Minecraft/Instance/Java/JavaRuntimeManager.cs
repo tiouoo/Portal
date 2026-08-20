@@ -6,6 +6,8 @@ namespace Portal.Core.Minecraft.Instance.Java;
 
 public static class JavaRuntimeManager
 {
+    private const int DeepScanProgressInterval = 200;
+
     public static async Task<JavaRuntimeEntry?> FromPathAsync(string javaPath,
         CancellationToken cancellationToken = default)
     {
@@ -31,21 +33,29 @@ public static class JavaRuntimeManager
         var result = new List<JavaRuntimeEntry>();
         progress?.Report(new DeepScanProgress(0, 0, 0, CommonLanguageManager.Instance.javaRuntime_scanStage1.CurrentValue()));
 
-        var scanProgress = progress is null ? null : new Progress<JavaScanProgress>(p =>
-            progress.Report(new DeepScanProgress(
-                p.DirectoriesScanned,
-                p.DirectoriesQueued,
-                result.Count,
-                string.Format(CommonLanguageManager.Instance.javaRuntime_scanning.CurrentValue(), p.CurrentDirectory))));
-
         try
         {
-            await foreach (var java in IridiumJavaRuntimeScanner.EnumerableJavaAsync(true, scanProgress, cancellationToken))
+            await Task.Run(async () =>
             {
-                result.Add(java);
-                progress?.Report(new DeepScanProgress(0, 0, result.Count,
-                    string.Format(CommonLanguageManager.Instance.javaRuntime_autoScanFound.CurrentValue(), java.JavaVersion)));
-            }
+                var scanProgress = progress is null ? null : new Progress<JavaScanProgress>(p =>
+                {
+                    if (p.DirectoriesScanned % DeepScanProgressInterval != 0)
+                        return;
+
+                    progress.Report(new DeepScanProgress(
+                        p.DirectoriesScanned,
+                        p.DirectoriesQueued,
+                        result.Count,
+                        string.Format(CommonLanguageManager.Instance.javaRuntime_scanning.CurrentValue(), p.CurrentDirectory)));
+                });
+
+                await foreach (var java in IridiumJavaRuntimeScanner.EnumerableJavaAsync(true, scanProgress, cancellationToken))
+                {
+                    result.Add(java);
+                    progress?.Report(new DeepScanProgress(0, 0, result.Count,
+                        string.Format(CommonLanguageManager.Instance.javaRuntime_autoScanFound.CurrentValue(), java.JavaVersion)));
+                }
+            }, cancellationToken);
         }
         catch (OperationCanceledException)
         {
