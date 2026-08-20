@@ -518,7 +518,7 @@ public partial class TabWindow : TioTabWindowBase
             {
                 WindowDecorations = WindowDecorations.None;
                 FrameBorderThickness = new Thickness(1);
-                FrameBorderCornerRadius = new CornerRadius(10);
+                FrameBorderCornerRadius = new CornerRadius(entry.CustomWindowBorderCornerRadius);
                 FrameBorderBrush = entry.EnableManagedWindowBorderOnWindows
                     ? new SolidColorBrush(entry.CustomWindowBorderColor)
                     : new SolidColorBrush(Colors.Transparent);
@@ -540,7 +540,7 @@ public partial class TabWindow : TioTabWindowBase
                 ClearBackgroundLayers();
                 ClearValue(BackgroundProperty);
                 ClearValue(TransparencyBackgroundFallbackProperty);
-                TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
                 break;
 
             case BackgroundMode.Transparent:
@@ -562,7 +562,7 @@ public partial class TabWindow : TioTabWindowBase
                         UpdateImageBlurEffect(entry.ImageBlurRadius);
                         ClearValue(BackgroundProperty);
                         ClearValue(TransparencyBackgroundFallbackProperty);
-                        TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                        TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
                     }
                     catch (Exception exception)
                     {
@@ -665,12 +665,19 @@ public partial class TabWindow : TioTabWindowBase
         var panel = new Panel();
         panel.Children.Add(_backgroundImageLayer);
         panel.Children.Add(_backgroundMaskLayer);
-        panel.Children.Add(dockPanel);
 
         if (layoutTransformControl != null)
+        {
+            layoutTransformControl.Child = null;
+            panel.Children.Add(dockPanel);
             layoutTransformControl.Child = panel;
+        }
         else
+        {
+            RootBorder.Child = null;
+            panel.Children.Add(dockPanel);
             RootBorder.Child = panel;
+        }
     }
 
     private void ClearBackgroundLayers()

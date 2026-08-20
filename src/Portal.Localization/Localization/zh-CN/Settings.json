@@ -37,6 +37,7 @@
     "disableSystemWindowBorder": "禁用系统边框",
     "enableWindowBorder": "显示边框",
     "borderColor": "边框颜色",
+    "borderCornerRadius": "边框圆角",
     "showWidgetBackground": "小组件背景"
   },
   "about": {

@@ -59,6 +59,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Color ForegroundColor { get; set; } = Color.Parse("#494c4f");
     [ObservableProperty] public partial Color ThemeColor { get; set; } = Color.Parse("#1890ff");
     [ObservableProperty] public partial Color CustomWindowBorderColor { get; set; } = Color.Parse("#6a6c70");
+    [ObservableProperty] public partial double CustomWindowBorderCornerRadius { get; set; } = 10;
     [ObservableProperty] public partial NewTabContent NewTabContent { get; set; } = NewTabContent.NewTabPage;
     [ObservableProperty] public partial GithubMirrorMode GithubMirrorMode { get; set; } = GithubMirrorMode.Prefix;
     [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;

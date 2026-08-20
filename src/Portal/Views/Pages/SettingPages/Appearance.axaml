@@ -502,6 +502,25 @@
                 </tio:TioColorPicker>
             </StackPanel>
         </Border>
+        <StackPanel IsVisible="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_borderCornerRadius}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Slider
+                    Grid.Column="0"
+                    Maximum="30"
+                    Minimum="0"
+                    Value="{Binding CustomWindowBorderCornerRadius, Source={x:Static const1:Data.ConfigEntry}}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="6,0,0,0"
+                    Text="{Binding CustomWindowBorderCornerRadius, Source={x:Static const1:Data.ConfigEntry}, StringFormat={}{0:0}px}"
+                    VerticalAlignment="Center"
+                    Width="40" />
+            </Grid>
+        </StackPanel>
         <StackPanel Spacing="5">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_showWidgetBackground}}"
