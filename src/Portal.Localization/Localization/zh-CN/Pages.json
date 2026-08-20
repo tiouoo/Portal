@@ -100,7 +100,6 @@
   "settingpage": {
     "General": "通用",
     "Appearance": "界面外观",
-    "DefaultBehavior": "默认行为",
     "Shortcuts": "按键绑定",
     "Notification": "通知选项",
     "Storage": "存储空间",

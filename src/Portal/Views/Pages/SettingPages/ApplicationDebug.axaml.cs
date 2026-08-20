@@ -1,9 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
+using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Ipc;
 using Portal.Localization;
+using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -17,6 +19,18 @@ public partial class ApplicationDebug : Dsc
     {
         InitializeComponent();
         DataContext = this;
+    }
+
+    public static IReadOnlyList<DefaultPageRegistry.DefaultPageEntry> DefaultPages => DefaultPageRegistry.Pages;
+
+    public DefaultPageRegistry.DefaultPageEntry? SelectedDefaultPage
+    {
+        get => DefaultPages.FirstOrDefault(page => page.PageType.AssemblyQualifiedName == Data.ConfigEntry.DefaultPage);
+        set
+        {
+            if (value != null)
+                Data.ConfigEntry.DefaultPage = value.PageType.AssemblyQualifiedName!;
+        }
     }
 
     public bool CanRegisterProtocol => ProtocolRegistration.IsSupported;

@@ -89,7 +89,13 @@
     "packagedCommand": "Wrapper Command",
     "launchCommandPlaceholder": "Leave empty by default, e.g. cmd /c {command}",
     "width": "Width ",
-    "height": "Height "
+    "height": "Height ",
+    "launcherVisibility": "Launcher Visibility",
+    "keepUnchanged": "Keep unchanged after the game launches",
+    "exitLauncher": "Exit the launcher after the game launches",
+    "hideAndRestore": "Hide after the game launches, restore when the game exits",
+    "minimizeLauncher": "Minimize after the game launches",
+    "minimizeAndRestore": "Minimize after the game launches, restore when the game exits"
   },
   "agent": {
     "title": "Network Proxy",
@@ -110,29 +116,20 @@
   },
   "applicationdebug": {
     "title": "Other Settings",
-    "portalProtocol": "Portal Protocol",
-    "portalProtocolHint": " *After registration, the launcher can be invoked from a browser via the protocol",
-    "logLevel": "Log Level",
-    "debugMode": "Debug Mode",
-    "debugModeHint": " *Shows application startup and runtime logs; requires restarting the program to take effect."
-  },
-  "defaultbehavior": {
-    "title": "Default Behavior",
     "defaultPage": "Default Page",
     "newTabContent": "New Tab Content",
     "newTab": "New Tab",
     "homePage": "Start Page",
     "widgets": "Widgets",
-    "launcherVisibility": "Launcher Visibility",
-    "keepUnchanged": "Keep unchanged after the game launches",
-    "exitLauncher": "Exit the launcher after the game launches",
-    "hideAndRestore": "Hide after the game launches, restore when the game exits",
-    "minimizeLauncher": "Minimize after the game launches",
-    "minimizeAndRestore": "Minimize after the game launches, restore when the game exits",
     "filePicker": "File Picker",
     "systemDialog": "System Dialog",
     "managedDialog": "Managed Dialog",
-    "restartRequiredHint": " *Requires restarting the program"
+    "restartRequiredHint": " *Requires restarting the program",
+    "portalProtocol": "Portal Protocol",
+    "portalProtocolHint": " *After registration, the launcher can be invoked from a browser via the protocol",
+    "logLevel": "Log Level",
+    "debugMode": "Debug Mode",
+    "debugModeHint": " *Shows application startup and runtime logs; requires restarting the program to take effect."
   },
   "download": {
     "title": "Download Settings",

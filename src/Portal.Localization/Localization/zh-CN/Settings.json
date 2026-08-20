@@ -116,14 +116,6 @@
   },
   "applicationdebug": {
     "title": "其他设置",
-    "portalProtocol": "Portal 协议",
-    "portalProtocolHint": " *注册后，可在浏览器通过协议调起启动器",
-    "logLevel": "日志等级",
-    "debugMode": "调试模式",
-    "debugModeHint": " *显示应用启动和运行日志，需要重启程序后生效。"
-  },
-  "defaultbehavior": {
-    "title": "默认行为",
     "defaultPage": "默认页面",
     "newTabContent": "新标签页内容",
     "newTab": "新标签页",
@@ -132,7 +124,12 @@
     "filePicker": "文件选择器",
     "systemDialog": "系统对话框",
     "managedDialog": "接管对话框",
-    "restartRequiredHint": " *需要重启程序"
+    "restartRequiredHint": " *需要重启程序",
+    "portalProtocol": "Portal 协议",
+    "portalProtocolHint": " *注册后，可在浏览器通过协议调起启动器",
+    "logLevel": "日志等级",
+    "debugMode": "调试模式",
+    "debugModeHint": " *显示应用启动和运行日志，需要重启程序后生效。"
   },
   "download": {
     "title": "下载设置",

@@ -31,10 +31,6 @@
                         IsSelected="True" />
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
-                        CommandParameter="{x:Type p:DefaultBehavior}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_DefaultBehavior}}" />
-                    <tio:NavMenuItem
-                        Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Shortcuts}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Shortcuts}}" />
                     <tio:NavMenuItem

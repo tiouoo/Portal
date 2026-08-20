@@ -11,6 +11,42 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_title}}" />
+        <StackPanel Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_defaultPage}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ComboBox
+                DisplayMemberBinding="{Binding Title}"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding DefaultPages}"
+                SelectedItem="{Binding SelectedDefaultPage}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_newTabContent}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.NewTabContent}">
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_newTab}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_homePage}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_widgets}}" />
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_filePicker}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.FilePicker}">
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_systemDialog}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_managedDialog}}" />
+            </ComboBox>
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_restartRequiredHint}}" />
+        </StackPanel>
         <StackPanel IsVisible="{Binding CanRegisterProtocol}" Spacing="5">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_portalProtocol}}"
