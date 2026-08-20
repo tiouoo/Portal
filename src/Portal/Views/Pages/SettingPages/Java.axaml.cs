@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Avalonia;
@@ -24,15 +26,25 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 {
     private const int HostVmInfo = 2;
     private const int _ScPagesize = 29;
+    private static readonly int[] SupportedJavaVersions = [25, 21, 17, 8];
     private readonly DispatcherTimer _memoryRefreshTimer = new() { Interval = TimeSpan.FromSeconds(2) };
+    private readonly NotifyCollectionChangedEventHandler _javaRuntimesChangedHandler;
     private int _availableMemoryMb;
     private bool _isDisposed;
     private int _totalMemoryMb;
 
+    public IReadOnlyList<JavaVersionOption> MainstreamJavaOptions { get; }
+
     public Java()
     {
         InitializeComponent();
+        MainstreamJavaOptions = SupportedJavaVersions
+            .Select(version => new JavaVersionOption(version, Data.ConfigEntry.SetJavaDefault))
+            .ToArray();
         DataContext = this;
+        _javaRuntimesChangedHandler = (_, _) => RefreshMainstreamJavaOptions();
+        Data.ConfigEntry.JavaRuntimes.CollectionChanged += _javaRuntimesChangedHandler;
+        RefreshMainstreamJavaOptions();
         _memoryRefreshTimer.Tick += MemoryRefreshTimer_OnTick;
         Data.ConfigEntry.PropertyChanged += ConfigEntry_PropertyChanged;
         Slider.Value = Data.ConfigEntry.MinecraftMaxMemory;
@@ -66,6 +78,7 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
         _isDisposed = true;
         _memoryRefreshTimer.Stop();
         _memoryRefreshTimer.Tick -= MemoryRefreshTimer_OnTick;
+        Data.ConfigEntry.JavaRuntimes.CollectionChanged -= _javaRuntimesChangedHandler;
         Data.ConfigEntry.PropertyChanged -= ConfigEntry_PropertyChanged;
         DataContext = null;
     }
@@ -290,8 +303,6 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
         {
             topLevel.Notice(CommonLanguageManager.Instance.javaPage_scanning.CurrentValue());
             var result = await JavaRuntimeOperations.ScanAndAddAsync(Data.ConfigEntry.JavaRuntimes);
-            if (Data.ConfigEntry.DefaultJavaRuntime == null)
-                Data.ConfigEntry.DefaultJavaRuntime = Data.ConfigEntry.JavaRuntimes.FirstOrDefault();
 
             topLevel.Notice(
                 string.Format(CommonLanguageManager.Instance.javaPage_scanComplete.CurrentValue(),
@@ -328,9 +339,6 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
                 result = (0, 0);
             }
 
-            if (Data.ConfigEntry.DefaultJavaRuntime == null)
-                Data.ConfigEntry.DefaultJavaRuntime = Data.ConfigEntry.JavaRuntimes.FirstOrDefault();
-
             if (task.Status == ManagedTaskStatus.Cancelled)
                 topLevel.Notice(
                     string.Format(CommonLanguageManager.Instance.javaPage_deepScanCancelled.CurrentValue(),
@@ -353,6 +361,77 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
         }
     }
 
+    private void RefreshMainstreamJavaOptions()
+    {
+        foreach (var option in MainstreamJavaOptions)
+        {
+            var stale = option.Runtimes
+                .Where(runtime => !Data.ConfigEntry.JavaRuntimes.Contains(runtime))
+                .ToArray();
+            foreach (var runtime in stale)
+                option.Runtimes.Remove(runtime);
+
+            foreach (var runtime in Data.ConfigEntry.JavaRuntimes)
+                if (runtime.MajorVersion == option.MajorVersion && !option.Runtimes.Contains(runtime))
+                    option.Runtimes.Add(runtime);
+
+            var selected = Data.ConfigEntry.GetJavaDefault(option.MajorVersion);
+            if (selected is null && option.Runtimes.Count > 0)
+                selected = option.Runtimes[0];
+            option.SetSelectedRuntime(selected, true);
+        }
+    }
+
+    private async void ManualSelectJava_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control { Tag: JavaVersionOption option })
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        try
+        {
+            var result = await JavaRuntimeOperations.AddFromPickerAsync(topLevel, Data.ConfigEntry.JavaRuntimes);
+            if (result is null)
+                return;
+
+            if (!result.IsValid)
+            {
+                topLevel.Notice(CommonLanguageManager.Instance.javaPage_unrecognizedJava.CurrentValue(),
+                    NotificationType.Error);
+                return;
+            }
+
+            var java = result.JavaRuntime!;
+            RefreshMainstreamJavaOptions();
+
+            if (java.MajorVersion != option.MajorVersion)
+            {
+                topLevel.Notice(
+                    string.Format(CommonLanguageManager.Instance.javaPage_manualSelectVersionMismatch.CurrentValue(),
+                        option.MajorVersion, java.MajorVersion),
+                    NotificationType.Warning);
+                return;
+            }
+
+            if (result.IsDuplicate)
+                topLevel.Notice(CommonLanguageManager.Instance.javaPage_javaDuplicate.CurrentValue(),
+                    NotificationType.Warning);
+            else
+                topLevel.Notice(CommonLanguageManager.Instance.javaPage_javaAdded.CurrentValue(),
+                    NotificationType.Success);
+
+            option.SelectedRuntime = java;
+        }
+        catch (Exception ex)
+        {
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.javaPage_addJavaFailed.CurrentValue(),
+                ex.Message), NotificationType.Error);
+        }
+    }
+
     private async Task AddJavaAsync(TopLevel topLevel)
     {
         try
@@ -366,9 +445,6 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
                     NotificationType.Error);
                 return;
             }
-
-            if (Data.ConfigEntry.DefaultJavaRuntime is null)
-                Data.ConfigEntry.DefaultJavaRuntime = result.JavaRuntime;
 
             if (result.IsDuplicate)
             {
@@ -390,10 +466,8 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
     {
         if (sender is not Control { Tag: JavaRuntimeEntry java }) return;
 
-        Data.ConfigEntry.DefaultJavaRuntime = JavaRuntimeOperations.Remove(
-            Data.ConfigEntry.JavaRuntimes,
-            java,
-            Data.ConfigEntry.DefaultJavaRuntime);
+        Data.ConfigEntry.ClearJavaDefault(java.JavaPath);
+        Data.ConfigEntry.JavaRuntimes.Remove(java);
 
         this.AsTopLevel().Notice(new NotificationOptions
         {
@@ -406,7 +480,6 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
                 new OperateButtonEntry(CommonLanguageManager.Instance.titleBar_undo.CurrentValue(), _ =>
                 {
                     JavaRuntimeOperations.Restore(Data.ConfigEntry.JavaRuntimes, java);
-                    Data.ConfigEntry.DefaultJavaRuntime = java;
                 }, true)
             ]
         });
@@ -445,4 +518,49 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
         public uint PurgeableCount;
         public uint SpeculativeCount;
     }
+}
+
+public sealed class JavaVersionOption : INotifyPropertyChanged
+{
+    private readonly Action<int, JavaRuntimeEntry?> _persist;
+    private JavaRuntimeEntry? _selectedRuntime;
+
+    public JavaVersionOption(int majorVersion, Action<int, JavaRuntimeEntry?> persist)
+    {
+        MajorVersion = majorVersion;
+        DisplayName = $"Java {majorVersion}";
+        _persist = persist;
+    }
+
+    public int MajorVersion { get; }
+
+    public string DisplayName { get; }
+
+    public ObservableCollection<JavaRuntimeEntry> Runtimes { get; } = [];
+
+    public JavaRuntimeEntry? SelectedRuntime
+    {
+        get => _selectedRuntime;
+        set
+        {
+            if (Equals(_selectedRuntime, value))
+                return;
+
+            _selectedRuntime = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedRuntime)));
+            _persist(MajorVersion, value);
+        }
+    }
+
+    internal void SetSelectedRuntime(JavaRuntimeEntry? value, bool notify)
+    {
+        if (Equals(_selectedRuntime, value))
+            return;
+
+        _selectedRuntime = value;
+        if (notify)
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedRuntime)));
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 }

@@ -65,6 +65,7 @@ public class Config
 
         Logger.MinimumLevel = Data.ConfigEntry.MinimumLogLevel;
         Data.ConfigEntry.Shortcuts ??= new ShortcutConfig();
+        Data.ConfigEntry.JavaVersionDefaultPaths ??= new();
 
         if (!Enum.IsDefined(typeof(UpdateSource), Data.ConfigEntry.UpdateSource))
         {

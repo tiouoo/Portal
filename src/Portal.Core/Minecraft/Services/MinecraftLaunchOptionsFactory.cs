@@ -26,7 +26,7 @@ public static class MinecraftLaunchOptionsFactory
                 : Data.ConfigEntry.EnableFullscreen,
             ShowGameOverlay = UiEvents.ShowGameOverlay,
             JavaRuntimes = Data.ConfigEntry.JavaRuntimes,
-            DefaultJavaRuntime = Data.ConfigEntry.DefaultJavaRuntime,
+            JavaVersionDefaults = Data.ConfigEntry.JavaVersionDefaultPaths,
             WindowWidth = overrideAdvanced && javaConfig != null
                 ? javaConfig.MinecraftWindowWidth
                 : Data.ConfigEntry.MinecraftWindowWidth,

@@ -46,7 +46,8 @@ public static class JavaAutoInstallCoordinator
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 if (!Data.ConfigEntry.JavaRuntimes.Contains(runtime)) Data.ConfigEntry.JavaRuntimes.Add(runtime);
-                Data.ConfigEntry.DefaultJavaRuntime ??= runtime;
+                if (Data.ConfigEntry.GetJavaDefault(runtime.MajorVersion) is null)
+                    Data.ConfigEntry.SetJavaDefault(runtime.MajorVersion, runtime);
             });
             return runtime;
         }

@@ -7,12 +7,15 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Core.Const;
+using Portal.Core.Minecraft;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Module.Ipc;
 using Portal.Localization;
 using Portal.Module;
 using Portal.Module.Initialize;
 using Portal.Views;
+using Portal.Views.Pages;
+using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal;
@@ -32,6 +35,16 @@ public partial class App : Application
     public static TopLevel TopLevel => TopLevel.GetTopLevel(MainWindow);
     public static event UiLoadedEventHandler? UiLoaded;
 
+    private static void OpenJavaDownloadPage()
+    {
+        if (MainWindow is not { } window)
+            return;
+
+        var downloadPage = new DownloadPage();
+        downloadPage.DownloadPageViewModel.NavigateType(typeof(JavaDownloadPage));
+        window.OpenPage(downloadPage);
+    }
+
     public override void Initialize()
     {
         Logger.Info(LogLanguageManager.Instance.app_initStart.CurrentValue());
@@ -46,6 +59,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         Logger.Info("OnFrameworkInitializationCompleted");
+        MinecraftLaunchService.OpenJavaDownloadPage = OpenJavaDownloadPage;
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
 #if DEBUG

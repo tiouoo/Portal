@@ -659,9 +659,7 @@ internal static class ModpackInstallation
 
     private static string? GetForgeJavaPath()
     {
-        var preferred = Data.ConfigEntry.DefaultJavaRuntime;
-        if (preferred is { JavaPath: { } path } && File.Exists(path)) return path;
-        return Data.ConfigEntry.JavaRuntimes.Select(runtime => runtime.JavaPath).FirstOrDefault(File.Exists);
+        return MinecraftInstallationTasks.GetJavaPath();
     }
 
     private static async Task<VersionManifestEntry> GetVanillaEntryAsync(TaskExecutionContext context,

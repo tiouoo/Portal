@@ -538,8 +538,12 @@ public static class MinecraftInstallationTasks
 
     public static string? GetJavaPath()
     {
-        var preferred = Data.ConfigEntry.DefaultJavaRuntime;
-        if (preferred is { JavaPath: { } path } && File.Exists(path)) return path;
+        foreach (var defaultPath in Data.ConfigEntry.JavaVersionDefaultPaths.Values)
+            if (Data.ConfigEntry.JavaRuntimes.FirstOrDefault(runtime =>
+                    string.Equals(runtime.JavaPath, defaultPath, StringComparison.OrdinalIgnoreCase) &&
+                    File.Exists(runtime.JavaPath)) is { } defaultRuntime)
+                return defaultRuntime.JavaPath;
+
         return Data.ConfigEntry.JavaRuntimes.Select(runtime => runtime.JavaPath).FirstOrDefault(File.Exists);
     }
 

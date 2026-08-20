@@ -165,12 +165,12 @@
     "autoCleanMemoryBeforeLaunchHint": "游戏启动时将申请管理员权限以清理内存，可能会弹出 UAC 提示。",
     "autoHighPerformanceGpu": "自动为 Java 使用高性能显卡",
     "autoHighPerformanceGpuHint": "启动游戏时，自动为 Java 选择高性能独立显卡",
-    "defaultJava": "默认 Java",
-    "defaultJavaHint": " *启动游戏时会自动选择适合的Java运行时，与此设置无关",
     "javaManagement": "Java 管理",
     "deepScan": "强力扫描",
     "autoScan": "自动扫描",
-    "addManually": "手动添加"
+    "addManually": "手动添加",
+    "versions": "Java 版本",
+    "manualSelect": "手动选择"
   },
   "notification": {
     "title": "通知选项",

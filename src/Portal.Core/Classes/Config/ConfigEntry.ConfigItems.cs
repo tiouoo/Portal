@@ -98,6 +98,6 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
     [ObservableProperty] public partial BedrockAccount? UsingBedrockAccount { get; set; }
     [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }
-    [ObservableProperty] public partial JavaRuntimeEntry? DefaultJavaRuntime { get; set; }
+    [ObservableProperty] public partial Dictionary<int, string> JavaVersionDefaultPaths { get; set; } = new();
     [ObservableProperty] public partial ShortcutConfig Shortcuts { get; set; } = new();
 }

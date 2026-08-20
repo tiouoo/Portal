@@ -69,6 +69,41 @@ public partial class ConfigEntry : ObservableObject
     public ObservableCollection<AuthServer> AuthServers { get; } = [];
     public ObservableCollection<JavaRuntimeEntry> JavaRuntimes { get; } = [];
 
+    public JavaRuntimeEntry? GetJavaDefault(int majorVersion)
+    {
+        if (JavaVersionDefaultPaths is not null &&
+            JavaVersionDefaultPaths.TryGetValue(majorVersion, out var javaPath))
+            return JavaRuntimes.FirstOrDefault(runtime =>
+                string.Equals(runtime.JavaPath, javaPath, StringComparison.OrdinalIgnoreCase));
+        return null;
+    }
+
+    public void SetJavaDefault(int majorVersion, JavaRuntimeEntry? runtime)
+    {
+        JavaVersionDefaultPaths ??= new();
+        if (runtime is null || string.IsNullOrWhiteSpace(runtime.JavaPath))
+            JavaVersionDefaultPaths.Remove(majorVersion);
+        else
+            JavaVersionDefaultPaths[majorVersion] = runtime.JavaPath;
+        OnPropertyChanged(nameof(JavaVersionDefaultPaths));
+    }
+
+    public void ClearJavaDefault(string javaPath)
+    {
+        if (JavaVersionDefaultPaths is null)
+            return;
+
+        var keys = JavaVersionDefaultPaths
+            .Where(pair => string.Equals(pair.Value, javaPath, StringComparison.OrdinalIgnoreCase))
+            .Select(pair => pair.Key)
+            .ToArray();
+        foreach (var key in keys)
+            JavaVersionDefaultPaths.Remove(key);
+
+        if (keys.Length > 0)
+            OnPropertyChanged(nameof(JavaVersionDefaultPaths));
+    }
+
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)

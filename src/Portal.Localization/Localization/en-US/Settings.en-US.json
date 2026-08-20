@@ -165,12 +165,12 @@
     "autoCleanMemoryBeforeLaunchHint": "Requests administrator privileges to clean memory when the game launches; a UAC prompt may appear.",
     "autoHighPerformanceGpu": "Automatically use the high-performance GPU for Java",
     "autoHighPerformanceGpuHint": "Automatically selects the high-performance discrete GPU for Java when launching the game",
-    "defaultJava": "Default Java",
-    "defaultJavaHint": " *A suitable Java runtime is auto-selected when launching the game; unrelated to this setting",
     "javaManagement": "Java Management",
     "deepScan": "Force Scan",
     "autoScan": "Auto Scan",
-    "addManually": "Add Manually"
+    "addManually": "Add Manually",
+    "versions": "Java Versions",
+    "manualSelect": "Manual Select"
   },
   "notification": {
     "title": "Notification Options",
