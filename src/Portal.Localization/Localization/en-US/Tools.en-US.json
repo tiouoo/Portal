@@ -1,0 +1,11 @@
+{
+  "bedrocktoolspage": {
+    "pageTitle": "Bedrock Tools",
+    "downloadFrameworkTitle": "Download UWP Game Framework",
+    "downloadFrameworkDescription": "Open the game framework download page for the MC Appx",
+    "checkSdkTitle": "Check SDK 1.8 Installation",
+    "checkSdkDescription": "Check the Main, Singleton and DDLM components of Windows App SDK 1.8 (8000.x)",
+    "uninstallMinecraftTitle": "Uninstall the Locally Installed Minecraft",
+    "uninstallMinecraftDescription": "Remove the Bedrock Edition Minecraft installed from the Microsoft Store"
+  }
+}

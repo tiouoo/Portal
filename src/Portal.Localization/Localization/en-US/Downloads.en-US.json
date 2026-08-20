@@ -1,0 +1,173 @@
+{
+  "bedrockinstalldialog": {
+    "title": "Install Minecraft Bedrock Edition",
+    "installFolderLabel": "Install Directory",
+    "cancel": "Cancel",
+    "startInstall": "Start Install"
+  },
+  "bedrockinstallation": {
+    "gameTitle": "Bedrock Game Client",
+    "releaseChannelAll": "All",
+    "releaseChannelRelease": "Release",
+    "releaseChannelPreview": "Preview",
+    "buildTypeAll": "All Builds",
+    "searchPlaceholder": "Search version names"
+  },
+  "bedrockresourcesearchpage": {
+    "search": "Search",
+    "retry": "Retry",
+    "unfavoriteToolTip": "Unfavorite",
+    "downloadToolTip": "Download"
+  },
+  "createinstancedialog": {
+    "title": "Create New Instance",
+    "changeIcon": "Change Icon",
+    "resetIcon": "Reset Icon",
+    "instanceIdPlaceholder": "Enter an instance ID",
+    "selectGameVersionHeading": "Select Game Version",
+    "minecraftFolderPlaceholder": "Install Directory",
+    "selectLoaderHeading": "Select Loader",
+    "loaderVersionHeading": "Loader",
+    "installOptiFineCheckBox": "Also install OptiFine",
+    "optiFineVersionHeading": "OptiFine Version",
+    "cancel": "Cancel",
+    "createInstance": "Create Instance"
+  },
+  "customdownloadpage": {
+    "pageTitle": "Custom Download",
+    "downloadUrlLabel": "Download Link",
+    "saveFolderLabel": "Save Folder",
+    "browse": "Browse",
+    "saveFolderPlaceholder": "Select or enter a save folder",
+    "saveFileNameLabel": "Save File Name",
+    "fileNamePlaceholder": "Automatically fetched after entering the download link; editable",
+    "startDownload": "Start Download",
+    "downloadConfigHeading": "Download Configuration",
+    "configDescription": "The following configuration only applies to custom downloads and is independent of the global download settings",
+    "maxFragmentCountLabel": "Max File Fragments (parallel fragment connections per file)"
+  },
+  "favoritecollectioneditdialog": {
+    "title": "Edit Collection",
+    "renameLabel": "Rename Collection",
+    "namePlaceholder": "Collection name",
+    "share": "Share",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "complete": "Done"
+  },
+  "favoritespage": {
+    "pageTitle": "Favorites",
+    "edit": "Edit",
+    "newCollection": "New Collection",
+    "importCollection": "Import Collection",
+    "exportCurrentCollection": "Export Current Collection",
+    "editCurrentCollection": "Edit Current Collection",
+    "searchPlaceholder": "Search favorites",
+    "unfavoriteToolTip": "Unfavorite",
+    "downloadToolTip": "Download"
+  },
+  "javadownloadpage": {
+    "pageTitle": "Java Runtime",
+    "retry": "Retry",
+    "loadingText": "Fetching available distributions…"
+  },
+  "javaresourcedetailspage": {
+    "emptyText": "No files available"
+  },
+  "javaresourceinstalldialog": {
+    "installPrefix": "Install",
+    "showAllInstances": "Show All Instances",
+    "targetInstanceLabel": "Target Instance",
+    "noCompatibleInstancesText": "No compatible Java Edition instances",
+    "targetWorldLabel": "Target Save",
+    "loadingWorldsText": "Loading saves...",
+    "noWorldsText": "This instance has no saves that can accept data packs",
+    "saveAs": "Save As",
+    "cancel": "Cancel",
+    "confirm": "OK"
+  },
+  "javaresourcesearchview": {
+    "search": "Search",
+    "gameVersionPlaceholder": "Game Version",
+    "retry": "Retry",
+    "unfavoriteToolTip": "Unfavorite",
+    "downloadToolTip": "Download"
+  },
+  "javaversiondialog": {
+    "installed": "Installed",
+    "cancel": "Cancel",
+    "install": "Install"
+  },
+  "loaderversiondialog": {
+    "title": "Select Loader Version to Install",
+    "cancel": "Cancel",
+    "confirm": "OK"
+  },
+  "minecraftinstallationpage": {
+    "installJavaPrefix": "Install Java ",
+    "installDirectoryLabel": "Install Directory",
+    "instanceIdLabel": "Instance ID",
+    "instanceIdPlaceholder": "Enter an instance ID",
+    "selectLoaderHeading": "Select Loader",
+    "selectVersion": "Select Version",
+    "cancel": "Cancel",
+    "startInstall": "Start Install"
+  },
+  "moddetailspage": {
+    "loadingText": "Loading mod details and all versions...",
+    "loadErrorText": "Unable to load mod details. Please check your network",
+    "emptyText": "No files available under this filter"
+  },
+  "modinstalldialog": {
+    "installPrefix": "Install Mod",
+    "showAllInstances": "Show All Instances",
+    "targetInstanceLabel": "Target Instance",
+    "noInstancesText": "No Java Edition instances that can install mods",
+    "noCompatibleFileText": "This instance has no mod file matching the game version and loader",
+    "loadingDependenciesText": "Loading dependencies. You can skip them and download only the current mod.",
+    "dependencyLoadErrorText": "Dependency loading failed. You can skip them and download only the current mod.",
+    "dependenciesHeading": "The following dependencies will also be downloaded",
+    "saveAs": "Save As",
+    "cancel": "Cancel",
+    "skipDependencies": "Skip Dependencies",
+    "confirm": "OK"
+  },
+  "modsearchpage": {
+    "pageTitle": "Mod Search",
+    "search": "Search",
+    "searchPlaceholder": "Search mods",
+    "gameVersionPlaceholder": "Game Version",
+    "retry": "Retry",
+    "unfavoriteToolTip": "Unfavorite",
+    "downloadToolTip": "Download"
+  },
+  "modpackinstalldialog": {
+    "title": "Install Modpack",
+    "description": "Will download the game, loaders and modpack files into a new instance.",
+    "minecraftFolderLabel": "Minecraft Folder",
+    "noMinecraftFoldersText": "No traditional Minecraft folder available for installation",
+    "instanceIdLabel": "Instance ID",
+    "instanceIdExistsText": "This instance ID already exists. Please choose another name",
+    "invalidInstanceIdText": "Instance ID cannot be empty and cannot contain invalid file name characters",
+    "saveAs": "Save As",
+    "cancel": "Cancel",
+    "install": "Install"
+  },
+  "quickdownloadloadingdialog": {
+    "close": "Close"
+  },
+  "vanillainstallation": {
+    "gameTitle": "Java Game Client",
+    "searchPlaceholder": "Search version names"
+  },
+  "versionmodifydialog": {
+    "modifyInstancePrefix": "Modify Instance ",
+    "versionTypeLabel": "Version Type",
+    "targetVersionLabel": "Target Game Version",
+    "selectLoaderHeading": "Select Loader",
+    "selectLoaderVersion": "Select Loader Version",
+    "uninstallAllLoaders": "Uninstall All Loaders",
+    "cancel": "Cancel",
+    "startModify": "Start Modify"
+  }
+}

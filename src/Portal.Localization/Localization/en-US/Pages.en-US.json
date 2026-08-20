@@ -1,0 +1,134 @@
+{
+  "debugpage": {
+    "Operations": "Operations",
+    "TriggerCrashDivideByZero": "Trigger Crash (Divide by Zero)",
+    "TaskManagementTest": "Task Management Test",
+    "TaskManagementTestHint": "After creating a task, you can open the drawer via the dot in the title bar, or open the task tab from the drawer.",
+    "StartFullDownloadFlow": "Start Full Download Flow",
+    "StartNestedSubTaskFlow": "Start Nested Sub-Task Flow",
+    "CreateWaitingTask": "Create Waiting Task",
+    "CreateFailedTask": "Create Failed Task",
+    "CreateCancellableTask": "Create Cancellable Task",
+    "CreateActionButtonTask": "Create Task with Action Button",
+    "VersionInfo": "Version Info",
+    "BuildType": "Build Type",
+    "BuildTime": "Build Time",
+    "BuildVersion": "Build Version",
+    "BuildAction": "Build Action",
+    "BuildCommit": "Build Commit"
+  },
+  "downloadpage": {
+    "Favorites": "Favorites",
+    "JavaEdition": "Java Edition",
+    "GameClient": "Game Client",
+    "Mods": "Mods",
+    "Modpacks": "Modpacks",
+    "ResourcePacks": "Resource Packs",
+    "ShaderPacks": "Shader Packs",
+    "DataPacks": "Data Packs",
+    "Saves": "Saves",
+    "BedrockEdition": "Bedrock Edition",
+    "BedrockResourcePacks": "Resource Packs",
+    "Others": "Others",
+    "CustomDownload": "Custom Download"
+  },
+  "instancedetailpage": {
+    "Dashboard": "Dashboard",
+    "Storage": "Storage",
+    "Mods": "Mods",
+    "ResourcePacks": "Resource Packs",
+    "ShaderPacks": "Shader Packs",
+    "Saves": "Saves",
+    "Servers": "Servers",
+    "Screenshots": "Screenshots",
+    "Logs": "Logs",
+    "CrashReports": "Crash Reports",
+    "BehaviorPacks": "Behavior Packs",
+    "WorldTemplates": "World Templates",
+    "SkinPacks": "Skin Packs",
+    "ConfigFiles": "Config Files",
+    "Properties": "Configuration Management"
+  },
+  "litematicapage": {
+    "LitematicaProjectionAnalysis": "Litematica Projection Analysis",
+    "ProjectionFile": "Projection File",
+    "Analyze": "Analyze",
+    "SelectLitematicaProjectionFile": "Select Litematica Projection File",
+    "TotalBlocks": "Total Blocks: ",
+    "BlockTypes": "Block Types: ",
+    "BlockName": "Block Name",
+    "Count": "Count",
+    "Category": "Category",
+    "Percentage": "Percentage",
+    "Units": "Units",
+    "ExportTxt": "Export TXT",
+    "ExportCsv": "Export CSV"
+  },
+  "minecraftlogpage": {
+    "MinecraftLog": "Minecraft Log",
+    "AutoScrollToBottom": "Auto Scroll to Bottom",
+    "ShowLevels": "Show Levels",
+    "Information": "Information",
+    "Warning": "Warning",
+    "Error": "Error",
+    "Debug": "Debug",
+    "Trace": "Trace",
+    "Other": "Other",
+    "Export": "Export",
+    "SelectAll": "Select All",
+    "Copy": "Copy"
+  },
+  "newtabpage": {
+    "NoRecentGames": "No Recent Games",
+    "ContinueGame": "Continue Game",
+    "NoRecentSaveOrServer": "No Recent Saves or Servers",
+    "GamePlayTime": "Game Play Time",
+    "Sessions": "sessions",
+    "NoInstancesGoTo": "No instances yet. Go to",
+    "AddFolder": "Add Folder",
+    "Or": "or",
+    "CreateNewInstance": "Create New Instance",
+    "NoMatchingInstancesGoTo": "No matching instances. Adjust the filters, or go to"
+  },
+  "newsdetailspage": {
+    "LoadingNewsContent": "Loading news content…",
+    "Retry": "Retry"
+  },
+  "newspage": {
+    "MinecraftNews": "Minecraft News"
+  },
+  "settingpage": {
+    "General": "General",
+    "Appearance": "Appearance",
+    "DefaultBehavior": "Default Behavior",
+    "Shortcuts": "Key Bindings",
+    "Notification": "Notification Options",
+    "Storage": "Storage",
+    "OtherSettings": "Other Settings",
+    "About": "About App",
+    "Game": "Game",
+    "Account": "Account Profile",
+    "JavaRuntime": "Java Runtime",
+    "GameFolder": "Game Folder",
+    "Advanced": "Advanced Options",
+    "Network": "Network",
+    "Download": "Download Settings",
+    "Proxy": "Network Proxy"
+  },
+  "startpage": {
+    "NoInstancesGoTo": "No instances yet. Go to",
+    "AddFolder": "Add Folder",
+    "Or": "or",
+    "CreateNewInstance": "Create New Instance",
+    "NoMatchingInstancesGoTo": "No matching instances. Adjust the filters, or go to"
+  },
+  "taskpage": {
+    "Tasks": "Tasks"
+  },
+  "toolspage": {
+    "BedrockEdition": "Bedrock Edition"
+  },
+  "instancespage": {},
+  "multiplayerpage": {},
+  "widgetspage": {}
+}

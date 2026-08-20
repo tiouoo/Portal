@@ -1,0 +1,86 @@
+{
+  "app": {
+    "title": "Portal",
+    "menu": {
+      "settings": "Settings",
+      "theme": "Theme",
+      "themeSystem": "System",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeMirage": "Mirage"
+    },
+    "tab": {
+      "tabs": "Tabs",
+      "newTab": "New Tab",
+      "closeTab": "Close Current Tab",
+      "closeOtherTabs": "Close Other Tabs",
+      "openInNewWindow": "Open in New Window"
+    },
+    "tooltips": {
+      "closeTab": "Close Tab (Ctrl + W)",
+      "closeTabMac": "Close Tab (⌃ + W)",
+      "newTab": "New Tab (Ctrl + T)",
+      "newTabMac": "New Tab (⌃ + T)"
+    },
+    "settings": "Settings",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeMirage": "Mirage"
+  },
+  "bedrockpackageimportwindow": {
+    "importLocation": "Import To",
+    "noAvailableInstances": "No Bedrock Edition instances available",
+    "importWorldUser": "Import To Which Save User",
+    "cancel": "Cancel"
+  },
+  "crashwindow": {
+    "windowTitle": "Crash Window",
+    "crashTitle": "Oops, it crashed! ヾ(•ω•`)o",
+    "unhandledExceptionDescription": "Portal encountered an unhandled exception and may not be able to continue running. Details are shown below",
+    "copyToClipboard": "Copy to Clipboard",
+    "continueRunning": "Ignore the error and continue",
+    "exit": "Exit",
+    "reopen": "Reopen"
+  },
+  "oobewindow": {
+    "windowTitle": "Welcome to Portal",
+    "back": "Back",
+    "next": "Next",
+    "enterPortal": "Enter Portal",
+    "welcome": "Welcome",
+    "welcomeDescription": "Let's start by picking an appearance you like",
+    "themeStyle": "Theme Style",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeMirage": "Mirage",
+    "themeColor": "Accent Color",
+    "addMinecraftFolder": "Add Minecraft Folder",
+    "addMinecraftFolderDescription": "Supports Modrinth/CurseForge/MultiMC and many other formats",
+    "folderList": "Folder List",
+    "addFolder": "Add Folder",
+    "addAccount": "Add Account",
+    "addAccountDescription": "Sign in with a Microsoft account, use an external login, or create an offline account ovo",
+    "accountList": "Account List",
+    "noAccounts": "No accounts yet. Click \"Add Account\" to get started",
+    "addJava": "Add Java",
+    "addJavaDescription": "Of course you need Java to run Minecraft",
+    "javaList": "Java List",
+    "autoScan": "Auto Scan",
+    "manualAdd": "Add Manually",
+    "noJava": "No Java yet. Try \"Auto Scan\""
+  },
+  "overlaywindow": {
+    "instanceDetails": "Instance Details",
+    "multiplayerLobby": "Multiplayer Lobby"
+  },
+  "tabwindow": {
+    "tabs": "Tabs",
+    "newTab": "New Tab",
+    "closeTab": "Close Current Tab",
+    "closeOtherTabs": "Close Other Tabs",
+    "openInNewWindow": "Open in New Window"
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "aggregatedsearchdialog": {
+    "searchBoxPlaceholder": "Enter search content"
+  },
+  "multiplayercontentpage": {
+    "identityAndNetworkSectionTitle": "Identity & Network",
+    "playerNameLabel": "Multiplayer Username",
+    "playerNamePlaceholder": "Defaults to the current Minecraft account name",
+    "natTypeLabel": "NAT Type",
+    "createRoomSectionTitle": "Create Room",
+    "manualPortButton": "Enter Port Manually",
+    "cancelButton": "Cancel",
+    "lanServerComboBoxPlaceholder": "No open worlds detected yet",
+    "bedrockCreateRoomTip": "Open a LAN world in Minecraft first, then create a room.",
+    "joinRoomSectionTitle": "Join Room",
+    "joinRoomTip": "Join the room first, then open the game; if the game is already open, close it first.",
+    "clearJoinCodeButton": "Clear",
+    "pasteJoinCodeButton": "Paste",
+    "currentRoomSectionTitle": "Current Room",
+    "currentRoomCodeLabel": "Current Room Code",
+    "copyRoomCodeButton": "Copy Room Code",
+    "leaveRoomButton": "Close or Leave",
+    "confirmMinecraftEndedButton": "Game closed, continue connecting",
+    "roomMembersSectionTitle": "Room Members"
+  },
+  "multiplayerportdialog": {
+    "title": "Enter the Public Port",
+    "portPlaceholder": "e.g. 25565",
+    "cancelButton": "Cancel",
+    "confirmButton": "OK"
+  },
+  "randomminecraft": {
+    "title": "Drawing results!",
+    "wonPrefix": "This time you got",
+    "wonSuffix": ", let's start the game!",
+    "closeButton": "No thanks",
+    "againButton": "Draw Again",
+    "completeButton": "Go with This"
+  },
+  "scaleinputdialog": {
+    "title": "Custom Scale",
+    "hint": "Enter an integer percentage between 50% and 500%",
+    "cancelButton": "Cancel",
+    "confirmButton": "OK"
+  },
+  "tasklistview": {
+    "removeTerminalTask": "Remove"
+  },
+  "titlebarcomponent": {
+    "newVersionTip": "A new version is available",
+    "tasksToolTip": "Tasks",
+    "searchToolTip": "Search",
+    "multiplayerToolTip": "Multiplayer",
+    "javaEditionMenuItem": "Java Edition",
+    "bedrockEditionMenuItem": "Bedrock Edition",
+    "moreToolTip": "More",
+    "createNewInstanceMenuItem": "Create New Instance",
+    "utilitiesMenuItem": "Utilities",
+    "downloadToolTip": "Download",
+    "settingsToolTip": "Settings",
+    "switchAccountText": "Switch Account"
+  },
+  "authserver": {
+    "titleAndNextButton": "Add Auth Server",
+    "serverNamePlaceholder": "Enter the server name",
+    "serverUrlPlaceholder": "Enter the server API address",
+    "cancelButton": "Cancel",
+    "serverNameLabel": "Server Name",
+    "serverUrlLabel": "Server Address"
+  },
+  "authserverdetected": {
+    "title": "Auth server address detected",
+    "cancelButton": "Cancel",
+    "addServerButton": "Add as Auth Server",
+    "loginButton": "Sign In"
+  },
+  "bedrockmicrosoft": {
+    "title": "Link Bedrock Xbox Account",
+    "cancelButton": "Cancel",
+    "copyCodeButton": "Copy Code",
+    "openBrowserButton": "Open Browser"
+  },
+  "changeskin": {
+    "selectSkinFileLabel": "Select a skin file (PNG)",
+    "pathPickerTitle": "Select Skin Image",
+    "lockViewCheckBox": "Lock View",
+    "cancelButton": "Cancel",
+    "confirmButton": "OK",
+    "closeButton": "Close",
+    "fileFilter": "[Skin images, *.png]"
+  },
+  "editaccountnote": {
+    "title": "Edit Account Note",
+    "notePlaceholder": "Enter a note",
+    "cancelButton": "Cancel",
+    "confirmButton": "Apply Changes",
+    "noteLabel": "Note"
+  },
+  "editauthserver": {
+    "title": "Edit Auth Server",
+    "serverNamePlaceholder": "Enter the server name",
+    "serverUrlPlaceholder": "Enter the server API address",
+    "deleteButton": "Delete",
+    "cancelButton": "Cancel",
+    "confirmButton": "Apply Changes",
+    "serverNameLabel": "Server Name",
+    "serverUrlLabel": "Server Address"
+  },
+  "microsoft": {
+    "title": "Verify Microsoft Account",
+    "errorMessage": "Something went wrong! Please check your network connection.",
+    "errorInfoPrefix": "Error info: ",
+    "cancelButton": "Cancel",
+    "retryButton": "Retry",
+    "copyUrlButton": "Copy URL",
+    "copyCodeButton": "Copy Code",
+    "openBrowserButton": "Open Browser"
+  },
+  "offline": {
+    "title": "Create Offline Account",
+    "roleNamePlaceholder": "Enter a character name",
+    "ignoreStandardCheckBox": "Ignore Standard Verification",
+    "advancedSettingsExpander": "Advanced Settings",
+    "uuidWarning": "Changing the UUID can sync the character identity with other launchers to keep your existing inventory and game progress. But if changed improperly, the game may fail to recognize the character and you may lose inventory items. Unless you clearly understand the consequences, keep the default.",
+    "warningHeader": "Warning",
+    "cancelButton": "Cancel",
+    "addAccountButton": "Add Account",
+    "roleNameLabel": "Character Name"
+  },
+  "renameofflineaccount": {
+    "title": "Modify Offline Account Info",
+    "roleNamePlaceholder": "Enter a character name",
+    "syncUuidCheckBox": "Automatically update the UUID when renaming",
+    "uuidWarning": "The UUID can be used to sync the character identity with other launchers to keep your existing inventory and game progress. But if changed improperly, the game may fail to recognize the character and you may lose inventory items. Unless you clearly understand the consequences, keep the default.",
+    "warningHeader": "Warning",
+    "cancelButton": "Cancel",
+    "completeButton": "Done",
+    "roleNameLabel": "Character Name"
+  },
+  "selectaccounttype": {
+    "title": "Add New Account",
+    "cancelButton": "Cancel",
+    "nextButton": "Next"
+  },
+  "viewresult": {
+    "title": "Add Complete",
+    "subtitle": "The following accounts were added successfully",
+    "addTimeLabel": "Added At",
+    "completeButton": "Done"
+  },
+  "yggdrasil": {
+    "title": "External Login Account",
+    "verifyFailedMessage": "Verification failed",
+    "serverUrlPlaceholder": "Enter the external auth server API address",
+    "usernamePlaceholder": "Enter the account name or email",
+    "passwordPlaceholder": "Enter the password",
+    "cancelButton": "Cancel",
+    "retryButton": "Retry",
+    "authServerButton": "Add Auth Server",
+    "addAccountButton": "Add Account",
+    "builtInServerLabel": "Built-in Server",
+    "apiUrlLabel": "API URL",
+    "usernameLabel": "Account",
+    "passwordLabel": "Password"
+  },
+  "newminecraftfolder": {
+    "title": "Add Minecraft Folder",
+    "folderNamePlaceholder": "Enter a name (e.g. Modpacks)",
+    "folderPathPlaceholder": "Enter the folder path",
+    "folderPathPickerTitle": "Select Minecraft Folder",
+    "browseButton": "Browse",
+    "missingVersionsWarning": "*No versions or .minecraft subdirectory found. You may have selected the wrong folder, or the folder structure is invalid",
+    "folderNotExistWarning": "*This folder does not exist",
+    "folderAlreadyAddedWarning": "*This folder is already included",
+    "cancelButton": "Cancel",
+    "addButton": "Add",
+    "importButton": "Import",
+    "folderNameLabel": "Folder Name",
+    "folderPathLabel": "Folder Path"
+  },
+  "taskdrawerview": {}
+}

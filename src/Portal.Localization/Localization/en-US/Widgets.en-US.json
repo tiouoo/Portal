@@ -1,0 +1,85 @@
+{
+  "widgets": {
+    "clock": {
+      "currentTime": "Current Time"
+    }
+  },
+  "addwidgetdialog": {
+    "title": "Add Widget",
+    "searchPlaceholder": "Search widgets",
+    "categoryGame": "Game",
+    "categoryResource": "System Resources",
+    "categoryUtility": "Utilities",
+    "add": "Add"
+  },
+  "instancecard": {
+    "play": "Play",
+    "createShortcut": "Shortcut",
+    "launchInstance": "Launch Instance",
+    "favorited": "Favorited",
+    "blocked": "Blocked"
+  },
+  "instancelisttoolbar": {
+    "instances": "Instances",
+    "add": "Add",
+    "importModpack": "Import Modpack",
+    "addFolder": "Add Folder",
+    "createNewInstance": "Create New Instance",
+    "search": "Search"
+  },
+  "instancepickerdialog": {
+    "title": "Select Instance",
+    "searchPlaceholder": "Search instances",
+    "cancel": "Cancel"
+  },
+  "instancewidget1x1": {
+    "launchInstance": "Launch Instance"
+  },
+  "instancewidget2x1": {
+    "launchInstance": "Launch Instance"
+  },
+  "quickserverwidget1x1": {
+    "quickJoinServer": "Quick Join Server"
+  },
+  "quickserverwidget2x1": {
+    "quickJoinServer": "Quick Join Server"
+  },
+  "quickworldwidget1x1": {
+    "quickJoinWorld": "Quick Enter World"
+  },
+  "quickworldwidget2x1": {
+    "quickJoinWorld": "Quick Enter World"
+  },
+  "recentplaycard": {
+    "play": "Play",
+    "createShortcut": "Shortcut",
+    "quickPlay": "Quick Play",
+    "favorited": "Favorited",
+    "blocked": "Blocked"
+  },
+  "recentplayssection": {
+    "recentPlays": "Recent Plays"
+  },
+  "serverconnectdialog": {
+    "title": "Enter Server Address",
+    "addressLabel": "Server Address",
+    "addressPlaceholder": "e.g. 127.0.0.1 or play.example.net",
+    "portLabel": "Port",
+    "portPlaceholder": "Default 25565",
+    "description": "After connecting, the game will launch through the selected instance and automatically join this server.",
+    "cancel": "Cancel",
+    "confirm": "OK"
+  },
+  "worldpickerdialog": {
+    "title": "Select Save",
+    "searchPlaceholder": "Search saves",
+    "emptyText": "This instance has no recognized saves",
+    "cancel": "Cancel"
+  },
+  "clock1x1": {},
+  "clock2x1": {},
+  "resourcewidgetview1x1": {},
+  "resourcewidgetview2x1": {},
+  "resourcewidgetview2x2": {},
+  "widgethost": {}
+}
