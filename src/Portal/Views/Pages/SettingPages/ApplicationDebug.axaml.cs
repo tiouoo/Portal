@@ -10,7 +10,7 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Other Settings", "Settings/Other Settings", "ApplicationDebug")]
+[AggregatedSearchPage("pages_otherSettings", "pages_otherSettingsPath", "ApplicationDebug")]
 public partial class ApplicationDebug : Dsc
 {
     public ApplicationDebug()

@@ -103,7 +103,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
             var versions = string.Join("/", File.MinecraftVersions);
 
             var loaders = File.GroupKeys
-                .Select(key => key.Loader == "通用" ? CommonLanguageManager.Instance.modInstall_universalLoader.CurrentValue() : key.Loader)
+                .Select(key => key.Loader == LinguaSentinels.UniversalLoader ? CommonLanguageManager.Instance.modInstall_universalLoader.CurrentValue() : key.Loader)
                 .Where(loader => !string.IsNullOrWhiteSpace(loader))
                 .Distinct()
                 .ToList();
@@ -221,7 +221,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     private static bool IsCompatible(ModVersionFileItem file, MinecraftInstance instance)
     {
         if (!file.MinecraftVersions.Contains(instance.VersionId, StringComparer.OrdinalIgnoreCase)) return false;
-        var compatibleLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != "通用").ToHashSet();
+        var compatibleLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != LinguaSentinels.UniversalLoader).ToHashSet();
         return compatibleLoaders.Count == 0 || (instance.MinecraftEntry is ModifiedMinecraftEntry entry &&
                                                 entry.ModLoaders.Any(loader =>
                                                     compatibleLoaders.Contains(LoaderName(loader.Type))));
@@ -362,17 +362,17 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     {
         if (!candidate.MinecraftVersions.Intersect(file.MinecraftVersions).Any()) return false;
 
-        var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != "通用").Distinct()
+        var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != LinguaSentinels.UniversalLoader).Distinct()
             .ToArray();
         return selectedLoaders.Length == 0 || candidate.GroupKeys.Any(key =>
-            key.Loader == "通用" || selectedLoaders.Contains(key.Loader));
+            key.Loader == LinguaSentinels.UniversalLoader || selectedLoaders.Contains(key.Loader));
     }
 
     private static ModDetailsTarget CreateDetailsTarget(ModVersionFileItem file, ModVersionFileItem dependency)
     {
         var gameVersion = file.MinecraftVersions.Intersect(dependency.MinecraftVersions).FirstOrDefault() ??
                           string.Empty;
-        var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != "通用").ToHashSet();
+        var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != LinguaSentinels.UniversalLoader).ToHashSet();
         var loader = dependency.GroupKeys.Select(key => key.Loader)
             .FirstOrDefault(selectedLoaders.Contains) ?? dependency.GroupKeys.FirstOrDefault()?.Loader;
         return new ModDetailsTarget(dependency.Source, dependency.ProjectId, gameVersion, ToModLoaderType(loader));

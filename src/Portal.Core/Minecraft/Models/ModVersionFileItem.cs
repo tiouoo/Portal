@@ -46,7 +46,7 @@ public sealed record ModVersionFileItem(
     public static ModVersionFileItem From(CurseforgeResourceFile file)
     {
         var versions = file.GameVersions.Where(IsMinecraftVersion).ToList();
-        var loaders = file.GameVersions.Select(LoaderName).OfType<string>().DefaultIfEmpty("通用");
+        var loaders = file.GameVersions.Select(LoaderName).OfType<string>().DefaultIfEmpty(LinguaSentinels.UniversalLoader);
         var enumerable = loaders as string[] ?? loaders.ToArray();
         return new ModVersionFileItem(file.Id.ToString(),
             string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
@@ -77,7 +77,7 @@ public sealed record ModVersionFileItem(
         return loader switch
         {
             ModLoaderType.NeoForge => "NeoForge", ModLoaderType.Forge => "Forge", ModLoaderType.Fabric => "Fabric",
-            ModLoaderType.Quilt => "Quilt", _ => "通用"
+            ModLoaderType.Quilt => "Quilt", _ => LinguaSentinels.UniversalLoader
         };
     }
 

@@ -23,8 +23,8 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("New Tab", "New Tab", "NewTab")]
-[DefaultPage("New Tab")]
+[AggregatedSearchPage("pages_newTab", "pages_newTabPath", "NewTab")]
+[DefaultPage("pages_newTab")]
 public partial class NewTabPage : InstanceListPageBase
 {
     public NewTabViewModel NewTabViewModel;

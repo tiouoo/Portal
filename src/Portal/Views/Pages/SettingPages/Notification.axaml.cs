@@ -7,7 +7,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Notifications", "Settings/Notifications", "Notification")]
+[AggregatedSearchPage("pages_notifications", "pages_notificationsPath", "Notification")]
 public partial class Notification : Dsc
 {
     public Notification()

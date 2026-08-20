@@ -12,8 +12,8 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("Tools", "Tools", "Tools")]
-[DefaultPage("Tools")]
+[AggregatedSearchPage("pages_tools", "pages_toolsPath", "Tools")]
+[DefaultPage("pages_tools")]
 public partial class ToolsPage : Dsc, ITioTabPage
 {
     public ToolsPage()

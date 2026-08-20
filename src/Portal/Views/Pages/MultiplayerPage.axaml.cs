@@ -25,7 +25,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("Multiplayer", "Multiplayer", "Multiplayer")]
+[AggregatedSearchPage("pages_multiplayer", "pages_multiplayerPath", "Multiplayer")]
 public partial class MultiplayerPage : UserControl, ITioTabPage
 {
     public MultiplayerPage() : this(MinecraftEdition.Java)
@@ -1052,7 +1052,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
     private static string FriendlyError(Exception exception)
     {
         return exception is GravityConeException { Code: "INTERNAL_ERROR" } &&
-               exception.Message.Contains("未检测", StringComparison.Ordinal)
+               exception.Message.Contains(LinguaSentinels.NotDetectedMarker, StringComparison.Ordinal)
             ? CommonLanguageManager.Instance.multiplayer_noOpenWorld.CurrentValue()
             : exception.Message;
     }

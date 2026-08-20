@@ -631,7 +631,7 @@ public sealed class ResourceUpdateService
             return new ModVersionFileItem(
                 Id ?? string.Empty,
                 string.IsNullOrWhiteSpace(Name) ? file?.FileName ?? string.Empty : Name,
-                FormatDetails(loaderKeys.Count > 0 ? string.Join(",", loaderKeys.Select(key => key.Loader).Distinct()) : "通用",
+                FormatDetails(loaderKeys.Count > 0 ? string.Join(",", loaderKeys.Select(key => key.Loader).Distinct()) : LinguaSentinels.UniversalLoader,
                     file?.FileName ?? string.Empty, Published, ReleaseType(VersionType)),
                 ReleaseType(VersionType),
                 file?.FileName ?? string.Empty,
@@ -653,7 +653,7 @@ public sealed class ResourceUpdateService
                 "forge" => "Forge",
                 "fabric" => "Fabric",
                 "quilt" => "Quilt",
-                _ => "通用"
+                _ => LinguaSentinels.UniversalLoader
             };
         }
 
@@ -714,7 +714,7 @@ public sealed class ResourceUpdateService
         public ModVersionFileItem ToFileItem()
         {
             var versions = GameVersions?.Where(IsMinecraftVersion).ToList() ?? [];
-            var loaders = GameVersions?.Select(LoaderName).OfType<string>().DefaultIfEmpty("通用").Distinct().ToArray() ?? ["通用"];
+            var loaders = GameVersions?.Select(LoaderName).OfType<string>().DefaultIfEmpty(LinguaSentinels.UniversalLoader).Distinct().ToArray() ?? [LinguaSentinels.UniversalLoader];
             var loaderKeys = loaders.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
                 .ToList();
             return new ModVersionFileItem(Id.ToString(),

@@ -9,6 +9,7 @@ using Portal.Core.Minecraft.Services;
 using Portal.Core.Module;
 using Portal.Views.Pages;
 using Portal.Views.Pages.InstancePages;
+using Portal.Localization;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -42,7 +43,8 @@ public partial class RecentPlayCard : UserControl
         var visible = !ShowQuickPlayWhenPossible || DataContext is RecentPlayItem { CanQuickPlay: true };
         foreach (var item in menu.Items)
         {
-            if (item is MenuItem { Header: string header } menuItem && header == "游玩")
+            if (item is MenuItem { Header: string header } menuItem &&
+                header == WidgetsLanguageManager.Instance.recentplaycard_play.CurrentValue())
             {
                 menuItem.IsVisible = visible;
                 break;

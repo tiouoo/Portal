@@ -15,7 +15,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Shortcuts", "Settings/Shortcuts", "Shortcuts")]
+[AggregatedSearchPage("pages_shortcuts", "pages_shortcutsPath", "Shortcuts")]
 public partial class Shortcuts : Dsc
 {
     public Shortcuts()

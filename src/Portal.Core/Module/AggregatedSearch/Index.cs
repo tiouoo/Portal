@@ -67,8 +67,8 @@ public class Index
             yield return new AggregatedSearchEntry
             {
                 Type = AggregatedSearchEntryType.Page,
-                Title = attr.Title,
-                Description = attr.Path,
+                Title = LocalizationService.ResolveKey(attr.Title),
+                Description = LocalizationService.ResolveKey(attr.Path),
                 IconKey = attr.IconKey,
                 Data = type,
                 TypeDescription = CommonLanguageManager.Instance.aggregatedSearch_page.CurrentValue()

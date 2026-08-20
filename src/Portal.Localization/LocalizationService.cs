@@ -29,4 +29,7 @@ public static class LocalizationService
             manager.UpdateCulture(culture);
         CultureChanged?.Invoke(culture);
     }
+
+    public static string ResolveKey(string key) =>
+        CommonLanguageManager.Instance.GetObservable(key)?.CurrentValue() ?? key;
 }

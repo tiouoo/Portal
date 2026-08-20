@@ -4,7 +4,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Advanced", "Settings/Advanced", "Advanced")]
+[AggregatedSearchPage("pages_advanced", "pages_advancedPath", "Advanced")]
 public partial class Advanced : Dsc
 {
     public Advanced()

@@ -16,7 +16,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Storage", "Settings/Storage", "Storage")]
+[AggregatedSearchPage("pages_storage", "pages_storagePath", "Storage")]
 public partial class Storage : UserControl
 {
     public Storage()

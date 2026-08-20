@@ -8,7 +8,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Download Settings", "Settings/Download Settings", "Download")]
+[AggregatedSearchPage("pages_downloadSettings", "pages_downloadSettingsPath", "Download")]
 public partial class Download : Dsc, INotifyPropertyChanged, IDisposable
 {
     private bool _isDisposed;

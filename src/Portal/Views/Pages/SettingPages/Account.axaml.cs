@@ -18,7 +18,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Account", "Settings/Account", "Account")]
+[AggregatedSearchPage("pages_account", "pages_accountPath", "Account")]
 public partial class Account : Dsc
 {
     public Account()

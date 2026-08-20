@@ -1,6 +1,7 @@
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using Portal.Core.Minecraft.Classes;
+using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Models;
 
@@ -29,7 +30,7 @@ public static class ResourceCompatibility
             return true;
 
         var fileLoaders = file.GroupKeys.Select(key => key.Loader)
-            .Where(loader => loader != "通用")
+            .Where(loader => loader != LinguaSentinels.UniversalLoader)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (fileLoaders.Count == 0)
             return true;

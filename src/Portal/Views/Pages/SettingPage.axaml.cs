@@ -12,7 +12,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
-[DefaultPage("Settings")]
+[DefaultPage("pages_settings")]
 public partial class SettingPage : UserControl, ITioTabPage
 {
     public SettingPageViewModel SettingPageViewModel;

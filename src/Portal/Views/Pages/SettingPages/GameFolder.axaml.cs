@@ -16,7 +16,7 @@ using NewMinecraftFolderViewModel = Portal.Views.Components.Operations.OpenFile.
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Game Folder", "Settings/Game Folder", "GameFolder")]
+[AggregatedSearchPage("pages_gameFolder", "pages_gameFolderPath", "GameFolder")]
 public partial class GameFolder : Dsc
 {
     public GameFolder()

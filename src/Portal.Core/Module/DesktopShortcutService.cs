@@ -94,7 +94,7 @@ public static class DesktopShortcutService
 
 
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        foreach (var candidate in new[] { Path.Combine(home, "Desktop"), Path.Combine(home, "桌面") })
+        foreach (var candidate in new[] { Path.Combine(home, "Desktop"), Path.Combine(home, LinguaSentinels.DesktopDirectory) })
             if (Directory.Exists(candidate))
                 return candidate;
 

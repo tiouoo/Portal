@@ -19,7 +19,7 @@ using TioUi.Shared;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Appearance", "Settings/Appearance", "Appearance")]
+[AggregatedSearchPage("pages_appearance", "pages_appearancePath", "Appearance")]
 public partial class Appearance : Dsc, INotifyPropertyChanged
 {
     private double _currentRenderScaling = 1.0;
