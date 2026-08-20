@@ -13,8 +13,8 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("下载", "下载", "DownloadPage")]
-[DefaultPage("下载")]
+[AggregatedSearchPage("Download", "Download", "DownloadPage")]
+[DefaultPage("Download")]
 public partial class DownloadPage : UserControl, ITioTabPage
 {
     public DownloadPageViewModel DownloadPageViewModel;

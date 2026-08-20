@@ -20,7 +20,7 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("关于应用", "设置/关于应用", "About")]
+[AggregatedSearchPage("About", "Settings/About", "About")]
 public partial class About : Dsc
 {
     public readonly AboutViewModel AboutViewModel;

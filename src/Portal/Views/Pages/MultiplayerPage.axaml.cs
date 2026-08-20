@@ -25,7 +25,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("联机", "联机", "Multiplayer")]
+[AggregatedSearchPage("Multiplayer", "Multiplayer", "Multiplayer")]
 public partial class MultiplayerPage : UserControl, ITioTabPage
 {
     public MultiplayerPage() : this(MinecraftEdition.Java)

@@ -11,8 +11,8 @@ using Tio.Avalonia.Standard.Tab.Entries;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("实例", "实例", "Instances")]
-[DefaultPage("实例")]
+[AggregatedSearchPage("Instances", "Instances", "Instances")]
+[DefaultPage("Instances")]
 public partial class InstancesPage : InstanceListPageBase
 {
     public InstancesPageViewModel InstancesPageViewModel;

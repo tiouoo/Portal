@@ -15,8 +15,8 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("新闻", "新闻", "News")]
-[DefaultPage("新闻")]
+[AggregatedSearchPage("News", "News", "News")]
+[DefaultPage("News")]
 public partial class NewsPage : Dsc, ITioTabPage
 {
     public NewsPage(bool isInset = false)

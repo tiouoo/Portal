@@ -5,7 +5,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("默认行为", "设置/默认行为", "DefaultBehavior")]
+[AggregatedSearchPage("Default Behavior", "Settings/Default Behavior", "DefaultBehavior")]
 public partial class DefaultBehavior : Dsc
 {
     public DefaultBehavior()

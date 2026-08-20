@@ -7,7 +7,7 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("任务", "任务", "Task")]
+[AggregatedSearchPage("Tasks", "Tasks", "Task")]
 public partial class TaskPage : Dsc, ITioTabPage
 {
     public TaskPage()

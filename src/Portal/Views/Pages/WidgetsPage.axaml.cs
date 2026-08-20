@@ -12,8 +12,8 @@ using TioUi.Controls;
 
 namespace Portal.Views.Pages;
 
-[DefaultPage("小组件")]
-[AggregatedSearchPage("小组件", "小组件", "Widgets")]
+[DefaultPage("Widgets")]
+[AggregatedSearchPage("Widgets", "Widgets", "Widgets")]
 public partial class WidgetsPage : UserControl, ITioTabPage
 {
     private readonly WidgetWorkspace? _workspace;

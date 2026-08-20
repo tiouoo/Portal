@@ -4,7 +4,7 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("网络代理", "设置/网络代理", "Agent")]
+[AggregatedSearchPage("Proxy", "Settings/Proxy", "Agent")]
 public partial class Agent : Dsc
 {
     public Agent()

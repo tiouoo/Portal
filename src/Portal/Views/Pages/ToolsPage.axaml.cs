@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,8 +12,8 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("实用工具", "实用工具", "Tools")]
-[DefaultPage("实用工具")]
+[AggregatedSearchPage("Tools", "Tools", "Tools")]
+[DefaultPage("Tools")]
 public partial class ToolsPage : Dsc, ITioTabPage
 {
     public ToolsPage()

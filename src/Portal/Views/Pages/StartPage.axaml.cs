@@ -20,8 +20,8 @@ using AutoCompleteBox = TioUi.Controls.AutoCompleteBox;
 
 namespace Portal.Views.Pages;
 
-[AggregatedSearchPage("起始页", "起始页", "NewTab")]
-[DefaultPage("起始页")]
+[AggregatedSearchPage("Start Page", "Start Page", "NewTab")]
+[DefaultPage("Start Page")]
 public partial class StartPage : InstanceListPageBase
 {
     private readonly StartPageViewModel _viewModel;

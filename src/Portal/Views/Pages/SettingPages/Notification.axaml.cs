@@ -7,7 +7,7 @@ using TioUi.Common.Extensions;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("通知选项", "设置/通知选项", "Notification")]
+[AggregatedSearchPage("Notifications", "Settings/Notifications", "Notification")]
 public partial class Notification : Dsc
 {
     public Notification()

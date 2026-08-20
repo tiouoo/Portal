@@ -19,7 +19,7 @@ using TioUi.Common.Classes;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("Java 环境", "设置/Java 环境", "Java")]
+[AggregatedSearchPage("Java", "Settings/Java", "Java")]
 public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 {
     private const int HostVmInfo = 2;
