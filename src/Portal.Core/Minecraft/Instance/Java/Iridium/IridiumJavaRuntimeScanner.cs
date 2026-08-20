@@ -20,7 +20,7 @@ internal static class IridiumJavaRuntimeScanner
         IProgress<JavaScanProgress>? progress = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await foreach (var java in Provider.EnumerableJavaAsync(fullDiskSearch, progress, cancellationToken))
+        await foreach (var java in Provider.EnumerableJavaAsync(fullDiskSearch, progress, cancellationToken: cancellationToken))
             if (java is not null)
                 yield return Convert(java);
     }
