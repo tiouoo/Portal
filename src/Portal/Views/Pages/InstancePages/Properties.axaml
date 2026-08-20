@@ -180,24 +180,39 @@
                                 </ComboBox>
                             </StackPanel>
                         </StackPanel>
-                        <StackPanel Spacing="12">
+                    </StackPanel>
+                    <StackPanel Spacing="12">
+                        <TextBlock
+                            FontSize="16"
+                            Margin="0,5,0,0"
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_advancedOptions}}" />
+                        <StackPanel Spacing="5">
+                            <Label
+                                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_useAdvancedOptions}}"
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}" />
+                            <ToggleSwitch IsChecked="{Binding Instance.Config.EnableOverrideAdvancedOptions}" />
                             <TextBlock
-                                FontSize="16"
-                                Margin="0,5,0,0"
-                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_advancedOptions}}" />
+                                FontSize="11"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Margin="0,-3,0,0"
+                                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_advancedOptionsHint}}" />
+                        </StackPanel>
+                        <StackPanel IsEnabled="{Binding Instance.Config.EnableOverrideAdvancedOptions}" Spacing="12">
                             <StackPanel Spacing="5">
                                 <Label
-                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_useAdvancedOptions}}"
+                                    Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launcherVisibility}}"
                                     FontSize="13"
                                     Foreground="{DynamicResource InnerForegroundColor}" />
-                                <ToggleSwitch IsChecked="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" />
-                                <TextBlock
-                                    FontSize="11"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Margin="0,-3,0,0"
-                                    Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_advancedOptionsHint}}" />
+                                <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Instance.Config.PortalVisibleMode}">
+                                    <ComboBoxItem Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launcherKeepUnchanged}}" />
+                                    <ComboBoxItem Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launcherExit}}" />
+                                    <ComboBoxItem Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launcherHideAndRestore}}" />
+                                    <ComboBoxItem Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launcherMinimize}}" />
+                                    <ComboBoxItem Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launcherMinimizeAndRestore}}" />
+                                </ComboBox>
                             </StackPanel>
-                            <StackPanel IsEnabled="{Binding Instance.JavaConfig.EnableOverrideAdvancedOptions}" Spacing="12">
+                            <StackPanel IsVisible="{Binding Instance.IsJava}" Spacing="12">
                                 <StackPanel Spacing="5">
                                     <Label
                                         Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_autoSetChinese}}"

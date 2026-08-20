@@ -35,19 +35,6 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_launcherVisibility}}"
-                FontSize="13"
-                Foreground="{DynamicResource InnerForegroundColor}" />
-            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.PortalVisibleMode}">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_keepUnchanged}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_exitLauncher}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_hideAndRestore}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_minimizeLauncher}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_minimizeAndRestore}}" />
-            </ComboBox>
-        </StackPanel>
-        <StackPanel Spacing="5">
-            <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.defaultbehavior_filePicker}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />

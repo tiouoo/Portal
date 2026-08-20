@@ -6,9 +6,10 @@
     x:DataType="settingPages:Advanced"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_title}}" />
         <StackPanel Spacing="5">
@@ -46,6 +47,19 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Margin="0,-3,0,0"
                 Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_gameFullscreenHint}}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_launcherVisibility}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ComboBox HorizontalAlignment="Stretch" SelectedIndex="{Binding Data.ConfigEntry.PortalVisibleMode}">
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_keepUnchanged}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_exitLauncher}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_hideAndRestore}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_minimizeLauncher}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.advanced_minimizeAndRestore}}" />
+            </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label

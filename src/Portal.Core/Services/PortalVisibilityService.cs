@@ -15,7 +15,7 @@ public static class PortalVisibilityService
     private static readonly List<Window> _hiddenWindows = [];
     private static readonly List<(Window Window, WindowState State)> _minimizedWindows = [];
 
-    public static void OnGameStarted()
+    public static void OnGameStarted(PortalVisibleMode mode)
     {
         Dispatcher.UIThread.Post(() =>
         {
@@ -23,7 +23,7 @@ public static class PortalVisibilityService
             if (_runningGames > 1)
                 return;
 
-            _appliedMode = Data.ConfigEntry.PortalVisibleMode;
+            _appliedMode = mode;
             switch (_appliedMode)
             {
                 case PortalVisibleMode.QuitAfterLaunch:

@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Core.Classes;
 using Portal.Core.Json;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance;
@@ -906,6 +907,8 @@ public partial class MinecraftInstanceConfig : ObservableObject
     [ObservableProperty] public partial bool IsFavorite { get; set; }
     [ObservableProperty] public partial DateTime LastPlayTime { get; set; } = DateTime.MinValue;
     [ObservableProperty] public partial Dictionary<string, bool> RecentPlayFavorites { get; set; } = [];
+    [ObservableProperty] public partial bool EnableOverrideAdvancedOptions { get; set; }
+    [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
 
     [ObservableProperty] public partial Dictionary<string, long> PlayTimeByDate { get; set; } = [];
 
@@ -929,7 +932,6 @@ public partial class JavaInstanceConfig : MinecraftInstanceConfig
     [ObservableProperty] public partial GraphicsApi GraphicsBackend { get; set; } = GraphicsApi.Default;
     [ObservableProperty] public partial string? OpenGlRenderer { get; set; }
     [ObservableProperty] public partial string? VulkanRenderer { get; set; }
-    [ObservableProperty] public partial bool EnableOverrideAdvancedOptions { get; set; }
     [ObservableProperty] public partial bool EnableFullscreen { get; set; }
     [ObservableProperty] public partial bool AutoSetChineseLanguage { get; set; } = true;
     [ObservableProperty] public partial bool EnableGameOverlay { get; set; } = true;

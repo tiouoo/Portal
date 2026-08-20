@@ -250,7 +250,13 @@
     "packagedCommand": "Wrapper Command",
     "launchCommandPlaceholder": "Leave empty by default, e.g. cmd /c {command}",
     "windowWidth": "Width ",
-    "windowHeight": "Height "
+    "windowHeight": "Height ",
+    "launcherVisibility": "Launcher Visibility",
+    "launcherKeepUnchanged": "Keep unchanged after the game launches",
+    "launcherExit": "Exit the launcher after the game launches",
+    "launcherHideAndRestore": "Hide after launch, restore when the game exits",
+    "launcherMinimize": "Minimize the launcher after the game launches",
+    "launcherMinimizeAndRestore": "Minimize after launch, restore when the game exits"
   },
   "renameinstance": {
     "title": "Rename Instance",

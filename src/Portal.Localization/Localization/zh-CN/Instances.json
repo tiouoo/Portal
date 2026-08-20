@@ -250,7 +250,13 @@
     "packagedCommand": "包装命令",
     "launchCommandPlaceholder": "默认留空 例：cmd /c {command}",
     "windowWidth": "宽度 ",
-    "windowHeight": "高度 "
+    "windowHeight": "高度 ",
+    "launcherVisibility": "启动器可见性",
+    "launcherKeepUnchanged": "游戏启动后保持不变",
+    "launcherExit": "游戏启动后退出启动器",
+    "launcherHideAndRestore": "游戏启动后隐藏，游戏退出后重新显示",
+    "launcherMinimize": "游戏启动后最小化",
+    "launcherMinimizeAndRestore": "游戏启动后最小化，游戏退出后恢复"
   },
   "renameinstance": {
     "title": "重命名实例",

@@ -89,7 +89,13 @@
     "packagedCommand": "包装命令",
     "launchCommandPlaceholder": "默认留空 例：cmd /c {command}",
     "width": "宽度 ",
-    "height": "高度 "
+    "height": "高度 ",
+    "launcherVisibility": "启动器可见性",
+    "keepUnchanged": "游戏启动后保持不变",
+    "exitLauncher": "游戏启动后退出启动器",
+    "hideAndRestore": "游戏启动后隐藏，游戏退出后重新显示",
+    "minimizeLauncher": "游戏启动后最小化",
+    "minimizeAndRestore": "游戏启动后最小化，游戏退出后恢复"
   },
   "agent": {
     "title": "网络代理",
@@ -123,12 +129,6 @@
     "newTab": "新标签页",
     "homePage": "起始页",
     "widgets": "小组件",
-    "launcherVisibility": "启动器可见性",
-    "keepUnchanged": "游戏启动后保持不变",
-    "exitLauncher": "游戏启动后退出启动器",
-    "hideAndRestore": "游戏启动后隐藏，游戏退出后重新显示",
-    "minimizeLauncher": "游戏启动后最小化",
-    "minimizeAndRestore": "游戏启动后最小化，游戏退出后恢复",
     "filePicker": "文件选择器",
     "systemDialog": "系统对话框",
     "managedDialog": "接管对话框",
