@@ -1,8 +1,7 @@
 using System.Text.RegularExpressions;
-using MinecraftLaunch.Base.Enums;
+using Iridium.Enums.Resources;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
-using MinecraftLaunch.Components.Provider;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -38,25 +37,14 @@ internal static class MinecraftVersionParsing
             match.Groups["patch"].Success ? int.Parse(match.Groups["patch"].Value) : 0, stage);
     }
 
-    public static ModrinthSearchIndex ToModrinthSort(SearchSort sort)
+    public static ResourceSort ToResourceSort(SearchSort sort)
     {
         return sort switch
         {
-            SearchSort.Popularity => ModrinthSearchIndex.Downloads,
-            SearchSort.Updated => ModrinthSearchIndex.DateUpdated,
-            SearchSort.Newest => ModrinthSearchIndex.DatePublished,
-            _ => ModrinthSearchIndex.Relevance
-        };
-    }
-
-    public static SortField ToCurseForgeSort(SearchSort sort)
-    {
-        return sort switch
-        {
-            SearchSort.Popularity => SortField.Popularity,
-            SearchSort.Updated => SortField.LastUpdated,
-            SearchSort.Newest => SortField.ReleasedDate,
-            _ => SortField.Featured
+            SearchSort.Popularity => ResourceSort.Downloads,
+            SearchSort.Updated => ResourceSort.Updated,
+            SearchSort.Newest => ResourceSort.Newest,
+            _ => ResourceSort.Relevance
         };
     }
 }

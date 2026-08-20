@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Iridium.Extensions.Resources;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Interfaces;
@@ -50,6 +51,87 @@ internal static class ModpackInstallation
 
         if (result.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
         StartInstallation(topLevel, viewModel.Target.Source, file, viewModel.IconUrl, result);
+    }
+
+    /// <summary>从搜索结果一键安装整合包：解析最新版本 → 选择目标 → 安装。</summary>
+    public static async Task InstallFromSearchAsync(TopLevel topLevel, JavaResourceDetailsTarget target,
+        string? iconUrl, string? suggestedName)
+    {
+        var loading = new QuickDownloadLoadingDialogViewModel(
+            string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                target.Definition.DisplayName));
+        var loadingDialog = OverlayDialog
+            .ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
+                object?>(loading, topLevel.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
+                    target.Definition.DisplayName), Buttons = DialogButton.None,
+                CanLightDismiss = false, CanResize = false
+            });
+        try
+        {
+            IReadOnlyList<JavaResourceFileItem> files = target.Source switch
+            {
+                ModDetailsSource.Modrinth =>
+                    (await IridiumResourceClients.Modrinth.GetFilesAsync(target.ProjectId))
+                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
+                        long.Parse(target.ProjectId)))
+                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
+                _ => []
+            };
+            var file = files.OrderByDescending(item => item.Published).FirstOrDefault();
+            if (file is null)
+                throw new InvalidDataException(CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());
+            loading.Close();
+            await loadingDialog;
+
+            await InstallFromFileAsync(topLevel, target.Source, file, iconUrl,
+                SanitizeInstanceId(string.IsNullOrWhiteSpace(suggestedName)
+                    ? file.DisplayName
+                    : suggestedName));
+        }
+        catch (OperationCanceledException exception)
+        {
+            Logger.Debug($"[Modpack] One-click install cancelled for {target.ProjectId}: {exception}");
+            loading.Fail();
+            await loadingDialog;
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+            loading.Fail();
+            await loadingDialog;
+        }
+    }
+
+    /// <summary>展示整合包安装对话框（选择目标文件夹与实例 ID），随后直接安装最新版本。</summary>
+    public static async Task InstallFromFileAsync(TopLevel topLevel, ModDetailsSource source,
+        JavaResourceFileItem file, string? iconUrl, string? suggestedInstanceId)
+    {
+        var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
+            ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(suggestedInstanceId ?? file.DisplayName),
+            topLevel.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = CommonLanguageManager.Instance.modpack_downloadStep.CurrentValue(),
+                Buttons = DialogButton.None, CanLightDismiss = false, CanResize = false
+            });
+        if (result is null) return;
+        if (result.Destination == ModpackDownloadDestination.SaveAs)
+        {
+            await SaveAsAsync(topLevel, file);
+            return;
+        }
+
+        if (result.Folder is null || string.IsNullOrWhiteSpace(result.InstanceId)) return;
+        StartInstallation(topLevel, source, file, iconUrl, result);
+    }
+
+    private static string SanitizeInstanceId(string name)
+    {
+        foreach (var invalid in Path.GetInvalidFileNameChars())
+            name = name.Replace(invalid, '_');
+        return name.Trim();
     }
 
     public static async Task InstallLocalAsync(TopLevel topLevel, string archivePath, ModDetailsSource source,

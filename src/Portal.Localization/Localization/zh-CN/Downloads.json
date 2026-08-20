@@ -91,7 +91,11 @@
     "gameVersionPlaceholder": "游戏版本",
     "retry": "重试",
     "unfavoriteToolTip": "取消收藏",
-    "downloadToolTip": "下载"
+    "downloadToolTip": "下载",
+    "installMenu": "安装",
+    "favoriteMenu": "收藏",
+    "unfavoriteMenu": "取消收藏",
+    "showDetailsMenu": "查看详情"
   },
   "javaversiondialog": {
     "installed": "已安装",
@@ -139,7 +143,11 @@
     "gameVersionPlaceholder": "游戏版本",
     "retry": "重试",
     "unfavoriteToolTip": "取消收藏",
-    "downloadToolTip": "下载"
+    "downloadToolTip": "下载",
+    "installMenu": "安装",
+    "favoriteMenu": "收藏",
+    "unfavoriteMenu": "取消收藏",
+    "showDetailsMenu": "查看详情"
   },
   "modpackinstalldialog": {
     "title": "安装整合包",

@@ -8,9 +8,8 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Iridium.Extensions.Resources;
 using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Provider;
 using Portal.Core.App.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
@@ -115,11 +114,11 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
             IReadOnlyList<ModVersionFileItem> files = target.Source switch
             {
                 ModDetailsSource.Modrinth =>
-                    (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
-                    .Select(ModVersionFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(
+                    (await IridiumResourceClients.Modrinth.GetFilesAsync(target.ProjectId))
+                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
                         long.Parse(target.ProjectId)))
-                    .Select(ModVersionFileItem.From).ToArray(),
+                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
                 _ => []
             };
             if (files.Count == 0)
@@ -207,9 +206,7 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
 
 public partial class ModDetailsPageViewModel(ModDetailsTarget target) : ObservableObject, IDisposable
 {
-    private readonly CurseforgeProvider _curseforge = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
-    private readonly ModrinthProvider _modrinth = new();
     private IReadOnlyList<ModVersionGroup> _allVersionGroups = [];
     private bool _buildingFilters;
     private bool _disposed;
@@ -278,36 +275,41 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             var cancellationToken = _disposeCancellation.Token;
             if (target.Source == ModDetailsSource.Modrinth)
             {
-                var project = await _modrinth.SearchByProjectIdAsync(target.ProjectId, cancellationToken);
+                var project = await IridiumResourceClients.Modrinth.GetProjectAsync(target.ProjectId, cancellationToken)
+                              ?? throw new InvalidDataException(
+                                  CommonLanguageManager.Instance.modDetails_noModFiles.CurrentValue());
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.Modrinth,
-                    [project.ProjectId], cancellationToken);
-                Name = project.Name;
-                FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
-                Summary = translations.GetValueOrDefault(project.ProjectId) ?? project.Summary;
+                    [project.Id ?? string.Empty], cancellationToken);
+                Name = project.Title ?? string.Empty;
+                FriendlyName = WikiEntries.FindChineseName(project.Slug ?? string.Empty) ?? project.Title ?? string.Empty;
+                Summary = translations.GetValueOrDefault(project.Id ?? string.Empty) ?? project.Description ?? string.Empty;
                 IconUrl = project.IconUrl;
-                Metadata = FormatMetadata(project.Updated, project.DownloadCount, "Modrinth");
-                AddScreenshots(project.Screenshots);
-                Files = await Task.Run(async () => (await _modrinth.GetModFilesByProjectIdAsync(target.ProjectId,
-                    cancellationToken)).Select(ModVersionFileItem.From).ToArray(), cancellationToken);
+                Metadata = FormatMetadata(project.Updated ?? default, (int)project.Downloads, "Modrinth");
+                AddScreenshots(project.Gallery.Select(gallery => gallery.Url));
+                Files = await Task.Run(async () => (await IridiumResourceClients.Modrinth.GetFilesAsync(
+                    target.ProjectId, cancellationToken: cancellationToken))
+                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
             }
             else
             {
-                var project =
-                    (await _curseforge.GetResourcesByModIdsAsync([long.Parse(target.ProjectId)], cancellationToken))
-                    .First();
+                var project = await IridiumResourceClients.CurseForge.GetProjectAsync(long.Parse(target.ProjectId),
+                    cancellationToken) ?? throw new InvalidDataException(
+                    CommonLanguageManager.Instance.modDetails_noModFiles.CurrentValue());
                 var projectId = project.Id.ToString();
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.CurseForge,
                     [projectId], cancellationToken);
-                Name = project.Name;
-                FriendlyName = WikiEntries.FindChineseName(project.Slug) ?? project.Name;
-                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary;
-                IconUrl = project.IconUrl;
-                Metadata = FormatMetadata(project.DateModified, project.DownloadCount, "CurseForge");
-                AddScreenshots(project.Screenshots);
-                Files = await Task.Run(async () => (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
-                    .Select(ModVersionFileItem.From).ToArray(), cancellationToken);
+                Name = project.Name ?? string.Empty;
+                FriendlyName = WikiEntries.FindChineseName(project.Slug ?? string.Empty) ?? project.Name ?? string.Empty;
+                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary ?? string.Empty;
+                IconUrl = project.Logo?.ThumbnailUrl ?? project.Logo?.Url;
+                Metadata = FormatMetadata(project.DateModified ?? default,
+                    (int)(project.DownloadCount ?? 0), "CurseForge");
+                AddScreenshots(project.Screenshots.Select(screenshot => screenshot.Url ?? screenshot.ThumbnailUrl));
+                Files = await Task.Run(async () => (await IridiumResourceClients.CurseForge.GetFilesAsync(project.Id,
+                        cancellationToken: cancellationToken))
+                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
             }
 
             await BuildFiltersAsync(cancellationToken);
@@ -451,12 +453,12 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         OnPropertyChanged(nameof(LoadMoreVersionGroupsText));
     }
 
-    private void AddScreenshots(IEnumerable<string>? urls)
+    private void AddScreenshots(IEnumerable<string?>? urls)
     {
         if (urls == null) return;
         foreach (var url in urls.Where(url => !string.IsNullOrWhiteSpace(url)).Distinct())
         {
-            Screenshots.Add(url);
+            Screenshots.Add(url!);
             ScreenshotIndices.Add(ScreenshotIndices.Count);
         }
 

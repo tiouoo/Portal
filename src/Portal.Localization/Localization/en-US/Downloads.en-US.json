@@ -91,7 +91,11 @@
     "gameVersionPlaceholder": "Game Version",
     "retry": "Retry",
     "unfavoriteToolTip": "Unfavorite",
-    "downloadToolTip": "Download"
+    "downloadToolTip": "Download",
+    "installMenu": "Install",
+    "favoriteMenu": "Favorite",
+    "unfavoriteMenu": "Unfavorite",
+    "showDetailsMenu": "View Details"
   },
   "javaversiondialog": {
     "installed": "Installed",
@@ -139,7 +143,11 @@
     "gameVersionPlaceholder": "Game Version",
     "retry": "Retry",
     "unfavoriteToolTip": "Unfavorite",
-    "downloadToolTip": "Download"
+    "downloadToolTip": "Download",
+    "installMenu": "Install",
+    "favoriteMenu": "Favorite",
+    "unfavoriteMenu": "Unfavorite",
+    "showDetailsMenu": "View Details"
   },
   "modpackinstalldialog": {
     "title": "Install Modpack",

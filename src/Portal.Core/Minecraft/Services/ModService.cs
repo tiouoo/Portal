@@ -1,10 +1,9 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Flurl.Http;
-using MinecraftLaunch.Utilities;
+using Iridium.Enums.Resources;
+using Iridium.Helpers.Resources;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Services;
 using Portal.Localization;
@@ -14,14 +13,9 @@ namespace Portal.Core.Minecraft.Services;
 
 public sealed class ModService
 {
-    private const string CurseForgeFingerprintEndpoint = "https://api.curseforge.com/v1/fingerprints";
-    private const string CurseForgeModsEndpoint = "https://api.curseforge.com/v1/mods";
-    private const string ModrinthVersionFilesEndpoint = "https://api.modrinth.com/v2/version_files";
-    private const string ModrinthProjectsEndpoint = "https://api.modrinth.com/v2/projects";
     private const int FingerprintBatchSize = 50;
     private const int MaximumConcurrentRequests = 4;
     private const int MaximumConcurrentHashes = 4;
-    private const int HashBufferSize = 81920;
 
     public async Task<IReadOnlyList<ModInfo>> ScanAsync(MinecraftInstance instance,
         CancellationToken cancellationToken = default)
@@ -306,65 +300,58 @@ public sealed class ModService
         var requested = hashes.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (requested.Length == 0) return [];
 
-        Dictionary<string, ModrinthVersion> response;
+        IReadOnlyDictionary<string, Iridium.Models.Modrinth.ModrinthVersion?> response;
         try
         {
-            response = await HttpUtil.Request(ModrinthVersionFilesEndpoint)
-                .WithHeader("Accept", "application/json")
-                .PostJsonAsync(new { hashes = requested, algorithm = "sha1" }, cancellationToken: cancellationToken)
-                .ReceiveJson<Dictionary<string, ModrinthVersion>>();
+            response = await IridiumResourceClients.Modrinth.GetVersionsByHashesAsync(requested,
+                Iridium.Enums.Resources.HashAlgorithm.Sha1, cancellationToken);
         }
-        catch (FlurlHttpException)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            return [];
-        }
-        catch (JsonException)
-        {
+            Logger.Warning($"[ModService] Modrinth metadata lookup failed: {exception}");
             return [];
         }
 
-        var projects =
-            await FetchModrinthProjectsAsync(response.Values.Select(version => version.ProjectId), cancellationToken);
-        return response.ToDictionary(pair => pair.Key, pair =>
-        {
-            projects.TryGetValue(pair.Value.ProjectId ?? string.Empty, out var project);
-            return new ModCacheEntry
+        var versions = response.Values.OfType<Iridium.Models.Modrinth.ModrinthVersion>().ToArray();
+        var projects = await FetchModrinthProjectsAsync(
+            versions.Select(version => version.ProjectId), cancellationToken);
+        return response
+            .Where(pair => pair.Value is not null)
+            .ToDictionary(pair => pair.Key, pair =>
             {
-                DisplayName = project?.Title ?? pair.Value.Name ?? pair.Value.VersionNumber,
-                Description = project?.Description,
-                IconUrl = project?.IconUrl,
-                MetadataFetched = true,
-                Source = "Modrinth",
-                ModrinthProjectId = pair.Value.ProjectId,
-                ModrinthVersionId = pair.Value.Id,
-                ModrinthSlug = project?.Slug
-            };
-        }, StringComparer.OrdinalIgnoreCase);
+                var version = pair.Value!;
+                projects.TryGetValue(version.ProjectId ?? string.Empty, out var project);
+                return new ModCacheEntry
+                {
+                    DisplayName = project?.Title ?? version.Name ?? version.VersionNumber,
+                    Description = project?.Description,
+                    IconUrl = project?.IconUrl,
+                    MetadataFetched = true,
+                    Source = "Modrinth",
+                    ModrinthProjectId = version.ProjectId,
+                    ModrinthVersionId = version.Id,
+                    ModrinthSlug = project?.Slug
+                };
+            }, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static async Task<Dictionary<string, ModrinthProject>> FetchModrinthProjectsAsync(
+    private static async Task<Dictionary<string, Iridium.Models.Modrinth.ModrinthProject>> FetchModrinthProjectsAsync(
         IEnumerable<string?> projectIds,
         CancellationToken cancellationToken)
     {
-        var requested = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal)
-            .ToArray();
+        var requested = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Cast<string>()
+            .Distinct(StringComparer.Ordinal).ToArray();
         if (requested.Length == 0) return [];
 
         try
         {
-            var projects = await HttpUtil.Request(ModrinthProjectsEndpoint)
-                .WithHeader("Accept", "application/json")
-                .SetQueryParam("ids", JsonSerializer.Serialize(requested))
-                .GetJsonAsync<List<ModrinthProject>>(cancellationToken: cancellationToken);
+            var projects = await IridiumResourceClients.Modrinth.GetProjectsAsync(requested, cancellationToken);
             return projects.Where(project => !string.IsNullOrWhiteSpace(project.Id))
                 .ToDictionary(project => project.Id!, StringComparer.Ordinal);
         }
-        catch (FlurlHttpException)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            return [];
-        }
-        catch (JsonException)
-        {
+            Logger.Warning($"[ModService] Modrinth project lookup failed: {exception}");
             return [];
         }
     }
@@ -373,27 +360,21 @@ public sealed class ModService
         CancellationToken cancellationToken)
     {
         var requested = fingerprints.Distinct().ToArray();
-        CurseForgeFingerprintResponse response;
+        Iridium.Models.CurseForge.CurseForgeFingerprintResult response;
         try
         {
-            response = await HttpUtil.Request(CurseForgeFingerprintEndpoint)
-                .WithHeader("Accept", "application/json")
-                .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
-                .PostJsonAsync(new { fingerprints = requested }, cancellationToken: cancellationToken)
-                .ReceiveJson<CurseForgeFingerprintResponse>();
+            response = await IridiumResourceClients.CurseForge.GetFilesByFingerprintsAsync(requested,
+                cancellationToken);
         }
-        catch (FlurlHttpException)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            return [];
-        }
-        catch (JsonException)
-        {
+            Logger.Warning($"[ModService] CurseForge fingerprint lookup failed: {exception}");
             return [];
         }
 
         var matches = response.Data?.ExactMatches
-            ?.Where(match => match.File != null)
-            .ToDictionary(match => match.File!.Fingerprint) ?? [];
+            ?.Where(match => match.File is { FileFingerprint: not null })
+            .ToDictionary(match => match.File!.FileFingerprint!.Value) ?? [];
         var entries = new Dictionary<uint, ModCacheEntry?>();
         foreach (var fingerprint in requested)
         {
@@ -407,8 +388,8 @@ public sealed class ModService
             var entry = new ModCacheEntry
             {
                 DisplayName = match.File.DisplayName,
-                ProjectId = match.File.ModId,
-                FileId = match.File.Id,
+                ProjectId = (int?)match.File.ModId,
+                FileId = (int)match.File.Id,
                 MetadataFetched = true,
                 Source = "CurseForge"
             };
@@ -416,7 +397,7 @@ public sealed class ModService
             {
                 entry = await GetMetadataAsync(match.File, cancellationToken);
             }
-            catch (FlurlHttpException)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
             }
 
@@ -473,20 +454,20 @@ public sealed class ModService
         }
     }
 
-    private static async Task<ModCacheEntry> GetMetadataAsync(CurseForgeFile file, CancellationToken cancellationToken)
+    private static async Task<ModCacheEntry> GetMetadataAsync(Iridium.Models.CurseForge.CurseForgeFile file,
+        CancellationToken cancellationToken)
     {
-        var mod = await $"{CurseForgeModsEndpoint}/{file.ModId}"
-            .WithHeader("Accept", "application/json")
-            .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
-            .GetJsonAsync<CurseForgeModResponse>(cancellationToken: cancellationToken);
+        var mod = file.ModId is { } modId
+            ? await IridiumResourceClients.CurseForge.GetProjectAsync(modId, cancellationToken)
+            : null;
         return new ModCacheEntry
         {
-            DisplayName = mod.Data?.Name ?? file.DisplayName,
-            Description = mod.Data?.Summary,
-            IconUrl = mod.Data?.Logo?.ThumbnailUrl ?? mod.Data?.Logo?.Url,
-            CurseForgeSlug = mod.Data?.Slug,
-            ProjectId = file.ModId,
-            FileId = file.Id,
+            DisplayName = mod?.Name ?? file.DisplayName,
+            Description = mod?.Summary,
+            IconUrl = mod?.Logo?.ThumbnailUrl ?? mod?.Logo?.Url,
+            CurseForgeSlug = mod?.Slug,
+            ProjectId = (int?)file.ModId,
+            FileId = (int)file.Id,
             MetadataFetched = true,
             Source = "CurseForge"
         };
@@ -542,57 +523,11 @@ public sealed class ModService
 
     internal static (string Sha1, uint Fingerprint) ComputeHashes(string path, CancellationToken cancellationToken)
     {
-        using var sha1 = IncrementalHash.CreateHash(HashAlgorithmName.SHA1);
-        var buffer = new byte[HashBufferSize];
-        uint filteredLength = 0;
-        using (var source = File.OpenRead(path))
-        {
-            int read;
-            while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                sha1.AppendData(buffer, 0, read);
-                for (var index = 0; index < read; index++)
-                    if (!IsCurseForgeWhitespace(buffer[index]))
-                        filteredLength++;
-            }
-        }
-
-        var fingerprint = new CurseForgeFingerprint(filteredLength);
-        var filtered = new byte[HashBufferSize];
-        using (var source = File.OpenRead(path))
-        {
-            int read;
-            while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var count = 0;
-                for (var index = 0; index < read; index++)
-                {
-                    var value = buffer[index];
-                    if (!IsCurseForgeWhitespace(value))
-                        filtered[count++] = value;
-                }
-
-                fingerprint.Append(filtered.AsSpan(0, count));
-            }
-        }
-
-        return (Convert.ToHexString(sha1.GetHashAndReset()).ToLowerInvariant(), fingerprint.Complete());
-    }
-
-    private static bool IsCurseForgeWhitespace(byte value)
-    {
-        return value is 0x20 or 0x09 or 0x0a or 0x0d;
-    }
-
-    private static void Mix(ref uint hash, uint value)
-    {
-        value *= 0x5bd1e995u;
-        value ^= value >> 24;
-        value *= 0x5bd1e995u;
-        hash *= 0x5bd1e995u;
-        hash ^= value;
+        cancellationToken.ThrowIfCancellationRequested();
+        var bytes = File.ReadAllBytes(path);
+        cancellationToken.ThrowIfCancellationRequested();
+        return (Convert.ToHexString(SHA1.HashData(bytes)).ToLowerInvariant(),
+            CurseForgeFingerprintHelper.Compute(bytes));
     }
 
     private static ModCacheEntry? ReadCache(uint fingerprint)
@@ -722,50 +657,6 @@ public sealed class ModService
             ? property.GetString()!.Trim()
             : null;
     }
-
-    private struct CurseForgeFingerprint(uint filteredLength)
-    {
-        private uint _hash = 1u ^ filteredLength;
-        private uint _tail;
-        private int _tailLength;
-
-        public void Append(ReadOnlySpan<byte> data)
-        {
-            var index = 0;
-            while (_tailLength > 0 && _tailLength < 4 && index < data.Length)
-                _tail |= (uint)data[index++] << (8 * _tailLength++);
-
-            if (_tailLength == 4)
-            {
-                Mix(ref _hash, _tail);
-                _tail = 0;
-                _tailLength = 0;
-            }
-
-            while (data.Length - index >= 4)
-            {
-                Mix(ref _hash, BitConverter.ToUInt32(data.Slice(index, 4)));
-                index += 4;
-            }
-
-            while (index < data.Length)
-                _tail |= (uint)data[index++] << (8 * _tailLength++);
-        }
-
-        public uint Complete()
-        {
-            if (_tailLength > 0)
-            {
-                _hash ^= _tail;
-                _hash *= 0x5bd1e995u;
-            }
-
-            _hash ^= _hash >> 13;
-            _hash *= 0x5bd1e995u;
-            _hash ^= _hash >> 15;
-            return _hash;
-        }
-    }
 }
 
 public sealed record ModInfo(
@@ -800,64 +691,4 @@ internal sealed record ModCacheEntry
     public string? ModrinthSlug { get; init; }
     public bool IsWikiFriendlyName { get; init; }
     public string? TranslatedDescription { get; set; }
-}
-
-internal sealed class ModrinthVersion
-{
-    [JsonPropertyName("id")] public string? Id { get; init; }
-    [JsonPropertyName("project_id")] public string? ProjectId { get; init; }
-    [JsonPropertyName("name")] public string? Name { get; init; }
-    [JsonPropertyName("version_number")] public string? VersionNumber { get; init; }
-}
-
-internal sealed class ModrinthProject
-{
-    [JsonPropertyName("id")] public string? Id { get; init; }
-    [JsonPropertyName("title")] public string? Title { get; init; }
-    [JsonPropertyName("description")] public string? Description { get; init; }
-    [JsonPropertyName("icon_url")] public string? IconUrl { get; init; }
-    [JsonPropertyName("slug")] public string? Slug { get; init; }
-}
-
-internal sealed class CurseForgeFingerprintResponse
-{
-    [JsonPropertyName("data")] public CurseForgeFingerprintData? Data { get; init; }
-}
-
-internal sealed class CurseForgeFingerprintData
-{
-    [JsonPropertyName("exactMatches")] public List<CurseForgeMatch>? ExactMatches { get; init; }
-}
-
-internal sealed class CurseForgeMatch
-{
-    [JsonPropertyName("id")] public int Id { get; init; }
-    [JsonPropertyName("file")] public CurseForgeFile? File { get; init; }
-}
-
-internal sealed class CurseForgeFile
-{
-    [JsonPropertyName("id")] public int Id { get; init; }
-    [JsonPropertyName("modId")] public int ModId { get; init; }
-    [JsonPropertyName("fileFingerprint")] public uint Fingerprint { get; init; }
-    [JsonPropertyName("displayName")] public string? DisplayName { get; init; }
-}
-
-internal sealed class CurseForgeModResponse
-{
-    [JsonPropertyName("data")] public CurseForgeMod? Data { get; init; }
-}
-
-internal sealed class CurseForgeMod
-{
-    [JsonPropertyName("name")] public string? Name { get; init; }
-    [JsonPropertyName("summary")] public string? Summary { get; init; }
-    [JsonPropertyName("logo")] public CurseForgeLogo? Logo { get; init; }
-    [JsonPropertyName("slug")] public string? Slug { get; init; }
-}
-
-internal sealed class CurseForgeLogo
-{
-    [JsonPropertyName("thumbnailUrl")] public string? ThumbnailUrl { get; init; }
-    [JsonPropertyName("url")] public string? Url { get; init; }
 }

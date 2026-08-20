@@ -1,6 +1,7 @@
-using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Provider;
+using Iridium.Enums.Resources;
+using Iridium.Models.Resources;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Ipc;
 using Portal.Core.Services;
 using Portal.Localization;
@@ -241,9 +242,15 @@ internal static class PortalCliHeadless
 
         try
         {
-            var provider = new ModrinthProvider();
-            var page = provider.SearchPageAsync(query, projectType: projectType, offset: offset, limit: limit)
-                .GetAwaiter().GetResult();
+            var options = new ResourceSearchOptions
+            {
+                Source = ResourceSource.Modrinth,
+                Type = IridiumResourceMapping.ParseResourceType(projectType),
+                Query = query,
+                Page = offset / limit + 1,
+                PageSize = limit
+            };
+            var page = IridiumResourceClients.Search.SearchAsync(options).GetAwaiter().GetResult();
 
             var output = new List<string>
             {
@@ -260,9 +267,9 @@ internal static class PortalCliHeadless
                     output.Add(string.Empty);
 
                 output.Add(string.Format(CommonLanguageManager.Instance.desktop_cli_searchItem.CurrentValue(), index,
-                    item.Name, item.Slug, item.DownloadCount));
+                    item.Title, item.Slug, item.Downloads));
                 output.Add(string.Format(CommonLanguageManager.Instance.desktop_cli_searchLink.CurrentValue(),
-                    item.WebLink));
+                    item.WebsiteUrl ?? string.Empty));
                 index++;
             }
 

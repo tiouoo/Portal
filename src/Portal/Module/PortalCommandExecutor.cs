@@ -1,12 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
+using Iridium.Enums.Resources;
+using Iridium.Extensions.Resources;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Interfaces;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Components.Installer;
-using MinecraftLaunch.Components.Provider;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Const;
 using Portal.Core.Minecraft;
@@ -358,81 +359,96 @@ public static class PortalCommandExecutor
     private static async Task<ResolvedPackFile> ResolveModrinthFileAsync(string query, string? packVersion,
         CancellationToken cancellationToken)
     {
-        var provider = new ModrinthProvider();
-        ModrinthResource? project = null;
+        Iridium.Models.Modrinth.ModrinthProject? project = null;
         try
         {
-            var direct = await provider.SearchByProjectIdAsync(query, cancellationToken);
-            if (string.IsNullOrEmpty(direct.ProjectType) ||
-                string.Equals(direct.ProjectType, "modpack", StringComparison.OrdinalIgnoreCase))
+            var direct = await IridiumResourceClients.Modrinth.GetProjectAsync(query, cancellationToken);
+            if (direct is not null && (string.IsNullOrEmpty(direct.ProjectType) ||
+                                       string.Equals(direct.ProjectType, "modpack", StringComparison.OrdinalIgnoreCase)))
                 project = direct;
         }
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {
         }
 
-        project ??= (await provider.SearchAsync(query, projectType: "modpack", cancellationToken: cancellationToken))
-                    .FirstOrDefault()
+        project ??= await ResolveModrinthProjectBySearchAsync(query, cancellationToken)
                     ?? throw new InvalidOperationException(string.Format(
                         CommonLanguageManager.Instance.modpack_modrinthPackNotFound.CurrentValue(), query));
 
-        ModrinthResourceFile? file = null;
+        Iridium.Models.Modrinth.ModrinthVersion? file = null;
         if (!string.IsNullOrWhiteSpace(packVersion))
         {
             try
             {
-                var byVersionId = await provider.GetModFileByVersionIdAsync(packVersion, cancellationToken);
-                if (byVersionId.ProjectId == project.ProjectId) file = byVersionId;
+                var byVersionId = await IridiumResourceClients.Modrinth.GetVersionAsync(packVersion, cancellationToken);
+                if (byVersionId is { ProjectId: { } projectId } && projectId == project.Id) file = byVersionId;
             }
             catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
             }
 
-            file ??= (await provider.GetModFilesByProjectIdAsync(project.ProjectId, cancellationToken))
+            file ??= (await IridiumResourceClients.Modrinth.GetFilesAsync(project.Id!,
+                        cancellationToken: cancellationToken))
                      .FirstOrDefault(candidate =>
                          string.Equals(candidate.VersionNumber, packVersion, StringComparison.OrdinalIgnoreCase) ||
-                         string.Equals(candidate.DisplayName, packVersion, StringComparison.OrdinalIgnoreCase) ||
-                         string.Equals(candidate.VersionId, packVersion, StringComparison.OrdinalIgnoreCase))
+                         string.Equals(candidate.Name, packVersion, StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(candidate.Id, packVersion, StringComparison.OrdinalIgnoreCase))
                      ?? throw new InvalidOperationException(string.Format(
                          CommonLanguageManager.Instance.modpack_packVersionNotFound.CurrentValue(),
-                         project.Name, packVersion));
+                         project.Title, packVersion));
         }
         else
         {
-            file = (await provider.GetModFilesByProjectIdAsync(project.ProjectId, cancellationToken))
-                   .OrderByDescending(candidate => candidate.Published).FirstOrDefault()
+            file = (await IridiumResourceClients.Modrinth.GetFilesAsync(project.Id!,
+                        cancellationToken: cancellationToken))
+                   .OrderByDescending(candidate => candidate.DatePublished).FirstOrDefault()
                    ?? throw new InvalidOperationException(string.Format(
                        CommonLanguageManager.Instance.modpack_packNoDownloadableVersion.CurrentValue(),
-                       project.Name));
+                       project.Title));
         }
 
-        return new ResolvedPackFile(file.DownloadUrl, file.FileName, file.FileSize,
-            $"{project.Name} {file.VersionNumber}", project.IconUrl);
+        var entry = file.ToResourceFile().PrimaryFile;
+        return new ResolvedPackFile(entry?.Url ?? string.Empty, entry?.FileName ?? string.Empty, entry?.Size ?? 0,
+            $"{project.Title} {file.VersionNumber}", project.IconUrl);
+    }
+
+    private static async Task<Iridium.Models.Modrinth.ModrinthProject?> ResolveModrinthProjectBySearchAsync(
+        string query, CancellationToken cancellationToken)
+    {
+        var result = await IridiumResourceClients.Modrinth.SearchAsync(new Iridium.Models.Resources.ResourceSearchOptions
+        {
+            Source = ResourceSource.Modrinth,
+            Type = ResourceType.Modpack,
+            Query = query,
+            PageSize = 10
+        }, cancellationToken);
+        var hit = result.Hits.FirstOrDefault();
+        return hit?.ProjectId is { } projectId
+            ? await IridiumResourceClients.Modrinth.GetProjectAsync(projectId, cancellationToken)
+            : null;
     }
 
     private static async Task<ResolvedPackFile> ResolveCurseForgeFileAsync(string query, string? packVersion,
         CancellationToken cancellationToken)
     {
-        var provider = new CurseforgeProvider();
-        CurseforgeResource? project = null;
+        Iridium.Models.CurseForge.CurseForgeProject? project = null;
         if (long.TryParse(query, out var modId))
-            project = (await provider.GetResourcesByModIdsAsync([modId], cancellationToken)).FirstOrDefault();
-        project ??= (await provider.SearchResourcesPageAsync(new CurseforgeSearchOptions
+            project = await IridiumResourceClients.CurseForge.GetProjectAsync(modId, cancellationToken);
+        project ??= (await IridiumResourceClients.CurseForge.SearchAsync(new Iridium.Models.Resources.ResourceSearchOptions
                     {
-                        ClassId = 4471,
-                        GameId = 432,
-                        SearchFilter = query,
-                        SortField = SortField.Popularity,
-                        SortOrder = SortOrder.Desc,
+                        Source = ResourceSource.CurseForge,
+                        Type = ResourceType.Modpack,
+                        Query = query,
                         PageSize = 10
                     }, cancellationToken)).Items.FirstOrDefault()
                     ?? throw new InvalidOperationException(string.Format(
                         CommonLanguageManager.Instance.modpack_curseForgePackNotFound.CurrentValue(), query));
 
-        var files = (await provider.GetModFilesAsync(project.Id, cancellationToken)).ToList();
+        var files = (await IridiumResourceClients.CurseForge.GetFilesAsync(project.Id,
+            cancellationToken: cancellationToken)).ToList();
         var file = string.IsNullOrWhiteSpace(packVersion)
-            ? files.Where(candidate => candidate.IsAvailable && !candidate.IsServerPack)
-                  .OrderByDescending(candidate => candidate.Published).FirstOrDefault()
+            ? files.Where(candidate => candidate.IsAvailable != false && candidate.IsServerPack != true)
+                  .OrderByDescending(candidate => candidate.FileDate).FirstOrDefault()
               ?? throw new InvalidOperationException(string.Format(
                   CommonLanguageManager.Instance.modpack_packNoDownloadableFile.CurrentValue(), project.Name))
             : files.FirstOrDefault(candidate =>
@@ -443,12 +459,12 @@ public static class PortalCommandExecutor
                   CommonLanguageManager.Instance.modpack_packFileNotFound.CurrentValue(), project.Name, packVersion));
 
         var url = await ResolveCurseForgeDownloadUrlAsync(file, cancellationToken);
-        return new ResolvedPackFile(url, file.FileName, file.FileLength, $"{project.Name} {file.DisplayName}",
-            project.IconUrl);
+        return new ResolvedPackFile(url, file.FileName ?? string.Empty, file.FileLength ?? 0,
+            $"{project.Name} {file.DisplayName}", project.Logo?.ThumbnailUrl ?? project.Logo?.Url);
     }
 
     private static async Task<string> ResolveCurseForgeDownloadUrlAsync(
-        CurseforgeResourceFile file, CancellationToken cancellationToken)
+        Iridium.Models.CurseForge.CurseForgeFile file, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(file.DownloadUrl)) return file.DownloadUrl;
 
@@ -457,7 +473,7 @@ public static class PortalCommandExecutor
         if (idText.Length <= 4)
             throw new InvalidOperationException(string.Format(
                 CommonLanguageManager.Instance.modpack_curseForgeDownloadUrlFailed.CurrentValue(), file.FileName));
-        var encodedName = Uri.EscapeDataString(file.FileName);
+        var encodedName = Uri.EscapeDataString(file.FileName ?? string.Empty);
         string[] candidates =
         [
             $"https://edge.forgecdn.net/files/{idText[..4]}/{idText[4..]}/{encodedName}",
@@ -489,8 +505,8 @@ public static class PortalCommandExecutor
             var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (segments.Length < 2 || !string.Equals(segments[0], "data", StringComparison.OrdinalIgnoreCase))
                 return null;
-            var project = await new ModrinthProvider().SearchByProjectIdAsync(segments[1], cancellationToken);
-            return project.IconUrl;
+            var project = await IridiumResourceClients.Modrinth.GetProjectAsync(segments[1], cancellationToken);
+            return project?.IconUrl;
         }
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {

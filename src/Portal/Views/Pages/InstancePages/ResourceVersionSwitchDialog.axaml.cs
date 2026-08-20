@@ -4,9 +4,10 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MinecraftLaunch.Components.Provider;
+using Iridium.Extensions.Resources;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
+using Portal.Core.Minecraft.Services;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common;
@@ -72,8 +73,6 @@ public sealed record ResourceVersionItem(ModVersionFileItem File, bool IsCurrent
 
 public partial class ResourceVersionSwitchDialogViewModel : ObservableObject, IDialogContext
 {
-    private readonly CurseforgeProvider _curseforge = new();
-    private readonly ModrinthProvider _modrinth = new();
     private readonly ResourceVersionSwitchTarget _target;
     private List<ResourceVersionItem> _allItems = [];
 
@@ -120,10 +119,11 @@ public partial class ResourceVersionSwitchDialogViewModel : ObservableObject, ID
             IReadOnlyList<ModVersionFileItem> files = _target.Source switch
             {
                 ModDetailsSource.Modrinth =>
-                    (await _modrinth.GetModFilesByProjectIdAsync(_target.ProjectId))
-                    .Select(ModVersionFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await _curseforge.GetModFilesAsync(long.Parse(_target.ProjectId)))
-                    .Select(ModVersionFileItem.From).ToArray(),
+                    (await IridiumResourceClients.Modrinth.GetFilesAsync(_target.ProjectId))
+                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
+                        long.Parse(_target.ProjectId)))
+                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
                 _ => []
             };
 
