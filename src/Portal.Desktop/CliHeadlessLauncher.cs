@@ -25,6 +25,7 @@ internal static class CliHeadlessLauncher
     private sealed class CliSettings
     {
         public List<JavaRuntimeEntry> JavaRuntimes { get; set; } = [];
+        public Dictionary<int, string> JavaVersionDefaultPaths { get; set; } = new();
         public MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
         public int MinecraftMaxMemory { get; set; } = 4096;
         public bool EnableFullscreen { get; set; }
@@ -201,8 +202,10 @@ internal static class CliHeadlessLauncher
 
         try
         {
-            return JsonSerializer.Deserialize<CliSettings>(File.ReadAllText(settingsPath), PortalJson.Options)
-                   ?? settings;
+            var loaded = JsonSerializer.Deserialize<CliSettings>(File.ReadAllText(settingsPath), PortalJson.Options)
+                         ?? settings;
+            loaded.JavaVersionDefaultPaths ??= new();
+            return loaded;
         }
         catch (Exception)
         {
@@ -264,19 +267,37 @@ internal static class CliHeadlessLauncher
         var entry = instance.MinecraftEntry!;
         var javaConfig = instance.JavaConfig;
         var preferred = javaConfig?.EnableSpecificJava == true ? javaConfig.SpecificJavaEntry : null;
-        var candidates = preferred != null ? new List<JavaRuntimeEntry> { preferred } : settings.JavaRuntimes.ToList();
         var requiredVersion = entry.GetAppropriateJavaVersion();
 
-        var javaEntries = candidates.Select(ToJavaEntry).ToList();
-        var ordered = preferred != null ? javaEntries : OrderJavaCandidates(entry, javaEntries);
-        foreach (var candidate in ordered)
+        if (preferred is not null)
         {
-            if (!await JavaRuntimeVerifier.IsUsableAsync(candidate.JavaPath, candidate.MajorVersion))
-                continue;
-            return candidate;
+            if (await JavaRuntimeVerifier.IsUsableAsync(preferred.JavaPath, preferred.MajorVersion))
+                return ToJavaEntry(preferred);
+            throw new MissingJavaVersionException(requiredVersion);
         }
 
-        throw new InvalidOperationException(CommonLanguageManager.Instance.launch_noUsableJava.CurrentValue());
+        var candidates = settings.JavaRuntimes
+            .Where(runtime => runtime.MajorVersion == requiredVersion)
+            .ToList();
+        if (settings.JavaVersionDefaultPaths.TryGetValue(requiredVersion, out var defaultPath) &&
+            !string.IsNullOrWhiteSpace(defaultPath))
+        {
+            var match = candidates.FirstOrDefault(runtime =>
+                string.Equals(runtime.JavaPath, defaultPath, StringComparison.OrdinalIgnoreCase));
+            if (match is not null)
+            {
+                candidates.Remove(match);
+                candidates.Insert(0, match);
+            }
+        }
+
+        foreach (var candidate in candidates)
+        {
+            if (await JavaRuntimeVerifier.IsUsableAsync(candidate.JavaPath, candidate.MajorVersion))
+                return ToJavaEntry(candidate);
+        }
+
+        throw new MissingJavaVersionException(requiredVersion);
     }
 
     private static List<JavaEntry> OrderJavaCandidates(MinecraftEntry minecraft, IReadOnlyList<JavaEntry> javaEntries)
@@ -322,6 +343,7 @@ internal static class CliHeadlessLauncher
                 ? javaConfig.EnableFullscreen
                 : settings.EnableFullscreen,
             JavaRuntimes = settings.JavaRuntimes,
+            JavaVersionDefaults = settings.JavaVersionDefaultPaths,
             WindowWidth = overrideAdvanced && javaConfig != null
                 ? javaConfig.MinecraftWindowWidth
                 : settings.MinecraftWindowWidth,

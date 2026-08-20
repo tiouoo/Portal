@@ -526,6 +526,8 @@
     "installingJava": "Installing Java {0}",
     "autoInstalledJavaIncomplete": "The auto-installed Java {0} module is incomplete (missing jdk.zipfs / jdk.unsupported) and cannot launch Minecraft. Please replace it with a complete Java runtime.",
     "noUsableJava": "No usable Java runtime is available, or all added Java runtimes have incomplete modules (missing jdk.zipfs / jdk.unsupported) and cannot launch Minecraft. Please re-add a complete Java runtime in Settings.",
+    "missingJavaVersion": "This instance requires Java {0}, but no matching Java runtime is selected or installed.",
+    "downloadJava": "Download Java",
     "watchingProcess": "Launch complete, monitoring the Minecraft process",
     "copyLaunchArguments": "Copy Launch Arguments",
     "copyLaunchArgumentsDescription": "Copy the full Java arguments used for this launch.",
@@ -1554,7 +1556,8 @@
     "javaDuplicate": "This Java is already in the list",
     "javaAdded": "Java added",
     "addJavaFailed": "Failed to add Java: {0}",
-    "javaRemoved": "Java removed: {0}"
+    "javaRemoved": "Java removed: {0}",
+    "manualSelectVersionMismatch": "The selected Java is {1}, not the target Java {0}; it has been added to the Java list."
   },
   "javaResourceDetails": {
     "title": "{0} Details",

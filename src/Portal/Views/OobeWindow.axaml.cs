@@ -211,7 +211,6 @@ public partial class OobeWindow : TioWindow
         try
         {
             var result = await JavaRuntimeOperations.ScanAndAddAsync(Data.ConfigEntry.JavaRuntimes);
-            Data.ConfigEntry.DefaultJavaRuntime ??= Data.ConfigEntry.JavaRuntimes.FirstOrDefault();
             ShowJavaStatus(string.Format(CommonLanguageManager.Instance.javaPage_scanComplete.CurrentValue(),
                 result.AddedCount, result.DuplicateCount));
         }
@@ -240,7 +239,6 @@ public partial class OobeWindow : TioWindow
                 return;
             }
 
-            Data.ConfigEntry.DefaultJavaRuntime ??= result.JavaRuntime;
             ShowJavaStatus(result.IsDuplicate
                 ? CommonLanguageManager.Instance.javaPage_javaDuplicate.CurrentValue()
                 : string.Format(CommonLanguageManager.Instance.oobe_javaAdded.CurrentValue(),

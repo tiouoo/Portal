@@ -22,6 +22,7 @@ using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using TioUi.Common.Classes;
 using ModLoaderType = MinecraftLaunch.Base.Enums.ModLoaderType;
 
 namespace Portal.Core.Minecraft;
@@ -29,6 +30,8 @@ namespace Portal.Core.Minecraft;
 public static class MinecraftLaunchService
 {
     public static Func<BedrockInstanceConfig, IBedrockLaunch>? DefaultBedrockLauncherFactory { get; set; }
+
+    public static Action? OpenJavaDownloadPage { get; set; }
 
     public static Task LaunchAsync(MinecraftInstance instance, TopLevel? topLevel, MinecraftLaunchOptions options,
         RecentPlayTarget? target = null)
@@ -226,6 +229,12 @@ public static class MinecraftLaunchService
                 task.Complete();
             Notice(topLevel, CommonLanguageManager.Instance.launch_taskCancelled.CurrentValue(), NotificationType.Information);
         }
+        catch (MissingJavaVersionException exception)
+        {
+            if (!task.IsTerminal)
+                task.Fault(exception);
+            NoticeMissingJava(topLevel, exception);
+        }
         catch (Exception exception)
         {
             if (!task.IsTerminal)
@@ -237,7 +246,11 @@ public static class MinecraftLaunchService
     private static void ThrowIfFailed(ManagedTask task)
     {
         if (task.Exception != null)
+        {
+            if (task.Exception is MissingJavaVersionException missingJavaVersion)
+                throw missingJavaVersion;
             throw new InvalidOperationException(task.Exception.Message, task.Exception);
+        }
         task.CancellationToken.ThrowIfCancellationRequested();
     }
 
@@ -543,35 +556,51 @@ public static class MinecraftLaunchService
         var javaConfig = instance.JavaConfig
                          ?? throw new InvalidOperationException(CommonLanguageManager.Instance.launch_javaConfigMissing.CurrentValue());
         var preferred = javaConfig.EnableSpecificJava ? javaConfig.SpecificJavaEntry : null;
-        var candidates = preferred != null ? [preferred] : options.JavaRuntimes.ToList();
         var requiredVersion = instance.MinecraftEntry!.GetAppropriateJavaVersion();
 
-        var selected = await SelectViableJavaAsync(instance, preferred, candidates, cancellationToken);
-        if (selected is not null) return selected;
-
-        if (options.InstallMissingJava is not null && requiredVersion > 0)
+        if (preferred is not null)
         {
-            context.SetRunning(string.Format(CommonLanguageManager.Instance.launch_installingJava.CurrentValue(), requiredVersion));
-            var installed = await options.InstallMissingJava(requiredVersion,
-                progress => ReportJavaInstallProgress(context, progress), cancellationToken);
-            if (installed is not null)
-            {
-                var usable =
-                    await JavaRuntimeVerifier.IsUsableAsync(installed.JavaPath, installed.MajorVersion,
-                        cancellationToken);
-                if (usable) return ToJavaEntry(installed);
-                throw new InvalidOperationException(
-                    string.Format(CommonLanguageManager.Instance.launch_autoInstalledJavaIncomplete.CurrentValue(), installed.JavaVersion));
-            }
+            var selected = await SelectViableJavaAsync(instance, preferred, [preferred], cancellationToken);
+            if (selected is not null) return selected;
+            throw new MissingJavaVersionException(requiredVersion);
         }
 
+        var candidates = options.JavaRuntimes
+            .Where(runtime => runtime.MajorVersion == requiredVersion)
+            .ToList();
+        MoveDefaultJavaFirst(candidates, options.JavaVersionDefaults, requiredVersion);
 
         if (candidates.Count == 0)
-            candidates = (await JavaRuntimeManager.ScanAsync(cancellationToken)).ToList();
-        selected = await SelectViableJavaAsync(instance, preferred, candidates, cancellationToken);
-        if (selected is not null) return selected;
+        {
+            candidates = (await JavaRuntimeManager.ScanAsync(cancellationToken))
+                .Where(runtime => runtime.MajorVersion == requiredVersion)
+                .ToList();
+            MoveDefaultJavaFirst(candidates, options.JavaVersionDefaults, requiredVersion);
+        }
 
-        throw new InvalidOperationException(CommonLanguageManager.Instance.launch_noUsableJava.CurrentValue());
+        foreach (var candidate in candidates)
+        {
+            if (await JavaRuntimeVerifier.IsUsableAsync(candidate.JavaPath, candidate.MajorVersion, cancellationToken))
+                return ToJavaEntry(candidate);
+        }
+
+        throw new MissingJavaVersionException(requiredVersion);
+    }
+
+    private static void MoveDefaultJavaFirst(List<JavaRuntimeEntry> candidates,
+        IReadOnlyDictionary<int, string> javaVersionDefaults, int majorVersion)
+    {
+        if (!javaVersionDefaults.TryGetValue(majorVersion, out var defaultPath) ||
+            string.IsNullOrWhiteSpace(defaultPath))
+            return;
+
+        var match = candidates.FirstOrDefault(runtime =>
+            string.Equals(runtime.JavaPath, defaultPath, StringComparison.OrdinalIgnoreCase));
+        if (match is null)
+            return;
+
+        candidates.Remove(match);
+        candidates.Insert(0, match);
     }
 
     private static async Task<JavaEntry?> SelectViableJavaAsync(MinecraftInstance instance, JavaRuntimeEntry? preferred,
@@ -987,6 +1016,26 @@ public static class MinecraftLaunchService
         Dispatcher.UIThread.Post(() => topLevel.Notice(message, type));
     }
 
+    private static void NoticeMissingJava(TopLevel? topLevel, MissingJavaVersionException exception)
+    {
+        if (topLevel == null)
+            return;
+
+        Dispatcher.UIThread.Post(() => topLevel.Notice(new NotificationOptions
+        {
+            Content = exception.Message,
+            Type = NotificationType.Error,
+            Expiration = TimeSpan.FromSeconds(10),
+            OperateButtons =
+            [
+                new OperateButtonEntry(CommonLanguageManager.Instance.launch_downloadJava.CurrentValue(), _ =>
+                {
+                    OpenJavaDownloadPage?.Invoke();
+                }, true)
+            ]
+        }));
+    }
+
     private static string GetFailureReason(Exception exception)
     {
         return exception switch
@@ -1053,7 +1102,7 @@ public sealed class MinecraftLaunchOptions
     public bool EnableGameOverlay { get; init; }
     public Action<Process, MinecraftInstance>? ShowGameOverlay { get; init; }
     public IReadOnlyList<JavaRuntimeEntry> JavaRuntimes { get; init; } = [];
-    public JavaRuntimeEntry? DefaultJavaRuntime { get; init; }
+    public IReadOnlyDictionary<int, string> JavaVersionDefaults { get; init; } = new Dictionary<int, string>();
     public int WindowWidth { get; init; }
     public int WindowHeight { get; init; }
     public bool IsFullscreen { get; init; }
