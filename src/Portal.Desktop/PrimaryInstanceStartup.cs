@@ -13,6 +13,7 @@ internal static class PrimaryInstanceStartup
     {
         PortalCommandQueue.Initialize();
         ProtocolRegistration.TryRegisterLinuxOnStartupAsync().GetAwaiter().GetResult();
+        PortalCommandRegistration.RegisterAsync().GetAwaiter().GetResult();
         PackagePathResolver.TryGetBedrockPackagePath(args, out var packagePath);
         if (packagePath != null)
             App.BedrockPackagePath = packagePath;

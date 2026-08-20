@@ -52,6 +52,9 @@
   },
   "desktop": {
     "bedrockFileAssociation_registerFailed": "Failed to register Bedrock pack file association: {0}",
+    "cli_pathUpdateFailed": "Unable to update the user PATH environment variable. {0}{1}",
+    "cli_registered": "Registered the portal command ({0} -> {1}).",
+    "cli_registerFailed": "Failed to register the portal command. {0}{1}",
     "commandService_connectFailed": "Unable to connect to the existing Portal command service. {0}{1}",
     "commandService_connectTimeout": "Timed out connecting to the existing Portal command service. {0}{1}",
     "commandService_invalidPayload": "The command line named pipe received an invalid payload and it was discarded. {0}{1}",

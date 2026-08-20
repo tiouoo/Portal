@@ -18,6 +18,9 @@ internal static class Program
         App.StartupTimestamp = Stopwatch.GetTimestamp();
         Console.OutputEncoding = Encoding.UTF8;
 
+        if (PortalCliHeadless.IsHeadlessCommand(args))
+            Logger.MinimumLevel = Logger.LogLevel.Fatal;
+
         LocalizationInitializer.Initialize();
 
         Logger.Info("Portal MC");
@@ -33,6 +36,12 @@ internal static class Program
         if (args is ["--memory-optimize"])
         {
             Environment.Exit(MemoryOptimizationService.OptimizeCurrentProcessContext());
+            return;
+        }
+
+        if (PortalCliHeadless.TryRun(args, out var exitCode))
+        {
+            Environment.Exit(exitCode);
             return;
         }
 

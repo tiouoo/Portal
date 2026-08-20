@@ -126,14 +126,39 @@ internal static partial class PortalCommandService
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            AttachConsole(AttachParentProcess);
+            EnsureConsoleAttached();
             Console.WriteLine();
         }
 
         Console.WriteLine(message);
     }
 
+    internal static void WriteConsoleLines(IEnumerable<string> lines)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            EnsureConsoleAttached();
+        foreach (var line in lines)
+            Console.WriteLine(line);
+    }
+
+    private static void EnsureConsoleAttached()
+    {
+        AttachConsole(AttachParentProcess);
+        try
+        {
+            var codePage = GetConsoleOutputCP();
+            if (codePage > 0 && codePage != Console.OutputEncoding.CodePage)
+                Console.OutputEncoding = Encoding.GetEncoding((int)codePage);
+        }
+        catch
+        {
+        }
+    }
+
     [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial void AttachConsole(int processId);
+
+    [LibraryImport("kernel32.dll")]
+    private static partial uint GetConsoleOutputCP();
 }
