@@ -2,9 +2,9 @@ using System.Collections.ObjectModel;
 using AsyncImageLoader;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Iridium.Enums.Resources;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Provider;
 using Portal.Core.App.Helpers;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
@@ -53,11 +53,11 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 {
     private const int PageSize = 40;
     private static readonly BoundedCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new(32);
-    private readonly CurseforgeProvider _curseForge = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
-    private readonly ModrinthProvider _modrinth = new();
     private bool _disposed;
+    private CancellationTokenSource? _gameVersionDebounce;
     private bool _initialized;
+    private bool _suppressFilterSearch;
 
     protected JavaResourceSearchViewModel(JavaResourceDefinition definition)
     {
@@ -115,6 +115,8 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     {
         if (_disposed) return;
         _disposed = true;
+        _suppressFilterSearch = true;
+        _gameVersionDebounce?.Cancel();
         _disposeCancellation.Cancel();
         Results.Clear();
         MinecraftVersions.Clear();
@@ -138,20 +140,76 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
     partial void OnSelectedSourceChanged(JavaResourceSearchSource? value)
     {
-        SelectedSort = SortOptions[0];
-        GameVersion = string.Empty;
-        SelectedLoader = Loaders[0];
+        _suppressFilterSearch = true;
+        try
+        {
+            SelectedSort = SortOptions[0];
+            GameVersion = string.Empty;
+            SelectedLoader = Loaders[0];
+        }
+        finally
+        {
+            _suppressFilterSearch = false;
+        }
+
         RestartSearch();
+    }
+
+    partial void OnSelectedSortChanged(ModSearchSort? value)
+    {
+        if (!_initialized || _suppressFilterSearch)
+            return;
+
+        RestartSearch();
+    }
+
+    partial void OnGameVersionChanged(string value)
+    {
+        if (!_initialized || _suppressFilterSearch)
+            return;
+
+        ScheduleGameVersionSearch();
     }
 
     partial void OnSelectedLoaderChanged(ModSearchLoader? value)
     {
+        if (!_initialized || _suppressFilterSearch)
+            return;
+
         if (ShowLoaderFilter) RestartSearch();
     }
 
     partial void OnCurrentPageChanged(int value)
     {
-        if (_initialized && value > 0) _ = SearchAsync();
+        if (_initialized && value > 0) _ = SearchAsync(false);
+    }
+
+    private void ScheduleGameVersionSearch()
+    {
+        if (_disposed) return;
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
+        var previous = Interlocked.Exchange(ref _gameVersionDebounce, cts);
+        previous?.Cancel();
+        _ = RunGameVersionSearchAsync(cts.Token);
+    }
+
+    private async Task RunGameVersionSearchAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(500, cancellationToken);
+            if (_disposed || cancellationToken.IsCancellationRequested || _suppressFilterSearch) return;
+            if (CurrentPage != 1)
+            {
+                CurrentPage = 1;
+                return;
+            }
+
+            await SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     [RelayCommand]
@@ -197,9 +255,8 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         var request = new JavaResourceSearchRequest(Definition.Kind, SelectedSource.Kind, SearchText.Trim(),
             GameVersion.Trim(), ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any,
             SelectedSort.Kind, CurrentPage);
-        JavaResourceSearchPage? cached = null;
-        var renderedCache = isDefaultSearch && Cache.TryGetValue(request, out cached);
-        if (renderedCache && IsCurrent(request)) Apply(cached!);
+        var renderedCache = Cache.TryGetValue(request, out var cached) && cached is not null && IsCurrent(request);
+        if (renderedCache) Apply(cached!);
 
         if (IsCurrent(request))
         {
@@ -213,7 +270,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         try
         {
             var page = await FetchAsync(request, _disposeCancellation.Token);
-            if (isDefaultSearch) Cache.Set(request, page);
+            Cache.Set(request, page);
             if (IsCurrent(request)) Apply(page, renderedCache);
         }
         catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
@@ -232,48 +289,22 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     private async Task<JavaResourceSearchPage> FetchAsync(JavaResourceSearchRequest request,
         CancellationToken cancellationToken)
     {
-        var offset = (request.Page - 1) * PageSize;
-        if (request.Source == SearchSource.Modrinth)
+        var options = new ResourceSearchOptions
         {
-            var page = await _modrinth.SearchPageAsync(request.Query, request.GameVersion,
-                projectType: Definition.ProjectType, modLoader: request.Loader,
-                index: MinecraftVersionParsing.ToModrinthSort(request.Sort), offset: offset, limit: PageSize,
-                cancellationToken: cancellationToken);
-            var items = page.Items.ToArray();
-            var translations = await ProjectTranslationService.GetTranslationsAsync(ProjectTranslationSource.Modrinth,
-                items.Select(item => item.ProjectId), cancellationToken);
-            return new JavaResourceSearchPage(items.Select(item =>
-                    new JavaResourceSearchResultItem(
-                        translations.TryGetValue(item.ProjectId, out var translated)
-                            ? item with { Summary = translated }
-                            : item,
-                        Definition, request.GameVersion, request.Loader)).ToArray(),
-                page.TotalCount);
-        }
-
-        var curseForgePage = await _curseForge.SearchResourcesPageAsync(new CurseforgeSearchOptions
-        {
-            ClassId = Definition.CurseForgeClassId,
-            GameId = Definition.CurseForgeGameId,
-            SearchFilter = request.Query,
+            Source = request.Source == SearchSource.Modrinth ? ResourceSource.Modrinth : ResourceSource.CurseForge,
+            Type = IridiumResourceMapping.ParseResourceType(Definition.ProjectType),
+            Query = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
-            ModLoaderType = request.Loader,
-            SortField = MinecraftVersionParsing.ToCurseForgeSort(request.Sort),
-            SortOrder = SortOrder.Desc,
-            Index = offset,
+            Loader = request.Loader.ToResourceLoader(),
+            Sort = MinecraftVersionParsing.ToResourceSort(request.Sort),
+            Page = request.Page,
             PageSize = PageSize
-        }, cancellationToken);
-        var curseForgeItems = curseForgePage.Items.ToArray();
-        var curseForgeTranslations = await ProjectTranslationService.GetTranslationsAsync(
-            ProjectTranslationSource.CurseForge,
-            curseForgeItems.Select(item => item.Id.ToString()), cancellationToken);
-        return new JavaResourceSearchPage(curseForgeItems.Select(item =>
-                new JavaResourceSearchResultItem(
-                    curseForgeTranslations.TryGetValue(item.Id.ToString(), out var translated)
-                        ? item with { Summary = translated }
-                        : item,
-                    Definition, request.GameVersion, request.Loader)).ToArray(),
-            curseForgePage.TotalCount);
+        };
+        var page = await IridiumResourceClients.Search.SearchAsync(options, cancellationToken);
+        var translated = await IridiumResourceClients.Search.TranslateAsync(page.Items, cancellationToken);
+        return new JavaResourceSearchPage(translated.Select(hit =>
+            new JavaResourceSearchResultItem(hit, Definition, request.GameVersion, request.Loader)).ToArray(),
+            page.TotalCount);
     }
 
     private void Apply(JavaResourceSearchPage page, bool preserveExistingItems = false)
@@ -332,30 +363,16 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
 public sealed partial class JavaResourceSearchResultItem : ObservableObject
 {
-    public JavaResourceSearchResultItem(ModrinthResource item, JavaResourceDefinition definition,
+    public JavaResourceSearchResultItem(ResourceHit hit, JavaResourceDefinition definition,
         string gameVersion, ModLoaderType loader)
     {
-        Name = item.Name;
-        Summary = item.Summary;
-        IconUrl = item.IconUrl;
+        Name = hit.Title ?? string.Empty;
+        Summary = hit.Translation ?? hit.Summary ?? string.Empty;
+        IconUrl = hit.IconUrl;
         Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-            RelativeTime.Format(item.Updated), item.DownloadCount);
-        Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.Modrinth, item.ProjectId,
-            gameVersion, loader);
-        IsFavorite =
-            FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
-    }
-
-    public JavaResourceSearchResultItem(CurseforgeResource item, JavaResourceDefinition definition,
-        string gameVersion, ModLoaderType loader)
-    {
-        Name = item.Name;
-        Summary = item.Summary;
-        IconUrl = item.IconUrl;
-        Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-            RelativeTime.Format(item.DateModified), item.DownloadCount);
-        Target = new JavaResourceDetailsTarget(definition, ModDetailsSource.CurseForge, item.Id.ToString(),
-            gameVersion, loader);
+            RelativeTime.Format(hit.DateModified ?? hit.DateCreated ?? default), hit.Downloads);
+        Target = new JavaResourceDetailsTarget(definition,
+            ModSearchResultItem.ToModDetailsSource(hit.Source), hit.Id, gameVersion, loader);
         IsFavorite =
             FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
     }

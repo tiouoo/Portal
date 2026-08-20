@@ -1,9 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
-using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
-using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -16,6 +14,7 @@ namespace Portal.Views.Pages.DownloadPages;
 
 internal static class DownloadProgressReporter
 {
+    /// <summary>MinecraftLaunch 下载进度 —— 仅供仍使用 ML 下载器的场景（如整合包安装）。</summary>
     public static Action<ResourceDownloadProgressChangedEventArgs> Create(TaskExecutionContext context,
         Func<double, string>? formatSpeed = null)
     {
@@ -41,6 +40,28 @@ internal static class DownloadProgressReporter
                         : string.Format(CommonLanguageManager.Instance.download_speed.CurrentValue(),
                             DefaultDownloader.FormatSize(current.Speed, true)));
                 }
+            }, DispatcherPriority.Background);
+        };
+    }
+
+    /// <summary>Iridium 下载进度 —— 按已完成文件计数汇报。</summary>
+    public static Action<Iridium.Models.Download.ResourceDownloadProgressChangedEventArgs> CreateIridium(
+        TaskExecutionContext context)
+    {
+        Iridium.Models.Download.ResourceDownloadProgressChangedEventArgs? latestProgress = null;
+        var dispatchQueued = 0;
+        return progress =>
+        {
+            if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+
+            Volatile.Write(ref latestProgress, progress);
+            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                Interlocked.Exchange(ref dispatchQueued, 0);
+                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+                if (Volatile.Read(ref latestProgress) is { } current)
+                    context.ReportProgress(current.Progress);
             }, DispatcherPriority.Background);
         };
     }
@@ -79,22 +100,30 @@ internal static class DownloadTasks
         {
             context.SetRunning(string.Format(CommonLanguageManager.Instance.download_downloading.CurrentValue(),
                 fileName));
-            var request = new DownloadRequest(downloadUrl, destination, fileSize)
+            var request = new Iridium.Models.Download.DownloadRequest
             {
-                ProgressChanged = DownloadProgressReporter.Create(context, formatSpeed)
+                Url = downloadUrl,
+                LocalPath = destination,
+                Size = fileSize,
+                ProgressChanged = DownloadProgressReporter.CreateIridium(context)
             };
-            var result = await new DefaultDownloader().DownloadAsync(request, context.CancellationToken);
-            if (result.Type == DownloadResultType.Cancelled)
+            var result = await new Iridium.Download.DefaultDownloader().DownloadAsync(request,
+                context.CancellationToken);
+            if (result.SuccessCount > 0)
+            {
+                if (afterDownload is not null) await afterDownload(context);
+                context.ReportProgress(1);
+                context.SetDescription(string.IsNullOrEmpty(completedText)
+                    ? CommonLanguageManager.Instance.download_complete.CurrentValue()
+                    : completedText);
+                return;
+            }
+
+            if (context.Task.IsCancellationRequested || context.CancellationToken.IsCancellationRequested)
                 throw new OperationCanceledException(context.CancellationToken);
-            if (result.Type != DownloadResultType.Successful)
-                throw result.Exception ?? new IOException(string.IsNullOrEmpty(failureMessage)
-                    ? CommonLanguageManager.Instance.download_failed.CurrentValue()
-                    : failureMessage);
-            if (afterDownload is not null) await afterDownload(context);
-            context.ReportProgress(1);
-            context.SetDescription(string.IsNullOrEmpty(completedText)
-                ? CommonLanguageManager.Instance.download_complete.CurrentValue()
-                : completedText);
+            throw result.Exceptions.FirstOrDefault() ?? new IOException(string.IsNullOrEmpty(failureMessage)
+                ? CommonLanguageManager.Instance.download_failed.CurrentValue()
+                : failureMessage);
         });
         task.Start();
         _ = ObserveAsync(task, topLevel, fileName);

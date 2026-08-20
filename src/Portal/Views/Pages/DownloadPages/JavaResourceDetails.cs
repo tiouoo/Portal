@@ -7,9 +7,10 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Iridium.Enums.Resources;
+using Iridium.Extensions.Resources;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Network;
-using MinecraftLaunch.Components.Provider;
 using Portal.Core.App.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
@@ -42,9 +43,7 @@ public sealed record JavaResourceDetailsTarget(
 public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTarget target)
     : ObservableObject, IDisposable
 {
-    private readonly CurseforgeProvider _curseforge = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
-    private readonly ModrinthProvider _modrinth = new();
     private IReadOnlyList<JavaResourceVersionGroup> _allVersionGroups = [];
     private bool _buildingFilters;
     private bool _disposed;
@@ -112,38 +111,42 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
             var cancellationToken = _disposeCancellation.Token;
             if (Target.Source == ModDetailsSource.Modrinth)
             {
-                var project = await _modrinth.SearchByProjectIdAsync(Target.ProjectId, cancellationToken);
+                var project = await IridiumResourceClients.Modrinth.GetProjectAsync(Target.ProjectId, cancellationToken)
+                              ?? throw new InvalidDataException(
+                                  CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.Modrinth,
-                    [project.ProjectId], cancellationToken);
-                Name = project.Name;
-                Summary = translations.GetValueOrDefault(project.ProjectId) ?? project.Summary;
+                    [project.Id ?? string.Empty], cancellationToken);
+                Name = project.Title ?? string.Empty;
+                Summary = translations.GetValueOrDefault(project.Id ?? string.Empty) ?? project.Description ?? string.Empty;
                 IconUrl = project.IconUrl;
                 Metadata =
                     string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-                        RelativeTime.Format(project.Updated), project.DownloadCount);
-                AddScreenshots(project.Screenshots);
-                AllFiles = await Task.Run(async () => (await _modrinth.GetModFilesByProjectIdAsync(Target.ProjectId,
-                    cancellationToken)).Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
+                        RelativeTime.Format(project.Updated ?? default), project.Downloads);
+                AddScreenshots(project.Gallery.Select(gallery => gallery.Url));
+                AllFiles = await Task.Run(async () => (await IridiumResourceClients.Modrinth.GetFilesAsync(
+                        Target.ProjectId, cancellationToken: cancellationToken))
+                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
             }
             else
             {
-                var project = (await _curseforge.GetResourcesByModIdsAsync([long.Parse(Target.ProjectId)],
-                    cancellationToken)).First();
+                var project = await IridiumResourceClients.CurseForge.GetProjectAsync(long.Parse(Target.ProjectId),
+                    cancellationToken) ?? throw new InvalidDataException(
+                    CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());
                 var projectId = project.Id.ToString();
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.CurseForge,
                     [projectId], cancellationToken);
-                Name = project.Name;
-                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary;
-                IconUrl = project.IconUrl;
+                Name = project.Name ?? string.Empty;
+                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary ?? string.Empty;
+                IconUrl = project.Logo?.ThumbnailUrl ?? project.Logo?.Url;
                 Metadata =
                     string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-                        RelativeTime.Format(project.DateModified), project.DownloadCount);
-                AddScreenshots(project.Screenshots);
-                AllFiles = await Task.Run(async () =>
-                    (await _curseforge.GetModFilesAsync(project.Id, cancellationToken))
-                    .Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
+                        RelativeTime.Format(project.DateModified ?? default), project.DownloadCount ?? 0);
+                AddScreenshots(project.Screenshots.Select(screenshot => screenshot.Url ?? screenshot.ThumbnailUrl));
+                AllFiles = await Task.Run(async () => (await IridiumResourceClients.CurseForge.GetFilesAsync(
+                        project.Id, cancellationToken: cancellationToken))
+                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
             }
 
             await BuildVersionGroupsAsync(cancellationToken);
@@ -253,12 +256,12 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
         return match.Success ? $"{match.Groups[1].Value}.{match.Groups[2].Value}" : null;
     }
 
-    private void AddScreenshots(IEnumerable<string>? urls)
+    private void AddScreenshots(IEnumerable<string?>? urls)
     {
         if (urls is null) return;
         foreach (var url in urls.Where(url => !string.IsNullOrWhiteSpace(url)).Distinct())
         {
-            Screenshots.Add(url);
+            Screenshots.Add(url!);
             ScreenshotIndices.Add(ScreenshotIndices.Count);
         }
 
@@ -310,35 +313,31 @@ public sealed record JavaResourceFileItem(
     DateTime Published,
     IReadOnlyList<string> MinecraftVersions)
 {
-    public static JavaResourceFileItem From(ModrinthResourceFile file)
+    public static JavaResourceFileItem From(ResourceFile file)
     {
-        return new JavaResourceFileItem(file.VersionId,
-            string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-            FormatDetails(file.FileName, file.Published, file.ReleaseType), file.FileName, file.DownloadUrl,
-            file.FileSize, file.Published, file.MinecraftVersions.ToArray());
+        var fileName = file.PrimaryFile?.FileName ?? string.Empty;
+        return new JavaResourceFileItem(file.Id,
+            string.IsNullOrWhiteSpace(file.Name) ? fileName : file.Name,
+            FormatDetails(fileName, file.Published, file.ReleaseType), fileName,
+            file.PrimaryFile?.Url ?? string.Empty, file.PrimaryFile?.Size ?? 0,
+            file.Published ?? default, file.GameVersions.Where(IsMinecraftVersion).ToArray());
     }
 
-    public static JavaResourceFileItem From(CurseforgeResourceFile file)
+    private static string FormatDetails(string fileName, DateTime? published,
+        Iridium.Enums.Resources.ReleaseType releaseType)
     {
-        return new JavaResourceFileItem(file.Id.ToString(),
-            string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-            FormatDetails(file.FileName, file.Published, file.ReleaseType), file.FileName, file.DownloadUrl,
-            file.FileLength, file.Published, file.GameVersions.Where(IsMinecraftVersion).ToArray());
+        return $"{fileName}·{RelativeTime.Format(published ?? default)}·{ReleaseType(releaseType)}";
     }
 
-    private static string FormatDetails(string fileName, DateTime published, FileReleaseType releaseType)
-    {
-        return $"{fileName}·{RelativeTime.Format(published)}·{ReleaseType(releaseType)}";
-    }
-
-    private static string ReleaseType(FileReleaseType type)
+    private static string ReleaseType(Iridium.Enums.Resources.ReleaseType type)
     {
         return type switch
         {
-            FileReleaseType.Release => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
-            FileReleaseType.Beta => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
-            FileReleaseType.Alpha => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
-            _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
+            Iridium.Enums.Resources.ReleaseType.Beta =>
+                CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
+            Iridium.Enums.Resources.ReleaseType.Alpha =>
+                CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
+            _ => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue()
         };
     }
 
@@ -371,11 +370,11 @@ public static class JavaResourceDownload
             IReadOnlyList<JavaResourceFileItem> files = target.Source switch
             {
                 ModDetailsSource.Modrinth =>
-                    (await new ModrinthProvider().GetModFilesByProjectIdAsync(target.ProjectId))
-                    .Select(JavaResourceFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await new CurseforgeProvider().GetModFilesAsync(
+                    (await IridiumResourceClients.Modrinth.GetFilesAsync(target.ProjectId))
+                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
                         long.Parse(target.ProjectId)))
-                    .Select(JavaResourceFileItem.From).ToArray(),
+                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
                 _ => []
             };
             if (files.Count == 0)

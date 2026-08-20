@@ -1,12 +1,13 @@
 ﻿using System.Collections.Concurrent;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Flurl.Http;
+using Iridium.Enums.Resources;
+using Iridium.Extensions.Resources;
+using Iridium.Models.CurseForge;
+using Iridium.Models.Modrinth;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
 using Portal.Localization;
-using MinecraftLaunch.Utilities;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Core.Minecraft.Services;
 
@@ -16,10 +17,6 @@ namespace Portal.Core.Minecraft.Services;
 /// </summary>
 public sealed class ResourceUpdateService
 {
-    private const string ModrinthVersionFilesEndpoint = "https://api.modrinth.com/v2/version_files";
-    private const string ModrinthUpdateEndpoint = "https://api.modrinth.com/v2/version_files/update";
-    private const string CurseForgeFingerprintEndpoint = "https://api.curseforge.com/v1/fingerprints";
-    private const string CurseForgeModsEndpoint = "https://api.curseforge.com/v1/mods";
     private const int MaximumConcurrentRequests = 4;
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(60);
     private static readonly ConcurrentDictionary<string, (ResourceUpdateResult Result, DateTime CheckedAt)> Cache =
@@ -295,13 +292,12 @@ public sealed class ResourceUpdateService
                 await NetworkSemaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var response = await HttpUtil.Request(ModrinthVersionFilesEndpoint)
-                        .WithHeader("Accept", "application/json")
-                        .PostJsonAsync(new { hashes = batch, algorithm = "sha1" }, cancellationToken: cancellationToken)
-                        .ReceiveJson<Dictionary<string, ModrinthIdentityVersion>>();
+                    var response = await IridiumResourceClients.Modrinth.GetVersionsByHashesAsync(batch,
+                        HashAlgorithm.Sha1, cancellationToken);
                     foreach (var hash in batch)
                     {
-                        if (response.TryGetValue(hash, out var version) && version is { Id: { Length: > 0 }, ProjectId: { Length: > 0 } })
+                        if (response.TryGetValue(hash, out var version) &&
+                            version is { Id: { Length: > 0 }, ProjectId: { Length: > 0 } })
                         {
                             result[hash] = (version.ProjectId, version.Id);
                             var entry = new ModCacheEntry
@@ -323,11 +319,9 @@ public sealed class ResourceUpdateService
                     NetworkSemaphore.Release();
                 }
             }
-            catch (FlurlHttpException)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
-            }
-            catch (JsonException)
-            {
+                Logger.Warning($"[UpdateCheck] Modrinth identity lookup failed: {exception}");
             }
         }
 
@@ -348,16 +342,14 @@ public sealed class ResourceUpdateService
                 await NetworkSemaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var response = await HttpUtil.Request(CurseForgeFingerprintEndpoint)
-                        .WithHeader("Accept", "application/json")
-                        .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
-                        .PostJsonAsync(new { fingerprints = batch }, cancellationToken: cancellationToken)
-                        .ReceiveJson<ResCurseForgeFingerprintResponse>();
+                    var response = await IridiumResourceClients.CurseForge.GetFilesByFingerprintsAsync(batch,
+                        cancellationToken);
                     foreach (var match in response.Data?.ExactMatches ?? [])
                     {
-                        if (match.File is null)
+                        if (match.File is not { FileFingerprint: { } fingerprint } file)
                             continue;
-                        result[match.File.Fingerprint] = (match.File.ModId, match.File.Id);
+                        if (file.ModId is { } modId)
+                            result[fingerprint] = ((int)modId, (int)file.Id);
                     }
                 }
                 finally
@@ -365,11 +357,9 @@ public sealed class ResourceUpdateService
                     NetworkSemaphore.Release();
                 }
             }
-            catch (FlurlHttpException)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
-            }
-            catch (JsonException)
-            {
+                Logger.Warning($"[UpdateCheck] CurseForge fingerprint lookup failed: {exception}");
             }
         }
 
@@ -383,6 +373,7 @@ public sealed class ResourceUpdateService
         if (hashes.Length == 0)
             return result;
 
+        var loader = IridiumResourceMapping.ParseResourceLoader(loaders.FirstOrDefault() ?? string.Empty);
         foreach (var batch in hashes.Distinct(StringComparer.OrdinalIgnoreCase).Chunk(50))
         {
             try
@@ -390,20 +381,13 @@ public sealed class ResourceUpdateService
                 await NetworkSemaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var response = await HttpUtil.Request(ModrinthUpdateEndpoint)
-                        .WithHeader("Accept", "application/json")
-                        .PostJsonAsync(new
-                        {
-                            hashes = batch,
-                            algorithm = "sha1",
-                            game_versions = new[] { gameVersion },
-                            loaders
-                        }, cancellationToken: cancellationToken)
-                        .ReceiveJson<Dictionary<string, ModrinthUpdateVersion>>();
+                    var response = await IridiumResourceClients.Modrinth.CheckForUpdatesAsync(batch, gameVersion,
+                        loader, HashAlgorithm.Sha1, cancellationToken);
                     foreach (var hash in batch)
                     {
-                        if (response.TryGetValue(hash, out var version))
-                            result[hash] = version.ToFileItem();
+                        if (response.TryGetValue(hash, out var versions) &&
+                            versions.FirstOrDefault() is { } version)
+                            result[hash] = ModVersionFileItem.From(version.ToResourceFile());
                     }
                 }
                 finally
@@ -411,11 +395,9 @@ public sealed class ResourceUpdateService
                     NetworkSemaphore.Release();
                 }
             }
-            catch (FlurlHttpException)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
-            }
-            catch (JsonException)
-            {
+                Logger.Warning($"[UpdateCheck] Modrinth update lookup failed: {exception}");
             }
         }
 
@@ -429,7 +411,7 @@ public sealed class ResourceUpdateService
         if (fingerprints.Length == 0 || CredentialsService.CurseForgeApiKey is null)
             return result;
 
-        var matches = new Dictionary<uint, (int ModId, int CurrentFileId)>();
+        var matches = new Dictionary<uint, (long ModId, long CurrentFileId)>();
         foreach (var batch in fingerprints.Distinct().Chunk(50))
         {
             try
@@ -437,16 +419,13 @@ public sealed class ResourceUpdateService
                 await NetworkSemaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var response = await HttpUtil.Request(CurseForgeFingerprintEndpoint)
-                        .WithHeader("Accept", "application/json")
-                        .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
-                        .PostJsonAsync(new { fingerprints = batch }, cancellationToken: cancellationToken)
-                        .ReceiveJson<ResCurseForgeFingerprintResponse>();
+                    var response = await IridiumResourceClients.CurseForge.GetFilesByFingerprintsAsync(batch,
+                        cancellationToken);
                     foreach (var match in response.Data?.ExactMatches ?? [])
                     {
-                        if (match.File is null)
+                        if (match.File is not { FileFingerprint: { } fingerprint, ModId: { } modId } file)
                             continue;
-                        matches[match.File.Fingerprint] = (match.File.ModId, match.File.Id);
+                        matches[fingerprint] = (modId, file.Id);
                     }
                 }
                 finally
@@ -454,11 +433,9 @@ public sealed class ResourceUpdateService
                     NetworkSemaphore.Release();
                 }
             }
-            catch (FlurlHttpException)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
-            }
-            catch (JsonException)
-            {
+                Logger.Warning($"[UpdateCheck] CurseForge fingerprint lookup failed: {exception}");
             }
         }
 
@@ -475,7 +452,7 @@ public sealed class ResourceUpdateService
         return result;
     }
 
-    private static async Task<ModVersionFileItem?> FindLatestCurseForgeFileAsync(int modId, int currentFileId,
+    private static async Task<ModVersionFileItem?> FindLatestCurseForgeFileAsync(long modId, long currentFileId,
         string gameVersion, IReadOnlyList<string> loaders, CancellationToken cancellationToken)
     {
         try
@@ -483,11 +460,7 @@ public sealed class ResourceUpdateService
             await NetworkSemaphore.WaitAsync(cancellationToken);
             try
             {
-                var response = await HttpUtil.Request($"{CurseForgeModsEndpoint}/{modId}")
-                    .WithHeader("Accept", "application/json")
-                    .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
-                    .GetJsonAsync<ResCurseForgeModResponse>(cancellationToken: cancellationToken);
-                var data = response.Data;
+                var data = await IridiumResourceClients.CurseForge.GetProjectAsync(modId, cancellationToken);
                 if (data?.LatestFilesIndexes is null)
                     return null;
 
@@ -498,29 +471,26 @@ public sealed class ResourceUpdateService
                     .Where(index => index.FileId != currentFileId)
                     .OrderByDescending(index => index.FileId)
                     .FirstOrDefault();
-                if (targetIndex is null)
+                if (targetIndex?.FileId is not { } targetFileId)
                     return null;
 
-                var file = data.LatestFiles?.FirstOrDefault(candidate => candidate.Id == targetIndex.FileId);
-                file ??= await FetchCurseForgeFileAsync(modId, targetIndex.FileId, cancellationToken);
-                return file is null ? null : file.ToFileItem();
+                var file = data.LatestFiles?.FirstOrDefault(candidate => candidate.Id == targetFileId);
+                file ??= await FetchCurseForgeFileAsync(modId, targetFileId, cancellationToken);
+                return file is null ? null : ModVersionFileItem.From(file.ToResourceFile());
             }
             finally
             {
                 NetworkSemaphore.Release();
             }
         }
-        catch (FlurlHttpException)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            return null;
-        }
-        catch (JsonException)
-        {
+            Logger.Warning($"[UpdateCheck] CurseForge latest file lookup failed: {exception}");
             return null;
         }
     }
 
-    private static async Task<ResCurseForgeFile?> FetchCurseForgeFileAsync(int modId, int fileId,
+    private static async Task<CurseForgeFile?> FetchCurseForgeFileAsync(long modId, long fileId,
         CancellationToken cancellationToken)
     {
         try
@@ -528,23 +498,16 @@ public sealed class ResourceUpdateService
             await NetworkSemaphore.WaitAsync(cancellationToken);
             try
             {
-                var response = await HttpUtil.Request($"{CurseForgeModsEndpoint}/{modId}/files/{fileId}")
-                    .WithHeader("Accept", "application/json")
-                    .WithHeader("x-api-key", CredentialsService.CurseForgeApiKey!)
-                    .GetJsonAsync<ResCurseForgeFileResponse>(cancellationToken: cancellationToken);
-                return response.Data;
+                return await IridiumResourceClients.CurseForge.GetFileAsync(modId, fileId, cancellationToken);
             }
             finally
             {
                 NetworkSemaphore.Release();
             }
         }
-        catch (FlurlHttpException)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            return null;
-        }
-        catch (JsonException)
-        {
+            Logger.Warning($"[UpdateCheck] CurseForge file lookup failed: {exception}");
             return null;
         }
     }
@@ -591,7 +554,7 @@ public sealed class ResourceUpdateService
         return separator > 0 && string.Equals(key[..separator], filePath, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string? LoaderName(int modLoader)
+    private static string? LoaderName(int? modLoader)
     {
         return modLoader switch
         {
@@ -601,180 +564,5 @@ public sealed class ResourceUpdateService
             6 => "neoforge",
             _ => null
         };
-    }
-
-    private sealed class ModrinthIdentityVersion
-    {
-        [JsonPropertyName("id")] public string? Id { get; init; }
-        [JsonPropertyName("project_id")] public string? ProjectId { get; init; }
-    }
-
-    private sealed class ModrinthUpdateVersion
-    {
-        [JsonPropertyName("id")] public string? Id { get; init; }
-        [JsonPropertyName("project_id")] public string? ProjectId { get; init; }
-        [JsonPropertyName("name")] public string? Name { get; init; }
-        [JsonPropertyName("version_number")] public string? VersionNumber { get; init; }
-        [JsonPropertyName("date_published")] public DateTime Published { get; init; }
-        [JsonPropertyName("version_type")] public string? VersionType { get; init; }
-        [JsonPropertyName("game_versions")] public List<string>? GameVersions { get; init; }
-        [JsonPropertyName("loaders")] public List<string>? Loaders { get; init; }
-        [JsonPropertyName("files")] public List<ModrinthUpdateFile>? Files { get; init; }
-
-        public ModVersionFileItem ToFileItem()
-        {
-            var file = Files?.FirstOrDefault(candidate => candidate.IsPrimary) ?? Files?.FirstOrDefault();
-            var minecraftVersions = GameVersions?.ToArray() ?? [];
-            var loaderKeys = Loaders?.Where(loader => loader is not null)
-                .SelectMany(loader => minecraftVersions.Select(version => new ModVersionGroupKey(LoaderDisplayName(loader), version)))
-                .ToList() ?? [];
-            return new ModVersionFileItem(
-                Id ?? string.Empty,
-                string.IsNullOrWhiteSpace(Name) ? file?.FileName ?? string.Empty : Name,
-                FormatDetails(loaderKeys.Count > 0 ? string.Join(",", loaderKeys.Select(key => key.Loader).Distinct()) : LinguaSentinels.UniversalLoader,
-                    file?.FileName ?? string.Empty, Published, ReleaseType(VersionType)),
-                ReleaseType(VersionType),
-                file?.FileName ?? string.Empty,
-                file?.Url ?? string.Empty,
-                file?.Size ?? 0,
-                Published,
-                minecraftVersions,
-                loaderKeys,
-                ModDetailsSource.Modrinth,
-                ProjectId ?? string.Empty,
-                []);
-        }
-
-        private static string LoaderDisplayName(string loader)
-        {
-            return loader.ToLowerInvariant() switch
-            {
-                "neoforge" => "NeoForge",
-                "forge" => "Forge",
-                "fabric" => "Fabric",
-                "quilt" => "Quilt",
-                _ => LinguaSentinels.UniversalLoader
-            };
-        }
-
-        private static string ReleaseType(string? versionType)
-        {
-            return versionType switch
-            {
-                "release" => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
-                "beta" => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
-                "alpha" => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
-                _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
-            };
-        }
-
-        private static string FormatDetails(string loader, string fileName, DateTime published, string releaseType)
-        {
-            return $"{loader}·{fileName}·{Portal.Core.App.Helpers.RelativeTime.Format(published)}·{releaseType}";
-        }
-    }
-
-    private sealed class ModrinthUpdateFile
-    {
-        [JsonPropertyName("filename")] public string? FileName { get; init; }
-        [JsonPropertyName("url")] public string? Url { get; init; }
-        [JsonPropertyName("size")] public long Size { get; init; }
-        [JsonPropertyName("primary")] public bool IsPrimary { get; init; }
-    }
-
-    private sealed class ResCurseForgeFingerprintResponse
-    {
-        [JsonPropertyName("data")] public ResCurseForgeFingerprintData? Data { get; init; }
-    }
-
-    private sealed class ResCurseForgeFingerprintData
-    {
-        [JsonPropertyName("exactMatches")] public List<ResCurseForgeMatch>? ExactMatches { get; init; }
-    }
-
-    private sealed class ResCurseForgeMatch
-    {
-        [JsonPropertyName("file")] public ResCurseForgeFile? File { get; init; }
-    }
-
-    private sealed class ResCurseForgeFile
-    {
-        [JsonPropertyName("id")] public int Id { get; init; }
-        [JsonPropertyName("modId")] public int ModId { get; init; }
-        [JsonPropertyName("fileFingerprint")] public uint Fingerprint { get; init; }
-        [JsonPropertyName("fileName")] public string? FileName { get; init; }
-        [JsonPropertyName("displayName")] public string? DisplayName { get; init; }
-        [JsonPropertyName("fileDate")] public DateTime Published { get; init; }
-        [JsonPropertyName("releaseType")] public int ReleaseType { get; init; }
-        [JsonPropertyName("downloadUrl")] public string? DownloadUrl { get; init; }
-        [JsonPropertyName("fileLength")] public long FileLength { get; init; }
-        [JsonPropertyName("gameVersions")] public List<string>? GameVersions { get; init; }
-        [JsonPropertyName("isAvailable")] public bool IsAvailable { get; init; }
-
-        public ModVersionFileItem ToFileItem()
-        {
-            var versions = GameVersions?.Where(IsMinecraftVersion).ToList() ?? [];
-            var loaders = GameVersions?.Select(LoaderName).OfType<string>().DefaultIfEmpty(LinguaSentinels.UniversalLoader).Distinct().ToArray() ?? [LinguaSentinels.UniversalLoader];
-            var loaderKeys = loaders.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
-                .ToList();
-            return new ModVersionFileItem(Id.ToString(),
-                string.IsNullOrWhiteSpace(DisplayName) ? FileName ?? string.Empty : DisplayName,
-                $"{string.Join(",", loaders)}·{FileName ?? string.Empty}·{Portal.Core.App.Helpers.RelativeTime.Format(Published)}·{ReleaseTypeText(ReleaseType)}",
-                ReleaseTypeText(ReleaseType), FileName ?? string.Empty, DownloadUrl ?? string.Empty, FileLength, Published,
-                versions, loaderKeys, ModDetailsSource.CurseForge, ModId.ToString(), []);
-        }
-
-        private static string? LoaderName(string loader)
-        {
-            return loader.Trim().ToLowerInvariant() switch
-            {
-                "forge" => "Forge",
-                "fabric" => "Fabric",
-                "quilt" => "Quilt",
-                "neoforge" => "NeoForge",
-                _ => null
-            };
-        }
-
-        private static bool IsMinecraftVersion(string version)
-        {
-            return System.Text.RegularExpressions.Regex.IsMatch(version,
-                @"^\d+\.\d+(?:\.\d+)?(?:-(?:snapshot|pre-release|pre\d+|rc\d+))?$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        }
-
-        private static string ReleaseTypeText(int releaseType)
-        {
-            return releaseType switch
-            {
-                1 => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
-                2 => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
-                3 => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
-                _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
-            };
-        }
-    }
-
-    private sealed class ResCurseForgeModResponse
-    {
-        [JsonPropertyName("data")] public ResCurseForgeMod? Data { get; init; }
-    }
-
-    private sealed class ResCurseForgeMod
-    {
-        [JsonPropertyName("latestFiles")] public List<ResCurseForgeFile>? LatestFiles { get; init; }
-        [JsonPropertyName("latestFilesIndexes")] public List<ResCurseForgeFileIndex>? LatestFilesIndexes { get; init; }
-    }
-
-    private sealed class ResCurseForgeFileIndex
-    {
-        [JsonPropertyName("gameVersion")] public string? GameVersion { get; init; }
-        [JsonPropertyName("modLoader")] public int ModLoader { get; init; }
-        [JsonPropertyName("fileId")] public int FileId { get; init; }
-    }
-
-    private sealed class ResCurseForgeFileResponse
-    {
-        [JsonPropertyName("data")] public ResCurseForgeFile? Data { get; init; }
     }
 }

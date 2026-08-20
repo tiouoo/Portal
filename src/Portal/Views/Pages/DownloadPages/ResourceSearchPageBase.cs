@@ -45,6 +45,13 @@ public abstract class ResourceSearchPageBase : UserControl
         e.Handled = true;
     }
 
+    protected void ShowDetails_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is JavaResourceSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
+            OpenDetails(topLevel, item);
+        e.Handled = true;
+    }
+
     protected virtual FavoriteEdition FavoriteEdition => FavoriteEdition.Java;
 
     protected virtual void OpenDetails(TopLevel topLevel, JavaResourceSearchResultItem item)

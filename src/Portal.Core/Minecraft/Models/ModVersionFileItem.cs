@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Network;
+using Iridium.Enums.Resources;
+using Iridium.Models.Resources;
 using Portal.Core.App.Helpers;
 using Portal.Localization;
 
@@ -23,43 +23,28 @@ public sealed record ModVersionFileItem(
     string ProjectId,
     IReadOnlyList<ModFileDependency> Dependencies)
 {
-    public static ModVersionFileItem From(ModrinthResourceFile file)
+    public static ModVersionFileItem From(ResourceFile file)
     {
-        return new ModVersionFileItem(file.VersionId,
-            string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-            FormatDetails(string.Join(",", file.ModLoaders.Select(LoaderName).Distinct()), file.FileName,
-                file.Published,
-                file.ReleaseType),
-            ReleaseType(file.ReleaseType), file.FileName, file.DownloadUrl, file.FileSize, file.Published,
-            file.MinecraftVersions.ToList(),
-            file.ModLoaders.SelectMany(loader =>
-                file.MinecraftVersions.Select(version => new ModVersionGroupKey(LoaderName(loader), version))).ToList(),
-            ModDetailsSource.Modrinth,
+        var fileName = file.PrimaryFile?.FileName ?? string.Empty;
+        var versions = file.GameVersions.Where(IsMinecraftVersion).ToList();
+        var loaders = file.Loaders.Count > 0
+            ? file.Loaders.Select(LoaderName).OfType<string>().ToArray()
+            : [LinguaSentinels.UniversalLoader];
+        return new ModVersionFileItem(file.Id,
+            string.IsNullOrWhiteSpace(file.Name) ? fileName : file.Name,
+            FormatDetails(string.Join(",", loaders.Distinct()), fileName, file.Published, file.ReleaseType),
+            ReleaseType(file.ReleaseType), fileName,
+            file.PrimaryFile?.Url ?? string.Empty, file.PrimaryFile?.Size ?? 0,
+            file.Published ?? default, versions,
+            loaders.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
+                .ToList(),
+            file.Source == ResourceSource.Modrinth ? ModDetailsSource.Modrinth : ModDetailsSource.CurseForge,
             file.ProjectId,
             file.Dependencies.Where(dependency => dependency.Type == DependencyType.Required &&
                                                   (!string.IsNullOrWhiteSpace(dependency.ProjectId) ||
                                                    !string.IsNullOrWhiteSpace(dependency.VersionId)))
-                .Select(dependency => new ModFileDependency(dependency.ProjectId, dependency.FileName ?? string.Empty,
-                    dependency.VersionId)).Distinct().ToArray());
-    }
-
-    public static ModVersionFileItem From(CurseforgeResourceFile file)
-    {
-        var versions = file.GameVersions.Where(IsMinecraftVersion).ToList();
-        var loaders = file.GameVersions.Select(LoaderName).OfType<string>().DefaultIfEmpty(LinguaSentinels.UniversalLoader);
-        var enumerable = loaders as string[] ?? loaders.ToArray();
-        return new ModVersionFileItem(file.Id.ToString(),
-            string.IsNullOrWhiteSpace(file.DisplayName) ? file.FileName : file.DisplayName,
-            FormatDetails(string.Join(",", enumerable), file.FileName, file.Published, file.ReleaseType),
-            ReleaseType(file.ReleaseType), file.FileName,
-            file.DownloadUrl, file.FileLength, file.Published, versions,
-            enumerable.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
-                .ToList(),
-            ModDetailsSource.CurseForge,
-            file.ModId.ToString(),
-            file.Dependencies.Where(dependency => dependency.Value == DependencyType.Required)
-                .Select(dependency => new ModFileDependency(dependency.Key.ToString(), string.Empty)).Distinct()
-                .ToArray());
+                .Select(dependency => new ModFileDependency(dependency.ProjectId ?? string.Empty,
+                    dependency.FileName ?? string.Empty, dependency.VersionId)).Distinct().ToArray());
     }
 
     public ModVersionFileItem ForCompatibility(ModVersionGroupKey compatibility)
@@ -72,20 +57,15 @@ public sealed record ModVersionFileItem(
         };
     }
 
-    private static string LoaderName(ModLoaderType loader)
+    private static string? LoaderName(ResourceLoaderType loader)
     {
         return loader switch
         {
-            ModLoaderType.NeoForge => "NeoForge", ModLoaderType.Forge => "Forge", ModLoaderType.Fabric => "Fabric",
-            ModLoaderType.Quilt => "Quilt", _ => LinguaSentinels.UniversalLoader
-        };
-    }
-
-    private static string? LoaderName(string loader)
-    {
-        return loader.Trim().ToLowerInvariant() switch
-        {
-            "neoforge" => "NeoForge", "forge" => "Forge", "fabric" => "Fabric", "quilt" => "Quilt", _ => null
+            ResourceLoaderType.NeoForge => "NeoForge", ResourceLoaderType.Forge => "Forge",
+            ResourceLoaderType.Fabric => "Fabric", ResourceLoaderType.Quilt => "Quilt",
+            ResourceLoaderType.LiteLoader => "LiteLoader", ResourceLoaderType.OptiFine => "OptiFine",
+            ResourceLoaderType.Canvas => "Canvas", ResourceLoaderType.Iris => "Iris",
+            _ => LinguaSentinels.UniversalLoader
         };
     }
 
@@ -95,19 +75,20 @@ public sealed record ModVersionFileItem(
             @"^\d+\.\d+(?:\.\d+)?(?:-(?:snapshot|pre-release|pre\d+|rc\d+))?$", RegexOptions.IgnoreCase);
     }
 
-    private static string FormatDetails(string loader, string fileName, DateTime published, FileReleaseType releaseType)
+    private static string FormatDetails(string loader, string fileName, DateTime? published, ReleaseType releaseType)
     {
-        return $"{loader}·{fileName}·{RelativeTime.Format(published)}·{ReleaseType(releaseType)}";
+        return $"{loader}·{fileName}·{RelativeTime.Format(published ?? default)}·{ReleaseType(releaseType)}";
     }
 
-    private static string ReleaseType(FileReleaseType type)
+    private static string ReleaseType(Iridium.Enums.Resources.ReleaseType type)
     {
         return type switch
         {
-            FileReleaseType.Release => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue(),
-            FileReleaseType.Beta => CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
-            FileReleaseType.Alpha => CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
-            _ => CommonLanguageManager.Instance.mod_releaseTypeOther.CurrentValue()
+            Iridium.Enums.Resources.ReleaseType.Beta =>
+                CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
+            Iridium.Enums.Resources.ReleaseType.Alpha =>
+                CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
+            _ => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue()
         };
     }
 }

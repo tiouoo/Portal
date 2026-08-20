@@ -10,7 +10,6 @@ public sealed class ModpackSearchPage : JavaResourceSearchView
 
     protected override Task QuickDownloadAsync(TopLevel topLevel, JavaResourceSearchResultItem item)
     {
-        JavaResourceDetailsPage.Open(topLevel, item.Target, item.Name);
-        return Task.CompletedTask;
+        return ModpackInstallation.InstallFromSearchAsync(topLevel, item.Target, item.IconUrl, item.Name);
     }
 }

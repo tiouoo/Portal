@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using MinecraftLaunch.Components.Provider;
+using Iridium.Extensions.Resources;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Minecraft.Services;
 using Portal.Localization;
@@ -35,8 +35,9 @@ public static class BedrockResourceDownload
         try
         {
             Logger.Info($"[BedrockDownload] Loading latest file for project {target.ProjectId}.");
-            var files = await new CurseforgeProvider().GetModFilesAsync(long.Parse(target.ProjectId));
-            var file = files.Select(JavaResourceFileItem.From).OrderByDescending(item => item.Published)
+            var files = await IridiumResourceClients.CurseForge.GetFilesAsync(long.Parse(target.ProjectId));
+            var file = files.Select(file => JavaResourceFileItem.From(file.ToResourceFile()))
+                .OrderByDescending(item => item.Published)
                 .FirstOrDefault();
             if (file is null)
                 throw new InvalidDataException(

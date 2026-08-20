@@ -2,12 +2,13 @@ using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Iridium.Extensions.Resources;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
-using MinecraftLaunch.Components.Provider;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
+using Portal.Core.Minecraft.Services;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common.Interfaces;
@@ -71,9 +72,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
 {
     private static readonly TimeSpan DependencyLoadTimeout = TimeSpan.FromSeconds(90);
     private readonly IReadOnlyList<ModInstallInstanceItem> _allInstances;
-    private readonly CurseforgeProvider _curseforge = new();
     private readonly IReadOnlyList<ModVersionFileItem> _files;
-    private readonly ModrinthProvider _modrinth = new();
     private ModInstallDependencyItem[] _allDependencies = [];
     private int _dependencyFilterGeneration;
     private int _dependencyLoadGeneration;
@@ -330,14 +329,18 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     {
         if (!string.IsNullOrWhiteSpace(dependency.VersionId))
         {
-            var fixedVersion =
-                ModVersionFileItem.From(await _modrinth.GetModFileByVersionIdAsync(dependency.VersionId));
-            if (IsCompatible(file, fixedVersion)) return fixedVersion;
+            var fixedVersion = await IridiumResourceClients.Modrinth.GetVersionAsync(dependency.VersionId);
+            if (fixedVersion is not null)
+            {
+                var mapped = ModVersionFileItem.From(fixedVersion.ToResourceFile());
+                if (IsCompatible(file, mapped)) return mapped;
+            }
         }
 
         if (string.IsNullOrWhiteSpace(dependency.ProjectId)) return null;
-        var files = await _modrinth.GetModFilesByProjectIdAsync(dependency.ProjectId);
-        return files.Select(ModVersionFileItem.From).Where(candidate => IsCompatible(file, candidate))
+        var files = await IridiumResourceClients.Modrinth.GetFilesAsync(dependency.ProjectId);
+        return files.Select(version => ModVersionFileItem.From(version.ToResourceFile()))
+            .Where(candidate => IsCompatible(file, candidate))
             .OrderByDescending(candidate =>
                 candidate.MinecraftVersions.Count(version => file.MinecraftVersions.Contains(version)))
             .ThenByDescending(candidate => candidate.Id).FirstOrDefault();
@@ -348,11 +351,12 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         var ids = file.Dependencies.Select(dependency => long.Parse(dependency.ProjectId)).Distinct().ToArray();
         if (ids.Length == 0) return [];
 
-        var projects = await _curseforge.GetResourcesByModIdsAsync(ids);
+        var projects = await IridiumResourceClients.CurseForge.GetProjectsAsync(ids);
         var candidates = await Task.WhenAll(projects.Select(async project =>
         {
-            var files = await _curseforge.GetModFilesAsync(project.Id);
-            return files.Select(ModVersionFileItem.From).Where(candidate => IsCompatible(file, candidate))
+            var files = await IridiumResourceClients.CurseForge.GetFilesAsync(project.Id);
+            return files.Select(candidate => ModVersionFileItem.From(candidate.ToResourceFile()))
+                .Where(candidate => IsCompatible(file, candidate))
                 .OrderByDescending(candidate => candidate.Id).FirstOrDefault();
         }));
         return candidates.OfType<ModVersionFileItem>().DistinctBy(file => file.Id).ToArray();
@@ -382,13 +386,13 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     {
         if (dependency.Source == ModDetailsSource.Modrinth)
         {
-            var modrinthProject = await _modrinth.SearchByProjectIdAsync(dependency.ProjectId);
-            return modrinthProject.Name;
+            var modrinthProject = await IridiumResourceClients.Modrinth.GetProjectAsync(dependency.ProjectId);
+            return modrinthProject?.Title ?? dependency.DisplayName;
         }
 
         var curseForgeProject =
-            (await _curseforge.GetResourcesByModIdsAsync([long.Parse(dependency.ProjectId)])).First();
-        return curseForgeProject.Name;
+            await IridiumResourceClients.CurseForge.GetProjectAsync(long.Parse(dependency.ProjectId));
+        return curseForgeProject?.Name ?? dependency.DisplayName;
     }
 
     private static ModLoaderType ToModLoaderType(string? loader)
