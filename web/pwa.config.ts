@@ -28,28 +28,29 @@ const pwaConfig = {
     maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
     runtimeCaching: [
       {
-        urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+        urlPattern: /\.ttf$/i,
         handler: 'CacheFirst',
         options: {
-          cacheName: 'google-fonts-cache',
+          cacheName: 'font-cache',
+          expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      {
+        urlPattern: /\.woff2$/i,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'font-cache',
           expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
           cacheableResponse: { statuses: [0, 200] },
         },
       },
       {
-        urlPattern: /^https:\/\/(cdn|sdk|cloud|umami)\..*/i,
+        urlPattern: /^https:\/\/(cdn|sdk|cloud)\..*/i,
         handler: 'NetworkFirst',
         options: {
           cacheName: 'cdn-cache',
           expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
-        },
-      },
-      {
-        urlPattern: /\.woff2$/,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'font-cache',
-          expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
         },
       },
     ],

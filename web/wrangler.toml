@@ -1,0 +1,14 @@
+name = "portal-web"
+main = "worker.js"
+account_id = "c08e66094fd880d7006b0dcec2ff87e5"
+compatibility_date = "2026-08-20"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "single-page-application"
+
+[[routes]]
+pattern = "portal.tiouo.cc/*"
+zone_name = "tiouo.cc"

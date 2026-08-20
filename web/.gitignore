@@ -29,3 +29,7 @@ coverage
 
 *.tsbuildinfo
 /dev-dist
+
+# Cloudflare
+.wrangler
+cf.env
