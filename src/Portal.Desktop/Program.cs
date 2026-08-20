@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using Avalonia;
+using Portal.Core.Module.Initialize;
 using Portal.Core.Services.SystemResources;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 #if DEBUG
@@ -16,6 +17,8 @@ internal static class Program
     {
         App.StartupTimestamp = Stopwatch.GetTimestamp();
         Console.OutputEncoding = Encoding.UTF8;
+
+        LocalizationInitializer.Initialize();
 
         Logger.Info("Portal MC");
         Logger.Info(@"  ____                   _             _     __  __    ____ ");
