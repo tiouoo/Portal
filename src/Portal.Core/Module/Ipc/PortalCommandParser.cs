@@ -40,6 +40,11 @@ public static class PortalCommandParser
         return CommonLanguageManager.Instance.ipc_usageText.CurrentValue();
     }
 
+    public static string GetHeadlessUsageText()
+    {
+        return CommonLanguageManager.Instance.desktop_cli_usageText.CurrentValue();
+    }
+
     private static PortalCliParseStatus ParseInstallCli(string[] args, out PortalCommand? command, out string? error)
     {
         command = null;

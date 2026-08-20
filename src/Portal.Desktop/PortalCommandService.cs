@@ -22,7 +22,7 @@ internal static partial class PortalCommandService
             case PortalCliParseStatus.NotACommand:
                 return false;
             case PortalCliParseStatus.Help:
-                WriteConsole(PortalCommandParser.GetUsageText());
+                WriteConsole(PortalCommandParser.GetHeadlessUsageText());
                 return true;
             case PortalCliParseStatus.Error:
                 WriteConsole(

@@ -60,7 +60,7 @@ internal static class SingleInstanceGuard
         switch (PortalCommandParser.Parse(args, out var command, out var error))
         {
             case PortalCliParseStatus.Help:
-                PortalCommandService.WriteConsole(PortalCommandParser.GetUsageText());
+                PortalCommandService.WriteConsole(PortalCommandParser.GetHeadlessUsageText());
                 return;
             case PortalCliParseStatus.Error:
                 PortalCommandService.WriteConsole(

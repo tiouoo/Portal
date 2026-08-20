@@ -14,10 +14,11 @@ internal static class PortalCommandRegistration
         """
         @echo off
         if /I "%1"=="--version" goto :headless
-        if /I "%1"=="-V" goto :headless
+        if /I "%1"=="-v" goto :headless
         if /I "%1"=="-l" goto :headless
         if /I "%1"=="--list" goto :headless
         if /I "%1"=="list" goto :headless
+        if /I "%1"=="--search" goto :headless
         if /I "%1"=="search" goto :headless
         if /I "%1"=="help" goto :headless
         if /I "%1"=="--help" goto :headless

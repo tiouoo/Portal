@@ -8,7 +8,7 @@ using Portal.Localization;
 namespace Portal.Desktop;
 
 /// <summary>
-/// 不打开窗口的命令行命令：--version / -l|--list / search。
+/// 不打开窗口的命令行命令：--version / -l|--list / --search。
 /// 在单实例保护和 Avalonia 启动之前调用，只读本地数据，用完直接退出。
 /// </summary>
 internal static class PortalCliHeadless
@@ -16,7 +16,7 @@ internal static class PortalCliHeadless
     public static bool IsHeadlessCommand(string[] args)
     {
         return args.Length > 0 &&
-               args[0].ToLowerInvariant() is "--version" or "-V" or "-l" or "--list" or "list" or "search" or "help" or
+               args[0].ToLowerInvariant() is "--version" or "-v" or "-l" or "--list" or "list" or "--search" or "search" or "help" or
                    "--help" or "-h" or "/?" or "-?";
     }
 
@@ -28,7 +28,7 @@ internal static class PortalCliHeadless
 
         switch (args[0].ToLowerInvariant())
         {
-            case "--version" or "-V":
+            case "--version" or "-v":
                 PortalCommandRegistration.RegisterAsync().GetAwaiter().GetResult();
                 PrintVersion();
                 return true;
@@ -36,13 +36,13 @@ internal static class PortalCliHeadless
                 PortalCommandRegistration.RegisterAsync().GetAwaiter().GetResult();
                 exitCode = RunList(args);
                 return true;
-            case "search":
+            case "--search" or "search":
                 PortalCommandRegistration.RegisterAsync().GetAwaiter().GetResult();
                 exitCode = RunSearch(args);
                 return true;
             case "help" or "--help" or "-h" or "/?" or "-?":
                 PortalCommandRegistration.RegisterAsync().GetAwaiter().GetResult();
-                Write(PortalCommandParser.GetUsageText());
+                Write(PortalCommandParser.GetHeadlessUsageText());
                 return true;
             default:
                 return false;
@@ -60,20 +60,34 @@ internal static class PortalCliHeadless
     private static int RunList(string[] args)
     {
         var output = new List<string>();
+        var folderFilter = ParseFolderFilter(args);
         var folders = CliInstanceScanner.LoadFolders();
+
+        CliFolderSnapshot? directFolder = null;
+        if (folderFilter is not null &&
+            !folders.Any(folder => IsFolderMatch(folder, folderFilter)) &&
+            Directory.Exists(folderFilter))
+        {
+            directFolder = CreateDirectFolderSnapshot(folderFilter);
+            folders = [directFolder];
+        }
+
         if (folders.Count == 0)
         {
-            Write(CommonLanguageManager.Instance.desktop_cli_noFolders.CurrentValue());
+            var message = folderFilter is not null
+                ? string.Format(CommonLanguageManager.Instance.minecraft_minecraftFolderNotFoundShort.CurrentValue(),
+                    folderFilter)
+                : CommonLanguageManager.Instance.desktop_cli_noFolders.CurrentValue();
+            Write(string.Empty, message, string.Empty);
             return 0;
         }
 
-        var folderFilter = ParseFolderFilter(args);
-
         var totalInstances = 0;
         var shownFolders = 0;
+        output.Add(string.Empty);
         foreach (var folder in folders)
         {
-            if (folderFilter is not null && !IsFolderMatch(folder, folderFilter))
+            if (directFolder is null && folderFilter is not null && !IsFolderMatch(folder, folderFilter))
                 continue;
 
             var instances = CliInstanceScanner.Scan(folder)
@@ -101,12 +115,16 @@ internal static class PortalCliHeadless
                         instance.Id, instance.Version, loader).TrimEnd());
                 }
             }
+
+            output.Add(string.Empty);
         }
 
-        if (shownFolders == 0 && folderFilter is not null)
+        if (shownFolders == 0 && folderFilter is not null && directFolder is null)
         {
-            Write(string.Format(CommonLanguageManager.Instance.minecraft_minecraftFolderNotFoundShort.CurrentValue(),
-                folderFilter));
+            Write(string.Empty,
+                string.Format(CommonLanguageManager.Instance.minecraft_minecraftFolderNotFoundShort.CurrentValue(),
+                    folderFilter),
+                string.Empty);
             return 0;
         }
 
@@ -114,6 +132,7 @@ internal static class PortalCliHeadless
         {
             output.Add(string.Format(CommonLanguageManager.Instance.desktop_cli_summary.CurrentValue(),
                 totalInstances, shownFolders));
+            output.Add(string.Empty);
         }
 
         Write(output.ToArray());
@@ -132,6 +151,15 @@ internal static class PortalCliHeadless
     {
         return folder.FolderName.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
                folder.FolderPath.Contains(filter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static CliFolderSnapshot CreateDirectFolderSnapshot(string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var name = Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (string.IsNullOrWhiteSpace(name))
+            name = fullPath;
+        return new CliFolderSnapshot(name, fullPath, MinecraftFolderKind.Auto);
     }
 
     private static int RunSearch(string[] args)
@@ -185,13 +213,18 @@ internal static class PortalCliHeadless
 
             var output = new List<string>
             {
+                string.Empty,
                 string.Format(CommonLanguageManager.Instance.desktop_cli_searchTitle.CurrentValue(), query, projectType,
-                    page.Items.Count)
+                    page.Items.Count),
+                string.Empty
             };
 
             var index = 1;
             foreach (var item in page.Items)
             {
+                if (index > 1)
+                    output.Add(string.Empty);
+
                 output.Add(string.Format(CommonLanguageManager.Instance.desktop_cli_searchItem.CurrentValue(), index,
                     item.Name, item.Slug, item.DownloadCount));
                 output.Add(string.Format(CommonLanguageManager.Instance.desktop_cli_searchLink.CurrentValue(),
@@ -202,6 +235,7 @@ internal static class PortalCliHeadless
             if (page.Items.Count == 0)
                 output.Add(CommonLanguageManager.Instance.desktop_cli_searchEmpty.CurrentValue());
 
+            output.Add(string.Empty);
             Write(output.ToArray());
             return 0;
         }
