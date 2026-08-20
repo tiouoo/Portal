@@ -212,6 +212,7 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="classes:BedrockAccount">
                         <Border
+                            Background="Transparent"
                             CornerRadius="8"
                             Padding="0,12"
                             Width="350">
