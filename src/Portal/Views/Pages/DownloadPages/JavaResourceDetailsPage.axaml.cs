@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Core.Minecraft.Models;
 using Portal.Localization;
+using Portal.Module;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -21,7 +22,7 @@ public partial class JavaResourceDetailsPage : ResourceDetailsPageBase
         {
             Title = string.Format(CommonLanguageManager.Instance.javaResourceDetails_title.CurrentValue(),
                 ViewModel.Target.Definition.DisplayName),
-            Icon = StreamGeometry.Parse(JavaResourceDetailsIcon.Data)
+            Icon = GeometryResources.Get("FolderGeometry")
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }

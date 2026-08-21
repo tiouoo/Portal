@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Module.Widgets;
@@ -32,9 +33,9 @@ public abstract class ResourceWidgetBase : IWidgetContent
         AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(ProgressMaximum), o => o.ProgressMaximum,
             (o, v) => o.ProgressMaximum = v);
 
-    public static readonly DirectProperty<ResourceWidgetBase, string> IconGeometryProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string>(nameof(IconGeometry), o => o.IconGeometry,
-            (o, v) => o.IconGeometry = v);
+    public static readonly DirectProperty<ResourceWidgetBase, StreamGeometry?> IconGeometryProperty =
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, StreamGeometry?>(nameof(IconGeometry),
+            o => o.IconGeometry, (o, v) => o.IconGeometry = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, bool> HasSecondaryTextProperty =
         AvaloniaProperty.RegisterDirect<ResourceWidgetBase, bool>(nameof(HasSecondaryText), o => o.HasSecondaryText,
@@ -45,7 +46,7 @@ public abstract class ResourceWidgetBase : IWidgetContent
             (o, v) => o.IsLoading = v);
 
     private bool _hasSecondaryText = true;
-    private string _iconGeometry = string.Empty;
+    private StreamGeometry? _iconGeometry;
     private bool _isLoading = true;
     private double _percentage;
     private string _primaryText = "--";
@@ -96,7 +97,7 @@ public abstract class ResourceWidgetBase : IWidgetContent
         set => SetAndRaise(ProgressMaximumProperty, ref _progressMaximum, value);
     }
 
-    public string IconGeometry
+    public StreamGeometry? IconGeometry
     {
         get => _iconGeometry;
         set => SetAndRaise(IconGeometryProperty, ref _iconGeometry, value);

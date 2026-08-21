@@ -23,6 +23,7 @@ using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 
+using Portal.Module;
 namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("pages_multiplayer", "pages_multiplayerPath", "Multiplayer")]
@@ -50,8 +51,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.multiplayer_title.CurrentValue(),
-        Icon = StreamGeometry.Parse(
-            "F1 M640,640z M0,0z M451.5,160C434.9,160 418.8,164.5 404.7,172.7 388.9,156.7 370.5,143.3 350.2,133.2 378.4,109.2 414.3,96 451.5,96 537.9,96 608,166 608,252.5 608,294 591.5,333.8 562.2,363.1L491.1,434.2C461.8,463.5 422,480 380.5,480 294.1,480 224,410 224,323.5 224,305.8 238.3,291.5 256,291.5 273.7,291.5 288,305.8 288,323.5 288,374.6 329.4,416 380.5,416 405,416 428.5,406.3 445.9,388.9L517,317.8C534.3,300.5 544,277 544,252.5 544,201.4 502.6,160 451.5,160z M259.5,224C235,224 211.5,233.7 194.1,251.1L123,322.2C105.7,339.5 96,363 96,387.5 96,438.6 137.4,480 188.5,480 205.1,480 221.2,475.5 235.3,467.3 251.1,483.3 269.5,496.7 289.8,506.8 261.6,530.8 225.7,544 188.5,544 102.1,544 32,474 32,387.5 32,346 48.5,306.2 77.8,276.9L148.9,205.8C178.2,176.5 218,160 259.5,160 345.9,160 416,230 416,316.5 416,334.2 401.7,348.5 384,348.5 366.3,348.5 352,334.2 352,316.5 352,265.4 310.6,224 259.5,224z")
+        Icon = GeometryResources.Get("LinkGeometry")
     };
 
     public TabEntry HostTab { get; set; } = null!;

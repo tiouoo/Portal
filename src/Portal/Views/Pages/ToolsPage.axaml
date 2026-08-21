@@ -28,7 +28,7 @@
                     IsVisible="{Binding IsWindows}">
                     <tio:NavMenuItem.Icon>
                         <PathIcon
-                            Data="F1 M640,640z M0,0z M217.6,544L451.3,544 566.7,339.8 268.4,397.2 217.6,544z M569,304.1L451.4,96 219.9,96 424.5,331.9 569,304.1z M188.6,112.8L71.5,320 187.5,525.2 289.9,229.6 188.6,112.8z"
+                            Data="{StaticResource BedrockEditionGeometry}"
                             Height="16"
                             Width="16" />
                     </tio:NavMenuItem.Icon>

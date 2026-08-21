@@ -83,8 +83,7 @@ public class WidgetWorkspace : UserControl
         {
             Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M232.7,69.9C237.1,56.8,249.3,48,263.1,48L377,48C390.8,48,403,56.8,407.4,69.9L416,96 512,96C529.7,96 544,110.3 544,128 544,145.7 529.7,160 512,160L128,160C110.3,160 96,145.7 96,128 96,110.3 110.3,96 128,96L224,96 232.7,69.9z M128,208L512,208 512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,208z M216,272C202.7,272,192,282.7,192,296L192,488C192,501.3 202.7,512 216,512 229.3,512 240,501.3 240,488L240,296C240,282.7,229.3,272,216,272z M320,272C306.7,272,296,282.7,296,296L296,488C296,501.3 306.7,512 320,512 333.3,512 344,501.3 344,488L344,296C344,282.7,333.3,272,320,272z M424,272C410.7,272,400,282.7,400,296L400,488C400,501.3 410.7,512 424,512 437.3,512 448,501.3 448,488L448,296C448,282.7,437.3,272,424,272z"),
+                Data = GeometryResources.Get("DeleteGeometry"),
                 Width = 16, Height = 16
             }
         };
@@ -95,8 +94,7 @@ public class WidgetWorkspace : UserControl
         {
             Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M512,128C547.3,128,576,156.7,576,192L576,341.5C576,358.5,569.3,374.8,557.3,386.8L450.7,493.3C438.7,505.3,422.4,512,405.4,512L128,512C92.7,512,64,483.3,64,448L64,192C64,156.7,92.7,128,128,128L512,128z M517.5,336L424,336C410.7,336,400,346.7,400,360L400,453.5 517.5,336z M160,256C177.7,256 192,241.7 192,224 192,206.3 177.7,192 160,192 142.3,192 128,206.3 128,224 128,241.7 142.3,256 160,256z"),
+                Data = GeometryResources.Get("ImageGeometry"),
                 Width = 16, Height = 16
             }
         };
@@ -116,8 +114,7 @@ public class WidgetWorkspace : UserControl
             Header = CommonLanguageManager.Instance.widgets_toggleDisplayMode.CurrentValue(),
             Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M320,0C441.9,0 547.7,67.9 604.3,167.6L551.7,202.2C508.6,127.6 427.5,80 336,80L320,80C171.9,80 56,195.9 56,344L56,376 152,376 152,344C152,249.1 225.1,176 320,176L336,176C427.5,176 508.6,223.6 551.7,298.2L604.3,263.6C547.7,163.9 441.9,96 320,96L320,0z M320,512C414.9,512 488,438.9 488,344L488,312 584,312 584,344C584,492.1 468.1,608 320,608L320,512z M320,432A80,80 0 1,0 160,432A80,80 0 1,0 320,432z"),
+                Data = GeometryResources.Get("SyncGeometry"),
                 Width = 16, Height = 16
             },
             IsVisible = false
@@ -138,8 +135,7 @@ public class WidgetWorkspace : UserControl
             Header = CommonLanguageManager.Instance.widgets_newsFilter.CurrentValue(),
             Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M128,96C128,78 142,64 160,64L480,64C498,64 512,78 512,96L512,544C512,562 498,576 480,576L160,576C142,576 128,562 128,544L128,96z M192,160L192,192H448V160H192z M192,256V288H448V256H192z M192,352V384H352V352H192z"),
+                Data = GeometryResources.Get("NewsGeometry"),
                 Width = 16, Height = 16
             },
             IsVisible = false
@@ -160,8 +156,7 @@ public class WidgetWorkspace : UserControl
             Header = CommonLanguageManager.Instance.widgets_changeImage.CurrentValue(),
             Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M448,128C448,93,419,64,384,64L256,64C221,64,192,93,192,128L192,256L128,256C93,256,64,285,64,320L64,448C64,483,93,512,128,512L256,512C291,512,320,483,320,448L320,384L384,384C419,384,448,355,448,320L448,128z M320,448C320,466,306,480,288,480L160,480C142,480,128,466,128,448L128,320C128,302,142,288,160,288L192,288L192,320C192,355,221,384,256,384L320,384L320,448z M384,320C384,338,370,352,352,352L224,352C206,352,192,338,192,320L192,192C192,174,206,160,224,160L352,160C370,160,384,174,384,192L384,320z"),
+                Data = GeometryResources.Get("CopyGeometry"),
                 Width = 16, Height = 16
             },
             IsVisible = false
@@ -174,8 +169,7 @@ public class WidgetWorkspace : UserControl
             Header = CommonLanguageManager.Instance.widgets_toggleStretchMode.CurrentValue(),
             Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M128,96C128,78,142,64,160,64L480,64C498,64,512,78,512,96L512,416C512,434,498,448,480,448L160,448C142,448,128,434,128,416L128,96z M64,480C64,462,78,448,96,448L544,448C562,448,576,462,576,480L576,512C576,530,562,544,544,544L96,544C78,544,64,530,64,512L64,480z"),
+                Data = GeometryResources.Get("StretchGeometry"),
                 Width = 16, Height = 16
             },
             IsVisible = false
@@ -194,8 +188,7 @@ public class WidgetWorkspace : UserControl
         {
             Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M241.1,580.2C222.4,598.9,192,598.9,173.2,580.2L60.1,467.1C41.4,448.4,41.4,418,60.1,399.2L77.1,382.2 150.6,455.7C160,465.1 175.2,465.1 184.5,455.7 193.8,446.3 193.9,431.1 184.5,421.8L111,348.3 144.9,314.4 195.8,365.3C205.2,374.7 220.4,374.7 229.7,365.3 239,355.9 239.1,340.7 229.7,331.4L178.8,280.5 212.7,246.6 286.2,320.1C295.6,329.5 310.8,329.5 320.1,320.1 329.4,310.7 329.5,295.5 320.1,286.2L246.6,212.7 280.5,178.8 331.4,229.7C340.8,239.1 356,239.1 365.3,229.7 374.6,220.3 374.7,205.1 365.3,195.8L314.4,144.9 348.3,111 421.8,184.5C431.2,193.9 446.4,193.9 455.7,184.5 465,175.1 465.1,159.9 455.7,150.6L382.2,77.1 399.2,60.1C417.9,41.4,448.3,41.4,467.1,60.1L580.5,172.9C599.2,191.6,599.2,222,580.5,240.8L241.1,580.2z"),
+                Data = GeometryResources.Get("ResizeGeometry"),
                 Width = 16, Height = 16
             }
         };
@@ -248,8 +241,7 @@ public class WidgetWorkspace : UserControl
         {
             Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = new PathIcon
             {
-                Data = StreamGeometry.Parse(
-                    "F1 M640,640z M0,0z M352,128C352,110.3 337.7,96 320,96 302.3,96 288,110.3 288,128L288,288 128,288C110.3,288 96,302.3 96,320 96,337.7 110.3,352 128,352L288,352 288,512C288,529.7 302.3,544 320,544 337.7,544 352,529.7 352,512L352,352 512,352C529.7,352 544,337.7 544,320 544,302.3 529.7,288 512,288L352,288 352,128z"),
+                Data = GeometryResources.Get("AddGeometry"),
                 Width = 16, Height = 16
             }
         };

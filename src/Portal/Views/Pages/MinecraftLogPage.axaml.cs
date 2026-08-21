@@ -19,6 +19,7 @@ using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 
+using Portal.Module;
 namespace Portal.Views.Pages;
 
 public partial class MinecraftLogPage : UserControl, ITioTabPage
@@ -54,8 +55,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.minecraftLog_pageTitle.CurrentValue(),
-        Icon = StreamGeometry.Parse(
-            "F1 M640,640z M0,0z M128,128C128,92.7,156.7,64,192,64L341.5,64C358.5,64,374.8,70.7,386.8,82.7L493.3,189.3C505.3,201.3,512,217.6,512,234.6L512,512C512,547.3,483.3,576,448,576L192,576C156.7,576,128,547.3,128,512L128,416 188.3,416 237.1,478.7C242.2,485.3 250.4,488.7 258.7,487.8 267,486.9 274.2,481.7 277.8,474.2L320.7,383 330.6,402.8C334.7,410.9,343,416.1,352.1,416.1L424.1,416.1C437.4,416.1 448.1,405.4 448.1,392.1 448.1,378.8 437.4,368.1 424.1,368.1L366.9,368.1 341.5,317.4C337.4,309.2 328.9,304 319.7,304.1 310.5,304.2 302.2,309.6 298.3,317.9L251,418.5 219,377.4C214.4,371.4,207.4,368,200,368L128,368 128,128z M336,122.5L336,216C336,229.3,346.7,240,360,240L453.5,240 336,122.5z")
+        Icon = GeometryResources.Get("LogGeometry")
     };
 
     public TabEntry HostTab { get; set; } = null!;
