@@ -1,6 +1,3 @@
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using AvaloniaEdit.Document;
@@ -16,8 +13,6 @@ namespace Portal.Views.Pages.InstancePages;
 
 internal static class LogSharingInteraction
 {
-    private static readonly ConcurrentDictionary<string, Lazy<Task<string>>> AiAnalysisCache = new();
-
     public static async Task ShareAsync(Control view, TextDocument document, string displayName)
     {
         var topLevel = TopLevel.GetTopLevel(view);
@@ -68,67 +63,20 @@ internal static class LogSharingInteraction
             });
     }
 
-    public static async Task AnalyseAiAsync(Control view, TextDocument document, string displayName)
+    public static Task AnalyseAiAsync(Control view, TextDocument document, string displayName)
     {
         var topLevel = TopLevel.GetTopLevel(view);
         if (topLevel is null)
-            return;
+            return Task.CompletedTask;
 
         if (string.IsNullOrWhiteSpace(document.Text))
         {
             topLevel.Notice(string.Format(CommonLanguageManager.Instance.logShare_noAnalyzable.CurrentValue(),
                 displayName), NotificationType.Warning);
-            return;
+            return Task.CompletedTask;
         }
 
-        var key = ComputeContentKey(document.Text);
-
-        if (AiAnalysisCache.TryGetValue(key, out var cached) && cached.Value.IsCompletedSuccessfully)
-        {
-            ShowResultNotice(topLevel, cached.Value.Result, displayName);
-            return;
-        }
-
-        topLevel.Notice(CommonLanguageManager.Instance.aiAnalysis_analyzing.CurrentValue());
-
-        try
-        {
-            var task = AiAnalysisCache.GetOrAdd(key, _ => new Lazy<Task<string>>(() => AnalyseCoreAsync(document.Text)))
-                .Value;
-            var result = await task;
-            ShowResultNotice(topLevel, result, displayName);
-        }
-        catch (Exception ex)
-        {
-            AiAnalysisCache.TryRemove(key, out _);
-            topLevel.Notice(string.Format(CommonLanguageManager.Instance.aiAnalysis_failed.CurrentValue(), ex.Message),
-                NotificationType.Error);
-        }
-    }
-
-    private static Task<string> AnalyseCoreAsync(string content)
-    {
-        return LogSharingService.AnalyseAiAsync(content, null, CancellationToken.None);
-    }
-
-    private static string ComputeContentKey(string content)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(content));
-        return Convert.ToHexString(bytes);
-    }
-
-    private static void ShowResultNotice(TopLevel topLevel, string result, string displayName)
-    {
-        topLevel.Notice(new NotificationOptions
-        {
-            Type = NotificationType.Success,
-            Expiration = TimeSpan.Zero,
-            Content = CommonLanguageManager.Instance.aiAnalysis_complete.CurrentValue(),
-            OperateButtons =
-            [
-                new OperateButtonEntry(CommonLanguageManager.Instance.aiAnalysis_viewResult.CurrentValue(),
-                    _ => AiAnalysisPage.Open(result, displayName, topLevel), closeOnClick: true)
-            ]
-        });
+        AiAnalysisPage.Open(document.Text, displayName, topLevel);
+        return Task.CompletedTask;
     }
 }

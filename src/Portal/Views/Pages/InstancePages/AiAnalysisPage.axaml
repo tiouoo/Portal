@@ -7,22 +7,18 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
-    <Grid RowDefinitions="Auto,*" Margin="12">
-        <DockPanel Margin="0,0,0,8">
-            <Button
-                Click="Copy_OnClick"
-                Content="{Translate {x:Static loc:CommonLanguageManager+Keys.aiAnalysis_copyResult}}"
-                DockPanel.Dock="Right"
-                VerticalAlignment="Center" />
-            <TextBlock
-                FontSize="17"
-                FontWeight="SemiBold"
-                Text="{Binding PageInfo.Title}"
-                TextTrimming="CharacterEllipsis"
-                VerticalAlignment="Center" />
-        </DockPanel>
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="12,0,12,10" RowDefinitions="Auto,*">
+        <TextBlock
+            FontSize="17"
+            FontWeight="SemiBold"
+            Margin="0,0,0,8"
+            Text="{Binding PageInfo.Title}"
+            TextTrimming="CharacterEllipsis"
+            VerticalAlignment="Center" />
+
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -30,13 +26,56 @@
             CornerRadius="8"
             Grid.Row="1"
             Padding="8">
-            <TextBox
-                AcceptsReturn="True"
-                Background="Transparent"
-                FontSize="13"
-                IsReadOnly="True"
-                Text="{Binding ResultText}"
-                TextWrapping="Wrap" />
+            <Panel>
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding IsAnalyzing}"
+                    Spacing="16"
+                    VerticalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="240" />
+                    <TextBlock HorizontalAlignment="Center" Text="{Translate {x:Static loc:CommonLanguageManager+Keys.aiAnalysis_analyzing}}" />
+                </StackPanel>
+
+                <Grid
+                    IsVisible="{Binding IsComplete}"
+                    RowDefinitions="Auto,*"
+                    RowSpacing="8">
+                    <Button
+                        Click="Copy_OnClick"
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.aiAnalysis_copyResult}}"
+                        HorizontalAlignment="Right" />
+                    <TextBox
+                        AcceptsReturn="True"
+                        Background="Transparent"
+                        FontSize="13"
+                        Grid.Row="1"
+                        IsReadOnly="True"
+                        Text="{Binding ResultText}"
+                        TextWrapping="Wrap" />
+                </Grid>
+
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding IsFailed}"
+                    Spacing="12"
+                    VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        HorizontalAlignment="Center"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.aiAnalysis_failedTitle}}" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        MaxWidth="560"
+                        Text="{Binding ErrorMessage}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <Button
+                        Click="Retry_OnClick"
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.aiAnalysis_retry}}"
+                        HorizontalAlignment="Center" />
+                </StackPanel>
+            </Panel>
         </Border>
     </Grid>
 </UserControl>

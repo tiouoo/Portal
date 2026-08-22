@@ -1232,10 +1232,11 @@
   },
   "aiAnalysis": {
     "copied": "Analysis result copied",
-    "analyzing": "AI analyzing…",
+    "analyzing": "Analyzing…",
     "complete": "Analysis complete",
     "failed": "Analysis failed: {0}",
-    "viewResult": "View Result",
+    "failedTitle": "Analysis failed",
+    "retry": "Retry",
     "pageTitle": "AI Analysis - {0}",
     "copyResult": "Copy Result"
   },

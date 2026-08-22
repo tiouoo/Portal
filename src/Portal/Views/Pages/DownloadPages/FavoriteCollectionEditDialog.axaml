@@ -2,8 +2,9 @@
     x:Class="Portal.Views.Pages.DownloadPages.FavoriteCollectionEditDialog"
     x:DataType="local:FavoriteCollectionEditDialogViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid
         Margin="24"
         RowDefinitions="Auto, *, Auto"
@@ -13,7 +14,10 @@
             FontWeight="600"
             Grid.Row="0"
             Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritecollectioneditdialog_title}}" />
-        <StackPanel Grid.Row="1" Margin="0,20">
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,20"
+            Spacing="4">
             <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritecollectioneditdialog_renameLabel}}" />
             <TextBox PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritecollectioneditdialog_namePlaceholder}}" Text="{Binding DraftName}" />
         </StackPanel>
