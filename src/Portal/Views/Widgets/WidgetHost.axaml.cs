@@ -15,7 +15,7 @@ public partial class WidgetHost : UserControl
 {
     private readonly Border? _card;
     private readonly Border? _resizeHandle;
-    private readonly PathIcon? _resizeIcon;
+    private readonly TextBlock? _resizeIcon;
     private IPointer? _activePointer;
     private bool _isResizing;
     private Point _startMousePoint;
@@ -28,7 +28,7 @@ public partial class WidgetHost : UserControl
         InitializeComponent();
         _card = this.FindControl<Border>("Card");
         _resizeHandle = this.FindControl<Border>("ResizeHandle");
-        _resizeIcon = this.FindControl<PathIcon>("ResizeIcon");
+        _resizeIcon = this.FindControl<TextBlock>("ResizeIcon");
 
         if (_resizeHandle != null)
         {

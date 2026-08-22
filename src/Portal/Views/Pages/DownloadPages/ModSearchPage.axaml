@@ -138,7 +138,7 @@
                                         Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_installMenu}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="18" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -147,7 +147,7 @@
                                         IsVisible="{Binding !IsFavorite}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="18" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -156,7 +156,7 @@
                                         IsVisible="{Binding IsFavorite}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="18" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -164,7 +164,7 @@
                                         Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_showDetailsMenu}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe60c;" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe60c;" FontSize="18" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>
