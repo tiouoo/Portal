@@ -1,0 +1,42 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="1000"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.InstancePages.AiAnalysisPage"
+    x:DataType="instancePages:AiAnalysisPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    <Grid RowDefinitions="Auto,*" Margin="12">
+        <DockPanel Margin="0,0,0,8">
+            <Button
+                Click="Copy_OnClick"
+                Content="{Translate {x:Static loc:CommonLanguageManager+Keys.aiAnalysis_copyResult}}"
+                DockPanel.Dock="Right"
+                VerticalAlignment="Center" />
+            <TextBlock
+                FontSize="17"
+                FontWeight="SemiBold"
+                Text="{Binding PageInfo.Title}"
+                TextTrimming="CharacterEllipsis"
+                VerticalAlignment="Center" />
+        </DockPanel>
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Grid.Row="1"
+            Padding="8">
+            <TextBox
+                AcceptsReturn="True"
+                Background="Transparent"
+                FontSize="13"
+                IsReadOnly="True"
+                Text="{Binding ResultText}"
+                TextWrapping="Wrap" />
+        </Border>
+    </Grid>
+</UserControl>
