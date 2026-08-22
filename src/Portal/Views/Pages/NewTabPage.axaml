@@ -7,11 +7,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources />
     <UserControl.Styles>
         <Style Selector="widgets|RecentPlayCard">
@@ -41,7 +42,13 @@
                                 Margin="0,0,0,8"
                                 Spacing="5"
                                 VerticalAlignment="Center">
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe651;" FontSize="30" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="30"
+                                    FontWeight="Thin"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    HorizontalAlignment="Center"
+                                    Text="&#xe651;" />
                                 <TextBlock
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     HorizontalAlignment="Center"
@@ -128,7 +135,13 @@
                                 Margin="0,0,0,8"
                                 Spacing="5"
                                 VerticalAlignment="Center">
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe628;" FontSize="30" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="30"
+                                    FontWeight="Thin"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    HorizontalAlignment="Center"
+                                    Text="&#xe628;" />
                                 <TextBlock
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     HorizontalAlignment="Center"
@@ -245,7 +258,12 @@
                                 Orientation="Horizontal"
                                 Spacing="5"
                                 VerticalAlignment="Top">
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe637;" FontSize="20" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="20"
+                                    FontWeight="Thin"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="&#xe637;" />
                                 <TextBlock
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_GamePlayTime}}"
