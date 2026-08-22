@@ -1,4 +1,4 @@
-using System.Xml;
+﻿using System.Xml;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
@@ -55,7 +55,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.minecraftLog_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("LogGeometry")
+        IconGlyph = IconResources.GetGlyph("file-waveform"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; } = null!;

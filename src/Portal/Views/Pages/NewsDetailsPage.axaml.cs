@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Media;
 using Portal.Core.Minecraft.Classes;
 using Portal.Localization;
@@ -29,7 +29,7 @@ public partial class NewsDetailsPage : UserControl, ITioTabPage
             Title = string.IsNullOrEmpty(entry.Title)
                 ? CommonLanguageManager.Instance.newsDetails_pageTitle.CurrentValue()
                 : entry.Title,
-            Icon = GeometryResources.Get("NewsGeometry")
+            IconGlyph = IconResources.GetGlyph("book"), IconFont = IconResources.FontFamilyName
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }

@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -34,7 +34,7 @@ public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
         PageInfo = new PageInfo
         {
             Title = FileName,
-            Icon = GeometryResources.Get("DocumentImageGeometry")
+            IconGlyph = IconResources.GetGlyph("file-image"), IconFont = IconResources.FontFamilyName
         };
 
         InitializeComponent();

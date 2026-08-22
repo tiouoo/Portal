@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -10,7 +10,7 @@
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
@@ -76,12 +76,7 @@
                                             Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_copyImage}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <PathIcon
-                                                    Data="{StaticResource DocumentGeometry}"
-                                                    Height="16"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Width="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph newspaper}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
@@ -89,12 +84,7 @@
                                             Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_openImage}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <PathIcon
-                                                    Data="{StaticResource OpenFolderGeometry}"
-                                                    Height="16"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Width="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph square-arrow-up-right}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
@@ -102,12 +92,7 @@
                                             Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_saveAs}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <PathIcon
-                                                    Data="{StaticResource DocumentImageGeometry}"
-                                                    Height="16"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Width="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph file-image}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <Separator />
@@ -116,12 +101,7 @@
                                             Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.screenshots_deleteImage}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <PathIcon
-                                                    Data="{StaticResource DeleteGeometry}"
-                                                    Height="16"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Width="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                     </MenuFlyout>

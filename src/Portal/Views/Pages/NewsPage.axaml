@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -12,7 +12,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:viewModels="clr-namespace:Portal.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <converters:StringIsNotWriteSpaceOrNullConverter x:Key="StringNotEmptyConv" />
     </UserControl.Resources>
@@ -32,13 +32,7 @@
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <PathIcon
-                        Data="{StaticResource ArticleGeometry}"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Height="21"
-                        Margin="0,-1,0,0"
-                        Name="PathIcon"
-                        Width="20" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph newspaper}" FontSize="21" Foreground="{DynamicResource InnerForegroundColor}" Margin="0,-1,0,0" Name="PathIcon" />
                     <TextBlock
                         FontSize="15"
                         Foreground="{DynamicResource InnerForegroundColor}"

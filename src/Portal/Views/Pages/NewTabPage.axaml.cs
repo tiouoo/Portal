@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -50,7 +50,7 @@ public partial class NewTabPage : InstanceListPageBase
     public override PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.newTabPage_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("HomeGeometry")
+        IconGlyph = IconResources.GetGlyph("tag"), IconFont = IconResources.FontFamilyName
     };
 
     protected override InstanceListViewModelBase PageViewModel => NewTabViewModel;

@@ -1,4 +1,4 @@
-using Portal.Core.Module.Widgets;
+﻿using Portal.Core.Module.Widgets;
 using Portal.Core.Services.SystemResources;
 using Portal.Localization;
 
@@ -10,7 +10,7 @@ public sealed class DiskResourceWidget : ResourceWidgetBase
     public DiskResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = CommonLanguageManager.Instance.widgets_diskTitle.CurrentValue();
-        IconGeometry = GeometryResources.Get("DiskGeometry");;
+        IconGlyph = "hard-drive";;
     }
 
     public override ResourceKind ResourceKind => ResourceKind.Disk;

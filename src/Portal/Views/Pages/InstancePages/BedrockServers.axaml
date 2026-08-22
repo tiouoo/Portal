@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="600"
     d:DesignWidth="1000"
     mc:Ignorable="d"
@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
@@ -102,10 +102,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshServer}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource RefreshGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -114,10 +111,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_copyAddress}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource ShareGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-up-from-bracket}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -126,10 +120,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_edit}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource EditGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph pen}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -137,10 +128,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource DeleteGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>

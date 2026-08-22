@@ -1,4 +1,4 @@
-using Portal.Core.Module.Widgets;
+﻿using Portal.Core.Module.Widgets;
 using Portal.Core.Services.SystemResources;
 using Portal.Localization;
 
@@ -10,7 +10,7 @@ public sealed class GpuResourceWidget : ResourceWidgetBase
     public GpuResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = "GPU";
-        IconGeometry = GeometryResources.Get("GpuGeometry");;
+        IconGlyph = "display";;
     }
 
     public override ResourceKind ResourceKind => ResourceKind.Gpu;

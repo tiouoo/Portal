@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="600"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:toolsPages="clr-namespace:Portal.Views.Pages.ToolsPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <ScrollViewer Classes="Flat">
         <StackPanel
             Margin="10,2,10,20"
@@ -34,10 +34,7 @@
                         Padding="14,12"
                         Theme="{StaticResource TransparentButton}">
                         <DockPanel>
-                            <PathIcon
-                                Data="{StaticResource ChevronRightGeometry}"
-                                DockPanel.Dock="Right"
-                                Height="20" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph angle-right}" FontSize="20" DockPanel.Dock="Right" />
                             <StackPanel Spacing="3">
                                 <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_downloadFrameworkTitle}}" />
                                 <TextBlock
@@ -57,10 +54,7 @@
                         Padding="14,12"
                         Theme="{StaticResource TransparentButton}">
                         <DockPanel>
-                            <PathIcon
-                                Data="{StaticResource ChevronRightGeometry}"
-                                DockPanel.Dock="Right"
-                                Height="20" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph angle-right}" FontSize="20" DockPanel.Dock="Right" />
                             <StackPanel Spacing="3">
                                 <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_checkSdkTitle}}" />
                                 <TextBlock
@@ -80,10 +74,7 @@
                         Padding="14,12"
                         Theme="{StaticResource TransparentButton}">
                         <DockPanel>
-                            <PathIcon
-                                Data="{StaticResource ChevronRightGeometry}"
-                                DockPanel.Dock="Right"
-                                Height="20" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph angle-right}" FontSize="20" DockPanel.Dock="Right" />
                             <StackPanel Spacing="3">
                                 <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_uninstallMinecraftTitle}}" />
                                 <TextBlock

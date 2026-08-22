@@ -1,4 +1,4 @@
-<tio:TioWindow
+﻿<tio:TioWindow
     CanResize="False"
     Height="380"
     IsCloseBtnShow="{OnPlatform Default=True,
@@ -20,7 +20,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
     </tio:TioWindow.Resources>
@@ -56,11 +56,7 @@
                                 IsVisible="{Binding HasPackageIcon}"
                                 Source="{Binding PackageIcon}"
                                 Stretch="UniformToFill" />
-                            <PathIcon
-                                Data="{StaticResource FolderViewGeometry}"
-                                Height="30"
-                                IsVisible="{Binding !HasPackageIcon}"
-                                Width="30" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" FontSize="30" IsVisible="{Binding !HasPackageIcon}" />
                         </Grid>
                     </Border>
                     <StackPanel Margin="0,1,0,0" Spacing="2">

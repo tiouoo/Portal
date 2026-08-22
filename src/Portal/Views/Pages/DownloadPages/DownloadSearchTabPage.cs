@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Media;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Interface;
@@ -19,7 +19,7 @@ public sealed class DownloadSearchTabPage : UserControl, ITioTabPage
             searchPage.SearchText = keyword;
         Content = _page;
         PageInfo.Title = title;
-        PageInfo.Icon = GeometryResources.Get("PeopleGeometry");
+        PageInfo.IconGlyph = IconResources.GetGlyph("database"); PageInfo.IconFont = IconResources.FontFamilyName;
     }
 
     public PageInfo PageInfo { get; init; } = new();

@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="272"
     d:DesignWidth="272"
     mc:Ignorable="d"
@@ -7,11 +7,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module">
     <Grid Margin="6">
         <StackPanel Spacing="8">
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <PathIcon Data="{StaticResource ClockGeometry}" Width="17" />
+                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph clock}" FontSize="17" />
                 <TextBlock Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.widgets_clock_currentTime}}" />
             </StackPanel>
             <TextBlock

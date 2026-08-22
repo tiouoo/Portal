@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -44,7 +44,7 @@ public partial class NewsPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.news_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("NewsGeometry")
+        IconGlyph = IconResources.GetGlyph("book"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

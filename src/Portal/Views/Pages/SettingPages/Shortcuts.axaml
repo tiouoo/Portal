@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="controls|ShortcutKeyGestureInput /template/ Button#PART_ClearButton">
             <Setter Property="IsVisible" Value="False" />
@@ -24,12 +24,7 @@
             PlaceholderText="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_searchPlaceholder}}"
             Text="{Binding SearchText}">
             <TextBox.InnerRightContent>
-                <PathIcon
-                    Data="{StaticResource SearchGeometry}"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Height="14"
-                    Margin="0,0,2,0"
-                    Width="14" />
+                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph magnifying-glass}" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Margin="0,0,2,0" />
             </TextBox.InnerRightContent>
         </TextBox>
         <TextBlock

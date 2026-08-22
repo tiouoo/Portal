@@ -1,4 +1,4 @@
-using Avalonia.Interactivity;
+﻿using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Localization;
 using Portal.ViewModels;
@@ -20,7 +20,7 @@ public partial class DebugPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.debug_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("DebugGeometry")
+        IconGlyph = IconResources.GetGlyph("bug"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

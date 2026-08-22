@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
@@ -33,7 +33,7 @@ public partial class LitematicaPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.litematica_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("HomeGeometry")
+        IconGlyph = IconResources.GetGlyph("tag"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

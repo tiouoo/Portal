@@ -1,4 +1,4 @@
-using Portal.Core.Module.Widgets;
+﻿using Portal.Core.Module.Widgets;
 using Portal.Core.Services.SystemResources;
 
 using Portal.Module;
@@ -9,7 +9,7 @@ public sealed class CpuResourceWidget : ResourceWidgetBase
     public CpuResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = "CPU";
-        IconGeometry = GeometryResources.Get("CpuGeometry");;
+        IconGlyph = "microchip";;
         HasSecondaryText = false;
     }
 

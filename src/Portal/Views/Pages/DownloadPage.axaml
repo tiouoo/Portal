@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <controls:ScrollView
             Classes="Flat"
@@ -25,28 +25,19 @@
                     CommandParameter="{x:Type downloadPages:FavoritesPage}"
                     Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Favorites}}">
                     <tio:NavMenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource StarSolidGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="16" />
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_JavaEdition}}">
                     <tio:NavMenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource JavaEditionGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph mug-hot}" FontSize="16" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:VanillaInstallation}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_GameClient}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource ChatGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph gamepad}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -55,10 +46,7 @@
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Mods}}"
                         IsSelected="True">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource LightbulbGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph lightbulb}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -66,10 +54,7 @@
                         CommandParameter="{x:Type downloadPages:ModpackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Modpacks}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource FolderGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -77,10 +62,7 @@
                         CommandParameter="{x:Type downloadPages:ResourcePackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_ResourcePacks}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource LayersGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph layer-group}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -88,10 +70,7 @@
                         CommandParameter="{x:Type downloadPages:ShaderPackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_ShaderPacks}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource PersonGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph user}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -99,10 +78,7 @@
                         CommandParameter="{x:Type downloadPages:DataPackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_DataPacks}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource DataBarsGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph chart-simple}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -110,19 +86,13 @@
                         CommandParameter="{x:Type downloadPages:SaveSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Saves}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource WorldGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph earth-americas}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_BedrockEdition}}">
                     <tio:NavMenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource BedrockEditionGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph instalod}" FontSize="16" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
@@ -130,10 +100,7 @@
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_GameClient}}"
                         IsVisible="{Binding IsBedrockInstallationSupported}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource ChatGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph gamepad}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -141,29 +108,20 @@
                         CommandParameter="{x:Type downloadPages:BedrockResourcePackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_BedrockResourcePacks}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource DiamondGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph cubes}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Others}}">
                     <tio:NavMenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource SendArrowGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="16" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:JavaDownloadPage}"
                         Header="Java">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource CubeGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph cubes}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -171,10 +129,7 @@
                         CommandParameter="{x:Type downloadPages:CustomDownloadPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_CustomDownload}}">
                         <tio:NavMenuItem.Icon>
-                            <PathIcon
-                                Data="{StaticResource CloudDownloadGeometry}"
-                                Height="16"
-                                Width="16" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph download}" FontSize="16" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>

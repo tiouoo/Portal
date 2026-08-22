@@ -22,7 +22,7 @@ namespace Portal.Views.Widgets;
 
 public sealed class SearchWidget : IWidgetContent
 {
-    private static readonly string SearchIconData = "SearchGeometry";
+    private static readonly string SearchIconData = "magnifying-glass";
 
     private readonly Panel _innerLeftPlaceholder;
     private readonly ComboBox _modeComboBox;
@@ -56,11 +56,11 @@ public sealed class SearchWidget : IWidgetContent
                 VerticalAlignment = VerticalAlignment.Center,
                 Children =
                 {
-                    new PathIcon
+                    new TextBlock
                     {
-                        Data = mode?.IconData is { Length: > 0 } key ? GeometryResources.Get(key) : null,
-                        Height = 16,
-                        Width = 16,
+                        FontFamily = IconResources.IconFont,
+                        Text = mode?.IconData is { Length: > 0 } name ? IconResources.GetGlyph(name) : string.Empty,
+                        FontSize = 16,
                         IsVisible = !string.IsNullOrEmpty(mode?.IconData)
                     },
                     new TextBlock
@@ -89,11 +89,11 @@ public sealed class SearchWidget : IWidgetContent
             _innerLeftPlaceholder.Width = e.NewSize.Width;
         _searchBox.InnerLeftContent = _innerLeftPlaceholder;
 
-        var searchIcon = new PathIcon
+        var searchIcon = new TextBlock
         {
-            Data = GeometryResources.Get(SearchIconData),
-            Height = 14,
-            Width = 14
+            FontFamily = IconResources.IconFont,
+            Text = IconResources.GetGlyph(SearchIconData),
+            FontSize = 14
         };
         searchIcon.Bind(
             ForegroundProperty,

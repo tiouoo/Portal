@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Media;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Module.DefaultPage;
@@ -31,7 +31,7 @@ public partial class WidgetsPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.widgetsPage_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("GridGeometry")
+        IconGlyph = IconResources.GetGlyph("grid"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

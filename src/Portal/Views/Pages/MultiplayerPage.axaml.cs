@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -51,7 +51,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.multiplayer_title.CurrentValue(),
-        Icon = GeometryResources.Get("LinkGeometry")
+        IconGlyph = IconResources.GetGlyph("link"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; } = null!;

@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -13,7 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module">
     <UserControl.Resources>
         <converter:BackgroundModeCompareConverter x:Key="BackgroundModeCompareConverter" />
     </UserControl.Resources>
@@ -37,49 +37,25 @@
             <ListBox Name="ListBox" Theme="{DynamicResource BorderListBox}">
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <PathIcon
-                            Data="{StaticResource PersonSparkleGeometry}"
-                            Height="16"
-                            HorizontalAlignment="Center"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph cloud-sun}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeSystem}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <PathIcon
-                            Data="{StaticResource SystemThemeGeometry}"
-                            Height="16"
-                            HorizontalAlignment="Center"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph display}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeLight}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <PathIcon
-                            Data="{StaticResource MoonGeometry}"
-                            Height="16"
-                            HorizontalAlignment="Center"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph moon}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeDark}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <PathIcon
-                            Data="{StaticResource SunGeometry}"
-                            Height="16"
-                            HorizontalAlignment="Center"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph sun-regular}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeMirage}}" />
                     </StackPanel>
                 </ListBoxItem>

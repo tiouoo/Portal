@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -26,7 +26,7 @@ public partial class ToolsPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.toolsPage_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("UtilitiesGeometry")
+        IconGlyph = IconResources.GetGlyph("wrench"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

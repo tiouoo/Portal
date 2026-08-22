@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Avalonia.Media;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance;
@@ -38,7 +38,7 @@ public partial class InstancesPage : InstanceListPageBase
     public override PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.instancesPage_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("DocumentLinesGeometry")
+        IconGlyph = IconResources.GetGlyph("clipboard-list"), IconFont = IconResources.FontFamilyName
     };
 
     protected override InstanceListViewModelBase PageViewModel => InstancesPageViewModel;

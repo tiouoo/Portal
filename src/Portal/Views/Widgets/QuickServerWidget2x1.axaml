@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     Margin="-4,-4,-4,-4"
     d:DesignHeight="130"
     d:DesignWidth="272"
@@ -7,7 +7,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <Border
         Background="Transparent"
         CornerRadius="10"
@@ -113,11 +113,7 @@
                         ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickserverwidget2x1_quickJoinServer}}"
                         VerticalAlignment="Center"
                         x:Name="LaunchButton">
-                        <PathIcon
-                            Data="{StaticResource SendArrowGeometry}"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Height="14"
-                            Width="14" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
                         <Button.Transitions>
                             <Transitions>
                                 <DoubleTransition

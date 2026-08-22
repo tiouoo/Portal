@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="130"
     d:DesignWidth="130"
     mc:Ignorable="d"
@@ -6,7 +6,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module">
     <Panel>
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
@@ -34,13 +34,7 @@
             VerticalAlignment="Bottom"
             Width="10"
             x:Name="ResizeHandle">
-            <PathIcon
-                Data="{StaticResource ResizeHandleGeometry}"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Height="14"
-                Opacity="0"
-                Width="14"
-                x:Name="ResizeIcon" />
+            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph resize-handle}" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Opacity="0" x:Name="ResizeIcon" />
         </Border>
     </Panel>
 </UserControl>

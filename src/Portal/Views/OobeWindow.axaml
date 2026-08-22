@@ -1,4 +1,4 @@
-<tio:TioWindow
+﻿<tio:TioWindow
     CanResize="False"
     Height="480"
     IsCloseBtnShow="{OnPlatform Default=True,
@@ -24,7 +24,7 @@
     xmlns:styles="clr-namespace:Portal.Styles"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
@@ -137,49 +137,25 @@
                     <ListBox Name="ThemeListBox" Theme="{DynamicResource BorderListBox}">
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                             <StackPanel Orientation="Horizontal">
-                                <PathIcon
-                                    Data="{StaticResource PersonSparkleGeometry}"
-                                    Height="16"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,0,10,0"
-                                    VerticalAlignment="Center"
-                                    Width="16" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph cloud-sun}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                                 <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeSystem}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                             <StackPanel Orientation="Horizontal">
-                                <PathIcon
-                                    Data="{StaticResource SystemThemeGeometry}"
-                                    Height="16"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,0,10,0"
-                                    VerticalAlignment="Center"
-                                    Width="16" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph display}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                                 <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeLight}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                             <StackPanel Orientation="Horizontal">
-                                <PathIcon
-                                    Data="{StaticResource MoonGeometry}"
-                                    Height="16"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,0,10,0"
-                                    VerticalAlignment="Center"
-                                    Width="16" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph moon}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                                 <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeDark}}" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                             <StackPanel Orientation="Horizontal">
-                                <PathIcon
-                                    Data="{StaticResource SunGeometry}"
-                                    Height="16"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,0,10,0"
-                                    VerticalAlignment="Center"
-                                    Width="16" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph sun-regular}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
                                 <TextBlock Text="{Translate {x:Static loc:AppLanguageManager+Keys.oobewindow_themeMirage}}" />
                             </StackPanel>
                         </ListBoxItem>
@@ -254,13 +230,7 @@
                                     CornerRadius="10"
                                     Padding="12,8">
                                     <StackPanel Orientation="Horizontal">
-                                        <PathIcon
-                                            Data="{StaticResource FolderMaterialGeometry}"
-                                            Height="22"
-                                            HorizontalAlignment="Center"
-                                            Margin="4,0,0,2"
-                                            VerticalAlignment="Center"
-                                            Width="22" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" FontSize="22" HorizontalAlignment="Center" Margin="4,0,0,2" VerticalAlignment="Center" />
                                         <StackPanel Margin="14,0,0,0" Spacing="2">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding FolderName}" />

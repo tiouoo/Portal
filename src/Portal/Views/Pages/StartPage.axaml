@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="720"
     d:DesignWidth="1200"
     mc:Ignorable="d"
@@ -12,7 +12,7 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <UserControl.Resources>
         <DataTemplate DataType="entries1:AggregatedSearchEntry" x:Key="SearchItemTemplate">
             <StackPanel Margin="4,0">
@@ -63,11 +63,7 @@
                     <Panel Width="{Binding Bounds.Width, ElementName=SearchModeComboBox}" />
                 </tio:AutoCompleteBox.InnerLeftContent>
                 <tio:AutoCompleteBox.InnerRightContent>
-                    <PathIcon
-                        Data="{StaticResource SearchGeometry}"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Height="14"
-                        Width="14" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph magnifying-glass}" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
                 </tio:AutoCompleteBox.InnerRightContent>
             </tio:AutoCompleteBox>
             <ComboBox
@@ -86,11 +82,11 @@
                             Orientation="Horizontal"
                             Spacing="6"
                             VerticalAlignment="Center">
-                            <PathIcon
-                                Data="{Binding IconData}"
-                                Height="16"
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
                                 IsVisible="{Binding IconData, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                Width="16" />
+                                Text="{Binding IconData, Converter={x:Static icons:IconGlyphConverter.Instance}}" />
                             <TextBlock Text="{Binding DisplayText}" VerticalAlignment="Center" />
                         </StackPanel>
                     </DataTemplate>

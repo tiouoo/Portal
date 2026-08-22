@@ -1,4 +1,4 @@
-using Portal.Core.Module.Widgets;
+﻿using Portal.Core.Module.Widgets;
 using Portal.Core.Services.SystemResources;
 using Portal.Localization;
 
@@ -12,7 +12,7 @@ public sealed class NetworkResourceWidget : ResourceWidgetBase
     public NetworkResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = CommonLanguageManager.Instance.widgets_networkTitle.CurrentValue();
-        IconGeometry = GeometryResources.Get("NetworkGeometry");;
+        IconGlyph = "tower-cell1";;
         ProgressMaximum = MaxReferenceMBps;
     }
 

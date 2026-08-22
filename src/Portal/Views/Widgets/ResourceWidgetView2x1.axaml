@@ -8,18 +8,18 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Widgets"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module">
     <DockPanel Margin="12,10,12,10">
 
         <StackPanel
             DockPanel.Dock="Top"
             Orientation="Horizontal"
             Spacing="5">
-            <PathIcon
-                Data="{Binding IconGeometry}"
-                Height="16"
-                VerticalAlignment="Center"
-                Width="16" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
+                Text="{Binding IconGlyph, Converter={x:Static icons:IconGlyphConverter.Instance}}"
+                VerticalAlignment="Center" />
             <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
             <TextBlock
                 FontSize="16"

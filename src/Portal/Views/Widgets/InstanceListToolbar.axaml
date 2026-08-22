@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="40"
     d:DesignWidth="1200"
     mc:Ignorable="d"
@@ -10,7 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="clr-namespace:Portal.ViewModels"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <StackPanel
             HorizontalAlignment="Left"
@@ -24,13 +24,7 @@
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <PathIcon
-                        Data="{StaticResource DocumentLinesGeometry}"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Height="21"
-                        IsVisible="{Binding ShowTitleIcon, ElementName=Root}"
-                        Margin="0,-1,0,0"
-                        Width="21" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph clipboard-list}" FontSize="21" Foreground="{DynamicResource InnerForegroundColor}" IsVisible="{Binding ShowTitleIcon, ElementName=Root}" Margin="0,-1,0,0" />
                     <TextBlock
                         FontSize="15"
                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -50,11 +44,7 @@
                 Margin="5,0,0,0"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Center">
-                <PathIcon
-                    Data="{StaticResource RefreshGeometry}"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Height="16"
-                    Width="16" />
+                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" Foreground="{DynamicResource InnerForegroundColor}" />
             </Button>
         </StackPanel>
         <StackPanel
@@ -73,17 +63,17 @@
                     <MenuFlyout>
                         <MenuItem Click="ImportModpack_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_importModpack}}">
                             <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource FolderGeometry}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Click="AddFolder_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_addFolder}}">
                             <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource PeopleGeometry}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph database}" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Click="ToDownload_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_createNewInstance}}">
                             <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource DownloadArrowGeometry}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph download}" />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuFlyout>
@@ -119,11 +109,7 @@
                 Text="{Binding SearchText}"
                 Width="170">
                 <TextBox.InnerRightContent>
-                    <PathIcon
-                        Data="{StaticResource SearchGeometry}"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Height="14"
-                        Width="14" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph magnifying-glass}" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
                 </TextBox.InnerRightContent>
             </TextBox>
         </StackPanel>

@@ -1,10 +1,10 @@
-<UserControl
+﻿<UserControl
     x:Class="Portal.Views.Pages.InstancePages.BedrockWorldTemplates"
     x:DataType="local:BedrockWorldTemplates"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="Border.world-template-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -148,11 +148,7 @@
                                                 IsVisible="{Binding HasIcon}"
                                                 Source="{Binding Icon}"
                                                 Stretch="UniformToFill" />
-                                            <PathIcon
-                                                Data="{StaticResource FolderOutlineGeometry}"
-                                                Height="32"
-                                                IsVisible="{Binding !HasIcon}"
-                                                Width="32" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder1}" FontSize="32" IsVisible="{Binding !HasIcon}" />
                                         </Grid>
                                     </Border>
                                     <TextBlock

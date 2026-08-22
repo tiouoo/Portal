@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -33,9 +33,9 @@ public abstract class ResourceWidgetBase : IWidgetContent
         AvaloniaProperty.RegisterDirect<ResourceWidgetBase, double>(nameof(ProgressMaximum), o => o.ProgressMaximum,
             (o, v) => o.ProgressMaximum = v);
 
-    public static readonly DirectProperty<ResourceWidgetBase, StreamGeometry?> IconGeometryProperty =
-        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, StreamGeometry?>(nameof(IconGeometry),
-            o => o.IconGeometry, (o, v) => o.IconGeometry = v);
+    public static readonly DirectProperty<ResourceWidgetBase, string?> IconGlyphProperty =
+        AvaloniaProperty.RegisterDirect<ResourceWidgetBase, string?>(nameof(IconGlyph),
+            o => o.IconGlyph, (o, v) => o.IconGlyph = v);
 
     public static readonly DirectProperty<ResourceWidgetBase, bool> HasSecondaryTextProperty =
         AvaloniaProperty.RegisterDirect<ResourceWidgetBase, bool>(nameof(HasSecondaryText), o => o.HasSecondaryText,
@@ -46,7 +46,7 @@ public abstract class ResourceWidgetBase : IWidgetContent
             (o, v) => o.IsLoading = v);
 
     private bool _hasSecondaryText = true;
-    private StreamGeometry? _iconGeometry;
+    private string? _iconGlyph;
     private bool _isLoading = true;
     private double _percentage;
     private string _primaryText = "--";
@@ -97,10 +97,10 @@ public abstract class ResourceWidgetBase : IWidgetContent
         set => SetAndRaise(ProgressMaximumProperty, ref _progressMaximum, value);
     }
 
-    public StreamGeometry? IconGeometry
+    public string? IconGlyph
     {
-        get => _iconGeometry;
-        set => SetAndRaise(IconGeometryProperty, ref _iconGeometry, value);
+        get => _iconGlyph;
+        set => SetAndRaise(IconGlyphProperty, ref _iconGlyph, value);
     }
 
     public bool HasSecondaryText

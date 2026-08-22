@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -35,7 +35,7 @@ public partial class SettingPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.settingPage_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("SettingsGeometry")
+        IconGlyph = IconResources.GetGlyph("gear"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

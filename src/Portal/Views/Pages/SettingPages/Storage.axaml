@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <StackPanel>
         <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
             <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_title}}" />
@@ -17,11 +17,7 @@
                 Margin="5,0,0,3"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Bottom">
-                <PathIcon
-                    Data="{StaticResource RefreshGeometry}"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Height="18"
-                    Width="18" />
+                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="18" Foreground="{DynamicResource InnerForegroundColor}" />
             </Button>
         </StackPanel>
         <DockPanel Margin="10,5,10,10">

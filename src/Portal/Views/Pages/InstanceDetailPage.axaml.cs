@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,7 +23,7 @@ public partial class InstanceDetailPage : UserControl, ITioTabPage
         PageInfo = new PageInfo
         {
             Title = instance.InstanceName,
-            Icon = GeometryResources.Get("DocumentLinesGeometry")
+            IconGlyph = IconResources.GetGlyph("clipboard-list"), IconFont = IconResources.FontFamilyName
         };
         instance.PropertyChanged += Instance_PropertyChanged;
         Loaded += (s, e) =>

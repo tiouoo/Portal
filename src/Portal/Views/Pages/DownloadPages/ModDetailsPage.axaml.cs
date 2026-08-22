@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using AsyncImageLoader;
 using Avalonia.Controls;
@@ -49,7 +49,7 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
         PageInfo = new PageInfo
         {
             Title = CommonLanguageManager.Instance.modDetails_title.CurrentValue(),
-            Icon = GeometryResources.Get("FolderGeometry")
+            IconGlyph = IconResources.GetGlyph("folder"), IconFont = IconResources.FontFamilyName
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }

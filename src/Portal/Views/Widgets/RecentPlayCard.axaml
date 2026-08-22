@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="120"
     d:DesignWidth="270"
     mc:Ignorable="d"
@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <Border
         Background="{DynamicResource TranslucentBackgroundColor}"
         BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -25,10 +25,7 @@
                     IsVisible="{Binding CanQuickPlay}"
                     Tag="{Binding Target}">
                     <MenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource SendArrowGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -36,10 +33,7 @@
                     Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_createShortcut}}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource ZapGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph bolt}" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -47,10 +41,7 @@
                     Header="{Binding FavoriteHeaderText}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource StarSolidGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -58,10 +49,7 @@
                     Header="{Binding BlockHeaderText}"
                     Tag="{Binding Target}">
                     <MenuItem.Icon>
-                        <PathIcon
-                            Data="{StaticResource DismissCircleGeometry}"
-                            Height="16"
-                            Width="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph ban}" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
             </ContextMenu>
@@ -178,11 +166,7 @@
                             Theme="{StaticResource TransparentButton}"
                             ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_quickPlay}}"
                             x:Name="QuickPlayButton">
-                            <PathIcon
-                                Data="{StaticResource SendArrowGeometry}"
-                                Foreground="{DynamicResource InnerForegroundColor}"
-                                Height="15"
-                                Width="15" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" />
                             <Button.Transitions>
                                 <Transitions>
                                     <DoubleTransition
@@ -203,17 +187,8 @@
                             Theme="{StaticResource TransparentButton}"
                             x:Name="UnfavoritedRecentPlayButton">
                             <Grid>
-                                <PathIcon
-                                    Data="{StaticResource StarSolidGeometry}"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="15"
-                                    Width="15"
-                                    x:Name="SolidStar" />
-                                <PathIcon
-                                    Data="{StaticResource StarOutlineGeometry}"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="15"
-                                    Width="15" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" x:Name="SolidStar" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star}" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" />
                             </Grid>
                             <Button.Transitions>
                                 <Transitions>
@@ -234,12 +209,7 @@
                             Tag="{Binding}"
                             Theme="{StaticResource TransparentButton}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <PathIcon
-                                    Data="{StaticResource StarSolidGeometry}"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="15"
-                                    VerticalAlignment="Center"
-                                    Width="15" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" VerticalAlignment="Center" />
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -259,11 +229,7 @@
                             Theme="{StaticResource TransparentButton}"
                             x:Name="BlockedRecentPlayButton">
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <PathIcon
-                                    Data="{StaticResource DismissCircleGeometry}"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Height="15"
-                                    Width="15" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph ban}" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" />
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"

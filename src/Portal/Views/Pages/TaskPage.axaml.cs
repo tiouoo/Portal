@@ -1,4 +1,4 @@
-using Avalonia.Media;
+﻿using Avalonia.Media;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Localization;
 using Portal.ViewModels;
@@ -20,7 +20,7 @@ public partial class TaskPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.titleBar_tasks.CurrentValue(),
-        Icon = GeometryResources.Get("DocumentTextGeometry")
+        IconGlyph = IconResources.GetGlyph("newspaper"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

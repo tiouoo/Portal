@@ -1,4 +1,4 @@
-<tio:TioWindow
+﻿<tio:TioWindow
     Height="535"
     IsCloseBtnShow="{OnPlatform Default=True,
                                 macOS=False}"
@@ -16,7 +16,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
     </tio:TioWindow.Resources>
@@ -50,11 +50,7 @@
                     Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_copyToClipboard}}"
                     HorizontalAlignment="Left">
                     <tio:IconButton.Icon>
-                        <PathIcon
-                            Data="{StaticResource ClipboardGeometry}"
-                            Height="16"
-                            Margin="0,-1,0,0"
-                            Width="14" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph file-waveform}" FontSize="16" Margin="0,-1,0,0" />
                     </tio:IconButton.Icon>
                 </tio:IconButton>
                 <StackPanel
@@ -67,10 +63,7 @@
                         Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_continueRunning}}"
                         Name="Continue">
                         <tio:IconButton.Icon>
-                            <PathIcon
-                                Data="{StaticResource CloseGeometry}"
-                                Height="13"
-                                Width="12" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph close}" FontSize="13" />
                         </tio:IconButton.Icon>
                     </tio:IconButton>
                     <tio:IconButton
@@ -79,11 +72,7 @@
                         Content="{Translate {x:Static loc:AppLanguageManager+Keys.crashwindow_exit}}"
                         Name="Exit">
                         <tio:IconButton.Icon>
-                            <PathIcon
-                                Data="{StaticResource ExitGeometry}"
-                                Height="15"
-                                Margin="0,0,-2,0"
-                                Width="15" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-right-from-bracket}" FontSize="15" Margin="0,0,-2,0" />
                         </tio:IconButton.Icon>
                     </tio:IconButton>
                     <tio:IconButton
@@ -94,12 +83,7 @@
                         Foreground="White"
                         Name="Restart">
                         <tio:IconButton.Icon>
-                            <PathIcon
-                                Data="{StaticResource ArrowClockwiseGeometry}"
-                                Foreground="White"
-                                Height="14"
-                                Margin="0,0,-2,0"
-                                Width="14" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="14" Foreground="White" Margin="0,0,-2,0" />
                         </tio:IconButton.Icon>
                     </tio:IconButton>
                 </StackPanel>

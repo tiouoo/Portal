@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -37,7 +37,7 @@ public partial class DownloadPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.downloadPage_pageTitle.CurrentValue(),
-        Icon = GeometryResources.Get("PeopleGeometry")
+        IconGlyph = IconResources.GetGlyph("database"), IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

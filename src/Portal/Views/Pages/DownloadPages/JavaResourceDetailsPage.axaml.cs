@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Core.Minecraft.Models;
@@ -22,7 +22,7 @@ public partial class JavaResourceDetailsPage : ResourceDetailsPageBase
         {
             Title = string.Format(CommonLanguageManager.Instance.javaResourceDetails_title.CurrentValue(),
                 ViewModel.Target.Definition.DisplayName),
-            Icon = GeometryResources.Get("FolderGeometry")
+            IconGlyph = IconResources.GetGlyph("folder"), IconFont = IconResources.FontFamilyName
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }

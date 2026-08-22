@@ -1,4 +1,4 @@
-using Portal.Core.Classes.Entries;
+﻿using Portal.Core.Classes.Entries;
 using Portal.Core.Module.Widgets;
 using Portal.Core.Services.SystemResources;
 using Portal.Localization;
@@ -14,7 +14,7 @@ public sealed class MemoryResourceWidget : ResourceWidgetBase
     public MemoryResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = CommonLanguageManager.Instance.widgets_memoryTitle.CurrentValue();
-        IconGeometry = GeometryResources.Get("MemoryGeometry");;
+        IconGlyph = "memory";;
     }
 
     public override ResourceKind ResourceKind => ResourceKind.Memory;

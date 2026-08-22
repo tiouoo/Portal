@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -81,22 +81,14 @@ public class WidgetWorkspace : UserControl
 
         var deleteItem = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("DeleteGeometry"),
-                Width = 16, Height = 16
-            }
+            Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = IconResources.CreateIcon("trash-can", 16)
         };
         deleteItem.Click += OnDeleteWidgetClick;
         _widgetContextMenu.Items.Add(deleteItem);
 
         var backgroundMenu = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("ImageGeometry"),
-                Width = 16, Height = 16
-            }
+            Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = IconResources.CreateIcon("image", 16)
         };
         var followItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_backgroundFollow.CurrentValue(), Classes = { "hide-icon" } };
         followItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, null);
@@ -112,11 +104,7 @@ public class WidgetWorkspace : UserControl
         var memoryModeItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_toggleDisplayMode.CurrentValue(),
-            Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("SyncGeometry"),
-                Width = 16, Height = 16
-            },
+            Icon = IconResources.CreateIcon("arrow-rotate-right", 16),
             IsVisible = false
         };
         memoryModeItem.Click += (_, _) =>
@@ -133,11 +121,7 @@ public class WidgetWorkspace : UserControl
         var newsFilterMenu = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_newsFilter.CurrentValue(),
-            Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("NewsGeometry"),
-                Width = 16, Height = 16
-            },
+            Icon = IconResources.CreateIcon("book", 16),
             IsVisible = false
         };
         var newsAllItem = new MenuItem { Header = CommonLanguageManager.Instance.news_filterAll.CurrentValue(), Classes = { "hide-icon" } };
@@ -154,11 +138,7 @@ public class WidgetWorkspace : UserControl
         var imageChangeItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_changeImage.CurrentValue(),
-            Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("CopyGeometry"),
-                Width = 16, Height = 16
-            },
+            Icon = IconResources.CreateIcon("clipboard-list", 16),
             IsVisible = false
         };
         imageChangeItem.Click += (_, _) => _ = ChangeImageAsync();
@@ -167,11 +147,7 @@ public class WidgetWorkspace : UserControl
         var imageStretchItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_toggleStretchMode.CurrentValue(),
-            Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("StretchGeometry"),
-                Width = 16, Height = 16
-            },
+            Icon = IconResources.CreateIcon("ruler", 16),
             IsVisible = false
         };
         imageStretchItem.Click += (_, _) =>
@@ -186,11 +162,7 @@ public class WidgetWorkspace : UserControl
 
         var sizeMenu = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("ResizeGeometry"),
-                Width = 16, Height = 16
-            }
+            Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = IconResources.CreateIcon("ruler", 16)
         };
         _widgetContextMenu.Items.Add(sizeMenu);
 
@@ -239,11 +211,7 @@ public class WidgetWorkspace : UserControl
         _emptyContextMenu = new ContextMenu();
         var addItem = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = new PathIcon
-            {
-                Data = GeometryResources.Get("AddGeometry"),
-                Width = 16, Height = 16
-            }
+            Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = IconResources.CreateIcon("plus", 16)
         };
         addItem.Click += (_, _) => AddWidgetCallOn?.Invoke(this, EventArgs.Empty);
         _emptyContextMenu.Items.Add(addItem);

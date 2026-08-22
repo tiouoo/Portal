@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -10,7 +10,7 @@
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
     <UserControl.Styles>
         <Style Selector="Border.mod-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -182,10 +182,7 @@
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource InfoGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph circle-info}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -194,10 +191,7 @@
                                         IsVisible="{Binding IsDisabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource ToggleGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph ban}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -206,10 +200,7 @@
                                         IsVisible="{Binding IsEnabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource ToggleGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph ban}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -218,10 +209,7 @@
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource RefreshGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -230,10 +218,7 @@
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource SwapGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-right-arrow-left}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -242,10 +227,7 @@
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource DownloadArrowGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph download}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator IsVisible="{Binding HasIdentity}" />
@@ -254,10 +236,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_openInFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource OpenFolderGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph square-arrow-up-right}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -265,10 +244,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <PathIcon
-                                                Data="{StaticResource DeleteGeometry}"
-                                                Height="16"
-                                                Width="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>
@@ -315,11 +291,7 @@
                                                     Source="{Binding Icon}"
                                                     Stretch="UniformToFill"
                                                     Width="56" />
-                                                <PathIcon
-                                                    Data="{StaticResource FolderGeometry}"
-                                                    Height="32"
-                                                    IsVisible="{Binding !HasIcon}"
-                                                    Width="32" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" FontSize="32" IsVisible="{Binding !HasIcon}" />
                                             </Grid>
                                         </Border>
                                         <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">
