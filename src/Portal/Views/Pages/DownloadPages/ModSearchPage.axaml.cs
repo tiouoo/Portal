@@ -9,6 +9,7 @@ using Iridium.Enums.Resources;
 using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.App.Helpers;
+using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -87,9 +88,12 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     public ModSearchPageViewModel()
     {
-        SelectedSource = Sources[1];
-        SelectedLoader = Loaders[0];
-        SelectedSort = SortOptions[0];
+        SelectedSource = Sources.FirstOrDefault(source => source.Kind == DownloadSearchPersistence.ToUiSource(Data.ConfigEntry.DefaultDownloadSearchSource))
+                         ?? Sources[1];
+        SelectedLoader = Loaders.FirstOrDefault(loader => loader.Kind == Data.ConfigEntry.DownloadSearchLoader)
+                         ?? Loaders[0];
+        SelectedSort = SortOptions.FirstOrDefault(sort => sort.Kind == DownloadSearchPersistence.ToUiSort(Data.ConfigEntry.DefaultDownloadSearchSort))
+                       ?? SortOptions[0];
     }
 
     public ObservableCollection<ModSearchResultItem> Results { get; } = [];
@@ -157,6 +161,9 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     partial void OnSelectedSourceChanged(ModSearchSource? value)
     {
+        if (_initialized && value is not null)
+            Data.ConfigEntry.DefaultDownloadSearchSource = DownloadSearchPersistence.ToCoreSource(value.Kind);
+
         OnPropertyChanged(nameof(Categories));
         _suppressFilterSearch = true;
         try
@@ -199,6 +206,9 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     partial void OnSelectedSortChanged(ModSearchSort? value)
     {
+        if (_initialized && value is not null)
+            Data.ConfigEntry.DefaultDownloadSearchSort = DownloadSearchPersistence.ToCoreSort(value.Kind);
+
         if (!_initialized || _suppressFilterSearch)
             return;
 
@@ -227,6 +237,9 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     partial void OnSelectedLoaderChanged(ModSearchLoader? value)
     {
+        if (_initialized)
+            Data.ConfigEntry.DownloadSearchLoader = value?.Kind ?? ModLoaderType.Any;
+
         if (!_initialized || _suppressFilterSearch)
             return;
 

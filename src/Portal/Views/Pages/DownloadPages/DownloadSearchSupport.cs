@@ -2,11 +2,43 @@ using System.Text.RegularExpressions;
 using Iridium.Enums.Resources;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
+using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
+
+internal static class DownloadSearchPersistence
+{
+    public static DownloadSearchSource ToCoreSource(SearchSource source) => source switch
+    {
+        SearchSource.Modrinth => DownloadSearchSource.Modrinth,
+        _ => DownloadSearchSource.CurseForge
+    };
+
+    public static SearchSource ToUiSource(DownloadSearchSource source) => source switch
+    {
+        DownloadSearchSource.Modrinth => SearchSource.Modrinth,
+        _ => SearchSource.CurseForge
+    };
+
+    public static DownloadSearchSort ToCoreSort(SearchSort sort) => sort switch
+    {
+        SearchSort.Popularity => DownloadSearchSort.Popularity,
+        SearchSort.Updated => DownloadSearchSort.Updated,
+        SearchSort.Newest => DownloadSearchSort.Newest,
+        _ => DownloadSearchSort.Relevance
+    };
+
+    public static SearchSort ToUiSort(DownloadSearchSort sort) => sort switch
+    {
+        DownloadSearchSort.Popularity => SearchSort.Popularity,
+        DownloadSearchSort.Updated => SearchSort.Updated,
+        DownloadSearchSort.Newest => SearchSort.Newest,
+        _ => SearchSort.Relevance
+    };
+}
 
 public readonly record struct MinecraftVersionSortKey(int Major, int Minor, int Patch, int Stage)
     : IComparable<MinecraftVersionSortKey>

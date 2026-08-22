@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.Const;
 using Portal.Localization;
 using Portal.Views.Pages.DownloadPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -107,13 +108,14 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         if (FilterComboBox.SelectedIndex < 0)
             FilterComboBox.SelectedIndex = 0;
         if (SortComboBox.SelectedIndex < 0)
-            SortComboBox.SelectedIndex = 0;
+            SortComboBox.SelectedIndex = Math.Clamp(Data.ConfigEntry.ResourceListSortIndex, 0, SortOptions.Length - 1);
     }
 
     private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
             return;
+        Data.ConfigEntry.ResourceListSortIndex = combo.SelectedIndex;
         _sortMode = combo.SelectedIndex switch
         {
             1 => ResourceSortMode.Name,

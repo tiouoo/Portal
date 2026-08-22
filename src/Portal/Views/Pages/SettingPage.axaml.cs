@@ -3,6 +3,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Module.DefaultPage;
+using Portal.Core.Const;
 using Portal.Localization;
 using Portal.Views.Pages.SettingPages;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -26,9 +27,27 @@ public partial class SettingPage : UserControl, ITioTabPage
         Loaded += (s, e) =>
         {
             Logger.Info("[Settings] Settings page loaded.");
+            WireNavPersistence();
             var a = SettingPageViewModel.CurrentPage;
             SettingPageViewModel.CurrentPage = null;
             SettingPageViewModel.CurrentPage = a;
+        };
+    }
+
+    private void WireNavPersistence()
+    {
+        WireCollapsePersistence("GeneralNavItem", value => Data.ConfigEntry.SettingsNavGeneralExpanded = !value);
+        WireCollapsePersistence("GameNavItem", value => Data.ConfigEntry.SettingsNavGameExpanded = !value);
+        WireCollapsePersistence("NetworkNavItem", value => Data.ConfigEntry.SettingsNavNetworkExpanded = !value);
+    }
+
+    private void WireCollapsePersistence(string itemName, Action<bool> setter)
+    {
+        if (this.FindControl<NavMenuItem>(itemName) is not { } item) return;
+        item.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == NavMenuItem.IsVerticalCollapsedProperty)
+                setter(item.IsVerticalCollapsed);
         };
     }
 
@@ -72,6 +91,8 @@ public partial class SettingPage : UserControl, ITioTabPage
 public partial class SettingPageViewModel : ObservableObject, IDisposable
 {
     private readonly Dictionary<Type, UserControl> _settingPageCache = new();
+
+    public Data Data => Data.Instance;
 
     public SettingPageViewModel()
     {

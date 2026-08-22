@@ -6,6 +6,7 @@ using Iridium.Enums.Resources;
 using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.App.Helpers;
+using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -69,9 +70,14 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
                 new JavaResourceSearchSource("Modrinth", SearchSource.Modrinth)
             ]
             : [new JavaResourceSearchSource("CurseForge", SearchSource.CurseForge)];
-        SelectedSource = Sources.Last();
-        SelectedLoader = Loaders[0];
-        SelectedSort = SortOptions[0];
+        SelectedSource = Sources.FirstOrDefault(source =>
+                               source.Kind == DownloadSearchPersistence.ToUiSource(Data.ConfigEntry.DefaultDownloadSearchSource))
+                           ?? Sources.Last();
+        SelectedLoader = Loaders.FirstOrDefault(loader => loader.Kind == Data.ConfigEntry.DownloadSearchLoader)
+                         ?? Loaders[0];
+        SelectedSort = SortOptions.FirstOrDefault(sort =>
+                           sort.Kind == DownloadSearchPersistence.ToUiSort(Data.ConfigEntry.DefaultDownloadSearchSort))
+                       ?? SortOptions[0];
     }
 
     public JavaResourceDefinition Definition { get; }
@@ -140,6 +146,9 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
     partial void OnSelectedSourceChanged(JavaResourceSearchSource? value)
     {
+        if (_initialized && value is not null)
+            Data.ConfigEntry.DefaultDownloadSearchSource = DownloadSearchPersistence.ToCoreSource(value.Kind);
+
         _suppressFilterSearch = true;
         try
         {
@@ -157,6 +166,9 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
     partial void OnSelectedSortChanged(ModSearchSort? value)
     {
+        if (_initialized && value is not null)
+            Data.ConfigEntry.DefaultDownloadSearchSort = DownloadSearchPersistence.ToCoreSort(value.Kind);
+
         if (!_initialized || _suppressFilterSearch)
             return;
 
@@ -173,6 +185,9 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
     partial void OnSelectedLoaderChanged(ModSearchLoader? value)
     {
+        if (_initialized)
+            Data.ConfigEntry.DownloadSearchLoader = value?.Kind ?? ModLoaderType.Any;
+
         if (!_initialized || _suppressFilterSearch)
             return;
 

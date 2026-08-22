@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
+using Portal.Core.Classes;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Java;
@@ -43,6 +44,17 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowRecentPlays { get; set; } = true;
     [ObservableProperty] public partial bool NewTabRecentPlaysExpanded { get; set; } = true;
     [ObservableProperty] public partial bool StartPageRecentPlaysExpanded { get; set; }
+    [ObservableProperty] public partial bool DownloadJavaEditionExpanded { get; set; } = true;
+    [ObservableProperty] public partial bool DownloadBedrockEditionExpanded { get; set; }
+    [ObservableProperty] public partial bool DownloadOthersExpanded { get; set; }
+    [ObservableProperty] public partial bool SettingsNavGeneralExpanded { get; set; } = true;
+    [ObservableProperty] public partial bool SettingsNavGameExpanded { get; set; } = true;
+    [ObservableProperty] public partial bool SettingsNavNetworkExpanded { get; set; } = true;
+    [ObservableProperty] public partial DownloadSearchSource DefaultDownloadSearchSource { get; set; } = DownloadSearchSource.Modrinth;
+    [ObservableProperty] public partial ModLoaderType DownloadSearchLoader { get; set; } = ModLoaderType.Any;
+    [ObservableProperty] public partial DownloadSearchSort DefaultDownloadSearchSort { get; set; } = DownloadSearchSort.Relevance;
+    [ObservableProperty] public partial int ResourceListSortIndex { get; set; }
+    [ObservableProperty] public partial string DownloadLastSelectedPage { get; set; } = string.Empty;
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
     [ObservableProperty] public partial string? ProxyServer { get; set; }
@@ -66,13 +78,8 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;
     [ObservableProperty] public partial FilePicker FilePicker { get; set; } = FilePicker.System;
     [ObservableProperty] public partial BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Default;
-
-    [ObservableProperty]
-    public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
-
-    [ObservableProperty]
-    public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
-
+    [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
+    [ObservableProperty] public partial InstanceSortType DefaultInstanceSortType { get; set; } = InstanceSortType.PlayTime;
     [ObservableProperty] public partial int DownloadMaxThreadCount { get; set; } = 64;
     [ObservableProperty] public partial int DownloadMaxRetryCount { get; set; } = 4;
     [ObservableProperty] public partial int DownloadMaxFragmentCount { get; set; } = 32;

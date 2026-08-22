@@ -40,3 +40,17 @@ public enum NewTabContent
     StartPage,
     Widget
 }
+
+public enum DownloadSearchSource
+{
+    CurseForge,
+    Modrinth
+}
+
+public enum DownloadSearchSort
+{
+    Relevance,
+    Popularity,
+    Updated,
+    Newest
+}

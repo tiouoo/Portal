@@ -23,7 +23,7 @@
                 Margin="0,0,10,0"
                 Name="NavMenu"
                 Theme="{StaticResource FlatScrollBarTheme}">
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_General}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_General}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGeneralExpanded}" Name="GeneralNavItem">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Appearance}"
@@ -51,7 +51,7 @@
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_About}}"
                         Name="AboutItem" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Game}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Game}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGameExpanded}" Name="GameNavItem">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Account}"
@@ -69,7 +69,7 @@
                         CommandParameter="{x:Type p:Advanced}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Advanced}}" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Network}}">
+                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Network}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavNetworkExpanded}" Name="NetworkNavItem">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Download}"

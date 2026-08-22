@@ -11,6 +11,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Const;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
@@ -91,13 +92,14 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         if (FilterComboBox.SelectedIndex < 0)
             FilterComboBox.SelectedIndex = 0;
         if (SortComboBox.SelectedIndex < 0)
-            SortComboBox.SelectedIndex = 0;
+            SortComboBox.SelectedIndex = Math.Clamp(Data.ConfigEntry.ResourceListSortIndex, 0, SortOptions.Length - 1);
     }
 
     private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
             return;
+        Data.ConfigEntry.ResourceListSortIndex = combo.SelectedIndex;
         _sortMode = combo.SelectedIndex switch
         {
             1 => ResourceSortMode.Name,

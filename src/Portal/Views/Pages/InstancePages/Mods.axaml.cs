@@ -16,6 +16,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Flurl.Http;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -151,13 +152,14 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         if (FilterComboBox.SelectedIndex < 0)
             FilterComboBox.SelectedIndex = 0;
         if (SortComboBox.SelectedIndex < 0)
-            SortComboBox.SelectedIndex = 0;
+            SortComboBox.SelectedIndex = Math.Clamp(Data.ConfigEntry.ResourceListSortIndex, 0, SortOptions.Length - 1);
     }
 
     private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
             return;
+        Data.ConfigEntry.ResourceListSortIndex = combo.SelectedIndex;
         _sortMode = combo.SelectedIndex switch
         {
             1 => ResourceSortMode.Name,
