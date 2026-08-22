@@ -148,7 +148,7 @@
                                                 IsVisible="{Binding HasIcon}"
                                                 Source="{Binding Icon}"
                                                 Stretch="UniformToFill" />
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder1}" FontSize="32" IsVisible="{Binding !HasIcon}" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" FontSize="32" IsVisible="{Binding !HasIcon}" />
                                         </Grid>
                                     </Border>
                                     <TextBlock

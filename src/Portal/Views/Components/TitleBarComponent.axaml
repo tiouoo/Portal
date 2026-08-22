@@ -10,8 +10,10 @@
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:icons="using:Portal.Module"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid.Styles>
         <Style Selector="Button.custom-title-bar-button">
             <Setter Property="Background" Value="Transparent" />
@@ -166,7 +168,12 @@
             Margin="3,0,-2,0"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_searchToolTip}}">
-            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph magnifying-glass}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Text="{icons:IconGlyph magnifying-glass}"
+                VerticalAlignment="Center" />
         </Button>
         <Button
             Classes="custom-title-bar-button"
@@ -181,7 +188,10 @@
                         Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_javaEditionMenuItem}}"
                         Tag="Java">
                         <MenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph mug-hot}" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                Text="{icons:IconGlyph mug-hot}" />
                         </MenuItem.Icon>
                     </MenuItem>
                     <MenuItem
@@ -189,12 +199,20 @@
                         Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_bedrockEditionMenuItem}}"
                         Tag="Bedrock">
                         <MenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph instalod}" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                Text="{icons:IconGlyph instalod}" />
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuFlyout>
             </Button.Flyout>
-            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph link}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Text="{icons:IconGlyph link}"
+                VerticalAlignment="Center" />
         </Button>
         <Button
             Classes="custom-title-bar-button"
@@ -203,7 +221,12 @@
             Margin="2,0,0,0"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_multiplayerToolTip}}">
-            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph link}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Text="{icons:IconGlyph link}"
+                VerticalAlignment="Center" />
         </Button>
         <Button
             Classes="custom-title-bar-button"
@@ -214,31 +237,58 @@
                 <MenuFlyout>
                     <MenuItem Click="OpenCreateInstance" Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_createNewInstanceMenuItem}}">
                         <MenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph plus}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                HorizontalAlignment="Center"
+                                Text="{icons:IconGlyph plus}"
+                                VerticalAlignment="Center" />
                         </MenuItem.Icon>
                     </MenuItem>
                     <MenuItem Click="ToolsButton_OnClick" Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_utilitiesMenuItem}}">
                         <MenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph wrench}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                HorizontalAlignment="Center"
+                                Text="{icons:IconGlyph wrench}"
+                                VerticalAlignment="Center" />
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuFlyout>
             </Button.Flyout>
-            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph wrench}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Text="{icons:IconGlyph wrench}"
+                VerticalAlignment="Center" />
         </Button>
         <Button
             Classes="custom-title-bar-button"
             Click="DownloadButton_OnClick"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_downloadToolTip}}">
-            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph download}" FontSize="18" HorizontalAlignment="Center" Margin="0,-1,0,0" VerticalAlignment="Center" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="18"
+                HorizontalAlignment="Center"
+                Margin="0,-1,0,0"
+                Text="{icons:IconGlyph download}"
+                VerticalAlignment="Center" />
         </Button>
         <Button
             Classes="custom-title-bar-button"
             Click="SettingMenuItem_OnClick"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_settingsToolTip}}">
-            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph gear}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
+                FontWeight="Thin"
+                HorizontalAlignment="Center"
+                Text="{icons:IconGlyph gear}"
+                VerticalAlignment="Center" />
         </Button>
         <Separator
             Background="{DynamicResource ForegroundColor}"
@@ -261,14 +311,20 @@
                                 FontSize="14"
                                 HorizontalAlignment="Left"
                                 Margin="0,5,0,7"
-                                PointerPressed="InputElement_OnPointerPressed" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_switchAccountText}}" />
+                                PointerPressed="InputElement_OnPointerPressed"
+                                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_switchAccountText}}" />
                             <Button
                                 Click="AddAcountButton_OnClick"
                                 DockPanel.Dock="Right"
                                 HorizontalAlignment="Right"
                                 Theme="{StaticResource TransparentButton}"
                                 VerticalAlignment="Center">
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph plus}" FontSize="21" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="21"
+                                    HorizontalAlignment="Center"
+                                    Text="{icons:IconGlyph plus}"
+                                    VerticalAlignment="Center" />
                             </Button>
                         </DockPanel>
 
@@ -321,7 +377,10 @@
                                                 CommandParameter="{Binding}"
                                                 Theme="{StaticResource TransparentButton}"
                                                 VerticalAlignment="Center">
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="14" />
+                                                <TextBlock
+                                                    FontFamily="{StaticResource IconFont}"
+                                                    FontSize="14"
+                                                    Text="{icons:IconGlyph trash-can}" />
                                                 <Button.Transitions>
                                                     <Transitions>
                                                         <DoubleTransition Duration="0:0:0.1" Property="Opacity" />
@@ -361,7 +420,10 @@
                                             CommandParameter="{Binding}"
                                             Grid.Column="2"
                                             Theme="{StaticResource TransparentButton}">
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="14" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="14"
+                                                Text="{icons:IconGlyph trash-can}" />
                                         </Button>
                                     </Grid>
                                 </DataTemplate>
