@@ -33,7 +33,7 @@ public partial class LitematicaPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.litematica_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("tag"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue619", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

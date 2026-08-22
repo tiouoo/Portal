@@ -27,7 +27,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <common:NavScrollOpacityMaskConverter x:Key="NavScrollOpacityMaskConverter" />
@@ -227,7 +227,7 @@
                                                     <DoubleTransition Duration="0:0:0.07" Property="Opacity" />
                                                 </Transitions>
                                             </Button.Transitions>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph close}" FontSize="9" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe609;" FontSize="9" />
                                         </Button>
                                     </Grid>
                                 </Panel>
@@ -246,7 +246,7 @@
                     ToolTip.ShowDelay="900"
                     ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.app_tooltips_newTab}}"
                     Width="30">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph plus}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe645;" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
             </DockPanel>
         </ScrollViewer>

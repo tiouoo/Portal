@@ -10,7 +10,7 @@
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <Border
             Background="Transparent"
@@ -31,17 +31,17 @@
                         <ContextMenu>
                             <MenuItem Click="SaveIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_saveIconAs}}">
                                 <MenuItem.Icon>
-                                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph file-image}" FontSize="16" />
+                                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe632;" FontSize="16" />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <MenuItem Click="ChangeIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_changeIcon}}">
                                 <MenuItem.Icon>
-                                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph pen}" FontSize="16" />
+                                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62c;" FontSize="16" />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <MenuItem Click="ResetIcon_Click" Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_resetIcon}}">
                                 <MenuItem.Icon>
-                                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" />
+                                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
                                 </MenuItem.Icon>
                             </MenuItem>
                         </ContextMenu>
@@ -70,7 +70,7 @@
                                             Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_openInstanceFolder}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph square-arrow-up-right}" FontSize="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe628;" FontSize="16" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
@@ -78,7 +78,7 @@
                                             Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_createShortcut}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph bolt}" FontSize="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe607;" FontSize="16" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
@@ -88,7 +88,7 @@
                                             IsVisible="{Binding Instance.CanModifyVersion}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
@@ -98,7 +98,7 @@
                                             IsVisible="{Binding Instance.CanModifyVersion}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph pen}" FontSize="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62c;" FontSize="16" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
@@ -107,7 +107,7 @@
                                             IsVisible="{Binding Instance.IsJava}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph download}" FontSize="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" FontSize="16" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
@@ -115,7 +115,7 @@
                                             Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_deleteInstance}}"
                                             Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="16" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                     </MenuFlyout>

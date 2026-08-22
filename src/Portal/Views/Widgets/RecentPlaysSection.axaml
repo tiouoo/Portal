@@ -11,7 +11,7 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:viewmodels="clr-namespace:Portal.ViewModels"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="8">
         <DockPanel Margin="{Binding HeaderMargin, ElementName=Root}">
             <StackPanel
@@ -23,7 +23,7 @@
                     Foreground="{DynamicResource InnerForegroundColor}"
                     Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplayssection_recentPlays}}" />
                 <Button Click="RefreshRecentPlays_Click" Theme="{StaticResource TransparentButton}">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" Foreground="{DynamicResource InnerForegroundColor}" />
                 </Button>
             </StackPanel>
             <Button

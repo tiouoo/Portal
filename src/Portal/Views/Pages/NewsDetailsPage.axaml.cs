@@ -29,7 +29,7 @@ public partial class NewsDetailsPage : UserControl, ITioTabPage
             Title = string.IsNullOrEmpty(entry.Title)
                 ? CommonLanguageManager.Instance.newsDetails_pageTitle.CurrentValue()
                 : entry.Title,
-            IconGlyph = IconResources.GetGlyph("book"), IconFont = IconResources.FontFamilyName
+            IconGlyph = "\ue63d", IconFont = IconResources.FontFamilyName
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }

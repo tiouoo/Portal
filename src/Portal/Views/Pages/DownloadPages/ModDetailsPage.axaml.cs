@@ -49,7 +49,7 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
         PageInfo = new PageInfo
         {
             Title = CommonLanguageManager.Instance.modDetails_title.CurrentValue(),
-            IconGlyph = IconResources.GetGlyph("folder"), IconFont = IconResources.FontFamilyName
+            IconGlyph = "\ue611", IconFont = IconResources.FontFamilyName
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }

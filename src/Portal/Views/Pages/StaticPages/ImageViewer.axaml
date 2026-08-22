@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:staticPages="clr-namespace:Portal.Views.Pages.StaticPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid>
         <controls1:ScrollView
             Classes="Flat"
@@ -45,7 +45,7 @@
                     Theme="{StaticResource TransparentButton}"
                     ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomOutTooltip}}"
                     Width="32">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph minus}" FontSize="16" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe608;" FontSize="16" />
                 </RepeatButton>
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -59,7 +59,7 @@
                     Theme="{StaticResource TransparentButton}"
                     ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomInTooltip}}"
                     Width="32">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph plus}" FontSize="16" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe645;" FontSize="16" />
                 </RepeatButton>
             </StackPanel>
         </Border>

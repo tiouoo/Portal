@@ -9,7 +9,7 @@ public sealed class CpuResourceWidget : ResourceWidgetBase
     public CpuResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = "CPU";
-        IconGlyph = "microchip";;
+        IconGlyph = "\ue62b";
         HasSecondaryText = false;
     }
 

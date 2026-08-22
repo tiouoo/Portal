@@ -10,7 +10,7 @@ public sealed class GpuResourceWidget : ResourceWidgetBase
     public GpuResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = "GPU";
-        IconGlyph = "display";;
+        IconGlyph = "\ue636";
     }
 
     public override ResourceKind ResourceKind => ResourceKind.Gpu;

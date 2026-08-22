@@ -34,7 +34,7 @@ public partial class ImageViewer : UserControl, ITioTabPage, IDisposable
         PageInfo = new PageInfo
         {
             Title = FileName,
-            IconGlyph = IconResources.GetGlyph("file-image"), IconFont = IconResources.FontFamilyName
+            IconGlyph = "\ue632", IconFont = IconResources.FontFamilyName
         };
 
         InitializeComponent();

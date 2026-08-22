@@ -10,7 +10,7 @@
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
@@ -106,7 +106,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_openFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph square-arrow-up-right}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe628;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -114,7 +114,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_changeIcon}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -122,7 +122,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_showDetails}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph database}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe653;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -131,7 +131,7 @@
                                         IsVisible="{Binding CanQuickEnter}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -139,7 +139,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_createShortcut}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph bolt}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe607;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -148,7 +148,7 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.saves_deleteWorld}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>

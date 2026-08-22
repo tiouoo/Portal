@@ -11,7 +11,7 @@
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:toolsPages="clr-namespace:Portal.Views.Pages.ToolsPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <controls:ScrollView
             Classes="Flat"
@@ -27,7 +27,7 @@
                     IsSelected="True"
                     IsVisible="{Binding IsWindows}">
                     <tio:NavMenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph instalod}" FontSize="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe60f;" FontSize="16" />
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
             </tio:NavMenu>

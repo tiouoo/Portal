@@ -10,7 +10,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Border
         Background="{DynamicResource TranslucentBackgroundColor}"
         BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -26,7 +26,7 @@
                     Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_play}}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -34,7 +34,7 @@
                     Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_createShortcut}}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph bolt}" FontSize="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe607;" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -42,7 +42,7 @@
                     Header="{Binding FavoriteHeaderText}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -50,7 +50,7 @@
                     Header="{Binding BlockHeaderText}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph ban}" FontSize="16" />
+                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61f;" FontSize="16" />
                     </MenuItem.Icon>
                 </MenuItem>
             </ContextMenu>
@@ -139,7 +139,7 @@
                             Theme="{StaticResource TransparentButton}"
                             ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_launchInstance}}"
                             x:Name="LaunchButton">
-                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="{Binding LaunchIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="{Binding LaunchIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
                             <Button.Transitions>
                                 <Transitions>
                                     <DoubleTransition
@@ -159,8 +159,8 @@
                             Theme="{StaticResource TransparentButton}"
                             x:Name="UnfavoritedButton">
                             <Grid>
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" x:Name="SolidStar" />
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star}" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" x:Name="SolidStar" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe643;" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
                             </Grid>
                             <Button.Transitions>
                                 <Transitions>
@@ -181,7 +181,7 @@
                             Theme="{StaticResource TransparentButton}"
                             x:Name="FavoritedButton">
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
                                 <TextBlock
                                     FontSize="{Binding ContentFontSize, ElementName=Root}"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -200,7 +200,7 @@
                             Theme="{StaticResource TransparentButton}"
                             x:Name="BlockedButton">
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph ban}" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61f;" FontSize="{Binding ActionIconSize, ElementName=Root}" Foreground="{DynamicResource InnerForegroundColor}" />
                                 <TextBlock
                                     FontSize="{Binding ContentFontSize, ElementName=Root}"
                                     Foreground="{DynamicResource InnerForegroundColor}"

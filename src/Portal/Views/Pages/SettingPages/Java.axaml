@@ -11,7 +11,7 @@
     xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
         <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_title}}" />
         <StackPanel Spacing="5">
@@ -223,7 +223,7 @@
                                 Tag="{Binding}"
                                 Theme="{StaticResource TransparentButton}"
                                 VerticalAlignment="Center">
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="14" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="14" />
                             </Button>
                         </Grid>
                     </DataTemplate>

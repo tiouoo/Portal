@@ -6,7 +6,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Border
         Background="Transparent"
         CornerRadius="10"
@@ -59,7 +59,7 @@
                     ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickworldwidget1x1_quickJoinWorld}}"
                     VerticalAlignment="Bottom"
                     x:Name="LaunchButton">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
                     <Button.Transitions>
                         <Transitions>
                             <DoubleTransition

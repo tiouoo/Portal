@@ -14,7 +14,7 @@ public sealed class MemoryResourceWidget : ResourceWidgetBase
     public MemoryResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = CommonLanguageManager.Instance.widgets_memoryTitle.CurrentValue();
-        IconGlyph = "memory";;
+        IconGlyph = "\ue62d";
     }
 
     public override ResourceKind ResourceKind => ResourceKind.Memory;

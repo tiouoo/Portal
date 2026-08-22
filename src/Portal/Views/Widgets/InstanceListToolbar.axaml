@@ -10,7 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="clr-namespace:Portal.ViewModels"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <StackPanel
             HorizontalAlignment="Left"
@@ -24,7 +24,7 @@
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph clipboard-list}" FontSize="21" Foreground="{DynamicResource InnerForegroundColor}" IsVisible="{Binding ShowTitleIcon, ElementName=Root}" Margin="0,-1,0,0" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe635;" FontSize="21" Foreground="{DynamicResource InnerForegroundColor}" IsVisible="{Binding ShowTitleIcon, ElementName=Root}" Margin="0,-1,0,0" />
                     <TextBlock
                         FontSize="15"
                         Foreground="{DynamicResource InnerForegroundColor}"
@@ -44,7 +44,7 @@
                 Margin="5,0,0,0"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Center">
-                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" Foreground="{DynamicResource InnerForegroundColor}" />
+                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" Foreground="{DynamicResource InnerForegroundColor}" />
             </Button>
         </StackPanel>
         <StackPanel
@@ -63,17 +63,17 @@
                     <MenuFlyout>
                         <MenuItem Click="ImportModpack_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_importModpack}}">
                             <MenuItem.Icon>
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Click="AddFolder_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_addFolder}}">
                             <MenuItem.Icon>
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph database}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe653;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Click="ToDownload_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_createNewInstance}}">
                             <MenuItem.Icon>
-                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph download}" />
+                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuFlyout>
@@ -109,7 +109,7 @@
                 Text="{Binding SearchText}"
                 Width="170">
                 <TextBox.InnerRightContent>
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph magnifying-glass}" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe615;" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
                 </TextBox.InnerRightContent>
             </TextBox>
         </StackPanel>

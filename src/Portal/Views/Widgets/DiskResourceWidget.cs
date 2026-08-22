@@ -10,7 +10,7 @@ public sealed class DiskResourceWidget : ResourceWidgetBase
     public DiskResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = CommonLanguageManager.Instance.widgets_diskTitle.CurrentValue();
-        IconGlyph = "hard-drive";;
+        IconGlyph = "\ue62f";
     }
 
     public override ResourceKind ResourceKind => ResourceKind.Disk;

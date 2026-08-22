@@ -35,7 +35,7 @@ public partial class SettingPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.settingPage_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("gear"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue627", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

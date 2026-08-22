@@ -50,7 +50,7 @@ public partial class NewTabPage : InstanceListPageBase
     public override PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.newTabPage_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("tag"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue619", IconFont = IconResources.FontFamilyName
     };
 
     protected override InstanceListViewModelBase PageViewModel => NewTabViewModel;

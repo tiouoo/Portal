@@ -11,7 +11,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
         <StackPanel.Resources>
             <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
@@ -27,7 +27,7 @@
                 Margin="5,0,0,2"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Bottom">
-                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph plus}" FontSize="22" Foreground="{DynamicResource InnerForegroundColor}" />
+                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe645;" FontSize="22" Foreground="{DynamicResource InnerForegroundColor}" />
             </Button>
         </StackPanel>
         <ListBox
@@ -56,7 +56,7 @@
                                     CommandParameter="{Binding}"
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_saveSkin}}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph file-image}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe632;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem
@@ -64,7 +64,7 @@
                                     CommandParameter="{Binding}"
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_previewSkin}}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph user}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63e;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem
@@ -72,7 +72,7 @@
                                     CommandParameter="{Binding}"
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_switchAvatar}}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-right-arrow-left}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe621;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
 
@@ -83,7 +83,7 @@
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_refreshInfo}}"
                                     IsVisible="{Binding AccountType, Converter={StaticResource AccountTypeToBoolConverter}, ConverterParameter=IsOnline}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem
@@ -92,7 +92,7 @@
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_editInfo}}"
                                     IsVisible="{Binding AccountType, Converter={StaticResource AccountTypeToBoolConverter}, ConverterParameter=IsOffline}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph pen}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62c;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem
@@ -100,7 +100,7 @@
                                     CommandParameter="{Binding}"
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_editNote}}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph clipboard-list}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe635;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem
@@ -108,7 +108,7 @@
                                     CommandParameter="{Binding}"
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_copyUuid}}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph newspaper}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62a;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem
@@ -116,7 +116,7 @@
                                     CommandParameter="{Binding}"
                                     Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_removeAccount}}">
                                     <MenuItem.Icon>
-                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="16" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </ContextMenu>
@@ -195,7 +195,7 @@
                                         CommandParameter="{Binding}"
                                         Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_refreshInfo}}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph arrow-rotate-right}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -203,7 +203,7 @@
                                         CommandParameter="{Binding}"
                                         Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_editNote}}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph clipboard-list}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe635;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -211,7 +211,7 @@
                                         CommandParameter="{Binding}"
                                         Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_removeAccount}}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph trash-can}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </ContextMenu>

@@ -48,7 +48,7 @@ public partial class StartPage : InstanceListPageBase
     public override PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.startPage_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("tag"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue619", IconFont = IconResources.FontFamilyName
     };
 
     protected override InstanceListViewModelBase PageViewModel => _viewModel;
@@ -209,50 +209,50 @@ public partial class StartPageViewModel : RecentPlaysViewModelBase
                 "本机", "本地文件", "本机文件", "local file", "localfiles",
                 "本机资源", "我的电脑", "本地存档", "本地模组"
             ],
-            "location"),
+            "\ue613"),
 
         new(CommonLanguageManager.Instance.startPage_searchModpack.CurrentValue(), typeof(ModpackSearchPage), [
                 "整合包", "zhb",
                 "懒人包", "一键包", "整合", "modpack", "mod packs", "整合模组包"
             ],
-            "folder"),
+            "\ue611"),
 
         new(CommonLanguageManager.Instance.startPage_searchMod.CurrentValue(), typeof(ModSearchPage), [
                 "模组", "mods", "mod", "mz",
                 "模块", "插件", "mod文件", "mod组件", "modification", "md", "mokuai"
             ],
-            "lightbulb"),
+            "\ue630"),
 
         new(CommonLanguageManager.Instance.startPage_searchResourcePack.CurrentValue(), typeof(ResourcePackSearchPage), [
                 "资源包", "材质包", "resource pack", "resourcepack", "zyb", "rp",
                 "贴图包", "纹理包", "材质", "texture", "texture pack", "tp", "czb", "zy", "wzbao"
             ],
-            "layer-group"),
+            "\ue64d"),
 
         new(CommonLanguageManager.Instance.startPage_searchShaderPack.CurrentValue(), typeof(ShaderPackSearchPage), [
                 "光影包", "shader", "shaders",
                 "光影", "着色器", "光影文件", "光影材质", "shader pack", "sd", "gy", "gyb",
                 "着色包", "光影补丁"
             ],
-            "user"),
+            "\ue63e"),
 
         new(CommonLanguageManager.Instance.startPage_searchDataPack.CurrentValue(), typeof(DataPackSearchPage), [
                 "数据包", "datapack", "data pack",
                 "数据", "数据文件", "dp", "sjb", "data package", "mc数据包"
             ],
-            "chart-simple"),
+            "\ue63b"),
 
         new(CommonLanguageManager.Instance.startPage_searchSave.CurrentValue(), typeof(SaveSearchPage), [
                 "存档", "saves", "save", "world",
                 "世界", "存档文件", "游戏存档", "存档记录", "存档世界", "cun", "cd", "world save"
             ],
-            "earth-americas"),
+            "\ue629"),
 
         new(CommonLanguageManager.Instance.startPage_searchBedrockPack.CurrentValue(), typeof(BedrockResourcePackSearchPage), [
                 "基岩包", "bedrock", "基岩", "jy", "jyb",
                 "基岩版材质", "基岩资源", "BE", "bedrock pack", "基岩材质包", "jyzyb", "基岩光影"
             ],
-            "cubes")
+            "\ue638")
     ];
 
     public IReadOnlyList<SearchMode> SearchModes => DefaultSearchModes;

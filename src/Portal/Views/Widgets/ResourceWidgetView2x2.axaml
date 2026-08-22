@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Widgets"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="16,12,16,12">
 
         <StackPanel
@@ -16,9 +16,9 @@
             Orientation="Horizontal"
             Spacing="6">
             <TextBlock
-                FontFamily="{StaticResource IconFont}"
+                FontFamily="{StaticResource IconFont}" FontWeight="Thin"
                 FontSize="16"
-                Text="{Binding IconGlyph, Converter={x:Static icons:IconGlyphConverter.Instance}}"
+                Text="{Binding IconGlyph}"
                 VerticalAlignment="Center" />
             <TextBlock
                 FontSize="14"

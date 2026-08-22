@@ -81,14 +81,14 @@ public class WidgetWorkspace : UserControl
 
         var deleteItem = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = IconResources.CreateIcon("trash-can", 16)
+            Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = IconResources.CreateIcon("\ue640", 16)
         };
         deleteItem.Click += OnDeleteWidgetClick;
         _widgetContextMenu.Items.Add(deleteItem);
 
         var backgroundMenu = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = IconResources.CreateIcon("image", 16)
+            Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = IconResources.CreateIcon("\ue646", 16)
         };
         var followItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_backgroundFollow.CurrentValue(), Classes = { "hide-icon" } };
         followItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, null);
@@ -104,7 +104,7 @@ public class WidgetWorkspace : UserControl
         var memoryModeItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_toggleDisplayMode.CurrentValue(),
-            Icon = IconResources.CreateIcon("arrow-rotate-right", 16),
+            Icon = IconResources.CreateIcon("\ue63c", 16),
             IsVisible = false
         };
         memoryModeItem.Click += (_, _) =>
@@ -121,7 +121,7 @@ public class WidgetWorkspace : UserControl
         var newsFilterMenu = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_newsFilter.CurrentValue(),
-            Icon = IconResources.CreateIcon("book", 16),
+            Icon = IconResources.CreateIcon("\ue63d", 16),
             IsVisible = false
         };
         var newsAllItem = new MenuItem { Header = CommonLanguageManager.Instance.news_filterAll.CurrentValue(), Classes = { "hide-icon" } };
@@ -138,7 +138,7 @@ public class WidgetWorkspace : UserControl
         var imageChangeItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_changeImage.CurrentValue(),
-            Icon = IconResources.CreateIcon("clipboard-list", 16),
+            Icon = IconResources.CreateIcon("\ue635", 16),
             IsVisible = false
         };
         imageChangeItem.Click += (_, _) => _ = ChangeImageAsync();
@@ -147,7 +147,7 @@ public class WidgetWorkspace : UserControl
         var imageStretchItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_toggleStretchMode.CurrentValue(),
-            Icon = IconResources.CreateIcon("ruler", 16),
+            Icon = IconResources.CreateIcon("\ue64a", 16),
             IsVisible = false
         };
         imageStretchItem.Click += (_, _) =>
@@ -162,7 +162,7 @@ public class WidgetWorkspace : UserControl
 
         var sizeMenu = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = IconResources.CreateIcon("ruler", 16)
+            Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = IconResources.CreateIcon("\ue64a", 16)
         };
         _widgetContextMenu.Items.Add(sizeMenu);
 
@@ -211,7 +211,7 @@ public class WidgetWorkspace : UserControl
         _emptyContextMenu = new ContextMenu();
         var addItem = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = IconResources.CreateIcon("plus", 16)
+            Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = IconResources.CreateIcon("\ue645", 16)
         };
         addItem.Click += (_, _) => AddWidgetCallOn?.Invoke(this, EventArgs.Empty);
         _emptyContextMenu.Items.Add(addItem);

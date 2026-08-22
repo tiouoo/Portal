@@ -38,7 +38,7 @@ public partial class InstancesPage : InstanceListPageBase
     public override PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.instancesPage_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("clipboard-list"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue635", IconFont = IconResources.FontFamilyName
     };
 
     protected override InstanceListViewModelBase PageViewModel => InstancesPageViewModel;

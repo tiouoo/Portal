@@ -23,7 +23,7 @@ public partial class InstanceDetailPage : UserControl, ITioTabPage
         PageInfo = new PageInfo
         {
             Title = instance.InstanceName,
-            IconGlyph = IconResources.GetGlyph("clipboard-list"), IconFont = IconResources.FontFamilyName
+            IconGlyph = "\ue635", IconFont = IconResources.FontFamilyName
         };
         instance.PropertyChanged += Instance_PropertyChanged;
         Loaded += (s, e) =>

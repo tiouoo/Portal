@@ -10,7 +10,6 @@
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:icons="using:Portal.Module"
     xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -171,8 +170,9 @@
             <TextBlock
                 FontFamily="{StaticResource IconFont}"
                 FontSize="16"
+                FontWeight="Thin"
                 HorizontalAlignment="Center"
-                Text="{icons:IconGlyph magnifying-glass}"
+                Text="&#xe615;"
                 VerticalAlignment="Center" />
         </Button>
         <Button
@@ -191,7 +191,8 @@
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
                                 FontSize="16"
-                                Text="{icons:IconGlyph mug-hot}" />
+                                FontWeight="Thin"
+                                Text="&#xe652;" />
                         </MenuItem.Icon>
                     </MenuItem>
                     <MenuItem
@@ -202,7 +203,8 @@
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
                                 FontSize="16"
-                                Text="{icons:IconGlyph instalod}" />
+                                FontWeight="Thin"
+                                Text="&#xe60f;" />
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuFlyout>
@@ -210,8 +212,9 @@
             <TextBlock
                 FontFamily="{StaticResource IconFont}"
                 FontSize="16"
+                FontWeight="Thin"
                 HorizontalAlignment="Center"
-                Text="{icons:IconGlyph link}"
+                Text="&#xe614;"
                 VerticalAlignment="Center" />
         </Button>
         <Button
@@ -224,10 +227,12 @@
             <TextBlock
                 FontFamily="{StaticResource IconFont}"
                 FontSize="16"
+                FontWeight="Thin"
                 HorizontalAlignment="Center"
-                Text="{icons:IconGlyph link}"
+                Text="&#xe614;"
                 VerticalAlignment="Center" />
         </Button>
+        S
         <Button
             Classes="custom-title-bar-button"
             Margin="2,0,0,0"
@@ -240,8 +245,9 @@
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
                                 FontSize="16"
+                                FontWeight="Thin"
                                 HorizontalAlignment="Center"
-                                Text="{icons:IconGlyph plus}"
+                                Text="&#xe645;"
                                 VerticalAlignment="Center" />
                         </MenuItem.Icon>
                     </MenuItem>
@@ -250,8 +256,9 @@
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
                                 FontSize="16"
+                                FontWeight="Thin"
                                 HorizontalAlignment="Center"
-                                Text="{icons:IconGlyph wrench}"
+                                Text="&#xe641;"
                                 VerticalAlignment="Center" />
                         </MenuItem.Icon>
                     </MenuItem>
@@ -260,8 +267,9 @@
             <TextBlock
                 FontFamily="{StaticResource IconFont}"
                 FontSize="16"
+                FontWeight="Thin"
                 HorizontalAlignment="Center"
-                Text="{icons:IconGlyph wrench}"
+                Text="&#xe641;"
                 VerticalAlignment="Center" />
         </Button>
         <Button
@@ -272,9 +280,10 @@
             <TextBlock
                 FontFamily="{StaticResource IconFont}"
                 FontSize="18"
+                FontWeight="Thin"
                 HorizontalAlignment="Center"
                 Margin="0,-1,0,0"
-                Text="{icons:IconGlyph download}"
+                Text="&#xe622;"
                 VerticalAlignment="Center" />
         </Button>
         <Button
@@ -287,7 +296,7 @@
                 FontSize="16"
                 FontWeight="Thin"
                 HorizontalAlignment="Center"
-                Text="{icons:IconGlyph gear}"
+                Text="&#xe627;"
                 VerticalAlignment="Center" />
         </Button>
         <Separator
@@ -322,8 +331,9 @@
                                 <TextBlock
                                     FontFamily="{StaticResource IconFont}"
                                     FontSize="21"
+                                    FontWeight="Thin"
                                     HorizontalAlignment="Center"
-                                    Text="{icons:IconGlyph plus}"
+                                    Text="&#xe645;"
                                     VerticalAlignment="Center" />
                             </Button>
                         </DockPanel>
@@ -380,7 +390,8 @@
                                                 <TextBlock
                                                     FontFamily="{StaticResource IconFont}"
                                                     FontSize="14"
-                                                    Text="{icons:IconGlyph trash-can}" />
+                                                    FontWeight="Thin"
+                                                    Text="&#xe640;" />
                                                 <Button.Transitions>
                                                     <Transitions>
                                                         <DoubleTransition Duration="0:0:0.1" Property="Opacity" />
@@ -423,7 +434,8 @@
                                             <TextBlock
                                                 FontFamily="{StaticResource IconFont}"
                                                 FontSize="14"
-                                                Text="{icons:IconGlyph trash-can}" />
+                                                FontWeight="Thin"
+                                                Text="&#xe640;" />
                                         </Button>
                                     </Grid>
                                 </DataTemplate>

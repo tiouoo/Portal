@@ -26,7 +26,7 @@ public partial class ToolsPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.toolsPage_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("wrench"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue641", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

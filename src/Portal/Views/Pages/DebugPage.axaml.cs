@@ -20,7 +20,7 @@ public partial class DebugPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.debug_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("bug"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue626", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

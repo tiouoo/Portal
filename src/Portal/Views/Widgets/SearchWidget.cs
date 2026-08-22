@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
@@ -22,7 +22,7 @@ namespace Portal.Views.Widgets;
 
 public sealed class SearchWidget : IWidgetContent
 {
-    private static readonly string SearchIconData = "magnifying-glass";
+    private static readonly string SearchIconData = "\ue615";
 
     private readonly Panel _innerLeftPlaceholder;
     private readonly ComboBox _modeComboBox;
@@ -58,8 +58,8 @@ public sealed class SearchWidget : IWidgetContent
                 {
                     new TextBlock
                     {
-                        FontFamily = IconResources.IconFont,
-                        Text = mode?.IconData is { Length: > 0 } name ? IconResources.GetGlyph(name) : string.Empty,
+                        FontFamily = IconResources.IconFont, FontWeight = FontWeight.Thin,
+                        Text = mode?.IconData ?? string.Empty,
                         FontSize = 16,
                         IsVisible = !string.IsNullOrEmpty(mode?.IconData)
                     },
@@ -91,8 +91,8 @@ public sealed class SearchWidget : IWidgetContent
 
         var searchIcon = new TextBlock
         {
-            FontFamily = IconResources.IconFont,
-            Text = IconResources.GetGlyph(SearchIconData),
+            FontFamily = IconResources.IconFont, FontWeight = FontWeight.Thin,
+            Text = SearchIconData,
             FontSize = 14
         };
         searchIcon.Bind(

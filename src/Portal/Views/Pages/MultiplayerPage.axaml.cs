@@ -51,7 +51,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.multiplayer_title.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("link"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue614", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; } = null!;

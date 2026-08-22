@@ -12,7 +12,7 @@
     x:Class="Portal.Views.OverlayWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <Grid Name="OverlayRoot" Opacity="0">
         <Grid Background="#66000000" Opacity="1" />
 
@@ -28,7 +28,7 @@
                 HorizontalAlignment="Right"
                 Name="CloseBtn"
                 Width="48">
-                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph close}" FontSize="18" Foreground="#FFFFFF" />
+                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe609;" FontSize="18" Foreground="#FFFFFF" />
             </Button>
 
             <StackPanel
@@ -85,7 +85,7 @@
                 Cursor="Hand"
                 PointerPressed="InputElement_OnPointerPressed">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph clipboard-list}" FontSize="24" Foreground="#fff" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe635;" FontSize="24" Foreground="#fff" />
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock
                             Foreground="#FFFFFF"
@@ -103,7 +103,7 @@
                 Cursor="Hand"
                 PointerPressed="Multiplayer_OnPointerPressed">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph link}" FontSize="24" Foreground="#fff" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe614;" FontSize="24" Foreground="#fff" />
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock
                             Foreground="#FFFFFF"
@@ -151,7 +151,7 @@
                     Margin="0,0,5,0"
                     Theme="{StaticResource TransparentButton}"
                     VerticalAlignment="Top">
-                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph close}" FontSize="18" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe609;" FontSize="18" />
                 </Button>
             </Panel>
         </Border>

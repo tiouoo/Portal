@@ -31,7 +31,7 @@ public partial class WidgetsPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.widgetsPage_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("grid"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue64f", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

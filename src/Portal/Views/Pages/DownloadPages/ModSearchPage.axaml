@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top" Spacing="8">
             <DockPanel>
@@ -138,7 +138,7 @@
                                         Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_installMenu}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph location}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -147,7 +147,7 @@
                                         IsVisible="{Binding !IsFavorite}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -156,7 +156,7 @@
                                         IsVisible="{Binding IsFavorite}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -164,7 +164,7 @@
                                         Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_showDetailsMenu}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph circle-info}" FontSize="16" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe60c;" FontSize="16" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>
@@ -205,8 +205,8 @@
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_unfavoriteToolTip}}">
                                             <Grid>
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star}" FontSize="16" IsVisible="{Binding !IsFavorite}" />
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph star-full}" FontSize="16" IsVisible="{Binding IsFavorite}" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe643;" FontSize="16" IsVisible="{Binding !IsFavorite}" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" IsVisible="{Binding IsFavorite}" />
                                             </Grid>
                                         </Button>
                                         <Button
@@ -215,7 +215,7 @@
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_downloadToolTip}}">
-                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph download}" FontSize="14" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" FontSize="14" />
                                         </Button>
                                     </StackPanel>
                                 </Border>
@@ -234,7 +234,7 @@
                                                     Loader="{Binding ImageLoader}"
                                                     Source="{Binding IconUrl}"
                                                     Width="56" />
-                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph folder}" FontSize="32" IsVisible="{Binding !HasIcon}" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="32" IsVisible="{Binding !HasIcon}" />
                                             </Grid>
                                         </Border>
                                         <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">

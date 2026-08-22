@@ -37,7 +37,7 @@ public partial class DownloadPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.downloadPage_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("database"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue653", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

@@ -55,7 +55,7 @@ public partial class MinecraftLogPage : UserControl, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.minecraftLog_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("file-waveform"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue649", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; } = null!;

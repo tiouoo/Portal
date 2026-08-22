@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Portal.Module" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel Margin="12,0,12,12">
         <StackPanel
             DockPanel.Dock="Top"
@@ -74,7 +74,7 @@
                             PointerPressed="DistributionCard_OnPointerPressed">
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock FontFamily="{StaticResource IconFont}" Text="{icons:IconGlyph cubes}" FontSize="24" />
+                                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe638;" FontSize="24" />
                                     <TextBlock
                                         FontSize="15"
                                         FontWeight="SemiBold"

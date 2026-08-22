@@ -44,7 +44,7 @@ public partial class NewsPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.news_pageTitle.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("book"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue63d", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }

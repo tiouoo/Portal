@@ -19,7 +19,7 @@ public sealed class DownloadSearchTabPage : UserControl, ITioTabPage
             searchPage.SearchText = keyword;
         Content = _page;
         PageInfo.Title = title;
-        PageInfo.IconGlyph = IconResources.GetGlyph("database"); PageInfo.IconFont = IconResources.FontFamilyName;
+        PageInfo.IconGlyph = "\ue653"; PageInfo.IconFont = IconResources.FontFamilyName;
     }
 
     public PageInfo PageInfo { get; init; } = new();

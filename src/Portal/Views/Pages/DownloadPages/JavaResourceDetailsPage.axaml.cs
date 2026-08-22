@@ -22,7 +22,7 @@ public partial class JavaResourceDetailsPage : ResourceDetailsPageBase
         {
             Title = string.Format(CommonLanguageManager.Instance.javaResourceDetails_title.CurrentValue(),
                 ViewModel.Target.Definition.DisplayName),
-            IconGlyph = IconResources.GetGlyph("folder"), IconFont = IconResources.FontFamilyName
+            IconGlyph = "\ue611", IconFont = IconResources.FontFamilyName
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }

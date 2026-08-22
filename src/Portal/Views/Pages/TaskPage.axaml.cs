@@ -20,7 +20,7 @@ public partial class TaskPage : Dsc, ITioTabPage
     public PageInfo PageInfo { get; init; } = new()
     {
         Title = CommonLanguageManager.Instance.titleBar_tasks.CurrentValue(),
-        IconGlyph = IconResources.GetGlyph("newspaper"), IconFont = IconResources.FontFamilyName
+        IconGlyph = "\ue62a", IconFont = IconResources.FontFamilyName
     };
 
     public TabEntry HostTab { get; set; }
