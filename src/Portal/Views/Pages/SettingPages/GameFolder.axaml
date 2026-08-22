@@ -69,7 +69,7 @@
                             IconWidth="14">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="24" HorizontalAlignment="Center" Margin="8,0,4,2" VerticalAlignment="Center" />
+                                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61d;" FontSize="24" HorizontalAlignment="Center" Margin="8,0,4,2" VerticalAlignment="Center" />
                                     <StackPanel Margin="10,8,0,8" Spacing="2">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding FolderName}" />

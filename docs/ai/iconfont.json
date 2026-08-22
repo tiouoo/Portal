@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "48378583",
+      "name": "download-outline",
+      "font_class": "downloadxiazai",
+      "unicode": "e647",
+      "unicode_decimal": 58951
+    },
+    {
       "icon_id": "48377901",
       "name": "file-lines",
       "font_class": "file-lines-regular-full",

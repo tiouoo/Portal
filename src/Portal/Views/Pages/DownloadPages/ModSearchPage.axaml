@@ -215,7 +215,7 @@
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_downloadToolTip}}">
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" FontSize="14" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe647;" FontSize="14" />
                                         </Button>
                                     </StackPanel>
                                 </Border>
@@ -234,7 +234,7 @@
                                                     Loader="{Binding ImageLoader}"
                                                     Source="{Binding IconUrl}"
                                                     Width="56" />
-                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="32" IsVisible="{Binding !HasIcon}" />
+                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe631;" FontSize="32" IsVisible="{Binding !HasIcon}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Grid>
                                         </Border>
                                         <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">

@@ -148,7 +148,7 @@
                                                 IsVisible="{Binding HasIcon}"
                                                 Source="{Binding Icon}"
                                                 Stretch="UniformToFill" />
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="32" IsVisible="{Binding !HasIcon}" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe631;" FontSize="32" IsVisible="{Binding !HasIcon}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Grid>
                                     </Border>
                                     <TextBlock

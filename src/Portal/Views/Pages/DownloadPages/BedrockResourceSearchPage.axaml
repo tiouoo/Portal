@@ -128,7 +128,7 @@
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.bedrockresourcesearchpage_downloadToolTip}}">
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" FontSize="14" />
+                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe647;" FontSize="14" />
                                         </Button>
                                     </StackPanel>
                                 </Border>

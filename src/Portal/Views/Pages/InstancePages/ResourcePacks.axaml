@@ -267,8 +267,10 @@
                                                     FontFamily="{StaticResource IconFont}"
                                                     FontSize="32"
                                                     FontWeight="Thin"
+                                                    HorizontalAlignment="Center"
                                                     IsVisible="{Binding !HasIcon}"
-                                                    Text="&#xe611;" />
+                                                    Text="&#xe631;"
+                                                    VerticalAlignment="Center" />
                                             </Grid>
                                         </Border>
                                         <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">

@@ -230,7 +230,7 @@
                                     CornerRadius="10"
                                     Padding="12,8">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="22" HorizontalAlignment="Center" Margin="4,0,0,2" VerticalAlignment="Center" />
+                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61d;" FontSize="22" HorizontalAlignment="Center" Margin="4,0,0,2" VerticalAlignment="Center" />
                                         <StackPanel Margin="14,0,0,0" Spacing="2">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding FolderName}" />

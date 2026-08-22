@@ -56,7 +56,7 @@
                                 IsVisible="{Binding HasPackageIcon}"
                                 Source="{Binding PackageIcon}"
                                 Stretch="UniformToFill" />
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="30" IsVisible="{Binding !HasPackageIcon}" />
+                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe631;" FontSize="30" IsVisible="{Binding !HasPackageIcon}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                     </Border>
                     <StackPanel Margin="0,1,0,0" Spacing="2">
