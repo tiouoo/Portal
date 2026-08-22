@@ -5,8 +5,8 @@ using System.Windows.Input;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MinecraftLaunch.Components.Authenticator;
-using MinecraftLaunch.Components.Provider;
+using Iridium.Providers.Minecraft;
+using Iridium.Services.Authentication;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Localization;
@@ -227,20 +227,13 @@ public partial class YggdrasilAccountViewModel : ObservableObject, IDialogContex
         FetchingMsg = CommonLanguageManager.Instance.account_verifying.CurrentValue();
         try
         {
-            var authenticator = new YggdrasilAuthenticator(ServerUrl, Username, Password);
-            var result = await authenticator.AuthenticateAsync();
-            if (result == null)
-            {
-                IsError = true;
-                IsAuthing = false;
-                ErrMsg = CommonLanguageManager.Instance.account_noAccountData.CurrentValue();
-                return;
-            }
+            var authenticator = new YggdrasilAuthenticator(ServerUrl);
+            var result = await authenticator.AuthenticateAsync(Username, Password);
 
             Logger.Info(string.Format(LogLanguageManager.Instance.account_verificationSuccess.CurrentValue(),
-                result!.AsJson()));
+                result.AsJson()));
 
-            var yggdrasilAccounts = result!.ToList();
+            var yggdrasilAccounts = result.ToList();
             if (yggdrasilAccounts.Any())
             {
                 FetchingMsg = string.Format(

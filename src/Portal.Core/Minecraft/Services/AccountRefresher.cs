@@ -1,6 +1,6 @@
-using MinecraftLaunch.Base.Models.Authentication;
-using MinecraftLaunch.Components.Authenticator;
-using MinecraftLaunch.Components.Provider;
+using Iridium.Models.Authentication;
+using Iridium.Providers.Minecraft;
+using Iridium.Services.Authentication;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Services;
@@ -87,13 +87,8 @@ public static class AccountRefresher
                                         StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            var authenticator = new YggdrasilAuthenticator(account.YggdrasilServerUrl, account.Email, account.Password);
-            var authenticatedAccounts = await authenticator.AuthenticateAsync();
-            if (authenticatedAccounts == null)
-            {
-                Logger.Warning(string.Format(LogLanguageManager.Instance.accountRefresher_yggdrasilNoAccount.CurrentValue(), account.Name));
-                return null;
-            }
+            var authenticator = new YggdrasilAuthenticator(account.YggdrasilServerUrl);
+            var authenticatedAccounts = await authenticator.AuthenticateAsync(account.Email, account.Password);
 
             var existingByUuid = existingAccounts
                 .Where(candidate => candidate.Uuid.HasValue)
