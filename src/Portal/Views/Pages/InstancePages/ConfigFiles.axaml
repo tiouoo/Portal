@@ -9,9 +9,10 @@
     xmlns:common="clr-namespace:Tio.Avalonia.Standard.Tab.Common;assembly=Tio.Avalonia.Standard.Tab"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <common:NavScrollOpacityMaskConverter x:Key="NavScrollOpacityMaskConverter" />
     </UserControl.Resources>
@@ -42,7 +43,12 @@
                     Text="{Binding SearchText}"
                     Width="170">
                     <TextBox.InnerRightContent>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe615;" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="14"
+                            FontWeight="Thin"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="&#xe615;" />
                     </TextBox.InnerRightContent>
                 </TextBox>
                 <TextBlock
@@ -87,11 +93,14 @@
                 <TreeView.ItemTemplate>
                     <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="local:ConfigTreeItem">
                         <DockPanel Margin="2,3">
-                            <PathIcon
-                                Data="{Binding Icon}"
-                                Height="14"
+                            <TextBlock
+                                DockPanel.Dock="Left"
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
                                 Margin="0,0,7,0"
-                                Width="14" />
+                                Text="{Binding Icon}"
+                                VerticalAlignment="Center" />
                             <TextBlock
                                 Text="{Binding Name}"
                                 TextTrimming="LeadingCharacterEllipsis"
@@ -154,7 +163,11 @@
                                         Theme="{StaticResource TransparentButton}"
                                         ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.configfiles_closeFile}}"
                                         Width="20">
-                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe609;" FontSize="9" />
+                                        <TextBlock
+                                            FontFamily="{StaticResource IconFont}"
+                                            FontSize="14"
+                                            FontWeight="Thin"
+                                            Text="&#xe609;" />
                                     </Button>
                                     <TextBlock
                                         Margin="10,5,8,5"

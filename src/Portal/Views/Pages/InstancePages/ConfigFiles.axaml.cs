@@ -28,8 +28,8 @@ namespace Portal.Views.Pages.InstancePages;
 
 public partial class ConfigFiles : UserControl, IDisposable, INotifyPropertyChanged
 {
-    private static readonly Geometry FolderIcon = Geometry.Parse("M3 5h5l2 2h11v12H3z");
-    private static readonly Geometry FileIcon = Geometry.Parse("M6 2h8l5 5v15H6z M14 2v6h5");
+    private const string FolderIcon = "\ue611";
+    private const string FileIcon = "\ue634";
     private readonly List<ConfigTreeItem> _allRootItems = [];
     private readonly IHighlightingDefinition _highlighting;
     private bool _isWordWrap;
@@ -532,7 +532,7 @@ public sealed record ConfigTreeItem(
     string Name,
     string FullPath,
     bool IsDirectory,
-    Geometry Icon,
+    string Icon,
     ObservableCollection<ConfigTreeItem> Children);
 
 public partial class ConfigEditorTab : ObservableObject, IDisposable

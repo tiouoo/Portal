@@ -1,5 +1,5 @@
 ﻿<UserControl
-    d:DesignHeight="120"
+    d:DesignHeight="125"
     d:DesignWidth="270"
     mc:Ignorable="d"
     x:Class="Portal.Views.Widgets.RecentPlayCard"
@@ -15,7 +15,7 @@
         BorderBrush="{DynamicResource TranslucentBorderBrush}"
         BorderThickness="1"
         CornerRadius="10"
-        Height="120"
+        Height="125"
         Name="RecentBorder"
         PointerPressed="RecentPlayItem_OnPointerPressed">
         <Border.ContextMenu>
@@ -71,10 +71,7 @@
             <Style Selector="Button#QuickPlayButton">
                 <Setter Property="Opacity" Value="0" />
             </Style>
-            <Style Selector="Button#UnfavoritedRecentPlayButton PathIcon">
-                <Setter Property="Opacity" Value="0" />
-            </Style>
-            <Style Selector="Button#UnfavoritedRecentPlayButton PathIcon#SolidStar">
+            <Style Selector="Button#UnfavoritedRecentPlayButton TextBlock#SolidStar">
                 <Setter Property="Opacity" Value="1" />
             </Style>
             <Style Selector="Button#UnfavoritedRecentPlayButton">
@@ -90,6 +87,7 @@
                     ClipToBounds="True"
                     CornerRadius="10"
                     Height="40"
+                    HorizontalAlignment="Left"
                     Margin="0,0,8,0"
                     Width="40">
                     <Image
@@ -97,72 +95,39 @@
                         Source="{Binding Icon}"
                         Width="40" />
                 </Border>
-                <StackPanel Margin="2,3,0,0" Spacing="2">
-                    <TextBlock
-                        MaxLines="1"
-                        Text="{Binding Name}"
-                        TextTrimming="CharacterEllipsis"
-                        TextWrapping="NoWrap" />
-                    <TextBlock
-                        FontSize="12"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        IsVisible="{Binding HasSubtitle}"
-                        MaxLines="1"
-                        Text="{Binding SubtitleText}"
-                        TextTrimming="CharacterEllipsis"
-                        TextWrapping="NoWrap" />
-                </StackPanel>
+                <TextBlock
+                    Margin="2,3,0,0"
+                    MaxLines="2"
+                    Text="{Binding InstanceName}"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="Wrap" />
             </DockPanel>
             <StackPanel
                 DockPanel.Dock="Bottom"
-                Margin="2,8,0,5"
-                Spacing="2">
+                Margin="0,0,0,5"
+                Spacing="2"
+                VerticalAlignment="Bottom">
                 <TextBlock
                     FontSize="12"
                     Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="0,4,0,0"
                     MaxLines="1"
-                    Text="{Binding InstanceName}"
+                    Text="{Binding FolderName}"
                     TextTrimming="CharacterEllipsis" />
                 <TextBlock
                     FontSize="12"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    IsVisible="{Binding !IsServer}"
                     MaxLines="1"
                     Text="{Binding Details}"
                     TextTrimming="CharacterEllipsis" />
-                <StackPanel
-                    IsVisible="{Binding IsServer}"
-                    Orientation="Horizontal"
-                    Spacing="5">
-                    <TextBlock
-                        FontSize="12"
-                        Foreground="{Binding StatusBrush}"
-                        MaxLines="1"
-                        Text="{Binding StatusText}"
-                        TextTrimming="CharacterEllipsis"
-                        VerticalAlignment="Center" />
-                    <TextBlock
-                        FontSize="12"
-                        Foreground="{Binding PingBrush}"
-                        IsVisible="{Binding HasPing}"
-                        MaxLines="1"
-                        Text="{Binding PingText}"
-                        TextTrimming="CharacterEllipsis"
-                        VerticalAlignment="Center" />
-                    <TextBlock
-                        FontSize="12"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        IsVisible="{Binding HasPlayers}"
-                        MaxLines="1"
-                        Text="{Binding PlayersText}"
-                        TextTrimming="CharacterEllipsis"
-                        VerticalAlignment="Center" />
-                </StackPanel>
                 <DockPanel>
                     <TextBlock
+                        DockPanel.Dock="Left"
                         FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Text="{Binding RelativeTime}" />
+                        MaxLines="1"
+                        Text="{Binding RelativeTime}"
+                        TextTrimming="CharacterEllipsis" />
                     <StackPanel
                         DockPanel.Dock="Right"
                         HorizontalAlignment="Right"
@@ -171,10 +136,9 @@
                             Background="Transparent"
                             BorderThickness="0"
                             Click="QuickPlay_Click"
-                            HorizontalAlignment="Right"
+                            Cursor="Hand"
                             IsVisible="{Binding CanQuickPlay}"
-                            Margin="0,0,2,2"
-                            Padding="4,-2,2,0"
+                            Padding="4,-1,2,0"
                             Tag="{Binding Target}"
                             Theme="{StaticResource TransparentButton}"
                             ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_quickPlay}}"
@@ -200,21 +164,21 @@
                             Click="RecentPlayFavorite_Click"
                             Cursor="Hand"
                             IsVisible="{Binding !IsFavorite}"
-                            Padding="4,-4,4,0"
+                            Padding="4,0,4,0"
                             Tag="{Binding}"
                             Theme="{StaticResource TransparentButton}"
                             x:Name="UnfavoritedRecentPlayButton">
                             <Grid>
                                 <TextBlock
                                     FontFamily="{StaticResource IconFont}"
-                                    FontSize="15"
+                                    FontSize="14"
                                     FontWeight="Thin"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     Text="&#xe644;"
                                     x:Name="SolidStar" />
                                 <TextBlock
                                     FontFamily="{StaticResource IconFont}"
-                                    FontSize="15"
+                                    FontSize="14"
                                     FontWeight="Thin"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     Text="&#xe643;" />
@@ -234,22 +198,22 @@
                             Click="RecentPlayFavorite_Click"
                             Cursor="Hand"
                             IsVisible="{Binding IsFavorite}"
-                            Padding="4,-4,4,0"
+                            Padding="4,0,4,0"
                             Tag="{Binding}"
                             Theme="{StaticResource TransparentButton}">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="2">
                                 <TextBlock
                                     FontFamily="{StaticResource IconFont}"
-                                    FontSize="15"
+                                    FontSize="14"
                                     FontWeight="Thin"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="&#xe644;"
-                                    VerticalAlignment="Center" />
+                                    Text="&#xe644;" />
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"
+                                    MaxLines="1"
                                     Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_favorited}}"
-                                    VerticalAlignment="Center" />
+                                    TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Button>
                         <Button
@@ -258,7 +222,6 @@
                             Click="BlockRecentPlay_Click"
                             Cursor="Hand"
                             IsVisible="{Binding IsBlocked}"
-                            Margin="0,-4,0,0"
                             Padding="4,0,4,0"
                             Tag="{Binding Target}"
                             Theme="{StaticResource TransparentButton}"
@@ -266,17 +229,16 @@
                             <StackPanel Orientation="Horizontal" Spacing="2">
                                 <TextBlock
                                     FontFamily="{StaticResource IconFont}"
-                                    FontSize="15"
+                                    FontSize="14"
                                     FontWeight="Thin"
                                     Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="&#xe61f;" />
+                                    Text="&#xe63a;" />
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     MaxLines="1"
                                     Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_blocked}}"
-                                    TextTrimming="CharacterEllipsis"
-                                    VerticalAlignment="Center" />
+                                    TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
