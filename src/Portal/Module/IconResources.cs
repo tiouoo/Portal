@@ -46,7 +46,7 @@ public static class IconResources
         { "heart-solid", "\ue61c" },
         { "heart-regular", "\ue620" },
         { "minus", "\ue608" },
-        { "tower-cell1", "\ue63f" },
+        { "tower-cell", "\uE602;" },
         { "memory", "\ue62d" },
         { "file-waveform", "\ue633" },
         { "lightbulb", "\ue630" },

@@ -12,7 +12,7 @@ public sealed class NetworkResourceWidget : ResourceWidgetBase
     public NetworkResourceWidget(WidgetCellSize size) : base(size)
     {
         Title = CommonLanguageManager.Instance.widgets_networkTitle.CurrentValue();
-        IconGlyph = "tower-cell1";;
+        IconGlyph = "tower-cell";;
         ProgressMaximum = MaxReferenceMBps;
     }
 
