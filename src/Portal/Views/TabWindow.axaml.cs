@@ -120,8 +120,6 @@ public partial class TabWindow : TioTabWindowBase
             };
             var tab = new TabEntry(this, page)
             {
-                IconHeight = 17,
-                IconWidth = 17,
                 IconMargin = Data.ConfigEntry.NewTabContent switch
                 {
                     _ => new Thickness(0, 0, 4, 0)

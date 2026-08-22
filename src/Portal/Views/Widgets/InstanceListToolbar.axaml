@@ -3,14 +3,15 @@
     d:DesignWidth="1200"
     mc:Ignorable="d"
     x:Class="Portal.Views.Widgets.InstanceListToolbar"
-    x:Name="Root"
     x:DataType="viewmodels:InstanceListViewModelBase"
+    x:Name="Root"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="clr-namespace:Portal.ViewModels"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
         <StackPanel
             HorizontalAlignment="Left"
@@ -21,30 +22,52 @@
                 Background="Transparent"
                 Click="ButtonOpenInstance_OnClick"
                 IsVisible="{Binding ShowOpenInstancesTitle, ElementName=Root}"
+                Margin="10,0,0,0"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe635;" FontSize="21" Foreground="{DynamicResource InnerForegroundColor}" IsVisible="{Binding ShowTitleIcon, ElementName=Root}" Margin="0,-1,0,0" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="22"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding ShowTitleIcon, ElementName=Root}"
+                        Text="&#xe653;" />
                     <TextBlock
                         FontSize="15"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        Margin="5,0,0,0"
+                        Margin="5,1,0,0"
                         Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_instances}}"
                         VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <TextBlock
-                FontSize="15"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="{Binding ShowOpenInstancesTitle, ElementName=Root, Converter={x:Static BoolConverters.Not}}"
-                Margin="5,0,0,0"
-                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_instances}}" />
+            <StackPanel IsVisible="{Binding ShowOpenInstancesTitle, ElementName=Root, Converter={x:Static BoolConverters.Not}}" Margin="10,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="22"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="&#xe653;" />
+                    <TextBlock
+                        FontSize="15"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="5,1,0,0"
+                        Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_instances}}"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
             <Button
                 Click="RefreshInstance_Click"
                 Margin="5,0,0,0"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Center">
-                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" Foreground="{DynamicResource InnerForegroundColor}" />
+                <TextBlock
+                    FontFamily="{StaticResource IconFont}"
+                    FontSize="16"
+                    FontWeight="Thin"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="&#xe63c;" />
             </Button>
         </StackPanel>
         <StackPanel
@@ -63,17 +86,26 @@
                     <MenuFlyout>
                         <MenuItem Click="ImportModpack_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_importModpack}}">
                             <MenuItem.Icon>
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontWeight="Thin"
+                                    Text="&#xe611;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Click="AddFolder_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_addFolder}}">
                             <MenuItem.Icon>
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe653;" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontWeight="Thin"
+                                    Text="&#xe653;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Click="ToDownload_Click" Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancelisttoolbar_createNewInstance}}">
                             <MenuItem.Icon>
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontWeight="Thin"
+                                    Text="&#xe622;" />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuFlyout>
@@ -109,7 +141,12 @@
                 Text="{Binding SearchText}"
                 Width="170">
                 <TextBox.InnerRightContent>
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe615;" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="14"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="&#xe615;" />
                 </TextBox.InnerRightContent>
             </TextBox>
         </StackPanel>

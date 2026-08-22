@@ -232,7 +232,6 @@
                 Text="&#xe614;"
                 VerticalAlignment="Center" />
         </Button>
-        S
         <Button
             Classes="custom-title-bar-button"
             Margin="2,0,0,0"

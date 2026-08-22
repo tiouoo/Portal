@@ -3,6 +3,9 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Button.tab-add-btn">
+        <Style Selector="^">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
         <Style Selector="^:pointerover">
             <Setter Property="Background" Value="{DynamicResource ButtonDefaultPointeroverBackground}" />
         </Style>

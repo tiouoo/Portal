@@ -6,9 +6,10 @@
     x:DataType="pages:RecentPlayItem"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Border
         Background="{DynamicResource TranslucentBackgroundColor}"
         BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -25,7 +26,10 @@
                     IsVisible="{Binding CanQuickPlay}"
                     Tag="{Binding Target}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            Text="&#xe613;" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -33,7 +37,10 @@
                     Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_createShortcut}}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe607;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            Text="&#xe607;" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -41,7 +48,10 @@
                     Header="{Binding FavoriteHeaderText}"
                     Tag="{Binding}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            Text="&#xe644;" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -49,7 +59,10 @@
                     Header="{Binding BlockHeaderText}"
                     Tag="{Binding Target}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61f;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            Text="&#xe63a;" />
                     </MenuItem.Icon>
                 </MenuItem>
             </ContextMenu>
@@ -166,7 +179,12 @@
                             Theme="{StaticResource TransparentButton}"
                             ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_quickPlay}}"
                             x:Name="QuickPlayButton">
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="15"
+                                FontWeight="Thin"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="&#xe613;" />
                             <Button.Transitions>
                                 <Transitions>
                                     <DoubleTransition
@@ -187,8 +205,19 @@
                             Theme="{StaticResource TransparentButton}"
                             x:Name="UnfavoritedRecentPlayButton">
                             <Grid>
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" x:Name="SolidStar" />
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe643;" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="15"
+                                    FontWeight="Thin"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="&#xe644;"
+                                    x:Name="SolidStar" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="15"
+                                    FontWeight="Thin"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="&#xe643;" />
                             </Grid>
                             <Button.Transitions>
                                 <Transitions>
@@ -209,7 +238,13 @@
                             Tag="{Binding}"
                             Theme="{StaticResource TransparentButton}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" VerticalAlignment="Center" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="15"
+                                    FontWeight="Thin"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="&#xe644;"
+                                    VerticalAlignment="Center" />
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -229,7 +264,12 @@
                             Theme="{StaticResource TransparentButton}"
                             x:Name="BlockedRecentPlayButton">
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61f;" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="15"
+                                    FontWeight="Thin"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="&#xe61f;" />
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"

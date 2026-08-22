@@ -24,10 +24,11 @@
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entries="clr-namespace:Tio.Avalonia.Standard.Tab.Entries;assembly=Tio.Avalonia.Standard.Tab"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <tio:TioWindow.Resources>
         <SolidColorBrush Color="Transparent" x:Key="TitleBarBackgroundColor" />
         <common:NavScrollOpacityMaskConverter x:Key="NavScrollOpacityMaskConverter" />
@@ -183,8 +184,9 @@
                                             VerticalAlignment="Center"
                                             Width="{Binding IconWidth}">
                                             <TextBlock
-                                                FontFamily="{Binding IconFont}"
+                                                FontFamily="{StaticResource IconFont}"
                                                 FontSize="{Binding IconHeight}"
+                                                FontWeight="Thin"
                                                 HorizontalAlignment="Center"
                                                 IsVisible="{Binding HasFontIcon}"
                                                 Text="{Binding IconGlyph}"
@@ -227,7 +229,13 @@
                                                     <DoubleTransition Duration="0:0:0.07" Property="Opacity" />
                                                 </Transitions>
                                             </Button.Transitions>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe609;" FontSize="9" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="16"
+                                                FontWeight="Thin"
+                                                HorizontalAlignment="Center"
+                                                Text="&#xe609;"
+                                                VerticalAlignment="Center" />
                                         </Button>
                                     </Grid>
                                 </Panel>
@@ -246,7 +254,13 @@
                     ToolTip.ShowDelay="900"
                     ToolTip.Tip="{Translate {x:Static loc:AppLanguageManager+Keys.app_tooltips_newTab}}"
                     Width="30">
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe645;" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        HorizontalAlignment="Center"
+                        Text="&#xe645;"
+                        VerticalAlignment="Center" />
                 </Button>
             </DockPanel>
         </ScrollViewer>
