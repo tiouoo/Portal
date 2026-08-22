@@ -1552,7 +1552,7 @@
     "scanning": "正在扫描中",
     "scanComplete": "扫描完成：新增 {0} 个 Java，重复 {1} 个",
     "scanFailed": "Java 扫描失败：{0}",
-    "deepScanStarted": "强力扫描仪启动",
+    "deepScanStarted": "强力扫描已启动",
     "deepScanCancelled": "扫描已取消，已找到的 Java 已添加：{0} 个新增，{1} 个重复",
     "deepScanComplete": "强力扫描完成：新增 {0} 个 Java，重复 {1} 个",
     "deepScanFailed": "强力扫描失败：{0}",

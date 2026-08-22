@@ -1,4 +1,3 @@
-using Iridium.Models.Java;
 using Portal.Core.Minecraft.Instance.Java.Iridium;
 using Portal.Localization;
 
@@ -6,8 +5,6 @@ namespace Portal.Core.Minecraft.Instance.Java;
 
 public static class JavaRuntimeManager
 {
-    private const int DeepScanProgressInterval = 200;
-
     public static async Task<JavaRuntimeEntry?> FromPathAsync(string javaPath,
         CancellationToken cancellationToken = default)
     {
@@ -28,6 +25,7 @@ public static class JavaRuntimeManager
 
     public static async Task<IReadOnlyList<JavaRuntimeEntry>> DeepScanAsync(
         IProgress<DeepScanProgress>? progress = null,
+        IProgress<JavaRuntimeEntry>? onFound = null,
         CancellationToken cancellationToken = default)
     {
         var result = new List<JavaRuntimeEntry>();
@@ -37,23 +35,12 @@ public static class JavaRuntimeManager
         {
             await Task.Run(async () =>
             {
-                var scanProgress = progress is null ? null : new Progress<JavaScanProgress>(p =>
-                {
-                    if (p.DirectoriesScanned % DeepScanProgressInterval != 0)
-                        return;
-
-                    progress.Report(new DeepScanProgress(
-                        p.DirectoriesScanned,
-                        p.DirectoriesQueued,
-                        result.Count,
-                        string.Format(CommonLanguageManager.Instance.javaRuntime_scanning.CurrentValue(), p.CurrentDirectory)));
-                });
-
-                await foreach (var java in IridiumJavaRuntimeScanner.EnumerableJavaAsync(true, scanProgress, cancellationToken))
+                await foreach (var java in IridiumJavaRuntimeScanner.EnumerableJavaAsync(true, cancellationToken))
                 {
                     result.Add(java);
+                    onFound?.Report(java);
                     progress?.Report(new DeepScanProgress(0, 0, result.Count,
-                        string.Format(CommonLanguageManager.Instance.javaRuntime_autoScanFound.CurrentValue(), java.JavaVersion)));
+                        string.Format(CommonLanguageManager.Instance.javaRuntime_deepScanFound.CurrentValue(), java.JavaVersion)));
                 }
             }, cancellationToken);
         }

@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using Iridium.Models.Java;
-using Iridium.Providers;
+using Iridium.Providers.Java;
 
 namespace Portal.Core.Minecraft.Instance.Java.Iridium;
 
@@ -17,10 +17,9 @@ internal static class IridiumJavaRuntimeScanner
 
     public static async IAsyncEnumerable<JavaRuntimeEntry> EnumerableJavaAsync(
         bool fullDiskSearch,
-        IProgress<JavaScanProgress>? progress = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await foreach (var java in Provider.EnumerableJavaAsync(fullDiskSearch, progress, cancellationToken: cancellationToken))
+        await foreach (var java in Provider.EnumerableJavaAsync(fullDiskSearch, cancellationToken: cancellationToken))
             if (java is not null)
                 yield return Convert(java);
     }

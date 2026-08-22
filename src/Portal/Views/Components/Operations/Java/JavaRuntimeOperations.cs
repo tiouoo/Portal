@@ -117,17 +117,10 @@ public static class JavaRuntimeOperations
                         }
                     });
 
-                    IReadOnlyList<JavaRuntimeEntry> found;
-                    try
+                    var onFound = new Progress<JavaRuntimeEntry>(java =>
                     {
-                        found = await JavaRuntimeManager.DeepScanAsync(progress, ctx.CancellationToken);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        found = Array.Empty<JavaRuntimeEntry>();
-                    }
+                        if (ctx.CancellationToken.IsCancellationRequested) return;
 
-                    foreach (var java in found)
                         if (javaRuntimes.Contains(java))
                         {
                             duplicateCount++;
@@ -137,6 +130,15 @@ public static class JavaRuntimeOperations
                             javaRuntimes.Add(java);
                             addedCount++;
                         }
+                    });
+
+                    try
+                    {
+                        await JavaRuntimeManager.DeepScanAsync(progress, onFound, ctx.CancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
 
                     var cancelled = ctx.CancellationToken.IsCancellationRequested;
                     var finishText = cancelled
