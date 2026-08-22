@@ -215,7 +215,7 @@ public partial class StartPageViewModel : RecentPlaysViewModelBase
                 "整合包", "zhb",
                 "懒人包", "一键包", "整合", "modpack", "mod packs", "整合模组包"
             ],
-            "\ue611"),
+            "\ue631"),
 
         new(CommonLanguageManager.Instance.startPage_searchMod.CurrentValue(), typeof(ModSearchPage), [
                 "模组", "mods", "mod", "mz",

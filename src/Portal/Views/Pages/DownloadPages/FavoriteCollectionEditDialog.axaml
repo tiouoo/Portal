@@ -26,8 +26,6 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
-            <Button Click="Share_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritecollectioneditdialog_share}}" />
-            <Button Click="Delete_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritecollectioneditdialog_delete}}" />
             <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritecollectioneditdialog_cancel}}" />
             <Button Click="Complete_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritecollectioneditdialog_complete}}" />
         </StackPanel>

@@ -34,8 +34,16 @@
                                 Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_exportCurrentCollection}}" />
                             <MenuItem
                                 Classes="hide-icon"
-                                Click="Edit_OnClick"
-                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_editCurrentCollection}}" />
+                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_editCurrentCollection}}">
+                                <MenuItem
+                                    Classes="hide-icon"
+                                    Click="Delete_OnClick"
+                                    Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_deleteCollection}}" />
+                                <MenuItem
+                                    Classes="hide-icon"
+                                    Click="Rename_OnClick"
+                                    Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_renameCollection}}" />
+                            </MenuItem>
                         </MenuFlyout>
                     </DropDownButton.Flyout>
                 </DropDownButton>

@@ -62,6 +62,8 @@
     "importCollection": "Import Collection",
     "exportCurrentCollection": "Export Current Collection",
     "editCurrentCollection": "Edit Current Collection",
+    "deleteCollection": "Delete Collection",
+    "renameCollection": "Rename Collection",
     "searchPlaceholder": "Search favorites",
     "unfavoriteToolTip": "Unfavorite",
     "downloadToolTip": "Download"

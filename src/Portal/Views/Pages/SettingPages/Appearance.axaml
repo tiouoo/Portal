@@ -37,25 +37,53 @@
             <ListBox Name="ListBox" Theme="{DynamicResource BorderListBox}">
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe650;" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,10,0"
+                            Text="&#xe650;"
+                            VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeSystem}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe636;" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,10,0"
+                            Text="&#xe642;"
+                            VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeLight}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62e;" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,10,0"
+                            Text="&#xe62e;"
+                            VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeDark}}" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Background="{DynamicResource PopupBackgroundColor}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe642;" FontSize="16" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,10,0"
+                            Text=""
+                            VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeMirage}}" />
                     </StackPanel>
                 </ListBoxItem>

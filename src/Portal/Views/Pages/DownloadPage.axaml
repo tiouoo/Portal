@@ -8,10 +8,11 @@
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
         <controls:ScrollView
             Classes="Flat"
@@ -25,19 +26,31 @@
                     CommandParameter="{x:Type downloadPages:FavoritesPage}"
                     Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Favorites}}">
                     <tio:NavMenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe644;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="18"
+                            FontWeight="Thin"
+                            Text="&#xe644;" />
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_JavaEdition}}">
                     <tio:NavMenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe652;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            Text="&#xe652;" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:VanillaInstallation}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_GameClient}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe651;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe651;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -46,7 +59,11 @@
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Mods}}"
                         IsSelected="True">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe630;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe638;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -54,7 +71,11 @@
                         CommandParameter="{x:Type downloadPages:ModpackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Modpacks}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe631;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -62,7 +83,11 @@
                         CommandParameter="{x:Type downloadPages:ResourcePackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_ResourcePacks}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe64d;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe64d;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -70,7 +95,11 @@
                         CommandParameter="{x:Type downloadPages:ShaderPackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_ShaderPacks}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63e;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe630;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -78,7 +107,11 @@
                         CommandParameter="{x:Type downloadPages:DataPackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_DataPacks}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63b;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe63b;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -86,13 +119,21 @@
                         CommandParameter="{x:Type downloadPages:SaveSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Saves}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe629;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe629;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_BedrockEdition}}">
                     <tio:NavMenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe60f;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            Text="&#xe60f;" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
@@ -100,7 +141,11 @@
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_GameClient}}"
                         IsVisible="{Binding IsBedrockInstallationSupported}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe651;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe651;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -108,20 +153,32 @@
                         CommandParameter="{x:Type downloadPages:BedrockResourcePackSearchPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_BedrockResourcePacks}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe638;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe638;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Others}}">
                     <tio:NavMenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            Text="&#xe613;" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:JavaDownloadPage}"
                         Header="Java">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe638;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe652;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -129,7 +186,11 @@
                         CommandParameter="{x:Type downloadPages:CustomDownloadPage}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_CustomDownload}}">
                         <tio:NavMenuItem.Icon>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" FontSize="16" />
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                FontWeight="Thin"
+                                Text="&#xe622;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>

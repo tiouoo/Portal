@@ -62,6 +62,8 @@
     "importCollection": "导入收藏夹",
     "exportCurrentCollection": "导出当前收藏夹",
     "editCurrentCollection": "编辑当前收藏夹",
+    "deleteCollection": "删除收藏夹",
+    "renameCollection": "重命名收藏夹",
     "searchPlaceholder": "搜索收藏内容",
     "unfavoriteToolTip": "取消收藏",
     "downloadToolTip": "下载"

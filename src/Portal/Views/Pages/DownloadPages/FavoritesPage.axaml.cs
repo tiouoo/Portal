@@ -68,7 +68,7 @@ public partial class FavoritesPage : UserControl
         if (!string.IsNullOrWhiteSpace(file)) ((FavoritesPageViewModel)DataContext!).Import(file);
     }
 
-    private async void Edit_OnClick(object? sender, RoutedEventArgs e)
+    private async void Rename_OnClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not FavoritesPageViewModel viewModel || viewModel.SelectedCollection is null)
             return;
@@ -82,6 +82,12 @@ public partial class FavoritesPage : UserControl
             });
         if (result is not null)
             viewModel.ApplyEdit(result);
+    }
+
+    private void Delete_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is FavoritesPageViewModel viewModel)
+            viewModel.DeleteSelectedCollection();
     }
 
     private async void Export_OnClick(object? sender, RoutedEventArgs e)
@@ -199,6 +205,15 @@ public partial class FavoritesPageViewModel : ObservableObject
         }
 
         _service.Save();
+    }
+
+    public void DeleteSelectedCollection()
+    {
+        if (SelectedCollection is null) return;
+        _service.Document.Collections.Remove(SelectedCollection);
+        if (_service.Document.Collections.Count == 0) _service.Document.Collections.Add(new FavoriteCollection());
+        _service.Save();
+        RefreshCollections();
     }
 
     private void RefreshCollections()
