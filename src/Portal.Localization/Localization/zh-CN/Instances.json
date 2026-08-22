@@ -1,9 +1,4 @@
 {
-  "aianalysisdialog": {
-    "title": "AI 日志分析",
-    "close": "完成",
-    "copyResult": "复制结果"
-  },
   "bedrockmods": {
     "openFolder": "打开文件夹",
     "importMods": "添加模组",

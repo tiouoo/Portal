@@ -1234,7 +1234,10 @@
     "copied": "分析结果已复制",
     "analyzing": "AI 分析中…",
     "complete": "分析完成",
-    "failed": "分析失败：{0}"
+    "failed": "分析失败：{0}",
+    "viewResult": "查看结果",
+    "pageTitle": "AI 分析 - {0}",
+    "copyResult": "复制结果"
   },
   "appDebug": {
     "writeRegistry": "写入注册表",

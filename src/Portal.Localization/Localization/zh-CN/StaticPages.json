@@ -1,6 +1,9 @@
 {
   "imageviewer": {
     "zoomOutTooltip": "缩小 10%",
-    "zoomInTooltip": "放大 10%"
+    "zoomInTooltip": "放大 10%",
+    "openWithDefault": "用默认方式打开",
+    "copyImage": "复制图像",
+    "saveAs": "另存为"
   }
 }

@@ -1,9 +1,4 @@
 {
-  "aianalysisdialog": {
-    "title": "AI Log Analysis",
-    "close": "Done",
-    "copyResult": "Copy Result"
-  },
   "bedrockmods": {
     "openFolder": "Open Folder",
     "importMods": "Add Mods",

@@ -9,8 +9,9 @@
     xmlns:controls1="clr-namespace:Portal.Views.Components.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
@@ -82,7 +83,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_refreshServer}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="16"
+                                                FontWeight="Thin"
+                                                Text="&#xe63c;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -90,7 +95,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_quickPlay}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe607;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe607;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -99,7 +108,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_copyAddress}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe616;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe616;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -107,7 +120,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_createShortcut}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62a;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe62a;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -116,7 +133,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_edit}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62c;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe62c;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -124,7 +145,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe640;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>
@@ -151,7 +176,12 @@
                                                     Source="{Binding Icon}"
                                                     Stretch="UniformToFill"
                                                     Width="56" />
-                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe614;" FontSize="32" IsVisible="{Binding !HasIcon}" />
+                                                <TextBlock
+                                                    FontFamily="{StaticResource IconFont}"
+                                                    FontSize="32"
+                                                    FontWeight="Thin"
+                                                    IsVisible="{Binding !HasIcon}"
+                                                    Text="&#xe614;" />
                                             </Grid>
                                         </Border>
                                         <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">
@@ -214,7 +244,12 @@
                                             ToolTip.Tip="{Translate {x:Static loc:InstancesLanguageManager+Keys.servers_launchServer}}"
                                             VerticalAlignment="Bottom"
                                             VerticalContentAlignment="Bottom">
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="15" Foreground="{DynamicResource InnerForegroundColor}" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="15"
+                                                FontWeight="Thin"
+                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                Text="&#xe613;" />
                                         </Button>
                                         <StackPanel Spacing="3">
                                             <TextBlock

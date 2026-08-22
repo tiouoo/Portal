@@ -8,8 +8,9 @@
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:instancePages="clr-namespace:Portal.Views.Pages.InstancePages"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
@@ -102,7 +103,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_refreshServer}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe63c;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -111,7 +116,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_copyAddress}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe616;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe616;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -120,7 +129,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_edit}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe62c;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe62c;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -128,7 +141,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockservers_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe640;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>

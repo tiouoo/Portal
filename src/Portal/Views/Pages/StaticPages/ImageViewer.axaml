@@ -7,9 +7,10 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls1="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:staticPages="clr-namespace:Portal.Views.Pages.StaticPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid>
         <controls1:ScrollView
             Classes="Flat"
@@ -40,12 +41,19 @@
                 Spacing="4"
                 ZIndex="1">
                 <RepeatButton
+                    Background="Transparent"
                     Click="ZoomOut_OnClick"
                     Height="32"
                     Theme="{StaticResource TransparentButton}"
                     ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomOutTooltip}}"
                     Width="32">
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe608;" FontSize="16" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="16"
+                        FontWeight="Thin"
+                        HorizontalAlignment="Center"
+                        Text="&#xe608;"
+                        VerticalAlignment="Center" />
                 </RepeatButton>
                 <TextBlock
                     Foreground="{DynamicResource InnerForegroundColor}"
@@ -54,12 +62,19 @@
                     VerticalAlignment="Center"
                     Width="52" />
                 <RepeatButton
+                    Background="Transparent"
                     Click="ZoomIn_OnClick"
                     Height="32"
                     Theme="{StaticResource TransparentButton}"
                     ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomInTooltip}}"
                     Width="32">
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe645;" FontSize="16" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="16"
+                        FontWeight="Thin"
+                        HorizontalAlignment="Center"
+                        Text="&#xe645;"
+                        VerticalAlignment="Center" />
                 </RepeatButton>
             </StackPanel>
         </Border>

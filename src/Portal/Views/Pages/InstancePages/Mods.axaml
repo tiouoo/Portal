@@ -7,10 +7,11 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Styles>
         <Style Selector="Border.mod-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -182,7 +183,11 @@
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe60c;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe60c;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -191,7 +196,11 @@
                                         IsVisible="{Binding IsDisabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61f;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe61f;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -200,7 +209,11 @@
                                         IsVisible="{Binding IsEnabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61f;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe61f;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -209,7 +222,11 @@
                                         IsVisible="{Binding IsUpdatable}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe63c;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -218,7 +235,11 @@
                                         IsVisible="{Binding HasIdentity}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe621;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe621;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -227,7 +248,11 @@
                                         IsVisible="{Binding HasRollback}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe622;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe622;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator IsVisible="{Binding HasIdentity}" />
@@ -236,7 +261,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_openInFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe628;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe628;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
@@ -244,7 +273,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.mods_delete}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe640;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>
@@ -291,7 +324,12 @@
                                                     Source="{Binding Icon}"
                                                     Stretch="UniformToFill"
                                                     Width="56" />
-                                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe611;" FontSize="32" IsVisible="{Binding !HasIcon}" />
+                                                <TextBlock
+                                                    FontFamily="{StaticResource IconFont}"
+                                                    FontSize="32"
+                                                    FontWeight="Thin"
+                                                    IsVisible="{Binding !HasIcon}"
+                                                    Text="&#xe611;" />
                                             </Grid>
                                         </Border>
                                         <StackPanel Margin="10,1,0,0" VerticalAlignment="Center">

@@ -34,7 +34,6 @@
             <Button
                 Click="AnalyseAi_OnClick"
                 Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.crashreports_aiAnalysis}}"
-                IsVisible="False"
                 VerticalAlignment="Center" />
             <Button
                 Click="Share_OnClick"

@@ -3,8 +3,9 @@
     x:DataType="local:BedrockWorlds"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
             <Button
@@ -85,7 +86,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_openInFolder}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe628;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe628;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
@@ -94,7 +99,11 @@
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_deleteWorld}}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                Text="&#xe640;" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </MenuFlyout>
@@ -110,7 +119,12 @@
                                             IsVisible="{Binding HasIcon}"
                                             Source="{Binding Icon}"
                                             Stretch="UniformToFill" />
-                                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe64c;" FontSize="32" IsVisible="{Binding !HasIcon}" />
+                                        <TextBlock
+                                            FontFamily="{StaticResource IconFont}"
+                                            FontSize="32"
+                                            FontWeight="Thin"
+                                            IsVisible="{Binding !HasIcon}"
+                                            Text="&#xe64c;" />
                                     </Grid>
                                 </Border>
                                 <TextBlock

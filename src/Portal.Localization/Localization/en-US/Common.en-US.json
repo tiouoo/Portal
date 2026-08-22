@@ -1234,7 +1234,10 @@
     "copied": "Analysis result copied",
     "analyzing": "AI analyzing…",
     "complete": "Analysis complete",
-    "failed": "Analysis failed: {0}"
+    "failed": "Analysis failed: {0}",
+    "viewResult": "View Result",
+    "pageTitle": "AI Analysis - {0}",
+    "copyResult": "Copy Result"
   },
   "appDebug": {
     "writeRegistry": "Write Registry",

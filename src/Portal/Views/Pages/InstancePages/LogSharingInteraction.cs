@@ -1,11 +1,14 @@
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using Portal.Core.Services;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
+using TioUi.Common.Classes;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 
@@ -13,6 +16,8 @@ namespace Portal.Views.Pages.InstancePages;
 
 internal static class LogSharingInteraction
 {
+    private static readonly ConcurrentDictionary<string, Lazy<Task<string>>> AiAnalysisCache = new();
+
     public static async Task ShareAsync(Control view, TextDocument document, string displayName)
     {
         var topLevel = TopLevel.GetTopLevel(view);
@@ -76,26 +81,54 @@ internal static class LogSharingInteraction
             return;
         }
 
-        var viewModel = new AiAnalysisDialogViewModel();
-        var dialog = OverlayDialog.ShowCustomAsync<AiAnalysisDialog, AiAnalysisDialogViewModel, object>(
-            viewModel, view.TryGetHostId(), new OverlayDialogOptions
-            {
-                Buttons = DialogButton.None,
-                CanLightDismiss = false,
-                CanResize = false
-            });
+        var key = ComputeContentKey(document.Text);
+
+        if (AiAnalysisCache.TryGetValue(key, out var cached) && cached.Value.IsCompletedSuccessfully)
+        {
+            ShowResultNotice(topLevel, cached.Value.Result, displayName);
+            return;
+        }
+
+        topLevel.Notice(CommonLanguageManager.Instance.aiAnalysis_analyzing.CurrentValue());
 
         try
         {
-            await LogSharingService.AnalyseAiAsync(document.Text,
-                chunk => Dispatcher.UIThread.Post(() => viewModel.Append(chunk)), CancellationToken.None);
-            Dispatcher.UIThread.Post(viewModel.Complete);
+            var task = AiAnalysisCache.GetOrAdd(key, _ => new Lazy<Task<string>>(() => AnalyseCoreAsync(document.Text)))
+                .Value;
+            var result = await task;
+            ShowResultNotice(topLevel, result, displayName);
         }
         catch (Exception ex)
         {
-            Dispatcher.UIThread.Post(() => viewModel.Fail(ex.Message));
+            AiAnalysisCache.TryRemove(key, out _);
+            topLevel.Notice(string.Format(CommonLanguageManager.Instance.aiAnalysis_failed.CurrentValue(), ex.Message),
+                NotificationType.Error);
         }
+    }
 
-        await dialog;
+    private static Task<string> AnalyseCoreAsync(string content)
+    {
+        return LogSharingService.AnalyseAiAsync(content, null, CancellationToken.None);
+    }
+
+    private static string ComputeContentKey(string content)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+        return Convert.ToHexString(bytes);
+    }
+
+    private static void ShowResultNotice(TopLevel topLevel, string result, string displayName)
+    {
+        topLevel.Notice(new NotificationOptions
+        {
+            Type = NotificationType.Success,
+            Expiration = TimeSpan.Zero,
+            Content = CommonLanguageManager.Instance.aiAnalysis_complete.CurrentValue(),
+            OperateButtons =
+            [
+                new OperateButtonEntry(CommonLanguageManager.Instance.aiAnalysis_viewResult.CurrentValue(),
+                    _ => AiAnalysisPage.Open(result, displayName, topLevel), closeOnClick: true)
+            ]
+        });
     }
 }
