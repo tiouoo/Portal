@@ -1,3 +1,38 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:lingua="https://irihi.tech/lingua" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <FontFamily x:Key="IconFont">avares://Portal/Assets/Fonts/iconfont.ttf#iconfont</FontFamily>
+
+    <ControlTheme TargetType="lingua:CulturePicker" x:Key="CulturePickerTheme">
+        <Setter Property="Template">
+            <ControlTemplate TargetType="lingua:CulturePicker">
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding Cultures, RelativeSource={RelativeSource TemplatedParent}}"
+                    SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                    <ComboBox.SelectionBoxItemTemplate>
+                        <DataTemplate DataType="lingua:LinguaCulture">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="16"
+                                    FontWeight="Thin"
+                                    Margin="0,0,4,0"
+                                    Text="&#xe648;"
+                                    VerticalAlignment="Center" />
+                                <TextBlock
+                                    Text="{Binding SelectionDisplayText}"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.SelectionBoxItemTemplate>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="lingua:LinguaCulture">
+                            <TextBlock
+                                Text="{Binding DisplayText}"
+                                VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
 </ResourceDictionary>

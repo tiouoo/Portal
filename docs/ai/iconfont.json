@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "48378636",
+      "name": "ghost",
+      "font_class": "a-ghost-solid-full1",
+      "unicode": "e654",
+      "unicode_decimal": 58964
+    },
+    {
+      "icon_id": "48378635",
+      "name": "language",
+      "font_class": "language-solid-full",
+      "unicode": "e648",
+      "unicode_decimal": 58952
+    },
+    {
       "icon_id": "48378583",
       "name": "download-outline",
       "font_class": "downloadxiazai",
@@ -280,7 +294,7 @@
     },
     {
       "icon_id": "48376553",
-      "name": "sun-regular",
+      "name": "sun",
       "font_class": "sun-regular",
       "unicode": "e642",
       "unicode_decimal": 58946

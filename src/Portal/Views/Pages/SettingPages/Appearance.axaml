@@ -27,7 +27,8 @@
             <lingua:CulturePicker
                 CultureChanged="OnCultureChanged"
                 Cultures="{Binding Cultures}"
-                Managers="{Binding Managers}" />
+                Managers="{Binding Managers}"
+                Theme="{StaticResource CulturePickerTheme}" />
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
@@ -82,7 +83,7 @@
                             FontWeight="Thin"
                             HorizontalAlignment="Center"
                             Margin="0,0,10,0"
-                            Text=""
+                            Text="&#xe654;"
                             VerticalAlignment="Center" />
                         <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_themeMirage}}" />
                     </StackPanel>
