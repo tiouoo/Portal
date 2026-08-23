@@ -8,10 +8,11 @@
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tasks="clr-namespace:Tio.Avalonia.Standard.Modules.Tasks;assembly=Tio.Avalonia.Standard"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <converter:ManagedTaskStatusToBrushConverter x:Key="TaskStatusBrush" />
         <converter:ManagedTaskStatusToTextConverter x:Key="TaskStatusText" />
@@ -58,6 +59,21 @@
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="tio|TioExpander /template/ PathIcon#PART_Icon">
+            <Setter Property="Data" Value="{DynamicResource AngleDown}" />
+            <Setter Property="RenderTransform" Value="rotate(0deg)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Duration="0:0:0.12" Property="RenderTransform" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="tio|TioExpander:expanded /template/ PathIcon#PART_Icon">
+            <Setter Property="Data" Value="{DynamicResource AngleDown}" />
+            <Setter Property="RenderTransform" Value="rotate(180deg)" />
+        </Style>
+    </UserControl.Styles>
     <ScrollViewer
         ClipToBounds="True"
         HorizontalScrollBarVisibility="Disabled"
@@ -72,12 +88,11 @@
                         Background="{DynamicResource TranslucentBackgroundColor}"
                         BorderBrush="{DynamicResource TranslucentBorderBrush}"
                         BorderThickness="1"
-                        Classes="no-transitions"
                         HeaderHeight="72"
                         HeaderPadding="0"
-                        IconHeight="12"
+                        IconHeight="15"
                         IconMargin="0,0,10,0"
-                        IconWidth="12">
+                        IconWidth="15">
                         <Expander.Header>
                             <Grid Margin="0,8,10,8" RowDefinitions="Auto,Auto">
                                 <Grid ColumnDefinitions="Auto,*,Auto,Auto" Grid.Row="0">
