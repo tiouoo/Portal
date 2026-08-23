@@ -54,4 +54,106 @@ public static class JavaRuntimeManager
 
         return deduplicated;
     }
+
+    /// <summary>
+    /// 检测列表中不再存在于文件系统的 Java，从列表中移除，并为受影响的版本自动切换默认 Java。
+    /// </summary>
+    public static async Task<JavaReconcileResult> ReconcileAsync(
+        ICollection<JavaRuntimeEntry> javaRuntimes,
+        IDictionary<int, string>? javaVersionDefaultPaths,
+        CancellationToken cancellationToken = default)
+    {
+        var snapshot = javaRuntimes.ToArray();
+        if (snapshot.Length == 0)
+            return JavaReconcileResult.Empty;
+
+        var existence = await Task.Run(() =>
+        {
+            var result = new bool[snapshot.Length];
+            for (var index = 0; index < snapshot.Length; index++)
+                result[index] = File.Exists(snapshot[index].JavaPath);
+            return result;
+        }, cancellationToken);
+
+        var removed = new List<JavaRuntimeEntry>();
+        for (var index = 0; index < snapshot.Length; index++)
+            if (!existence[index])
+                removed.Add(snapshot[index]);
+
+        if (removed.Count == 0)
+            return JavaReconcileResult.Empty;
+
+        var remainingByVersion = snapshot
+            .Where((_, index) => existence[index])
+            .GroupBy(runtime => runtime.MajorVersion)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        var switches = new List<JavaRuntimeSwitch>();
+        var missing = new List<JavaRuntimeEntry>();
+        foreach (var runtime in removed)
+        {
+            if (remainingByVersion.TryGetValue(runtime.MajorVersion, out var candidates) && candidates.Count > 0)
+                switches.Add(new JavaRuntimeSwitch(runtime, candidates[0]));
+            else
+                missing.Add(runtime);
+        }
+
+        var removedPaths = new HashSet<string>(removed.Select(runtime => runtime.JavaPath),
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var runtime in removed)
+            javaRuntimes.Remove(runtime);
+
+        if (javaVersionDefaultPaths is not null)
+        {
+            var staleKeys = javaVersionDefaultPaths
+                .Where(pair => removedPaths.Contains(pair.Value))
+                .Select(pair => pair.Key)
+                .ToArray();
+            foreach (var key in staleKeys)
+                javaVersionDefaultPaths.Remove(key);
+
+            foreach (var javaRuntimeSwitch in switches)
+                javaVersionDefaultPaths[javaRuntimeSwitch.Removed.MajorVersion] = javaRuntimeSwitch.Selected.JavaPath;
+        }
+
+        return new JavaReconcileResult(switches, missing);
+    }
+
+    public static IReadOnlyList<JavaReconcileMessage> BuildMessages(JavaReconcileResult result)
+    {
+        if (!result.HasChanges)
+            return [];
+
+        var messages = new List<JavaReconcileMessage>();
+        foreach (var javaRuntimeSwitch in result.Switches)
+        {
+            messages.Add(new JavaReconcileMessage(
+                string.Format(CommonLanguageManager.Instance.javaPage_reconcileSwitched.CurrentValue(),
+                    javaRuntimeSwitch.Removed.DisplayName, javaRuntimeSwitch.Selected.DisplayName),
+                false));
+        }
+
+        foreach (var runtime in result.Missing)
+        {
+            messages.Add(new JavaReconcileMessage(
+                string.Format(CommonLanguageManager.Instance.javaPage_reconcileMissing.CurrentValue(),
+                    runtime.DisplayName),
+                true));
+        }
+
+        return messages;
+    }
 }
+
+public sealed record JavaRuntimeSwitch(JavaRuntimeEntry Removed, JavaRuntimeEntry Selected);
+
+public sealed record JavaReconcileResult(
+    IReadOnlyList<JavaRuntimeSwitch> Switches,
+    IReadOnlyList<JavaRuntimeEntry> Missing)
+{
+    public static JavaReconcileResult Empty { get; } = new([], []);
+
+    public bool HasChanges => Switches.Count > 0 || Missing.Count > 0;
+}
+
+public sealed record JavaReconcileMessage(string Text, bool IsError);

@@ -1,11 +1,13 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Localization;
+using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -20,6 +22,14 @@ public static class JavaAutoInstallCoordinator
         JavaInstallProgressHandler? progress = null,
         CancellationToken cancellationToken = default)
     {
+        var reconcile = Dispatcher.UIThread.CheckAccess()
+            ? await JavaRuntimeManager.ReconcileAsync(Data.ConfigEntry.JavaRuntimes,
+                Data.ConfigEntry.JavaVersionDefaultPaths, cancellationToken)
+            : await Dispatcher.UIThread.InvokeAsync(() =>
+                JavaRuntimeManager.ReconcileAsync(Data.ConfigEntry.JavaRuntimes,
+                    Data.ConfigEntry.JavaVersionDefaultPaths, cancellationToken));
+        NotifyReconcile(reconcile);
+
         var existing =
             Data.ConfigEntry.JavaRuntimes.FirstOrDefault(x =>
                 x.MajorVersion == majorVersion && File.Exists(x.JavaPath));
@@ -78,6 +88,25 @@ public static class JavaAutoInstallCoordinator
                 CanLightDismiss = false, CanResize = false
             });
             return result == DialogResult.Yes;
+        });
+    }
+
+    private static void NotifyReconcile(JavaReconcileResult result)
+    {
+        var messages = JavaRuntimeManager.BuildMessages(result);
+        if (messages.Count == 0)
+            return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            var topLevel = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
+                ?.MainWindow;
+            if (topLevel is null)
+                return;
+
+            foreach (var message in messages)
+                topLevel.Notice(message.Text,
+                    message.IsError ? NotificationType.Error : NotificationType.Information);
         });
     }
 }

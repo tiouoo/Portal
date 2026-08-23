@@ -1561,7 +1561,9 @@
     "javaAdded": "Java 已添加",
     "addJavaFailed": "添加 Java 失败：{0}",
     "javaRemoved": "已移除 Java：{0}",
-    "manualSelectVersionMismatch": "选择的 Java 是 {1}，不是目标 Java {0}；已将其添加到 Java 列表。"
+    "manualSelectVersionMismatch": "选择的 Java 是 {1}，不是目标 Java {0}；已将其添加到 Java 列表。",
+    "reconcileSwitched": "「{0}」不存在，已自动切换到「{1}」",
+    "reconcileMissing": "「{0}」不存在，且没有其他可用的 Java"
   },
   "javaResourceDetails": {
     "title": "{0}详情",

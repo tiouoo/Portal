@@ -13,6 +13,7 @@ using MinecraftLaunch.Extensions;
 using MinecraftLaunch.Launch;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
+using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Java;
@@ -175,6 +176,11 @@ public static class MinecraftLaunchService
             selectJava!.Start(async context =>
             {
                 context.SetRunning(CommonLanguageManager.Instance.launch_checkingJavaRuntime.CurrentValue());
+                var reconcile = await JavaRuntimeManager.ReconcileAsync(
+                    Data.ConfigEntry.JavaRuntimes,
+                    Data.ConfigEntry.JavaVersionDefaultPaths,
+                    context.CancellationToken);
+                NotifyJavaReconcile(topLevel, reconcile);
                 java = await SelectJavaAsync(instance, options, context, context.CancellationToken);
                 if (options.AutoSetJavaHighPerformanceGpu)
                 {
@@ -1034,6 +1040,12 @@ public static class MinecraftLaunchService
                 }, true)
             ]
         }));
+    }
+
+    private static void NotifyJavaReconcile(TopLevel? topLevel, JavaReconcileResult result)
+    {
+        foreach (var message in JavaRuntimeManager.BuildMessages(result))
+            Notice(topLevel, message.Text, message.IsError ? NotificationType.Error : NotificationType.Information);
     }
 
     private static string GetFailureReason(Exception exception)

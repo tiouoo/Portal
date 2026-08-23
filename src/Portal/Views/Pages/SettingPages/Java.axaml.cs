@@ -96,12 +96,26 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
         base.OnAttachedToVisualTree(e);
         RefreshMemoryStatus();
         _memoryRefreshTimer.Start();
+        _ = ReconcileStaleRuntimesAsync();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _memoryRefreshTimer.Stop();
         base.OnDetachedFromVisualTree(e);
+    }
+
+    private async Task ReconcileStaleRuntimesAsync()
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+            return;
+
+        var result = await JavaRuntimeManager.ReconcileAsync(
+            Data.ConfigEntry.JavaRuntimes,
+            Data.ConfigEntry.JavaVersionDefaultPaths);
+        foreach (var message in JavaRuntimeManager.BuildMessages(result))
+            topLevel.Notice(message.Text, message.IsError ? NotificationType.Error : NotificationType.Information);
     }
 
     private void ConfigEntry_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -377,7 +391,10 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
             var selected = Data.ConfigEntry.GetJavaDefault(option.MajorVersion);
             if (selected is null && option.Runtimes.Count > 0)
+            {
                 selected = option.Runtimes[0];
+                Data.ConfigEntry.SetJavaDefault(option.MajorVersion, selected);
+            }
             option.SetSelectedRuntime(selected, true);
         }
     }

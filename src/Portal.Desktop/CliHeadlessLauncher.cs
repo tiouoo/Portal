@@ -91,6 +91,10 @@ internal static class CliHeadlessLauncher
         var account = await VerifyAccountAsync(settings.UsingMinecraftMinecraftAccount);
 
         Write(CommonLanguageManager.Instance.launch_checkingJavaRuntime.CurrentValue());
+        var reconcile = await JavaRuntimeManager.ReconcileAsync(settings.JavaRuntimes,
+            settings.JavaVersionDefaultPaths);
+        foreach (var message in JavaRuntimeManager.BuildMessages(reconcile))
+            Write(message.Text);
         var java = await SelectJavaAsync(instance, settings);
 
         var options = BuildOptions(instance, settings);

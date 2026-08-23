@@ -1561,7 +1561,9 @@
     "javaAdded": "Java added",
     "addJavaFailed": "Failed to add Java: {0}",
     "javaRemoved": "Java removed: {0}",
-    "manualSelectVersionMismatch": "The selected Java is {1}, not the target Java {0}; it has been added to the Java list."
+    "manualSelectVersionMismatch": "The selected Java is {1}, not the target Java {0}; it has been added to the Java list.",
+    "reconcileSwitched": "{0} no longer exists, switched to {1}",
+    "reconcileMissing": "{0} no longer exists, and no other Java is available"
   },
   "javaResourceDetails": {
     "title": "{0} Details",
