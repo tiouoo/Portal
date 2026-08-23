@@ -44,7 +44,8 @@ public enum NewTabContent
 public enum DownloadSearchSource
 {
     CurseForge,
-    Modrinth
+    Modrinth,
+    All
 }
 
 public enum DownloadSearchSort

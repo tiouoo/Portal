@@ -50,7 +50,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool SettingsNavGeneralExpanded { get; set; } = true;
     [ObservableProperty] public partial bool SettingsNavGameExpanded { get; set; } = true;
     [ObservableProperty] public partial bool SettingsNavNetworkExpanded { get; set; } = true;
-    [ObservableProperty] public partial DownloadSearchSource DefaultDownloadSearchSource { get; set; } = DownloadSearchSource.Modrinth;
+    [ObservableProperty] public partial DownloadSearchSource DefaultDownloadSearchSource { get; set; } = DownloadSearchSource.All;
     [ObservableProperty] public partial ModLoaderType DownloadSearchLoader { get; set; } = ModLoaderType.Any;
     [ObservableProperty] public partial DownloadSearchSort DefaultDownloadSearchSort { get; set; } = DownloadSearchSort.Relevance;
     [ObservableProperty] public partial int ResourceListSortIndex { get; set; }

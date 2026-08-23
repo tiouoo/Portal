@@ -89,7 +89,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     public ModSearchPageViewModel()
     {
         SelectedSource = Sources.FirstOrDefault(source => source.Kind == DownloadSearchPersistence.ToUiSource(Data.ConfigEntry.DefaultDownloadSearchSource))
-                         ?? Sources[1];
+                         ?? Sources[0];
         SelectedLoader = Loaders.FirstOrDefault(loader => loader.Kind == Data.ConfigEntry.DownloadSearchLoader)
                          ?? Loaders[0];
         SelectedSort = SortOptions.FirstOrDefault(sort => sort.Kind == DownloadSearchPersistence.ToUiSort(Data.ConfigEntry.DefaultDownloadSearchSort))
@@ -100,7 +100,11 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     public ObservableCollection<string> MinecraftVersions { get; } = [];
 
     public IReadOnlyList<ModSearchSource> Sources { get; } =
-        [new("CurseForge", SearchSource.CurseForge), new("Modrinth", SearchSource.Modrinth)];
+    [
+        new(CommonLanguageManager.Instance.mod_all.CurrentValue(), SearchSource.All),
+        new("CurseForge", SearchSource.CurseForge),
+        new("Modrinth", SearchSource.Modrinth)
+    ];
 
     public IReadOnlyList<ModSearchCategory> Categories => SelectedSource?.Categories ?? [];
 
@@ -347,7 +351,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     {
         var options = new ResourceSearchOptions
         {
-            Source = request.Source == SearchSource.Modrinth ? ResourceSource.Modrinth : ResourceSource.CurseForge,
+            Source = DownloadSearchPersistence.ToResourceSource(request.Source),
             Type = ResourceType.Mod,
             Query = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
@@ -430,7 +434,8 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 public enum SearchSource
 {
     CurseForge,
-    Modrinth
+    Modrinth,
+    All
 }
 
 public enum SearchSort
@@ -449,8 +454,13 @@ public sealed record ModSearchSort(string DisplayName, SearchSort Kind);
 
 public sealed record ModSearchSource(string DisplayName, SearchSource Kind)
 {
-    public IReadOnlyList<ModSearchCategory> Categories { get; } = Kind is SearchSource.Modrinth
-        ?
+    public IReadOnlyList<ModSearchCategory> Categories { get; } = Kind switch
+    {
+        SearchSource.All =>
+        [
+            new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), "")
+        ],
+        SearchSource.Modrinth =>
         [
             new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), ""),
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catAdventure.CurrentValue(), "adventure"),
@@ -461,8 +471,8 @@ public sealed record ModSearchSource(string DisplayName, SearchSource Kind)
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catOptimization.CurrentValue(), "optimization"),
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catWorldgen.CurrentValue(), "worldgen"),
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catTechnology.CurrentValue(), "technology")
-        ]
-        :
+        ],
+        _ =>
         [
             new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), "0"),
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catAdventureExploration.CurrentValue(), "425"),
@@ -473,7 +483,8 @@ public sealed record ModSearchSource(string DisplayName, SearchSource Kind)
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catMapsInfo.CurrentValue(), "423"),
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catPerformance.CurrentValue(), "6821"),
             new ModSearchCategory(CommonLanguageManager.Instance.mod_catApiLibraries.CurrentValue(), "421")
-        ];
+        ]
+    };
 }
 
 public sealed partial class ModSearchResultItem : ObservableObject
@@ -483,7 +494,9 @@ public sealed partial class ModSearchResultItem : ObservableObject
     {
         Name = hit.Title ?? string.Empty;
         FriendlyName = WikiEntries.FindChineseName(hit.Slug ?? string.Empty) ?? hit.Title ?? string.Empty;
-        Summary = hit.Translation ?? hit.Summary ?? string.Empty;
+        var sourceTag = DownloadSearchPersistence.SourceAbbreviation(hit.Source);
+        var summary = hit.Translation ?? hit.Summary ?? string.Empty;
+        Summary = string.IsNullOrEmpty(summary) ? sourceTag : $"{sourceTag}·{summary}";
         var timestamp = (sort is SearchSort.Newest ? hit.DateCreated : hit.DateModified) ??
                         hit.DateModified ?? hit.DateCreated;
         IconUrl = hit.IconUrl;

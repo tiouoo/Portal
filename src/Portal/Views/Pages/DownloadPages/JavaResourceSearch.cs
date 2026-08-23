@@ -66,13 +66,14 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         Sources = definition.SupportsModrinth
             ?
             [
+                new JavaResourceSearchSource(CommonLanguageManager.Instance.mod_all.CurrentValue(), SearchSource.All),
                 new JavaResourceSearchSource("CurseForge", SearchSource.CurseForge),
                 new JavaResourceSearchSource("Modrinth", SearchSource.Modrinth)
             ]
             : [new JavaResourceSearchSource("CurseForge", SearchSource.CurseForge)];
         SelectedSource = Sources.FirstOrDefault(source =>
                                source.Kind == DownloadSearchPersistence.ToUiSource(Data.ConfigEntry.DefaultDownloadSearchSource))
-                           ?? Sources.Last();
+                           ?? Sources[0];
         SelectedLoader = Loaders.FirstOrDefault(loader => loader.Kind == Data.ConfigEntry.DownloadSearchLoader)
                          ?? Loaders[0];
         SelectedSort = SortOptions.FirstOrDefault(sort =>
@@ -306,7 +307,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     {
         var options = new ResourceSearchOptions
         {
-            Source = request.Source == SearchSource.Modrinth ? ResourceSource.Modrinth : ResourceSource.CurseForge,
+            Source = DownloadSearchPersistence.ToResourceSource(request.Source),
             Type = IridiumResourceMapping.ParseResourceType(Definition.ProjectType),
             Query = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
@@ -382,7 +383,9 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         string gameVersion, ModLoaderType loader)
     {
         Name = hit.Title ?? string.Empty;
-        Summary = hit.Translation ?? hit.Summary ?? string.Empty;
+        var sourceTag = DownloadSearchPersistence.SourceAbbreviation(hit.Source);
+        var summary = hit.Translation ?? hit.Summary ?? string.Empty;
+        Summary = string.IsNullOrEmpty(summary) ? sourceTag : $"{sourceTag}·{summary}";
         IconUrl = hit.IconUrl;
         Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
             RelativeTime.Format(hit.DateModified ?? hit.DateCreated ?? default), hit.Downloads);

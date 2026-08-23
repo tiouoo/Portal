@@ -6,6 +6,7 @@ using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.Services;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -14,14 +15,28 @@ internal static class DownloadSearchPersistence
     public static DownloadSearchSource ToCoreSource(SearchSource source) => source switch
     {
         SearchSource.Modrinth => DownloadSearchSource.Modrinth,
+        SearchSource.All => DownloadSearchSource.All,
         _ => DownloadSearchSource.CurseForge
     };
 
     public static SearchSource ToUiSource(DownloadSearchSource source) => source switch
     {
         DownloadSearchSource.Modrinth => SearchSource.Modrinth,
+        DownloadSearchSource.All => SearchSource.All,
         _ => SearchSource.CurseForge
     };
+
+    public static ResourceSource ToResourceSource(SearchSource source)
+    {
+        if (source == SearchSource.All && string.IsNullOrWhiteSpace(CredentialsService.CurseForgeApiKey))
+            return ResourceSource.Modrinth;
+        return source switch
+        {
+            SearchSource.Modrinth => ResourceSource.Modrinth,
+            SearchSource.All => ResourceSource.All,
+            _ => ResourceSource.CurseForge
+        };
+    }
 
     public static DownloadSearchSort ToCoreSort(SearchSort sort) => sort switch
     {
@@ -38,6 +53,16 @@ internal static class DownloadSearchPersistence
         DownloadSearchSort.Newest => SearchSort.Newest,
         _ => SearchSort.Relevance
     };
+
+    public static string SourceAbbreviation(ResourceSource source)
+    {
+        return source switch
+        {
+            ResourceSource.Modrinth => "Modrinth",
+            ResourceSource.CurseForge => "CurseForge",
+            _ => string.Empty
+        };
+    }
 }
 
 public readonly record struct MinecraftVersionSortKey(int Major, int Minor, int Patch, int Stage)
