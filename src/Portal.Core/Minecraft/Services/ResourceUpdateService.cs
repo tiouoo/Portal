@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using Iridium.Enums.Resources;
-using Iridium.Extensions.Resources;
-using Iridium.Models.CurseForge;
-using Iridium.Models.Modrinth;
+using Iridium.Extensions;
+using Iridium.Models.Resources;
+using Iridium.Models.Resources.CurseForge;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;
@@ -292,12 +292,12 @@ public sealed class ResourceUpdateService
                 await NetworkSemaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var response = await IridiumResourceClients.Modrinth.GetVersionsByHashesAsync(batch,
+                    var response = await IridiumResourceClients.Modrinth.GetFilesByHashesAsync(batch,
                         HashAlgorithm.Sha1, cancellationToken);
                     foreach (var hash in batch)
                     {
                         if (response.TryGetValue(hash, out var version) &&
-                            version is { Id: { Length: > 0 }, ProjectId: { Length: > 0 } })
+                            version is { Id.Length: > 0, ProjectId.Length: > 0 })
                         {
                             result[hash] = (version.ProjectId, version.Id);
                             var entry = new ModCacheEntry
@@ -374,6 +374,7 @@ public sealed class ResourceUpdateService
             return result;
 
         var loader = IridiumResourceMapping.ParseResourceLoader(loaders.FirstOrDefault() ?? string.Empty);
+        var loaderSlugs = loader.ToModrinthLoader() is { } slug ? new[] { slug } : Array.Empty<string>();
         foreach (var batch in hashes.Distinct(StringComparer.OrdinalIgnoreCase).Chunk(50))
         {
             try
@@ -381,13 +382,12 @@ public sealed class ResourceUpdateService
                 await NetworkSemaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var response = await IridiumResourceClients.Modrinth.CheckForUpdatesAsync(batch, gameVersion,
-                        loader, HashAlgorithm.Sha1, cancellationToken);
+                    var response = await IridiumResourceClients.Modrinth.GetLatestFilesByHashesAsync(batch,
+                        loaderSlugs, new[] { gameVersion }, null, HashAlgorithm.Sha1, cancellationToken);
                     foreach (var hash in batch)
                     {
-                        if (response.TryGetValue(hash, out var versions) &&
-                            versions.FirstOrDefault() is { } version)
-                            result[hash] = ModVersionFileItem.From(version.ToResourceFile());
+                        if (response.TryGetValue(hash, out var version) && version is not null)
+                            result[hash] = ModVersionFileItem.From(version);
                     }
                 }
                 finally
@@ -460,23 +460,14 @@ public sealed class ResourceUpdateService
             await NetworkSemaphore.WaitAsync(cancellationToken);
             try
             {
-                var data = await IridiumResourceClients.CurseForge.GetProjectAsync(modId, cancellationToken);
-                if (data?.LatestFilesIndexes is null)
-                    return null;
-
-                var targetIndex = data.LatestFilesIndexes
-                    .Where(index => index.GameVersion == gameVersion)
-                    .Where(index => loaders.Count == 0 || index.ModLoader == 0 ||
-                                    loaders.Contains(LoaderName(index.ModLoader)))
-                    .Where(index => index.FileId != currentFileId)
-                    .OrderByDescending(index => index.FileId)
+                var loaderType = IridiumResourceMapping.ParseResourceLoader(loaders.FirstOrDefault() ?? string.Empty);
+                var files = await IridiumResourceClients.CurseForge.GetProjectFilesAsync(modId.ToString(),
+                    gameVersion, loaderType, cancellationToken);
+                var file = files
+                    .Where(candidate => candidate.Id != currentFileId.ToString())
+                    .OrderByDescending(candidate => candidate.Published)
                     .FirstOrDefault();
-                if (targetIndex?.FileId is not { } targetFileId)
-                    return null;
-
-                var file = data.LatestFiles?.FirstOrDefault(candidate => candidate.Id == targetFileId);
-                file ??= await FetchCurseForgeFileAsync(modId, targetFileId, cancellationToken);
-                return file is null ? null : ModVersionFileItem.From(file.ToResourceFile());
+                return file is null ? null : ModVersionFileItem.From(file);
             }
             finally
             {
@@ -490,7 +481,7 @@ public sealed class ResourceUpdateService
         }
     }
 
-    private static async Task<CurseForgeFile?> FetchCurseForgeFileAsync(long modId, long fileId,
+    private static async Task<ResourceFile?> FetchCurseForgeFileAsync(long modId, long fileId,
         CancellationToken cancellationToken)
     {
         try
@@ -552,17 +543,5 @@ public sealed class ResourceUpdateService
     {
         var separator = key.IndexOf('|');
         return separator > 0 && string.Equals(key[..separator], filePath, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string? LoaderName(int? modLoader)
-    {
-        return modLoader switch
-        {
-            1 => "forge",
-            4 => "fabric",
-            5 => "quilt",
-            6 => "neoforge",
-            _ => null
-        };
     }
 }

@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using Iridium.Extensions.Resources;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Interfaces;
@@ -73,11 +73,11 @@ internal static class ModpackInstallation
             IReadOnlyList<JavaResourceFileItem> files = target.Source switch
             {
                 ModDetailsSource.Modrinth =>
-                    (await IridiumResourceClients.Modrinth.GetFilesAsync(target.ProjectId))
-                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
-                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
-                        long.Parse(target.ProjectId)))
-                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
+                    (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(target.ProjectId))
+                    .Select(JavaResourceFileItem.From).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
+                        target.ProjectId))
+                    .Select(JavaResourceFileItem.From).ToArray(),
                 _ => []
             };
             var file = files.OrderByDescending(item => item.Published).FirstOrDefault();

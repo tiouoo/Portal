@@ -8,7 +8,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Iridium.Extensions.Resources;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.App.Helpers;
 using Portal.Core.Minecraft.Classes;
@@ -114,11 +114,11 @@ public partial class ModDetailsPage : ResourceDetailsPageBase
             IReadOnlyList<ModVersionFileItem> files = target.Source switch
             {
                 ModDetailsSource.Modrinth =>
-                    (await IridiumResourceClients.Modrinth.GetFilesAsync(target.ProjectId))
-                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
-                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
-                        long.Parse(target.ProjectId)))
-                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
+                    (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(target.ProjectId))
+                    .Select(ModVersionFileItem.From).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
+                        target.ProjectId))
+                    .Select(ModVersionFileItem.From).ToArray(),
                 _ => []
             };
             if (files.Count == 0)
@@ -280,36 +280,36 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
                                   CommonLanguageManager.Instance.modDetails_noModFiles.CurrentValue());
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.Modrinth,
-                    [project.Id ?? string.Empty], cancellationToken);
+                    [project.Id], cancellationToken);
                 Name = project.Title ?? string.Empty;
                 FriendlyName = WikiEntries.FindChineseName(project.Slug ?? string.Empty) ?? project.Title ?? string.Empty;
-                Summary = translations.GetValueOrDefault(project.Id ?? string.Empty) ?? project.Description ?? string.Empty;
+                Summary = translations.GetValueOrDefault(project.Id) ?? project.Description ?? string.Empty;
                 IconUrl = project.IconUrl;
-                Metadata = FormatMetadata(project.Updated ?? default, (int)project.Downloads, "Modrinth");
-                AddScreenshots(project.Gallery.Select(gallery => gallery.Url));
-                Files = await Task.Run(async () => (await IridiumResourceClients.Modrinth.GetFilesAsync(
+                Metadata = FormatMetadata(project.DateModified ?? default, (int)project.Downloads, "Modrinth");
+                AddScreenshots(project.Screenshots);
+                Files = await Task.Run(async () => (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(
                     target.ProjectId, cancellationToken: cancellationToken))
-                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
+                    .Select(ModVersionFileItem.From).ToArray(), cancellationToken);
             }
             else
             {
-                var project = await IridiumResourceClients.CurseForge.GetProjectAsync(long.Parse(target.ProjectId),
+                var project = await IridiumResourceClients.CurseForge.GetProjectAsync(target.ProjectId,
                     cancellationToken) ?? throw new InvalidDataException(
                     CommonLanguageManager.Instance.modDetails_noModFiles.CurrentValue());
-                var projectId = project.Id.ToString();
+                var projectId = project.Id;
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.CurseForge,
                     [projectId], cancellationToken);
-                Name = project.Name ?? string.Empty;
-                FriendlyName = WikiEntries.FindChineseName(project.Slug ?? string.Empty) ?? project.Name ?? string.Empty;
-                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary ?? string.Empty;
-                IconUrl = project.Logo?.ThumbnailUrl ?? project.Logo?.Url;
+                Name = project.Title ?? string.Empty;
+                FriendlyName = WikiEntries.FindChineseName(project.Slug ?? string.Empty) ?? project.Title ?? string.Empty;
+                Summary = translations.GetValueOrDefault(projectId) ?? project.Description ?? string.Empty;
+                IconUrl = project.IconUrl;
                 Metadata = FormatMetadata(project.DateModified ?? default,
-                    (int)(project.DownloadCount ?? 0), "CurseForge");
-                AddScreenshots(project.Screenshots.Select(screenshot => screenshot.Url ?? screenshot.ThumbnailUrl));
-                Files = await Task.Run(async () => (await IridiumResourceClients.CurseForge.GetFilesAsync(project.Id,
+                    (int)project.Downloads, "CurseForge");
+                AddScreenshots(project.Screenshots);
+                Files = await Task.Run(async () => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(project.Id,
                         cancellationToken: cancellationToken))
-                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
+                    .Select(ModVersionFileItem.From).ToArray(), cancellationToken);
             }
 
             await BuildFiltersAsync(cancellationToken);
@@ -401,20 +401,39 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
         previous?.Cancel();
         try
         {
-            var groups = await Task.Run(() => Files.Where(file =>
-                    selectedFamily == null ||
-                    file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
-                .SelectMany(file => file.GroupKeys.Select(key => (Key: key, File: file)))
-                .Where(item =>
-                    (selectedFamily == null || GetVersionFamily(item.Key.MinecraftVersion) == selectedFamily) &&
-                    (selectedLoader == null || item.Key.Loader == selectedLoader))
-                .GroupBy(item => item.Key)
-                .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key.MinecraftVersion))
-                .ThenBy(group => group.Key.Loader)
-                .Select(group => new ModVersionGroup($"{group.Key.Loader} {group.Key.MinecraftVersion}",
-                    group.Select(item => item.File.ForCompatibility(item.Key)).DistinctBy(file => file.Id).ToArray(),
-                    group.Key.Loader, group.Key.MinecraftVersion))
-                .ToArray(), cancellation.Token);
+            var groups = await Task.Run(() =>
+            {
+                var pairs = Files.Where(file =>
+                        selectedFamily == null ||
+                        file.MinecraftVersions.Any(version => GetVersionFamily(version) == selectedFamily))
+                    .SelectMany(file => file.GroupKeys.Select(key => (Key: key, File: file)))
+                    .Where(item =>
+                        (selectedFamily == null || GetVersionFamily(item.Key.MinecraftVersion) == selectedFamily) &&
+                        (selectedLoader == null || item.Key.Loader == selectedLoader))
+                    .ToArray();
+
+                if (selectedLoader is not null)
+                {
+                    return pairs
+                        .GroupBy(item => item.Key)
+                        .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key.MinecraftVersion))
+                        .ThenBy(group => group.Key.Loader)
+                        .Select(group => new ModVersionGroup($"{group.Key.Loader} {group.Key.MinecraftVersion}",
+                            group.Select(item => item.File.ForCompatibility(item.Key)).DistinctBy(file => file.Id)
+                                .ToArray(),
+                            group.Key.Loader, group.Key.MinecraftVersion))
+                        .ToArray();
+                }
+
+                return pairs
+                    .GroupBy(item => item.Key.MinecraftVersion)
+                    .OrderByDescending(group => MinecraftVersionKey.Parse(group.Key))
+                    .Select(group => new ModVersionGroup(group.Key,
+                        group.Select(item => item.File).DistinctBy(file => file.Id)
+                            .OrderByDescending(file => file.Published).ToArray(),
+                        string.Empty, group.Key))
+                    .ToArray();
+            }, cancellation.Token);
             if (cancellation.IsCancellationRequested || _disposed) return;
 
             _allVersionGroups = groups;
@@ -424,6 +443,7 @@ public partial class ModDetailsPageViewModel(ModDetailsTarget target) : Observab
             if (!_hasLocatedTargetVersionGroup && !string.IsNullOrWhiteSpace(target.GameVersion) &&
                 VersionGroups.FirstOrDefault(group => group.MinecraftVersion == target.GameVersion &&
                                                       (LoaderName(target.Loader) is not { } targetLoader ||
+                                                       string.IsNullOrEmpty(group.Loader) ||
                                                        group.Loader == targetLoader)) is { } targetGroup)
             {
                 _hasLocatedTargetVersionGroup = true;

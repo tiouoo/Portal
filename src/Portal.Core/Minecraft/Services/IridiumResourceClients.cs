@@ -1,22 +1,22 @@
 using Iridium.Enums.Resources;
 using Iridium.Models.Resources;
-using Iridium.Providers.CurseForge;
-using Iridium.Providers.Modrinth;
-using Iridium.Services.Resources;
+using Iridium.Providers.Resource;
+using Iridium.Providers.Resource.CurseForge;
+using Iridium.Providers.Resource.Modrinth;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.Services;
 
 namespace Portal.Core.Minecraft.Services;
 
-/// <summary>Portal 共享的 Iridium 资源客户端与搜索服务（Modrinth / CurseForge）。</summary>
+/// <summary>Portal 共享的 Iridium 资源客户端与聚合搜索（Modrinth / CurseForge）。</summary>
 public static class IridiumResourceClients
 {
     private static readonly object Sync = new();
     private static string? _curseForgeKey;
     private static CurseForgeClient? _curseForge;
-    private static ResourceSearchService? _search;
+    private static ResourceProvider? _provider;
 
-    public static ModrinthClient Modrinth { get; } = new(BuildOptions());
+    public static ModrinthClient Modrinth { get; } = new();
 
     /// <summary>CurseForge 客户端。API Key 变化（如运行时注入环境变量）时自动重建。</summary>
     public static CurseForgeClient CurseForge
@@ -24,20 +24,56 @@ public static class IridiumResourceClients
         get
         {
             EnsureCurseForge();
-            return _curseForge!;
+            return _curseForge ?? throw new InvalidOperationException("CurseForge 未配置 API Key，无法访问 CurseForge API。");
         }
     }
 
-    public static ResourceSearchService Search
+    /// <summary>Modrinth / CurseForge 聚合搜索。</summary>
+    public static ResourceProvider Search
     {
         get
         {
             lock (Sync)
             {
                 EnsureCurseForgeCore();
-                return _search ??= new ResourceSearchService(Modrinth, _curseForge!);
+                return _provider ??= _curseForge is null
+                    ? new ResourceProvider()
+                    : new ResourceProvider(Modrinth, _curseForge);
             }
         }
+    }
+
+    /// <summary>为搜索结果批量获取中文翻译并写入 <see cref="ResourceHit.Translation"/>。</summary>
+    public static async Task<IReadOnlyList<ResourceHit>> TranslateAsync(
+        IReadOnlyList<ResourceHit> hits, CancellationToken cancellationToken = default)
+    {
+        var modrinthIds = hits.Where(hit => hit.Source == ResourceSource.Modrinth).Select(hit => hit.Id).ToArray();
+        var curseForgeIds = hits.Where(hit => hit.Source == ResourceSource.CurseForge).Select(hit => hit.Id).ToArray();
+
+        var translations = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (modrinthIds.Length > 0)
+        {
+            var result = await ProjectTranslationService.GetTranslationsAsync(
+                ProjectTranslationSource.Modrinth, modrinthIds, cancellationToken);
+            foreach (var pair in result)
+                translations[$"{ResourceSource.Modrinth}:{pair.Key}"] = pair.Value;
+        }
+
+        if (curseForgeIds.Length > 0)
+        {
+            var result = await ProjectTranslationService.GetTranslationsAsync(
+                ProjectTranslationSource.CurseForge, curseForgeIds, cancellationToken);
+            foreach (var pair in result)
+                translations[$"{ResourceSource.CurseForge}:{pair.Key}"] = pair.Value;
+        }
+
+        if (translations.Count == 0)
+            return hits;
+
+        return hits.Select(hit => translations.TryGetValue($"{hit.Source}:{hit.Id}", out var translated)
+                ? hit with { Translation = translated }
+                : hit)
+            .ToArray();
     }
 
     private static void EnsureCurseForge()
@@ -54,17 +90,8 @@ public static class IridiumResourceClients
         if (_curseForge is not null && string.Equals(_curseForgeKey, key, StringComparison.Ordinal))
             return;
         _curseForgeKey = key;
-        _curseForge = new CurseForgeClient(BuildOptions());
-        _search = null;
-    }
-
-    private static ResourceApiOptions BuildOptions()
-    {
-        return new ResourceApiOptions
-        {
-            CurseForgeApiKey = CredentialsService.CurseForgeApiKey,
-            UserAgent = $"Portal/{MinecraftCoreInitializer.AppVersion}"
-        };
+        _curseForge = string.IsNullOrWhiteSpace(key) ? null : new CurseForgeClient(key);
+        _provider = null;
     }
 }
 

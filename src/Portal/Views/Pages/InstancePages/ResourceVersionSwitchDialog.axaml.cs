@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Iridium.Extensions.Resources;
+using Iridium.Models.Resources;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -119,11 +119,11 @@ public partial class ResourceVersionSwitchDialogViewModel : ObservableObject, ID
             IReadOnlyList<ModVersionFileItem> files = _target.Source switch
             {
                 ModDetailsSource.Modrinth =>
-                    (await IridiumResourceClients.Modrinth.GetFilesAsync(_target.ProjectId))
-                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
-                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
-                        long.Parse(_target.ProjectId)))
-                    .Select(file => ModVersionFileItem.From(file.ToResourceFile())).ToArray(),
+                    (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(_target.ProjectId))
+                    .Select(ModVersionFileItem.From).DistinctBy(file => file.Id).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
+                        _target.ProjectId))
+                    .Select(ModVersionFileItem.From).DistinctBy(file => file.Id).ToArray(),
                 _ => []
             };
 

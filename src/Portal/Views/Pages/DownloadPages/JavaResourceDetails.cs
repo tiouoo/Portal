@@ -8,7 +8,6 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Iridium.Enums.Resources;
-using Iridium.Extensions.Resources;
 using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.App.Helpers;
@@ -110,37 +109,37 @@ public abstract partial class JavaResourceDetailsViewModel(JavaResourceDetailsTa
                                   CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.Modrinth,
-                    [project.Id ?? string.Empty], cancellationToken);
+                    [project.Id], cancellationToken);
                 Name = project.Title ?? string.Empty;
-                Summary = translations.GetValueOrDefault(project.Id ?? string.Empty) ?? project.Description ?? string.Empty;
+                Summary = translations.GetValueOrDefault(project.Id) ?? project.Description ?? string.Empty;
                 IconUrl = project.IconUrl;
                 Metadata =
                     string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-                        RelativeTime.Format(project.Updated ?? default), project.Downloads);
-                AddScreenshots(project.Gallery.Select(gallery => gallery.Url));
-                AllFiles = await Task.Run(async () => (await IridiumResourceClients.Modrinth.GetFilesAsync(
+                        RelativeTime.Format(project.DateModified ?? default), project.Downloads);
+                AddScreenshots(project.Screenshots);
+                AllFiles = await Task.Run(async () => (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(
                         Target.ProjectId, cancellationToken: cancellationToken))
-                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
+                    .Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
             }
             else
             {
-                var project = await IridiumResourceClients.CurseForge.GetProjectAsync(long.Parse(Target.ProjectId),
+                var project = await IridiumResourceClients.CurseForge.GetProjectAsync(Target.ProjectId,
                     cancellationToken) ?? throw new InvalidDataException(
                     CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());
-                var projectId = project.Id.ToString();
+                var projectId = project.Id;
                 var translations = await ProjectTranslationService.GetTranslationsAsync(
                     ProjectTranslationSource.CurseForge,
                     [projectId], cancellationToken);
-                Name = project.Name ?? string.Empty;
-                Summary = translations.GetValueOrDefault(projectId) ?? project.Summary ?? string.Empty;
-                IconUrl = project.Logo?.ThumbnailUrl ?? project.Logo?.Url;
+                Name = project.Title ?? string.Empty;
+                Summary = translations.GetValueOrDefault(projectId) ?? project.Description ?? string.Empty;
+                IconUrl = project.IconUrl;
                 Metadata =
                     string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-                        RelativeTime.Format(project.DateModified ?? default), project.DownloadCount ?? 0);
-                AddScreenshots(project.Screenshots.Select(screenshot => screenshot.Url ?? screenshot.ThumbnailUrl));
-                AllFiles = await Task.Run(async () => (await IridiumResourceClients.CurseForge.GetFilesAsync(
+                        RelativeTime.Format(project.DateModified ?? default), project.Downloads);
+                AddScreenshots(project.Screenshots);
+                AllFiles = await Task.Run(async () => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
                         project.Id, cancellationToken: cancellationToken))
-                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(), cancellationToken);
+                    .Select(JavaResourceFileItem.From).ToArray(), cancellationToken);
             }
 
             await BuildVersionGroupsAsync(cancellationToken);
@@ -364,11 +363,11 @@ public static class JavaResourceDownload
             IReadOnlyList<JavaResourceFileItem> files = target.Source switch
             {
                 ModDetailsSource.Modrinth =>
-                    (await IridiumResourceClients.Modrinth.GetFilesAsync(target.ProjectId))
-                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
-                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetFilesAsync(
-                        long.Parse(target.ProjectId)))
-                    .Select(file => JavaResourceFileItem.From(file.ToResourceFile())).ToArray(),
+                    (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(target.ProjectId))
+                    .Select(JavaResourceFileItem.From).ToArray(),
+                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
+                        target.ProjectId))
+                    .Select(JavaResourceFileItem.From).ToArray(),
                 _ => []
             };
             if (files.Count == 0)

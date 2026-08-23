@@ -316,7 +316,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             PageSize = PageSize
         };
         var page = await IridiumResourceClients.Search.SearchAsync(options, cancellationToken);
-        var translated = await IridiumResourceClients.Search.TranslateAsync(page.Items, cancellationToken);
+        var translated = await IridiumResourceClients.TranslateAsync(page.Items, cancellationToken);
         return new JavaResourceSearchPage(translated.Select(hit =>
             new JavaResourceSearchResultItem(hit, Definition, request.GameVersion, request.Loader)).ToArray(),
             page.TotalCount);

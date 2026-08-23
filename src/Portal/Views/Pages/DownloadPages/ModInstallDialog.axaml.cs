@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Iridium.Extensions.Resources;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Models.Game;
 using Portal.Core.Const;
@@ -329,17 +329,17 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     {
         if (!string.IsNullOrWhiteSpace(dependency.VersionId))
         {
-            var fixedVersion = await IridiumResourceClients.Modrinth.GetVersionAsync(dependency.VersionId);
+            var fixedVersion = await IridiumResourceClients.Modrinth.GetFileAsync(dependency.VersionId);
             if (fixedVersion is not null)
             {
-                var mapped = ModVersionFileItem.From(fixedVersion.ToResourceFile());
+                var mapped = ModVersionFileItem.From(fixedVersion);
                 if (IsCompatible(file, mapped)) return mapped;
             }
         }
 
         if (string.IsNullOrWhiteSpace(dependency.ProjectId)) return null;
-        var files = await IridiumResourceClients.Modrinth.GetFilesAsync(dependency.ProjectId);
-        return files.Select(version => ModVersionFileItem.From(version.ToResourceFile()))
+        var files = await IridiumResourceClients.Modrinth.GetProjectFilesAsync(dependency.ProjectId);
+        return files.Select(ModVersionFileItem.From)
             .Where(candidate => IsCompatible(file, candidate))
             .OrderByDescending(candidate =>
                 candidate.MinecraftVersions.Count(version => file.MinecraftVersions.Contains(version)))
@@ -348,14 +348,14 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
 
     private async Task<IReadOnlyList<ModVersionFileItem>> LoadCurseForgeDependenciesAsync(ModVersionFileItem file)
     {
-        var ids = file.Dependencies.Select(dependency => long.Parse(dependency.ProjectId)).Distinct().ToArray();
+        var ids = file.Dependencies.Select(dependency => dependency.ProjectId).Distinct().ToArray();
         if (ids.Length == 0) return [];
 
         var projects = await IridiumResourceClients.CurseForge.GetProjectsAsync(ids);
         var candidates = await Task.WhenAll(projects.Select(async project =>
         {
-            var files = await IridiumResourceClients.CurseForge.GetFilesAsync(project.Id);
-            return files.Select(candidate => ModVersionFileItem.From(candidate.ToResourceFile()))
+            var files = await IridiumResourceClients.CurseForge.GetProjectFilesAsync(project.Id);
+            return files.Select(ModVersionFileItem.From)
                 .Where(candidate => IsCompatible(file, candidate))
                 .OrderByDescending(candidate => candidate.Id).FirstOrDefault();
         }));
@@ -391,8 +391,8 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         }
 
         var curseForgeProject =
-            await IridiumResourceClients.CurseForge.GetProjectAsync(long.Parse(dependency.ProjectId));
-        return curseForgeProject?.Name ?? dependency.DisplayName;
+            await IridiumResourceClients.CurseForge.GetProjectAsync(dependency.ProjectId);
+        return curseForgeProject?.Title ?? dependency.DisplayName;
     }
 
     private static ModLoaderType ToModLoaderType(string? loader)

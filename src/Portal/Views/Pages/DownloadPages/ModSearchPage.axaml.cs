@@ -358,7 +358,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
             PageSize = PageSize
         };
         var page = await IridiumResourceClients.Search.SearchAsync(options, cancellationToken);
-        var translated = await IridiumResourceClients.Search.TranslateAsync(page.Items, cancellationToken);
+        var translated = await IridiumResourceClients.TranslateAsync(page.Items, cancellationToken);
         return new SearchPageData(
             translated.Select(hit => new ModSearchResultItem(hit, request.Sort, request.GameVersion, request.Loader))
                 .ToList(),

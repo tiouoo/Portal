@@ -300,10 +300,10 @@ public sealed class ModService
         var requested = hashes.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (requested.Length == 0) return [];
 
-        IReadOnlyDictionary<string, Iridium.Models.Modrinth.ModrinthVersion?> response;
+        IReadOnlyDictionary<string, Iridium.Models.Resources.ResourceFile?> response;
         try
         {
-            response = await IridiumResourceClients.Modrinth.GetVersionsByHashesAsync(requested,
+            response = await IridiumResourceClients.Modrinth.GetFilesByHashesAsync(requested,
                 Iridium.Enums.Resources.HashAlgorithm.Sha1, cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -312,7 +312,7 @@ public sealed class ModService
             return [];
         }
 
-        var versions = response.Values.OfType<Iridium.Models.Modrinth.ModrinthVersion>().ToArray();
+        var versions = response.Values.OfType<Iridium.Models.Resources.ResourceFile>().ToArray();
         var projects = await FetchModrinthProjectsAsync(
             versions.Select(version => version.ProjectId), cancellationToken);
         return response
@@ -335,7 +335,7 @@ public sealed class ModService
             }, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static async Task<Dictionary<string, Iridium.Models.Modrinth.ModrinthProject>> FetchModrinthProjectsAsync(
+    private static async Task<Dictionary<string, Iridium.Models.Resources.ResourceProject>> FetchModrinthProjectsAsync(
         IEnumerable<string?> projectIds,
         CancellationToken cancellationToken)
     {
@@ -347,7 +347,7 @@ public sealed class ModService
         {
             var projects = await IridiumResourceClients.Modrinth.GetProjectsAsync(requested, cancellationToken);
             return projects.Where(project => !string.IsNullOrWhiteSpace(project.Id))
-                .ToDictionary(project => project.Id!, StringComparer.Ordinal);
+                .ToDictionary(project => project.Id, StringComparer.Ordinal);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -360,7 +360,7 @@ public sealed class ModService
         CancellationToken cancellationToken)
     {
         var requested = fingerprints.Distinct().ToArray();
-        Iridium.Models.CurseForge.CurseForgeFingerprintResult response;
+        Iridium.Models.Resources.CurseForge.CurseForgeFingerprintResult response;
         try
         {
             response = await IridiumResourceClients.CurseForge.GetFilesByFingerprintsAsync(requested,
@@ -454,17 +454,17 @@ public sealed class ModService
         }
     }
 
-    private static async Task<ModCacheEntry> GetMetadataAsync(Iridium.Models.CurseForge.CurseForgeFile file,
+    private static async Task<ModCacheEntry> GetMetadataAsync(Iridium.Models.Resources.CurseForge.CurseForgeFile file,
         CancellationToken cancellationToken)
     {
         var mod = file.ModId is { } modId
-            ? await IridiumResourceClients.CurseForge.GetProjectAsync(modId, cancellationToken)
+            ? await IridiumResourceClients.CurseForge.GetProjectAsync(modId.ToString(), cancellationToken)
             : null;
         return new ModCacheEntry
         {
-            DisplayName = mod?.Name ?? file.DisplayName,
-            Description = mod?.Summary,
-            IconUrl = mod?.Logo?.ThumbnailUrl ?? mod?.Logo?.Url,
+            DisplayName = mod?.Title ?? file.DisplayName,
+            Description = mod?.Description,
+            IconUrl = mod?.IconUrl,
             CurseForgeSlug = mod?.Slug,
             ProjectId = (int?)file.ModId,
             FileId = (int)file.Id,
