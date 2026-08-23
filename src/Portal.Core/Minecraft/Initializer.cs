@@ -1,6 +1,7 @@
 ﻿using MinecraftLaunch;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Utilities;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Services;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -43,6 +44,9 @@ public static class MinecraftCoreInitializer
                 $"Portal/{options.AppVersion}");
             Logger.Debug(string.Format(LogLanguageManager.Instance.minecraft_defaultUserAgentApplied.CurrentValue(), $"Portal/{options.AppVersion}"));
         }
+
+        // Iridium 下载源自动选择：注册活跃镜像源（天跑）并按配置应用模式。
+        ResourceSourceService.Initialize();
     }
 }
 

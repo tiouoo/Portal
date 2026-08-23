@@ -12,6 +12,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Instance.Java;
+using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Initialize;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -157,6 +158,9 @@ public partial class ConfigEntry : ObservableObject
                 break;
             case nameof(MinecraftFileSource):
                 DownloadManager.MinecraftFileSource = MinecraftFileSource;
+                break;
+            case nameof(ResourceDownloadSource):
+                ResourceSourceService.Apply(ResourceDownloadSource);
                 break;
             case nameof(DownloadMaxThreadCount):
                 DownloadManager.MaxThread = DownloadMaxThreadCount;

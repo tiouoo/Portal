@@ -31,6 +31,14 @@ public partial class Download : Dsc, INotifyPropertyChanged, IDisposable
         new(DownloadSourceMode.OfficialOnly, CommonLanguageManager.Instance.download_officialOnly.CurrentValue())
     ];
 
+    public IReadOnlyList<ResourceDownloadSourceOption> ResourceSourceOptions { get; } =
+    [
+        new(ResourceDownloadSourceMode.Auto, CommonLanguageManager.Instance.download_auto.CurrentValue()),
+        new(ResourceDownloadSourceMode.OfficialPreferred, CommonLanguageManager.Instance.download_officialPreferred.CurrentValue()),
+        new(ResourceDownloadSourceMode.MirrorPreferred, CommonLanguageManager.Instance.download_mirrorPreferred.CurrentValue()),
+        new(ResourceDownloadSourceMode.OfficialOnly, CommonLanguageManager.Instance.download_officialOnly.CurrentValue())
+    ];
+
     public void Dispose()
     {
         if (_isDisposed)
@@ -58,3 +66,5 @@ public partial class Download : Dsc, INotifyPropertyChanged, IDisposable
 }
 
 public sealed record DownloadSourceOption(DownloadSourceMode Mode, string Name);
+
+public sealed record ResourceDownloadSourceOption(ResourceDownloadSourceMode Mode, string Name);

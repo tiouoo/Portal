@@ -42,6 +42,20 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </StackPanel>
+            <StackPanel Spacing="5">
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.download_resourceDownloadSource}}" VerticalAlignment="Center" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding ResourceSourceOptions}"
+                    SelectedValue="{Binding Data.ConfigEntry.ResourceDownloadSource}"
+                    SelectedValueBinding="{Binding Mode}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
         </StackPanel>
         <StackPanel Spacing="5">
             <Label

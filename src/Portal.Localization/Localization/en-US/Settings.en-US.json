@@ -137,6 +137,7 @@
     "downloadSource": "Resource Download Source",
     "minecraftMetadata": "Minecraft Metadata",
     "minecraftFileSource": "Minecraft Files, Loaders, Java",
+    "resourceDownloadSource": "Resource/Mod File Download Source",
     "maxDownloadThreads": "Max Download Threads",
     "maxRetryCount": "Max Retry Count",
     "enableFragmentDownload": "Enable Fragment Download",

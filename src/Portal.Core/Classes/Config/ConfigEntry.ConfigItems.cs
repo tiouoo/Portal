@@ -21,6 +21,9 @@ public partial class ConfigEntry : ObservableObject
     public partial DownloadSourceMode MinecraftMetadataSource { get; set; } = DownloadSourceMode.Auto;
 
     [ObservableProperty] public partial DownloadSourceMode MinecraftFileSource { get; set; } = DownloadSourceMode.Auto;
+
+    [ObservableProperty]
+    public partial ResourceDownloadSourceMode ResourceDownloadSource { get; set; } = ResourceDownloadSourceMode.Auto;
     [ObservableProperty] public partial bool EnableFragmentDownload { get; set; }
     [ObservableProperty] public partial bool EnableGameOverlay { get; set; } = true;
     [ObservableProperty] public partial bool EnableFullscreen { get; set; }
