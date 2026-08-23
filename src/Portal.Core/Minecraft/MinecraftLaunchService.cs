@@ -44,10 +44,17 @@ public static class MinecraftLaunchService
         var launchCompleted = false;
         Process? process = null;
         var logSession = new MinecraftLogSession(instance);
-        var task = TaskManager.Instance.CreateTask(new TaskOptions
+        var processExit = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ManagedTask? task = null;
+        ManagedTask? verifyAccount = null;
+        ManagedTask? selectJava = null;
+        ManagedTask? buildArguments = null;
+        ManagedTask? completeResources = null;
+        ManagedTask? startGame = null;
+        task = TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = string.Format(CommonLanguageManager.Instance.launch_taskName.CurrentValue(), GetEditionName(instance), instance.InstanceName),
-            Description = CommonLanguageManager.Instance.launch_preparing.CurrentValue(),
+            Description = CommonLanguageManager.Instance.launch_rootStarting.CurrentValue(),
             Progress = 0,
             Actions =
             [
@@ -91,11 +98,32 @@ public static class MinecraftLaunchService
                     IsVisible = _ => options.OpenLog != null
                 }
             ]
+        }, async context =>
+        {
+            try
+            {
+                context.SetDescription(CommonLanguageManager.Instance.launch_rootStarting.CurrentValue());
+                await RunWorkflowAsync(instance, topLevel, options, target, task!, verifyAccount, selectJava,
+                    buildArguments, completeResources, startGame, logSession, processExit,
+                    launchedProcess =>
+                    {
+                        process = launchedProcess;
+                        launchCompleted = true;
+                        context.SetDescription(CommonLanguageManager.Instance.launch_rootCompleted.CurrentValue());
+                        task!.RefreshActions();
+                    });
+                await processExit.Task;
+            }
+            catch (OperationCanceledException) when (task!.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(string.Format(LogLanguageManager.Instance.launch_workflowFaulted.CurrentValue(), instance.InstanceName), exception);
+                throw;
+            }
         });
-        ManagedTask? verifyAccount = null;
-        ManagedTask? selectJava = null;
-        ManagedTask? buildArguments = null;
-        ManagedTask? completeResources = null;
         if (instance.Type == MinecraftInstanceType.Java)
         {
             verifyAccount = task.CreateChild(new TaskOptions
@@ -116,26 +144,13 @@ public static class MinecraftLaunchService
             });
         }
 
-        var startGame = task.CreateChild(new TaskOptions
+        startGame = task.CreateChild(new TaskOptions
         {
             Name = instance.Type == MinecraftInstanceType.Bedrock ? CommonLanguageManager.Instance.launch_startBedrock.CurrentValue() : CommonLanguageManager.Instance.launch_startMinecraft.CurrentValue(),
             Description = instance.Type == MinecraftInstanceType.Bedrock ? CommonLanguageManager.Instance.launch_startGameWaiting.CurrentValue() : CommonLanguageManager.Instance.launch_completeResourcesWaiting.CurrentValue(),
             Progress = 0
         });
         task.Start();
-        RunWorkflowAsync(instance, topLevel, options, target, task, verifyAccount, selectJava, buildArguments,
-            completeResources,
-            startGame, logSession,
-            launchedProcess =>
-            {
-                process = launchedProcess;
-                launchCompleted = true;
-                task.RefreshActions();
-            }).ContinueWith(
-            completedTask => Logger.Error(string.Format(LogLanguageManager.Instance.launch_workflowFaulted.CurrentValue(), instance.InstanceName), completedTask.Exception!),
-            CancellationToken.None,
-            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default);
         return task.Completion;
     }
 
@@ -145,14 +160,14 @@ public static class MinecraftLaunchService
         ManagedTask? verifyAccount, ManagedTask? selectJava, ManagedTask? buildArguments,
         ManagedTask? completeResources,
         ManagedTask startGame,
-        MinecraftLogSession logSession, Action<Process> processStarted)
+        MinecraftLogSession logSession, TaskCompletionSource processExit, Action<Process> processStarted)
     {
         try
         {
             if (instance.Type == MinecraftInstanceType.Bedrock)
             {
                 startGame.Start(context => LaunchBedrockAsync(context, instance, topLevel, options, task, logSession,
-                    processStarted));
+                    processExit, processStarted));
                 await startGame.Completion;
                 ThrowIfFailed(startGame);
                 return;
@@ -230,27 +245,24 @@ public static class MinecraftLaunchService
             ThrowIfFailed(completeResources);
 
             startGame.Start(context => StartGameStepAsync(context, instance, config!, topLevel, task, logSession!,
-                options, placeholders!, extraGameArguments, processStarted));
+                options, placeholders!, extraGameArguments, processExit, processStarted));
             await startGame.Completion;
             ThrowIfFailed(startGame);
         }
         catch (OperationCanceledException) when (task.IsCancellationRequested)
         {
-            if (!task.IsTerminal)
-                task.Complete();
             Notice(topLevel, CommonLanguageManager.Instance.launch_taskCancelled.CurrentValue(), NotificationType.Information);
+            throw;
         }
         catch (MissingJavaVersionException exception)
         {
-            if (!task.IsTerminal)
-                task.Fault(exception);
             NoticeMissingJava(topLevel, exception);
+            throw;
         }
         catch (Exception exception)
         {
-            if (!task.IsTerminal)
-                task.Fault(exception);
             Notice(topLevel, string.Format(CommonLanguageManager.Instance.launch_failed.CurrentValue(), GetFailureReason(exception)), NotificationType.Error);
+            throw;
         }
     }
 
@@ -268,7 +280,7 @@ public static class MinecraftLaunchService
     private static async Task StartGameStepAsync(TaskExecutionContext context, MinecraftInstance instance,
         LaunchConfig config, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
         MinecraftLaunchOptions options, Dictionary<string, string> placeholders,
-        IReadOnlyList<string> extraGameArguments, Action<Process> processStarted)
+        IReadOnlyList<string> extraGameArguments, TaskCompletionSource processExit, Action<Process> processStarted)
     {
         await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
         if (options.AutoOptimizeMemoryBeforeGameLaunch && OperatingSystem.IsWindows())
@@ -306,7 +318,7 @@ public static class MinecraftLaunchService
             context.CancellationToken);
         if (mcProcess.Process is null)
             throw new InvalidOperationException(CommonLanguageManager.Instance.launch_noProcessInfo.CurrentValue());
-        ObserveProcess(instance, topLevel, mcProcess, task, context, logSession, options);
+        ObserveProcess(instance, topLevel, mcProcess, task, context, logSession, options, processExit);
         processStarted(mcProcess.Process);
         OnGameProcessStarted(mcProcess.Process, options, placeholders, true, instance);
         context.ReportProgress(1);
@@ -752,7 +764,8 @@ public static class MinecraftLaunchService
     }
 
     private static void ObserveProcess(MinecraftInstance instance, TopLevel? topLevel, MinecraftProcess process,
-        ManagedTask task, TaskExecutionContext context, MinecraftLogSession logSession, MinecraftLaunchOptions options)
+        ManagedTask task, TaskExecutionContext context, MinecraftLogSession logSession, MinecraftLaunchOptions options,
+        TaskCompletionSource processExit)
     {
         if (process.Process is not { } gameProcess)
             return;
@@ -787,17 +800,13 @@ public static class MinecraftLaunchService
             Notice(topLevel, string.Format(CommonLanguageManager.Instance.launch_processExited.CurrentValue(), instance.InstanceName), NotificationType.Success);
             if (options.GameExited != null)
                 Dispatcher.UIThread.Post(options.GameExited);
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (!task.IsTerminal)
-                    task.Complete();
-            });
+            processExit.TrySetResult();
         };
 
         if (!IsProcessRunning(process))
         {
             instance.StopPlayTimer();
-            task.Complete();
+            processExit.TrySetResult();
         }
     }
 
@@ -827,7 +836,7 @@ public static class MinecraftLaunchService
 
     private static async Task LaunchBedrockAsync(TaskExecutionContext context, MinecraftInstance instance,
         TopLevel? topLevel, MinecraftLaunchOptions options, ManagedTask task,
-        MinecraftLogSession logSession, Action<Process> processStarted)
+        MinecraftLogSession logSession, TaskCompletionSource processExit, Action<Process> processStarted)
     {
         if (instance.BedrockConfig == null)
             throw new InvalidOperationException(CommonLanguageManager.Instance.launch_bedrockConfigMissing.CurrentValue());
@@ -901,14 +910,15 @@ public static class MinecraftLaunchService
         var process = launcher.GetProcess()
                       ?? throw new InvalidOperationException(CommonLanguageManager.Instance.launch_bedrockNoProcessInfo.CurrentValue());
 
-        ObserveBedrockProcess(instance, topLevel, process, task, context, options);
+        ObserveBedrockProcess(instance, topLevel, process, task, context, options, processExit);
         ReportProcess(process);
         OnGameProcessStarted(process, options, placeholders, false, instance);
         context.ReportProgress(1);
     }
 
     private static void ObserveBedrockProcess(MinecraftInstance instance, TopLevel? topLevel, Process process,
-        ManagedTask task, TaskExecutionContext context, MinecraftLaunchOptions options)
+        ManagedTask task, TaskExecutionContext context, MinecraftLaunchOptions options,
+        TaskCompletionSource processExit)
     {
         instance.Config.LastPlayTime = DateTime.Now;
         context.SetRunning(CommonLanguageManager.Instance.launch_watchingProcess.CurrentValue());
@@ -921,18 +931,14 @@ public static class MinecraftLaunchService
             Notice(topLevel, string.Format(CommonLanguageManager.Instance.launch_processExited.CurrentValue(), instance.InstanceName), NotificationType.Success);
             if (options.GameExited != null)
                 Dispatcher.UIThread.Post(options.GameExited);
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (!task.IsTerminal)
-                    task.Complete();
-            });
+            processExit.TrySetResult();
         };
         process.EnableRaisingEvents = true;
 
         if (!IsProcessRunning(process))
         {
             instance.StopPlayTimer();
-            task.Complete();
+            processExit.TrySetResult();
         }
     }
 

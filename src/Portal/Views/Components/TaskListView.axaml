@@ -98,7 +98,7 @@
                                             FontSize="12"
                                             Foreground="{DynamicResource InnerForegroundColor}"
                                             MaxLines="1"
-                                            Text="{Binding DisplayDescription}"
+                                            Text="{Binding Description}"
                                             TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                     <TextBlock

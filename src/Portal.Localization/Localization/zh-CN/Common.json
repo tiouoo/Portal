@@ -464,6 +464,8 @@
   "launch": {
     "starting": "启动 {0}",
     "taskName": "启动 {0} {1}",
+    "rootStarting": "启动中",
+    "rootCompleted": "启动完成",
     "preparing": "正在准备启动流程",
     "cancelLaunch": "取消启动流程",
     "cancelLaunchDescription": "取消启动流程及其子任务。",

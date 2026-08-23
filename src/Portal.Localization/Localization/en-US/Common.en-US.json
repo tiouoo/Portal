@@ -464,6 +464,8 @@
   "launch": {
     "starting": "Launch {0}",
     "taskName": "Launch {0} {1}",
+    "rootStarting": "Launching",
+    "rootCompleted": "Launch complete",
     "preparing": "Preparing the launch process",
     "cancelLaunch": "Cancel Launch",
     "cancelLaunchDescription": "Cancel the launch process and its subtasks.",
