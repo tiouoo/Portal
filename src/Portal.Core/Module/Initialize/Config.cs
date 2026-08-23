@@ -44,6 +44,19 @@ public class Config
             Data.ConfigEntry = string.IsNullOrWhiteSpace(configText)
                 ? new ConfigEntry()
                 : JsonSerializer.Deserialize<ConfigEntry>(configText, PortalJson.Options) ?? new ConfigEntry();
+
+            // Migrate the former shared resource mirror mode to both platform settings.
+            if (!string.IsNullOrWhiteSpace(configText))
+            {
+                using var document = JsonDocument.Parse(configText);
+                var root = document.RootElement;
+                if (!root.TryGetProperty("ModrinthResourceDownloadSource", out _) &&
+                    !root.TryGetProperty("CurseForgeResourceDownloadSource", out _))
+                {
+                    Data.ConfigEntry.ModrinthResourceDownloadSource = Data.ConfigEntry.ResourceDownloadSource;
+                    Data.ConfigEntry.CurseForgeResourceDownloadSource = Data.ConfigEntry.ResourceDownloadSource;
+                }
+            }
         }
         catch (JsonException exception)
         {

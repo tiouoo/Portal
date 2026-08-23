@@ -138,6 +138,8 @@
     "minecraftMetadata": "Minecraft 元数据",
     "minecraftFileSource": "Minecraft 文件、加载器、Java",
     "resourceDownloadSource": "资源/模组文件下载源",
+    "modrinthResourceDownloadSource": "Modrinth 文件下载源",
+    "curseForgeResourceDownloadSource": "CurseForge 文件下载源",
     "maxDownloadThreads": "最大下载线程数",
     "maxRetryCount": "最大重试次数",
     "enableFragmentDownload": "启用分片下载",

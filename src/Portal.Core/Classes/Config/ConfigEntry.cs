@@ -162,6 +162,10 @@ public partial class ConfigEntry : ObservableObject
             case nameof(ResourceDownloadSource):
                 ResourceSourceService.Apply(ResourceDownloadSource);
                 break;
+            case nameof(ModrinthResourceDownloadSource):
+            case nameof(CurseForgeResourceDownloadSource):
+                ResourceSourceService.Apply(ModrinthResourceDownloadSource, CurseForgeResourceDownloadSource);
+                break;
             case nameof(DownloadMaxThreadCount):
                 DownloadManager.MaxThread = DownloadMaxThreadCount;
                 break;

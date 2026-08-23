@@ -43,16 +43,26 @@
                 </ComboBox>
             </StackPanel>
             <StackPanel Spacing="5">
-                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.download_resourceDownloadSource}}" VerticalAlignment="Center" />
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.download_modrinthResourceDownloadSource}}" VerticalAlignment="Center" />
                 <ComboBox
                     HorizontalAlignment="Stretch"
                     ItemsSource="{Binding ResourceSourceOptions}"
-                    SelectedValue="{Binding Data.ConfigEntry.ResourceDownloadSource}"
+                    SelectedValue="{Binding Data.ConfigEntry.ModrinthResourceDownloadSource}"
                     SelectedValueBinding="{Binding Mode}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Name}" />
                         </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Spacing="5">
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.download_curseForgeResourceDownloadSource}}" VerticalAlignment="Center" />
+                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ResourceSourceOptions}"
+                          SelectedValue="{Binding Data.ConfigEntry.CurseForgeResourceDownloadSource}"
+                          SelectedValueBinding="{Binding Mode}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </StackPanel>
