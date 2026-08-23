@@ -46,31 +46,9 @@ public static class InstanceRenameService
         var oldNativesDirectory = Path.Combine(metadataRoot, "natives", oldId);
         var newNativesDirectory = Path.Combine(metadataRoot, "natives", newId);
 
-        var oldConfigPath = MinecraftInstance.GetExternalConfigPath(layout.Kind, oldInstanceDirectory);
-        var newConfigPath = MinecraftInstance.GetExternalConfigPath(layout.Kind, newInstanceDirectory);
-        var oldIconPath = oldConfigPath + ".png";
-        var newIconPath = newConfigPath + ".png";
-        var oldIconDirectory = Path.Combine(Path.GetDirectoryName(oldConfigPath)!,
-            Path.GetFileNameWithoutExtension(oldConfigPath));
-        var newIconDirectory = Path.Combine(Path.GetDirectoryName(newConfigPath)!,
-            Path.GetFileNameWithoutExtension(newConfigPath));
-
         var undoActions = new List<Action>();
         try
         {
-            await MinecraftInstallationTasks.RunStepAsync(context, CommonLanguageManager.Instance.instanceRename_migrateSettingsStep.CurrentValue(),
-                CommonLanguageManager.Instance.instanceRename_migratingSettings.CurrentValue(), step =>
-            {
-                if (MoveFileIfExists(oldConfigPath, newConfigPath))
-                    undoActions.Add(() => MoveFileIfExists(newConfigPath, oldConfigPath));
-                if (MoveFileIfExists(oldIconPath, newIconPath))
-                    undoActions.Add(() => MoveFileIfExists(newIconPath, oldIconPath));
-                if (MoveDirectoryIfExists(oldIconDirectory, newIconDirectory))
-                    undoActions.Add(() => MoveDirectoryIfExists(newIconDirectory, oldIconDirectory));
-                step.ReportProgress(1);
-                return Task.CompletedTask;
-            });
-
             await MinecraftInstallationTasks.RunStepAsync(context, CommonLanguageManager.Instance.instanceRename_renameVersionFilesStep.CurrentValue(),
                 CommonLanguageManager.Instance.instanceRename_renamingVersionFiles.CurrentValue(), step =>
             {

@@ -16,6 +16,7 @@
                 Color="{DynamicResource SystemAccentColorLight3}"
                 Opacity="0.3"
                 x:Key="TabSelected" />
+            <BoxShadows x:Key="PopupBoxShadow">0 0 8 1 #28000000</BoxShadows>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

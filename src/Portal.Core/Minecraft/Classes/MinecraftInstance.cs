@@ -1,7 +1,5 @@
 using System.Globalization;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avalonia.Media.Imaging;
@@ -424,10 +422,7 @@ public class MinecraftInstance : ObservableObject
 
     public static string GetExternalConfigPath(MinecraftFolderKind kind, string instanceRoot)
     {
-        var identity = $"{kind}|{Path.GetFullPath(instanceRoot)}";
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
-        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "cc.tiouo.Portal", "Instances", $"{hash}.json");
+        return Path.Combine(instanceRoot, PortablePortalConfigFileName);
     }
 
     public IReadOnlyList<string> GetDeletionPaths()
@@ -443,10 +438,6 @@ public class MinecraftInstance : ObservableObject
             if (Directory.Exists(nativesDirectory))
                 paths.Add(nativesDirectory);
         }
-
-        var instanceDataDirectory = Path.GetDirectoryName(GetConfigPath());
-        if (instanceDataDirectory is not null && Directory.Exists(instanceDataDirectory))
-            paths.Add(instanceDataDirectory);
 
         return paths;
     }
@@ -804,20 +795,11 @@ public class MinecraftInstance : ObservableObject
     private IEnumerable<string> GetIconOverridePaths()
     {
         yield return GetIconOverridePath();
-
-        if (Layout != null)
-            yield return Path.Combine(Path.GetDirectoryName(GetConfigPath())!,
-                Path.GetFileNameWithoutExtension(GetConfigPath()),
-                "Icon.png");
-        else
-            yield return Path.Combine(GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder), "Icon.png");
     }
 
     private string GetIconOverridePath()
     {
-        if (Layout == null)
-            return Path.Combine(GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder), "Portal.Icon.png");
-        return GetConfigPath() + ".png";
+        return Path.Combine(GetSpecialFolder(MinecraftSpecialFolder.InstanceFolder), PortablePortalIconFileName);
     }
 
     private string? GetNativeIconPath(string instanceFolder)

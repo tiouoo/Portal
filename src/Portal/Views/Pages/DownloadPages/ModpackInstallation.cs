@@ -378,7 +378,7 @@ internal static class ModpackInstallation
             await RunStepAsync(context, CommonLanguageManager.Instance.modpack_importSettingsStep.CurrentValue(),
                 CommonLanguageManager.Instance.modpack_importSettingsDescription.CurrentValue(), step =>
             {
-                ImportPortalSettings(instancePath, instancesRoot is not null);
+                ImportPortalSettings(instancePath);
                 step.ReportProgress(1);
                 return Task.CompletedTask;
             });
@@ -654,7 +654,7 @@ internal static class ModpackInstallation
         return minecraft;
     }
 
-    private static void ImportPortalSettings(string instancePath, bool isPortalMc)
+    private static void ImportPortalSettings(string instancePath)
     {
         var portalFolder = Path.Combine(instancePath, "Portal");
         if (!Directory.Exists(portalFolder))
@@ -665,9 +665,7 @@ internal static class ModpackInstallation
             var exportedConfigPath = Path.Combine(portalFolder, MinecraftInstance.PortablePortalConfigFileName);
             if (File.Exists(exportedConfigPath))
             {
-                var targetConfigPath = isPortalMc
-                    ? MinecraftInstance.GetExternalConfigPath(MinecraftFolderKind.PortalMc, instancePath)
-                    : Path.Combine(instancePath, MinecraftInstance.PortablePortalConfigFileName);
+                var targetConfigPath = Path.Combine(instancePath, MinecraftInstance.PortablePortalConfigFileName);
                 var configDirectory = Path.GetDirectoryName(targetConfigPath);
                 if (!string.IsNullOrEmpty(configDirectory))
                 {
@@ -680,9 +678,7 @@ internal static class ModpackInstallation
             var exportedIconPath = Path.Combine(portalFolder, MinecraftInstance.PortablePortalIconFileName);
             if (File.Exists(exportedIconPath))
             {
-                var targetIconPath = isPortalMc
-                    ? MinecraftInstance.GetExternalConfigPath(MinecraftFolderKind.PortalMc, instancePath) + ".png"
-                    : Path.Combine(instancePath, MinecraftInstance.PortablePortalIconFileName);
+                var targetIconPath = Path.Combine(instancePath, MinecraftInstance.PortablePortalIconFileName);
                 var iconDirectory = Path.GetDirectoryName(targetIconPath);
                 if (!string.IsNullOrEmpty(iconDirectory))
                 {
