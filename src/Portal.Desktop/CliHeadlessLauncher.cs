@@ -1,10 +1,10 @@
 using System.Text.Json;
-using MinecraftLaunch.Base.Models.Authentication;
-using MinecraftLaunch.Base.Models.Game;
-using MinecraftLaunch.Components.Downloader;
-using MinecraftLaunch.Components.Parser;
-using MinecraftLaunch.Extensions;
-using MinecraftLaunch.Launch;
+using Iridium.Models.Authentication;
+using Iridium.Models.Java;
+using Iridium.Models.Launch;
+using Iridium.Models.Minecraft;
+using Iridium.Parsers.Launch;
+using Iridium.Providers.Minecraft;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Json;
 using Portal.Core.Minecraft;
@@ -16,7 +16,7 @@ using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Ipc;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
-using ModLoaderType = MinecraftLaunch.Base.Enums.ModLoaderType;
+using LoaderType = Iridium.Enums.LoaderType;
 
 namespace Portal.Desktop;
 
@@ -99,27 +99,30 @@ internal static class CliHeadlessLauncher
 
         var options = BuildOptions(instance, settings);
         var placeholders = LaunchCustomization.BuildPlaceholders(instance, account, java, options);
-        var config = CreateLaunchConfig(instance, account, java, options, command, placeholders);
+        var extraGameArguments = new List<string>();
+        var config = CreateLaunchConfig(instance, account, java, options, command, placeholders, extraGameArguments);
 
-        await CompleteResourcesAsync(entry, config, options);
+        await CompleteResourcesAsync(entry, options);
 
         Write(CommonLanguageManager.Instance.launch_startingProcess.CurrentValue());
-        var parser = new MinecraftParser(entry.MinecraftFolderPath);
-        var mcProcess = await new MinecraftRunner(config, parser).RunAsync(entry, CancellationToken.None);
+        var mcProcess = await new Iridium.Launch.Launcher(
+            resolver: new PortalGameArgumentParser(new StandardMinecraftArgumentParser(), extraGameArguments))
+            .LaunchAsync(entry, config, CancellationToken.None);
+        if (mcProcess.Process is not { } process)
+            throw new InvalidOperationException(CommonLanguageManager.Instance.launch_noProcessInfo.CurrentValue());
 
         instance.Config.LastPlayTime = DateTime.Now;
         instance.Config.PlaySessions++;
         instance.SaveConfig();
 
-        var process = mcProcess.Process;
         Write(string.Format(CommonLanguageManager.Instance.desktop_cli_launchProcessStarted.CurrentValue(),
             process.Id));
 
         var exited = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         mcProcess.OutputLogReceived += (_, args) =>
         {
-            if (!string.IsNullOrWhiteSpace(args.Data.SourceText))
-                Write(args.Data.SourceText);
+            if (!string.IsNullOrWhiteSpace(args.Data))
+                Write(args.Data);
         };
         process.Exited += (_, _) =>
         {
@@ -164,7 +167,10 @@ internal static class CliHeadlessLauncher
                 {
                     try
                     {
-                        var minecraftEntry = new MinecraftParser(layout.RootPath).GetMinecraft(id);
+                        var minecraftEntry = new StandardMinecraftProvider(new DirectoryInfo(layout.RootPath))
+                            .GetMinecraftAsync(id).GetAwaiter().GetResult();
+                        if (minecraftEntry is null)
+                            return null;
                         return new MinecraftInstance(minecraftEntry);
                     }
                     catch (Exception)
@@ -248,8 +254,8 @@ internal static class CliHeadlessLauncher
                     string.IsNullOrWhiteSpace(account.YggdrasilServerUrl))
                     throw new InvalidOperationException(
                         CommonLanguageManager.Instance.launch_yggdrasilIncomplete.CurrentValue());
-                return new YggdrasilAccount(account.Name, account.Uuid.Value, account.AccessToken, account.ClientToken,
-                    account.YggdrasilServerUrl) { MetaData = account.MetaData };
+                return new YggdrasilAccount(account.Name, account.Uuid.Value, account.AccessToken,
+                    account.YggdrasilServerUrl, account.ClientToken) { MetaData = account.MetaData };
             case AccountType.Microsoft:
                 var refreshed = await AccountRefresher.RefreshMicrosoft(account)
                                 ?? throw new InvalidOperationException(
@@ -271,7 +277,7 @@ internal static class CliHeadlessLauncher
         var entry = instance.MinecraftEntry!;
         var javaConfig = instance.JavaConfig;
         var preferred = javaConfig?.EnableSpecificJava == true ? javaConfig.SpecificJavaEntry : null;
-        var requiredVersion = entry.GetAppropriateJavaVersion();
+        var requiredVersion = IridiumEntryHelper.GetAppropriateJavaVersion(entry);
 
         if (preferred is not null)
         {
@@ -304,32 +310,16 @@ internal static class CliHeadlessLauncher
         throw new MissingJavaVersionException(requiredVersion);
     }
 
-    private static List<JavaEntry> OrderJavaCandidates(MinecraftEntry minecraft, IReadOnlyList<JavaEntry> javaEntries)
-    {
-        var requiredVersion = minecraft.GetAppropriateJavaVersion();
-        var requiresExactVersion = minecraft is ModifiedMinecraftEntry modified &&
-                                   modified.ModLoaders.Any(loader =>
-                                       loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
-
-        var compatible = javaEntries.Where(IsCompatible).ToList();
-        var incompatible = javaEntries.Where(candidate => !IsCompatible(candidate)).ToList();
-        compatible.Sort((a, b) => a.MajorVersion.CompareTo(b.MajorVersion));
-        return [.. compatible, .. incompatible];
-
-        bool IsCompatible(JavaEntry candidate)
-        {
-            return requiredVersion is 0 or -1 || (requiresExactVersion
-                ? candidate.MajorVersion == requiredVersion
-                : candidate.MajorVersion >= requiredVersion);
-        }
-    }
-
     private static JavaEntry ToJavaEntry(JavaRuntimeEntry java)
     {
         return new JavaEntry
         {
-            JavaPath = java.JavaPath, JavaType = java.JavaType, JavaVersion = java.JavaVersion,
-            MajorVersion = java.MajorVersion, Is64bit = java.Is64Bit
+            JavaPath = java.JavaPath,
+            JavaHome = Path.GetDirectoryName(java.JavaPath) ?? string.Empty,
+            Vendor = java.JavaType,
+            Version = java.JavaVersion,
+            MajorVersion = java.MajorVersion,
+            Is64Bit = java.Is64Bit
         };
     }
 
@@ -375,7 +365,8 @@ internal static class CliHeadlessLauncher
     }
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
-        MinecraftLaunchOptions options, PortalCommand command, Dictionary<string, string> placeholders)
+        MinecraftLaunchOptions options, PortalCommand command, Dictionary<string, string> placeholders,
+        List<string> extraGameArguments)
     {
         var config = new LaunchConfig
         {
@@ -395,7 +386,7 @@ internal static class CliHeadlessLauncher
                 : options.MaxMemory
         };
 
-        ApplyGraphicsConfiguration(instance, config);
+        ApplyGraphicsConfiguration(instance, config, extraGameArguments);
 
         if (!string.IsNullOrWhiteSpace(command.WorldFolder))
         {
@@ -417,17 +408,18 @@ internal static class CliHeadlessLauncher
             };
         }
 
+        config.IsFullscreen = options.IsFullscreen;
         if (options.IsFullscreen)
         {
             config.Width = 0;
             config.Height = 0;
-            config.GameArguments = config.GameArguments.Append("--fullscreen");
         }
 
         return config;
     }
 
-    private static void ApplyGraphicsConfiguration(MinecraftInstance instance, LaunchConfig config)
+    private static void ApplyGraphicsConfiguration(MinecraftInstance instance, LaunchConfig config,
+        List<string> extraGameArguments)
     {
         var entry = instance.MinecraftEntry;
         if (entry is null)
@@ -435,15 +427,12 @@ internal static class CliHeadlessLauncher
 
         try
         {
-            var versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
-                ? modified.InheritedMinecraft.Version.VersionId
-                : entry.Version.VersionId;
+            var version = GameVersion.Parse(entry.MinecraftVersion);
             var graphics = instance.JavaConfig?.GraphicsBackend ?? GraphicsApi.Default;
-            var version = GameVersion.Parse(versionId ?? entry.Id);
             var effective = GraphicsEnvironmentResolver.Resolve(graphics,
                 instance.JavaConfig?.OpenGlRenderer, instance.JavaConfig?.VulkanRenderer, version);
             var nativesFolder = string.IsNullOrEmpty(config.NativesFolder)
-                ? entry.NativesDirectoryPath ?? Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives")
+                ? IridiumEntryHelper.GetNativesDirectory(entry)
                 : config.NativesFolder;
             var launch = GraphicsLaunchArgumentsBuilder.Build(effective, graphics, version, nativesFolder,
                 Renderers.CurrentPlatform);
@@ -451,7 +440,7 @@ internal static class CliHeadlessLauncher
             if (launch.EnvironmentVariables.Count > 0)
                 config.EnvironmentVariables = new Dictionary<string, string>(launch.EnvironmentVariables);
             if (launch.GameArguments.Any())
-                config.GameArguments = launch.GameArguments;
+                extraGameArguments.AddRange(launch.GameArguments);
             if (launch.NeedsMesaAgent)
                 config.JvmArguments = config.JvmArguments.Concat(launch.JvmArguments);
         }
@@ -462,33 +451,21 @@ internal static class CliHeadlessLauncher
         }
     }
 
-    private static async Task CompleteResourcesAsync(MinecraftEntry entry, LaunchConfig config,
-        MinecraftLaunchOptions options)
+    private static async Task CompleteResourcesAsync(MinecraftEntry entry, MinecraftLaunchOptions options)
     {
-        var downloader = new MinecraftResourceDownloader(entry)
-        {
-            SourceRootDirectories = options.ResourceSourceRoots
-        };
-
         Write(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
-        await downloader.VerifyDependenciesAsync(2, CancellationToken.None);
 
-        var copyCount = downloader.CopyItems.Count;
-        var downloadCount = downloader.DependenciesToDownload.Count;
+        var copies = MinecraftResourceCompleter.BuildCopies(entry, options.ResourceSourceRoots);
         Write(string.Format(CommonLanguageManager.Instance.launch_resourcesToProcess.CurrentValue(),
-            copyCount, downloadCount));
+            copies.Count, 0));
 
-        if (downloader.CopyItems.Count > 0)
-            downloader.CopyDependencies(4, CancellationToken.None);
+        await MinecraftResourceCompleter.CopyAsync(copies, null, CancellationToken.None);
 
-        if (downloader.DependenciesToDownload.Count > 0)
-        {
-            var result = await downloader.DownloadDependenciesAsync(CancellationToken.None);
-            if (result.Failed.Any())
-                throw new IOException(string.Format(
-                    CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(),
-                    result.Failed.Count()));
-        }
+        var result = await MinecraftResourceCompleter.DownloadAsync(entry, null, CancellationToken.None);
+        if (result.FailCount > 0)
+            throw new IOException(string.Format(
+                CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(),
+                result.FailCount));
 
         Write(CommonLanguageManager.Instance.launch_resourcesCompleted.CurrentValue());
     }

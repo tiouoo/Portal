@@ -54,6 +54,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\module\Iridium\src\Iridium\Iridium.csproj"/>
+        <ProjectReference Include="..\..\module\Iridium\src\Iridium.Extension\Iridium.Extension.csproj"/>
         <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.2D\LiteSkinViewer.2D.csproj"/>
         <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.3D\LiteSkinViewer.3D.csproj"/>
         <ProjectReference Include="..\..\module\LiteSkinViewer\LiteSkinViewer.Shared\LiteSkinViewer.Shared.csproj"/>

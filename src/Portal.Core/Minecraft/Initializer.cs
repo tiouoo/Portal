@@ -45,7 +45,6 @@ public static class MinecraftCoreInitializer
             Logger.Debug(string.Format(LogLanguageManager.Instance.minecraft_defaultUserAgentApplied.CurrentValue(), $"Portal/{options.AppVersion}"));
         }
 
-        // Iridium 下载源自动选择：注册活跃镜像源（天跑）并按配置应用模式。
         ResourceSourceService.Initialize();
     }
 }

@@ -2,8 +2,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using MinecraftLaunch.Base.Models.Game;
-using MinecraftLaunch.Components.Parser;
+using Iridium.Models.Minecraft;
+using Iridium.Providers.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance.Java;
@@ -55,6 +55,9 @@ public class InstanceManager
     }
 
     public List<MinecraftInstance> ScanAll(IEnumerable<MinecraftFolderEntry> folders)
+        => Task.Run(() => ScanAllAsync(folders)).GetAwaiter().GetResult();
+
+    private static async Task<List<MinecraftInstance>> ScanAllAsync(IEnumerable<MinecraftFolderEntry> folders)
     {
         var stopwatch = Stopwatch.StartNew();
         var result = new List<MinecraftInstance>();
@@ -70,8 +73,8 @@ public class InstanceManager
             Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_folderScanStart.CurrentValue(), folderPath));
             var layout = folder.DetectedLayout;
             var instances = layout.Kind == MinecraftFolderKind.Standard
-                ? new FolderScanner(layout.RootPath, folder.FolderName, VersionFolders).Scan()
-                : ExternalMinecraftScanner.Scan(folder).ToList();
+                ? await new FolderScanner(layout.RootPath, folder.FolderName, Instance.VersionFolders).ScanAsync()
+                : await ExternalMinecraftScanner.ScanAsync(folder);
             result.AddRange(instances);
         }
 
@@ -144,16 +147,16 @@ internal class FolderScanner
         _versionFolders = versionFolders;
     }
 
-    public List<MinecraftInstance> Scan()
+    public async Task<List<MinecraftInstance>> ScanAsync()
     {
         var instances = new List<MinecraftInstance>();
 
-        MinecraftParser minecraftParser = _gameRootFolder;
-        var parsedJavaEntries = minecraftParser.GetMinecrafts();
+        var provider = new StandardMinecraftProvider(new DirectoryInfo(_gameRootFolder));
+        var parsedJavaEntries = await provider.GetMinecraftsAsync();
         var internalBaseIds = parsedJavaEntries
-            .OfType<ModifiedMinecraftEntry>()
-            .Select(entry => entry.InheritedMinecraft)
-            .Where(entry => entry is not null && HasClientVersionMetadata(entry))
+            .Where(entry => HasClientVersionMetadata(entry) &&
+                            parsedJavaEntries.Any(other =>
+                                string.Equals(other.InheritsFrom, entry.Id, StringComparison.OrdinalIgnoreCase)))
             .Select(entry => entry.Id)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var javaEntries = parsedJavaEntries
@@ -216,7 +219,7 @@ internal class FolderScanner
     {
         try
         {
-            using var stream = File.OpenRead(entry.ClientJsonPath);
+            using var stream = File.OpenRead(IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry));
             using var document = JsonDocument.Parse(stream);
             return document.RootElement.TryGetProperty("clientVersion", out var clientVersion) &&
                    clientVersion.ValueKind == JsonValueKind.String &&
@@ -224,12 +227,12 @@ internal class FolderScanner
         }
         catch (IOException exception)
         {
-            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_readVersionMetadataFailed.CurrentValue(), entry.ClientJsonPath, Environment.NewLine + exception));
+            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_readVersionMetadataFailed.CurrentValue(), IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry), Environment.NewLine + exception));
             return false;
         }
         catch (JsonException exception)
         {
-            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_parseVersionMetadataFailed.CurrentValue(), entry.ClientJsonPath, Environment.NewLine + exception));
+            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_parseVersionMetadataFailed.CurrentValue(), IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry), Environment.NewLine + exception));
             return false;
         }
     }

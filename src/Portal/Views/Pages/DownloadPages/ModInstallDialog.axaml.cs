@@ -4,7 +4,6 @@ using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Game;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
@@ -12,6 +11,7 @@ using Portal.Core.Minecraft.Services;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using TioUi.Common.Interfaces;
+using LoaderType = Iridium.Enums.LoaderType;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -221,19 +221,19 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
     {
         if (!file.MinecraftVersions.Contains(instance.VersionId, StringComparer.OrdinalIgnoreCase)) return false;
         var compatibleLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != LinguaSentinels.UniversalLoader).ToHashSet();
-        return compatibleLoaders.Count == 0 || (instance.MinecraftEntry is ModifiedMinecraftEntry entry &&
-                                                entry.ModLoaders.Any(loader =>
+        return compatibleLoaders.Count == 0 || (instance.MinecraftEntry is { Loaders.Count: > 0 } entry &&
+                                                entry.Loaders.Any(loader =>
                                                     compatibleLoaders.Contains(LoaderName(loader.Type))));
     }
 
-    private static string LoaderName(ModLoaderType loader)
+    private static string LoaderName(LoaderType loader)
     {
         return loader switch
         {
-            ModLoaderType.NeoForge => "NeoForge",
-            ModLoaderType.Forge => "Forge",
-            ModLoaderType.Fabric => "Fabric",
-            ModLoaderType.Quilt => "Quilt",
+            LoaderType.NeoForge => "NeoForge",
+            LoaderType.Forge => "Forge",
+            LoaderType.Fabric => "Fabric",
+            LoaderType.Quilt => "Quilt",
             _ => string.Empty
         };
     }

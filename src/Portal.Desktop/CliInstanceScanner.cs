@@ -1,7 +1,8 @@
 using System.Text.Json;
+using Iridium.Models.Minecraft;
+using Iridium.Providers.Minecraft;
 using Microsoft.Data.Sqlite;
-using MinecraftLaunch.Base.Models.Game;
-using MinecraftLaunch.Components.Parser;
+using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Localization;
@@ -90,19 +91,21 @@ internal static class CliInstanceScanner
     {
         var result = new List<CliInstanceInfo>();
 
-        var entries = new MinecraftParser(rootPath).GetMinecrafts();
-        var baseIds = entries.OfType<ModifiedMinecraftEntry>()
-            .Select(entry => entry.InheritedMinecraft)
-            .Where(entry => entry is not null && HasClientVersionMetadata(entry))
+        var entries = new StandardMinecraftProvider(new DirectoryInfo(rootPath))
+            .GetMinecraftsAsync().GetAwaiter().GetResult();
+        var baseIds = entries
+            .Where(entry => HasClientVersionMetadata(entry) &&
+                            entries.Any(other =>
+                                string.Equals(other.InheritsFrom, entry.Id, StringComparison.OrdinalIgnoreCase)))
             .Select(entry => entry.Id)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var entry in entries.Where(entry => !baseIds.Contains(entry.Id)))
         {
-            var loader = entry is ModifiedMinecraftEntry modified && modified.ModLoaders.Any()
-                ? string.Join("+", modified.ModLoaders.Select(loader => loader.Type.ToString()))
+            var loader = entry.Loaders.Count > 0
+                ? string.Join("+", entry.Loaders.Select(loader => loader.Type.ToString()))
                 : CommonLanguageManager.Instance.minecraft_vanilla.CurrentValue();
-            result.Add(new CliInstanceInfo(entry.Id, entry.Version.VersionId, loader, folder.FolderName,
+            result.Add(new CliInstanceInfo(entry.Id, entry.MinecraftVersion, loader, folder.FolderName,
                 folder.FolderPath));
         }
 
@@ -322,7 +325,7 @@ internal static class CliInstanceScanner
     {
         try
         {
-            using var stream = File.OpenRead(entry.ClientJsonPath);
+            using var stream = File.OpenRead(IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry));
             using var document = JsonDocument.Parse(stream);
             return document.RootElement.TryGetProperty("clientVersion", out var clientVersion) &&
                    clientVersion.ValueKind == JsonValueKind.String &&

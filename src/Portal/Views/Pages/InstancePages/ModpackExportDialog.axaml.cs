@@ -3,9 +3,8 @@ using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Game;
 using Portal.Core.Minecraft.Classes;
+using LoaderType = Iridium.Enums.LoaderType;
 using Portal.Core.Minecraft.Modpack;
 using Portal.Localization;
 using TioUi.Common;
@@ -109,15 +108,15 @@ public partial class ModpackExportDialogViewModel : ObservableObject, IDialogCon
     public IRelayCommand CancelCommand { get; }
 
     private bool HasOptiFine =>
-        _instance.MinecraftEntry is ModifiedMinecraftEntry modified &&
-        modified.ModLoaders.Any(loader => loader.Type == ModLoaderType.OptiFine);
+        _instance.MinecraftEntry is { Loaders: { Count: > 0 } loaders } &&
+        loaders.Any(loader => loader.Type == LoaderType.Optifine);
 
     private bool IsModded
     {
         get
         {
-            if (_instance.MinecraftEntry is ModifiedMinecraftEntry modified)
-                return modified.ModLoaders.Any();
+            if (_instance.MinecraftEntry is { Loaders.Count: > 0 })
+                return true;
             return !_instance.IsVanilla;
         }
     }

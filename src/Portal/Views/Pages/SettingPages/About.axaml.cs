@@ -167,6 +167,7 @@ public class AboutViewModel : ObservableObject
         new("BLoader", "GNU GPL v3.0", "https://github.com/Chlna6666/BLoader"),
         new("WineGDK", "GNU LGPL v2.1+", "https://github.com/winegdk/winegdk"),
         new("MinecraftLaunch", "MIT License", "https://github.com/tiouoo/MinecraftLaunch"),
+        new("Iridium", "MIT License", "https://github.com/Lunova-Studio/Iridium"),
         new("LiteSkinViewer", "MIT License", "https://github.com/tiouoo/LiteSkinViewer"),
         new("Tio.Avalonia.Standard", "MIT License", "https://github.com/tiouoo/Tio.Avalonia.Standard"),
         new("TioUi.Avalonia", "MIT License", "https://github.com/tiouoo/TioUi.Avalonia"),

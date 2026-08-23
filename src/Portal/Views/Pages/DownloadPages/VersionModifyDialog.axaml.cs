@@ -10,6 +10,7 @@ using MinecraftLaunch.Base.Models.Game;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Core.Const;
+using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -18,6 +19,7 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using TioUi.Common;
 using TioUi.Common.Extensions;
+using LoaderType = Iridium.Enums.LoaderType;
 using TioUi.Common.Interfaces;
 using TioUi.Controls;
 
@@ -113,10 +115,10 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         {
             var entry = _instance.MinecraftEntry;
             if (entry is null) return string.Empty;
-            var current = entry.Version.VersionId;
-            return entry is ModifiedMinecraftEntry { InheritedMinecraft: { } inherited }
+            var current = entry.MinecraftVersion;
+            return entry.InheritsFrom is { Length: > 0 } inherited
                 ? string.Format(CommonLanguageManager.Instance.minecraftInstall_currentVersionWithBase.CurrentValue(),
-                    current, inherited.Version.VersionId)
+                    current, inherited)
                 : string.Format(CommonLanguageManager.Instance.minecraftInstall_currentVersion.CurrentValue(), current);
         }
     }
@@ -169,7 +171,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
                              HasChanges && !HasDependentWarning;
 
     public bool CanUninstallAllLoaders =>
-        _instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } loaders } && loaders.Any();
+        _instance.MinecraftEntry is { Loaders.Count: > 0 };
 
     [ObservableProperty] public partial string ModifyPreviewText { get; set; } = string.Empty;
 
@@ -204,7 +206,8 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         if (instance.MinecraftEntry is not { } entry)
             return string.Empty;
 
-        var dependents = VersionModifyService.FindDependentVersionIds(entry.MinecraftFolderPath, entry.Id);
+        var versionRoot = instance.Layout?.MetadataRoot ?? IridiumEntryHelper.GetMinecraftRoot(entry);
+        var dependents = VersionModifyService.FindDependentVersionIds(versionRoot, entry.Id);
         return dependents.Count == 0
             ? string.Empty
             : string.Format(CommonLanguageManager.Instance.minecraftInstall_dependentWarning.CurrentValue(),
@@ -213,7 +216,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     private void PreselectInstalledLoaders()
     {
-        if (_instance.MinecraftEntry is not ModifiedMinecraftEntry { ModLoaders: { } modLoaders })
+        if (_instance.MinecraftEntry is not { Loaders: { Count: > 0 } modLoaders })
             return;
 
         foreach (var loader in modLoaders)
@@ -225,15 +228,15 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         }
     }
 
-    private static LoaderKind? ToLoaderKind(ModLoaderType type)
+    private static LoaderKind? ToLoaderKind(LoaderType type)
     {
         return type switch
         {
-            ModLoaderType.Fabric => LoaderKind.Fabric,
-            ModLoaderType.Forge => LoaderKind.Forge,
-            ModLoaderType.NeoForge => LoaderKind.NeoForge,
-            ModLoaderType.Quilt => LoaderKind.Quilt,
-            ModLoaderType.OptiFine => LoaderKind.OptiFine,
+            LoaderType.Fabric => LoaderKind.Fabric,
+            LoaderType.Forge => LoaderKind.Forge,
+            LoaderType.NeoForge => LoaderKind.NeoForge,
+            LoaderType.Quilt => LoaderKind.Quilt,
+            LoaderType.Optifine => LoaderKind.OptiFine,
             _ => null
         };
     }
@@ -438,12 +441,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     private string? GetCurrentVanillaId()
     {
-        return _instance.MinecraftEntry switch
-        {
-            ModifiedMinecraftEntry { InheritedMinecraft: { } inherited } => inherited.Version.VersionId,
-            { } entry => entry.Version.VersionId,
-            _ => null
-        };
+        return _instance.MinecraftEntry is { } entry ? entry.MinecraftVersion : null;
     }
 
     private void RefreshVersionList()
@@ -709,7 +707,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
 
     private HashSet<LoaderKind> GetInstalledLoaderKinds()
     {
-        return _instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } modLoaders }
+        return _instance.MinecraftEntry is { Loaders: { Count: > 0 } modLoaders }
             ? modLoaders.Select(loader => ToLoaderKind(loader.Type)).OfType<LoaderKind>().ToHashSet()
             : [];
     }

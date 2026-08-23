@@ -7,8 +7,8 @@ using System.Text.Json.Serialization;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Game;
+using Iridium.Enums;
+using Iridium.Models.Minecraft;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Classes;
 using Portal.Core.Json;
@@ -47,8 +47,7 @@ public class MinecraftInstance : ObservableObject
         Type = MinecraftInstanceType.Java;
         MinecraftEntry = e;
         Layout = layout;
-        InstanceFolderPath = layout?.InstanceRoot ?? e.VersionDirectoryPath ??
-            Path.Combine(e.MinecraftFolderPath, "versions", e.Id);
+        InstanceFolderPath = layout?.InstanceRoot ?? e.InstancePath;
         Config = GetInstanceConfig();
         EnsureRequiredIndependentInstance();
         ObserveConfigChanges();
@@ -136,7 +135,7 @@ public class MinecraftInstance : ObservableObject
         get
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                return Layout?.InstanceRoot ?? Path.GetDirectoryName(MinecraftEntry.ClientJarPath);
+                return Layout?.InstanceRoot ?? MinecraftEntry.InstancePath;
             return InstanceFolderPath;
         }
     }
@@ -191,7 +190,7 @@ public class MinecraftInstance : ObservableObject
         get
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                return MinecraftEntry.Version.VersionId;
+                return MinecraftEntry.MinecraftVersion;
             if (Type == MinecraftInstanceType.Bedrock && BedrockConfig != null)
                 return BedrockConfig.Version;
             return string.Empty;
@@ -203,7 +202,7 @@ public class MinecraftInstance : ObservableObject
         get
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                return MinecraftEntry.IsVanilla;
+                return MinecraftEntry.Loaders.Count == 0 && string.IsNullOrEmpty(MinecraftEntry.InheritsFrom);
             return false;
         }
     }
@@ -223,11 +222,9 @@ public class MinecraftInstance : ObservableObject
         get
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                return MinecraftEntry.IsVanilla ||
-                       (MinecraftEntry as ModifiedMinecraftEntry)?.ModLoaders.Any() == false
+                return MinecraftEntry.Loaders.Count == 0
                     ? CommonLanguageManager.Instance.minecraft_vanilla.CurrentValue()
-                    : string.Join(", ", (MinecraftEntry as ModifiedMinecraftEntry)?
-                        .ModLoaders.Select(x => x.Type.ToString()) ?? []);
+                    : string.Join(", ", MinecraftEntry.Loaders.Select(x => x.Type.ToString()));
 
             if (Type == MinecraftInstanceType.Bedrock) return CommonLanguageManager.Instance.minecraft_bedrock.CurrentValue();
 
@@ -311,7 +308,7 @@ public class MinecraftInstance : ObservableObject
         get
         {
             if (Type == MinecraftInstanceType.Java && MinecraftEntry != null)
-                return MinecraftEntry.Version.Type.ToString();
+                return MinecraftEntry.Type.ToString();
             if (Type == MinecraftInstanceType.Bedrock && BedrockConfig != null)
                 return BedrockConfig.Type.ToString();
             return string.Empty;
@@ -624,9 +621,7 @@ public class MinecraftInstance : ObservableObject
 
         return Layout?.GameDirectory is { Length: > 0 } gameDirectory
             ? gameDirectory
-            : JavaConfig?.EnableIndependentInstance == true
-                ? GetJavaInstanceFolder()
-                : MinecraftEntry.MinecraftFolderPath;
+            : IridiumEntryHelper.GetWorkingPath(MinecraftEntry, JavaConfig?.EnableIndependentInstance == true);
     }
 
     private string GetJavaInstanceFolder()
@@ -634,8 +629,7 @@ public class MinecraftInstance : ObservableObject
         if (Layout?.InstanceRoot is { Length: > 0 } instanceRoot)
             return instanceRoot;
 
-        return MinecraftEntry!.VersionDirectoryPath ??
-               Path.Combine(MinecraftEntry.MinecraftFolderPath, "versions", MinecraftEntry.Id);
+        return MinecraftEntry!.InstancePath;
     }
 
     public string GetSpecialFolder(MinecraftSpecialFolder folder)
@@ -863,16 +857,16 @@ public class MinecraftInstance : ObservableObject
 
         if (MinecraftEntry == null) return "01_grass_block_side.png";
 
-        if (MinecraftEntry is ModifiedMinecraftEntry e && e.ModLoaders.Any())
+        if (MinecraftEntry.Loaders.Any())
         {
-            if (e.ModLoaders.Any(a => a.Type == ModLoaderType.Forge)) return "06_ForgeIcon.png";
-            if (e.ModLoaders.Any(a => a.Type == ModLoaderType.NeoForge)) return "07_NeoForgeIcon.png";
-            if (e.ModLoaders.Any(a => a.Type == ModLoaderType.Fabric)) return "05_FabricIcon.png";
-            if (e.ModLoaders.Any(a => a.Type == ModLoaderType.Quilt)) return "09_QuiltIcon.png";
-            if (e.ModLoaders.Any(a => a.Type == ModLoaderType.OptiFine)) return "08_OptiFineIcon.png";
+            if (MinecraftEntry.Loaders.Any(a => a.Type == LoaderType.Forge)) return "06_ForgeIcon.png";
+            if (MinecraftEntry.Loaders.Any(a => a.Type == LoaderType.NeoForge)) return "07_NeoForgeIcon.png";
+            if (MinecraftEntry.Loaders.Any(a => a.Type == LoaderType.Fabric)) return "05_FabricIcon.png";
+            if (MinecraftEntry.Loaders.Any(a => a.Type == LoaderType.Quilt)) return "09_QuiltIcon.png";
+            if (MinecraftEntry.Loaders.Any(a => a.Type == LoaderType.Optifine)) return "08_OptiFineIcon.png";
         }
 
-        return MinecraftEntry.Version.Type switch
+        return MinecraftEntry.Type switch
         {
             MinecraftVersionType.Snapshot => "02_crafting_table_front.png",
             _ => "01_grass_block_side.png"

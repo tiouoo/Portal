@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using MinecraftLaunch.Base.Models.Game;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
@@ -79,9 +78,7 @@ public partial class Properties : Dsc, INotifyPropertyChanged
             var entry = Instance?.MinecraftEntry;
             if (entry is null)
                 return string.Empty;
-            return entry is ModifiedMinecraftEntry { HasInheritance: true } modified
-                ? modified.InheritedMinecraft.Version.VersionId
-                : entry.Version.VersionId;
+            return entry.MinecraftVersion;
         }
     }
 

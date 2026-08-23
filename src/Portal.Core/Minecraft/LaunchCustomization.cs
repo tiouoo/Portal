@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using MinecraftLaunch.Base.Models.Authentication;
-using MinecraftLaunch.Base.Models.Game;
-using MinecraftLaunch.Extensions;
+using Iridium.Models.Authentication;
+using Iridium.Models.Java;
+using Iridium.Models.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -19,10 +19,10 @@ public static class LaunchCustomization
         var independent = instance.RequiresIndependentInstance ||
                           instance.JavaConfig?.EnableIndependentInstance == true;
         var gameDirectory = entry != null
-            ? entry.ToWorkingPath(independent)
+            ? IridiumEntryHelper.GetWorkingPath(entry, independent)
             : instance.InstanceFolderPath;
-        var loaders = entry is ModifiedMinecraftEntry modified
-            ? string.Join(" ", modified.ModLoaders.Select(loader => $"{loader.Type} {loader.Version}".Trim()))
+        var loaders = entry != null
+            ? string.Join(" ", entry.Loaders.Select(loader => $"{loader.Type} {loader.Version}".Trim()))
             : string.Empty;
 
         var placeholders = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -31,11 +31,11 @@ public static class LaunchCustomization
             ["{instance_id}"] = entry?.Id ?? instance.BedrockConfig?.Name ?? string.Empty,
             ["{instance_path}"] = instance.MinecraftPath ?? string.Empty,
             ["{game_dir}"] = gameDirectory ?? string.Empty,
-            ["{minecraft_folder}"] = entry?.MinecraftFolderPath ?? instance.FolderPath ?? string.Empty,
-            ["{natives_dir}"] = entry?.NativesDirectoryPath ?? string.Empty,
-            ["{assets_dir}"] = entry?.AssetsDirectoryPath ?? string.Empty,
-            ["{version}"] = entry?.Version.VersionId ?? instance.BedrockConfig?.Version ?? string.Empty,
-            ["{version_type}"] = entry?.Version.Type.ToString() ?? string.Empty,
+            ["{minecraft_folder}"] = entry != null ? IridiumEntryHelper.GetMinecraftRoot(entry) : instance.FolderPath ?? string.Empty,
+            ["{natives_dir}"] = entry != null ? IridiumEntryHelper.GetNativesDirectory(entry) : string.Empty,
+            ["{assets_dir}"] = entry != null ? IridiumEntryHelper.GetAssetsDirectory(entry) : string.Empty,
+            ["{version}"] = entry?.MinecraftVersion ?? instance.BedrockConfig?.Version ?? string.Empty,
+            ["{version_type}"] = entry?.Type.ToString() ?? string.Empty,
             ["{loader}"] = loaders,
             ["{edition}"] = instance.Type == MinecraftInstanceType.Bedrock ? "bedrock" : "java",
             ["{player_name}"] = account?.Name ?? options.Account?.Name ?? string.Empty,
@@ -44,7 +44,7 @@ public static class LaunchCustomization
             ["{access_token}"] = account?.AccessToken ?? string.Empty,
             ["{java_path}"] = java?.JavaPath ?? string.Empty,
             ["{java_dir}"] = Path.GetDirectoryName(java?.JavaPath) ?? string.Empty,
-            ["{java_version}"] = java?.JavaVersion ?? string.Empty,
+            ["{java_version}"] = java?.Version ?? string.Empty,
             ["{java_major}"] = java?.MajorVersion.ToString() ?? string.Empty,
             ["{width}"] = options.WindowWidth.ToString(),
             ["{height}"] = options.WindowHeight.ToString(),

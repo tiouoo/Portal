@@ -24,8 +24,7 @@ public static class VersionModifyService
     {
         var hasLoaders = selectedEntries.Count > 0;
         var isUninstall = !hasLoaders &&
-                          instance.MinecraftEntry is ModifiedMinecraftEntry { ModLoaders: { } loaders } &&
-                          loaders.Any();
+                          instance.MinecraftEntry is { Loaders.Count: > 0 };
         return TaskManager.Instance.CreateTask(new TaskOptions
         {
             Name = isUninstall
@@ -61,13 +60,13 @@ public static class VersionModifyService
         if (!instance.CanModifyVersion)
             throw new InvalidOperationException(CommonLanguageManager.Instance.versionModify_onlyPortal.CurrentValue());
 
-        var dependents = FindDependentVersionIds(minecraftEntry.MinecraftFolderPath, minecraftEntry.Id);
+        var folderPath = instance.Layout?.MetadataRoot ?? IridiumEntryHelper.GetMinecraftRoot(minecraftEntry);
+        var dependents = FindDependentVersionIds(folderPath, minecraftEntry.Id);
         if (dependents.Count > 0)
             throw new InvalidOperationException(
                 string.Format(CommonLanguageManager.Instance.versionModify_dependentsExist.CurrentValue(),
                     minecraftEntry.Id, string.Join("、", dependents)));
 
-        var folderPath = minecraftEntry.MinecraftFolderPath;
         var instanceId = minecraftEntry.Id;
         var isPortalMc = MinecraftFolderLayout.TryFindPortalMcRoot(folderPath, out var portalMcRoot);
         var metadataRoot = isPortalMc ? Path.Combine(portalMcRoot, "meta") : folderPath;

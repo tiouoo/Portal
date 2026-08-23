@@ -3,8 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Flurl.Http;
-using MinecraftLaunch.Base.Enums;
-using MinecraftLaunch.Base.Models.Game;
+using Iridium.Enums;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
@@ -340,24 +339,22 @@ public sealed class ModpackExportService
     private static string BuildArchive(MinecraftInstance instance, ModpackExportOptions options,
         JsonArray filesIndex, string modpackRoot, string outputPath)
     {
-        var minecraftVersion = instance.MinecraftEntry is ModifiedMinecraftEntry { InheritedMinecraft: { } inherited }
-            ? inherited.Version.VersionId
-            : instance.VersionId;
+        var minecraftVersion = instance.VersionId;
         var dependencies = new JsonObject { ["minecraft"] = minecraftVersion };
-        if (instance.MinecraftEntry is ModifiedMinecraftEntry modified)
-            foreach (var loader in modified.ModLoaders)
+        if (instance.MinecraftEntry is { } entry)
+            foreach (var loader in entry.Loaders)
                 switch (loader.Type)
                 {
-                    case ModLoaderType.Forge:
+                    case LoaderType.Forge:
                         dependencies["forge"] = loader.Version;
                         break;
-                    case ModLoaderType.NeoForge:
+                    case LoaderType.NeoForge:
                         dependencies["neoforge"] = loader.Version;
                         break;
-                    case ModLoaderType.Fabric:
+                    case LoaderType.Fabric:
                         dependencies["fabric-loader"] = loader.Version;
                         break;
-                    case ModLoaderType.Quilt:
+                    case LoaderType.Quilt:
                         dependencies["quilt-loader"] = loader.Version;
                         break;
                 }

@@ -4,16 +4,18 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
-using MinecraftLaunch.Base.EventArgs;
-using MinecraftLaunch.Base.Models.Authentication;
-using MinecraftLaunch.Base.Models.Game;
-using MinecraftLaunch.Components.Downloader;
-using MinecraftLaunch.Components.Parser;
-using MinecraftLaunch.Extensions;
-using MinecraftLaunch.Launch;
+using Iridium.Download;
+using Iridium.Interfaces.Launch;
+using Iridium.Models.Authentication;
+using Iridium.Models.Download;
+using Iridium.Models.Java;
+using Iridium.Models.Launch;
+using Iridium.Models.Minecraft;
+using Iridium.Parsers.Launch;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Const;
+using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Java;
@@ -24,7 +26,8 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Classes;
-using ModLoaderType = MinecraftLaunch.Base.Enums.ModLoaderType;
+using LoaderType = Iridium.Enums.LoaderType;
+using MinecraftProcess = Iridium.Launch.MinecraftProcess;
 
 namespace Portal.Core.Minecraft;
 
@@ -163,6 +166,7 @@ public static class MinecraftLaunchService
             LaunchConfig? config = null;
             Dictionary<string, string>? placeholders = null;
             IReadOnlyDictionary<string, string>? highPerformanceGpuEnvironment = null;
+            var extraGameArguments = new List<string>();
 
             verifyAccount!.Start(async context =>
             {
@@ -205,12 +209,13 @@ public static class MinecraftLaunchService
             {
                 context.SetRunning(CommonLanguageManager.Instance.launch_applyingGameSettings.CurrentValue());
                 placeholders = LaunchCustomization.BuildPlaceholders(instance, account, java, options);
-                config = CreateLaunchConfig(instance, account!, java!, options, target, placeholders);
+                config = CreateLaunchConfig(instance, account!, java!, options, target, placeholders, extraGameArguments);
                 if (highPerformanceGpuEnvironment is { Count: > 0 } gpuEnvironment)
                 {
                     var merged = new Dictionary<string, string>(gpuEnvironment);
-                    foreach (var (key, value) in config.EnvironmentVariables)
-                        merged[key] = value;
+                    if (config.EnvironmentVariables is { } environmentVariables)
+                        foreach (var pair in environmentVariables)
+                            merged[pair.Key] = pair.Value;
                     config.EnvironmentVariables = merged;
                 }
 
@@ -225,7 +230,7 @@ public static class MinecraftLaunchService
             ThrowIfFailed(completeResources);
 
             startGame.Start(context => StartGameStepAsync(context, instance, config!, topLevel, task, logSession!,
-                options, placeholders!, processStarted));
+                options, placeholders!, extraGameArguments, processStarted));
             await startGame.Completion;
             ThrowIfFailed(startGame);
         }
@@ -262,7 +267,8 @@ public static class MinecraftLaunchService
 
     private static async Task StartGameStepAsync(TaskExecutionContext context, MinecraftInstance instance,
         LaunchConfig config, TopLevel? topLevel, ManagedTask task, MinecraftLogSession logSession,
-        MinecraftLaunchOptions options, Dictionary<string, string> placeholders, Action<Process> processStarted)
+        MinecraftLaunchOptions options, Dictionary<string, string> placeholders,
+        IReadOnlyList<string> extraGameArguments, Action<Process> processStarted)
     {
         await RunBeforeLaunchCommandAsync(context, topLevel, options, placeholders);
         if (options.AutoOptimizeMemoryBeforeGameLaunch && OperatingSystem.IsWindows())
@@ -289,17 +295,16 @@ public static class MinecraftLaunchService
         {
             context.SetRunning(CommonLanguageManager.Instance.launch_settingGameLanguage.CurrentValue());
             var entry = instance.MinecraftEntry;
-            GameOptionsService.SetChineseLanguage(entry.ToWorkingPath(config.IsEnableIndependency), entry.ReleaseTime);
+            GameOptionsService.SetChineseLanguage(IridiumEntryHelper.GetWorkingPath(entry, config.IsEnableIndependency), entry.ReleaseTime);
         }
 
-        WriteStartupLog(logSession, instance, config);
-        var mcProcess = await Task.Run(async () =>
-        {
-            var parser = new MinecraftParser(instance.MinecraftEntry!.MinecraftFolderPath);
-            return await new MinecraftRunner(config, parser)
-                .RunAsync(instance.MinecraftEntry, context.CancellationToken);
-        }, context.CancellationToken);
-        if (mcProcess == null)
+        WriteStartupLog(logSession, instance, config, extraGameArguments);
+        var mcProcess = await Task.Run(() =>
+            new Iridium.Launch.Launcher(
+                resolver: new PortalGameArgumentParser(new StandardMinecraftArgumentParser(), extraGameArguments))
+                .LaunchAsync(instance.MinecraftEntry!, config, context.CancellationToken),
+            context.CancellationToken);
+        if (mcProcess.Process is null)
             throw new InvalidOperationException(CommonLanguageManager.Instance.launch_noProcessInfo.CurrentValue());
         ObserveProcess(instance, topLevel, mcProcess, task, context, logSession, options);
         processStarted(mcProcess.Process);
@@ -314,11 +319,8 @@ public static class MinecraftLaunchService
         if (entry == null || instance.JavaConfig == null)
             return;
 
-        var versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
-            ? modified.InheritedMinecraft.Version.VersionId
-            : entry.Version.VersionId;
+        var version = GameVersion.Parse(entry.MinecraftVersion);
         var graphics = instance.JavaConfig.GraphicsBackend;
-        var version = GameVersion.Parse(versionId ?? entry.Id);
         var effective = GraphicsEnvironmentResolver.Resolve(graphics,
             instance.JavaConfig.OpenGlRenderer, instance.JavaConfig.VulkanRenderer, version);
 
@@ -329,9 +331,7 @@ public static class MinecraftLaunchService
         if (platform.Os != OperatingSystemKind.Windows)
             return;
 
-        var nativeDir = Path.Combine(entry.NativesDirectoryPath ??
-                                     Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives"),
-            "mesa-loader");
+        var nativeDir = Path.Combine(IridiumEntryHelper.GetNativesDirectory(entry), "mesa-loader");
         Directory.CreateDirectory(nativeDir);
 
         var jarPath = await MesaLoaderService.EnsureMesaLoaderAsync(cancellationToken);
@@ -377,124 +377,72 @@ public static class MinecraftLaunchService
         MinecraftLaunchOptions options)
     {
         context.SetRunning(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
-        var downloader = new MinecraftResourceDownloader(entry)
-        {
-            SourceRootDirectories = options.ResourceSourceRoots
-        };
+        context.SetRunning(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
+        var copies = MinecraftResourceCompleter.BuildCopies(entry, options.ResourceSourceRoots);
 
-
-        await RunStepAsync(context, CommonLanguageManager.Instance.launch_checkResourceFilesStep.CurrentValue(),
-            CommonLanguageManager.Instance.launch_verifyingResourceIntegrity.CurrentValue(), async step =>
-        {
-            await Task.Factory.StartNew(
-                    () => downloader.VerifyDependenciesAsync(2,
-                        step.CancellationToken),
-                    CancellationToken.None,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default)
-                .Unwrap();
-
-            var copyCount = downloader.CopyItems.Count;
-            var downloadCount = downloader.DependenciesToDownload.Count;
-            step.SetDescription(copyCount + downloadCount == 0
-                ? CommonLanguageManager.Instance.launch_resourcesReady.CurrentValue()
-                : string.Format(CommonLanguageManager.Instance.launch_resourcesToProcess.CurrentValue(), copyCount, downloadCount));
-            step.ReportProgress(1);
-        });
-
-
-        if (downloader.CopyItems.Count > 0)
+        if (copies.Count > 0)
             await RunStepAsync(context, CommonLanguageManager.Instance.launch_copyResourcesStep.CurrentValue(),
                 CommonLanguageManager.Instance.launch_copyingResources.CurrentValue(), step =>
             {
-                AttachCopyProgressReporter(step, downloader);
-                return Task.Run(() => downloader.CopyDependencies(4,
+                var reportCopyProgress = AttachCopyProgressReporter(step, copies.Count);
+                return Task.Run(() => MinecraftResourceCompleter.CopyAsync(copies, reportCopyProgress,
                     step.CancellationToken), step.CancellationToken);
             });
 
+        await RunStepAsync(context, CommonLanguageManager.Instance.launch_downloadResourcesStep.CurrentValue(),
+            CommonLanguageManager.Instance.launch_downloadingResources.CurrentValue(), async step =>
+        {
+            var result = await MinecraftResourceCompleter.DownloadAsync(entry,
+                progress => ReportDownloadProgress(step, progress), step.CancellationToken);
+            if (result.FailCount > 0)
+                throw new IOException(string.Format(CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(), result.FailCount));
 
-        if (downloader.DependenciesToDownload.Count > 0)
-            await RunStepAsync(context, CommonLanguageManager.Instance.launch_downloadResourcesStep.CurrentValue(),
-                CommonLanguageManager.Instance.launch_downloadingResources.CurrentValue(), async step =>
-            {
-                AttachDownloadProgressReporter(step, downloader);
-                var result = await Task.Factory.StartNew(
-                        () => downloader.DownloadDependenciesAsync(step.CancellationToken),
-                        CancellationToken.None,
-                        TaskCreationOptions.LongRunning,
-                        TaskScheduler.Default)
-                    .Unwrap();
-                if (result.Failed.Any())
-                    throw new IOException(string.Format(CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(), result.Failed.Count()));
-                step.ReportProgress(1);
-            });
+            step.ReportProgress(1);
+        });
 
         context.ReportProgress(1);
         context.SetDescription(CommonLanguageManager.Instance.launch_resourcesCompleted.CurrentValue());
     }
 
-    private static void AttachCopyProgressReporter(TaskExecutionContext context, MinecraftResourceDownloader downloader)
+    private static void ReportDownloadProgress(TaskExecutionContext context,
+        ResourceDownloadProgressChangedEventArgs progress)
     {
-        ResourceCopyProgressChangedEventArgs? latestProgress = null;
-        var dispatchQueued = 0;
-        downloader.CopyProgressChanged += (_, progress) =>
+        if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
+
+        Dispatcher.UIThread.Post(() =>
         {
             if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
 
-            Volatile.Write(ref latestProgress, progress);
-            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
-            Dispatcher.UIThread.Post(() =>
-            {
-                Interlocked.Exchange(ref dispatchQueued, 0);
-                if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                if (Volatile.Read(ref latestProgress) is not { } current) return;
-
-                var completion = current.TotalBytes > 0
-                    ? Math.Clamp((double)current.CopiedBytes / current.TotalBytes, 0, 1)
-                    : (double?)null;
-                context.ReportProgress(completion);
-                context.SetDescription(FormatCopyProgress(current));
-            }, DispatcherPriority.Background);
-        };
+            context.ReportProgress(progress.Progress);
+            context.SetDescription(FormatResourceProgress(progress.CompletedCount, progress.TotalCount,
+                progress.Progress));
+        }, DispatcherPriority.Background);
     }
 
-    private static void AttachDownloadProgressReporter(TaskExecutionContext context,
-        MinecraftResourceDownloader downloader)
-    {
-        ResourceDownloadProgressChangedEventArgs? latestProgress = null;
-        var dispatchQueued = 0;
-        downloader.ProgressChanged += (_, progress) =>
+    private static Action<CopyProgress> AttachCopyProgressReporter(TaskExecutionContext context, int totalCount)
+        => progress =>
         {
             if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
 
-            Volatile.Write(ref latestProgress, progress);
-            if (Interlocked.Exchange(ref dispatchQueued, 1) != 0) return;
+            var completion = progress.TotalCount > 0
+                ? Math.Clamp((double)progress.CompletedCount / progress.TotalCount, 0, 1)
+                : (double?)null;
             Dispatcher.UIThread.Post(() =>
             {
-                Interlocked.Exchange(ref dispatchQueued, 0);
                 if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                if (Volatile.Read(ref latestProgress) is not { } current) return;
 
-                var completion = current.TotalBytes > 0
-                    ? Math.Clamp((double)current.DownloadedBytes / current.TotalBytes, 0, 1)
-                    : (double?)null;
                 context.ReportProgress(completion);
-                context.SetDescription(FormatResourceProgress(current.CompletedCount, current.TotalCount,
-                    current.DownloadedBytes, current.TotalBytes, current.Speed, current.EstimatedRemaining));
+                context.SetDescription(FormatCopyProgress(progress));
             }, DispatcherPriority.Background);
         };
-    }
 
-    private static string FormatCopyProgress(ResourceCopyProgressChangedEventArgs progress)
+    private static string FormatCopyProgress(CopyProgress progress)
     {
         var files = progress.TotalCount > 0 ? string.Format(CommonLanguageManager.Instance.launch_copyFilesCount.CurrentValue(), progress.CompletedCount, progress.TotalCount) : CommonLanguageManager.Instance.launch_copyPreparing.CurrentValue();
-        var transferred = progress.TotalBytes > 0
-            ? string.Format(CommonLanguageManager.Instance.launch_copyTransferred.CurrentValue(), DefaultDownloader.FormatSize(progress.CopiedBytes), DefaultDownloader.FormatSize(progress.TotalBytes))
-            : string.Empty;
         var currentFile = !string.IsNullOrWhiteSpace(progress.CurrentFile)
             ? string.Format(CommonLanguageManager.Instance.launch_copyCurrentFile.CurrentValue(), Path.GetFileName(progress.CurrentFile))
             : string.Empty;
-        return string.Format(CommonLanguageManager.Instance.launch_copyingResourcesFormat.CurrentValue(), files, transferred, currentFile);
+        return string.Format(CommonLanguageManager.Instance.launch_copyingResourcesFormat.CurrentValue(), files, string.Empty, currentFile);
     }
 
     private static async Task RunStepAsync(TaskExecutionContext context, string name, string description,
@@ -509,17 +457,12 @@ public static class MinecraftLaunchService
         context.CancellationToken.ThrowIfCancellationRequested();
     }
 
-    private static string FormatResourceProgress(int completedCount, int totalCount, long downloadedBytes,
-        long totalBytes,
-        double speed, TimeSpan estimatedRemaining)
+    private static string FormatResourceProgress(int completedCount, int totalCount, double progress)
     {
         var files = totalCount > 0 ? string.Format(CommonLanguageManager.Instance.launch_copyFilesCount.CurrentValue(), completedCount, totalCount) : CommonLanguageManager.Instance.launch_downloadPreparing.CurrentValue();
-        var transferred = totalBytes > 0
-            ? string.Format(CommonLanguageManager.Instance.launch_copyTransferred.CurrentValue(), DefaultDownloader.FormatSize(downloadedBytes), DefaultDownloader.FormatSize(totalBytes))
-            : string.Empty;
-        var speedText = speed > 0 ? string.Format(CommonLanguageManager.Instance.launch_speedSuffix.CurrentValue(), DefaultDownloader.FormatSize(speed, true)) : string.Empty;
+        var percentage = progress > 0 ? progress.ToString("P0") : string.Empty;
 
-        return string.Format(CommonLanguageManager.Instance.launch_completingResourcesFormat.CurrentValue(), files, transferred, speedText);
+        return string.Format(CommonLanguageManager.Instance.launch_completingResourcesFormat.CurrentValue(), files, percentage, string.Empty);
     }
 
     private static async Task<Account> VerifyAccountAsync(MinecraftLaunchOptions options)
@@ -540,8 +483,8 @@ public static class MinecraftLaunchService
                     string.IsNullOrWhiteSpace(account.ClientToken) ||
                     string.IsNullOrWhiteSpace(account.YggdrasilServerUrl))
                     throw new InvalidOperationException(CommonLanguageManager.Instance.launch_yggdrasilIncomplete.CurrentValue());
-                return new YggdrasilAccount(account.Name, account.Uuid.Value, account.AccessToken, account.ClientToken,
-                    account.YggdrasilServerUrl) { MetaData = account.MetaData };
+                return new YggdrasilAccount(account.Name, account.Uuid.Value, account.AccessToken,
+                    account.YggdrasilServerUrl, account.ClientToken) { MetaData = account.MetaData };
             case AccountType.Microsoft:
                 var refreshed = await AccountRefresher.RefreshMicrosoft(account)
                                 ?? throw new InvalidOperationException(CommonLanguageManager.Instance.launch_microsoftRefreshFailed.CurrentValue());
@@ -562,7 +505,7 @@ public static class MinecraftLaunchService
         var javaConfig = instance.JavaConfig
                          ?? throw new InvalidOperationException(CommonLanguageManager.Instance.launch_javaConfigMissing.CurrentValue());
         var preferred = javaConfig.EnableSpecificJava ? javaConfig.SpecificJavaEntry : null;
-        var requiredVersion = instance.MinecraftEntry!.GetAppropriateJavaVersion();
+        var requiredVersion = IridiumEntryHelper.GetAppropriateJavaVersion(instance.MinecraftEntry!);
 
         if (preferred is not null)
         {
@@ -630,10 +573,9 @@ public static class MinecraftLaunchService
 
     private static List<JavaEntry> OrderJavaCandidates(MinecraftEntry minecraft, IReadOnlyList<JavaEntry> javaEntries)
     {
-        var requiredVersion = minecraft.GetAppropriateJavaVersion();
-        var requiresExactVersion = minecraft is ModifiedMinecraftEntry modified &&
-                                   modified.ModLoaders.Any(loader =>
-                                       loader.Type is ModLoaderType.Forge or ModLoaderType.NeoForge);
+        var requiredVersion = IridiumEntryHelper.GetAppropriateJavaVersion(minecraft);
+        var requiresExactVersion = minecraft.Loaders.Any(loader =>
+            loader.Type is LoaderType.Forge or LoaderType.NeoForge);
 
         var compatible = javaEntries.Where(IsCompatible).ToList();
         var incompatible = javaEntries.Where(candidate => !IsCompatible(candidate)).ToList();
@@ -658,7 +600,7 @@ public static class MinecraftLaunchService
             {
                 context.ReportProgress(progress.Fraction);
                 context.SetDescription(progress.SpeedBytesPerSecond > 0
-                    ? $"{progress.Stage}{string.Format(CommonLanguageManager.Instance.minecraft_javaInstallSpeed.CurrentValue(), DefaultDownloader.FormatSize(progress.SpeedBytesPerSecond, true))}"
+                    ? $"{progress.Stage}{string.Format(CommonLanguageManager.Instance.minecraft_javaInstallSpeed.CurrentValue(), SizeFormatter.FormatSize(progress.SpeedBytesPerSecond, true))}"
                     : progress.Stage);
             }
             catch (InvalidOperationException)
@@ -671,13 +613,18 @@ public static class MinecraftLaunchService
     {
         return new JavaEntry
         {
-            JavaPath = java.JavaPath, JavaType = java.JavaType, JavaVersion = java.JavaVersion,
-            MajorVersion = java.MajorVersion, Is64bit = java.Is64Bit
+            JavaPath = java.JavaPath,
+            JavaHome = Path.GetDirectoryName(java.JavaPath) ?? string.Empty,
+            Vendor = java.JavaType,
+            Version = java.JavaVersion,
+            MajorVersion = java.MajorVersion,
+            Is64Bit = java.Is64Bit
         };
     }
 
     private static LaunchConfig CreateLaunchConfig(MinecraftInstance instance, Account account, JavaEntry java,
-        MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders)
+        MinecraftLaunchOptions options, RecentPlayTarget? target, Dictionary<string, string> placeholders,
+        List<string> extraGameArguments)
     {
         var config = new LaunchConfig
         {
@@ -702,36 +649,32 @@ public static class MinecraftLaunchService
                 : null
         };
 
-        ApplyGraphicsLaunchConfiguration(instance, config, placeholders);
+        ApplyGraphicsLaunchConfiguration(instance, config, placeholders, extraGameArguments);
 
+        config.IsFullscreen = options.IsFullscreen;
         if (options.IsFullscreen)
         {
             config.Width = 0;
             config.Height = 0;
-            config.GameArguments = config.GameArguments.Append("--fullscreen");
         }
 
         return config;
     }
 
     private static void ApplyGraphicsLaunchConfiguration(MinecraftInstance instance, LaunchConfig config,
-        Dictionary<string, string> placeholders)
+        Dictionary<string, string> placeholders, List<string> extraGameArguments)
     {
         var entry = instance.MinecraftEntry;
         if (entry == null)
             return;
 
-        var versionId = entry is ModifiedMinecraftEntry { HasInheritance: true } modified
-            ? modified.InheritedMinecraft.Version.VersionId
-            : entry.Version.VersionId;
-
+        var version = GameVersion.Parse(entry.MinecraftVersion);
         var graphics = instance.JavaConfig?.GraphicsBackend ?? GraphicsApi.Default;
-        var version = GameVersion.Parse(versionId ?? entry.Id);
         var effective = GraphicsEnvironmentResolver.Resolve(graphics,
             instance.JavaConfig?.OpenGlRenderer, instance.JavaConfig?.VulkanRenderer, version);
 
         var nativesFolder = string.IsNullOrEmpty(config.NativesFolder)
-            ? entry.NativesDirectoryPath ?? Path.Combine(entry.MinecraftFolderPath, "versions", entry.Id, "natives")
+            ? IridiumEntryHelper.GetNativesDirectory(entry)
             : config.NativesFolder;
 
         var launch = GraphicsLaunchArgumentsBuilder.Build(effective, graphics, version, nativesFolder,
@@ -740,16 +683,17 @@ public static class MinecraftLaunchService
         if (launch.EnvironmentVariables.Count > 0)
             config.EnvironmentVariables = new Dictionary<string, string>(launch.EnvironmentVariables);
         if (launch.GameArguments.Any())
-            config.GameArguments = launch.GameArguments;
+            extraGameArguments.AddRange(launch.GameArguments);
 
         if (launch.NeedsMesaAgent)
             config.JvmArguments = config.JvmArguments.Concat(launch.JvmArguments);
     }
 
-    private static void WriteStartupLog(MinecraftLogSession logSession, MinecraftInstance instance, LaunchConfig config)
+    private static void WriteStartupLog(MinecraftLogSession logSession, MinecraftInstance instance, LaunchConfig config,
+        IReadOnlyList<string> extraGameArguments)
     {
         var jvmArguments = string.Join(" ", config.JvmArguments);
-        var gameArguments = string.Join(" ", config.GameArguments);
+        var gameArguments = string.Join(" ", extraGameArguments);
         var none = CommonLanguageManager.Instance.common_none.CurrentValue();
         List<string> lines =
         [
@@ -774,11 +718,11 @@ public static class MinecraftLaunchService
             string.Format(LogLanguageManager.Instance.launch_playerName.CurrentValue(), config.Account.Name),
             string.Empty,
             LogLanguageManager.Instance.launch_javaInfoHeader.CurrentValue(),
-            string.Format(LogLanguageManager.Instance.launch_javaVersion.CurrentValue(), config.JavaPath.JavaVersion),
-            string.Format(LogLanguageManager.Instance.launch_javaType.CurrentValue(), config.JavaPath.JavaType),
+            string.Format(LogLanguageManager.Instance.launch_javaVersion.CurrentValue(), config.JavaPath.Version),
+            string.Format(LogLanguageManager.Instance.launch_javaType.CurrentValue(), config.JavaPath.Vendor),
             string.Format(LogLanguageManager.Instance.launch_javaMajorVersion.CurrentValue(), config.JavaPath.MajorVersion),
             string.Format(LogLanguageManager.Instance.launch_javaArchitecture.CurrentValue(),
-                config.JavaPath.Is64bit ? CommonLanguageManager.Instance.common_64bit.CurrentValue() : CommonLanguageManager.Instance.common_32bit.CurrentValue()),
+                config.JavaPath.Is64Bit ? CommonLanguageManager.Instance.common_64bit.CurrentValue() : CommonLanguageManager.Instance.common_32bit.CurrentValue()),
             string.Format(LogLanguageManager.Instance.launch_javaExecutable.CurrentValue(), config.JavaPath.JavaPath),
             string.Empty,
             LogLanguageManager.Instance.launch_memoryWindowHeader.CurrentValue(),
@@ -794,7 +738,7 @@ public static class MinecraftLaunchService
             LogLanguageManager.Instance.launch_gameArgumentsHeader.CurrentValue(),
             string.IsNullOrEmpty(gameArguments) ? none : gameArguments,
             LogLanguageManager.Instance.launch_environmentVariablesHeader.CurrentValue(),
-            config.EnvironmentVariables.Count > 0
+            (config.EnvironmentVariables?.Count ?? 0) > 0
                 ? string.Join(" ", config.EnvironmentVariables.Select(pair => $"{pair.Key}={pair.Value}"))
                 : none,
             string.IsNullOrEmpty(config.WrapperCommand)
@@ -810,11 +754,14 @@ public static class MinecraftLaunchService
     private static void ObserveProcess(MinecraftInstance instance, TopLevel? topLevel, MinecraftProcess process,
         ManagedTask task, TaskExecutionContext context, MinecraftLogSession logSession, MinecraftLaunchOptions options)
     {
+        if (process.Process is not { } gameProcess)
+            return;
+
         instance.Config.LastPlayTime = DateTime.Now;
         context.SetRunning(CommonLanguageManager.Instance.launch_watchingProcess.CurrentValue());
         instance.IncrementPlaySessions();
         instance.StartPlayTimer();
-        process.Process.OutputDataReceived += (_, data) =>
+        gameProcess.OutputDataReceived += (_, data) =>
         {
             if (string.IsNullOrEmpty(data.Data))
                 return;
@@ -1141,4 +1088,25 @@ public sealed class MinecraftLaunchOptions
 
     public Func<BedrockInstanceConfig, IBedrockLaunch>? BedrockLauncherFactory { get; init; }
     public IReadOnlyList<string> ResourceSourceRoots { get; init; } = [];
+}
+
+public sealed class PortalGameArgumentParser : IMinecraftArgumentParser
+{
+    private readonly IMinecraftArgumentParser _inner;
+    private readonly IReadOnlyList<string> _extraGameArguments;
+
+    public PortalGameArgumentParser(IMinecraftArgumentParser inner, IReadOnlyList<string> extraGameArguments)
+    {
+        _inner = inner;
+        _extraGameArguments = extraGameArguments;
+    }
+
+    public LaunchArguments Build(MinecraftEntry entry, LaunchConfig config)
+    {
+        var arguments = _inner.Build(entry, config);
+        if (_extraGameArguments.Count == 0)
+            return arguments;
+
+        return arguments with { GameArguments = [.. arguments.GameArguments, .. _extraGameArguments] };
+    }
 }
