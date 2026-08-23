@@ -29,15 +29,13 @@ namespace Portal.Views.Components;
 public partial class TitleBarComponent : Grid
 {
     private const double TaskTitleScrollStep = 0.7;
-    private const int TaskTitlePauseTicks = 40;
+    private const double TaskTitleGap = 24;
 
     public static readonly StyledProperty<string?> DropMsgProperty =
         AvaloniaProperty.Register<TitleBarComponent, string?>(nameof(DropMsg));
 
     private readonly DispatcherTimer _taskTitleScrollTimer;
-    private int _taskTitleDirection = 1;
-    private double _taskTitleOverflow;
-    private int _taskTitlePauseTicksRemaining;
+    private double _taskTitleCycle;
 
     public TitleBarComponent()
     {
@@ -72,45 +70,34 @@ public partial class TitleBarComponent : Grid
     private void UpdateTaskTitleAnimation()
     {
         TaskTitleScrollViewer.Offset = default;
-        _taskTitleDirection = 1;
-        _taskTitlePauseTicksRemaining = TaskTitlePauseTicks;
+        TaskTitleLoopText.IsVisible = false;
         Dispatcher.UIThread.Post(UpdateTaskTitleOverflow, DispatcherPriority.Render);
     }
 
     private void UpdateTaskTitleOverflow()
     {
-        _taskTitleOverflow = Math.Max(0, TaskTitleScrollViewer.Extent.Width - TaskTitleScrollViewer.Viewport.Width);
-        if (_taskTitleOverflow > 0)
-            _taskTitleScrollTimer.Start();
-        else
+        var titleWidth = CurrentTaskTitleText.Bounds.Width;
+        if (titleWidth <= TaskTitleScrollViewer.Viewport.Width)
+        {
+            _taskTitleCycle = 0;
             _taskTitleScrollTimer.Stop();
+            return;
+        }
+
+        TaskTitleLoopText.IsVisible = true;
+        _taskTitleCycle = titleWidth + TaskTitleGap;
+        _taskTitleScrollTimer.Start();
     }
 
     private void TaskTitleScrollTimer_OnTick(object? sender, EventArgs e)
     {
-        if (_taskTitlePauseTicksRemaining > 0)
-        {
-            _taskTitlePauseTicksRemaining--;
-            return;
-        }
+        if (_taskTitleCycle <= 0) return;
 
-        var nextOffset = TaskTitleScrollViewer.Offset.X + _taskTitleDirection * TaskTitleScrollStep;
-        if (nextOffset >= _taskTitleOverflow)
-        {
-            TaskTitleScrollViewer.Offset = new Vector(_taskTitleOverflow, 0);
-            _taskTitleDirection = -1;
-            _taskTitlePauseTicksRemaining = TaskTitlePauseTicks;
-        }
-        else if (nextOffset <= 0)
-        {
-            TaskTitleScrollViewer.Offset = default;
-            _taskTitleDirection = 1;
-            _taskTitlePauseTicksRemaining = TaskTitlePauseTicks;
-        }
-        else
-        {
-            TaskTitleScrollViewer.Offset = new Vector(nextOffset, 0);
-        }
+        var nextOffset = TaskTitleScrollViewer.Offset.X + TaskTitleScrollStep;
+        if (nextOffset >= _taskTitleCycle)
+            nextOffset -= _taskTitleCycle;
+
+        TaskTitleScrollViewer.Offset = new Vector(nextOffset, 0);
     }
 
     private void OpenTasks(object? sender, RoutedEventArgs e)

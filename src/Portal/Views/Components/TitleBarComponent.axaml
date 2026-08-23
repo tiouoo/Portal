@@ -130,13 +130,29 @@
                         Name="TaskTitleScrollViewer"
                         VerticalAlignment="Center"
                         VerticalScrollBarVisibility="Disabled">
-                        <TextBlock
-                            FontSize="13"
-                            Name="CurrentTaskTitleText"
-                            Text="{Binding Tasks.CurrentTaskTitle}"
-                            TextWrapping="NoWrap"
-                            VerticalAlignment="Center" />
+                        <StackPanel
+                            Name="TaskTitleTrack"
+                            Orientation="Horizontal"
+                            Spacing="24">
+                            <TextBlock
+                                FontSize="13"
+                                Name="CurrentTaskTitleText"
+                                Text="{Binding Tasks.CurrentTaskTitle}"
+                                TextWrapping="NoWrap"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                FontSize="13"
+                                Name="TaskTitleLoopText"
+                                Text="{Binding Tasks.CurrentTaskTitle}"
+                                TextWrapping="NoWrap"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
                     </ScrollViewer>
+                    <TextBlock
+                        FontSize="13"
+                        IsVisible="{Binding Tasks.HasAdditionalTasks}"
+                        Text="{Binding Tasks.AdditionalTaskCount, StringFormat='{}{0:+#}'}"
+                        VerticalAlignment="Center" />
                 </StackPanel>
             </Border>
         </Button>
