@@ -206,7 +206,7 @@
                         <MenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="16"
+                                FontSize="18"
                                 FontWeight="Thin"
                                 Text="&#xe652;" />
                         </MenuItem.Icon>
@@ -218,7 +218,7 @@
                         <MenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="16"
+                                FontSize="18"
                                 FontWeight="Thin"
                                 Text="&#xe60f;" />
                         </MenuItem.Icon>
@@ -259,7 +259,7 @@
                         <MenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="16"
+                                FontSize="18"
                                 FontWeight="Thin"
                                 HorizontalAlignment="Center"
                                 Text="&#xe645;"
@@ -270,7 +270,7 @@
                         <MenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="16"
+                                FontSize="18"
                                 FontWeight="Thin"
                                 HorizontalAlignment="Center"
                                 Text="&#xe641;"

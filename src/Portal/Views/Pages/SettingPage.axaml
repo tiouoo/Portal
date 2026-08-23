@@ -7,11 +7,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:p="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
         <controls:ScrollView
             Classes="Flat"
@@ -23,7 +24,10 @@
                 Margin="0,0,10,0"
                 Name="NavMenu"
                 Theme="{StaticResource FlatScrollBarTheme}">
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_General}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGeneralExpanded}" Name="GeneralNavItem">
+                <tio:NavMenuItem
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_General}}"
+                    IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGeneralExpanded}"
+                    Name="GeneralNavItem">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Appearance}"
@@ -51,7 +55,10 @@
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_About}}"
                         Name="AboutItem" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Game}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGameExpanded}" Name="GameNavItem">
+                <tio:NavMenuItem
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Game}}"
+                    IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGameExpanded}"
+                    Name="GameNavItem">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Account}"
@@ -69,7 +76,10 @@
                         CommandParameter="{x:Type p:Advanced}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Advanced}}" />
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Network}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavNetworkExpanded}" Name="NetworkNavItem">
+                <tio:NavMenuItem
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Network}}"
+                    IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavNetworkExpanded}"
+                    Name="NetworkNavItem">
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Download}"
@@ -81,7 +91,7 @@
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>
-        <controls:ScrollView Margin="0,0,5,0">
+        <ScrollViewer Margin="0,0,5,0">
             <TransitioningContentControl
                 Content="{Binding CurrentPage}"
                 Margin="0,10,10,10"
@@ -91,6 +101,6 @@
                     <CrossFade Duration="0:0:0.2" />
                 </TransitioningContentControl.PageTransition>
             </TransitioningContentControl>
-        </controls:ScrollView>
+        </ScrollViewer>
     </DockPanel>
 </UserControl>

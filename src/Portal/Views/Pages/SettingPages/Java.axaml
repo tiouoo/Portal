@@ -189,7 +189,7 @@
             BorderThickness="1"
             Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_versions}}"
             IsExpanded="False"
-            Margin="0,4,0,0">
+            Margin="1,4,0,0">
             <ListBox ItemsSource="{Binding Data.ConfigEntry.JavaRuntimes}" Margin="10,0,10,10">
                 <ListBox.Styles>
                     <Style Selector="ListBoxItem Button.delete-btn">
@@ -223,7 +223,11 @@
                                 Tag="{Binding}"
                                 Theme="{StaticResource TransparentButton}"
                                 VerticalAlignment="Center">
-                                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe640;" FontSize="14" />
+                                <TextBlock
+                                    FontFamily="{StaticResource IconFont}"
+                                    FontSize="14"
+                                    FontWeight="Thin"
+                                    Text="&#xe640;" />
                             </Button>
                         </Grid>
                     </DataTemplate>
