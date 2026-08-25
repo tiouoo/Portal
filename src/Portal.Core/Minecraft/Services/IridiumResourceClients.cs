@@ -1,8 +1,8 @@
-using Iridium.Enums.Resources;
-using Iridium.Models.Resources;
-using Iridium.Providers.Resource;
-using Iridium.Providers.Resource.CurseForge;
-using Iridium.Providers.Resource.Modrinth;
+using Iridium.Enums;
+using Iridium.Resources.Models;
+using Iridium.Resources;
+using Iridium.Resources.CurseForge;
+using Iridium.Resources.Modrinth;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.Services;
 

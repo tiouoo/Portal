@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using Iridium.Models.Resources;
+using Iridium.Resources.Models;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Base.Interfaces;

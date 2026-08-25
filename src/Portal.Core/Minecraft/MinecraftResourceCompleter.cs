@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Iridium.Download;
-using Iridium.Models.Download;
-using Iridium.Models.Minecraft;
+using Iridium.Download.Models;
+using Iridium.Minecraft.Models;
 
 namespace Portal.Core.Minecraft;
 

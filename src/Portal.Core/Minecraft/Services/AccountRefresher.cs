@@ -1,6 +1,6 @@
-using Iridium.Models.Authentication;
-using Iridium.Providers.Minecraft;
-using Iridium.Services.Authentication;
+using Iridium.Authentication.Models;
+using Iridium.Minecraft;
+using Iridium.Authentication;
 using Portal.Core.Helpers;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Services;

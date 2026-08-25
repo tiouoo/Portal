@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Iridium.Providers.Minecraft;
+using Iridium.Minecraft;
 using Portal.Core.App.Events;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Extensions;

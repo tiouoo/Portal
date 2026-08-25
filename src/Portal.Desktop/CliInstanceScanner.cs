@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Iridium.Models.Minecraft;
-using Iridium.Providers.Minecraft;
+using Iridium.Minecraft.Models;
+using Iridium.Minecraft;
 using Microsoft.Data.Sqlite;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;

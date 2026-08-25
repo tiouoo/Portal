@@ -1,10 +1,10 @@
 using System.Text.Json;
-using Iridium.Models.Authentication;
-using Iridium.Models.Java;
-using Iridium.Models.Launch;
-using Iridium.Models.Minecraft;
-using Iridium.Parsers.Launch;
-using Iridium.Providers.Minecraft;
+using Iridium.Authentication.Models;
+using Iridium.Java;
+using Iridium.Launch.Models;
+using Iridium.Minecraft.Models;
+using Iridium.Launch;
+using Iridium.Minecraft;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Json;
 using Portal.Core.Minecraft;

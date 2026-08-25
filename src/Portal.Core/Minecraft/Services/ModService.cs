@@ -2,8 +2,9 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Iridium.Enums.Resources;
+using Iridium.Enums;
 using Iridium.Helpers.Resources;
+using Iridium.Resources.CurseForge;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Services;
 using Portal.Localization;
@@ -300,11 +301,11 @@ public sealed class ModService
         var requested = hashes.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (requested.Length == 0) return [];
 
-        IReadOnlyDictionary<string, Iridium.Models.Resources.ResourceFile?> response;
+        IReadOnlyDictionary<string, Iridium.Resources.Models.ResourceFile?> response;
         try
         {
             response = await IridiumResourceClients.Modrinth.GetFilesByHashesAsync(requested,
-                Iridium.Enums.Resources.HashAlgorithm.Sha1, cancellationToken);
+                Iridium.Enums.HashAlgorithm.Sha1, cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -312,7 +313,7 @@ public sealed class ModService
             return [];
         }
 
-        var versions = response.Values.OfType<Iridium.Models.Resources.ResourceFile>().ToArray();
+        var versions = response.Values.OfType<Iridium.Resources.Models.ResourceFile>().ToArray();
         var projects = await FetchModrinthProjectsAsync(
             versions.Select(version => version.ProjectId), cancellationToken);
         return response
@@ -335,7 +336,7 @@ public sealed class ModService
             }, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static async Task<Dictionary<string, Iridium.Models.Resources.ResourceProject>> FetchModrinthProjectsAsync(
+    private static async Task<Dictionary<string, Iridium.Resources.Models.ResourceProject>> FetchModrinthProjectsAsync(
         IEnumerable<string?> projectIds,
         CancellationToken cancellationToken)
     {
@@ -360,7 +361,7 @@ public sealed class ModService
         CancellationToken cancellationToken)
     {
         var requested = fingerprints.Distinct().ToArray();
-        Iridium.Models.Resources.CurseForge.CurseForgeFingerprintResult response;
+        Iridium.Resources.CurseForge.CurseForgeFingerprintResult response;
         try
         {
             response = await IridiumResourceClients.CurseForge.GetFilesByFingerprintsAsync(requested,
@@ -454,7 +455,7 @@ public sealed class ModService
         }
     }
 
-    private static async Task<ModCacheEntry> GetMetadataAsync(Iridium.Models.Resources.CurseForge.CurseForgeFile file,
+    private static async Task<ModCacheEntry> GetMetadataAsync(Iridium.Resources.CurseForge.CurseForgeFile file,
         CancellationToken cancellationToken)
     {
         var mod = file.ModId is { } modId

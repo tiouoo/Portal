@@ -7,8 +7,8 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Iridium.Enums.Resources;
-using Iridium.Models.Resources;
+using Iridium.Enums;
+using Iridium.Resources.Models;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.App.Helpers;
 using Portal.Core.Minecraft.Classes;
@@ -317,18 +317,18 @@ public sealed record JavaResourceFileItem(
     }
 
     private static string FormatDetails(string fileName, DateTime? published,
-        Iridium.Enums.Resources.ReleaseType releaseType)
+        Iridium.Enums.ReleaseType releaseType)
     {
         return $"{fileName}·{RelativeTime.Format(published ?? default)}·{ReleaseType(releaseType)}";
     }
 
-    private static string ReleaseType(Iridium.Enums.Resources.ReleaseType type)
+    private static string ReleaseType(Iridium.Enums.ReleaseType type)
     {
         return type switch
         {
-            Iridium.Enums.Resources.ReleaseType.Beta =>
+            Iridium.Enums.ReleaseType.Beta =>
                 CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
-            Iridium.Enums.Resources.ReleaseType.Alpha =>
+            Iridium.Enums.ReleaseType.Alpha =>
                 CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
             _ => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue()
         };

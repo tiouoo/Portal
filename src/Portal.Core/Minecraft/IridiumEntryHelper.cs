@@ -1,6 +1,5 @@
-using Iridium.Interfaces.Minecraft;
-using Iridium.Models.Minecraft;
-using Iridium.Parsers.Launch;
+using Iridium.Minecraft.Models;
+using Iridium.Launch;
 
 namespace Portal.Core.Minecraft;
 

@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Iridium.Models.Authentication;
-using Iridium.Models.Java;
-using Iridium.Models.Minecraft;
+using Iridium.Authentication.Models;
+using Iridium.Java;
+using Iridium.Minecraft.Models;
 using Portal.Core.Minecraft.Classes;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;

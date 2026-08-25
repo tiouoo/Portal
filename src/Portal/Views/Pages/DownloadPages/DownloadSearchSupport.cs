@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Iridium.Enums.Resources;
+using Iridium.Enums;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
 using Portal.Core.Classes;

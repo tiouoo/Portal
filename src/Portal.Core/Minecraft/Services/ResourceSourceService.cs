@@ -1,7 +1,7 @@
 using Iridium.Download;
 using Iridium.Enums;
 using Iridium.Helpers.Resources;
-using Iridium.Interfaces.Resources;
+using Iridium.Resources;
 using Portal.Core.Classes.Config;
 using Portal.Core.Const;
 
@@ -25,9 +25,9 @@ public static class ResourceSourceService
     public static void Apply(ResourceDownloadSourceMode modrinth, ResourceDownloadSourceMode curseForge)
     {
         SourceSelector.ResourceMirror = ActiveResourceMirror;
-        SourceSelector.ConfigureResourceMirror(Iridium.Enums.Resources.ResourceSource.Modrinth,
+        SourceSelector.ConfigureResourceMirror(Iridium.Enums.ResourceSource.Modrinth,
             (SourceSelectionMode)(int)modrinth);
-        SourceSelector.ConfigureResourceMirror(Iridium.Enums.Resources.ResourceSource.CurseForge,
+        SourceSelector.ConfigureResourceMirror(Iridium.Enums.ResourceSource.CurseForge,
             (SourceSelectionMode)(int)curseForge);
     }
 }

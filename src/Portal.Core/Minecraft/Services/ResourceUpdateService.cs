@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
-using Iridium.Enums.Resources;
+using Iridium.Enums;
 using Iridium.Extensions;
-using Iridium.Models.Resources;
-using Iridium.Models.Resources.CurseForge;
+using Iridium.Resources.Models;
+using Iridium.Resources.CurseForge;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Services;

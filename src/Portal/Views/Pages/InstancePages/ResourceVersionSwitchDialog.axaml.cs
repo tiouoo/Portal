@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Iridium.Models.Resources;
+using Iridium.Resources.Models;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;

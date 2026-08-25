@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
-using Iridium.Enums.Resources;
-using Iridium.Models.Resources;
+using Iridium.Enums;
+using Iridium.Resources.Models;
 using MinecraftLaunch.Base.Enums;
 using MinecraftLaunch.Base.Interfaces;
 using MinecraftLaunch.Base.Models.Network;

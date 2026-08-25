@@ -6,7 +6,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Iridium.Enums;
-using Iridium.Models.Minecraft;
+using Iridium.Minecraft.Models;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Classes;
 using Portal.Core.Json;

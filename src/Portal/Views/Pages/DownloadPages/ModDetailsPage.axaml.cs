@@ -8,7 +8,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Iridium.Models.Resources;
+using Iridium.Resources.Models;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.App.Helpers;
 using Portal.Core.Minecraft.Classes;

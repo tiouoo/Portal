@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using Iridium.Enums.Resources;
-using Iridium.Models.Resources;
+using Iridium.Enums;
+using Iridium.Resources.Models;
 using Portal.Core.App.Helpers;
 using Portal.Localization;
 
@@ -80,13 +80,13 @@ public sealed record ModVersionFileItem(
         return $"{loader}·{fileName}·{RelativeTime.Format(published ?? default)}·{ReleaseType(releaseType)}";
     }
 
-    private static string ReleaseType(Iridium.Enums.Resources.ReleaseType type)
+    private static string ReleaseType(Iridium.Enums.ReleaseType type)
     {
         return type switch
         {
-            Iridium.Enums.Resources.ReleaseType.Beta =>
+            Iridium.Enums.ReleaseType.Beta =>
                 CommonLanguageManager.Instance.mod_releaseTypeBeta.CurrentValue(),
-            Iridium.Enums.Resources.ReleaseType.Alpha =>
+            Iridium.Enums.ReleaseType.Alpha =>
                 CommonLanguageManager.Instance.mod_releaseTypeAlpha.CurrentValue(),
             _ => CommonLanguageManager.Instance.mod_releaseTypeRelease.CurrentValue()
         };
