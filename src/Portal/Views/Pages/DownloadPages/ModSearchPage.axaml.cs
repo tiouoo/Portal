@@ -131,9 +131,31 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     [ObservableProperty] public partial string StatusText { get; set; } =
         CommonLanguageManager.Instance.modSearch_preparingSearch.CurrentValue();
     [ObservableProperty] public partial bool HasError { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; } = true;
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
     public bool HasResults => Results.Count > 0;
+    public bool IsLoadingPlaceholder => IsLoading && Results.Count == 0;
+    public bool IsEmpty => !IsLoading && !HasError && Results.Count == 0;
+    public string LoadingText => CommonLanguageManager.Instance.modSearch_loading.CurrentValue();
+    public string EmptyText => CommonLanguageManager.Instance.modSearch_noResults.CurrentValue();
+
+    partial void OnIsLoadingChanged(bool value)
+    {
+        NotifyResultState();
+    }
+
+    partial void OnHasErrorChanged(bool value)
+    {
+        NotifyResultState();
+    }
+
+    private void NotifyResultState()
+    {
+        OnPropertyChanged(nameof(HasResults));
+        OnPropertyChanged(nameof(IsLoadingPlaceholder));
+        OnPropertyChanged(nameof(IsEmpty));
+    }
 
     public void Dispose()
     {
@@ -151,6 +173,22 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     public void ExecuteSearch()
     {
         SearchCommand.Execute(null);
+    }
+
+    public void RefreshContent()
+    {
+        Results.Clear();
+        HasError = false;
+        IsLoading = true;
+        NotifyResultState();
+        if (!_initialized) return;
+        if (CurrentPage != 1)
+        {
+            CurrentPage = 1;
+            return;
+        }
+
+        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
     }
 
     public async Task InitializeAsync()
@@ -329,6 +367,9 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
                 : CommonLanguageManager.Instance.modSearch_searching.CurrentValue();
         }
 
+        if (IsCurrent(request) && !renderedCache)
+            IsLoading = true;
+
         try
         {
             var page = await FetchAsync(request, _disposeCancellation.Token);
@@ -342,6 +383,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         catch (Exception)
         {
             if (!IsCurrent(request)) return;
+            IsLoading = false;
             HasError = true;
             StatusText = CommonLanguageManager.Instance.modSearch_networkError.CurrentValue();
         }
@@ -396,10 +438,11 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
         TotalCount = page.TotalCount;
         HasError = false;
+        IsLoading = false;
         StatusText = page.TotalCount == 0
             ? CommonLanguageManager.Instance.modSearch_noResults.CurrentValue()
             : string.Format(CommonLanguageManager.Instance.modSearch_resultCount.CurrentValue(), page.TotalCount);
-        OnPropertyChanged(nameof(HasResults));
+        NotifyResultState();
     }
 
     private bool IsCurrent(SearchRequest request)

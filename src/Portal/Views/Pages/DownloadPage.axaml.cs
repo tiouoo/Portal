@@ -143,6 +143,12 @@ public partial class DownloadPageViewModel : ObservableObject, IDisposable
             Logger.Info($"[Download] Created download page {pageType.Name}.");
         }
 
+        if (page is not null && page != CurrentPage && page.DataContext is ISearchPageViewModel searchPage)
+        {
+            Logger.Info($"[Download] Refreshing search content on {pageType.Name}.");
+            searchPage.RefreshContent();
+        }
+
         Logger.Info($"[Download] Navigating to {pageType.Name}.");
         CurrentPage = page;
     }

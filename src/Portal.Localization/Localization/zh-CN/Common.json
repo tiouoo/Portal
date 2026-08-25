@@ -1698,6 +1698,7 @@
     "preparingSearch": "准备搜索...",
     "fetchingPopular": "正在获取热门模组...",
     "searching": "正在搜索...",
+    "loading": "正在加载...",
     "networkError": "网络错误，无法完成搜索。",
     "noResults": "没有找到匹配的模组。",
     "resultCount": "共 {0} 个模组"

@@ -1698,6 +1698,7 @@
     "preparingSearch": "Preparing search...",
     "fetchingPopular": "Fetching popular mods...",
     "searching": "Searching...",
+    "loading": "Loading...",
     "networkError": "Network error; unable to complete the search.",
     "noResults": "No matching mods found.",
     "resultCount": "{0} mods in total"
