@@ -7,9 +7,22 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:account="clr-namespace:Portal.Views.Components.Operations.Account"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Styles>
+        <Style Selector="Border.account-card">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.account-card.selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+        <Style Selector="Border.account-card-inner.selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+    </UserControl.Styles>
     <Grid Margin="24" RowDefinitions="Auto, *, Auto">
         <TextBlock
             FontSize="16"
@@ -24,17 +37,71 @@
             <tio:FormItem Label="">
                 <StackPanel Spacing="4">
                     <DataValidationErrors>
-                        <ListBox
-                            ItemsSource="{Binding AuthServers}"
-                            SelectedItem="{Binding SelectedServer}"
-                            Width="368"
-                            tio:FocusHelper.DialogFocusHint="True">
-                            <ListBox.ItemTemplate>
+                        <ItemsControl ItemsSource="{Binding AuthServers}" Width="368">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid
+                                        ColumnSpacing="10"
+                                        Columns="2"
+                                        RowSpacing="10" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayText}" />
+                                    <Border
+                                        Classes="account-card"
+                                        Classes.selected="{Binding IsSelected}"
+                                        CornerRadius="11"
+                                        Cursor="Hand"
+                                        Height="66"
+                                        Padding="0"
+                                        PointerPressed="AccountType_OnPointerPressed">
+                                        <Border.Transitions>
+                                            <Transitions>
+                                                <BrushTransition
+                                                    Duration="0:0:0.16"
+                                                    Easing="SineEaseOut"
+                                                    Property="BorderBrush" />
+                                            </Transitions>
+                                        </Border.Transitions>
+                                        <Border
+                                            Background="{DynamicResource TranslucentBackgroundColor}"
+                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                            BorderThickness="1"
+                                            Classes="account-card-inner"
+                                            Classes.selected="{Binding IsSelected}"
+                                            CornerRadius="10"
+                                            Padding="12">
+                                            <Border.Transitions>
+                                                <Transitions>
+                                                    <BrushTransition
+                                                        Duration="0:0:0.16"
+                                                        Easing="SineEaseOut"
+                                                        Property="BorderBrush" />
+                                                </Transitions>
+                                            </Border.Transitions>
+                                            <StackPanel
+                                                HorizontalAlignment="Center"
+                                                Orientation="Horizontal"
+                                                Spacing="10"
+                                                VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontFamily="{StaticResource IconFont}"
+                                                    FontSize="28"
+                                                    FontWeight="Thin"
+                                                    Text="{Binding IconGlyph}"
+                                                    VerticalAlignment="Center" />
+                                                <TextBlock
+                                                    FontSize="16"
+                                                    Text="{Binding DisplayText}"
+                                                    TextWrapping="Wrap"
+                                                    VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Border>
                                 </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </DataValidationErrors>
                 </StackPanel>
             </tio:FormItem>

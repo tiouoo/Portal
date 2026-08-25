@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "48379652",
+      "name": "xbox",
+      "font_class": "xbox-brands-solid-full",
+      "unicode": "e655",
+      "unicode_decimal": 58965
+    },
+    {
+      "icon_id": "48379651",
+      "name": "microsoft",
+      "font_class": "microsoft-brands-solid-full",
+      "unicode": "e656",
+      "unicode_decimal": 58966
+    },
+    {
       "icon_id": "48378636",
       "name": "ghost",
       "font_class": "a-ghost-solid-full1",

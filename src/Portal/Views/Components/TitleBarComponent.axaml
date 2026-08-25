@@ -259,7 +259,7 @@
                         <MenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="18"
+                                FontSize="19"
                                 FontWeight="Thin"
                                 HorizontalAlignment="Center"
                                 Text="&#xe645;"
@@ -345,7 +345,7 @@
                                 VerticalAlignment="Center">
                                 <TextBlock
                                     FontFamily="{StaticResource IconFont}"
-                                    FontSize="21"
+                                    FontSize="19"
                                     FontWeight="Thin"
                                     HorizontalAlignment="Center"
                                     Text="&#xe645;"

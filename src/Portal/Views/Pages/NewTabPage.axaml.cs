@@ -12,6 +12,7 @@ using Portal.Core.Minecraft.Instance;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Core.Module;
 using Portal.Module.DefaultPage;
 using Portal.Localization;
 using Portal.ViewModels;
@@ -95,6 +96,30 @@ public partial class NewTabPage : InstanceListPageBase
                     logSession => { MinecraftLogPage.Open(logSession, this.GetTopLevel()); }));
     }
 
+    private void RecentInstanceLaunch_Click(object? sender, RoutedEventArgs e)
+    {
+        ContinueGame_Click(sender, e);
+    }
+
+    private async void RecentInstanceCreateShortcut_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is MinecraftInstance instance)
+            await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
+                () => DesktopShortcutService.CreateAsync(instance));
+    }
+
+    private void RecentInstanceFavorite_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is MinecraftInstance instance)
+            NewTabViewModel.ToggleFavorite(instance);
+    }
+
+    private void RecentInstanceBlock_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is MinecraftInstance instance)
+            BlockListService.Instance.ToggleInstanceBlock(instance);
+    }
+
     private async void RecentPlayTargetCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
@@ -135,6 +160,25 @@ public partial class NewTabPage : InstanceListPageBase
         _ = MinecraftLaunchService.LaunchAsync(target.Instance, topLevel,
             MinecraftLaunchOptionsFactory.Create(target.Instance,
                 logSession => MinecraftLogPage.Open(logSession, topLevel)), target);
+    }
+
+    private async void RecentTargetCreateShortcut_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is RecentPlayItem item)
+            await DesktopShortcutUi.CreateAsync(TopLevel.GetTopLevel(this),
+                () => DesktopShortcutService.CreateAsync(item.Target.Instance, item.Target));
+    }
+
+    private void RecentTargetFavorite_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is RecentPlayItem item)
+            NewTabViewModel.ToggleRecentPlayFavorite(item);
+    }
+
+    private void RecentTargetBlock_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is RecentPlayTarget target)
+            BlockListService.Instance.ToggleRecentPlayBlock(target);
     }
 }
 

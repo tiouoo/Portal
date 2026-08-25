@@ -61,7 +61,54 @@
                                     Margin="12,10"
                                     PointerPressed="RecentInstanceCard_OnPointerPressed"
                                     Tag="{Binding RecentInstance}">
-
+                                    <DockPanel.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem
+                                                Click="RecentInstanceLaunch_Click"
+                                                Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_play}}"
+                                                Tag="{Binding RecentInstance}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource IconFont}"
+                                                        FontSize="16"
+                                                        Text="&#xe613;" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="RecentInstanceCreateShortcut_Click"
+                                                Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancecard_createShortcut}}"
+                                                Tag="{Binding RecentInstance}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource IconFont}"
+                                                        FontSize="16"
+                                                        Text="&#xe607;" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                             <MenuItem
+                                                 Click="RecentInstanceFavorite_Click"
+                                                 Header="{Binding RecentInstance.FavoriteHeaderText}"
+                                                 Tag="{Binding RecentInstance}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource IconFont}"
+                                                        FontSize="16"
+                                                     Text="&#xe644;" />
+                                                 </MenuItem.Icon>
+                                             </MenuItem>
+                                             <MenuItem
+                                                 Click="RecentInstanceBlock_Click"
+                                                 Header="{Binding RecentInstance.BlockHeaderText}"
+                                                 Tag="{Binding RecentInstance}">
+                                                 <MenuItem.Icon>
+                                                     <TextBlock
+                                                         FontFamily="{StaticResource IconFont}"
+                                                         FontSize="16"
+                                                         Text="&#xe63a;" />
+                                                 </MenuItem.Icon>
+                                             </MenuItem>
+                                         </ContextMenu>
+                                    </DockPanel.ContextMenu>
 
                                     <StackPanel
                                         DockPanel.Dock="Top"
@@ -154,6 +201,55 @@
                                     Margin="12,10"
                                     PointerPressed="RecentPlayTargetCard_OnPointerPressed"
                                     Tag="{Binding RecentPlayTargetItem.Target}">
+                                    <DockPanel.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem
+                                                Click="ContinueTargetGame_Click"
+                                                Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_play}}"
+                                                IsVisible="{Binding RecentPlayTargetItem.CanQuickPlay}"
+                                                Tag="{Binding RecentPlayTargetItem.Target}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource IconFont}"
+                                                        FontSize="18"
+                                                        Text="&#xe613;" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="RecentTargetCreateShortcut_Click"
+                                                Header="{Translate {x:Static loc:WidgetsLanguageManager+Keys.recentplaycard_createShortcut}}"
+                                                Tag="{Binding RecentPlayTargetItem}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource IconFont}"
+                                                        FontSize="16"
+                                                        Text="&#xe607;" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="RecentTargetFavorite_Click"
+                                                Header="{Binding RecentPlayTargetItem.FavoriteHeaderText}"
+                                                Tag="{Binding RecentPlayTargetItem}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource IconFont}"
+                                                        FontSize="16"
+                                                        Text="&#xe644;" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="RecentTargetBlock_Click"
+                                                Header="{Binding RecentPlayTargetItem.BlockHeaderText}"
+                                                Tag="{Binding RecentPlayTargetItem.Target}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource IconFont}"
+                                                        FontSize="16"
+                                                        Text="&#xe63a;" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </DockPanel.ContextMenu>
                                     <DockPanel DockPanel.Dock="Top">
                                         <Border
                                             ClipToBounds="True"
