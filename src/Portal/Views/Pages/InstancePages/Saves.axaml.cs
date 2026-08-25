@@ -31,6 +31,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
     private readonly DispatcherTimer _lockRefreshTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private readonly WorldSaveService _saveService = new();
     private readonly string? _savesPath;
+    private FilterSortMenuController? _filterSortMenu;
     private string _filter = string.Empty;
     private ResourceFilterMode _filterMode = ResourceFilterMode.All;
     private bool _hasLoaded;
@@ -39,6 +40,11 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
     private bool _isLoading;
     private bool _isRefreshingLockStates;
     private ResourceSortMode _sortMode = ResourceSortMode.FileName;
+
+    private static readonly string[] FilterBaseNames =
+    [
+        CommonLanguageManager.Instance.mod_all.CurrentValue()
+    ];
 
     public Saves()
     {
@@ -49,6 +55,10 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         DataContext = this;
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
             CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
+        _filterSortMenu = new FilterSortMenuController(FilterSortButton,
+            CommonLanguageManager.Instance.resourceList_sortBy.CurrentValue(),
+            CommonLanguageManager.Instance.resourceList_filter.CurrentValue(), FilterOptions,
+            FilterBaseNames, OnSortSelected, OnFilterSelected);
         _lockRefreshTimer.Tick += LockRefreshTimer_OnTick;
     }
 
@@ -106,18 +116,15 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
 
     private void EnsureDefaultSelections()
     {
-        if (FilterComboBox.SelectedIndex < 0)
-            FilterComboBox.SelectedIndex = 0;
-        if (SortComboBox.SelectedIndex < 0)
-            SortComboBox.SelectedIndex = Math.Clamp(Data.ConfigEntry.ResourceListSortIndex, 0, SortOptions.Length - 1);
+        _filterSortMenu?.SetSortIndex(Math.Clamp(Data.ConfigEntry.ResourceListSortIndex, 0,
+            ResourceListUi.SortOptions.Length - 1));
+        _filterSortMenu?.SetFilterIndex(0);
     }
 
-    private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnSortSelected(int index)
     {
-        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
-            return;
-        Data.ConfigEntry.ResourceListSortIndex = combo.SelectedIndex;
-        _sortMode = combo.SelectedIndex switch
+        Data.ConfigEntry.ResourceListSortIndex = index;
+        _sortMode = index switch
         {
             1 => ResourceSortMode.Name,
             2 => ResourceSortMode.LastWriteTime,
@@ -127,11 +134,9 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
         ApplyFilter();
     }
 
-    private void FilterComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnFilterSelected(int index)
     {
-        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
-            return;
-        _filterMode = combo.SelectedIndex switch
+        _filterMode = index switch
         {
             1 => ResourceFilterMode.Enabled,
             2 => ResourceFilterMode.Disabled,
@@ -198,6 +203,7 @@ public partial class Saves : UserControl, INotifyPropertyChanged, IDisposable
                 CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
         FilterOptions[0].Label = ResourceListUi.BuildFilterLabel(CommonLanguageManager.Instance.mod_all.CurrentValue(),
             Items.Count);
+        _filterSortMenu?.SyncFilterLabels(FilterOptions);
         RaiseListProperties();
     }
 

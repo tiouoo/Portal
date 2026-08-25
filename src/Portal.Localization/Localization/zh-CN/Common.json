@@ -1844,7 +1844,9 @@
     "sortFileName": "文件名称",
     "sortResourceName": "资源名称",
     "sortAddedTime": "加入时间",
-    "sortFileSize": "文件大小"
+    "sortFileSize": "文件大小",
+    "sortBy": "排序方式",
+    "filter": "筛选"
   },
   "resourceVersionSwitch": {
     "switchVersion": "切换版本"

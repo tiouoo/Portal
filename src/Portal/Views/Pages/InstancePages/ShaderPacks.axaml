@@ -25,77 +25,6 @@
     </UserControl.Styles>
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
-            <Button
-                Click="OpenFolder_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_openFolder}}"
-                DockPanel.Dock="Right"
-                VerticalAlignment="Top" />
-            <Button
-                Click="CheckUpdates_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates}}"
-                DockPanel.Dock="Right"
-                Margin="0,0,8,0"
-                VerticalAlignment="Top" />
-            <Button
-                Click="Import_OnClick"
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_importShaderPacks}}"
-                DockPanel.Dock="Right"
-                Margin="0,0,8,0"
-                VerticalAlignment="Top" />
-            <ComboBox
-                DockPanel.Dock="Right"
-                ItemsSource="{Binding SortOptions}"
-                Margin="0,0,8,0"
-                Name="SortComboBox"
-                SelectionChanged="SortComboBox_OnSelectionChanged"
-                VerticalAlignment="Top"
-                Width="108" />
-            <ComboBox
-                DockPanel.Dock="Right"
-                ItemsSource="{Binding FilterOptions}"
-                Margin="0,0,8,0"
-                Name="FilterComboBox"
-                SelectionChanged="FilterComboBox_OnSelectionChanged"
-                VerticalAlignment="Top"
-                Width="132">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="local:ResourceFilterOption">
-                        <TextBlock Text="{Binding Label}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-            <TextBox
-                DockPanel.Dock="Right"
-                Margin="0,0,8,0"
-                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_searchShaderPacks}}"
-                TextChanged="SearchBox_OnTextChanged"
-                VerticalAlignment="Top"
-                Width="180" />
-            <DropDownButton
-                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_select}}"
-                DockPanel.Dock="Right"
-                Margin="0,0,8,0"
-                VerticalAlignment="Top">
-                <Button.Flyout>
-                    <MenuFlyout>
-                        <MenuItem
-                            Classes="hide-icon"
-                            Click="SelectAll_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_selectAll}}"
-                            InputGesture="ctrl+A" />
-                        <MenuItem
-                            Classes="hide-icon"
-                            Click="ClearSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_clearSelection}}"
-                            InputGesture="ctrl+shift+A" />
-                        <MenuItem
-                            Classes="hide-icon"
-                            Click="InvertSelection_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_invertSelection}}"
-                            InputGesture="ctrl+I" />
-                    </MenuFlyout>
-                </Button.Flyout>
-            </DropDownButton>
             <DropDownButton
                 Content="{Binding SelectedCountText}"
                 DockPanel.Dock="Right"
@@ -110,6 +39,60 @@
                     </MenuFlyout>
                 </Button.Flyout>
             </DropDownButton>
+            <TextBox
+                DockPanel.Dock="Right"
+                Margin="0,0,8,0"
+                PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_searchShaderPacks}}"
+                TextChanged="SearchBox_OnTextChanged"
+                VerticalAlignment="Top"
+                Width="180" />
+            <DropDownButton
+                Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.dashboard_edit}}"
+                DockPanel.Dock="Right"
+                Margin="0,0,8,0"
+                VerticalAlignment="Top">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Classes="hide-icon"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_select}}">
+                            <MenuItem
+                                Classes="hide-icon"
+                                Click="SelectAll_OnClick"
+                                Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_selectAll}}"
+                                InputGesture="ctrl+A" />
+                            <MenuItem
+                                Classes="hide-icon"
+                                Click="ClearSelection_OnClick"
+                                Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_clearSelection}}"
+                                InputGesture="ctrl+shift+A" />
+                            <MenuItem
+                                Classes="hide-icon"
+                                Click="InvertSelection_OnClick"
+                                Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_invertSelection}}"
+                                InputGesture="ctrl+I" />
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="OpenFolder_OnClick"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_openFolder}}" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="Import_OnClick"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_importShaderPacks}}" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="CheckUpdates_OnClick"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_checkUpdates}}" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </DropDownButton>
+            <DropDownButton
+                DockPanel.Dock="Right"
+                Margin="0,0,8,0"
+                Name="FilterSortButton"
+                VerticalAlignment="Top" />
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"
@@ -125,19 +108,23 @@
                     Text="{Binding ShaderPackCountText}"
                     TextWrapping="NoWrap" />
             </DockPanel>
-            <TextBlock
-                DockPanel.Dock="Top"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="{Binding IsLoading}"
-                Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_loading}}" />
-            <TextBlock
-                DockPanel.Dock="Top"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="{Binding IsEmpty}"
-                Margin="0,8,0,0"
-                Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_empty}}" />
         </DockPanel>
+        <TextBlock
+            DockPanel.Dock="Top"
+            Foreground="{DynamicResource InnerForegroundColor}"
+            IsVisible="{Binding IsLoading}"
+            Margin="0,10,10,0"
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_loading}}"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="NoWrap" />
+        <TextBlock
+            DockPanel.Dock="Top"
+            Foreground="{DynamicResource InnerForegroundColor}"
+            IsVisible="{Binding IsEmpty}"
+            Margin="0,8,10,0"
+            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.shaderpacks_empty}}"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="NoWrap" />
         <controls:ScrollView Classes="Flat" Margin="0,10,0,0">
             <ItemsRepeater ItemsSource="{Binding FilteredItems}" Margin="0,0,10,0">
                 <ItemsRepeater.Layout>

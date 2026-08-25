@@ -1843,8 +1843,10 @@
     "secondaryFormat": "{0}·{1}",
     "sortFileName": "File Name",
     "sortResourceName": "Resource Name",
-    "sortAddedTime": "Added Time",
-    "sortFileSize": "File Size"
+    "sortAddedTime": "Date Added",
+    "sortFileSize": "File Size",
+    "sortBy": "Sort by",
+    "filter": "Filter"
   },
   "resourceVersionSwitch": {
     "switchVersion": "Switch Version"

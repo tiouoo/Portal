@@ -32,6 +32,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     private readonly bool _isCompactLayout;
     private readonly ResourcePackService _resourcePackService = new();
     private readonly ResourceUpdateService _updateService = new();
+    private FilterSortMenuController? _filterSortMenu;
     private string _filter = string.Empty;
     private ResourceFilterMode _filterMode = ResourceFilterMode.All;
     private bool _hasLoaded;
@@ -39,6 +40,12 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
     private bool _isLoading;
     private bool _updateCheckRunning;
     private ResourceSortMode _sortMode = ResourceSortMode.FileName;
+
+    private static readonly string[] FilterBaseNames =
+    [
+        CommonLanguageManager.Instance.mod_all.CurrentValue(),
+        CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue()
+    ];
 
     public ResourcePacks()
     {
@@ -51,6 +58,10 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             CommonLanguageManager.Instance.mod_all.CurrentValue(), 0)));
         FilterOptions.Add(new ResourceFilterOption(ResourceListUi.BuildFilterLabel(
             CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), 0)));
+        _filterSortMenu = new FilterSortMenuController(FilterSortButton,
+            CommonLanguageManager.Instance.resourceList_sortBy.CurrentValue(),
+            CommonLanguageManager.Instance.resourceList_filter.CurrentValue(), FilterOptions,
+            FilterBaseNames, OnSortSelected, OnFilterSelected);
     }
 
     public ResourcePacks(MinecraftInstance instance) : this(instance, MinecraftSpecialFolder.ResourcePacksFolder,
@@ -254,6 +265,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
             Items.Count);
         FilterOptions[1].Label = ResourceListUi.BuildFilterLabel(
             CommonLanguageManager.Instance.resourceList_canUpdate.CurrentValue(), Items.Count(item => item.HasUpdate));
+        _filterSortMenu?.SyncFilterLabels(FilterOptions);
         RaiseListProperties();
     }
 
@@ -268,18 +280,15 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
 
     private void EnsureDefaultSelections()
     {
-        if (FilterComboBox.SelectedIndex < 0)
-            FilterComboBox.SelectedIndex = 0;
-        if (SortComboBox.SelectedIndex < 0)
-            SortComboBox.SelectedIndex = Math.Clamp(Data.ConfigEntry.ResourceListSortIndex, 0, SortOptions.Length - 1);
+        _filterSortMenu?.SetSortIndex(Math.Clamp(Data.ConfigEntry.ResourceListSortIndex, 0,
+            ResourceListUi.SortOptions.Length - 1));
+        _filterSortMenu?.SetFilterIndex(0);
     }
 
-    private void SortComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnSortSelected(int index)
     {
-        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
-            return;
-        Data.ConfigEntry.ResourceListSortIndex = combo.SelectedIndex;
-        _sortMode = combo.SelectedIndex switch
+        Data.ConfigEntry.ResourceListSortIndex = index;
+        _sortMode = index switch
         {
             1 => ResourceSortMode.Name,
             2 => ResourceSortMode.LastWriteTime,
@@ -289,11 +298,9 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         ApplyFilter();
     }
 
-    private void FilterComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnFilterSelected(int index)
     {
-        if (sender is not ComboBox { SelectedIndex: >= 0 } combo)
-            return;
-        _filterMode = combo.SelectedIndex switch
+        _filterMode = index switch
         {
             1 => ResourceFilterMode.CanUpdate,
             _ => ResourceFilterMode.All

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using Avalonia.Controls;
 using Portal.Localization;
 
 namespace Portal.Views.Pages.InstancePages;
@@ -48,6 +49,101 @@ public sealed class ResourceFilterOption(string label) : INotifyPropertyChanged
     public override string ToString()
     {
         return _label;
+    }
+}
+
+public sealed class FilterSortMenuController
+{
+    private readonly DropDownButton _button;
+    private readonly MenuItem[] _filterItems;
+    private readonly string[] _filterBaseNames;
+    private readonly Action<int> _onFilterChanged;
+    private readonly Action<int> _onSortChanged;
+    private readonly MenuItem[] _sortItems;
+    private int _filterIndex;
+    private int _sortIndex;
+
+    public FilterSortMenuController(DropDownButton button, string sortHeader, string filterHeader,
+        IReadOnlyList<ResourceFilterOption> filterOptions, string[] filterBaseNames,
+        Action<int> onSortChanged, Action<int> onFilterChanged)
+    {
+        _button = button;
+        _filterBaseNames = filterBaseNames;
+        _onSortChanged = onSortChanged;
+        _onFilterChanged = onFilterChanged;
+
+        var flyout = new MenuFlyout();
+
+        var sortMenu = new MenuItem { Header = sortHeader, Classes = { "hide-icon" } };
+        _sortItems = new MenuItem[ResourceListUi.SortOptions.Length];
+        for (var i = 0; i < ResourceListUi.SortOptions.Length; i++)
+        {
+            var index = i;
+            var item = new MenuItem { Header = ResourceListUi.SortOptions[index], Classes = { "hide-icon" } };
+            item.Click += (_, _) => SelectSort(index);
+            _sortItems[i] = item;
+            sortMenu.Items.Add(item);
+        }
+
+        var filterMenu = new MenuItem { Header = filterHeader, Classes = { "hide-icon" } };
+        _filterItems = new MenuItem[filterOptions.Count];
+        for (var i = 0; i < filterOptions.Count; i++)
+        {
+            var index = i;
+            var item = new MenuItem { Header = filterOptions[index].Label, Classes = { "hide-icon" } };
+            item.Click += (_, _) => SelectFilter(index);
+            _filterItems[i] = item;
+            filterMenu.Items.Add(item);
+        }
+
+        flyout.Items.Add(sortMenu);
+        flyout.Items.Add(filterMenu);
+        _button.Flyout = flyout;
+
+        UpdateChecks();
+        _button.Content = FilterSortText;
+    }
+
+    public string FilterSortText => $"{_filterBaseNames[_filterIndex]} | {ResourceListUi.SortOptions[_sortIndex]}";
+
+    public void SetFilterIndex(int index)
+    {
+        _filterIndex = Math.Clamp(index, 0, _filterItems.Length - 1);
+        UpdateChecks();
+        _button.Content = FilterSortText;
+    }
+
+    public void SetSortIndex(int index)
+    {
+        _sortIndex = Math.Clamp(index, 0, _sortItems.Length - 1);
+        UpdateChecks();
+        _button.Content = FilterSortText;
+    }
+
+    public void SyncFilterLabels(IReadOnlyList<ResourceFilterOption> filterOptions)
+    {
+        for (var i = 0; i < _filterItems.Length && i < filterOptions.Count; i++)
+            _filterItems[i].Header = filterOptions[i].Label;
+    }
+
+    private void SelectFilter(int index)
+    {
+        SetFilterIndex(index);
+        _onFilterChanged(index);
+    }
+
+    private void SelectSort(int index)
+    {
+        SetSortIndex(index);
+        _onSortChanged(index);
+    }
+
+    private void UpdateChecks()
+    {
+        for (var i = 0; i < _sortItems.Length; i++)
+            _sortItems[i].IsChecked = i == _sortIndex;
+        for (var i = 0; i < _filterItems.Length; i++)
+            _filterItems[i].IsChecked = i == _filterIndex;
     }
 }
 
