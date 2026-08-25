@@ -10,7 +10,7 @@ public static class FavoriteResourceFactory
         return new FavoriteResource
         {
             Name = item.FriendlyName, Summary = item.Summary, IconUrl = item.IconUrl,
-            Edition = FavoriteEdition.Java, Kind = JavaResourceKind.Mod, Source = item.Target.Source,
+            Edition = FavoriteEdition.Java, Kind = ResourceKind.Mod, Source = item.Target.Source,
             ProjectId = item.Target.ProjectId
         };
     }

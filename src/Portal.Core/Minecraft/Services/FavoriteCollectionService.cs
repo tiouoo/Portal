@@ -19,7 +19,7 @@ public class FavoriteResource
     public string Summary { get; set; } = string.Empty;
     public string? IconUrl { get; set; }
     public FavoriteEdition Edition { get; set; }
-    public JavaResourceKind Kind { get; set; }
+    public ResourceKind Kind { get; set; }
     public ModDetailsSource Source { get; set; }
     public string ProjectId { get; set; } = string.Empty;
 }

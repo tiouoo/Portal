@@ -385,7 +385,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         var result = item.UpdateResult;
         if (result?.HasIdentity != true || result.Source is not { } source ||
             string.IsNullOrEmpty(result.ProjectId)) return;
-        ModDetailsPage.Open(topLevel, new ModDetailsTarget(source, result.ProjectId), item.DisplayName);
+        ResourceDetailsPage.Open(topLevel, new ResourceDetailsTarget(ResourceDefinitions.Mod, source, result.ProjectId), item.DisplayName);
     }
 
     private async void OpenResourcePackFolder_OnClick(object? sender, RoutedEventArgs e)
@@ -540,7 +540,7 @@ public partial class ResourcePacks : UserControl, INotifyPropertyChanged, IDispo
         await RollbackAsync(item);
     }
 
-    private async Task UpdateToVersionAsync(ResourcePackItem item, ModVersionFileItem file)
+    private async Task UpdateToVersionAsync(ResourcePackItem item, ResourceVersionFileItem file)
     {
         if (_instance == null || TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
@@ -692,7 +692,7 @@ public sealed class ResourcePackItem(ResourcePackInfo info, bool isCompactLayout
     public bool IsUpdatable => HasUpdate;
     public bool HasIdentity => _updateResult?.HasIdentity == true;
     public bool HasDetails => Info.IsBedrock || HasIdentity;
-    public ModVersionFileItem? UpdateFile => _updateResult?.TargetFile;
+    public ResourceVersionFileItem? UpdateFile => _updateResult?.TargetFile;
     public bool HasRollback => _hasRollback;
     public bool IsUpdating => _isUpdating;
 

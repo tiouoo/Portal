@@ -2,8 +2,8 @@
     d:DesignHeight="300"
     d:DesignWidth="480"
     mc:Ignorable="d"
-    x:Class="Portal.Views.Pages.DownloadPages.JavaResourceInstallDialog"
-    x:DataType="local:JavaResourceInstallDialogViewModel"
+    x:Class="Portal.Views.Pages.DownloadPages.ResourceInstallDialog"
+    x:DataType="local:ResourceInstallDialogViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
@@ -44,7 +44,7 @@
                 Padding="10,6,6,4"
                 SelectedItem="{Binding SelectedInstance}">
                 <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="local:JavaResourceInstallInstanceItem">
+                    <DataTemplate x:DataType="local:ResourceInstallInstanceItem">
                         <StackPanel>
                             <TextBlock Text="{Binding Name}" />
                             <TextBlock
@@ -73,7 +73,7 @@
                 Padding="10,6,6,4"
                 SelectedItem="{Binding SelectedWorld}">
                 <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="local:JavaResourceInstallWorldItem">
+                    <DataTemplate x:DataType="local:ResourceInstallWorldItem">
                         <StackPanel>
                             <TextBlock Text="{Binding Name}" />
                             <TextBlock

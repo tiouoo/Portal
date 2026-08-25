@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Iridium.Resources.Models;
 using Portal.Bedrock.Standard.Interface;
+using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Localization;
 using Portal.Views.Pages.InstancePages;
@@ -16,7 +17,7 @@ namespace Portal.Views.Pages.DownloadPages;
 
 public static class BedrockResourceDownload
 {
-    public static async Task QuickDownloadAsync(TopLevel topLevel, JavaResourceDetailsTarget target)
+    public static async Task QuickDownloadAsync(TopLevel topLevel, ResourceDetailsTarget target)
     {
         var destination = await BedrockPackageImportDialog.SelectDestinationAsync(topLevel, target.Definition);
         if (destination is null) return;
@@ -36,7 +37,7 @@ public static class BedrockResourceDownload
         {
             Logger.Info($"[BedrockDownload] Loading latest file for project {target.ProjectId}.");
             var files = await IridiumResourceClients.CurseForge.GetProjectFilesAsync(target.ProjectId);
-            var file = files.Select(JavaResourceFileItem.From)
+            var file = files.Select(ResourceVersionFileItem.From)
                 .OrderByDescending(item => item.Published)
                 .FirstOrDefault();
             if (file is null)
@@ -61,12 +62,12 @@ public static class BedrockResourceDownload
         }
     }
 
-    public static async Task DownloadAsync(TopLevel topLevel, JavaResourceDefinition definition,
-        JavaResourceFileItem file)
+    public static async Task DownloadAsync(TopLevel topLevel, ResourceDefinition definition,
+        ResourceVersionFileItem file)
     {
         if (BedrockInstallationService.DefaultInstaller is null)
         {
-            await JavaResourceDownload.DownloadAsync(topLevel, definition, file);
+            await ResourceDownload.DownloadAsync(topLevel, definition, file);
             return;
         }
 
@@ -81,7 +82,7 @@ public static class BedrockResourceDownload
         var temporaryPath = Path.Combine(Path.GetTempPath(), "Portal", $"{Guid.NewGuid():N}{extension}");
         Logger.Info($"[BedrockDownload] Downloading {file.FileName} to temporary path {temporaryPath} for import.");
         Directory.CreateDirectory(Path.GetDirectoryName(temporaryPath)!);
-        var task = JavaResourceDownload.StartDownload(topLevel, definition, file, temporaryPath);
+        var task = ResourceDownload.StartDownload(topLevel, definition, file, temporaryPath);
         try
         {
             await task.Completion;
@@ -109,8 +110,8 @@ public static class BedrockResourceDownload
         }
     }
 
-    private static async Task DownloadAndImportAsync(TopLevel topLevel, JavaResourceDefinition definition,
-        JavaResourceFileItem file, BedrockPackageImportDialogResult destination)
+    private static async Task DownloadAndImportAsync(TopLevel topLevel, ResourceDefinition definition,
+        ResourceVersionFileItem file, BedrockPackageImportDialogResult destination)
     {
         var extension = Path.GetExtension(file.FileName);
         if (string.IsNullOrWhiteSpace(extension))
@@ -124,7 +125,7 @@ public static class BedrockResourceDownload
         Logger.Info(
             $"[BedrockDownload] Downloading {file.FileName} to temporary path {temporaryPath} for direct import.");
         Directory.CreateDirectory(Path.GetDirectoryName(temporaryPath)!);
-        var task = JavaResourceDownload.StartDownload(topLevel, definition, file, temporaryPath);
+        var task = ResourceDownload.StartDownload(topLevel, definition, file, temporaryPath);
         try
         {
             await task.Completion;

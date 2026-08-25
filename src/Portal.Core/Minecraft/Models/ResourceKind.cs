@@ -1,6 +1,6 @@
 namespace Portal.Core.Minecraft.Models;
 
-public enum JavaResourceKind
+public enum ResourceKind
 {
     Mod,
     Modpack,

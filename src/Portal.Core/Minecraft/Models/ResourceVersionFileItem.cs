@@ -6,9 +6,9 @@ using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Models;
 
-public sealed record ModVersionGroupKey(string Loader, string MinecraftVersion);
+public sealed record ResourceVersionGroupKey(string Loader, string MinecraftVersion);
 
-public sealed record ModVersionFileItem(
+public sealed record ResourceVersionFileItem(
     string Id,
     string DisplayName,
     string Details,
@@ -18,36 +18,39 @@ public sealed record ModVersionFileItem(
     long FileSize,
     DateTime Published,
     IReadOnlyList<string> MinecraftVersions,
-    IReadOnlyList<ModVersionGroupKey> GroupKeys,
+    IReadOnlyList<ResourceVersionGroupKey> GroupKeys,
     ModDetailsSource Source,
     string ProjectId,
-    IReadOnlyList<ModFileDependency> Dependencies)
+    IReadOnlyList<ResourceFileDependency> Dependencies)
 {
-    public static ModVersionFileItem From(ResourceFile file)
+    public static ResourceVersionFileItem From(ResourceFile file)
     {
         var fileName = file.PrimaryFile?.FileName ?? string.Empty;
         var versions = file.GameVersions.Where(IsMinecraftVersion).ToList();
         var loaders = file.Loaders.Count > 0
             ? file.Loaders.Select(LoaderName).OfType<string>().ToArray()
             : [LinguaSentinels.UniversalLoader];
-        return new ModVersionFileItem(file.Id,
+        var loaderText = loaders.Any(loader => loader != LinguaSentinels.UniversalLoader)
+            ? string.Join(",", loaders.Distinct())
+            : string.Empty;
+        return new ResourceVersionFileItem(file.Id,
             string.IsNullOrWhiteSpace(file.Name) ? fileName : file.Name,
-            FormatDetails(string.Join(",", loaders.Distinct()), fileName, file.Published, file.ReleaseType),
+            FormatDetails(loaderText, fileName, file.Published, file.ReleaseType),
             ReleaseType(file.ReleaseType), fileName,
             file.PrimaryFile?.Url ?? string.Empty, file.PrimaryFile?.Size ?? 0,
             file.Published ?? default, versions,
-            loaders.SelectMany(loader => versions.Select(version => new ModVersionGroupKey(loader, version)))
+            loaders.SelectMany(loader => versions.Select(version => new ResourceVersionGroupKey(loader, version)))
                 .ToList(),
             file.Source == ResourceSource.Modrinth ? ModDetailsSource.Modrinth : ModDetailsSource.CurseForge,
             file.ProjectId,
             file.Dependencies.Where(dependency => dependency.Type == DependencyType.Required &&
                                                   (!string.IsNullOrWhiteSpace(dependency.ProjectId) ||
                                                    !string.IsNullOrWhiteSpace(dependency.VersionId)))
-                .Select(dependency => new ModFileDependency(dependency.ProjectId ?? string.Empty,
+                .Select(dependency => new ResourceFileDependency(dependency.ProjectId ?? string.Empty,
                     dependency.FileName ?? string.Empty, dependency.VersionId)).Distinct().ToArray());
     }
 
-    public ModVersionFileItem ForCompatibility(ModVersionGroupKey compatibility)
+    public ResourceVersionFileItem ForCompatibility(ResourceVersionGroupKey compatibility)
     {
         return this with
         {
@@ -77,7 +80,9 @@ public sealed record ModVersionFileItem(
 
     private static string FormatDetails(string loader, string fileName, DateTime? published, ReleaseType releaseType)
     {
-        return $"{loader}·{fileName}·{RelativeTime.Format(published ?? default)}·{ReleaseType(releaseType)}";
+        return string.IsNullOrWhiteSpace(loader)
+            ? $"{fileName}·{RelativeTime.Format(published ?? default)}·{ReleaseType(releaseType)}"
+            : $"{loader}·{fileName}·{RelativeTime.Format(published ?? default)}·{ReleaseType(releaseType)}";
     }
 
     private static string ReleaseType(Iridium.Enums.ReleaseType type)
@@ -93,7 +98,7 @@ public sealed record ModVersionFileItem(
     }
 }
 
-public sealed record ModFileDependency(string ProjectId, string Name, string? VersionId = null);
+public sealed record ResourceFileDependency(string ProjectId, string Name, string? VersionId = null);
 
 public readonly record struct MinecraftVersionKey(int Major, int Minor, int Patch) : IComparable<MinecraftVersionKey>
 {

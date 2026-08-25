@@ -2,13 +2,6 @@ using Portal.Core.Minecraft.Classes;
 
 namespace Portal.Core.Minecraft.Models;
 
-public enum ResourceKind
-{
-    Mod,
-    ResourcePack,
-    ShaderPack
-}
-
 public sealed record ResourceUpdateCandidate(
     string FilePath,
     ResourceKind Kind,
@@ -24,7 +17,7 @@ public sealed record ResourceUpdateResult(
     string? ProjectId,
     string? CurrentVersionId,
     string? TargetVersionId,
-    ModVersionFileItem? TargetFile)
+    ResourceVersionFileItem? TargetFile)
 {
     public bool HasUpdate => TargetFile != null &&
                              !string.IsNullOrEmpty(TargetVersionId) &&

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Iridium.Enums;
 using Iridium.Extensions;
 using Iridium.Resources.Models;
@@ -121,7 +121,7 @@ public sealed class ResourceUpdateService
 
     private static ResourceUpdateResult BuildResult(
         (ResourceUpdateCandidate Candidate, string? Sha1, uint? Fingerprint, string? Source, string? ProjectId, string? VersionId) item,
-        ModVersionFileItem target, ModDetailsSource source)
+        ResourceVersionFileItem target, ModDetailsSource source)
     {
         return new ResourceUpdateResult(item.Candidate.FilePath, source, item.ProjectId, item.VersionId,
             target.Id, target);
@@ -366,10 +366,10 @@ public sealed class ResourceUpdateService
         return result;
     }
 
-    private static async Task<Dictionary<string, ModVersionFileItem>> FetchModrinthUpdatesAsync(
+    private static async Task<Dictionary<string, ResourceVersionFileItem>> FetchModrinthUpdatesAsync(
         string[] hashes, string gameVersion, IReadOnlyList<string> loaders, CancellationToken cancellationToken)
     {
-        var result = new Dictionary<string, ModVersionFileItem>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, ResourceVersionFileItem>(StringComparer.OrdinalIgnoreCase);
         if (hashes.Length == 0)
             return result;
 
@@ -387,7 +387,7 @@ public sealed class ResourceUpdateService
                     foreach (var hash in batch)
                     {
                         if (response.TryGetValue(hash, out var version) && version is not null)
-                            result[hash] = ModVersionFileItem.From(version);
+                            result[hash] = ResourceVersionFileItem.From(version);
                     }
                 }
                 finally
@@ -404,10 +404,10 @@ public sealed class ResourceUpdateService
         return result;
     }
 
-    private static async Task<Dictionary<uint, ModVersionFileItem>> FetchCurseForgeUpdatesAsync(
+    private static async Task<Dictionary<uint, ResourceVersionFileItem>> FetchCurseForgeUpdatesAsync(
         uint[] fingerprints, string gameVersion, IReadOnlyList<string> loaders, CancellationToken cancellationToken)
     {
-        var result = new Dictionary<uint, ModVersionFileItem>();
+        var result = new Dictionary<uint, ResourceVersionFileItem>();
         if (fingerprints.Length == 0 || CredentialsService.CurseForgeApiKey is null)
             return result;
 
@@ -452,7 +452,7 @@ public sealed class ResourceUpdateService
         return result;
     }
 
-    private static async Task<ModVersionFileItem?> FindLatestCurseForgeFileAsync(long modId, long currentFileId,
+    private static async Task<ResourceVersionFileItem?> FindLatestCurseForgeFileAsync(long modId, long currentFileId,
         string gameVersion, IReadOnlyList<string> loaders, CancellationToken cancellationToken)
     {
         try
@@ -467,7 +467,7 @@ public sealed class ResourceUpdateService
                     .Where(candidate => candidate.Id != currentFileId.ToString())
                     .OrderByDescending(candidate => candidate.Published)
                     .FirstOrDefault();
-                return file is null ? null : ModVersionFileItem.From(file);
+                return file is null ? null : ResourceVersionFileItem.From(file);
             }
             finally
             {

@@ -539,7 +539,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         }
 
 
-        ModDetailsPage.Open(topLevel, new ModDetailsTarget(detailSource.Value, projectId), item.FriendlyName);
+        ResourceDetailsPage.Open(topLevel, new ResourceDetailsTarget(ResourceDefinitions.Mod, detailSource.Value, projectId), item.FriendlyName);
     }
 
     private async void EnableMod_OnClick(object? sender, RoutedEventArgs e)
@@ -750,7 +750,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         await RollbackModAsync(item);
     }
 
-    private async Task UpdateToVersionAsync(ModItem item, ModVersionFileItem file)
+    private async Task UpdateToVersionAsync(ModItem item, ResourceVersionFileItem file)
     {
         if (_instance == null || TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
@@ -841,7 +841,7 @@ public partial class Mods : UserControl, INotifyPropertyChanged, IDisposable
         }
     }
 
-    private static ModInfo BuildUpdatedModInfo(ModInfo oldInfo, string newPath, ModVersionFileItem file)
+    private static ModInfo BuildUpdatedModInfo(ModInfo oldInfo, string newPath, ResourceVersionFileItem file)
     {
         return oldInfo with
         {
@@ -1025,7 +1025,7 @@ public sealed class ModItem : INotifyPropertyChanged, IDisposable
     public bool IsUpdatable => HasUpdate;
     public bool HasIdentity => !string.IsNullOrEmpty(Info.Source) && !string.IsNullOrEmpty(Info.ProjectId) ||
                                _updateResult?.HasIdentity == true;
-    public ModVersionFileItem? UpdateFile => _updateResult?.TargetFile;
+    public ResourceVersionFileItem? UpdateFile => _updateResult?.TargetFile;
     public bool HasRollback => _hasRollback;
     public bool IsUpdating => _isUpdating;
 

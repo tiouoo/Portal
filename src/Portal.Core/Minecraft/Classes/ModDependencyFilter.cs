@@ -8,8 +8,8 @@ namespace Portal.Core.Minecraft.Classes;
 
 public static class ModDependencyFilter
 {
-    public static async Task<IReadOnlyList<ModVersionFileItem>> FilterInstalledAsync(
-        MinecraftInstance instance, IReadOnlyList<ModVersionFileItem> dependencies)
+    public static async Task<IReadOnlyList<ResourceVersionFileItem>> FilterInstalledAsync(
+        MinecraftInstance instance, IReadOnlyList<ResourceVersionFileItem> dependencies)
     {
         if (dependencies.Count == 0) return dependencies;
 
@@ -32,7 +32,7 @@ public static class ModDependencyFilter
             .Select(mod => Path.GetFileNameWithoutExtension(mod.FilePath))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var pending = new List<ModVersionFileItem>();
+        var pending = new List<ResourceVersionFileItem>();
         var queued = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var dependency in dependencies)
         {

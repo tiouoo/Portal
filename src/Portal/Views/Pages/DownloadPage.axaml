@@ -20,7 +20,10 @@
             HorizontalAlignment="Left"
             Margin="7,0,10,10"
             Width="179">
-            <tio:NavMenu Margin="0,0,10,0" Name="NavMenu" Theme="{StaticResource FlatScrollBarTheme}">
+            <tio:NavMenu
+                Margin="0,0,10,0"
+                Name="NavMenu"
+                Theme="{StaticResource FlatScrollBarTheme}">
                 <tio:NavMenuItem
                     Command="{Binding NavigateTypeCommand}"
                     CommandParameter="{x:Type downloadPages:FavoritesPage}"
@@ -28,12 +31,15 @@
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
-                            FontSize="18"
+                            FontSize="17"
                             FontWeight="Thin"
                             Text="&#xe644;" />
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_JavaEdition}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.DownloadJavaEditionExpanded}" Name="JavaEditionNavItem">
+                <tio:NavMenuItem
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_JavaEdition}}"
+                    IsVerticalCollapsed="{Binding !Data.ConfigEntry.DownloadJavaEditionExpanded}"
+                    Name="JavaEditionNavItem">
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
@@ -127,7 +133,10 @@
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_BedrockEdition}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.DownloadBedrockEditionExpanded}" Name="BedrockEditionNavItem">
+                <tio:NavMenuItem
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_BedrockEdition}}"
+                    IsVerticalCollapsed="{Binding !Data.ConfigEntry.DownloadBedrockEditionExpanded}"
+                    Name="BedrockEditionNavItem">
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
@@ -161,7 +170,10 @@
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Others}}" IsVerticalCollapsed="{Binding !Data.ConfigEntry.DownloadOthersExpanded}" Name="OthersNavItem">
+                <tio:NavMenuItem
+                    Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Others}}"
+                    IsVerticalCollapsed="{Binding !Data.ConfigEntry.DownloadOthersExpanded}"
+                    Name="OthersNavItem">
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"

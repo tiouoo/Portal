@@ -6,7 +6,7 @@ namespace Portal.Views.Pages.DownloadPages;
 
 public partial class BedrockResourceSearchPage : ResourceSearchPageBase
 {
-    protected BedrockResourceSearchPage(JavaResourceDefinition definition)
+    protected BedrockResourceSearchPage(ResourceDefinition definition)
     {
         InitializeComponent();
         DataContext = new BedrockResourceSearchViewModel(definition);

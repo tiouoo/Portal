@@ -73,8 +73,14 @@
     "retry": "Retry",
     "loadingText": "Fetching available distributions…"
   },
-  "javaresourcedetailspage": {
-    "emptyText": "No files available"
+  "resourcedetailspage": {
+    "emptyText": "No files available under this filter",
+    "favorite": "Favorite",
+    "favorited": "Favorited",
+    "quickInstall": "Quick Install",
+    "description": "Description",
+    "versions": "Versions",
+    "gallery": "Gallery"
   },
   "javaresourceinstalldialog": {
     "installPrefix": "Install",
@@ -118,11 +124,6 @@
     "selectVersion": "Select Version",
     "cancel": "Cancel",
     "startInstall": "Start Install"
-  },
-  "moddetailspage": {
-    "loadingText": "Loading mod details and all versions...",
-    "loadErrorText": "Unable to load mod details. Please check your network",
-    "emptyText": "No files available under this filter"
   },
   "modinstalldialog": {
     "installPrefix": "Install Mod",

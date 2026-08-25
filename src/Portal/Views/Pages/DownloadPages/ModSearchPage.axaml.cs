@@ -45,7 +45,7 @@ public partial class ModSearchPage : UserControl
             TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
-        ModDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
+        ResourceDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
         e.Handled = true;
     }
 
@@ -65,14 +65,14 @@ public partial class ModSearchPage : UserControl
     private async void Download_OnClick(object? sender, RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is ModSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
-            await ModDetailsPage.QuickDownloadAsync(topLevel, item.Target);
+            await ResourceDownload.QuickDownloadAsync(topLevel, item.Target);
         e.Handled = true;
     }
 
     private void ShowDetails_OnClick(object? sender, RoutedEventArgs e)
     {
         if ((sender as Control)?.Tag is ModSearchResultItem item && TopLevel.GetTopLevel(this) is { } topLevel)
-            ModDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
+            ResourceDetailsPage.Open(topLevel, item.Target, item.FriendlyName);
         e.Handled = true;
     }
 }
@@ -502,7 +502,8 @@ public sealed partial class ModSearchResultItem : ObservableObject
         IconUrl = hit.IconUrl;
         Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
             RelativeTime.Format(timestamp ?? default), hit.Downloads);
-        Target = new ModDetailsTarget(ToModDetailsSource(hit.Source), hit.Id, gameVersion, loader);
+        Target = new ResourceDetailsTarget(ResourceDefinitions.Mod, ToModDetailsSource(hit.Source), hit.Id, gameVersion,
+            loader);
         IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
 
@@ -526,7 +527,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
     [ObservableProperty] public partial string Metadata { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
 
-    public ModDetailsTarget Target { get; private set; }
+    public ResourceDetailsTarget Target { get; private set; }
 
     public void Update(ModSearchResultItem item)
     {
@@ -577,7 +578,7 @@ internal sealed record CachedSearchItem(
     string Summary,
     string? IconUrl,
     string Metadata,
-    ModDetailsTarget Target);
+    ResourceDetailsTarget Target);
 
 internal sealed record CachedSearchPage(IReadOnlyList<CachedSearchItem> Items, int TotalCount)
 {

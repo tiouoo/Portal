@@ -1567,7 +1567,7 @@
     "reconcileSwitched": "{0} no longer exists, switched to {1}",
     "reconcileMissing": "{0} no longer exists, and no other Java is available"
   },
-  "javaResourceDetails": {
+  "resourceDetails": {
     "title": "{0} Details",
     "loading": "Loading {0} details and all versions...",
     "error": "Unable to load {0} details. Please check your network"

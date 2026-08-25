@@ -324,7 +324,7 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         var result = item.UpdateResult;
         if (result?.HasIdentity != true || result.Source is not { } source ||
             string.IsNullOrEmpty(result.ProjectId)) return;
-        ModDetailsPage.Open(topLevel, new ModDetailsTarget(source, result.ProjectId), item.FileName);
+        ResourceDetailsPage.Open(topLevel, new ResourceDetailsTarget(ResourceDefinitions.Mod, source, result.ProjectId), item.FileName);
     }
 
     private async void DeleteShaderPack_OnClick(object? sender, RoutedEventArgs e)
@@ -462,7 +462,7 @@ public partial class ShaderPacks : UserControl, INotifyPropertyChanged
         await RollbackAsync(item);
     }
 
-    private async Task UpdateToVersionAsync(ShaderPackItem item, ModVersionFileItem file)
+    private async Task UpdateToVersionAsync(ShaderPackItem item, ResourceVersionFileItem file)
     {
         if (_instance == null || TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
@@ -630,7 +630,7 @@ public sealed class ShaderPackItem(string filePath) : INotifyPropertyChanged
     public bool IsUpdatable => HasUpdate;
     public bool HasIdentity => _updateResult?.HasIdentity == true;
     public bool HasDetails => HasIdentity;
-    public ModVersionFileItem? UpdateFile => _updateResult?.TargetFile;
+    public ResourceVersionFileItem? UpdateFile => _updateResult?.TargetFile;
     public bool HasRollback => _hasRollback;
     public bool IsUpdating => _isUpdating;
 

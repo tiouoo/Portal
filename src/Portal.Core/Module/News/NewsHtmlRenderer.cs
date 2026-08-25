@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -32,6 +33,28 @@ public static class NewsHtmlRenderer
         return Render(Parse(html));
     }
 
+    /// <summary>按内容格式自动渲染：HTML 直接渲染，Markdown 先转换为 HTML。</summary>
+    public static IReadOnlyList<Control> RenderContent(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return [];
+        var html = LooksLikeHtml(content) ? content : MarkdownToHtml.Convert(content);
+        return Render(html);
+    }
+
+    public static bool LooksLikeHtml(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return false;
+        var trimmed = content.TrimStart();
+        if (trimmed.StartsWith("<!DOCTYPE", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<html", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<head", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<body", StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (trimmed[0] == '<' && !Regex.IsMatch(trimmed, @"(?m)^\s*#{1,6}\s+"))
+            return true;
+        return false;
+    }
+
     public static IReadOnlyList<Control> Render(HtmlDocument doc)
     {
         return RenderEnumerable(doc).ToList();
@@ -52,7 +75,7 @@ public static class NewsHtmlRenderer
     {
         if (node.NodeType == HtmlNodeType.Text)
         {
-            var text = node.InnerText?.Trim();
+            var text = node.InnerText?.Replace('\u00A0', ' ').Trim();
             if (string.IsNullOrEmpty(text)) return [];
 
             return [CreateParagraph([new Run(text) { FontWeight = BodyWeight }], indentLevel)];
@@ -69,6 +92,13 @@ public static class NewsHtmlRenderer
             }
             case "br":
                 return [];
+            case "hr":
+                return [CreateHorizontalRule(indentLevel)];
+            case "img":
+            {
+                var image = CreateRemoteImage(node, indentLevel);
+                return image is null ? [] : [image];
+            }
             case "h1": return [CreateHeading(BuildInlines(node), 24, indentLevel)];
             case "h2": return [CreateHeading(BuildInlines(node), 20, indentLevel)];
             case "h3": return [CreateHeading(BuildInlines(node), 17, indentLevel)];
@@ -199,7 +229,8 @@ public static class NewsHtmlRenderer
                 if (string.IsNullOrEmpty(text)) return;
 
 
-                text = text.Replace("\r\n", " ").Replace('\r', ' ').Replace('\n', ' ');
+                text = text.Replace('\u00A0', ' ').Replace("\r\n", " ").Replace('\r', ' ').Replace('\n', ' ');
+                if (string.IsNullOrWhiteSpace(text)) return;
                 output.Add(new Run(text) { FontWeight = BodyWeight });
                 return;
             }
@@ -258,6 +289,17 @@ public static class NewsHtmlRenderer
             case "br":
                 output.Add(new LineBreak());
                 return;
+            case "img":
+            {
+                var image = CreateRemoteImage(node, 0);
+                if (image is not null)
+                    output.Add(new InlineUIContainer
+                    {
+                        Child = image,
+                        BaselineAlignment = BaselineAlignment.TextBottom
+                    });
+                return;
+            }
             case "span":
             {
                 var span = new Span();
@@ -315,6 +357,25 @@ public static class NewsHtmlRenderer
                 if (!string.IsNullOrEmpty(href)) TryOpenUrl(href);
             };
         return button;
+    }
+
+    private static RemoteImage? CreateRemoteImage(HtmlNode node, int indentLevel)
+    {
+        var src = node.GetAttributeValue("src", string.Empty);
+        if (string.IsNullOrWhiteSpace(src)) return null;
+        return new RemoteImage
+        {
+            ImageUrl = src,
+            Margin = new Thickness(indentLevel * 20, 4, 0, 4)
+        };
+    }
+
+    private static Separator CreateHorizontalRule(int indentLevel)
+    {
+        return new Separator
+        {
+            Margin = new Thickness(indentLevel * 20, 8, 0, 8)
+        };
     }
 
     private static void TryOpenUrl(string url)

@@ -16,8 +16,8 @@ using Tio.Avalonia.Standard.Modules.DiskIO;
 
 namespace Portal.Views.Pages.DownloadPages;
 
-public sealed record JavaResourceDefinition(
-    JavaResourceKind Kind,
+public sealed record ResourceDefinition(
+    ResourceKind Kind,
     string DisplayName,
     string ProjectType,
     int? CurseForgeClassId,
@@ -27,26 +27,29 @@ public sealed record JavaResourceDefinition(
     int CurseForgeGameId = 432,
     bool ShowIconPlaceholder = false);
 
-public static class JavaResourceDefinitions
+public static class ResourceDefinitions
 {
-    public static JavaResourceDefinition Modpack { get; } =
-        new(JavaResourceKind.Modpack, CommonLanguageManager.Instance.javaResourceSearch_modpack.CurrentValue(),
+    public static ResourceDefinition Mod { get; } =
+        new(ResourceKind.Mod, CommonLanguageManager.Instance.resourceList_mods.CurrentValue(), "mod", null, true, true);
+
+    public static ResourceDefinition Modpack { get; } =
+        new(ResourceKind.Modpack, CommonLanguageManager.Instance.javaResourceSearch_modpack.CurrentValue(),
             "modpack", 4471, false, true, ShowIconPlaceholder: true);
 
-    public static JavaResourceDefinition ResourcePack { get; } =
-        new(JavaResourceKind.ResourcePack, CommonLanguageManager.Instance.javaResourceSearch_resourcePack.CurrentValue(),
+    public static ResourceDefinition ResourcePack { get; } =
+        new(ResourceKind.ResourcePack, CommonLanguageManager.Instance.javaResourceSearch_resourcePack.CurrentValue(),
             "resourcepack", 12, true, false);
 
-    public static JavaResourceDefinition ShaderPack { get; } =
-        new(JavaResourceKind.ShaderPack, CommonLanguageManager.Instance.javaResourceSearch_shaderPack.CurrentValue(),
+    public static ResourceDefinition ShaderPack { get; } =
+        new(ResourceKind.ShaderPack, CommonLanguageManager.Instance.javaResourceSearch_shaderPack.CurrentValue(),
             "shader", 6552, true, false);
 
-    public static JavaResourceDefinition DataPack { get; } =
-        new(JavaResourceKind.DataPack, CommonLanguageManager.Instance.javaResourceSearch_dataPack.CurrentValue(),
+    public static ResourceDefinition DataPack { get; } =
+        new(ResourceKind.DataPack, CommonLanguageManager.Instance.javaResourceSearch_dataPack.CurrentValue(),
             "datapack", 6945, true, false);
 
-    public static JavaResourceDefinition Save { get; } =
-        new(JavaResourceKind.Save, CommonLanguageManager.Instance.javaResourceSearch_save.CurrentValue(), "world", 17,
+    public static ResourceDefinition Save { get; } =
+        new(ResourceKind.Save, CommonLanguageManager.Instance.javaResourceSearch_save.CurrentValue(), "world", 17,
             true, false, false);
 }
 
@@ -60,7 +63,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     private bool _initialized;
     private bool _suppressFilterSearch;
 
-    protected JavaResourceSearchViewModel(JavaResourceDefinition definition)
+    protected JavaResourceSearchViewModel(ResourceDefinition definition)
     {
         Definition = definition;
         Sources = definition.SupportsModrinth
@@ -81,7 +84,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
                        ?? SortOptions[0];
     }
 
-    public JavaResourceDefinition Definition { get; }
+    public ResourceDefinition Definition { get; }
     public string PageTitle => string.Format(CommonLanguageManager.Instance.startPage_searchModeTitle.CurrentValue(),
         Definition.DisplayName);
     public string SearchPlaceholder => string.Format(
@@ -379,7 +382,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
 
 public sealed partial class JavaResourceSearchResultItem : ObservableObject
 {
-    public JavaResourceSearchResultItem(ResourceHit hit, JavaResourceDefinition definition,
+    public JavaResourceSearchResultItem(ResourceHit hit, ResourceDefinition definition,
         string gameVersion, ModLoaderType loader)
     {
         Name = hit.Title ?? string.Empty;
@@ -389,7 +392,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         IconUrl = hit.IconUrl;
         Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
             RelativeTime.Format(hit.DateModified ?? hit.DateCreated ?? default), hit.Downloads);
-        Target = new JavaResourceDetailsTarget(definition,
+        Target = new ResourceDetailsTarget(definition,
             ModSearchResultItem.ToModDetailsSource(hit.Source), hit.Id, gameVersion, loader);
         IsFavorite =
             FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this, GetEdition(definition)));
@@ -402,7 +405,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
     public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
     [ObservableProperty] public partial bool IsFavorite { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
-    public JavaResourceDetailsTarget Target { get; private set; }
+    public ResourceDetailsTarget Target { get; private set; }
     public bool ShowIconPlaceholder => Target.Definition.ShowIconPlaceholder && !HasIcon;
 
     public void Update(JavaResourceSearchResultItem item)
@@ -416,11 +419,11 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         IsFavorite = item.IsFavorite;
     }
 
-    private static FavoriteEdition GetEdition(JavaResourceDefinition definition)
+    private static FavoriteEdition GetEdition(ResourceDefinition definition)
     {
         return definition.Kind is
-            JavaResourceKind.BedrockBehaviorPack or JavaResourceKind.BedrockResourcePack
-            or JavaResourceKind.BedrockWorld or JavaResourceKind.BedrockWorldTemplate
+            ResourceKind.BedrockBehaviorPack or ResourceKind.BedrockResourcePack
+            or ResourceKind.BedrockWorld or ResourceKind.BedrockWorldTemplate
             ? FavoriteEdition.Bedrock
             : FavoriteEdition.Java;
     }
@@ -429,7 +432,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
 public sealed record JavaResourceSearchSource(string DisplayName, SearchSource Kind);
 
 public sealed record JavaResourceSearchRequest(
-    JavaResourceKind Kind,
+    ResourceKind Kind,
     SearchSource Source,
     string Query,
     string GameVersion,
@@ -439,18 +442,18 @@ public sealed record JavaResourceSearchRequest(
 
 public sealed record JavaResourceSearchPage(IReadOnlyList<JavaResourceSearchResultItem> Items, int TotalCount);
 
-public sealed class ModpackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Modpack);
+public sealed class ModpackSearchPageViewModel() : JavaResourceSearchViewModel(ResourceDefinitions.Modpack);
 
 public sealed class ResourcePackSearchPageViewModel()
-    : JavaResourceSearchViewModel(JavaResourceDefinitions.ResourcePack);
+    : JavaResourceSearchViewModel(ResourceDefinitions.ResourcePack);
 
-public sealed class ShaderPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.ShaderPack);
+public sealed class ShaderPackSearchPageViewModel() : JavaResourceSearchViewModel(ResourceDefinitions.ShaderPack);
 
-public sealed class DataPackSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.DataPack);
+public sealed class DataPackSearchPageViewModel() : JavaResourceSearchViewModel(ResourceDefinitions.DataPack);
 
-public sealed class SaveSearchPageViewModel() : JavaResourceSearchViewModel(JavaResourceDefinitions.Save);
+public sealed class SaveSearchPageViewModel() : JavaResourceSearchViewModel(ResourceDefinitions.Save);
 
-public sealed class BedrockResourceSearchViewModel(JavaResourceDefinition definition)
+public sealed class BedrockResourceSearchViewModel(ResourceDefinition definition)
     : JavaResourceSearchViewModel(definition);
 
 internal sealed class BoundedCache<TKey, TValue>(int capacity) where TKey : notnull

@@ -129,7 +129,10 @@ public partial class App : Application
 
     private void ShowMainWindow(IClassicDesktopStyleApplicationLifetime desktop)
     {
-        _win = new TabWindow(true);
+        _win = new TabWindow(true)
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
         TextOptions.SetTextRenderingMode(_win, TextRenderingMode.Antialias);
         TextOptions.SetTextHintingMode(_win, TextHintingMode.Light);
         TextOptions.SetBaselinePixelAlignment(_win, BaselinePixelAlignment.Aligned);

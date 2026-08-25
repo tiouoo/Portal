@@ -73,8 +73,14 @@
     "retry": "重试",
     "loadingText": "正在获取可用发行版…"
   },
-  "javaresourcedetailspage": {
-    "emptyText": "没有可用文件"
+  "resourcedetailspage": {
+    "emptyText": "该筛选条件下没有可用文件",
+    "favorite": "收藏",
+    "favorited": "已收藏",
+    "quickInstall": "快速安装",
+    "description": "简介",
+    "versions": "版本",
+    "gallery": "展览图"
   },
   "javaresourceinstalldialog": {
     "installPrefix": "安装",
@@ -118,11 +124,6 @@
     "selectVersion": "选择版本",
     "cancel": "取消",
     "startInstall": "开始安装"
-  },
-  "moddetailspage": {
-    "loadingText": "正在加载模组详情与所有版本...",
-    "loadErrorText": "无法加载模组详情，请检查网络",
-    "emptyText": "该筛选条件下没有可用文件"
   },
   "modinstalldialog": {
     "installPrefix": "安装模组",

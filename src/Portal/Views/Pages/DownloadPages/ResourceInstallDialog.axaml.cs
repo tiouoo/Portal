@@ -11,60 +11,60 @@ using TioUi.Common.Interfaces;
 
 namespace Portal.Views.Pages.DownloadPages;
 
-public partial class JavaResourceInstallDialog : UserControl
+public partial class ResourceInstallDialog : UserControl
 {
-    public JavaResourceInstallDialog()
+    public ResourceInstallDialog()
     {
         InitializeComponent();
     }
 
     private void Install_Click(object? sender, RoutedEventArgs e)
     {
-        (DataContext as JavaResourceInstallDialogViewModel)?.Install();
+        (DataContext as ResourceInstallDialogViewModel)?.Install();
     }
 
     private void SaveAs_Click(object? sender, RoutedEventArgs e)
     {
-        (DataContext as JavaResourceInstallDialogViewModel)?.SaveAs();
+        (DataContext as ResourceInstallDialogViewModel)?.SaveAs();
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
-        (DataContext as JavaResourceInstallDialogViewModel)?.Cancel();
+        (DataContext as ResourceInstallDialogViewModel)?.Cancel();
     }
 }
 
-public enum JavaResourceDownloadDestination
+public enum ResourceDownloadDestination
 {
     Install,
     SaveAs
 }
 
-public sealed record JavaResourceInstallDialogResult(
-    JavaResourceDownloadDestination Destination,
+public sealed record ResourceInstallDialogResult(
+    ResourceDownloadDestination Destination,
     MinecraftInstance? Instance,
     WorldSaveInfo? World,
-    JavaResourceFileItem? File);
+    ResourceVersionFileItem? File);
 
-public sealed record JavaResourceInstallInstanceItem(MinecraftInstance Instance, string Name, string Description);
+public sealed record ResourceInstallInstanceItem(MinecraftInstance Instance, string Name, string Description);
 
-public sealed record JavaResourceInstallWorldItem(WorldSaveInfo World, string Name, string Description);
+public sealed record ResourceInstallWorldItem(WorldSaveInfo World, string Name, string Description);
 
-public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDialogContext
+public partial class ResourceInstallDialogViewModel : ObservableObject, IDialogContext
 {
-    private readonly IReadOnlyList<JavaResourceInstallInstanceItem> _allInstances;
+    private readonly IReadOnlyList<ResourceInstallInstanceItem> _allInstances;
 
-    private readonly IReadOnlyList<JavaResourceFileItem> _files;
+    private readonly IReadOnlyList<ResourceVersionFileItem> _files;
     private readonly WorldSaveService _worldSaveService = new();
     private CancellationTokenSource? _worldLoadCancellation;
 
-    public JavaResourceInstallDialogViewModel(JavaResourceDefinition definition, JavaResourceFileItem file,
+    public ResourceInstallDialogViewModel(ResourceDefinition definition, ResourceVersionFileItem file,
         IEnumerable<MinecraftInstance> instances) : this(definition, [file], instances)
     {
     }
 
-    public JavaResourceInstallDialogViewModel(JavaResourceDefinition definition,
-        IEnumerable<JavaResourceFileItem> files,
+    public ResourceInstallDialogViewModel(ResourceDefinition definition,
+        IEnumerable<ResourceVersionFileItem> files,
         IEnumerable<MinecraftInstance> instances)
     {
         Definition = definition;
@@ -72,20 +72,20 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
         File = _files.FirstOrDefault();
         _allInstances = instances.Where(instance => instance.IsJava)
             .Select(instance =>
-                new JavaResourceInstallInstanceItem(instance, instance.InstanceName, instance.ShortDisplay))
+                new ResourceInstallInstanceItem(instance, instance.InstanceName, instance.ShortDisplay))
             .ToArray();
         RefreshInstances();
     }
 
-    public JavaResourceDefinition Definition { get; }
-    [ObservableProperty] public partial JavaResourceFileItem? File { get; set; }
+    public ResourceDefinition Definition { get; }
+    [ObservableProperty] public partial ResourceVersionFileItem? File { get; set; }
     public string Metadata => File is null
         ? CommonLanguageManager.Instance.javaResourceInstall_noCompatibleVersion.CurrentValue()
         : string.Format(CommonLanguageManager.Instance.javaResourceInstall_appliesTo.CurrentValue(),
             string.Join("/", File.MinecraftVersions));
-    public bool IsDataPack => Definition.Kind == JavaResourceKind.DataPack;
-    public ObservableCollection<JavaResourceInstallInstanceItem> Instances { get; } = [];
-    public ObservableCollection<JavaResourceInstallWorldItem> Worlds { get; } = [];
+    public bool IsDataPack => Definition.Kind == ResourceKind.DataPack;
+    public ObservableCollection<ResourceInstallInstanceItem> Instances { get; } = [];
+    public ObservableCollection<ResourceInstallWorldItem> Worlds { get; } = [];
     public bool HasNoInstances => Instances.Count == 0;
     public bool HasNoWorlds => IsDataPack && !IsLoadingWorlds && Worlds.Count == 0;
 
@@ -93,8 +93,8 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
         File is not null && SelectedInstance is not null && (!IsDataPack || SelectedWorld is not null);
 
     [ObservableProperty] public partial bool ShowAllInstances { get; set; }
-    [ObservableProperty] public partial JavaResourceInstallInstanceItem? SelectedInstance { get; set; }
-    [ObservableProperty] public partial JavaResourceInstallWorldItem? SelectedWorld { get; set; }
+    [ObservableProperty] public partial ResourceInstallInstanceItem? SelectedInstance { get; set; }
+    [ObservableProperty] public partial ResourceInstallWorldItem? SelectedWorld { get; set; }
     [ObservableProperty] public partial bool IsLoadingWorlds { get; set; }
 
     public void Close()
@@ -109,20 +109,20 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
         RefreshInstances();
     }
 
-    partial void OnSelectedInstanceChanged(JavaResourceInstallInstanceItem? value)
+    partial void OnSelectedInstanceChanged(ResourceInstallInstanceItem? value)
     {
         File = value is null ? _files.FirstOrDefault() : FindLatestCompatibleFile(value.Instance);
         OnPropertyChanged(nameof(CanInstall));
         if (IsDataPack) _ = LoadWorldsAsync(value?.Instance);
     }
 
-    partial void OnFileChanged(JavaResourceFileItem? value)
+    partial void OnFileChanged(ResourceVersionFileItem? value)
     {
         OnPropertyChanged(nameof(Metadata));
         OnPropertyChanged(nameof(CanInstall));
     }
 
-    partial void OnSelectedWorldChanged(JavaResourceInstallWorldItem? value)
+    partial void OnSelectedWorldChanged(ResourceInstallWorldItem? value)
     {
         OnPropertyChanged(nameof(CanInstall));
     }
@@ -148,7 +148,7 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
         OnPropertyChanged(nameof(CanInstall));
     }
 
-    private JavaResourceFileItem? FindLatestCompatibleFile(MinecraftInstance instance)
+    private ResourceVersionFileItem? FindLatestCompatibleFile(MinecraftInstance instance)
     {
         return _files.FirstOrDefault(file =>
             file.MinecraftVersions.Count == 0 || file.MinecraftVersions.Contains(instance.VersionId,
@@ -180,7 +180,7 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
                     CommonLanguageManager.Instance.javaResourceInstall_worldDescription.CurrentValue(), world.FolderName,
                     world.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
                     world.DataPackArchiveCount);
-                Worlds.Add(new JavaResourceInstallWorldItem(world, name, description));
+                Worlds.Add(new ResourceInstallWorldItem(world, name, description));
             }
 
             SelectedWorld = Worlds.FirstOrDefault();
@@ -205,14 +205,14 @@ public partial class JavaResourceInstallDialogViewModel : ObservableObject, IDia
     public void Install()
     {
         RequestClose?.Invoke(this,
-            new JavaResourceInstallDialogResult(JavaResourceDownloadDestination.Install, SelectedInstance?.Instance,
+            new ResourceInstallDialogResult(ResourceDownloadDestination.Install, SelectedInstance?.Instance,
                 SelectedWorld?.World, File));
     }
 
     public void SaveAs()
     {
         RequestClose?.Invoke(this,
-            new JavaResourceInstallDialogResult(JavaResourceDownloadDestination.SaveAs, null, null,
+            new ResourceInstallDialogResult(ResourceDownloadDestination.SaveAs, null, null,
                 _files.FirstOrDefault()));
     }
 

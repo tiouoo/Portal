@@ -1,100 +1,56 @@
 <UserControl
-    d:DesignHeight="600"
-    d:DesignWidth="900"
+    Margin="0,10,-6,0"
     mc:Ignorable="d"
-    x:Class="Portal.Views.Pages.DownloadPages.JavaResourceDetailsPage"
-    x:DataType="local:JavaResourceDetailsViewModel"
+    x:Class="Portal.Views.Pages.DownloadPages.ResourceVersionsView"
+    x:DataType="local:ResourceDetailsViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:owned="clr-namespace:Portal.Views.Components"
+    xmlns:models="clr-namespace:Portal.Core.Minecraft.Models;assembly=Portal.Core"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
-    <DockPanel Margin="12,0,12,12">
-        <StackPanel DockPanel.Dock="Top">
-            <DockPanel>
-                <StackPanel
-                    DockPanel.Dock="Right"
-                    HorizontalAlignment="Right"
-                    IsVisible="{Binding HasScreenshots}"
-                    Width="294">
-                    <Border
-                        ClipToBounds="True"
-                        CornerRadius="10"
-                        Height="165">
-                        <Carousel ItemsSource="{Binding Screenshots}" SelectedIndex="{Binding SelectedScreenshotIndex}">
-                            <Carousel.ItemTemplate>
-                                <DataTemplate x:DataType="x:String">
-                                    <owned:OwnedAdvancedImage
-                                        Loader="{Binding $parent[UserControl].((local:JavaResourceDetailsViewModel)DataContext).ScreenshotLoader}"
-                                        Source="{Binding}"
-                                        Stretch="UniformToFill" />
-                                </DataTemplate>
-                            </Carousel.ItemTemplate>
-                        </Carousel>
-                    </Border>
-                </StackPanel>
-                <DockPanel>
-                    <DockPanel DockPanel.Dock="Top">
-                        <Border
-                            Background="{DynamicResource TranslucentBorderBrush}"
-                            CornerRadius="14"
-                            Height="72"
-                            Width="72">
-                            <owned:OwnedAdvancedImage
-                                CornerRadius="14"
-                                Loader="{Binding ImageLoader}"
-                                Source="{Binding IconUrl}" />
-                        </Border>
-                        <StackPanel Margin="12,5,12,0" Spacing="3">
-                            <TextBlock
-                                FontSize="22"
-                                FontWeight="SemiBold"
-                                Margin="0,0,0,-2"
-                                Text="{Binding Name}" />
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Target.Source}" />
-                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Binding Metadata}" />
-                        </StackPanel>
-                    </DockPanel>
-                    <TextBlock
-                        DockPanel.Dock="Top"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Height="52"
-                        Margin="2,4,0,0"
-                        MaxLines="3"
-                        Text="{Binding Summary}"
-                        TextWrapping="Wrap" />
-                    <Grid
-                        Height="32"
-                        Margin="0,5,0,0"
-                        VerticalAlignment="Top">
-                        <ComboBox
-                            IsVisible="{Binding HasVersions}"
-                            ItemsSource="{Binding VersionFilters}"
-                            SelectedItem="{Binding SelectedVersionFilter}"
-                            Width="140">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayName}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </Grid>
-                </DockPanel>
-            </DockPanel>
-        </StackPanel>
-        <Separator
-            Background="{DynamicResource TranslucentBorderBrush}"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel
             DockPanel.Dock="Top"
-            Margin="0,10,0,-2" />
-        <Grid Margin="0,14,0,0">
-            <controls:ScrollView>
-                <StackPanel>
+            Margin="0,0,0,10"
+            Orientation="Horizontal"
+            Spacing="6">
+            <ComboBox
+                IsVisible="{Binding ShowLoaderFilter}"
+                ItemsSource="{Binding LoaderFilters}"
+                SelectedItem="{Binding SelectedLoaderFilter}"
+                Width="150">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox
+                IsVisible="{Binding HasVersions}"
+                ItemsSource="{Binding VersionFilters}"
+                SelectedItem="{Binding SelectedVersionFilter}"
+                Width="180">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <Grid>
+            <tio:ScrollView HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,6,0">
                     <ItemsControl ItemsSource="{Binding VersionGroups}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="local:JavaResourceVersionGroup">
+                            <DataTemplate x:DataType="local:ResourceVersionGroup">
                                 <tio:TioExpander
                                     Background="{DynamicResource TranslucentBackgroundColor}"
                                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -122,7 +78,7 @@
                                         <StackPanel Margin="14,0,14,12">
                                             <ItemsControl ItemsSource="{Binding VisibleFiles}">
                                                 <ItemsControl.ItemTemplate>
-                                                    <DataTemplate x:DataType="local:JavaResourceFileItem">
+                                                    <DataTemplate x:DataType="models:ResourceVersionFileItem">
                                                         <Button
                                                             Background="Transparent"
                                                             Click="VersionFile_OnClick"
@@ -164,7 +120,7 @@
                         IsVisible="{Binding HasMoreVersionGroups}"
                         Margin="0,0,0,10" />
                 </StackPanel>
-            </controls:ScrollView>
+            </tio:ScrollView>
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left"
@@ -181,14 +137,14 @@
                 VerticalAlignment="Top" />
             <Border
                 HorizontalAlignment="Left"
-                IsVisible="{Binding !IsLoading}"
+                IsVisible="{Binding !HasError}"
                 VerticalAlignment="Top">
-                <Border IsVisible="{Binding !HasError}">
+                <Border IsVisible="{Binding !IsLoading}">
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding IsEmpty}"
                         Margin="2,2,0,0"
-                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourcedetailspage_emptyText}}" />
+                        Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.resourcedetailspage_emptyText}}" />
                 </Border>
             </Border>
         </Grid>

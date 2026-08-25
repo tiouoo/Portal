@@ -48,7 +48,7 @@ public partial class ModInstallDialog : UserControl
             TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
-        ModDetailsPage.Open(topLevel, item.Target, item.Name);
+        ResourceDetailsPage.Open(topLevel, item.Target, item.Name);
     }
 }
 
@@ -61,28 +61,28 @@ public enum ModDownloadDestination
 public sealed record ModInstallDialogResult(
     ModDownloadDestination Destination,
     MinecraftInstance? Instance,
-    IReadOnlyList<ModVersionFileItem> Dependencies,
-    ModVersionFileItem File);
+    IReadOnlyList<ResourceVersionFileItem> Dependencies,
+    ResourceVersionFileItem File);
 
 public sealed record ModInstallInstanceItem(MinecraftInstance Instance, string Name, string Description);
 
-public sealed record ModInstallDependencyItem(ModVersionFileItem File, ModDetailsTarget Target, string Name);
+public sealed record ModInstallDependencyItem(ResourceVersionFileItem File, ResourceDetailsTarget Target, string Name);
 
 public partial class ModInstallDialogViewModel : ObservableObject, IDialogContext
 {
     private static readonly TimeSpan DependencyLoadTimeout = TimeSpan.FromSeconds(90);
     private readonly IReadOnlyList<ModInstallInstanceItem> _allInstances;
-    private readonly IReadOnlyList<ModVersionFileItem> _files;
+    private readonly IReadOnlyList<ResourceVersionFileItem> _files;
     private ModInstallDependencyItem[] _allDependencies = [];
     private int _dependencyFilterGeneration;
     private int _dependencyLoadGeneration;
 
-    public ModInstallDialogViewModel(ModVersionFileItem file, IEnumerable<MinecraftInstance> instances) : this([file],
+    public ModInstallDialogViewModel(ResourceVersionFileItem file, IEnumerable<MinecraftInstance> instances) : this([file],
         instances)
     {
     }
 
-    public ModInstallDialogViewModel(IEnumerable<ModVersionFileItem> files, IEnumerable<MinecraftInstance> instances)
+    public ModInstallDialogViewModel(IEnumerable<ResourceVersionFileItem> files, IEnumerable<MinecraftInstance> instances)
     {
         _files = files.OrderByDescending(item => item.Published).ToArray();
         File = _files.First();
@@ -93,7 +93,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         _ = LoadDependenciesAsync();
     }
 
-    [ObservableProperty] public partial ModVersionFileItem File { get; set; }
+    [ObservableProperty] public partial ResourceVersionFileItem File { get; set; }
 
     public string Metadata
     {
@@ -172,7 +172,7 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         OnPropertyChanged(nameof(CanInstallWithDependencies));
     }
 
-    partial void OnFileChanged(ModVersionFileItem value)
+    partial void OnFileChanged(ResourceVersionFileItem value)
     {
         OnPropertyChanged(nameof(Metadata));
         _ = LoadDependenciesAsync();
@@ -211,13 +211,13 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         OnPropertyChanged(nameof(HasNoInstances));
     }
 
-    private ModVersionFileItem? FindLatestCompatibleFile(MinecraftInstance instance)
+    private ResourceVersionFileItem? FindLatestCompatibleFile(MinecraftInstance instance)
     {
         return _files.FirstOrDefault(file =>
             IsCompatible(file, instance));
     }
 
-    private static bool IsCompatible(ModVersionFileItem file, MinecraftInstance instance)
+    private static bool IsCompatible(ResourceVersionFileItem file, MinecraftInstance instance)
     {
         if (!file.MinecraftVersions.Contains(instance.VersionId, StringComparer.OrdinalIgnoreCase)) return false;
         var compatibleLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != LinguaSentinels.UniversalLoader).ToHashSet();
@@ -316,37 +316,37 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         OnPropertyChanged(nameof(HasDependencies));
     }
 
-    private async Task<IReadOnlyList<ModVersionFileItem>> LoadModrinthDependenciesAsync(ModVersionFileItem file)
+    private async Task<IReadOnlyList<ResourceVersionFileItem>> LoadModrinthDependenciesAsync(ResourceVersionFileItem file)
     {
         var dependencies = file.Dependencies.ToList();
         var files = await Task.WhenAll(dependencies.Select(dependency =>
             LoadModrinthDependencyAsync(file, dependency)));
-        return files.OfType<ModVersionFileItem>().DistinctBy(file => file.Id).ToArray();
+        return files.OfType<ResourceVersionFileItem>().DistinctBy(file => file.Id).ToArray();
     }
 
-    private async Task<ModVersionFileItem?> LoadModrinthDependencyAsync(ModVersionFileItem file,
-        ModFileDependency dependency)
+    private async Task<ResourceVersionFileItem?> LoadModrinthDependencyAsync(ResourceVersionFileItem file,
+        ResourceFileDependency dependency)
     {
         if (!string.IsNullOrWhiteSpace(dependency.VersionId))
         {
             var fixedVersion = await IridiumResourceClients.Modrinth.GetFileAsync(dependency.VersionId);
             if (fixedVersion is not null)
             {
-                var mapped = ModVersionFileItem.From(fixedVersion);
+                var mapped = ResourceVersionFileItem.From(fixedVersion);
                 if (IsCompatible(file, mapped)) return mapped;
             }
         }
 
         if (string.IsNullOrWhiteSpace(dependency.ProjectId)) return null;
         var files = await IridiumResourceClients.Modrinth.GetProjectFilesAsync(dependency.ProjectId);
-        return files.Select(ModVersionFileItem.From)
+        return files.Select(ResourceVersionFileItem.From)
             .Where(candidate => IsCompatible(file, candidate))
             .OrderByDescending(candidate =>
                 candidate.MinecraftVersions.Count(version => file.MinecraftVersions.Contains(version)))
             .ThenByDescending(candidate => candidate.Id).FirstOrDefault();
     }
 
-    private async Task<IReadOnlyList<ModVersionFileItem>> LoadCurseForgeDependenciesAsync(ModVersionFileItem file)
+    private async Task<IReadOnlyList<ResourceVersionFileItem>> LoadCurseForgeDependenciesAsync(ResourceVersionFileItem file)
     {
         var ids = file.Dependencies.Select(dependency => dependency.ProjectId).Distinct().ToArray();
         if (ids.Length == 0) return [];
@@ -355,14 +355,14 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
         var candidates = await Task.WhenAll(projects.Select(async project =>
         {
             var files = await IridiumResourceClients.CurseForge.GetProjectFilesAsync(project.Id);
-            return files.Select(ModVersionFileItem.From)
+            return files.Select(ResourceVersionFileItem.From)
                 .Where(candidate => IsCompatible(file, candidate))
                 .OrderByDescending(candidate => candidate.Id).FirstOrDefault();
         }));
-        return candidates.OfType<ModVersionFileItem>().DistinctBy(file => file.Id).ToArray();
+        return candidates.OfType<ResourceVersionFileItem>().DistinctBy(file => file.Id).ToArray();
     }
 
-    private static bool IsCompatible(ModVersionFileItem file, ModVersionFileItem candidate)
+    private static bool IsCompatible(ResourceVersionFileItem file, ResourceVersionFileItem candidate)
     {
         if (!candidate.MinecraftVersions.Intersect(file.MinecraftVersions).Any()) return false;
 
@@ -372,17 +372,18 @@ public partial class ModInstallDialogViewModel : ObservableObject, IDialogContex
             key.Loader == LinguaSentinels.UniversalLoader || selectedLoaders.Contains(key.Loader));
     }
 
-    private static ModDetailsTarget CreateDetailsTarget(ModVersionFileItem file, ModVersionFileItem dependency)
+    private static ResourceDetailsTarget CreateDetailsTarget(ResourceVersionFileItem file, ResourceVersionFileItem dependency)
     {
         var gameVersion = file.MinecraftVersions.Intersect(dependency.MinecraftVersions).FirstOrDefault() ??
                           string.Empty;
         var selectedLoaders = file.GroupKeys.Select(key => key.Loader).Where(loader => loader != LinguaSentinels.UniversalLoader).ToHashSet();
         var loader = dependency.GroupKeys.Select(key => key.Loader)
             .FirstOrDefault(selectedLoaders.Contains) ?? dependency.GroupKeys.FirstOrDefault()?.Loader;
-        return new ModDetailsTarget(dependency.Source, dependency.ProjectId, gameVersion, ToModLoaderType(loader));
+        return new ResourceDetailsTarget(ResourceDefinitions.Mod, dependency.Source, dependency.ProjectId, gameVersion,
+            ToModLoaderType(loader));
     }
 
-    private async Task<string> GetDependencyNameAsync(ModVersionFileItem dependency)
+    private async Task<string> GetDependencyNameAsync(ResourceVersionFileItem dependency)
     {
         if (dependency.Source == ModDetailsSource.Modrinth)
         {

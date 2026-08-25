@@ -56,11 +56,11 @@ public abstract class ResourceSearchPageBase : UserControl
 
     protected virtual void OpenDetails(TopLevel topLevel, JavaResourceSearchResultItem item)
     {
-        JavaResourceDetailsPage.Open(topLevel, item.Target, item.Name);
+        ResourceDetailsPage.Open(topLevel, item.Target, item.Name);
     }
 
     protected virtual Task QuickDownloadAsync(TopLevel topLevel, JavaResourceSearchResultItem item)
     {
-        return JavaResourceDownload.QuickDownloadAsync(topLevel, item.Target);
+        return ResourceDownload.QuickDownloadAsync(topLevel, item.Target);
     }
 }

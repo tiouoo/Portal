@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -49,11 +49,11 @@ public partial class ResourceVersionSwitchDialog : UserControl
 
     public ResourceVersionSwitchDialogViewModel ViewModel { get; private set; } = null!;
 
-    public static async Task<ModVersionFileItem?> ShowAsync(TopLevel topLevel, ResourceVersionSwitchTarget target)
+    public static async Task<ResourceVersionFileItem?> ShowAsync(TopLevel topLevel, ResourceVersionSwitchTarget target)
     {
         var dialog = new ResourceVersionSwitchDialog(target);
         var result = await OverlayDialog
-            .ShowCustomAsync<ModVersionFileItem?>(dialog, dialog.ViewModel, topLevel.TryGetHostId(),
+            .ShowCustomAsync<ResourceVersionFileItem?>(dialog, dialog.ViewModel, topLevel.TryGetHostId(),
                 new OverlayDialogOptions
                 {
                     Title = CommonLanguageManager.Instance.resourceVersionSwitch_switchVersion.CurrentValue(),
@@ -69,7 +69,7 @@ public partial class ResourceVersionSwitchDialog : UserControl
     }
 }
 
-public sealed record ResourceVersionItem(ModVersionFileItem File, bool IsCurrent, bool IsCompatible);
+public sealed record ResourceVersionItem(ResourceVersionFileItem File, bool IsCurrent, bool IsCompatible);
 
 public partial class ResourceVersionSwitchDialogViewModel : ObservableObject, IDialogContext
 {
@@ -116,14 +116,14 @@ public partial class ResourceVersionSwitchDialogViewModel : ObservableObject, ID
         HasError = false;
         try
         {
-            IReadOnlyList<ModVersionFileItem> files = _target.Source switch
+            IReadOnlyList<ResourceVersionFileItem> files = _target.Source switch
             {
                 ModDetailsSource.Modrinth =>
                     (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(_target.ProjectId))
-                    .Select(ModVersionFileItem.From).DistinctBy(file => file.Id).ToArray(),
+                    .Select(ResourceVersionFileItem.From).DistinctBy(file => file.Id).ToArray(),
                 ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
                         _target.ProjectId))
-                    .Select(ModVersionFileItem.From).DistinctBy(file => file.Id).ToArray(),
+                    .Select(ResourceVersionFileItem.From).DistinctBy(file => file.Id).ToArray(),
                 _ => []
             };
 

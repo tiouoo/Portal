@@ -19,7 +19,7 @@ public static class ResourceCompatibility
             .ToArray();
     }
 
-    public static bool IsCompatible(ModVersionFileItem file, MinecraftInstance instance, ResourceKind kind)
+    public static bool IsCompatible(ResourceVersionFileItem file, MinecraftInstance instance, ResourceKind kind)
     {
         if (!file.MinecraftVersions.Contains(instance.VersionId, StringComparer.OrdinalIgnoreCase))
             return false;

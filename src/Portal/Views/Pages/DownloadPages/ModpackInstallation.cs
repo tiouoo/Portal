@@ -32,8 +32,8 @@ namespace Portal.Views.Pages.DownloadPages;
 
 internal static class ModpackInstallation
 {
-    public static async Task HandleVersionFileClickAsync(JavaResourceDetailsViewModel viewModel, TopLevel topLevel,
-        JavaResourceFileItem file)
+    public static async Task HandleVersionFileClickAsync(ResourceDetailsViewModel viewModel, TopLevel topLevel,
+        ResourceVersionFileItem file)
     {
         var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
             ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(viewModel.Name),
@@ -54,7 +54,7 @@ internal static class ModpackInstallation
     }
 
     /// <summary>从搜索结果一键安装整合包：解析最新版本 → 选择目标 → 安装。</summary>
-    public static async Task InstallFromSearchAsync(TopLevel topLevel, JavaResourceDetailsTarget target,
+    public static async Task InstallFromSearchAsync(TopLevel topLevel, ResourceDetailsTarget target,
         string? iconUrl, string? suggestedName)
     {
         var loading = new QuickDownloadLoadingDialogViewModel(
@@ -70,14 +70,14 @@ internal static class ModpackInstallation
             });
         try
         {
-            IReadOnlyList<JavaResourceFileItem> files = target.Source switch
+            IReadOnlyList<ResourceVersionFileItem> files = target.Source switch
             {
                 ModDetailsSource.Modrinth =>
                     (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(target.ProjectId))
-                    .Select(JavaResourceFileItem.From).ToArray(),
+                    .Select(ResourceVersionFileItem.From).ToArray(),
                 ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
                         target.ProjectId))
-                    .Select(JavaResourceFileItem.From).ToArray(),
+                    .Select(ResourceVersionFileItem.From).ToArray(),
                 _ => []
             };
             var file = files.OrderByDescending(item => item.Published).FirstOrDefault();
@@ -107,7 +107,7 @@ internal static class ModpackInstallation
 
     /// <summary>展示整合包安装对话框（选择目标文件夹与实例 ID），随后直接安装最新版本。</summary>
     public static async Task InstallFromFileAsync(TopLevel topLevel, ModDetailsSource source,
-        JavaResourceFileItem file, string? iconUrl, string? suggestedInstanceId)
+        ResourceVersionFileItem file, string? iconUrl, string? suggestedInstanceId)
     {
         var result = await OverlayDialog.ShowCustomAsync<ModpackInstallDialog, ModpackInstallDialogViewModel,
             ModpackInstallDialogResult>(new ModpackInstallDialogViewModel(suggestedInstanceId ?? file.DisplayName),
@@ -242,7 +242,7 @@ internal static class ModpackInstallation
         };
     }
 
-    private static async Task SaveAsAsync(TopLevel topLevel, JavaResourceFileItem file)
+    private static async Task SaveAsAsync(TopLevel topLevel, ResourceVersionFileItem file)
     {
         var selected = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
@@ -256,10 +256,10 @@ internal static class ModpackInstallation
         var destination = selected?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(destination)) return;
         Logger.Info($"[Modpack] Exporting {file.FileName} to {destination}.");
-        JavaResourceDownload.StartDownload(topLevel, JavaResourceDefinitions.Modpack, file, destination);
+        ResourceDownload.StartDownload(topLevel, ResourceDefinitions.Modpack, file, destination);
     }
 
-    private static void StartInstallation(TopLevel topLevel, ModDetailsSource source, JavaResourceFileItem file,
+    private static void StartInstallation(TopLevel topLevel, ModDetailsSource source, ResourceVersionFileItem file,
         string? iconUrl, ModpackInstallDialogResult selection)
     {
         var task = TaskManager.Instance.CreateTask(new TaskOptions
@@ -277,7 +277,7 @@ internal static class ModpackInstallation
     }
 
     private static async Task InstallAsync(TaskExecutionContext context, ModDetailsSource source,
-        JavaResourceFileItem file,
+        ResourceVersionFileItem file,
         string? iconUrl, ModpackInstallDialogResult selection)
     {
         var folder = selection.Folder!.FolderPath;
@@ -428,7 +428,7 @@ internal static class ModpackInstallation
         });
     }
 
-    private static async Task DownloadArchiveAsync(TaskExecutionContext context, JavaResourceFileItem file,
+    private static async Task DownloadArchiveAsync(TaskExecutionContext context, ResourceVersionFileItem file,
         string destination)
     {
         context.SetRunning(string.Format(CommonLanguageManager.Instance.modpack_downloading.CurrentValue(),

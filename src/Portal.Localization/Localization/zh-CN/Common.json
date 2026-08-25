@@ -1567,7 +1567,7 @@
     "reconcileSwitched": "「{0}」不存在，已自动切换到「{1}」",
     "reconcileMissing": "「{0}」不存在，且没有其他可用的 Java"
   },
-  "javaResourceDetails": {
+  "resourceDetails": {
     "title": "{0}详情",
     "loading": "正在加载{0}详情与所有版本...",
     "error": "无法加载{0}详情，请检查网络"

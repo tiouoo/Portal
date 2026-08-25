@@ -248,7 +248,7 @@ public partial class FavoritesPageViewModel : ObservableObject
                 resource.Kind.ToString() == KindFromDisplay(SelectedKind).ToString());
     }
 
-    private static JavaResourceKind KindFromDisplay(string value)
+    private static ResourceKind KindFromDisplay(string value)
     {
         var mod = CommonLanguageManager.Instance.favorite_kindMod.CurrentValue();
         var modpack = CommonLanguageManager.Instance.favorite_kindModpack.CurrentValue();
@@ -258,21 +258,23 @@ public partial class FavoritesPageViewModel : ObservableObject
         var save = CommonLanguageManager.Instance.favorite_kindSave.CurrentValue();
         return value switch
         {
-            _ when value == mod => JavaResourceKind.Mod,
-            _ when value == modpack => JavaResourceKind.Modpack,
-            _ when value == resourcePack => JavaResourceKind.ResourcePack,
-            _ when value == shaderPack => JavaResourceKind.ShaderPack,
-            _ when value == dataPack => JavaResourceKind.DataPack,
-            _ when value == save => JavaResourceKind.Save,
-            _ => JavaResourceKind.Modpack
+            _ when value == mod => ResourceKind.Mod,
+            _ when value == modpack => ResourceKind.Modpack,
+            _ when value == resourcePack => ResourceKind.ResourcePack,
+            _ when value == shaderPack => ResourceKind.ShaderPack,
+            _ when value == dataPack => ResourceKind.DataPack,
+            _ when value == save => ResourceKind.Save,
+            _ => ResourceKind.Modpack
         };
     }
 
     public static void OpenDetails(TopLevel topLevel, FavoriteResource resource)
     {
-        if (resource.Kind == JavaResourceKind.Mod)
+        if (resource.Kind == ResourceKind.Mod)
         {
-            ModDetailsPage.Open(topLevel, new ModDetailsTarget(resource.Source, resource.ProjectId), resource.Name);
+            ResourceDetailsPage.Open(topLevel,
+                new ResourceDetailsTarget(ResourceDefinitions.Mod, resource.Source, resource.ProjectId),
+                resource.Name);
             return;
         }
 
@@ -280,15 +282,15 @@ public partial class FavoritesPageViewModel : ObservableObject
             ? BedrockResourceDefinitions.ResourcePack
             : resource.Kind switch
             {
-                JavaResourceKind.Modpack => JavaResourceDefinitions.Modpack,
-                JavaResourceKind.ResourcePack => JavaResourceDefinitions.ResourcePack,
-                JavaResourceKind.ShaderPack => JavaResourceDefinitions.ShaderPack,
-                JavaResourceKind.DataPack => JavaResourceDefinitions.DataPack,
-                JavaResourceKind.Save => JavaResourceDefinitions.Save,
-                _ => JavaResourceDefinitions.ResourcePack
+                ResourceKind.Modpack => ResourceDefinitions.Modpack,
+                ResourceKind.ResourcePack => ResourceDefinitions.ResourcePack,
+                ResourceKind.ShaderPack => ResourceDefinitions.ShaderPack,
+                ResourceKind.DataPack => ResourceDefinitions.DataPack,
+                ResourceKind.Save => ResourceDefinitions.Save,
+                _ => ResourceDefinitions.ResourcePack
             };
-        var target = new JavaResourceDetailsTarget(definition, resource.Source, resource.ProjectId);
-        JavaResourceDetailsPage.Open(topLevel, target, resource.Name);
+        var target = new ResourceDetailsTarget(definition, resource.Source, resource.ProjectId);
+        ResourceDetailsPage.Open(topLevel, target, resource.Name);
     }
 
     public static async Task QuickDownloadAsync(TopLevel topLevel, FavoriteResource resource)
@@ -297,42 +299,42 @@ public partial class FavoritesPageViewModel : ObservableObject
         {
             var bedrockDefinition = resource.Kind switch
             {
-                JavaResourceKind.BedrockBehaviorPack => BedrockResourceDefinitions.BehaviorPack,
-                JavaResourceKind.BedrockResourcePack => BedrockResourceDefinitions.ResourcePack,
-                JavaResourceKind.BedrockWorld => BedrockResourceDefinitions.World,
-                JavaResourceKind.BedrockWorldTemplate => BedrockResourceDefinitions.WorldTemplate,
+                ResourceKind.BedrockBehaviorPack => BedrockResourceDefinitions.BehaviorPack,
+                ResourceKind.BedrockResourcePack => BedrockResourceDefinitions.ResourcePack,
+                ResourceKind.BedrockWorld => BedrockResourceDefinitions.World,
+                ResourceKind.BedrockWorldTemplate => BedrockResourceDefinitions.WorldTemplate,
                 _ => null
             };
             if (bedrockDefinition is not null)
                 await BedrockResourceDownload.QuickDownloadAsync(topLevel,
-                    new JavaResourceDetailsTarget(bedrockDefinition, resource.Source, resource.ProjectId));
+                    new ResourceDetailsTarget(bedrockDefinition, resource.Source, resource.ProjectId));
             return;
         }
 
-        if (resource.Kind == JavaResourceKind.Modpack)
+        if (resource.Kind == ResourceKind.Modpack)
         {
             OpenDetails(topLevel, resource);
             return;
         }
 
-        if (resource.Kind == JavaResourceKind.Mod)
+        if (resource.Kind == ResourceKind.Mod)
         {
-            await ModDetailsPage.QuickDownloadAsync(topLevel,
-                new ModDetailsTarget(resource.Source, resource.ProjectId));
+            await ResourceDownload.QuickDownloadAsync(topLevel,
+                new ResourceDetailsTarget(ResourceDefinitions.Mod, resource.Source, resource.ProjectId));
             return;
         }
 
         var definition = resource.Kind switch
         {
-            JavaResourceKind.ResourcePack => JavaResourceDefinitions.ResourcePack,
-            JavaResourceKind.ShaderPack => JavaResourceDefinitions.ShaderPack,
-            JavaResourceKind.DataPack => JavaResourceDefinitions.DataPack,
-            JavaResourceKind.Save => JavaResourceDefinitions.Save,
+            ResourceKind.ResourcePack => ResourceDefinitions.ResourcePack,
+            ResourceKind.ShaderPack => ResourceDefinitions.ShaderPack,
+            ResourceKind.DataPack => ResourceDefinitions.DataPack,
+            ResourceKind.Save => ResourceDefinitions.Save,
             _ => null
         };
         if (definition is not null)
-            await JavaResourceDownload.QuickDownloadAsync(topLevel,
-                new JavaResourceDetailsTarget(definition, resource.Source, resource.ProjectId));
+            await ResourceDownload.QuickDownloadAsync(topLevel,
+                new ResourceDetailsTarget(definition, resource.Source, resource.ProjectId));
     }
 }
 

@@ -56,7 +56,7 @@ public partial class BedrockPackageImportDialog : UserControl
     }
 
     public static Task<BedrockPackageImportDialogResult?> SelectDestinationAsync(TopLevel topLevel,
-        JavaResourceDefinition definition)
+        ResourceDefinition definition)
     {
         return SelectDestinationAsync(topLevel,
             new BedrockPackageImportDialogViewModel(definition));
@@ -81,7 +81,7 @@ public sealed record BedrockPackageInstanceItem(MinecraftInstance Instance, stri
 
 public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDialogContext
 {
-    private readonly JavaResourceDefinition? _definition;
+    private readonly ResourceDefinition? _definition;
     private readonly BedrockPackageInspection? _inspection;
 
     public BedrockPackageImportDialogViewModel(BedrockPackageInspection inspection)
@@ -90,7 +90,7 @@ public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDi
         InitializeInstances();
     }
 
-    public BedrockPackageImportDialogViewModel(JavaResourceDefinition definition)
+    public BedrockPackageImportDialogViewModel(ResourceDefinition definition)
     {
         _definition = definition;
         InitializeInstances();
@@ -101,7 +101,7 @@ public partial class BedrockPackageImportDialogViewModel : ObservableObject, IDi
     public bool HasNoInstances => Instances.Count == 0;
 
     public bool RequiresUserId => _inspection?.ArchiveType == BedrockPackageArchiveType.Mcworld ||
-                                  _definition?.Kind == JavaResourceKind.BedrockWorld;
+                                  _definition?.Kind == ResourceKind.BedrockWorld;
 
     public bool CanImport =>
         SelectedInstance != null && (!RequiresUserId || !string.IsNullOrWhiteSpace(SelectedWorldUserId));

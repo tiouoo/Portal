@@ -1,0 +1,37 @@
+<UserControl
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.DownloadPages.ResourceGalleryView"
+    x:DataType="local:ResourceDetailsViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding Screenshots}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Border
+                        ClipToBounds="True"
+                        CornerRadius="10"
+                        Height="220"
+                        Margin="0,0,10,10"
+                        Width="320">
+                        <owned:OwnedAdvancedImage
+                            Loader="{Binding $parent[UserControl].((local:ResourceDetailsViewModel)DataContext).ScreenshotLoader}"
+                            Source="{Binding}"
+                            Stretch="Uniform" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</UserControl>

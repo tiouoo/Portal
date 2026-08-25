@@ -26,6 +26,7 @@
     xmlns:entries="clr-namespace:Tio.Avalonia.Standard.Tab.Entries;assembly=Tio.Avalonia.Standard.Tab"
     xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:views="clr-namespace:Portal.Views"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -199,11 +200,17 @@
                                                 VerticalAlignment="Center"
                                                 Width="{Binding IconWidth}" />
                                         </Panel>
-                                        <ContentControl
-                                            Content="{Binding Header}"
-                                            FontSize="13"
-                                            Margin="2,0,25,0"
-                                            VerticalAlignment="Center" />
+                                        <ContentControl Content="{Binding Header}" VerticalAlignment="Center">
+                                            <ContentControl.ContentTemplate>
+                                                <DataTemplate DataType="{x:Type sys:String}">
+                                                    <TextBlock
+                                                        FontSize="13"
+                                                        Margin="2,0,25,0"
+                                                        Text="{Binding}"
+                                                        VerticalAlignment="Center" />
+                                                </DataTemplate>
+                                            </ContentControl.ContentTemplate>
+                                        </ContentControl>
                                     </DockPanel>
                                     <Grid
                                         HorizontalAlignment="Right"
