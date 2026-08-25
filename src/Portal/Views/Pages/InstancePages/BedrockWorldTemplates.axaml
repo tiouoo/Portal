@@ -34,7 +34,16 @@
                 PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_searchWorldTemplates}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
-                Width="180" />
+                Width="180">
+                <TextBox.InnerRightContent>
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="&#xe615;" />
+                </TextBox.InnerRightContent>
+            </TextBox>
             <DropDownButton
                 Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworldtemplates_select}}"
                 DockPanel.Dock="Right"

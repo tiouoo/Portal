@@ -28,7 +28,7 @@
                 Text="{Binding SearchText}"
                 Width="300">
                 <TextBox.InnerRightContent>
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe615;" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe615;" FontSize="18" Foreground="{DynamicResource InnerForegroundColor}" />
                 </TextBox.InnerRightContent>
             </TextBox>
         </StackPanel>

@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -19,7 +19,7 @@
             DockPanel.Dock="Left"
             HorizontalAlignment="Left"
             Margin="7,0,10,10"
-            Width="179">
+            Width="170">
             <tio:NavMenu
                 Margin="0,0,10,0"
                 Name="NavMenu"
@@ -32,7 +32,6 @@
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
                             FontSize="19"
-                            FontWeight="Thin"
                             Margin="0,-1"
                             Text="&#xe644;" />
                     </tio:NavMenuItem.Icon>
@@ -45,7 +44,6 @@
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
                             FontSize="19"
-                            FontWeight="Thin"
                             Margin="0,-1"
                             Text="&#xe652;" />
                     </tio:NavMenuItem.Icon>
@@ -56,10 +54,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="18"
                                 Margin="0,-1"
-                                Text="&#xe651;" />
+                                Padding="1,0,0,0"
+                                Text="&#xe657;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -70,10 +68,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="18"
                                 Margin="0,-1"
-                                Text="&#xe638;" />
+                                Padding="3,0,0,0"
+                                Text="&#xe658;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -83,10 +81,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="17"
                                 Margin="0,-1"
-                                Text="&#xe631;" />
+                                Padding="3,0,0,0"
+                                Text="&#xe659;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -96,10 +94,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="17"
                                 Margin="0,-1"
-                                Text="&#xe64d;" />
+                                Padding="3,0,0,0"
+                                Text="&#xe65a;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -109,10 +107,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="17"
                                 Margin="0,-1"
-                                Text="&#xe630;" />
+                                Padding="1,0,0,0"
+                                Text="&#xe65c;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -122,10 +120,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="17"
                                 Margin="0,-1"
-                                Text="&#xe63b;" />
+                                Padding="3,0,0,0"
+                                Text="&#xe65b;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -135,10 +133,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="16"
                                 Margin="0,-1"
-                                Text="&#xe629;" />
+                                Padding="3,0,0,0"
+                                Text="&#xe65d;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
@@ -150,7 +148,6 @@
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
                             FontSize="19"
-                            FontWeight="Thin"
                             Margin="0,-1"
                             Text="&#xe60f;" />
                     </tio:NavMenuItem.Icon>
@@ -162,10 +159,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="18"
                                 Margin="0,-1"
-                                Text="&#xe651;" />
+                                Padding="1,0,0,0"
+                                Text="&#xe657;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -175,10 +172,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="17"
                                 Margin="0,-1"
-                                Text="&#xe638;" />
+                                Padding="3,0,0,0"
+                                Text="&#xe659;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
@@ -190,7 +187,6 @@
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
                             FontSize="19"
-                            FontWeight="Thin"
                             Margin="0,-1"
                             Text="&#xe613;" />
                     </tio:NavMenuItem.Icon>
@@ -201,10 +197,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="17"
                                 Margin="0,-1"
-                                Text="&#xe652;" />
+                                Padding="3,0,0,0"
+                                Text="&#xe65f;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
@@ -214,10 +210,10 @@
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
-                                FontSize="19"
-                                FontWeight="Thin"
+                                FontSize="17"
                                 Margin="0,-1"
-                                Text="&#xe622;" />
+                                Padding="2,0,0,0"
+                                Text="&#xe65e;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>

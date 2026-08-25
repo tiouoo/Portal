@@ -50,7 +50,16 @@
                         KeyDown="SearchBox_OnKeyDown"
                         Margin="0,0,10,0"
                         PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.modsearchpage_searchPlaceholder}}"
-                        Text="{Binding SearchText}" />
+                        Text="{Binding SearchText}">
+                        <TextBox.InnerRightContent>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="18"
+                                FontWeight="Thin"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="&#xe615;" />
+                        </TextBox.InnerRightContent>
+                    </TextBox>
                 </DockPanel>
             </DockPanel>
             <UniformGrid

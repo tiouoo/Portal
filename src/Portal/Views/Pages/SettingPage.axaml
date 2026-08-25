@@ -19,7 +19,7 @@
             DockPanel.Dock="Left"
             HorizontalAlignment="Left"
             Margin="7,0,10,10"
-            Width="180">
+            Width="170">
             <tio:NavMenu
                 Margin="0,0,10,0"
                 Name="NavMenu"
@@ -28,66 +28,207 @@
                     Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_General}}"
                     IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGeneralExpanded}"
                     Name="GeneralNavItem">
+                    <tio:NavMenuItem.Icon>
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="19"
+                            Margin="0,-1"
+                            Text="&#xe604;" />
+                    </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Appearance}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Appearance}}"
-                        IsSelected="True" />
+                        IsSelected="True">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe667;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Shortcuts}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Shortcuts}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Shortcuts}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe66c;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Notification}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Notification}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe664;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Storage}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Storage}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Storage}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe662;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:ApplicationDebug}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_OtherSettings}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_OtherSettings}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe668;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:About}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_About}}"
-                        Name="AboutItem" />
+                        Name="AboutItem">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe66b;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem
                     Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Game}}"
                     IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavGameExpanded}"
                     Name="GameNavItem">
+                    <tio:NavMenuItem.Icon>
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="19"
+                            Margin="0,-1"
+                            Text="&#xe61c;" />
+                    </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Account}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Account}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Account}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe663;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Java}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_JavaRuntime}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_JavaRuntime}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe66a;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:GameFolder}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_GameFolder}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_GameFolder}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="14"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe669;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Advanced}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Advanced}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Advanced}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe660;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem
                     Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Network}}"
                     IsVerticalCollapsed="{Binding !Data.ConfigEntry.SettingsNavNetworkExpanded}"
                     Name="NetworkNavItem">
+                    <tio:NavMenuItem.Icon>
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="19"
+                            Margin="0,-1"
+                            Text="&#xe607;" />
+                    </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Download}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Download}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Download}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="15"
+                                Margin="0,-1"
+                                Padding="1,0,0,0"
+                                Text="&#xe661;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Agent}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Proxy}}" />
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Proxy}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,1,0"
+                                Text="&#xe665;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>

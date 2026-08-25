@@ -45,7 +45,7 @@
                     <TextBox.InnerRightContent>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
-                            FontSize="14"
+                            FontSize="18"
                             FontWeight="Thin"
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Text="&#xe615;" />

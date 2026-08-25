@@ -25,7 +25,16 @@
                 PlaceholderText="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockworlds_searchWorlds}}"
                 TextChanged="SearchBox_OnTextChanged"
                 VerticalAlignment="Top"
-                Width="180" />
+                Width="180">
+                <TextBox.InnerRightContent>
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="&#xe615;" />
+                </TextBox.InnerRightContent>
+            </TextBox>
             <ComboBox
                 DisplayMemberBinding="{Binding}"
                 DockPanel.Dock="Right"

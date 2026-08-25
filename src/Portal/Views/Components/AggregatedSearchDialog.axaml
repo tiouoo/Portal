@@ -76,7 +76,16 @@
             Margin="10,8,10,5"
             Name="SearchBox"
             PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.aggregatedsearchdialog_searchBoxPlaceholder}}"
-            Text="{Binding Data.UiProperty.AggregatedSearchQuery}" />
+            Text="{Binding Data.UiProperty.AggregatedSearchQuery}">
+            <TextBox.InnerRightContent>
+                <TextBlock
+                    FontFamily="{StaticResource IconFont}"
+                    FontSize="18"
+                    FontWeight="Thin"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="&#xe615;" />
+            </TextBox.InnerRightContent>
+        </TextBox>
         <controls:ScrollView Classes="Flat" Margin="10,0,5,10">
             <ListBox
                 ItemsSource="{Binding Data.UiProperty.AggregatedSearchResults}"

@@ -52,7 +52,16 @@
                     PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.vanillainstallation_searchPlaceholder}}"
                     Text="{Binding SearchText}"
                     VerticalAlignment="Top"
-                    Width="170" />
+                    Width="170">
+                    <TextBox.InnerRightContent>
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="18"
+                            FontWeight="Thin"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="&#xe615;" />
+                    </TextBox.InnerRightContent>
+                </TextBox>
             </StackPanel>
         </DockPanel>
 
