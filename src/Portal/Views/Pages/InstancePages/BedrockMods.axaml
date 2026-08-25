@@ -6,11 +6,15 @@
     x:DataType="local:BedrockMods"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <converter:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
+    </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="Border.mod-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -25,29 +29,6 @@
     </UserControl.Styles>
     <DockPanel Margin="10,10,0,10">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,10,0">
-            <DropDownButton
-                Content="{Binding SelectedCountText}"
-                DockPanel.Dock="Right"
-                IsVisible="{Binding HasSelection}"
-                Margin="0,0,8,0">
-                <Button.Flyout>
-                    <MenuFlyout>
-                        <MenuItem
-                            Classes="hide-icon"
-                            Click="EnableSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_enableSelected}}" />
-                        <MenuItem
-                            Classes="hide-icon"
-                            Click="DisableSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_disableSelected}}" />
-                        <Separator />
-                        <MenuItem
-                            Classes="hide-icon"
-                            Click="DeleteSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_deleteSelected}}" />
-                    </MenuFlyout>
-                </Button.Flyout>
-            </DropDownButton>
             <TextBox
                 DockPanel.Dock="Right"
                 Margin="0,0,8,0"
@@ -98,6 +79,38 @@
                 Margin="0,0,8,0"
                 Name="FilterSortButton"
                 VerticalAlignment="Top" />
+            <DropDownButton
+                Content="{Binding SelectedCountText}"
+                DockPanel.Dock="Right"
+                IsVisible="{Binding HasSelection}"
+                Margin="0,0,8,0"
+                Opacity="{Binding HasSelection, Converter={StaticResource BoolToOpacityConverter}}">
+                <Button.Transitions>
+                    <Transitions>
+                        <DoubleTransition
+                            Duration="0:0:0.2"
+                            Easing="SineEaseOut"
+                            Property="Opacity" />
+                    </Transitions>
+                </Button.Transitions>
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="EnableSelected_OnClick"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_enableSelected}}" />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="DisableSelected_OnClick"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_disableSelected}}" />
+                        <Separator />
+                        <MenuItem
+                            Classes="hide-icon"
+                            Click="DeleteSelected_OnClick"
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_deleteSelected}}" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </DropDownButton>
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock
                     Cursor="Hand"

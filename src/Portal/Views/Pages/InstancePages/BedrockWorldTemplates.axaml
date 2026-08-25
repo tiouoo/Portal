@@ -3,8 +3,12 @@
     x:DataType="local:BedrockWorldTemplates"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:local="clr-namespace:Portal.Views.Pages.InstancePages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    <UserControl.Resources>
+        <converter:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
+    </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="Border.world-template-card">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -57,7 +61,16 @@
                 Content="{Binding SelectedCountText}"
                 DockPanel.Dock="Right"
                 IsVisible="{Binding HasMultipleSelection}"
-                Margin="0,0,8,0">
+                Margin="0,0,8,0"
+                Opacity="{Binding HasMultipleSelection, Converter={StaticResource BoolToOpacityConverter}}">
+                <Button.Transitions>
+                    <Transitions>
+                        <DoubleTransition
+                            Duration="0:0:0.2"
+                            Easing="SineEaseOut"
+                            Property="Opacity" />
+                    </Transitions>
+                </Button.Transitions>
                 <Button.Flyout>
                     <MenuFlyout>
                         <MenuItem
