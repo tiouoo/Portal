@@ -11,7 +11,7 @@ public static class FavoriteResourceFactory
         {
             Name = item.FriendlyName, Summary = item.Summary, IconUrl = item.IconUrl,
             Edition = FavoriteEdition.Java, Kind = ResourceKind.Mod, Source = item.Target.Source,
-            ProjectId = item.Target.ProjectId
+            ProjectId = item.Target.ProjectId, Tags = [.. item.Tags]
         };
     }
 
@@ -21,7 +21,7 @@ public static class FavoriteResourceFactory
         {
             Name = item.Name, Summary = item.Summary, IconUrl = item.IconUrl,
             Edition = edition, Kind = item.Target.Definition.Kind, Source = item.Target.Source,
-            ProjectId = item.Target.ProjectId
+            ProjectId = item.Target.ProjectId, Tags = [.. item.Tags]
         };
     }
 }

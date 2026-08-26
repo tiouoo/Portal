@@ -350,14 +350,26 @@ public sealed class FavoriteResourceItem : FavoriteResource
         Kind = resource.Kind;
         Source = resource.Source;
         ProjectId = resource.ProjectId;
+        Tags = resource.Tags ?? [];
     }
 
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
 
-    public string SourceText =>
-        string.Format(CommonLanguageManager.Instance.favorite_sourceText.CurrentValue(),
-            Edition == FavoriteEdition.Java
+    public IReadOnlyList<string> DisplayTags
+    {
+        get
+        {
+            var source = Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth";
+            var edition = Edition == FavoriteEdition.Java
                 ? CommonLanguageManager.Instance.launch_javaEdition.CurrentValue()
-                : CommonLanguageManager.Instance.launch_bedrockEdition.CurrentValue(),
-            Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth");
+                : CommonLanguageManager.Instance.launch_bedrockEdition.CurrentValue();
+            var category = Tags.FirstOrDefault(tag =>
+                !string.Equals(tag, "CurseForge", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(tag, "Modrinth", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(tag, edition, StringComparison.OrdinalIgnoreCase));
+            return string.IsNullOrWhiteSpace(category)
+                ? [source, edition]
+                : [source, edition, ResourceSearchPresentation.LocalizeTag(category)];
+        }
+    }
 }

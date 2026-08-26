@@ -23,7 +23,8 @@ namespace Portal.Views.Pages;
 public partial class DownloadPage : Dsc, ITioTabPage
 {
     public DownloadPageViewModel DownloadPageViewModel;
-
+    private bool _loaded;
+    
     public DownloadPage()
     {
         InitializeComponent();
@@ -32,10 +33,12 @@ public partial class DownloadPage : Dsc, ITioTabPage
         Loaded += (s, e) =>
         {
             Logger.Info("[Download] Download page loaded.");
-            RestoreNavState();
             var a = DownloadPageViewModel.CurrentPage;
             DownloadPageViewModel.CurrentPage = null;
             DownloadPageViewModel.CurrentPage = a;
+            if(_loaded) return;
+            _loaded = true;
+            RestoreNavState();
         };
     }
 

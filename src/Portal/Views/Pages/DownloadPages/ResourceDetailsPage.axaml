@@ -139,7 +139,7 @@
                 Margin="-2,-6,0,0">
                 <tio:SelectionList
                     ItemsSource="{Binding NavigationItems}"
-                    Margin="0,2,0,3"
+                    Margin="3,2,3,3"
                     SelectedItem="{Binding SelectedNavigation}">
                     <tio:SelectionList.Indicator>
                         <Border
@@ -158,7 +158,7 @@
                     <tio:SelectionList.ItemTemplate>
                         <DataTemplate>
                             <TextBlock
-                                FontSize="15"
+                                FontSize="14"
                                 Padding="14,7"
                                 Text="{Binding}" />
                         </DataTemplate>

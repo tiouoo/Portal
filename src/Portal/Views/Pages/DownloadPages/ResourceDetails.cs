@@ -235,7 +235,7 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
             DescriptionControls.Add(new TextBlock { Text = OriginalSummary, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
 
         Tags.Clear();
-        foreach (var tag in project.Categories.Select(category => category.DisplayName ?? category.Name)
+        foreach (var tag in project.Categories.Select(ResourceSearchPresentation.LocalizeCategory)
                      .Where(tag => !string.IsNullOrWhiteSpace(tag)).Distinct()) Tags.Add(tag);
         IsFavorite = FavoriteCollectionService.Instance.Contains(CreateFavoriteResource());
         OnPropertyChanged(nameof(HasDescription));
@@ -251,7 +251,12 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
             or ResourceKind.BedrockWorld or ResourceKind.BedrockWorldTemplate ? FavoriteEdition.Bedrock : FavoriteEdition.Java,
         Kind = Target.Definition.Kind,
         Source = Target.Source,
-        ProjectId = Target.ProjectId
+        ProjectId = Target.ProjectId,
+        Tags =
+        [
+            Target.Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth",
+            .. Tags.Take(2)
+        ]
     };
 
     [RelayCommand]

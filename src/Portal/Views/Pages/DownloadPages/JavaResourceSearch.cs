@@ -59,6 +59,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     private static readonly BoundedCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new(32);
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _disposed;
+    private CancellationTokenSource? _filterDebounce;
     private CancellationTokenSource? _gameVersionDebounce;
     private bool _initialized;
     private bool _suppressFilterSearch;
@@ -66,6 +67,8 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     protected JavaResourceSearchViewModel(ResourceDefinition definition)
     {
         Definition = definition;
+        FilterOptions = ResourceFilterCatalog.Get(definition.Kind)
+            .Select(category => new ResourceFilterOption(category.Name, category.Id, OnFilterChanged)).ToArray();
         Sources = definition.SupportsModrinth
             ?
             [
@@ -81,7 +84,8 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
                          ?? Loaders[0];
         SelectedSort = SortOptions.FirstOrDefault(sort =>
                            sort.Kind == DownloadSearchPersistence.ToUiSort(Data.ConfigEntry.DefaultDownloadSearchSort))
-                       ?? SortOptions[0];
+                        ?? SortOptions[0];
+        SelectedEnvironment = Environments[0];
     }
 
     public ResourceDefinition Definition { get; }
@@ -90,6 +94,19 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     public string SearchPlaceholder => string.Format(
         CommonLanguageManager.Instance.startPage_searchPlaceholderMode.CurrentValue(), Definition.DisplayName);
     public bool ShowLoaderFilter => Definition.SupportsLoaderFilter;
+    public bool ShowEnvironmentFilter => Definition.Kind == ResourceKind.DataPack;
+    public bool HasFilters => FilterOptions.Count > 0;
+    public bool CanUseAdvancedFilters => Definition.SupportsModrinth && SelectedSource?.Kind != SearchSource.CurseForge;
+    public IReadOnlyList<ResourceFilterOption> FilterOptions { get; }
+    public string FilterText => $"{CommonLanguageManager.Instance.mod_filterButton.CurrentValue()}" +
+                                (ActiveFilterCount > 0 ? $" ({ActiveFilterCount})" : string.Empty);
+    public int ActiveFilterCount => FilterOptions.Count(option => option.IsSelected != false) +
+                                    (SelectedEnvironment?.Kind == ResourceEnvironment.Any ? 0 : 1);
+    public string CategoryTitle => CommonLanguageManager.Instance.mod_filterCategories.CurrentValue();
+    public string ExcludeText => CommonLanguageManager.Instance.mod_filterExclude.CurrentValue();
+    public string ClearText => CommonLanguageManager.Instance.mod_filterClear.CurrentValue();
+    public string InvertText => CommonLanguageManager.Instance.mod_filterInvert.CurrentValue();
+    public string ModrinthOnlyText => CommonLanguageManager.Instance.mod_filterModrinthOnly.CurrentValue();
     public ObservableCollection<JavaResourceSearchResultItem> Results { get; } = [];
     public ObservableCollection<string> MinecraftVersions { get; } = [];
     public IReadOnlyList<JavaResourceSearchSource> Sources { get; }
@@ -110,9 +127,18 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         new(CommonLanguageManager.Instance.mod_sortNewest.CurrentValue(), SearchSort.Newest)
     ];
 
+    public IReadOnlyList<ModSearchEnvironment> Environments { get; } =
+    [
+        new(CommonLanguageManager.Instance.mod_environmentAny.CurrentValue(), ResourceEnvironment.Any),
+        new(CommonLanguageManager.Instance.mod_environmentClient.CurrentValue(), ResourceEnvironment.Client),
+        new(CommonLanguageManager.Instance.mod_environmentServer.CurrentValue(), ResourceEnvironment.Server),
+        new(CommonLanguageManager.Instance.mod_environmentBoth.CurrentValue(), ResourceEnvironment.ClientAndServer)
+    ];
+
     [ObservableProperty] public partial JavaResourceSearchSource? SelectedSource { get; set; }
     [ObservableProperty] public partial ModSearchLoader? SelectedLoader { get; set; }
     [ObservableProperty] public partial ModSearchSort? SelectedSort { get; set; }
+    [ObservableProperty] public partial ModSearchEnvironment? SelectedEnvironment { get; set; }
     [ObservableProperty] public partial string GameVersion { get; set; } = string.Empty;
     [ObservableProperty] public partial string StatusText { get; set; } =
         CommonLanguageManager.Instance.modSearch_preparingSearch.CurrentValue();
@@ -151,6 +177,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         _disposed = true;
         _suppressFilterSearch = true;
         _gameVersionDebounce?.Cancel();
+        _filterDebounce?.Cancel();
         _disposeCancellation.Cancel();
         Results.Clear();
         MinecraftVersions.Clear();
@@ -193,9 +220,17 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         if (_initialized && value is not null)
             Data.ConfigEntry.DefaultDownloadSearchSource = DownloadSearchPersistence.ToCoreSource(value.Kind);
 
+        OnPropertyChanged(nameof(CanUseAdvancedFilters));
+
         _suppressFilterSearch = true;
         try
         {
+            if (value?.Kind == SearchSource.CurseForge)
+            {
+                foreach (var option in FilterOptions.Where(option => option.IsSelected is null))
+                    option.IsSelected = false;
+                SelectedEnvironment = Environments[0];
+            }
             SelectedSort = SortOptions[0];
             GameVersion = string.Empty;
             SelectedLoader = Loaders[0];
@@ -205,6 +240,55 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             _suppressFilterSearch = false;
         }
 
+        OnPropertyChanged(nameof(ActiveFilterCount));
+        OnPropertyChanged(nameof(FilterText));
+
+        RestartSearch();
+    }
+
+    private void OnFilterChanged()
+    {
+        OnPropertyChanged(nameof(ActiveFilterCount));
+        OnPropertyChanged(nameof(FilterText));
+        if (_initialized && !_suppressFilterSearch) ScheduleFilterSearch();
+    }
+
+    partial void OnSelectedEnvironmentChanged(ModSearchEnvironment? value)
+    {
+        OnPropertyChanged(nameof(ActiveFilterCount));
+        OnPropertyChanged(nameof(FilterText));
+        if (_initialized && !_suppressFilterSearch) RestartSearch();
+    }
+
+    [RelayCommand]
+    private void ClearCategories()
+    {
+        _suppressFilterSearch = true;
+        try
+        {
+            foreach (var option in FilterOptions) option.IsSelected = false;
+            SelectedEnvironment = Environments[0];
+        }
+        finally
+        {
+            _suppressFilterSearch = false;
+        }
+        RestartSearch();
+    }
+
+    [RelayCommand]
+    private void InvertCategories()
+    {
+        _suppressFilterSearch = true;
+        try
+        {
+            foreach (var option in FilterOptions)
+                option.IsSelected = option.IsSelected switch { true => null, null => true, false => false };
+        }
+        finally
+        {
+            _suppressFilterSearch = false;
+        }
         RestartSearch();
     }
 
@@ -250,6 +334,27 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
         var previous = Interlocked.Exchange(ref _gameVersionDebounce, cts);
         previous?.Cancel();
         _ = RunGameVersionSearchAsync(cts.Token);
+    }
+
+    private void ScheduleFilterSearch()
+    {
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
+        var previous = Interlocked.Exchange(ref _filterDebounce, cts);
+        previous?.Cancel();
+        _ = RunFilterSearchAsync(cts.Token);
+    }
+
+    private async Task RunFilterSearchAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(250, cancellationToken);
+            if (CurrentPage != 1) CurrentPage = 1;
+            else await SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     private async Task RunGameVersionSearchAsync(CancellationToken cancellationToken)
@@ -311,8 +416,13 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     private async Task SearchAsync(bool isDefaultSearch = false)
     {
         if (SelectedSource is null || SelectedSort is null) return;
+        var includedCategories = string.Join('|', FilterOptions.Where(option => option.IsSelected == true)
+            .Select(option => option.Id).Order());
+        var excludedCategories = string.Join('|', FilterOptions.Where(option => option.IsSelected is null)
+            .Select(option => option.Id).Order());
         var request = new JavaResourceSearchRequest(Definition.Kind, SelectedSource.Kind, SearchText.Trim(),
             GameVersion.Trim(), ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any,
+            includedCategories, excludedCategories, SelectedEnvironment?.Kind ?? ResourceEnvironment.Any,
             SelectedSort.Kind, CurrentPage);
         var renderedCache = Cache.TryGetValue(request, out var cached) && cached is not null && IsCurrent(request);
         if (renderedCache) Apply(cached!);
@@ -352,14 +462,21 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     private async Task<JavaResourceSearchPage> FetchAsync(JavaResourceSearchRequest request,
         CancellationToken cancellationToken)
     {
+        var type = IridiumResourceMapping.ParseResourceType(Definition.ProjectType);
+        var includedTags = ResourceFilterCatalog.Parse(request.IncludedCategories, type);
+        var excludedTags = ResourceFilterCatalog.Parse(request.ExcludedCategories, type);
+        var source = ResourceFilterCatalog.ResolveSource(request.Source, includedTags, excludedTags, request.Environment);
         var options = new ResourceSearchOptions
         {
-            Source = DownloadSearchPersistence.ToResourceSource(request.Source),
+            Source = source,
             CurseForgeGameId = Definition.CurseForgeGameId,
-            Type = IridiumResourceMapping.ParseResourceType(Definition.ProjectType),
+            Type = type,
             Query = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
             Loader = request.Loader.ToResourceLoader(),
+            Tags = includedTags,
+            ExcludedTags = excludedTags,
+            Environment = request.Environment,
             Sort = MinecraftVersionParsing.ToResourceSort(request.Sort),
             Page = request.Page,
             PageSize = PageSize
@@ -401,9 +518,12 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     {
         return !_disposed && Definition.Kind == request.Kind &&
                SelectedSource?.Kind == request.Source && SearchText.Trim() == request.Query &&
-               GameVersion.Trim() == request.GameVersion &&
-               (ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any) == request.Loader &&
-               SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
+                GameVersion.Trim() == request.GameVersion &&
+                (ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any) == request.Loader &&
+                string.Join('|', FilterOptions.Where(option => option.IsSelected == true).Select(option => option.Id).Order()) == request.IncludedCategories &&
+                string.Join('|', FilterOptions.Where(option => option.IsSelected is null).Select(option => option.Id).Order()) == request.ExcludedCategories &&
+                (SelectedEnvironment?.Kind ?? ResourceEnvironment.Any) == request.Environment &&
+                SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
     }
 
     private async Task LoadVersionsAsync()
@@ -486,6 +606,9 @@ public sealed record JavaResourceSearchRequest(
     string Query,
     string GameVersion,
     ModLoaderType Loader,
+    string IncludedCategories,
+    string ExcludedCategories,
+    ResourceEnvironment Environment,
     SearchSort Sort,
     int Page);
 

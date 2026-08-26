@@ -7,10 +7,11 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="12,0,12,12">
         <StackPanel DockPanel.Dock="Top" Spacing="10">
             <DockPanel>
@@ -32,9 +33,7 @@
                                 Classes="hide-icon"
                                 Click="Export_OnClick"
                                 Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_exportCurrentCollection}}" />
-                            <MenuItem
-                                Classes="hide-icon"
-                                Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_editCurrentCollection}}">
+                            <MenuItem Classes="hide-icon" Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_editCurrentCollection}}">
                                 <MenuItem
                                     Classes="hide-icon"
                                     Click="Delete_OnClick"
@@ -75,7 +74,8 @@
                 <TextBox
                     Margin="10,0"
                     PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_searchPlaceholder}}"
-                    Text="{Binding SearchText}">
+                    Text="{Binding SearchText}"
+                    TextWrapping="NoWrap">
                     <TextBox.InnerRightContent>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
@@ -94,7 +94,7 @@
                         ItemsStretch="Fill"
                         MinColumnSpacing="16"
                         MinItemHeight="117"
-                        MinItemWidth="300"
+                        MinItemWidth="340"
                         MinRowSpacing="16" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
@@ -137,15 +137,28 @@
                                             <TextBlock
                                                 FontSize="16"
                                                 FontWeight="SemiBold"
-                                                MaxLines="2"
+                                                MaxLines="1"
                                                 Text="{Binding Name}"
                                                 TextTrimming="CharacterEllipsis" />
-                                            <TextBlock
-                                                FontSize="13"
-                                                Foreground="{DynamicResource InnerForegroundColor}"
-                                                MaxLines="1"
-                                                Text="{Binding SourceText}"
-                                                TextTrimming="CharacterEllipsis" />
+                                            <ItemsControl ItemsSource="{Binding DisplayTags}" Margin="0,3,0,0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="5" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="x:String">
+                                                        <Border
+                                                            Background="{DynamicResource TranslucentBackgroundColor}"
+                                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="999"
+                                                            Padding="7,1">
+                                                            <TextBlock FontSize="11" Text="{Binding}" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </StackPanel>
                                     </DockPanel>
                                     <TextBlock
@@ -184,7 +197,11 @@
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_unfavoriteToolTip}}">
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe61c;" FontSize="16" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="16"
+                                                FontWeight="Thin"
+                                                Text="&#xe644;" />
                                         </Button>
                                         <Button
                                             Classes="Icon"
@@ -192,7 +209,11 @@
                                             Tag="{Binding}"
                                             Theme="{StaticResource TransparentButton}"
                                             ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.favoritespage_downloadToolTip}}">
-                                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe647;" FontSize="15" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="15"
+                                                FontWeight="Thin"
+                                                Text="&#xe647;" />
                                         </Button>
                                     </StackPanel>
                                 </Border>

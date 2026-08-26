@@ -22,6 +22,7 @@ public class FavoriteResource
     public ResourceKind Kind { get; set; }
     public ModDetailsSource Source { get; set; }
     public string ProjectId { get; set; } = string.Empty;
+    public List<string> Tags { get; set; } = [];
 }
 
 public sealed class FavoriteCollection

@@ -53,11 +53,12 @@
                     </TextBox.InnerRightContent>
                 </TextBox>
             </DockPanel>
-            <UniformGrid
+            <Grid
+                ColumnDefinitions="*,*,*,*,Auto"
                 ColumnSpacing="10"
-                Height="32"
-                Rows="1">
+                Height="32">
                 <ComboBox
+                    Grid.Column="0"
                     HorizontalAlignment="Stretch"
                     ItemsSource="{Binding Sources}"
                     SelectedItem="{Binding SelectedSource}">
@@ -68,12 +69,14 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <ComboBox
+                    Grid.Column="1"
                     HorizontalAlignment="Stretch"
                     IsEditable="True"
                     ItemsSource="{Binding MinecraftVersions}"
                     PlaceholderText="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourcesearchview_gameVersionPlaceholder}}"
                     Text="{Binding GameVersion, Mode=TwoWay}" />
                 <ComboBox
+                    Grid.Column="2"
                     HorizontalAlignment="Stretch"
                     IsVisible="{Binding ShowLoaderFilter}"
                     ItemsSource="{Binding Loaders}"
@@ -85,7 +88,9 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <ComboBox
+                    Grid.Column="3"
                     HorizontalAlignment="Stretch"
+                    IsVisible="{Binding ShowLoaderFilter}"
                     ItemsSource="{Binding SortOptions}"
                     SelectedItem="{Binding SelectedSort}">
                     <ComboBox.ItemTemplate>
@@ -94,7 +99,102 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-            </UniformGrid>
+                <ComboBox
+                    Grid.Column="2"
+                    Grid.ColumnSpan="2"
+                    HorizontalAlignment="Stretch"
+                    IsVisible="{Binding !ShowLoaderFilter}"
+                    ItemsSource="{Binding SortOptions}"
+                    SelectedItem="{Binding SelectedSort}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <DropDownButton
+                    Content="{Binding FilterText}"
+                    Foreground="{DynamicResource ForegroundColor}"
+                    Grid.Column="4"
+                    IsVisible="{Binding HasFilters}">
+                    <DropDownButton.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <Grid RowDefinitions="Auto,*,Auto" Width="360">
+                                <DockPanel Margin="12,8,12,6">
+                                    <TextBlock
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding CategoryTitle}"
+                                        VerticalAlignment="Center" />
+                                </DockPanel>
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    MaxHeight="320"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding FilterOptions}" Margin="8,0">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel ItemWidth="164" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:ResourceFilterOption">
+                                                <CheckBox
+                                                    Content="{Binding DisplayName}"
+                                                    IsChecked="{Binding IsSelected}"
+                                                    IsThreeState="{Binding $parent[ItemsControl].((local:ModSearchPageViewModel)DataContext).CanUseAdvancedFilters}"
+                                                    Margin="4,2" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                <Border
+                                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                    BorderThickness="0,1,0,0"
+                                    Grid.Row="2"
+                                    Margin="8,6,8,8"
+                                    Padding="4,8,4,2">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            IsVisible="{Binding CanUseAdvancedFilters}"
+                                            Text="{Binding ExcludeText}" />
+                                        <Panel>
+                                            <ComboBox
+                                                HorizontalAlignment="Left"
+                                                IsEnabled="{Binding CanUseAdvancedFilters}"
+                                                ItemsSource="{Binding Environments}"
+                                                SelectedItem="{Binding SelectedEnvironment}"
+                                                ToolTip.Tip="{Binding ModrinthOnlyText}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="local:ModSearchEnvironment">
+                                                        <TextBlock Text="{Binding DisplayName}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <StackPanel
+                                                DockPanel.Dock="Right"
+                                                HorizontalAlignment="Right"
+                                                Orientation="Horizontal"
+                                                Spacing="4">
+                                                <Button
+                                                    Command="{Binding InvertCategoriesCommand}"
+                                                    Content="{Binding InvertText}"
+                                                    Theme="{DynamicResource BorderlessButton}" />
+                                                <Button
+                                                    Command="{Binding ClearCategoriesCommand}"
+                                                    Content="{Binding ClearText}"
+                                                    Theme="{DynamicResource BorderlessButton}" />
+                                            </StackPanel>
+                                        </Panel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Flyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+            </Grid>
             <Button
                 Command="{Binding RetryCommand}"
                 Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.javaresourcesearchview_retry}}"
@@ -109,7 +209,7 @@
                             ItemsStretch="Fill"
                             MinColumnSpacing="16"
                             MinItemHeight="117"
-                            MinItemWidth="380"
+                            MinItemWidth="340"
                             MinRowSpacing="16" />
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>

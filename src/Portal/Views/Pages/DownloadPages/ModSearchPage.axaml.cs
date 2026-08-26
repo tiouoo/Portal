@@ -82,12 +82,15 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     private const int PageSize = 40;
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _disposed;
+    private CancellationTokenSource? _filterDebounce;
     private CancellationTokenSource? _gameVersionDebounce;
     private bool _initialized;
     private bool _suppressFilterSearch;
 
     public ModSearchPageViewModel()
     {
+        FilterOptions = ResourceFilterCatalog.Get(ResourceKind.Mod)
+            .Select(category => new ResourceFilterOption(category.Name, category.Id, OnFilterChanged)).ToArray();
         SelectedSource = Sources.FirstOrDefault(source => source.Kind == DownloadSearchPersistence.ToUiSource(Data.ConfigEntry.DefaultDownloadSearchSource))
                          ?? Sources[0];
         SelectedLoader = Loaders.FirstOrDefault(loader => loader.Kind == Data.ConfigEntry.DownloadSearchLoader)
@@ -98,6 +101,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     public ObservableCollection<ModSearchResultItem> Results { get; } = [];
     public ObservableCollection<string> MinecraftVersions { get; } = [];
+    public IReadOnlyList<ResourceFilterOption> FilterOptions { get; }
 
     public IReadOnlyList<ModSearchSource> Sources { get; } =
     [
@@ -106,7 +110,16 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         new("Modrinth", SearchSource.Modrinth)
     ];
 
-    public IReadOnlyList<ModSearchCategory> Categories => SelectedSource?.Categories ?? [];
+    public string FilterText => $"{CommonLanguageManager.Instance.mod_filterButton.CurrentValue()}" +
+                                (ActiveFilterCount > 0 ? $" ({ActiveFilterCount})" : string.Empty);
+    public int ActiveFilterCount => FilterOptions.Count(option => option.IsSelected != false) +
+                                    (SelectedEnvironment?.Kind == ResourceEnvironment.Any ? 0 : 1);
+    public string CategoryTitle => CommonLanguageManager.Instance.mod_filterCategories.CurrentValue();
+    public string ExcludeText => CommonLanguageManager.Instance.mod_filterExclude.CurrentValue();
+    public string ClearText => CommonLanguageManager.Instance.mod_filterClear.CurrentValue();
+    public string InvertText => CommonLanguageManager.Instance.mod_filterInvert.CurrentValue();
+    public string ModrinthOnlyText => CommonLanguageManager.Instance.mod_filterModrinthOnly.CurrentValue();
+    public bool CanUseAdvancedFilters => SelectedSource?.Kind != SearchSource.CurseForge;
 
     public IReadOnlyList<ModSearchLoader> Loaders { get; } =
     [
@@ -123,10 +136,18 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         new(CommonLanguageManager.Instance.mod_sortNewest.CurrentValue(), SearchSort.Newest)
     ];
 
+    public IReadOnlyList<ModSearchEnvironment> Environments { get; } =
+    [
+        new(CommonLanguageManager.Instance.mod_environmentAny.CurrentValue(), ResourceEnvironment.Any),
+        new(CommonLanguageManager.Instance.mod_environmentClient.CurrentValue(), ResourceEnvironment.Client),
+        new(CommonLanguageManager.Instance.mod_environmentServer.CurrentValue(), ResourceEnvironment.Server),
+        new(CommonLanguageManager.Instance.mod_environmentBoth.CurrentValue(), ResourceEnvironment.ClientAndServer)
+    ];
+
     [ObservableProperty] public partial ModSearchSource? SelectedSource { get; set; }
-    [ObservableProperty] public partial ModSearchCategory? SelectedCategory { get; set; }
     [ObservableProperty] public partial ModSearchLoader? SelectedLoader { get; set; }
     [ObservableProperty] public partial ModSearchSort? SelectedSort { get; set; }
+    [ObservableProperty] public partial ModSearchEnvironment? SelectedEnvironment { get; set; }
     [ObservableProperty] public partial string GameVersion { get; set; } = string.Empty;
     [ObservableProperty] public partial string StatusText { get; set; } =
         CommonLanguageManager.Instance.modSearch_preparingSearch.CurrentValue();
@@ -163,6 +184,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         _disposed = true;
         _suppressFilterSearch = true;
         _gameVersionDebounce?.Cancel();
+        _filterDebounce?.Cancel();
         _disposeCancellation.Cancel();
         Results.Clear();
         MinecraftVersions.Clear();
@@ -182,13 +204,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         IsLoading = true;
         NotifyResultState();
         if (!_initialized) return;
-        if (CurrentPage != 1)
-        {
-            CurrentPage = 1;
-            return;
-        }
-
-        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+        ScheduleFilterSearch();
     }
 
     public async Task InitializeAsync()
@@ -206,11 +222,16 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         if (_initialized && value is not null)
             Data.ConfigEntry.DefaultDownloadSearchSource = DownloadSearchPersistence.ToCoreSource(value.Kind);
 
-        OnPropertyChanged(nameof(Categories));
+        OnPropertyChanged(nameof(CanUseAdvancedFilters));
         _suppressFilterSearch = true;
         try
         {
-            SelectedCategory = value?.Categories.FirstOrDefault();
+            if (value?.Kind == SearchSource.CurseForge)
+            {
+                foreach (var option in FilterOptions.Where(option => option.IsSelected is null))
+                    option.IsSelected = false;
+            }
+            SelectedEnvironment = Environments[0];
             SelectedSort = SortOptions[0];
             GameVersion = string.Empty;
             SelectedLoader = Loaders[0];
@@ -220,30 +241,63 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
             _suppressFilterSearch = false;
         }
 
+        OnPropertyChanged(nameof(ActiveFilterCount));
+        OnPropertyChanged(nameof(FilterText));
+
         if (!_initialized)
             return;
 
-        if (CurrentPage != 1)
-        {
-            CurrentPage = 1;
-            return;
-        }
-
-        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+        ScheduleFilterSearch();
     }
 
-    partial void OnSelectedCategoryChanged(ModSearchCategory? value)
+    private void OnFilterChanged()
     {
+        OnPropertyChanged(nameof(ActiveFilterCount));
+        OnPropertyChanged(nameof(FilterText));
         if (!_initialized || _suppressFilterSearch)
             return;
 
-        if (CurrentPage != 1)
+        ScheduleFilterSearch();
+    }
+
+    partial void OnSelectedEnvironmentChanged(ModSearchEnvironment? value)
+    {
+        OnPropertyChanged(nameof(ActiveFilterCount));
+        OnPropertyChanged(nameof(FilterText));
+        if (_initialized && !_suppressFilterSearch) RestartSearch();
+    }
+
+    [RelayCommand]
+    private void ClearCategories()
+    {
+        _suppressFilterSearch = true;
+        try
         {
-            CurrentPage = 1;
-            return;
+            foreach (var option in FilterOptions) option.IsSelected = false;
+            SelectedEnvironment = Environments[0];
+        }
+        finally
+        {
+            _suppressFilterSearch = false;
+        }
+        RestartSearch();
+    }
+
+    [RelayCommand]
+    private void InvertCategories()
+    {
+        _suppressFilterSearch = true;
+        try
+        {
+            foreach (var option in FilterOptions)
+                option.IsSelected = option.IsSelected switch { true => null, null => true, false => false };
+        }
+        finally
+        {
+            _suppressFilterSearch = false;
         }
 
-        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+        RestartSearch();
     }
 
     partial void OnSelectedSortChanged(ModSearchSort? value)
@@ -303,6 +357,38 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         _ = RunGameVersionSearchAsync(cts.Token);
     }
 
+    private void ScheduleFilterSearch()
+    {
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(_disposeCancellation.Token);
+        var previous = Interlocked.Exchange(ref _filterDebounce, cts);
+        previous?.Cancel();
+        _ = RunFilterSearchAsync(cts.Token);
+    }
+
+    private async Task RunFilterSearchAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(250, cancellationToken);
+            if (CurrentPage != 1) CurrentPage = 1;
+            else await SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void RestartSearch()
+    {
+        if (CurrentPage != 1)
+        {
+            CurrentPage = 1;
+            return;
+        }
+
+        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
+    }
+
     private async Task RunGameVersionSearchAsync(CancellationToken cancellationToken)
     {
         try
@@ -350,8 +436,13 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     private async Task SearchAsync(bool isDefaultSearch = false)
     {
         if (SelectedSource is null || SelectedSort is null) return;
+        var includedCategories = string.Join('|', FilterOptions.Where(option => option.IsSelected == true)
+            .Select(option => option.Id).Order());
+        var excludedCategories = string.Join('|', FilterOptions.Where(option => option.IsSelected is null)
+            .Select(option => option.Id).Order());
         var request = new SearchRequest(SelectedSource.Kind, SearchText.Trim(), GameVersion.Trim(),
-            SelectedLoader?.Kind ?? ModLoaderType.Any, SelectedCategory?.Id ?? "", SelectedSort.Kind, CurrentPage);
+            SelectedLoader?.Kind ?? ModLoaderType.Any, includedCategories, excludedCategories,
+            SelectedEnvironment?.Kind ?? ResourceEnvironment.Any, SelectedSort.Kind, CurrentPage);
         var renderedCache = false;
         if (ModSearchCache.TryGetValue(request, out var cached) && cached is not null && IsCurrent(request))
         {
@@ -391,14 +482,19 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
 
     private static async Task<SearchPageData> FetchAsync(SearchRequest request, CancellationToken cancellationToken)
     {
+        var includedTags = ResourceFilterCatalog.Parse(request.IncludedCategories, ResourceType.Mod);
+        var excludedTags = ResourceFilterCatalog.Parse(request.ExcludedCategories, ResourceType.Mod);
+        var source = ResourceFilterCatalog.ResolveSource(request.Source, includedTags, excludedTags, request.Environment);
         var options = new ResourceSearchOptions
         {
-            Source = DownloadSearchPersistence.ToResourceSource(request.Source),
+            Source = source,
             Type = ResourceType.Mod,
             Query = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query,
             GameVersion = string.IsNullOrWhiteSpace(request.GameVersion) ? null : request.GameVersion,
             Loader = request.Loader.ToResourceLoader(),
-            Tags = BuildCategoryTags(request.Source, request.Category),
+            Tags = includedTags,
+            ExcludedTags = excludedTags,
+            Environment = request.Environment,
             Sort = MinecraftVersionParsing.ToResourceSort(request.Sort),
             Page = request.Page,
             PageSize = PageSize
@@ -409,16 +505,6 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
             translated.Select(hit => new ModSearchResultItem(hit, request.Sort, request.GameVersion, request.Loader))
                 .ToList(),
             page.TotalCount);
-    }
-
-    private static IReadOnlyList<ResourceCategory> BuildCategoryTags(SearchSource source, string category)
-    {
-        if (string.IsNullOrWhiteSpace(category)) return [];
-        if (source == SearchSource.Modrinth)
-            return [new ResourceCategory { Type = ResourceType.Mod, ModrinthSlug = category }];
-        return int.TryParse(category, out var categoryId) && categoryId > 0
-            ? [new ResourceCategory { Type = ResourceType.Mod, CurseForgeId = categoryId }]
-            : [];
     }
 
     private void Apply(SearchPageData page, bool preserveExistingItems = false)
@@ -450,7 +536,9 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         return !_disposed && SelectedSource?.Kind == request.Source &&
                SearchText.Trim() == request.Query && GameVersion.Trim() == request.GameVersion &&
                (SelectedLoader?.Kind ?? ModLoaderType.Any) == request.Loader &&
-               (SelectedCategory?.Id ?? "") == request.Category &&
+               string.Join('|', FilterOptions.Where(option => option.IsSelected == true).Select(option => option.Id).Order()) == request.IncludedCategories &&
+               string.Join('|', FilterOptions.Where(option => option.IsSelected is null).Select(option => option.Id).Order()) == request.ExcludedCategories &&
+               (SelectedEnvironment?.Kind ?? ResourceEnvironment.Any) == request.Environment &&
                SelectedSort?.Kind == request.Sort && CurrentPage == request.Page;
     }
 
@@ -489,46 +577,13 @@ public enum SearchSort
     Newest
 }
 
-public sealed record ModSearchCategory(string DisplayName, string Id);
-
 public sealed record ModSearchLoader(string DisplayName, ModLoaderType Kind);
 
 public sealed record ModSearchSort(string DisplayName, SearchSort Kind);
 
-public sealed record ModSearchSource(string DisplayName, SearchSource Kind)
-{
-    public IReadOnlyList<ModSearchCategory> Categories { get; } = Kind switch
-    {
-        SearchSource.All =>
-        [
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), "")
-        ],
-        SearchSource.Modrinth =>
-        [
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), ""),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catAdventure.CurrentValue(), "adventure"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catEquipment.CurrentValue(), "equipment"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catCursed.CurrentValue(), "cursed"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catMagic.CurrentValue(), "magic"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catUtility.CurrentValue(), "utility"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catOptimization.CurrentValue(), "optimization"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catWorldgen.CurrentValue(), "worldgen"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catTechnology.CurrentValue(), "technology")
-        ],
-        _ =>
-        [
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_all.CurrentValue(), "0"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catAdventureExploration.CurrentValue(), "425"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catArmorWeaponsTools.CurrentValue(), "406"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catMagic.CurrentValue(), "5191"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catTechnology.CurrentValue(), "412"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catRedstone.CurrentValue(), "4558"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catMapsInfo.CurrentValue(), "423"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catPerformance.CurrentValue(), "6821"),
-            new ModSearchCategory(CommonLanguageManager.Instance.mod_catApiLibraries.CurrentValue(), "421")
-        ]
-    };
-}
+public sealed record ModSearchEnvironment(string DisplayName, ResourceEnvironment Kind);
+
+public sealed record ModSearchSource(string DisplayName, SearchSource Kind);
 
 public sealed partial class ModSearchResultItem : ObservableObject
 {
@@ -597,7 +652,9 @@ public sealed record SearchRequest(
     string Query,
     string GameVersion,
     ModLoaderType Loader,
-    string Category,
+    string IncludedCategories,
+    string ExcludedCategories,
+    ResourceEnvironment Environment,
     SearchSort Sort,
     int Page);
 
