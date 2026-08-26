@@ -12,6 +12,9 @@ public static class MinecraftResourceCompleter
         MinecraftContext context,
         IReadOnlyList<string> sourceRoots)
     {
+        if (sourceRoots.Count == 0)
+            return [];
+
         var entry = context.Entry;
         var layout = context.Layout;
         var librariesRoot = layout.GetLibrariesRoot(entry);

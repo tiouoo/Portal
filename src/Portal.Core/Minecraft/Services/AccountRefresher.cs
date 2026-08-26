@@ -25,20 +25,6 @@ public static class AccountRefresher
             var authResult = await authenticator.RefreshAsync(new MicrosoftAccount(account.Name, (Guid)account.Uuid!,
                 account.AccessToken, account.RefreshToken, account.LastLoginTime));
 
-            var skinBase64 = MinecraftAccount.SteveSkin;
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                await using var skinStream = await SkinProvider.GetMicrosoftSkinDataAsync(authResult, cts.Token);
-                using var ms = new MemoryStream();
-                await skinStream.CopyToAsync(ms, cts.Token);
-                skinBase64 = ms.ToArray().ToBase64();
-            }
-            catch (Exception e)
-            {
-                Logger.Error(LogLanguageManager.Instance.accountRefresher_skinFetchFailed.CurrentValue(), e);
-            }
-
             var newAccount = new MinecraftAccount(AccountType.Microsoft)
             {
                 CreateAt = account.CreateAt,
@@ -48,7 +34,7 @@ public static class AccountRefresher
                 AccessToken = authResult.AccessToken,
                 Uuid = authResult.Uuid,
                 Name = authResult.Name,
-                Skin = skinBase64,
+                Skin = account.Skin ?? MinecraftAccount.SteveSkin,
                 AccountNote = account.AccountNote
             };
 

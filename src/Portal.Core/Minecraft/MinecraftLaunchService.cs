@@ -187,15 +187,16 @@ public static class MinecraftLaunchService
 
             verifyAccount!.Start(async context =>
             {
+                var started = Stopwatch.GetTimestamp();
                 context.SetRunning(CommonLanguageManager.Instance.launch_verifyingAccount.CurrentValue());
                 account = await VerifyAccountAsync(options);
                 context.ReportProgress(1);
+                Logger.Info($"[MinecraftLaunch] Account verification completed in {Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms.");
             });
-            await verifyAccount.Completion;
-            ThrowIfFailed(verifyAccount);
 
             selectJava!.Start(async context =>
             {
+                var started = Stopwatch.GetTimestamp();
                 context.SetRunning(CommonLanguageManager.Instance.launch_checkingJavaRuntime.CurrentValue());
                 var reconcile = await JavaRuntimeManager.ReconcileAsync(
                     Data.ConfigEntry.JavaRuntimes,
@@ -218,9 +219,15 @@ public static class MinecraftLaunchService
                 }
 
                 context.ReportProgress(1);
+                Logger.Info($"[MinecraftLaunch] Java selection completed in {Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms.");
             });
-            await selectJava.Completion;
+
+            completeResources!.Start(context => CompleteResourcesAsync(context, instance.Context!, options));
+
+            await Task.WhenAll(verifyAccount.Completion, selectJava.Completion, completeResources.Completion);
+            ThrowIfFailed(verifyAccount);
             ThrowIfFailed(selectJava);
+            ThrowIfFailed(completeResources);
 
             buildArguments!.Start(context =>
             {
@@ -241,10 +248,6 @@ public static class MinecraftLaunchService
             });
             await buildArguments.Completion;
             ThrowIfFailed(buildArguments);
-
-            completeResources!.Start(context => CompleteResourcesAsync(context, instance.Context!, options));
-            await completeResources.Completion;
-            ThrowIfFailed(completeResources);
 
             startGame.Start(context => StartGameStepAsync(context, instance, config!, topLevel, task, logSession!,
                 options, placeholders!, extraGameArguments, processExit, processStarted));
@@ -390,10 +393,13 @@ public static class MinecraftLaunchService
     private static async Task CompleteResourcesAsync(TaskExecutionContext context, MinecraftContext mc,
         MinecraftLaunchOptions options)
     {
+        var totalStarted = Stopwatch.GetTimestamp();
         context.SetRunning(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
+        var scanStarted = Stopwatch.GetTimestamp();
         var copies = await Task.Run(
             () => MinecraftResourceCompleter.BuildCopies(mc, options.ResourceSourceRoots),
             context.CancellationToken);
+        Logger.Info($"[MinecraftLaunch] Resource copy scan completed in {Stopwatch.GetElapsedTime(scanStarted).TotalMilliseconds:F0} ms; {copies.Count} file(s) available from other roots.");
 
         if (copies.Count > 0)
             await RunStepAsync(context, CommonLanguageManager.Instance.launch_copyResourcesStep.CurrentValue(),
@@ -404,6 +410,8 @@ public static class MinecraftLaunchService
                     step.CancellationToken), step.CancellationToken);
             });
 
+        var downloadCount = 0;
+        var downloadStarted = Stopwatch.GetTimestamp();
         await RunStepAsync(context, CommonLanguageManager.Instance.launch_downloadResourcesStep.CurrentValue(),
             CommonLanguageManager.Instance.launch_downloadingResources.CurrentValue(), async step =>
         {
@@ -411,6 +419,7 @@ public static class MinecraftLaunchService
                 () => MinecraftResourceCompleter.DownloadAsync(mc,
                     progress => ReportDownloadProgress(step, progress), step.CancellationToken),
                 step.CancellationToken);
+            downloadCount = result.SuccessCount;
             if (result.FailCount > 0)
                 throw new IOException(string.Format(CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(), result.FailCount));
 
@@ -419,6 +428,7 @@ public static class MinecraftLaunchService
 
         context.ReportProgress(1);
         context.SetDescription(CommonLanguageManager.Instance.launch_resourcesCompleted.CurrentValue());
+        Logger.Info($"[MinecraftLaunch] Resource download check completed in {Stopwatch.GetElapsedTime(downloadStarted).TotalMilliseconds:F0} ms; downloaded {downloadCount} file(s). Total resource completion: {Stopwatch.GetElapsedTime(totalStarted).TotalMilliseconds:F0} ms.");
     }
 
     private static void ReportDownloadProgress(TaskExecutionContext context,
