@@ -537,14 +537,13 @@ public sealed partial class ModSearchResultItem : ObservableObject
     {
         Name = hit.Title ?? string.Empty;
         FriendlyName = WikiEntries.FindChineseName(hit.Slug ?? string.Empty) ?? hit.Title ?? string.Empty;
-        var sourceTag = DownloadSearchPersistence.SourceAbbreviation(hit.Source);
         var summary = hit.Translation ?? hit.Summary ?? string.Empty;
-        Summary = string.IsNullOrEmpty(summary) ? sourceTag : $"{sourceTag}·{summary}";
+        Summary = summary;
+        Tags = ResourceSearchPresentation.BuildTags(hit);
         var timestamp = (sort is SearchSort.Newest ? hit.DateCreated : hit.DateModified) ??
                         hit.DateModified ?? hit.DateCreated;
         IconUrl = hit.IconUrl;
-        Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-            RelativeTime.Format(timestamp ?? default), hit.Downloads);
+        Metadata = ResourceSearchPresentation.FormatMetadata(timestamp ?? default, hit.Downloads);
         Target = new ResourceDetailsTarget(ResourceDefinitions.Mod, ToModDetailsSource(hit.Source), hit.Id, gameVersion,
             loader);
         IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
@@ -557,6 +556,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Summary = item.Summary;
         IconUrl = item.IconUrl;
         Metadata = item.Metadata;
+        Tags = item.Tags;
         Target = item.Target;
         IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
@@ -568,6 +568,7 @@ public sealed partial class ModSearchResultItem : ObservableObject
     public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
     [ObservableProperty] public partial bool IsFavorite { get; set; }
     [ObservableProperty] public partial string Metadata { get; set; }
+    public IReadOnlyList<string> Tags { get; private set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
 
     public ResourceDetailsTarget Target { get; private set; }
@@ -579,8 +580,10 @@ public sealed partial class ModSearchResultItem : ObservableObject
         Summary = item.Summary;
         IconUrl = item.IconUrl;
         Metadata = item.Metadata;
+        Tags = item.Tags;
         Target = item.Target;
         OnPropertyChanged(nameof(HasIcon));
+        OnPropertyChanged(nameof(Tags));
     }
 
     internal static ModDetailsSource ToModDetailsSource(ResourceSource source)
@@ -621,6 +624,7 @@ internal sealed record CachedSearchItem(
     string Summary,
     string? IconUrl,
     string Metadata,
+    IReadOnlyList<string> Tags,
     ResourceDetailsTarget Target);
 
 internal sealed record CachedSearchPage(IReadOnlyList<CachedSearchItem> Items, int TotalCount)
@@ -629,7 +633,7 @@ internal sealed record CachedSearchPage(IReadOnlyList<CachedSearchItem> Items, i
     {
         return new CachedSearchPage(page.Items
             .Select(item => new CachedSearchItem(item.Name, item.FriendlyName, item.Summary, item.IconUrl,
-                item.Metadata, item.Target)).ToList(), page.TotalCount);
+                item.Metadata, item.Tags, item.Target)).ToList(), page.TotalCount);
     }
 
     public SearchPageData ToPageData()

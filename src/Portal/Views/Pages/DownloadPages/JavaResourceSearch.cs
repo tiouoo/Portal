@@ -432,12 +432,12 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         string gameVersion, ModLoaderType loader)
     {
         Name = hit.Title ?? string.Empty;
-        var sourceTag = DownloadSearchPersistence.SourceAbbreviation(hit.Source);
         var summary = hit.Translation ?? hit.Summary ?? string.Empty;
-        Summary = string.IsNullOrEmpty(summary) ? sourceTag : $"{sourceTag}·{summary}";
+        Summary = summary;
+        Tags = ResourceSearchPresentation.BuildTags(hit);
         IconUrl = hit.IconUrl;
-        Metadata = string.Format(CommonLanguageManager.Instance.mod_downloadCount.CurrentValue(),
-            RelativeTime.Format(hit.DateModified ?? hit.DateCreated ?? default), hit.Downloads);
+        Metadata = ResourceSearchPresentation.FormatMetadata(
+            hit.DateModified ?? hit.DateCreated ?? default, hit.Downloads);
         Target = new ResourceDetailsTarget(definition,
             ModSearchResultItem.ToModDetailsSource(hit.Source), hit.Id, gameVersion, loader);
         IsFavorite =
@@ -448,6 +448,7 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
     [ObservableProperty] public partial string Summary { get; set; }
     [ObservableProperty] public partial string? IconUrl { get; set; }
     [ObservableProperty] public partial string Metadata { get; set; }
+    public IReadOnlyList<string> Tags { get; private set; }
     public bool HasIcon => !string.IsNullOrWhiteSpace(IconUrl);
     [ObservableProperty] public partial bool IsFavorite { get; set; }
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
@@ -460,8 +461,10 @@ public sealed partial class JavaResourceSearchResultItem : ObservableObject
         Summary = item.Summary;
         IconUrl = item.IconUrl;
         Metadata = item.Metadata;
+        Tags = item.Tags;
         Target = item.Target;
         OnPropertyChanged(nameof(HasIcon));
+        OnPropertyChanged(nameof(Tags));
         IsFavorite = item.IsFavorite;
     }
 

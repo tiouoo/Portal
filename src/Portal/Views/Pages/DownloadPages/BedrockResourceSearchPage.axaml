@@ -78,7 +78,7 @@
                         ItemsStretch="Fill"
                         MinColumnSpacing="16"
                         MinItemHeight="117"
-                        MinItemWidth="300"
+                        MinItemWidth="380"
                         MinRowSpacing="16" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
@@ -166,6 +166,25 @@
                                                 FontSize="13"
                                                 Foreground="{DynamicResource InnerForegroundColor}"
                                                 Text="{Binding Metadata}" />
+                                            <ItemsControl ItemsSource="{Binding Tags}" Margin="0,3,0,0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="5" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="x:String">
+                                                        <Border
+                                                            Background="{DynamicResource TranslucentBackgroundColor}"
+                                                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="999"
+                                                            Padding="7,1">
+                                                            <TextBlock FontSize="11" Text="{Binding}" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </StackPanel>
                                     </DockPanel>
                                     <TextBlock

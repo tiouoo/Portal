@@ -1,12 +1,16 @@
 using System.Text.RegularExpressions;
+using System.Globalization;
 using Iridium.Enums;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Models.Network;
 using MinecraftLaunch.Components.Installer;
+using Portal.Core.App.Helpers;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Services;
+using Portal.Localization;
 
 namespace Portal.Views.Pages.DownloadPages;
 
@@ -62,6 +66,51 @@ internal static class DownloadSearchPersistence
             ResourceSource.CurseForge => "CurseForge",
             _ => string.Empty
         };
+    }
+}
+
+internal static class ResourceSearchPresentation
+{
+    public static IReadOnlyList<string> BuildTags(ResourceHit hit)
+    {
+        var source = DownloadSearchPersistence.SourceAbbreviation(hit.Source);
+        return hit.Categories
+            .Select(category => category.DisplayName ?? category.Name)
+            .Where(tag => !string.IsNullOrWhiteSpace(tag))
+            .Where(tag => !hit.Loaders.Any(loader =>
+                string.Equals(loader.ToString(), tag, StringComparison.OrdinalIgnoreCase)))
+            .Prepend(source)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(3)
+            .ToArray();
+    }
+
+    public static string FormatDownloads(long downloads)
+    {
+        var culture = LocalizationService.CurrentCulture;
+        if (!culture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
+            return downloads switch
+            {
+                >= 1_000_000_000 => $"{downloads / 1_000_000_000d:0.#}B",
+                >= 1_000_000 => $"{downloads / 1_000_000d:0.#}M",
+                >= 1_000 => $"{downloads / 1_000d:0.#}K",
+                _ => downloads.ToString("N0", culture)
+            };
+
+        return downloads switch
+        {
+            >= 100_000_000 => $"{downloads / 100_000_000d:0.#}亿",
+            >= 10_000 => $"{downloads / 10_000d:0.#}万",
+            >= 1_000 => $"{downloads / 1_000d:0.#}千",
+            _ => downloads.ToString("N0", CultureInfo.CurrentCulture)
+        };
+    }
+
+    public static string FormatMetadata(DateTime timestamp, long downloads)
+    {
+        var format = CommonLanguageManager.Instance.mod_downloadCount.CurrentValue()
+            .Replace("{1:N0}", "{1}", StringComparison.Ordinal);
+        return string.Format(format, RelativeTime.Format(timestamp), FormatDownloads(downloads));
     }
 }
 
