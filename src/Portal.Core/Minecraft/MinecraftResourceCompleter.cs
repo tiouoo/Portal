@@ -1,17 +1,19 @@
 using System.Text.Json;
 using Iridium.Download;
-using Iridium.Download.Models;
-using Iridium.Minecraft.Models;
+using Iridium.Models.Download;
+using Iridium.Models.Minecraft;
+using Iridium.Minecraft;
 
 namespace Portal.Core.Minecraft;
 
 public static class MinecraftResourceCompleter
 {
     public static IReadOnlyList<(string Source, string Target)> BuildCopies(
-        MinecraftEntry entry,
+        MinecraftContext context,
         IReadOnlyList<string> sourceRoots)
     {
-        var layout = IridiumEntryHelper.GetLayout(entry);
+        var entry = context.Entry;
+        var layout = context.Layout;
         var librariesRoot = layout.GetLibrariesRoot(entry);
         var assetsRoot = layout.GetAssetsRoot(entry);
         var versionJarPath = layout.GetVersionJarPath(entry);
@@ -59,17 +61,17 @@ public static class MinecraftResourceCompleter
     }
 
     public static async Task<DownloadResponse> DownloadAsync(
-        MinecraftEntry entry,
+        MinecraftContext context,
         Action<ResourceDownloadProgressChangedEventArgs>? onDownload,
         CancellationToken cancellationToken)
     {
         using var downloader = new ResourceDownloader(DownloadSource.Official,
-            maxConcurrency: 8,
-            layout: IridiumEntryHelper.GetLayout(entry));
+            context.Layout,
+            maxConcurrency: 8);
         if (onDownload is not null)
             downloader.ProgressChanged += (_, progress) => onDownload(progress);
 
-        return await downloader.DownloadAsync(entry, cancellationToken);
+        return await downloader.DownloadAsync(context.Entry, cancellationToken);
     }
 
     private static void AddLibraryCopies(MinecraftEntry entry, string librariesRoot, IReadOnlyList<string> sourceRoots,

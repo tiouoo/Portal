@@ -1,5 +1,5 @@
 using Iridium.Enums;
-using Iridium.Resources.Models;
+using Iridium.Models.Resources;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Services;
 using Portal.Core.Module.Ipc;

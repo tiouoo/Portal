@@ -2,6 +2,7 @@
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Iridium.Minecraft;
+using Iridium.Minecraft.Formats;
 using Portal.Core.App.Events;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -112,7 +113,8 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
                     var layout = DetectedLayout;
                     return layout.Kind switch
                     {
-                        MinecraftFolderKind.Standard => (await new StandardMinecraftProvider(new DirectoryInfo(layout.RootPath)).GetMinecraftsAsync()).Count +
+                        MinecraftFolderKind.Standard => (await new MinecraftProvider(new DirectoryInfo(layout.RootPath),
+                                                          [new StandardMinecraftProvider()]).GetMinecraftsAsync()).Count +
                                                         CountBedrockInstances(layout.RootPath),
                         MinecraftFolderKind.Modrinth => CountDirectories(Path.Combine(layout.RootPath, "profiles")),
                         MinecraftFolderKind.ModrinthInstance => 1,

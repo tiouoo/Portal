@@ -1,10 +1,12 @@
 using System.Text.Json;
-using Iridium.Authentication.Models;
+using Iridium.Models.Authentication;
 using Iridium.Java;
-using Iridium.Launch.Models;
-using Iridium.Minecraft.Models;
+using Iridium.Models.Launch;
+using Iridium.Models.Minecraft;
+using Iridium.Models.Java;
 using Iridium.Launch;
 using Iridium.Minecraft;
+using Iridium.Minecraft.Formats;
 using MinecraftLaunch.Utilities;
 using Portal.Core.Json;
 using Portal.Core.Minecraft;
@@ -102,12 +104,12 @@ internal static class CliHeadlessLauncher
         var extraGameArguments = new List<string>();
         var config = CreateLaunchConfig(instance, account, java, options, command, placeholders, extraGameArguments);
 
-        await CompleteResourcesAsync(entry, options);
+        await CompleteResourcesAsync(instance.Context!, options);
 
         Write(CommonLanguageManager.Instance.launch_startingProcess.CurrentValue());
         var mcProcess = await new Iridium.Launch.Launcher(
-            resolver: new PortalGameArgumentParser(new StandardMinecraftArgumentParser(), extraGameArguments))
-            .LaunchAsync(entry, config, CancellationToken.None);
+            new PortalGameArgumentParser(new ArgumentParser(), extraGameArguments))
+            .LaunchAsync(instance.Context!, config, CancellationToken.None);
         if (mcProcess.Process is not { } process)
             throw new InvalidOperationException(CommonLanguageManager.Instance.launch_noProcessInfo.CurrentValue());
 
@@ -167,11 +169,11 @@ internal static class CliHeadlessLauncher
                 {
                     try
                     {
-                        var minecraftEntry = new StandardMinecraftProvider(new DirectoryInfo(layout.RootPath))
-                            .GetMinecraftAsync(id).GetAwaiter().GetResult();
-                        if (minecraftEntry is null)
+                        var minecraftContext = new MinecraftProvider(new DirectoryInfo(layout.RootPath),
+                            [new StandardMinecraftProvider()]).GetAsync(id).GetAwaiter().GetResult();
+                        if (minecraftContext is null)
                             return null;
-                        return new MinecraftInstance(minecraftEntry);
+                        return new MinecraftInstance(minecraftContext);
                     }
                     catch (Exception)
                     {
@@ -432,7 +434,7 @@ internal static class CliHeadlessLauncher
             var effective = GraphicsEnvironmentResolver.Resolve(graphics,
                 instance.JavaConfig?.OpenGlRenderer, instance.JavaConfig?.VulkanRenderer, version);
             var nativesFolder = string.IsNullOrEmpty(config.NativesFolder)
-                ? IridiumEntryHelper.GetNativesDirectory(entry)
+                ? IridiumEntryHelper.GetNativesDirectory(instance.Context!)
                 : config.NativesFolder;
             var launch = GraphicsLaunchArgumentsBuilder.Build(effective, graphics, version, nativesFolder,
                 Renderers.CurrentPlatform);
@@ -451,17 +453,17 @@ internal static class CliHeadlessLauncher
         }
     }
 
-    private static async Task CompleteResourcesAsync(MinecraftEntry entry, MinecraftLaunchOptions options)
+    private static async Task CompleteResourcesAsync(MinecraftContext mc, MinecraftLaunchOptions options)
     {
         Write(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
 
-        var copies = MinecraftResourceCompleter.BuildCopies(entry, options.ResourceSourceRoots);
+        var copies = MinecraftResourceCompleter.BuildCopies(mc, options.ResourceSourceRoots);
         Write(string.Format(CommonLanguageManager.Instance.launch_resourcesToProcess.CurrentValue(),
             copies.Count, 0));
 
         await MinecraftResourceCompleter.CopyAsync(copies, null, CancellationToken.None);
 
-        var result = await MinecraftResourceCompleter.DownloadAsync(entry, null, CancellationToken.None);
+        var result = await MinecraftResourceCompleter.DownloadAsync(mc, null, CancellationToken.None);
         if (result.FailCount > 0)
             throw new IOException(string.Format(
                 CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(),

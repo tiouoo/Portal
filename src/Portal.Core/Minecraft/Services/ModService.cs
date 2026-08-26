@@ -301,7 +301,7 @@ public sealed class ModService
         var requested = hashes.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (requested.Length == 0) return [];
 
-        IReadOnlyDictionary<string, Iridium.Resources.Models.ResourceFile?> response;
+        IReadOnlyDictionary<string, Iridium.Models.Resources.ResourceFile?> response;
         try
         {
             response = await IridiumResourceClients.Modrinth.GetFilesByHashesAsync(requested,
@@ -313,7 +313,7 @@ public sealed class ModService
             return [];
         }
 
-        var versions = response.Values.OfType<Iridium.Resources.Models.ResourceFile>().ToArray();
+        var versions = response.Values.OfType<Iridium.Models.Resources.ResourceFile>().ToArray();
         var projects = await FetchModrinthProjectsAsync(
             versions.Select(version => version.ProjectId), cancellationToken);
         return response
@@ -336,7 +336,7 @@ public sealed class ModService
             }, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static async Task<Dictionary<string, Iridium.Resources.Models.ResourceProject>> FetchModrinthProjectsAsync(
+    private static async Task<Dictionary<string, Iridium.Models.Resources.ResourceProject>> FetchModrinthProjectsAsync(
         IEnumerable<string?> projectIds,
         CancellationToken cancellationToken)
     {

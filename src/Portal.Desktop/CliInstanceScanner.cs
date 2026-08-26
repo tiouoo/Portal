@@ -1,6 +1,7 @@
 using System.Text.Json;
-using Iridium.Minecraft.Models;
+using Iridium.Models.Minecraft;
 using Iridium.Minecraft;
+using Iridium.Minecraft.Formats;
 using Microsoft.Data.Sqlite;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
@@ -91,10 +92,11 @@ internal static class CliInstanceScanner
     {
         var result = new List<CliInstanceInfo>();
 
-        var entries = new StandardMinecraftProvider(new DirectoryInfo(rootPath))
+        var contexts = new MinecraftProvider(new DirectoryInfo(rootPath), [new StandardMinecraftProvider()])
             .GetMinecraftsAsync().GetAwaiter().GetResult();
+        var entries = contexts.Select(context => context.Entry).ToList();
         var baseIds = entries
-            .Where(entry => HasClientVersionMetadata(entry) &&
+            .Where(entry => HasClientVersionMetadata(contexts.First(context => context.Entry == entry)) &&
                             entries.Any(other =>
                                 string.Equals(other.InheritsFrom, entry.Id, StringComparison.OrdinalIgnoreCase)))
             .Select(entry => entry.Id)
@@ -321,11 +323,12 @@ internal static class CliInstanceScanner
         return result;
     }
 
-    private static bool HasClientVersionMetadata(MinecraftEntry entry)
+    private static bool HasClientVersionMetadata(MinecraftContext context)
     {
+        var entry = context.Entry;
         try
         {
-            using var stream = File.OpenRead(IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry));
+            using var stream = File.OpenRead(IridiumEntryHelper.GetLayout(context).GetVersionJsonPath(entry));
             using var document = JsonDocument.Parse(stream);
             return document.RootElement.TryGetProperty("clientVersion", out var clientVersion) &&
                    clientVersion.ValueKind == JsonValueKind.String &&

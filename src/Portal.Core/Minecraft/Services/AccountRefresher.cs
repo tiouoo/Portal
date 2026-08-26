@@ -1,4 +1,4 @@
-using Iridium.Authentication.Models;
+using Iridium.Models.Authentication;
 using Iridium.Minecraft;
 using Iridium.Authentication;
 using Portal.Core.Helpers;

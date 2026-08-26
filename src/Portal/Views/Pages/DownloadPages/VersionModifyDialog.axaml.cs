@@ -206,7 +206,7 @@ public partial class VersionModifyDialogViewModel : ObservableObject, IDialogCon
         if (instance.MinecraftEntry is not { } entry)
             return string.Empty;
 
-        var versionRoot = instance.Layout?.MetadataRoot ?? IridiumEntryHelper.GetMinecraftRoot(entry);
+        var versionRoot = instance.Layout?.MetadataRoot ?? IridiumEntryHelper.GetMinecraftRoot(instance.Context!);
         var dependents = VersionModifyService.FindDependentVersionIds(versionRoot, entry.Id);
         return dependents.Count == 0
             ? string.Empty

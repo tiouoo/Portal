@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Iridium.Java;
+using Iridium.Models.Java;
 
 namespace Portal.Core.Minecraft.Instance.Java.Iridium;
 

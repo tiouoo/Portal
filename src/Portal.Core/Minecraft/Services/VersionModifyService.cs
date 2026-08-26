@@ -60,7 +60,7 @@ public static class VersionModifyService
         if (!instance.CanModifyVersion)
             throw new InvalidOperationException(CommonLanguageManager.Instance.versionModify_onlyPortal.CurrentValue());
 
-        var folderPath = instance.Layout?.MetadataRoot ?? IridiumEntryHelper.GetMinecraftRoot(minecraftEntry);
+        var folderPath = instance.Layout?.MetadataRoot ?? IridiumEntryHelper.GetMinecraftRoot(instance.Context!);
         var dependents = FindDependentVersionIds(folderPath, minecraftEntry.Id);
         if (dependents.Count > 0)
             throw new InvalidOperationException(

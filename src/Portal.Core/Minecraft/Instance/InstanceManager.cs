@@ -2,8 +2,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using Iridium.Minecraft.Models;
+using Iridium.Models.Minecraft;
 using Iridium.Minecraft;
+using Iridium.Minecraft.Formats;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Core.Minecraft.Instance.Java;
@@ -151,17 +152,19 @@ internal class FolderScanner
     {
         var instances = new List<MinecraftInstance>();
 
-        var provider = new StandardMinecraftProvider(new DirectoryInfo(_gameRootFolder));
-        var parsedJavaEntries = await provider.GetMinecraftsAsync();
+        var provider = new MinecraftProvider(new DirectoryInfo(_gameRootFolder),
+            [new StandardMinecraftProvider()]);
+        var parsedContexts = await provider.GetMinecraftsAsync();
+        var parsedJavaEntries = parsedContexts.Select(context => context.Entry).ToList();
         var internalBaseIds = parsedJavaEntries
-            .Where(entry => HasClientVersionMetadata(entry) &&
+            .Where(entry => HasClientVersionMetadata(parsedContexts.First(context => context.Entry == entry)) &&
                             parsedJavaEntries.Any(other =>
                                 string.Equals(other.InheritsFrom, entry.Id, StringComparison.OrdinalIgnoreCase)))
             .Select(entry => entry.Id)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var javaEntries = parsedJavaEntries
-            .Where(entry => !internalBaseIds.Contains(entry.Id))
-            .ToDictionary(entry => entry.Id);
+        var javaContexts = parsedContexts
+            .Where(context => !internalBaseIds.Contains(context.Entry.Id))
+            .ToDictionary(context => context.Entry.Id);
 
         var processedFolders = new HashSet<string>();
 
@@ -188,8 +191,8 @@ internal class FolderScanner
                     try
                     {
                         var folderName = Path.GetFileName(instanceFolder);
-                        if (javaEntries.TryGetValue(folderName, out var minecraftEntry))
-                            instances.Add(new MinecraftInstance(minecraftEntry)
+                        if (javaContexts.TryGetValue(folderName, out var minecraftContext))
+                            instances.Add(new MinecraftInstance(minecraftContext)
                             {
                                 FolderName = _folderName,
                                 FolderPath = _gameRootFolder
@@ -215,11 +218,12 @@ internal class FolderScanner
         return instances;
     }
 
-    private static bool HasClientVersionMetadata(MinecraftEntry entry)
+    private static bool HasClientVersionMetadata(MinecraftContext context)
     {
+        var entry = context.Entry;
         try
         {
-            using var stream = File.OpenRead(IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry));
+            using var stream = File.OpenRead(IridiumEntryHelper.GetLayout(context).GetVersionJsonPath(entry));
             using var document = JsonDocument.Parse(stream);
             return document.RootElement.TryGetProperty("clientVersion", out var clientVersion) &&
                    clientVersion.ValueKind == JsonValueKind.String &&
@@ -227,12 +231,12 @@ internal class FolderScanner
         }
         catch (IOException exception)
         {
-            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_readVersionMetadataFailed.CurrentValue(), IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry), Environment.NewLine + exception));
+            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_readVersionMetadataFailed.CurrentValue(), IridiumEntryHelper.GetLayout(context).GetVersionJsonPath(entry), Environment.NewLine + exception));
             return false;
         }
         catch (JsonException exception)
         {
-            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_parseVersionMetadataFailed.CurrentValue(), IridiumEntryHelper.GetLayout(entry).GetVersionJsonPath(entry), Environment.NewLine + exception));
+            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_parseVersionMetadataFailed.CurrentValue(), IridiumEntryHelper.GetLayout(context).GetVersionJsonPath(entry), Environment.NewLine + exception));
             return false;
         }
     }

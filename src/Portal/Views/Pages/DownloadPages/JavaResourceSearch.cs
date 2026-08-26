@@ -3,7 +3,7 @@ using AsyncImageLoader;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Iridium.Enums;
-using Iridium.Resources.Models;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.App.Helpers;
 using Portal.Core.Classes;

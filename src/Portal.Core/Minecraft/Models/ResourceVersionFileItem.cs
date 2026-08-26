@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using Iridium.Enums;
-using Iridium.Resources.Models;
+using Iridium.Models.Resources;
 using Portal.Core.App.Helpers;
 using Portal.Localization;
 

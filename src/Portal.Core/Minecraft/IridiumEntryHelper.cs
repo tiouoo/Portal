@@ -1,21 +1,21 @@
-using Iridium.Minecraft.Models;
-using Iridium.Launch;
+using Iridium.Minecraft;
+using Iridium.Models.Minecraft;
+using Iridium.Interfaces;
 
 namespace Portal.Core.Minecraft;
 
 public static class IridiumEntryHelper
 {
-    public static IMinecraftLayout GetLayout(MinecraftEntry entry) =>
-        entry.Layout ?? new DefaultMinecraftLayoutFactory().Create(entry.Format);
+    public static IMinecraftLayout GetLayout(MinecraftContext context) => context.Layout;
 
-    public static string GetMinecraftRoot(MinecraftEntry entry) => GetLayout(entry).GetInstanceRoot(entry);
+    public static string GetMinecraftRoot(MinecraftContext context) => GetLayout(context).GetInstanceRoot(context.Entry);
 
-    public static string GetNativesDirectory(MinecraftEntry entry) => GetLayout(entry).GetNativesDirectory(entry);
+    public static string GetNativesDirectory(MinecraftContext context) => GetLayout(context).GetNativesDirectory(context.Entry);
 
-    public static string GetAssetsDirectory(MinecraftEntry entry) => GetLayout(entry).GetAssetsRoot(entry);
+    public static string GetAssetsDirectory(MinecraftContext context) => GetLayout(context).GetAssetsRoot(context.Entry);
 
-    public static string GetWorkingPath(MinecraftEntry entry, bool isEnableIndependency) =>
-        isEnableIndependency ? GetLayout(entry).GetGameDirectory(entry) : GetMinecraftRoot(entry);
+    public static string GetWorkingPath(MinecraftContext context, bool isEnableIndependency) =>
+        isEnableIndependency ? GetLayout(context).GetGameDirectory(context.Entry) : GetMinecraftRoot(context);
 
     public static int GetAppropriateJavaVersion(MinecraftEntry entry) => entry.RequiredJavaVersion ?? 8;
 }

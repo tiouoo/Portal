@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Iridium.Authentication.Models;
+using Iridium.Models.Authentication;
 using Iridium.Java;
-using Iridium.Minecraft.Models;
+using Iridium.Models.Minecraft;
+using Iridium.Models.Java;
 using Portal.Core.Minecraft.Classes;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -19,7 +20,7 @@ public static class LaunchCustomization
         var independent = instance.RequiresIndependentInstance ||
                           instance.JavaConfig?.EnableIndependentInstance == true;
         var gameDirectory = entry != null
-            ? IridiumEntryHelper.GetWorkingPath(entry, independent)
+            ? IridiumEntryHelper.GetWorkingPath(instance.Context!, independent)
             : instance.InstanceFolderPath;
         var loaders = entry != null
             ? string.Join(" ", entry.Loaders.Select(loader => $"{loader.Type} {loader.Version}".Trim()))
@@ -31,9 +32,9 @@ public static class LaunchCustomization
             ["{instance_id}"] = entry?.Id ?? instance.BedrockConfig?.Name ?? string.Empty,
             ["{instance_path}"] = instance.MinecraftPath ?? string.Empty,
             ["{game_dir}"] = gameDirectory ?? string.Empty,
-            ["{minecraft_folder}"] = entry != null ? IridiumEntryHelper.GetMinecraftRoot(entry) : instance.FolderPath ?? string.Empty,
-            ["{natives_dir}"] = entry != null ? IridiumEntryHelper.GetNativesDirectory(entry) : string.Empty,
-            ["{assets_dir}"] = entry != null ? IridiumEntryHelper.GetAssetsDirectory(entry) : string.Empty,
+            ["{minecraft_folder}"] = entry != null ? IridiumEntryHelper.GetMinecraftRoot(instance.Context!) : instance.FolderPath ?? string.Empty,
+            ["{natives_dir}"] = entry != null ? IridiumEntryHelper.GetNativesDirectory(instance.Context!) : string.Empty,
+            ["{assets_dir}"] = entry != null ? IridiumEntryHelper.GetAssetsDirectory(instance.Context!) : string.Empty,
             ["{version}"] = entry?.MinecraftVersion ?? instance.BedrockConfig?.Version ?? string.Empty,
             ["{version_type}"] = entry?.Type.ToString() ?? string.Empty,
             ["{loader}"] = loaders,

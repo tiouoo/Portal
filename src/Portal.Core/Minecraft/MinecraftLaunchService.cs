@@ -5,12 +5,15 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using Iridium.Download;
-using Iridium.Authentication.Models;
-using Iridium.Download.Models;
+using Iridium.Models.Authentication;
+using Iridium.Models.Download;
 using Iridium.Java;
-using Iridium.Launch.Models;
-using Iridium.Minecraft.Models;
+using Iridium.Models.Launch;
+using Iridium.Models.Minecraft;
+using Iridium.Models.Java;
 using Iridium.Launch;
+using Iridium.Minecraft;
+using Iridium.Interfaces;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Const;
@@ -239,7 +242,7 @@ public static class MinecraftLaunchService
             await buildArguments.Completion;
             ThrowIfFailed(buildArguments);
 
-            completeResources!.Start(context => CompleteResourcesAsync(context, instance.MinecraftEntry!, options));
+            completeResources!.Start(context => CompleteResourcesAsync(context, instance.Context!, options));
             await completeResources.Completion;
             ThrowIfFailed(completeResources);
 
@@ -306,14 +309,14 @@ public static class MinecraftLaunchService
         {
             context.SetRunning(CommonLanguageManager.Instance.launch_settingGameLanguage.CurrentValue());
             var entry = instance.MinecraftEntry;
-            GameOptionsService.SetChineseLanguage(IridiumEntryHelper.GetWorkingPath(entry, config.IsEnableIndependency), entry.ReleaseTime);
+            GameOptionsService.SetChineseLanguage(IridiumEntryHelper.GetWorkingPath(instance.Context!, config.IsEnableIndependency), entry.ReleaseTime);
         }
 
         WriteStartupLog(logSession, instance, config, extraGameArguments);
         var mcProcess = await Task.Run(() =>
             new Iridium.Launch.Launcher(
-                resolver: new PortalGameArgumentParser(new StandardMinecraftArgumentParser(), extraGameArguments))
-                .LaunchAsync(instance.MinecraftEntry!, config, context.CancellationToken),
+                new PortalGameArgumentParser(new ArgumentParser(), extraGameArguments))
+                .LaunchAsync(instance.Context!, config, context.CancellationToken),
             context.CancellationToken);
         if (mcProcess.Process is null)
             throw new InvalidOperationException(CommonLanguageManager.Instance.launch_noProcessInfo.CurrentValue());
@@ -342,7 +345,7 @@ public static class MinecraftLaunchService
         if (platform.Os != OperatingSystemKind.Windows)
             return;
 
-        var nativeDir = Path.Combine(IridiumEntryHelper.GetNativesDirectory(entry), "mesa-loader");
+        var nativeDir = Path.Combine(IridiumEntryHelper.GetNativesDirectory(instance.Context!), "mesa-loader");
         Directory.CreateDirectory(nativeDir);
 
         var jarPath = await MesaLoaderService.EnsureMesaLoaderAsync(cancellationToken);
@@ -384,12 +387,11 @@ public static class MinecraftLaunchService
             Dispatcher.UIThread.Post(options.GameStarted);
     }
 
-    private static async Task CompleteResourcesAsync(TaskExecutionContext context, MinecraftEntry entry,
+    private static async Task CompleteResourcesAsync(TaskExecutionContext context, MinecraftContext mc,
         MinecraftLaunchOptions options)
     {
         context.SetRunning(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
-        context.SetRunning(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
-        var copies = MinecraftResourceCompleter.BuildCopies(entry, options.ResourceSourceRoots);
+        var copies = MinecraftResourceCompleter.BuildCopies(mc, options.ResourceSourceRoots);
 
         if (copies.Count > 0)
             await RunStepAsync(context, CommonLanguageManager.Instance.launch_copyResourcesStep.CurrentValue(),
@@ -403,7 +405,7 @@ public static class MinecraftLaunchService
         await RunStepAsync(context, CommonLanguageManager.Instance.launch_downloadResourcesStep.CurrentValue(),
             CommonLanguageManager.Instance.launch_downloadingResources.CurrentValue(), async step =>
         {
-            var result = await MinecraftResourceCompleter.DownloadAsync(entry,
+            var result = await MinecraftResourceCompleter.DownloadAsync(mc,
                 progress => ReportDownloadProgress(step, progress), step.CancellationToken);
             if (result.FailCount > 0)
                 throw new IOException(string.Format(CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(), result.FailCount));
@@ -685,7 +687,7 @@ public static class MinecraftLaunchService
             instance.JavaConfig?.OpenGlRenderer, instance.JavaConfig?.VulkanRenderer, version);
 
         var nativesFolder = string.IsNullOrEmpty(config.NativesFolder)
-            ? IridiumEntryHelper.GetNativesDirectory(entry)
+            ? IridiumEntryHelper.GetNativesDirectory(instance.Context!)
             : config.NativesFolder;
 
         var launch = GraphicsLaunchArgumentsBuilder.Build(effective, graphics, version, nativesFolder,
@@ -1095,20 +1097,20 @@ public sealed class MinecraftLaunchOptions
     public IReadOnlyList<string> ResourceSourceRoots { get; init; } = [];
 }
 
-public sealed class PortalGameArgumentParser : IMinecraftArgumentParser
+public sealed class PortalGameArgumentParser : IArgumentParser
 {
-    private readonly IMinecraftArgumentParser _inner;
+    private readonly IArgumentParser _inner;
     private readonly IReadOnlyList<string> _extraGameArguments;
 
-    public PortalGameArgumentParser(IMinecraftArgumentParser inner, IReadOnlyList<string> extraGameArguments)
+    public PortalGameArgumentParser(IArgumentParser inner, IReadOnlyList<string> extraGameArguments)
     {
         _inner = inner;
         _extraGameArguments = extraGameArguments;
     }
 
-    public LaunchArguments Build(MinecraftEntry entry, LaunchConfig config)
+    public LaunchArguments Build(MinecraftContext context, LaunchConfig config)
     {
-        var arguments = _inner.Build(entry, config);
+        var arguments = _inner.Build(context, config);
         if (_extraGameArguments.Count == 0)
             return arguments;
 

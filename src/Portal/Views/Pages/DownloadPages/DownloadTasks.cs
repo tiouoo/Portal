@@ -45,10 +45,10 @@ internal static class DownloadProgressReporter
     }
 
     /// <summary>Iridium 下载进度 —— 按已完成文件计数汇报。</summary>
-    public static Action<Iridium.Download.Models.ResourceDownloadProgressChangedEventArgs> CreateIridium(
+    public static Action<Iridium.Models.Download.ResourceDownloadProgressChangedEventArgs> CreateIridium(
         TaskExecutionContext context)
     {
-        Iridium.Download.Models.ResourceDownloadProgressChangedEventArgs? latestProgress = null;
+        Iridium.Models.Download.ResourceDownloadProgressChangedEventArgs? latestProgress = null;
         var dispatchQueued = 0;
         return progress =>
         {
@@ -100,7 +100,7 @@ internal static class DownloadTasks
         {
             context.SetRunning(string.Format(CommonLanguageManager.Instance.download_downloading.CurrentValue(),
                 fileName));
-            var request = new Iridium.Download.Models.DownloadRequest
+            var request = new Iridium.Models.Download.DownloadRequest
             {
                 Url = downloadUrl,
                 LocalPath = destination,

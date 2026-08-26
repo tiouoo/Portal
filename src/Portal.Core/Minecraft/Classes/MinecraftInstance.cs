@@ -6,7 +6,8 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Iridium.Enums;
-using Iridium.Minecraft.Models;
+using Iridium.Minecraft;
+using Iridium.Models.Minecraft;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Core.Classes;
 using Portal.Core.Json;
@@ -35,17 +36,12 @@ public class MinecraftInstance : ObservableObject
     private Timer? _playTimer;
     private Bitmap? _sourceIcon;
 
-    public MinecraftInstance(MinecraftEntry e)
-        : this(e, null)
-    {
-    }
-
-    public MinecraftInstance(MinecraftEntry e, MinecraftInstanceLayout? layout)
+    public MinecraftInstance(MinecraftContext context, MinecraftInstanceLayout? layout = null)
     {
         Type = MinecraftInstanceType.Java;
-        MinecraftEntry = e;
+        Context = context;
         Layout = layout;
-        InstanceFolderPath = layout?.InstanceRoot ?? e.InstancePath;
+        InstanceFolderPath = layout?.InstanceRoot ?? context.Entry.InstancePath;
         Config = GetInstanceConfig();
         EnsureRequiredIndependentInstance();
         ObserveConfigChanges();
@@ -77,7 +73,9 @@ public class MinecraftInstance : ObservableObject
     public string BlockHeaderText => IsBlocked ? CommonLanguageManager.Instance.minecraft_unblock.CurrentValue() : CommonLanguageManager.Instance.minecraft_block.CurrentValue();
     public string FavoriteHeaderText => Config?.IsFavorite == true ? CommonLanguageManager.Instance.minecraft_unfavorite.CurrentValue() : CommonLanguageManager.Instance.minecraft_favorite.CurrentValue();
 
-    public MinecraftEntry? MinecraftEntry { get; init; }
+    public MinecraftContext? Context { get; init; }
+
+    public MinecraftEntry? MinecraftEntry => Context?.Entry;
 
     public BedrockInstanceConfig? BedrockConfig { get; init; }
 
@@ -612,7 +610,7 @@ public class MinecraftInstance : ObservableObject
 
         return Layout?.GameDirectory is { Length: > 0 } gameDirectory
             ? gameDirectory
-            : IridiumEntryHelper.GetWorkingPath(MinecraftEntry, JavaConfig?.EnableIndependentInstance == true);
+            : IridiumEntryHelper.GetWorkingPath(Context!, JavaConfig?.EnableIndependentInstance == true);
     }
 
     private string GetJavaInstanceFolder()

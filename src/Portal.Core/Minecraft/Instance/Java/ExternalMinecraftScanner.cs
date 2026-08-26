@@ -1,11 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Iridium.Extension.Providers.Minecraft.CurseForge;
-using Iridium.Extension.Providers.Minecraft.Modrinth;
-using Iridium.Extension.Providers.Minecraft.PortalMc;
-using Iridium.Minecraft.Models;
 using Iridium.Minecraft;
+using Iridium.Minecraft.Formats;
+using Iridium.Extension.Minecraft.Formats;
+using Iridium.Models.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance.Bedrock;
 using Portal.Localization;
@@ -46,13 +45,15 @@ internal static class ExternalMinecraftScanner
         var metadataRoot = Path.Combine(root, "meta");
         var result = new List<MinecraftInstance>();
 
-        foreach (var entry in await new PortalMcProvider(new DirectoryInfo(root)).GetMinecraftsAsync())
+        foreach (var context in await new MinecraftProvider(new DirectoryInfo(root),
+                     [new PortalMcProvider()]).GetMinecraftsAsync())
         {
             try
             {
+                var entry = context.Entry;
                 var iconPath = ResolveIcon(entry.InstancePath, "icon.png") ?? ResolveIcon(entry.InstancePath, "Icon.png")
                     ?? ResolveIcon(entry.InstancePath, "Portal.Icon.png");
-                result.Add(CreateInstance(entry, folder, MinecraftFolderKind.PortalMc, root, metadataRoot,
+                result.Add(CreateInstance(context, folder, MinecraftFolderKind.PortalMc, root, metadataRoot,
                     iconPath, entry.Name));
             }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or
@@ -93,10 +94,12 @@ internal static class ExternalMinecraftScanner
         var metadataRoot = Path.Combine(root, "meta");
         var result = new List<MinecraftInstance>();
 
-        foreach (var entry in await new PrismMinecraftProvider(new DirectoryInfo(root)).GetMinecraftsAsync())
+        foreach (var context in await new MinecraftProvider(new DirectoryInfo(root),
+                     [new PrismMinecraftProvider()]).GetMinecraftsAsync())
         {
             try
             {
+                var entry = context.Entry;
                 var isBakaXl = File.Exists(Path.Combine(entry.InstancePath, "package.info"));
                 string? iconPath;
                 if (isBakaXl)
@@ -107,7 +110,7 @@ internal static class ExternalMinecraftScanner
                     iconPath = ResolveMultiMcIcon(root, entry.InstancePath, cfg.GetValueOrDefault("iconKey"));
                 }
 
-                result.Add(CreateInstance(entry, folder, MinecraftFolderKind.MultiMc, root, metadataRoot,
+                result.Add(CreateInstance(context, folder, MinecraftFolderKind.MultiMc, root, metadataRoot,
                     iconPath, entry.Name));
             }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException)
@@ -125,12 +128,14 @@ internal static class ExternalMinecraftScanner
         var metadataRoot = Path.Combine(root, "Install");
         var result = new List<MinecraftInstance>();
 
-        foreach (var entry in await new CurseForgeProvider(new DirectoryInfo(root)).GetMinecraftsAsync())
+        foreach (var context in await new MinecraftProvider(new DirectoryInfo(root),
+                     [new CurseForgeProvider()]).GetMinecraftsAsync())
         {
             try
             {
+                var entry = context.Entry;
                 var icon = ResolveIcon(entry.InstancePath, "icon.png") ?? ResolveIcon(entry.InstancePath, "Icon.png");
-                result.Add(CreateInstance(entry, folder, MinecraftFolderKind.CurseForge, root, metadataRoot,
+                result.Add(CreateInstance(context, folder, MinecraftFolderKind.CurseForge, root, metadataRoot,
                     icon, entry.Name));
             }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException)
@@ -148,20 +153,22 @@ internal static class ExternalMinecraftScanner
         var metadataRoot = Path.Combine(root, "meta");
         var result = new List<MinecraftInstance>();
 
-        var instances = await new ModrinthProvider(new DirectoryInfo(root)).GetMinecraftsAsync();
+        var instances = await new MinecraftProvider(new DirectoryInfo(root),
+            [new ModrinthProvider()]).GetMinecraftsAsync();
         if (folderLayout.Kind is MinecraftFolderKind.ModrinthInstance)
         {
             var selected = Path.GetFullPath(folderLayout.SelectedPath);
-            instances = instances.Where(entry =>
-                Path.GetFullPath(entry.InstancePath).Equals(selected, StringComparison.OrdinalIgnoreCase)).ToArray();
+            instances = instances.Where(context =>
+                Path.GetFullPath(context.Entry.InstancePath).Equals(selected, StringComparison.OrdinalIgnoreCase)).ToArray();
         }
 
-        foreach (var entry in instances)
+        foreach (var context in instances)
         {
             try
             {
+                var entry = context.Entry;
                 var icon = ResolveIcon(entry.InstancePath, "icon.png") ?? ResolveIcon(entry.InstancePath, "Icon.png");
-                result.Add(CreateInstance(entry, folder, MinecraftFolderKind.Modrinth, root, metadataRoot,
+                result.Add(CreateInstance(context, folder, MinecraftFolderKind.Modrinth, root, metadataRoot,
                     icon, entry.Name));
             }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or
@@ -173,16 +180,17 @@ internal static class ExternalMinecraftScanner
         return result;
     }
 
-    private static MinecraftInstance CreateInstance(MinecraftEntry entry, MinecraftFolderEntry folder,
+    private static MinecraftInstance CreateInstance(MinecraftContext context, MinecraftFolderEntry folder,
         MinecraftFolderKind kind, string root, string metadataRoot, string? iconPath, string displayName)
     {
-        var iridiumLayout = IridiumEntryHelper.GetLayout(entry);
+        var entry = context.Entry;
+        var iridiumLayout = context.Layout;
         var layout = new MinecraftInstanceLayout(
             kind, root, entry.InstancePath, iridiumLayout.GetGameDirectory(entry), metadataRoot,
             Path.Combine(metadataRoot, "assets"), Path.Combine(metadataRoot, "libraries"),
             iridiumLayout.GetNativesDirectory(entry), iconPath);
 
-        return new MinecraftInstance(entry, layout)
+        return new MinecraftInstance(context, layout)
         {
             FolderName = folder.FolderName,
             FolderPath = folder.FolderPath,

@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Iridium.Resources.Models;
+using Iridium.Models.Resources;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;

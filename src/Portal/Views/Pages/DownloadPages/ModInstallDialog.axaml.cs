@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Iridium.Resources.Models;
+using Iridium.Models.Resources;
 using MinecraftLaunch.Base.Enums;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
