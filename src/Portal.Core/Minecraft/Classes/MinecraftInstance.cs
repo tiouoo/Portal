@@ -397,7 +397,6 @@ public class MinecraftInstance : ObservableObject
         lock (_timerLock)
         {
             EnsureRequiredIndependentInstance();
-            FormatPlayTimeData();
             var configPath = GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             File.WriteAllText(configPath, JsonSerializer.Serialize(Config, Config.GetType(), PortalJson.Options));
@@ -412,15 +411,7 @@ public class MinecraftInstance : ObservableObject
 
     public string GetConfigPath()
     {
-        if (Layout == null)
-            return Path.Combine(MinecraftPath, "Portal.config.json");
-
-        return GetExternalConfigPath(Layout.Kind, Layout.InstanceRoot);
-    }
-
-    public static string GetExternalConfigPath(MinecraftFolderKind kind, string instanceRoot)
-    {
-        return Path.Combine(instanceRoot, PortablePortalConfigFileName);
+        return Path.Combine(InstanceFolderPath, PortablePortalConfigFileName);
     }
 
     public IReadOnlyList<string> GetDeletionPaths()
@@ -526,8 +517,7 @@ public class MinecraftInstance : ObservableObject
     {
         lock (_timerLock)
         {
-            return Config.ArchivedPlayTimeSeconds
-                   + Config.LegacyPlayTimeSeconds
+            return Config.LegacyPlayTimeSeconds
                    + GetDailyPlayTimeByDate().Values.Sum()
                    + _unsavedPlayTimeByDate.Values.Sum();
         }
@@ -582,25 +572,6 @@ public class MinecraftInstance : ObservableObject
     private Dictionary<string, long> GetDailyPlayTimeByDate()
     {
         return Config.PlayTimeByDate ??= [];
-    }
-
-    private void FormatPlayTimeData()
-    {
-        if (Config.LegacyPlayTimeSeconds > 0)
-        {
-            Config.ArchivedPlayTimeSeconds += Config.LegacyPlayTimeSeconds;
-            Config.LegacyPlayTimeSeconds = 0;
-        }
-
-        var cutoffDate = DateTime.Today.AddMonths(-1);
-        var playTimeByDate = GetDailyPlayTimeByDate();
-        foreach (var (date, seconds) in playTimeByDate.ToArray())
-            if (DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture,
-                    DateTimeStyles.None, out var day) && day < cutoffDate)
-            {
-                Config.ArchivedPlayTimeSeconds += seconds;
-                playTimeByDate.Remove(date);
-            }
     }
 
     public string GetJavaGameDirectory()
@@ -885,8 +856,6 @@ public partial class MinecraftInstanceConfig : ObservableObject
     [ObservableProperty] public partial PortalVisibleMode PortalVisibleMode { get; set; } = PortalVisibleMode.NoOperation;
 
     [ObservableProperty] public partial Dictionary<string, long> PlayTimeByDate { get; set; } = [];
-
-    public long ArchivedPlayTimeSeconds { get; set; }
 
     [JsonPropertyName("PlayTimeSeconds")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
