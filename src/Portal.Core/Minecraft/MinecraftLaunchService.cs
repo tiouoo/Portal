@@ -391,7 +391,9 @@ public static class MinecraftLaunchService
         MinecraftLaunchOptions options)
     {
         context.SetRunning(CommonLanguageManager.Instance.launch_checkingResources.CurrentValue());
-        var copies = MinecraftResourceCompleter.BuildCopies(mc, options.ResourceSourceRoots);
+        var copies = await Task.Run(
+            () => MinecraftResourceCompleter.BuildCopies(mc, options.ResourceSourceRoots),
+            context.CancellationToken);
 
         if (copies.Count > 0)
             await RunStepAsync(context, CommonLanguageManager.Instance.launch_copyResourcesStep.CurrentValue(),
@@ -405,8 +407,10 @@ public static class MinecraftLaunchService
         await RunStepAsync(context, CommonLanguageManager.Instance.launch_downloadResourcesStep.CurrentValue(),
             CommonLanguageManager.Instance.launch_downloadingResources.CurrentValue(), async step =>
         {
-            var result = await MinecraftResourceCompleter.DownloadAsync(mc,
-                progress => ReportDownloadProgress(step, progress), step.CancellationToken);
+            var result = await Task.Run(
+                () => MinecraftResourceCompleter.DownloadAsync(mc,
+                    progress => ReportDownloadProgress(step, progress), step.CancellationToken),
+                step.CancellationToken);
             if (result.FailCount > 0)
                 throw new IOException(string.Format(CommonLanguageManager.Instance.launch_resourceCompletionFailed.CurrentValue(), result.FailCount));
 
