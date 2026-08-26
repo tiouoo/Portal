@@ -38,6 +38,8 @@ public sealed record ResourceDetailsTarget(
 
 public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
 {
+    private const int GalleryPage = 2;
+
     private readonly CancellationTokenSource _disposeCancellation = new();
     private readonly ResourceDetailsTarget _target;
     private readonly Dictionary<int, UserControl> _pageViews;
@@ -46,6 +48,7 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
     private bool _disposed;
     private CancellationTokenSource? _filterCancellation;
     private CancellationTokenSource? _filterDebounce;
+    private bool _galleryVisible;
     private bool _hasLocatedTargetVersionGroup;
     private int _currentPageIndex;
     private bool _loaded;
@@ -66,14 +69,13 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
     public ResourceDetailsTarget Target => _target;
     public ObservableCollection<ResourceVersionFilter> VersionFilters { get; } = [];
     public ObservableCollection<ResourceLoaderFilter> LoaderFilters { get; } = [];
-    public ObservableCollection<string> Screenshots { get; } = [];
+    public ObservableCollection<ResourceScreenshot> Screenshots { get; } = [];
     public ObservableCollection<Control> DescriptionControls { get; } = [];
     public ObservableCollection<string> Tags { get; } = [];
     public ObservableCollection<string> NavigationItems { get; } =
     [
         DownloadsLanguageManager.Instance.resourcedetailspage_description.CurrentValue(),
-        DownloadsLanguageManager.Instance.resourcedetailspage_versions.CurrentValue(),
-        DownloadsLanguageManager.Instance.resourcedetailspage_gallery.CurrentValue()
+        DownloadsLanguageManager.Instance.resourcedetailspage_versions.CurrentValue()
     ];
     public ObservableCollection<int> ScreenshotIndices { get; } = [];
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
@@ -273,9 +275,30 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
 
     private void SelectPage(int page)
     {
+        if (page == GalleryPage && !_galleryVisible)
+            return;
+
         _currentPageIndex = page;
         SelectedNavigation = NavigationItems[page];
         if (_pageViews.TryGetValue(page, out var view)) CurrentPage = view;
+    }
+
+    private void SetGalleryVisible(bool visible)
+    {
+        if (_galleryVisible == visible)
+            return;
+
+        _galleryVisible = visible;
+        if (visible)
+        {
+            NavigationItems.Add(DownloadsLanguageManager.Instance.resourcedetailspage_gallery.CurrentValue());
+        }
+        else
+        {
+            NavigationItems.Remove(DownloadsLanguageManager.Instance.resourcedetailspage_gallery.CurrentValue());
+            if (_currentPageIndex == GalleryPage)
+                ShowDescription();
+        }
     }
 
     partial void OnSelectedNavigationChanged(string value)
@@ -432,16 +455,29 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(LoadMoreVersionGroupsText));
     }
 
-    private void AddScreenshots(IEnumerable<string?>? urls)
+    private void AddScreenshots(IEnumerable<ResourceScreenshotInfo>? items)
     {
-        if (urls is null) return;
-        foreach (var url in urls.Where(url => !string.IsNullOrWhiteSpace(url)).Distinct())
+        if (items is not null)
         {
-            Screenshots.Add(url!);
-            ScreenshotIndices.Add(ScreenshotIndices.Count);
+            foreach (var item in items.Where(entry => !string.IsNullOrWhiteSpace(entry.Url))
+                         .DistinctBy(entry => entry.Url))
+            {
+                Screenshots.Add(new ResourceScreenshot(item.Url, ScreenshotName(item.Url, item.Title, Screenshots.Count), item.FullUrl));
+                ScreenshotIndices.Add(ScreenshotIndices.Count);
+            }
         }
 
         OnPropertyChanged(nameof(HasScreenshots));
+        SetGalleryVisible(Screenshots.Count > 0);
+    }
+
+    private static string ScreenshotName(string url, string? title, int index)
+    {
+        if (!string.IsNullOrWhiteSpace(title))
+            return title.Trim();
+
+        return string.Format(DownloadsLanguageManager.Instance.resourcedetailspage_screenshotIndex.CurrentValue(),
+            index + 1);
     }
 
     private static string? GetVersionFamily(string version)
@@ -463,6 +499,8 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
 public sealed record ResourceVersionFilter(string DisplayName, string? Family);
 
 public sealed record ResourceLoaderFilter(string DisplayName, string? Loader);
+
+public sealed record ResourceScreenshot(string Url, string Name, string? FullUrl = null);
 
 public sealed partial class ResourceVersionGroup : ObservableObject
 {

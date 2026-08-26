@@ -80,7 +80,10 @@
     "quickInstall": "快速安装",
     "description": "简介",
     "versions": "版本",
-    "gallery": "展览图"
+    "gallery": "展览图",
+    "screenshotIndex": "图片 {0}",
+    "copyImage": "复制图片",
+    "saveAs": "另存为"
   },
   "javaresourceinstalldialog": {
     "installPrefix": "安装",

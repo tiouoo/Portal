@@ -5,6 +5,7 @@
     "zoomOutTooltip": "Zoom Out 10%",
     "zoomInTooltip": "Zoom In 10%",
     "openWithDefault": "Open with Default App",
+    "openInBrowser": "Open in Browser",
     "copyImage": "Copy Image",
     "saveAs": "Save As"
   }

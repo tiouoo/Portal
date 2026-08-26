@@ -3,35 +3,97 @@
     x:Class="Portal.Views.Pages.DownloadPages.ResourceGalleryView"
     x:DataType="local:ResourceDetailsViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:controls1="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ScrollViewer
-        HorizontalScrollBarVisibility="Disabled"
-        VerticalScrollBarVisibility="Auto">
-        <ItemsControl ItemsSource="{Binding Screenshots}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
-                    <Border
-                        ClipToBounds="True"
-                        CornerRadius="10"
-                        Height="220"
-                        Margin="0,0,10,10"
-                        Width="320">
-                        <owned:OwnedAdvancedImage
-                            Loader="{Binding $parent[UserControl].((local:ResourceDetailsViewModel)DataContext).ScreenshotLoader}"
-                            Source="{Binding}"
-                            Stretch="Uniform" />
-                    </Border>
+    <controls1:ScrollView Classes="Flat" Margin="0,10,4,0">
+        <ItemsRepeater ItemsSource="{Binding Screenshots}">
+            <ItemsRepeater.Layout>
+                <UniformGridLayout
+                    ItemsStretch="Fill"
+                    MinColumnSpacing="16"
+                    MinItemHeight="210"
+                    MinItemWidth="240"
+                    MinRowSpacing="16"
+                    Orientation="Horizontal" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="local:ResourceScreenshot">
+                    <Grid Background="Transparent" RowDefinitions="*,Auto">
+                        <Border
+                            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                            BorderThickness="1"
+                            ClipToBounds="True"
+                            CornerRadius="16"
+                            Cursor="Hand"
+                            PointerPressed="OpenImageViewer_OnPointerPressed">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem
+                                        Click="OpenScreenshot_OnClick"
+                                        Header="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_openInBrowser}}"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                HorizontalAlignment="Center"
+                                                Text="&#xe628;"
+                                                VerticalAlignment="Center" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="CopyScreenshot_OnClick"
+                                        Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.resourcedetailspage_copyImage}}"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                HorizontalAlignment="Center"
+                                                Text="&#xe635;"
+                                                VerticalAlignment="Center" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Click="SaveScreenshotAs_OnClick"
+                                        Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.resourcedetailspage_saveAs}}"
+                                        Tag="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="18"
+                                                FontWeight="Thin"
+                                                HorizontalAlignment="Center"
+                                                Text="&#xe632;"
+                                                VerticalAlignment="Center" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+                            <owned:OwnedAdvancedImage
+                                CornerRadius="15"
+                                Loader="{Binding $parent[UserControl].((local:ResourceDetailsViewModel)DataContext).ScreenshotLoader}"
+                                Source="{Binding Url}"
+                                Stretch="UniformToFill" />
+                        </Border>
+                        <TextBlock
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Grid.Row="1"
+                            Margin="4,7,4,0"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap"
+                            ToolTip.Tip="{Binding Name}" />
+                    </Grid>
                 </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </ScrollViewer>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+    </controls1:ScrollView>
 </UserControl>

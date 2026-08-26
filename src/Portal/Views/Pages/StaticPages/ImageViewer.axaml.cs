@@ -14,39 +14,45 @@ using Tio.Avalonia.Standard.Tab.Interface;
 
 using Portal.Localization;
 using Portal.Module;
+using Portal.Module.Imaging;
 namespace Portal.Views.Pages.StaticPages;
 
 public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage, INotifyPropertyChanged, IDisposable
 {
-    private readonly IReadOnlyList<string> _filePaths;
+    private readonly IReadOnlyList<ImageViewerItem> _items;
     private bool _isDisposed;
     private Bitmap? _image;
     private int _currentIndex;
     private int _loadVersion;
 
-    public ImageViewer() : this(string.Empty, null)
+    public ImageViewer() : this(string.Empty, (IReadOnlyList<ImageViewerItem>?)null)
     {
     }
 
-    public ImageViewer(string filePath) : this(filePath, null)
+    public ImageViewer(string filePath) : this(filePath, (IReadOnlyList<ImageViewerItem>?)null)
     {
     }
 
     public ImageViewer(string filePath, IReadOnlyList<string>? filePaths)
+        : this(filePath, filePaths?.Select(path => new ImageViewerItem(path, Path.GetFileName(path))).ToArray())
     {
-        FilePath = filePath;
-        FileName = Path.GetFileName(filePath);
+    }
 
-        _filePaths = filePaths is { Count: > 0 } ? filePaths : [filePath];
+    public ImageViewer(string source, IReadOnlyList<ImageViewerItem>? items)
+    {
+        FilePath = source;
+        _items = items is { Count: > 0 } ? items : [new ImageViewerItem(source, Path.GetFileName(source))];
         _currentIndex = -1;
-        for (var i = 0; i < _filePaths.Count; i++)
+        for (var i = 0; i < _items.Count; i++)
         {
-            if (string.Equals(_filePaths[i], filePath, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(_items[i].Source, source, StringComparison.OrdinalIgnoreCase))
             {
                 _currentIndex = i;
                 break;
             }
         }
+
+        FileName = _currentIndex >= 0 ? _items[_currentIndex].DisplayName : Path.GetFileName(source);
 
         PageInfo = new PageInfo
         {
@@ -65,7 +71,7 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
 
     public bool CanNavigatePrevious => _currentIndex > 0;
 
-    public bool CanNavigateNext => _currentIndex >= 0 && _currentIndex < _filePaths.Count - 1;
+    public bool CanNavigateNext => _currentIndex >= 0 && _currentIndex < _items.Count - 1;
 
     public Bitmap? Image
     {
@@ -81,23 +87,35 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
 
     private async Task LoadImageAsync()
     {
-        if (_isDisposed || !File.Exists(FilePath))
+        if (_isDisposed || string.IsNullOrWhiteSpace(FilePath))
             return;
 
         var version = ++_loadVersion;
         Bitmap? bitmap;
         try
         {
-            bitmap = await Task.Run(() => new Bitmap(FilePath));
+            var source = FilePath;
+            bitmap = await Task.Run(async () =>
+            {
+                var localPath = source;
+                if (IsRemote(source))
+                {
+                    localPath = await RemoteImageHelper.EnsureLocalAsync(source);
+                    if (string.IsNullOrEmpty(localPath))
+                        return null;
+                }
+
+                return File.Exists(localPath) ? new Bitmap(localPath) : null;
+            });
         }
         catch (Exception)
         {
             return;
         }
 
-        if (_isDisposed || version != _loadVersion)
+        if (bitmap == null || _isDisposed || version != _loadVersion)
         {
-            bitmap.Dispose();
+            bitmap?.Dispose();
             return;
         }
 
@@ -128,7 +146,9 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
     {
         menuItems.Add(new MenuItem
         {
-            Header = StaticPagesLanguageManager.Instance.imageviewer_openWithDefault.CurrentValue(),
+            Header = IsRemote(FilePath)
+                ? StaticPagesLanguageManager.Instance.imageviewer_openInBrowser.CurrentValue()
+                : StaticPagesLanguageManager.Instance.imageviewer_openWithDefault.CurrentValue(),
             Icon = CreateMenuItemIcon("\ue628"),
             Command = new RelayCommand(async () => await OpenWithDefaultAsync())
         });
@@ -164,8 +184,18 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
     private async Task OpenWithDefaultAsync()
     {
         var topLevel = TopLevel.GetTopLevel(this);
-        var storage = topLevel?.StorageProvider;
-        if (topLevel == null || storage == null || !File.Exists(FilePath))
+        if (topLevel == null)
+            return;
+
+        if (IsRemote(FilePath))
+        {
+            if (Uri.TryCreate(FilePath, UriKind.Absolute, out var uri))
+                await topLevel.Launcher.LaunchUriAsync(uri);
+            return;
+        }
+
+        var storage = topLevel.StorageProvider;
+        if (storage == null || !File.Exists(FilePath))
             return;
 
         var file = await storage.TryGetFileFromPathAsync(new Uri(FilePath));
@@ -206,9 +236,39 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
         if (!File.Exists(filePath) || sender is not TioTabWindowBase window)
             return;
 
-        var tab = new TabEntry(window, new ImageViewer(filePath, filePaths));
+        var items = filePaths is { Count: > 0 }
+            ? filePaths.Select(path => new ImageViewerItem(path, Path.GetFileName(path))).ToArray()
+            : [new ImageViewerItem(filePath, Path.GetFileName(filePath))];
+
+        var currentIndex = -1;
+        for (var i = 0; i < items.Length; i++)
+        {
+            if (string.Equals(items[i].Source, filePath, StringComparison.OrdinalIgnoreCase))
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        Open(items, currentIndex, sender);
+    }
+
+    public static void Open(IReadOnlyList<ImageViewerItem> items, int currentIndex, TopLevel sender)
+    {
+        if (items.Count == 0 || currentIndex < 0 || currentIndex >= items.Count ||
+            sender is not TioTabWindowBase window)
+            return;
+
+        var item = items[currentIndex];
+        var tab = new TabEntry(window, new ImageViewer(item.Source, items));
         window.CreateTab(tab);
         window.SelectTab(tab);
+    }
+
+    private static bool IsRemote(string source)
+    {
+        return source.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+               source.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
     }
 
     private void NavigatePrevious_OnClick(object? sender, RoutedEventArgs e)
@@ -223,12 +283,12 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
 
     private void NavigateTo(int index)
     {
-        if (index < 0 || index >= _filePaths.Count || index == _currentIndex)
+        if (index < 0 || index >= _items.Count || index == _currentIndex)
             return;
 
         _currentIndex = index;
-        FilePath = _filePaths[index];
-        FileName = Path.GetFileName(FilePath);
+        FilePath = _items[index].Source;
+        FileName = _items[index].DisplayName;
 
         PageInfo.Title = FileName;
         if (HostTab != null)
@@ -255,3 +315,5 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
         ImageScrollView.ZoomTo(Math.Clamp(ImageScrollView.ZoomFactor - 0.1, 0.1, 100));
     }
 }
+
+public sealed record ImageViewerItem(string Source, string DisplayName);

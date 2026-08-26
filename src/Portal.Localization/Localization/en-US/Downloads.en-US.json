@@ -80,7 +80,10 @@
     "quickInstall": "Quick Install",
     "description": "Description",
     "versions": "Versions",
-    "gallery": "Gallery"
+    "gallery": "Gallery",
+    "screenshotIndex": "Image {0}",
+    "copyImage": "Copy Image",
+    "saveAs": "Save As"
   },
   "javaresourceinstalldialog": {
     "installPrefix": "Install",

@@ -52,20 +52,6 @@
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
-                        CommandParameter="{x:Type p:Shortcuts}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Shortcuts}}">
-                        <tio:NavMenuItem.Icon>
-                            <TextBlock
-                                FontFamily="{StaticResource IconFont}"
-                                FontSize="17"
-                                Margin="0,-1"
-                                Padding="2,0,0,0"
-                                Text="&#xe66c;"
-                                VerticalAlignment="Center" />
-                        </tio:NavMenuItem.Icon>
-                    </tio:NavMenuItem>
-                    <tio:NavMenuItem
-                        Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type p:Notification}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Notification}}">
                         <tio:NavMenuItem.Icon>
@@ -103,6 +89,20 @@
                                 Margin="0,-1"
                                 Padding="2,0,0,0"
                                 Text="&#xe668;"
+                                VerticalAlignment="Center" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
+                    <tio:NavMenuItem
+                        Command="{Binding NavigateTypeCommand}"
+                        CommandParameter="{x:Type p:Shortcuts}"
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Shortcuts}}">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe66c;"
                                 VerticalAlignment="Center" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>

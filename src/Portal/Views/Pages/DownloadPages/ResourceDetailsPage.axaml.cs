@@ -25,6 +25,12 @@ public partial class ResourceDetailsPage : ResourceDetailsPageBase
             IconGlyph = "\ue631", IconFont = IconResources.FontFamilyName
         };
         Loaded += async (_, _) => await ViewModel.LoadAsync();
+        Loaded += (_, _) =>
+        {
+            var a = ViewModel.CurrentPage;
+            ViewModel.CurrentPage = null;
+            ViewModel.CurrentPage = a;
+        };
     }
 
     /// <summary>Exposed for the XAML runtime loader; not intended for direct use.</summary>

@@ -1,5 +1,5 @@
 <UserControl
-    Margin="0,3,0,0"
+    Margin="0,10,0,0"
     mc:Ignorable="d"
     x:Class="Portal.Views.Pages.DownloadPages.ResourceDescriptionView"
     x:DataType="local:ResourceDetailsViewModel"
