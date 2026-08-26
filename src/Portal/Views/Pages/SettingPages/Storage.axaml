@@ -11,10 +11,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel>
         <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-            <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_title}}" />
             <Button
                 Command="{Binding RefreshStorageDataAsync}"
-                Margin="5,0,0,3"
+                Margin="0,0,0,3"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Bottom">
                 <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="18" Foreground="{DynamicResource InnerForegroundColor}" />

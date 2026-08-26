@@ -16,7 +16,6 @@
         <converter:UpdateSourceToIndexConverter x:Key="UpdateSourceToIndexConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_title}}" />
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"

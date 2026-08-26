@@ -16,7 +16,6 @@
         </Style>
     </UserControl.Styles>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.shortcuts_title}}" />
         <TextBox
             HorizontalAlignment="Stretch"
             Margin="0,0,0,-10"

@@ -18,7 +18,6 @@
         <converter:BackgroundModeCompareConverter x:Key="BackgroundModeCompareConverter" />
     </UserControl.Resources>
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_title}}" />
         <StackPanel Spacing="5">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_language}}"

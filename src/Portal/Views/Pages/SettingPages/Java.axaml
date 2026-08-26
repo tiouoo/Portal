@@ -13,7 +13,6 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.java_title}}" />
         <StackPanel Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Label

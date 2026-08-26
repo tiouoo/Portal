@@ -17,6 +17,8 @@ namespace Portal.Views.Pages;
 [DefaultPage("pages_settings")]
 public partial class SettingPage : UserControl, ITioTabPage
 {
+    private const double HeaderIconFontSizeOffset = 6;
+
     public SettingPageViewModel SettingPageViewModel;
 
     public SettingPage()
@@ -31,6 +33,7 @@ public partial class SettingPage : UserControl, ITioTabPage
             var a = SettingPageViewModel.CurrentPage;
             SettingPageViewModel.CurrentPage = null;
             SettingPageViewModel.CurrentPage = a;
+            if (a != null) SelectNavMenuItem(a.GetType());
         };
     }
 
@@ -83,8 +86,26 @@ public partial class SettingPage : UserControl, ITioTabPage
             if (childItem.CommandParameter is Type paramType && paramType == pageType)
             {
                 navMenu.SelectedItem = childItem;
+                UpdateHeader(childItem);
                 return;
             }
+    }
+
+    private void NavMenu_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is NavMenu { SelectedItem: NavMenuItem item }) UpdateHeader(item);
+    }
+
+    private void UpdateHeader(NavMenuItem item)
+    {
+        if (DataContext is not SettingPageViewModel viewModel) return;
+
+        viewModel.CurrentTitle = item.Header?.ToString() ?? string.Empty;
+        if (item.Icon is TextBlock icon)
+        {
+            viewModel.CurrentIconGlyph = icon.Text ?? string.Empty;
+            viewModel.CurrentIconFontSize = icon.FontSize + HeaderIconFontSizeOffset;
+        }
     }
 }
 
@@ -100,6 +121,9 @@ public partial class SettingPageViewModel : ObservableObject, IDisposable
     }
 
     [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
+    [ObservableProperty] public partial string CurrentTitle { get; set; } = string.Empty;
+    [ObservableProperty] public partial string CurrentIconGlyph { get; set; } = string.Empty;
+    [ObservableProperty] public partial double CurrentIconFontSize { get; set; } = 17;
 
     public void Dispose()
     {

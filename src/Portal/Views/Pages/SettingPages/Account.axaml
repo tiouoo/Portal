@@ -17,14 +17,10 @@
             <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
             <converter:AccountTypeToBoolConverter x:Key="AccountTypeToBoolConverter" />
         </StackPanel.Resources>
-        <StackPanel
-            Margin="0,0,0,0"
-            Orientation="Horizontal"
-            Spacing="6">
-            <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.account_title}}" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
             <Button
                 Click="AddAccountClick"
-                Margin="5,0,0,2"
+                Margin="0,0,0,2"
                 Theme="{StaticResource TransparentButton}"
                 VerticalAlignment="Bottom">
                 <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe645;" FontSize="22" Foreground="{DynamicResource InnerForegroundColor}" />

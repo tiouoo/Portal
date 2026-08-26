@@ -10,7 +10,6 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_title}}" />
         <StackPanel Spacing="5">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_defaultPage}}"

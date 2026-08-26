@@ -11,7 +11,6 @@
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel Spacing="15">
-        <TextBlock FontSize="26" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.download_title}}" />
         <StackPanel Spacing="8">
             <TextBlock FontSize="18" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.download_downloadSource}}" />
             <StackPanel Spacing="5">
