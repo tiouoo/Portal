@@ -67,6 +67,7 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
     [ObservableProperty] public partial MinecraftVersionFilterOption? SelectedFilter { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; } = true;
     [ObservableProperty] public partial string StatusText { get; set; } =
         CommonLanguageManager.Instance.vanillaInstall_fetchingVersions.CurrentValue();
 
@@ -80,6 +81,7 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
 
     public async Task LoadVersionsAsync()
     {
+        if (_disposed || !IsLoading) return;
         try
         {
             var entries = Data.UiProperty.MinecraftVersionManifestEntries;
@@ -103,6 +105,10 @@ public partial class VanillaInstallationViewModel : ObservableObject, IDisposabl
         catch (Exception)
         {
             StatusText = CommonLanguageManager.Instance.vanillaInstall_fetchFailed.CurrentValue();
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 

@@ -1,0 +1,17 @@
+<UserControl
+    x:Class="Portal.Views.Components.ResourceDescriptionSkeleton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="2,2,12,0" Spacing="10">
+        <tio:Skeleton CornerRadius="4" Height="20" IsActive="True" IsLoading="True" Width="210" />
+        <tio:Skeleton CornerRadius="3" Height="14" HorizontalAlignment="Stretch" IsActive="True" IsLoading="True" />
+        <tio:Skeleton CornerRadius="3" Height="14" HorizontalAlignment="Stretch" IsActive="True" IsLoading="True" />
+        <tio:Skeleton CornerRadius="3" Height="14" IsActive="True" IsLoading="True" Width="520" />
+        <tio:Skeleton CornerRadius="4" Height="18" IsActive="True" IsLoading="True" Margin="0,10,0,0" Width="160" />
+        <tio:Skeleton CornerRadius="3" Height="14" HorizontalAlignment="Stretch" IsActive="True" IsLoading="True" />
+        <tio:Skeleton CornerRadius="3" Height="14" HorizontalAlignment="Stretch" IsActive="True" IsLoading="True" />
+        <tio:Skeleton CornerRadius="3" Height="14" IsActive="True" IsLoading="True" Width="440" />
+        <tio:Skeleton CornerRadius="6" Height="110" HorizontalAlignment="Stretch" IsActive="True" IsLoading="True" Margin="0,8,0,0" />
+    </StackPanel>
+</UserControl>

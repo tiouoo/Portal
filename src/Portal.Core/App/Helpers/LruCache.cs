@@ -51,6 +51,16 @@ public sealed class LruCache<TKey, TValue>(int capacity, IEqualityComparer<TKey>
         }
     }
 
+    public bool Remove(TKey key)
+    {
+        lock (_lock)
+        {
+            if (!_entries.Remove(key, out var node)) return false;
+            _usage.Remove(node);
+            return true;
+        }
+    }
+
     public void Clear()
     {
         lock (_lock)

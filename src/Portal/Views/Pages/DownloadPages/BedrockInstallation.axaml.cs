@@ -57,6 +57,7 @@ public partial class BedrockInstallation : UserControl
 
 public partial class BedrockInstallationViewModel : ObservableObject, IDisposable
 {
+    private static IReadOnlyList<BedrockVersion>? _versionCache;
     private readonly List<BedrockVersion> _allVersions = [];
     private readonly CancellationTokenSource _pageCancellation = new();
     private bool _disposed;
@@ -67,7 +68,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
     [ObservableProperty] public partial int SelectedBuildType { get; set; }
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
     [ObservableProperty] public partial bool IsInstalling { get; set; }
-    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; } = true;
     [ObservableProperty] public partial string StatusText { get; set; } =
         CommonLanguageManager.Instance.bedrock_fetchingVersions.CurrentValue();
 
@@ -110,15 +111,21 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
     public async Task LoadVersionsAsync()
     {
-        if (IsLoading || BedrockInstallationService.DefaultInstaller is not { } installer) return;
+        if (_disposed || _allVersions.Count > 0) return;
+        if (BedrockInstallationService.DefaultInstaller is not { } installer)
+        {
+            IsLoading = false;
+            UpdateInstallState();
+            return;
+        }
 
-        IsLoading = true;
         var loaded = false;
         StatusText = CommonLanguageManager.Instance.bedrock_fetchingVersionsFromSource.CurrentValue();
         try
         {
-            var versions = await installer.GetVersionsAsync(false, _pageCancellation.Token);
+            var versions = _versionCache ?? await installer.GetVersionsAsync(false, _pageCancellation.Token);
             if (_disposed) return;
+            _versionCache ??= versions.ToArray();
             _allVersions.Clear();
             _allVersions.AddRange(versions);
             loaded = true;

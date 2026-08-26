@@ -36,6 +36,76 @@ public sealed record ResourceDetailsTarget(
     string GameVersion = "",
     ModLoaderType Loader = ModLoaderType.Any);
 
+internal static class ResourceProjectFiles
+{
+    private static readonly LruCache<(ModDetailsSource Source, string ProjectId),
+        Task<IReadOnlyList<ResourceVersionFileItem>>> Cache = new(64);
+    private static readonly Lock CacheLock = new();
+
+    public static bool TryGetCached(ResourceDetailsTarget target,
+        out IReadOnlyList<ResourceVersionFileItem> files)
+    {
+        Task<IReadOnlyList<ResourceVersionFileItem>>? task;
+        lock (CacheLock)
+        {
+            Cache.TryGetValue((target.Source, target.ProjectId), out task);
+        }
+
+        if (task is { IsCompletedSuccessfully: true })
+        {
+            files = task.Result;
+            return true;
+        }
+
+        files = [];
+        return false;
+    }
+
+    public static async Task<IReadOnlyList<ResourceVersionFileItem>> GetAsync(ResourceDetailsTarget target,
+        CancellationToken cancellationToken = default)
+    {
+        var key = (target.Source, target.ProjectId);
+        Task<IReadOnlyList<ResourceVersionFileItem>> task;
+        lock (CacheLock)
+        {
+            if (!Cache.TryGetValue(key, out task!))
+            {
+                task = LoadAsync(target.Source, target.ProjectId);
+                Cache.Set(key, task);
+            }
+        }
+
+        try
+        {
+            return await task.WaitAsync(cancellationToken);
+        }
+        catch when (task.IsFaulted || task.IsCanceled)
+        {
+            lock (CacheLock)
+            {
+                if (Cache.TryGetValue(key, out var cached) && ReferenceEquals(cached, task)) Cache.Remove(key);
+            }
+
+            throw;
+        }
+    }
+
+    private static async Task<IReadOnlyList<ResourceVersionFileItem>> LoadAsync(ModDetailsSource source,
+        string projectId)
+    {
+        return source switch
+        {
+            ModDetailsSource.Modrinth =>
+                (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(projectId))
+                .Select(ResourceVersionFileItem.From).ToArray(),
+            ModDetailsSource.CurseForge =>
+                (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(projectId))
+                .Select(ResourceVersionFileItem.From).ToArray(),
+            _ => []
+        };
+    }
+}
+
 public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
 {
     private const int GalleryPage = 2;
@@ -91,7 +161,7 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
     [ObservableProperty] public partial bool IsFavorite { get; set; }
     [ObservableProperty] public partial string Metadata { get; set; } = string.Empty;
     [ObservableProperty] public partial string? IconUrl { get; set; }
-    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; } = true;
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial ResourceVersionFilter? SelectedVersionFilter { get; set; }
     [ObservableProperty] public partial ResourceLoaderFilter? SelectedLoaderFilter { get; set; }
@@ -170,9 +240,7 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
                 Metadata = FormatMetadata(project.DateModified ?? default, (int)project.Downloads);
                 SetProjectDetails(project);
                 AddScreenshots(project.Screenshots);
-                AllFiles = await Task.Run(async () => (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(
-                        Target.ProjectId, cancellationToken: cancellationToken))
-                    .Select(ResourceVersionFileItem.From).ToArray(), cancellationToken);
+                AllFiles = await ResourceProjectFiles.GetAsync(Target, cancellationToken);
             }
             else
             {
@@ -193,9 +261,7 @@ public partial class ResourceDetailsViewModel : ObservableObject, IDisposable
                 Metadata = FormatMetadata(project.DateModified ?? default, (int)project.Downloads);
                 SetProjectDetails(project);
                 AddScreenshots(project.Screenshots);
-                AllFiles = await Task.Run(async () => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
-                        project.Id, cancellationToken: cancellationToken))
-                    .Select(ResourceVersionFileItem.From).ToArray(), cancellationToken);
+                AllFiles = await ResourceProjectFiles.GetAsync(Target, cancellationToken);
             }
 
             OnPropertyChanged(nameof(DisplayName));
@@ -566,6 +632,13 @@ public static class ResourceDownload
 
     private static async Task QuickDownloadDefaultAsync(TopLevel topLevel, ResourceDetailsTarget target)
     {
+        if (ResourceProjectFiles.TryGetCached(target, out var cachedFiles))
+        {
+            if (cachedFiles.Count > 0)
+                await ShowInstallDialogAsync(topLevel, target.Definition, cachedFiles);
+            return;
+        }
+
         var loading = new QuickDownloadLoadingDialogViewModel(
             string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
                 target.Definition.DisplayName));
@@ -581,16 +654,7 @@ public static class ResourceDownload
         {
             Logger.Info(
                 $"[Download] Loading quick-download files for {target.Definition.DisplayName} project {target.ProjectId} from {target.Source}.");
-            IReadOnlyList<ResourceVersionFileItem> files = target.Source switch
-            {
-                ModDetailsSource.Modrinth =>
-                    (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(target.ProjectId))
-                    .Select(ResourceVersionFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
-                        target.ProjectId))
-                    .Select(ResourceVersionFileItem.From).ToArray(),
-                _ => []
-            };
+            var files = await ResourceProjectFiles.GetAsync(target);
             if (files.Count == 0)
                 throw new InvalidDataException(
                     CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());
@@ -615,6 +679,13 @@ public static class ResourceDownload
 
     public static async Task QuickDownloadModAsync(TopLevel topLevel, ResourceDetailsTarget target)
     {
+        if (ResourceProjectFiles.TryGetCached(target, out var cachedFiles))
+        {
+            if (cachedFiles.Count > 0)
+                await ShowModInstallDialogAsync(topLevel, cachedFiles);
+            return;
+        }
+
         var loading = new QuickDownloadLoadingDialogViewModel(CommonLanguageManager.Instance.modDetails_downloadMod.CurrentValue());
         var loadingDialog = OverlayDialog
             .ShowCustomAsync<QuickDownloadLoadingDialog, QuickDownloadLoadingDialogViewModel,
@@ -625,16 +696,7 @@ public static class ResourceDownload
             });
         try
         {
-            IReadOnlyList<ResourceVersionFileItem> files = target.Source switch
-            {
-                ModDetailsSource.Modrinth =>
-                    (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(target.ProjectId))
-                    .Select(ResourceVersionFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
-                        target.ProjectId))
-                    .Select(ResourceVersionFileItem.From).ToArray(),
-                _ => []
-            };
+            var files = await ResourceProjectFiles.GetAsync(target);
             if (files.Count == 0)
                 throw new InvalidDataException(CommonLanguageManager.Instance.modDetails_noModFiles.CurrentValue());
             loading.Close();

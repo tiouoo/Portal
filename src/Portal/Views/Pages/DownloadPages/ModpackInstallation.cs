@@ -57,6 +57,17 @@ internal static class ModpackInstallation
     public static async Task InstallFromSearchAsync(TopLevel topLevel, ResourceDetailsTarget target,
         string? iconUrl, string? suggestedName)
     {
+        if (ResourceProjectFiles.TryGetCached(target, out var cachedFiles))
+        {
+            var cachedFile = cachedFiles.OrderByDescending(item => item.Published).FirstOrDefault();
+            if (cachedFile is not null)
+                await InstallFromFileAsync(topLevel, target.Source, cachedFile, iconUrl,
+                    SanitizeInstanceId(string.IsNullOrWhiteSpace(suggestedName)
+                        ? cachedFile.DisplayName
+                        : suggestedName));
+            return;
+        }
+
         var loading = new QuickDownloadLoadingDialogViewModel(
             string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
                 target.Definition.DisplayName));
@@ -70,16 +81,7 @@ internal static class ModpackInstallation
             });
         try
         {
-            IReadOnlyList<ResourceVersionFileItem> files = target.Source switch
-            {
-                ModDetailsSource.Modrinth =>
-                    (await IridiumResourceClients.Modrinth.GetProjectFilesAsync(target.ProjectId))
-                    .Select(ResourceVersionFileItem.From).ToArray(),
-                ModDetailsSource.CurseForge => (await IridiumResourceClients.CurseForge.GetProjectFilesAsync(
-                        target.ProjectId))
-                    .Select(ResourceVersionFileItem.From).ToArray(),
-                _ => []
-            };
+            var files = await ResourceProjectFiles.GetAsync(target);
             var file = files.OrderByDescending(item => item.Published).FirstOrDefault();
             if (file is null)
                 throw new InvalidDataException(CommonLanguageManager.Instance.quickDownload_noFiles.CurrentValue());

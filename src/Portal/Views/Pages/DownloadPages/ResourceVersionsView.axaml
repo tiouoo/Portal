@@ -9,11 +9,13 @@
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Portal.Core.Minecraft.Models;assembly=Portal.Core"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
         <StackPanel
             DockPanel.Dock="Top"
+            IsVisible="{Binding !IsLoading}"
             Margin="0,0,0,10"
             Orientation="Horizontal"
             Spacing="6">
@@ -41,7 +43,10 @@
             </ComboBox>
         </StackPanel>
         <Grid>
-            <tio:ScrollView HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <tio:ScrollView
+                HorizontalScrollBarVisibility="Disabled"
+                IsVisible="{Binding !IsLoading}"
+                VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="0,0,6,0">
                     <ItemsControl ItemsSource="{Binding VersionGroups}">
                         <ItemsControl.ItemsPanel>
@@ -121,13 +126,7 @@
                         Margin="0,0,0,10" />
                 </StackPanel>
             </tio:ScrollView>
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                HorizontalAlignment="Left"
-                IsVisible="{Binding IsLoading}"
-                Margin="2,2,0,0"
-                Text="{Binding LoadingText}"
-                VerticalAlignment="Top" />
+            <owned:ResourceVersionsSkeleton IsVisible="{Binding IsLoading}" />
             <TextBlock
                 Foreground="{DynamicResource InnerForegroundColor}"
                 HorizontalAlignment="Left"

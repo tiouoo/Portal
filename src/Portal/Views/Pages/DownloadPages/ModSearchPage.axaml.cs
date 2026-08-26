@@ -156,6 +156,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
     public bool HasResults => Results.Count > 0;
+    public bool HasPages => TotalCount > 0;
     public bool IsLoadingPlaceholder => IsLoading && Results.Count == 0;
     public bool IsEmpty => !IsLoading && !HasError && Results.Count == 0;
     public string LoadingText => CommonLanguageManager.Instance.modSearch_loading.CurrentValue();
@@ -169,6 +170,11 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
     partial void OnHasErrorChanged(bool value)
     {
         NotifyResultState();
+    }
+
+    partial void OnTotalCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(HasPages));
     }
 
     private void NotifyResultState()
@@ -204,7 +210,7 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         IsLoading = true;
         NotifyResultState();
         if (!_initialized) return;
-        ScheduleFilterSearch();
+        _ = SearchAsync(string.IsNullOrWhiteSpace(SearchText));
     }
 
     public async Task InitializeAsync()
@@ -443,33 +449,27 @@ public partial class ModSearchPageViewModel : ObservableObject, IDisposable, ISe
         var request = new SearchRequest(SelectedSource.Kind, SearchText.Trim(), GameVersion.Trim(),
             SelectedLoader?.Kind ?? ModLoaderType.Any, includedCategories, excludedCategories,
             SelectedEnvironment?.Kind ?? ResourceEnvironment.Any, SelectedSort.Kind, CurrentPage);
-        var renderedCache = false;
         if (ModSearchCache.TryGetValue(request, out var cached) && cached is not null && IsCurrent(request))
         {
             Apply(cached.ToPageData());
-            renderedCache = true;
+            return;
         }
 
         if (IsCurrent(request))
         {
+            Results.Clear();
             HasError = false;
+            IsLoading = true;
             StatusText = isDefaultSearch
                 ? CommonLanguageManager.Instance.modSearch_fetchingPopular.CurrentValue()
                 : CommonLanguageManager.Instance.modSearch_searching.CurrentValue();
         }
 
-        if (IsCurrent(request) && !renderedCache)
-            IsLoading = true;
-
         try
         {
-            var page = await FetchAsync(request, _disposeCancellation.Token);
-
-            ModSearchCache.Set(request, CachedSearchPage.From(page));
-            if (IsCurrent(request)) Apply(page, renderedCache);
-        }
-        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
-        {
+            var page = await ModSearchCache.GetOrCreateAsync(request, async () =>
+                CachedSearchPage.From(await FetchAsync(request, CancellationToken.None)));
+            if (IsCurrent(request)) Apply(page.ToPageData());
         }
         catch (Exception)
         {
@@ -662,7 +662,7 @@ public sealed record SearchPageData(IReadOnlyList<ModSearchResultItem> Items, in
 
 internal static class ModSearchCache
 {
-    private static readonly BoundedCache<SearchRequest, CachedSearchPage> Entries = new(32);
+    private static readonly ApplicationCache<SearchRequest, CachedSearchPage> Entries = new();
 
     public static bool TryGetValue(SearchRequest request, out CachedSearchPage? page)
     {
@@ -672,6 +672,12 @@ internal static class ModSearchCache
     public static void Set(SearchRequest request, CachedSearchPage page)
     {
         Entries.Set(request, page);
+    }
+
+    public static Task<CachedSearchPage> GetOrCreateAsync(SearchRequest request,
+        Func<Task<CachedSearchPage>> factory)
+    {
+        return Entries.GetOrCreateAsync(request, factory);
     }
 }
 

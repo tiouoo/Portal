@@ -1,0 +1,60 @@
+<UserControl
+    x:Class="Portal.Views.Components.ResourceVersionsSkeleton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:components="clr-namespace:Portal.Views.Components"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel
+            DockPanel.Dock="Top"
+            Margin="0,0,0,10"
+            Orientation="Horizontal"
+            Spacing="6">
+            <tio:Skeleton
+                CornerRadius="6"
+                Height="32"
+                IsActive="True"
+                IsLoading="True"
+                Width="150" />
+            <tio:Skeleton
+                CornerRadius="6"
+                Height="32"
+                IsActive="True"
+                IsLoading="True"
+                Width="180" />
+        </StackPanel>
+        <ItemsControl ItemsSource="{x:Static components:ResourceVersionsSkeleton.Items}" Margin="0,0,6,0">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border
+                        Background="{DynamicResource TranslucentBackgroundColor}"
+                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Height="46"
+                        Margin="0,0,0,10"
+                        Padding="14,0">
+                        <Panel>
+                            <tio:Skeleton
+                                CornerRadius="3"
+                                Height="13"
+                                HorizontalAlignment="Right"
+                                IsActive="True"
+                                IsLoading="True"
+                                VerticalAlignment="Center"
+                                Width="62" />
+                            <tio:Skeleton
+                                CornerRadius="4"
+                                Height="15"
+                                HorizontalAlignment="Left"
+                                IsActive="True"
+                                IsLoading="True"
+                                VerticalAlignment="Center"
+                                Width="145" />
+                        </Panel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>

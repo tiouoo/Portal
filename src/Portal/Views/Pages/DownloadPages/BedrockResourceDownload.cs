@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Iridium.Models.Resources;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Minecraft.Models;
 using Portal.Core.Minecraft.Services;
@@ -22,6 +21,14 @@ public static class BedrockResourceDownload
         var destination = await BedrockPackageImportDialog.SelectDestinationAsync(topLevel, target.Definition);
         if (destination is null) return;
 
+        if (ResourceProjectFiles.TryGetCached(target, out var cachedFiles))
+        {
+            var cachedFile = cachedFiles.OrderByDescending(item => item.Published).FirstOrDefault();
+            if (cachedFile is not null)
+                await DownloadAndImportAsync(topLevel, target.Definition, cachedFile, destination);
+            return;
+        }
+
         var loading = new QuickDownloadLoadingDialogViewModel(
             string.Format(CommonLanguageManager.Instance.quickDownload_title.CurrentValue(),
                 target.Definition.DisplayName));
@@ -36,8 +43,8 @@ public static class BedrockResourceDownload
         try
         {
             Logger.Info($"[BedrockDownload] Loading latest file for project {target.ProjectId}.");
-            var files = await IridiumResourceClients.CurseForge.GetProjectFilesAsync(target.ProjectId);
-            var file = files.Select(ResourceVersionFileItem.From)
+            var files = await ResourceProjectFiles.GetAsync(target);
+            var file = files
                 .OrderByDescending(item => item.Published)
                 .FirstOrDefault();
             if (file is null)

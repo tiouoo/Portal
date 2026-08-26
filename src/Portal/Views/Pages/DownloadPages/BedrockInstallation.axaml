@@ -10,6 +10,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloadPages="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <DockPanel>
         <DockPanel
@@ -64,7 +65,8 @@
         </DockPanel>
 
         <controls:ScrollView>
-            <ItemsRepeater ItemsSource="{Binding Versions}">
+            <Panel>
+            <ItemsRepeater IsVisible="{Binding !IsLoading}" ItemsSource="{Binding Versions}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout
                         ItemsStretch="Fill"
@@ -132,6 +134,8 @@
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
+                <owned:GameVersionSkeleton IsVisible="{Binding IsLoading}" />
+            </Panel>
         </controls:ScrollView>
     </DockPanel>
 </UserControl>

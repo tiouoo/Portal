@@ -1,0 +1,83 @@
+<UserControl
+    x:Class="Portal.Views.Components.ResourceSearchSkeleton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:components="clr-namespace:Portal.Views.Components"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ItemsRepeater
+        ItemsSource="{x:Static components:ResourceSearchSkeleton.Items}"
+        Margin="0,0,10,0">
+        <ItemsRepeater.Layout>
+            <UniformGridLayout
+                ItemsStretch="Fill"
+                MinColumnSpacing="16"
+                MinItemHeight="117"
+                MinItemWidth="340"
+                MinRowSpacing="16" />
+        </ItemsRepeater.Layout>
+        <ItemsRepeater.ItemTemplate>
+            <DataTemplate>
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="10">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top">
+                            <tio:Skeleton
+                                CornerRadius="12"
+                                DockPanel.Dock="Left"
+                                Height="56"
+                                IsActive="True"
+                                IsLoading="True"
+                                Width="56" />
+                            <StackPanel Margin="10,1,0,0" Spacing="5" VerticalAlignment="Center">
+                                <tio:Skeleton
+                                    CornerRadius="4"
+                                    Height="16"
+                                    IsActive="True"
+                                    IsLoading="True"
+                                    Width="150" />
+                                <tio:Skeleton
+                                    CornerRadius="3"
+                                    Height="12"
+                                    IsActive="True"
+                                    IsLoading="True"
+                                    Width="105" />
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <tio:Skeleton
+                                        CornerRadius="999"
+                                        Height="17"
+                                        IsActive="True"
+                                        IsLoading="True"
+                                        Width="52" />
+                                    <tio:Skeleton
+                                        CornerRadius="999"
+                                        Height="17"
+                                        IsActive="True"
+                                        IsLoading="True"
+                                        Width="40" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+                        <StackPanel Margin="3,5,3,0" Spacing="5">
+                            <tio:Skeleton
+                                CornerRadius="3"
+                                Height="12"
+                                HorizontalAlignment="Stretch"
+                                IsActive="True"
+                                IsLoading="True" />
+                            <tio:Skeleton
+                                CornerRadius="3"
+                                Height="12"
+                                IsActive="True"
+                                IsLoading="True"
+                                Width="190" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+            </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+    </ItemsRepeater>
+</UserControl>

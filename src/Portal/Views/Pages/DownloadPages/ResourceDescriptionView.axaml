@@ -8,8 +8,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:owned="clr-namespace:Portal.Views.Components"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <controls:ScrollView>
-        <ItemsControl ItemsSource="{Binding DescriptionControls}" />
+        <Panel>
+            <ItemsControl IsVisible="{Binding !IsLoading}" ItemsSource="{Binding DescriptionControls}" />
+            <owned:ResourceDescriptionSkeleton IsVisible="{Binding IsLoading}" />
+        </Panel>
     </controls:ScrollView>
 </UserControl>

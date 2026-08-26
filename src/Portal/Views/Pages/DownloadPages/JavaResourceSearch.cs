@@ -56,7 +56,7 @@ public static class ResourceDefinitions
 public abstract partial class JavaResourceSearchViewModel : ObservableObject, IDisposable, ISearchPageViewModel
 {
     private const int PageSize = 40;
-    private static readonly BoundedCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new(32);
+    private static readonly ApplicationCache<JavaResourceSearchRequest, JavaResourceSearchPage> Cache = new();
     private readonly CancellationTokenSource _disposeCancellation = new();
     private bool _disposed;
     private CancellationTokenSource? _filterDebounce;
@@ -147,6 +147,7 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
     public bool HasResults => Results.Count > 0;
+    public bool HasPages => TotalCount > 0;
     public bool IsLoadingPlaceholder => IsLoading && Results.Count == 0;
     public bool IsEmpty => !IsLoading && !HasError && Results.Count == 0;
     public string LoadingText => CommonLanguageManager.Instance.modSearch_loading.CurrentValue();
@@ -162,6 +163,11 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
     partial void OnHasErrorChanged(bool value)
     {
         NotifyResultState();
+    }
+
+    partial void OnTotalCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(HasPages));
     }
 
     private void NotifyResultState()
@@ -424,30 +430,27 @@ public abstract partial class JavaResourceSearchViewModel : ObservableObject, ID
             GameVersion.Trim(), ShowLoaderFilter ? SelectedLoader?.Kind ?? ModLoaderType.Any : ModLoaderType.Any,
             includedCategories, excludedCategories, SelectedEnvironment?.Kind ?? ResourceEnvironment.Any,
             SelectedSort.Kind, CurrentPage);
-        var renderedCache = Cache.TryGetValue(request, out var cached) && cached is not null && IsCurrent(request);
-        if (renderedCache) Apply(cached!);
+        if (Cache.TryGetValue(request, out var cached) && cached is not null && IsCurrent(request))
+        {
+            Apply(cached);
+            return;
+        }
 
         if (IsCurrent(request))
         {
+            Results.Clear();
             HasError = false;
+            IsLoading = true;
             StatusText = isDefaultSearch
                 ? string.Format(CommonLanguageManager.Instance.javaResourceSearch_fetchingPopular.CurrentValue(),
                     Definition.DisplayName)
                 : CommonLanguageManager.Instance.modSearch_searching.CurrentValue();
         }
 
-        if (IsCurrent(request) && !renderedCache)
-            IsLoading = true;
-
         try
         {
-            var page = await FetchAsync(request, _disposeCancellation.Token);
-            Cache.Set(request, page);
-            if (IsCurrent(request)) Apply(page, renderedCache);
-        }
-        catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
-        {
-            Logger.Debug($"[Download] {Definition.DisplayName} search cancelled.");
+            var page = await Cache.GetOrCreateAsync(request, () => FetchAsync(request, CancellationToken.None));
+            if (IsCurrent(request)) Apply(page);
         }
         catch (Exception exception)
         {
@@ -628,26 +631,17 @@ public sealed class SaveSearchPageViewModel() : JavaResourceSearchViewModel(Reso
 public sealed class BedrockResourceSearchViewModel(ResourceDefinition definition)
     : JavaResourceSearchViewModel(definition);
 
-internal sealed class BoundedCache<TKey, TValue>(int capacity) where TKey : notnull
+internal sealed class ApplicationCache<TKey, TValue> where TKey : notnull
 {
-    private readonly Dictionary<TKey, LinkedListNode<(TKey Key, TValue Value)>> _entries = new();
+    private readonly Dictionary<TKey, TValue> _entries = new();
+    private readonly Dictionary<TKey, Task<TValue>> _pending = new();
     private readonly object _lock = new();
-    private readonly LinkedList<(TKey Key, TValue Value)> _usage = new();
 
     public bool TryGetValue(TKey key, out TValue? value)
     {
         lock (_lock)
         {
-            if (!_entries.TryGetValue(key, out var node))
-            {
-                value = default;
-                return false;
-            }
-
-            _usage.Remove(node);
-            _usage.AddFirst(node);
-            value = node.Value.Value;
-            return true;
+            return _entries.TryGetValue(key, out value);
         }
     }
 
@@ -655,16 +649,41 @@ internal sealed class BoundedCache<TKey, TValue>(int capacity) where TKey : notn
     {
         lock (_lock)
         {
-            if (_entries.Remove(key, out var existing))
-                _usage.Remove(existing);
+            _entries[key] = value;
+        }
+    }
 
-            var node = _usage.AddFirst((key, value));
-            _entries[key] = node;
-            if (_entries.Count <= capacity) return;
+    public Task<TValue> GetOrCreateAsync(TKey key, Func<Task<TValue>> factory)
+    {
+        lock (_lock)
+        {
+            if (_entries.TryGetValue(key, out var value)) return Task.FromResult(value);
+            if (_pending.TryGetValue(key, out var pending)) return pending;
 
-            var oldest = _usage.Last!;
-            _usage.RemoveLast();
-            _entries.Remove(oldest.Value.Key);
+            var task = factory();
+            _pending[key] = task;
+            _ = CompleteAsync(key, task);
+            return task;
+        }
+    }
+
+    private async Task CompleteAsync(TKey key, Task<TValue> task)
+    {
+        try
+        {
+            var value = await task;
+            lock (_lock)
+            {
+                _entries[key] = value;
+                _pending.Remove(key);
+            }
+        }
+        catch
+        {
+            lock (_lock)
+            {
+                _pending.Remove(key);
+            }
         }
     }
 }

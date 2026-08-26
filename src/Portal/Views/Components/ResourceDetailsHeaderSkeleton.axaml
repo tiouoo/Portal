@@ -1,0 +1,84 @@
+<UserControl
+    x:Class="Portal.Views.Components.ResourceDetailsHeaderSkeleton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="2,0,0,0">
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top">
+                <tio:Skeleton
+                    CornerRadius="14"
+                    DockPanel.Dock="Left"
+                    Height="72"
+                    IsActive="True"
+                    IsLoading="True"
+                    Width="72" />
+                <StackPanel Margin="12,5,12,0" Spacing="7">
+                    <tio:Skeleton
+                        CornerRadius="4"
+                        Height="22"
+                        HorizontalAlignment="Left"
+                        IsActive="True"
+                        IsLoading="True"
+                        Width="230" />
+                    <tio:Skeleton
+                        CornerRadius="3"
+                        Height="14"
+                        HorizontalAlignment="Left"
+                        IsActive="True"
+                        IsLoading="True"
+                        Width="150" />
+                    <tio:Skeleton
+                        CornerRadius="3"
+                        Height="14"
+                        HorizontalAlignment="Left"
+                        IsActive="True"
+                        IsLoading="True"
+                        Width="190" />
+                </StackPanel>
+            </DockPanel>
+            <StackPanel
+                DockPanel.Dock="Top"
+                Margin="2,8,0,0"
+                Spacing="6">
+                <tio:Skeleton
+                    CornerRadius="3"
+                    Height="14"
+                    HorizontalAlignment="Stretch"
+                    IsActive="True"
+                    IsLoading="True" />
+                <tio:Skeleton
+                    CornerRadius="3"
+                    Height="14"
+                    HorizontalAlignment="Left"
+                    IsActive="True"
+                    IsLoading="True"
+                    Width="420" />
+            </StackPanel>
+            <StackPanel
+                DockPanel.Dock="Top"
+                Margin="2,9,0,0"
+                Orientation="Horizontal"
+                Spacing="5">
+                <tio:Skeleton
+                    CornerRadius="12"
+                    Height="24"
+                    IsActive="True"
+                    IsLoading="True"
+                    Width="72" />
+                <tio:Skeleton
+                    CornerRadius="12"
+                    Height="24"
+                    IsActive="True"
+                    IsLoading="True"
+                    Width="58" />
+                <tio:Skeleton
+                    CornerRadius="12"
+                    Height="24"
+                    IsActive="True"
+                    IsLoading="True"
+                    Width="86" />
+            </StackPanel>
+        </DockPanel>
+    </DockPanel>
+</UserControl>

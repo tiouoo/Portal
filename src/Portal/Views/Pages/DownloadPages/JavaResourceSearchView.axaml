@@ -29,7 +29,7 @@
                     CurrentPage="{Binding CurrentPage}"
                     DockPanel.Dock="Right"
                     HorizontalAlignment="Right"
-                    IsVisible="{Binding HasResults}"
+                    IsVisible="{Binding HasPages}"
                     PageSize="40"
                     TotalCount="{Binding TotalCount}" />
             </DockPanel>
@@ -412,25 +412,7 @@
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    HorizontalAlignment="Center"
-                    IsVisible="{Binding IsLoadingPlaceholder}"
-                    Margin="0,24,0,0"
-                    Padding="10"
-                    VerticalAlignment="Top">
-                    <StackPanel Spacing="8">
-                        <ProgressBar IsIndeterminate="True" Width="200" />
-                        <TextBlock
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            HorizontalAlignment="Center"
-                            Text="{Binding LoadingText}" />
-                    </StackPanel>
-                </Border>
+                <owned:ResourceSearchSkeleton IsVisible="{Binding IsLoadingPlaceholder}" />
                 <TextBlock
                     FontSize="14"
                     Foreground="{DynamicResource InnerForegroundColor}"
