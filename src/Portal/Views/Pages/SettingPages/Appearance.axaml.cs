@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -6,7 +7,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Irihi.Lingua;
@@ -18,7 +22,6 @@ using Portal.Views.Components;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Extensions;
-using TioUi.Common;
 using TioUi.Controls;
 using TioUi.Shared;
 
@@ -51,9 +54,14 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
         {
             ListBox.SelectedIndex = (int)Data.ConfigEntry.Theme;
             UpdateApplyButtonState();
+            RefreshBackgroundHistory();
             SubscribeRenderScaling();
         };
-        Unloaded += (_, _) => { UnsubscribeRenderScaling(); };
+        Unloaded += (_, _) =>
+        {
+            UnsubscribeRenderScaling();
+            ClearBackgroundHistory();
+        };
         ListBox.SelectionChanged += (_, _) =>
         {
             if (ListBox.SelectedIndex == -1) return;
@@ -74,6 +82,10 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
     }
 
     public double EffectiveScale => CurrentRenderScaling * AppScaleSlider.Value;
+
+    public ObservableCollection<BackgroundHistoryItem> BackgroundHistory { get; } = [];
+
+    public bool HasBackgroundHistory => BackgroundHistory.Count > 0;
 
     public object IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
@@ -190,30 +202,98 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
             await using (var target = File.Create(targetPath))
                 await source.CopyToAsync(target);
 
-            var previousPath = Data.ConfigEntry.BackgroundImagePath;
             Data.ConfigEntry.BackgroundImagePath = targetPath;
-            DeleteManagedBackground(previousPath, targetPath);
+            RefreshBackgroundHistory();
         }
         catch (Exception exception)
         {
             Logger.Error(exception);
-            if (File.Exists(targetPath))
-                File.Delete(targetPath);
+            try
+            {
+                if (File.Exists(targetPath))
+                    File.Delete(targetPath);
+            }
+            catch (Exception cleanupException)
+            {
+                Logger.Error(cleanupException);
+            }
             TopLevel.GetTopLevel(this)?.Notice(
                 string.Format(SettingsLanguageManager.Instance.appearance_changeBackgroundImageFailed.CurrentValue(),
                     exception.Message), NotificationType.Error);
         }
     }
 
-    private static void DeleteManagedBackground(string? path, string currentPath)
+    private void BackgroundHistory_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        if (string.IsNullOrEmpty(path) || string.Equals(path, currentPath, StringComparison.OrdinalIgnoreCase))
+        if (sender is not ScrollViewer scrollViewer)
             return;
 
-        var relativePath = Path.GetRelativePath(ConfigPath.BackgroundFolderPath, path);
-        if (!relativePath.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) &&
-            relativePath != ".." && File.Exists(path))
-            File.Delete(path);
+        scrollViewer.Offset = new Vector(scrollViewer.Offset.X + e.Delta.Y * -100, scrollViewer.Offset.Y);
+        e.Handled = true;
+    }
+
+    private void BackgroundHistoryItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
+            sender is not Border { Tag: BackgroundHistoryItem item })
+            return;
+
+        Data.ConfigEntry.BackgroundImagePath = item.Path;
+        File.SetLastWriteTimeUtc(item.Path, DateTime.UtcNow);
+        RefreshBackgroundHistory();
+        e.Handled = true;
+    }
+
+    private void RemoveBackgroundHistoryItem_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { CommandParameter: BackgroundHistoryItem item })
+            return;
+
+        try
+        {
+            if (string.Equals(Data.ConfigEntry.BackgroundImagePath, item.Path, StringComparison.OrdinalIgnoreCase))
+                Data.ConfigEntry.BackgroundImagePath = null;
+            File.Delete(item.Path);
+            RefreshBackgroundHistory();
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+            TopLevel.GetTopLevel(this)?.Notice(
+                string.Format(SettingsLanguageManager.Instance.appearance_removeBackgroundFromHistoryFailed.CurrentValue(),
+                    exception.Message), NotificationType.Error);
+        }
+    }
+
+    private void RefreshBackgroundHistory()
+    {
+        ClearBackgroundHistory();
+        if (Directory.Exists(ConfigPath.BackgroundFolderPath))
+            foreach (var path in Directory.EnumerateFiles(ConfigPath.BackgroundFolderPath)
+                         .OrderByDescending(File.GetLastWriteTimeUtc))
+                try
+                {
+                    using var stream = File.OpenRead(path);
+                    var preview = Bitmap.DecodeToWidth(stream, 292);
+                    var isSelected = string.Equals(path, Data.ConfigEntry.BackgroundImagePath,
+                        StringComparison.OrdinalIgnoreCase);
+                    BackgroundHistory.Add(new BackgroundHistoryItem(path, preview,
+                        isSelected ? Brushes.DodgerBlue : Brushes.Transparent));
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error(exception);
+                }
+
+        OnPropertyChanged(nameof(HasBackgroundHistory));
+    }
+
+    private void ClearBackgroundHistory()
+    {
+        foreach (var item in BackgroundHistory)
+            item.Preview.Dispose();
+        BackgroundHistory.Clear();
+        OnPropertyChanged(nameof(HasBackgroundHistory));
     }
 
     private void UpdateApplyButtonState()
@@ -234,3 +314,5 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
             Data.ConfigEntry.Language = name;
     }
 }
+
+public sealed record BackgroundHistoryItem(string Path, Bitmap Preview, IBrush BorderBrush);

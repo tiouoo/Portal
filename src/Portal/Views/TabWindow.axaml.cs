@@ -701,10 +701,13 @@ public partial class TabWindow : TioTabWindowBase
         var radius = imageBlurRadius * 20;
         if (radius <= 0.5)
         {
+            _backgroundImageLayer.Margin = default;
             _backgroundImageLayer.Effect = null;
             return;
         }
 
+        // Keep the blur kernel's transparent sampling area outside the visible window.
+        _backgroundImageLayer.Margin = new Thickness(-radius * 2);
         _backgroundImageLayer.Effect = new BlurEffect { Radius = radius };
     }
 

@@ -218,10 +218,61 @@
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundImageLabel}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBlock
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_recentBackgrounds}}" />
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Auto"
+                IsVisible="{Binding HasBackgroundHistory}"
+                PointerWheelChanged="BackgroundHistory_OnPointerWheelChanged"
+                VerticalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding BackgroundHistory}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="settingPages:BackgroundHistoryItem">
+                            <Border
+                                BorderBrush="{Binding BorderBrush}"
+                                BorderThickness="2"
+                                ClipToBounds="True"
+                                CornerRadius="10"
+                                Height="86"
+                                PointerPressed="BackgroundHistoryItem_OnPointerPressed"
+                                Tag="{Binding}"
+                                Width="146">
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem
+                                            Click="RemoveBackgroundHistoryItem_OnClick"
+                                            CommandParameter="{Binding}"
+                                            Header="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_removeBackgroundFromHistory}}">
+                                            <MenuItem.Icon>
+                                                <TextBlock
+                                                    FontFamily="{StaticResource IconFont}"
+                                                    FontSize="16"
+                                                    FontWeight="Thin"
+                                                    Text="&#xe640;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+                                <Border ClipToBounds="True" CornerRadius="8">
+                                    <Image Source="{Binding Preview}" Stretch="UniformToFill" />
+                                </Border>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
             <Button
                 Click="ChangeBackgroundImage_OnClick"
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_changeBackgroundImage}}"
-                HorizontalAlignment="Left" />
+                HorizontalAlignment="Left"
+                Margin="0,5,0,0" />
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label
