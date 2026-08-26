@@ -5,11 +5,13 @@
     x:Class="Portal.Views.Pages.SettingPages.About"
     x:DataType="settingPages:AboutViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:classes="clr-namespace:Portal.Classes"
     xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <converter:UpdateChannelToIndexConverter x:Key="UpdateChannelToIndexConverter" />
         <converter:UpdateSourceCompareConverter x:Key="UpdateSourceCompareConverter" />
@@ -204,7 +206,7 @@
                         <StackLayout Spacing="8" />
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
-                        <DataTemplate x:DataType="settingPages:OpenSourceProject">
+                        <DataTemplate x:DataType="classes:OpenSourceProject">
                             <StackPanel Margin="0,0,0,10">
                                 <TextBlock FontSize="18" Text="{Binding Name}" />
                                 <TextBlock

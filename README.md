@@ -109,7 +109,7 @@ npm run dev
 
 ## 致谢
 
-Portal 建立在许多优秀的 [开源项目](src/Directory.Packages.props) 之上
+Portal 建立在许多优秀的 [开源项目](src/Portal/Classes/OpenSourceProjects.cs) 之上
 
 > [!NOTE]
 > 项目中使用的部分开源库进行了二次修改：
