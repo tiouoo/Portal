@@ -102,7 +102,13 @@
                     Margin="0,40"
                     Spacing="8"
                     VerticalAlignment="Center">
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe628;" FontSize="30" Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="30"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Center"
+                        Text="&#xe628;" />
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
                         HorizontalAlignment="Center"
