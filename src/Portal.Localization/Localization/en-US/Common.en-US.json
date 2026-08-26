@@ -1735,7 +1735,11 @@
     "greetingAfternoon": "Good afternoon, {0}. May the rest of your day go smoothly; pause for a moment when you need to.",
     "greetingEvening": "Good evening, {0}. You have made it through the day; save a little quiet time for yourself.",
     "greetingNight": "Good evening, {0}. Enjoy the slower hours and bring your day to a gentle close.",
-    "greetingLateNight": "It's getting late, {0}. What remains can wait a little; getting enough rest matters more."
+    "greetingLateNight": "It's getting late, {0}. What remains can wait a little; getting enough rest matters more.",
+    "addInstance": "Add Instance",
+    "addWorld": "Add World Save",
+    "addServer": "Add Server",
+    "emptyList": "Add an instance, world save, or server to quickly start your next game"
   },
   "notification": {
     "test": "Notification Test"

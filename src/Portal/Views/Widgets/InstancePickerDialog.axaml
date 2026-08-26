@@ -11,9 +11,10 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:classes="clr-namespace:Portal.Core.Minecraft.Classes;assembly=Portal.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:widgets="clr-namespace:Portal.Views.Widgets"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid
         Margin="20"
         RowDefinitions="Auto,*,Auto"
@@ -23,12 +24,14 @@
                 FontSize="22"
                 FontWeight="SemiBold"
                 Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancepickerdialog_title}}" />
-            <TextBox
-                PlaceholderText="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancepickerdialog_searchPlaceholder}}"
-                Text="{Binding SearchText}"
-                Width="300">
+            <TextBox PlaceholderText="{Translate {x:Static loc:WidgetsLanguageManager+Keys.instancepickerdialog_searchPlaceholder}}" Text="{Binding SearchText}">
                 <TextBox.InnerRightContent>
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe615;" FontSize="18" Foreground="{DynamicResource InnerForegroundColor}" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="&#xe615;" />
                 </TextBox.InnerRightContent>
             </TextBox>
         </StackPanel>
@@ -38,7 +41,7 @@
                     <UniformGridLayout
                         ItemsStretch="Fill"
                         MinColumnSpacing="12"
-                        MinItemHeight="110"
+                        MinItemHeight="93"
                         MinItemWidth="240"
                         MinRowSpacing="12"
                         Orientation="Horizontal" />
@@ -54,7 +57,7 @@
                             Padding="12"
                             PointerPressed="InstanceItem_OnPointerPressed"
                             Tag="{Binding}">
-                            <StackPanel Spacing="6">
+                            <StackPanel Spacing="0">
                                 <DockPanel>
                                     <Border
                                         ClipToBounds="True"
@@ -79,6 +82,7 @@
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{DynamicResource InnerForegroundColor}"
+                                    Margin="0,5,0,0"
                                     MaxLines="1"
                                     Text="{Binding FolderName}"
                                     TextTrimming="CharacterEllipsis" />

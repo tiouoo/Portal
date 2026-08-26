@@ -1735,7 +1735,11 @@
     "greetingAfternoon": "下午好，{0}。愿接下来的时光轻松顺利，累了就稍作休息",
     "greetingEvening": "傍晚好，{0}。辛苦了一天，愿今晚留一些惬意给自己",
     "greetingNight": "晚上好，{0}。愿你享受此刻的闲暇，也为今天画上温柔的句号",
-    "greetingLateNight": "已经很晚了，{0}。手头的事可以慢一点，早点休息更重要"
+    "greetingLateNight": "已经很晚了，{0}。手头的事可以慢一点，早点休息更重要",
+    "addInstance": "添加实例",
+    "addWorld": "添加世界存档",
+    "addServer": "添加服务器",
+    "emptyList": "添加实例、世界存档或服务器，快速开始下一次游戏"
   },
   "notification": {
     "test": "通知测试"

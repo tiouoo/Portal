@@ -9,6 +9,7 @@
     xmlns:loc="clr-namespace:Portal.Localization;assembly=Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Margin="24,0,24,60" VerticalAlignment="Center">
         <TextBlock
@@ -33,13 +34,131 @@
             BorderThickness="1"
             CornerRadius="18"
             Margin="30,0"
-            MaxWidth="768"
-            MinHeight="90">
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                HorizontalAlignment="Center"
-                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.contextmenu_emptyList}}"
-                VerticalAlignment="Center" />
+            MaxWidth="920"
+            Padding="12">
+            <Border.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Click="AddInstance_OnClick" Header="{Translate {x:Static loc:CommonLanguageManager+Keys.homePage_addInstance}}">
+                        <MenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="20"
+                                FontWeight="Thin"
+                                Text="&#xe63d;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Click="AddWorld_OnClick" Header="{Translate {x:Static loc:CommonLanguageManager+Keys.homePage_addWorld}}">
+                        <MenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="20"
+                                FontWeight="Thin"
+                                Text="&#xe629;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Click="AddServer_OnClick" Header="{Translate {x:Static loc:CommonLanguageManager+Keys.homePage_addServer}}">
+                        <MenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="20"
+                                FontWeight="Thin"
+                                Text="&#xe614;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </Border.ContextMenu>
+            <Grid>
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="0" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="pages:HomePageGameItem">
+                            <Border
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                ContextRequested="Item_OnContextRequested"
+                                CornerRadius="14"
+                                Name="ItemBorder"
+                                Padding="14,12,16,12"
+                                Tag="{Binding}">
+                                <Border.Styles>
+                                    <Style Selector="Border#ItemBorder">
+                                        <Setter Property="Background" Value="Transparent" />
+                                    </Style>
+                                    <Style Selector="Border#ItemBorder:pointerover">
+                                        <Setter Property="Background" Value="{DynamicResource ButtonDefaultBackground}" />
+                                    </Style>
+                                </Border.Styles>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                                    <Border
+                                        ClipToBounds="True"
+                                        CornerRadius="12"
+                                        Height="58"
+                                        VerticalAlignment="Center"
+                                        Width="58">
+                                        <Image Source="{Binding Icon}" Stretch="UniformToFill" />
+                                    </Border>
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Spacing="5"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            FontSize="18"
+                                            FontWeight="SemiBold"
+                                            MaxLines="1"
+                                            Text="{Binding Name}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            FontSize="14"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            MaxLines="1"
+                                            Text="{Binding Details}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <Button
+                                        Classes="Accent"
+                                        Click="PlayButton_OnClick"
+                                        CornerRadius="12"
+                                        Cursor="Hand"
+                                        FontSize="15"
+                                        Grid.Column="2"
+                                        Height="37"
+                                        IsVisible="{Binding CanPlay}"
+                                        Padding="17,0"
+                                        Tag="{Binding}"
+                                        ToolTip.Tip="{Binding PlayText}"
+                                        VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="9">
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="20"
+                                                Foreground="White"
+                                                Text="&#xe613;"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock
+                                                Foreground="White"
+                                                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.contextmenu_startGame}}"
+                                                VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Border MinHeight="84">
+                    <TextBlock
+                        FontSize="15"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding IsEmpty}"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.homePage_emptyList}}"
+                        VerticalAlignment="Center" />
+                </Border>
+            </Grid>
         </Border>
     </StackPanel>
 </UserControl>

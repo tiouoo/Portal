@@ -90,9 +90,17 @@ public sealed class GameListWidgetData : WidgetData
 
 public sealed class GameListWidgetEntry
 {
+    public HomePageItemKind? ItemKind { get; set; }
     public string InstanceFolderPath { get; set; } = string.Empty;
     public string? TargetId { get; set; }
     public string? DisplayName { get; set; }
     public string? ServerAddress { get; set; }
     public int? ServerPort { get; set; }
+}
+
+public enum HomePageItemKind
+{
+    Instance,
+    World,
+    Server
 }
