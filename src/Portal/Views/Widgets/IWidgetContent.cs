@@ -22,3 +22,8 @@ public interface IWidgetContextMenuProvider
 {
     IReadOnlyList<MenuItem> CreateContextMenuItems(Action saveLayout);
 }
+
+public interface IWidgetPersistenceAware
+{
+    void SetSaveLayoutAction(Action saveLayout);
+}

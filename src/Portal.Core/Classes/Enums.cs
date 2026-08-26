@@ -38,7 +38,8 @@ public enum NewTabContent
 {
     NewTabPage,
     StartPage,
-    Widget
+    Widget,
+    HomePage
 }
 
 public enum DownloadSearchSource

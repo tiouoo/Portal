@@ -14,7 +14,8 @@ public static class PortalJson
     private static readonly Type[] WidgetDataTypes =
     [
         typeof(InstanceWidgetData), typeof(QuickWorldWidgetData), typeof(QuickServerWidgetData),
-        typeof(MemoryWidgetData), typeof(ImageWidgetData), typeof(NewsWidgetData)
+        typeof(MemoryWidgetData), typeof(ImageWidgetData), typeof(NewsWidgetData),
+        typeof(GameListWidgetData)
     ];
 
     public static JsonSerializerOptions Options { get; } = Create();

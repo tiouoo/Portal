@@ -13,7 +13,12 @@ public enum WidgetKind
     GpuResource,
     Image,
     Search,
-    News
+    News,
+    ServerList,
+    InstanceList,
+    WorldList,
+    RecentPlayList,
+    RecentInstanceList
 }
 
 public enum WidgetCategory

@@ -64,10 +64,12 @@ public partial class WidgetHost : UserControl
                 _widgetContent.Initialize(Layout);
             if (ContentHost != null)
                 ContentHost.Content = value;
+            WidgetContentChanged?.Invoke(this);
         }
     }
 
     public event Action<WidgetHost>? Resized;
+    public event Action<WidgetHost>? WidgetContentChanged;
     public event EventHandler<PointerPressedEventArgs>? RightButtonPressed;
 
     private void SetResizeIcon(bool visible)

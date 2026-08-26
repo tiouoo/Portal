@@ -418,13 +418,22 @@ public class WidgetWorkspace : UserControl
     private void HookWidget(WidgetHost widget)
     {
         widget.Resized += OnWidgetResized;
+        widget.WidgetContentChanged += OnWidgetContentChanged;
         widget.RightButtonPressed += OnWidgetRightButtonDown;
+        OnWidgetContentChanged(widget);
     }
 
     private void UnhookWidget(WidgetHost widget)
     {
         widget.Resized -= OnWidgetResized;
+        widget.WidgetContentChanged -= OnWidgetContentChanged;
         widget.RightButtonPressed -= OnWidgetRightButtonDown;
+    }
+
+    private void OnWidgetContentChanged(WidgetHost widget)
+    {
+        if (widget.WidgetContent is IWidgetPersistenceAware persistenceAware)
+            persistenceAware.SetSaveLayoutAction(SaveLayout);
     }
 
     private void OnWidgetRightButtonDown(object? sender, PointerPressedEventArgs e)

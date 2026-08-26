@@ -81,3 +81,18 @@ public sealed class NewsWidgetData : WidgetData
 {
     public string? Filter { get; set; }
 }
+
+public sealed class GameListWidgetData : WidgetData
+{
+    public List<GameListWidgetEntry> Items { get; set; } = [];
+    public int Limit { get; set; } = 4;
+}
+
+public sealed class GameListWidgetEntry
+{
+    public string InstanceFolderPath { get; set; } = string.Empty;
+    public string? TargetId { get; set; }
+    public string? DisplayName { get; set; }
+    public string? ServerAddress { get; set; }
+    public int? ServerPort { get; set; }
+}

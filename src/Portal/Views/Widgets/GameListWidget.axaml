@@ -1,0 +1,119 @@
+<UserControl
+    d:DesignHeight="272"
+    d:DesignWidth="272"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.GameListWidget"
+    x:CompileBindings="False"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid RowDefinitions="Auto,*" RowSpacing="6">
+        <DockPanel LastChildFill="True">
+            <TextBlock
+                DockPanel.Dock="Left"
+                FontSize="15"
+                FontWeight="SemiBold"
+                Margin="4,0,0,0"
+                MaxLines="1"
+                Name="TitleTextBlock"
+                TextTrimming="CharacterEllipsis"
+                VerticalAlignment="Center" />
+            <TextBlock
+                DockPanel.Dock="Right"
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Margin="8,0,0,0"
+                Name="CountTextBlock"
+                VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <controls:ScrollView
+                Classes="Flat"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Hidden">
+                <ItemsRepeater ItemsSource="{Binding Items}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="0" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Border
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Name="ItemBorder"
+                                Padding="10,8,12,8"
+                                PointerPressed="Item_OnPointerPressed"
+                                Tag="{Binding}">
+                                <Border.Styles>
+                                    <Style Selector="Border#ItemBorder">
+                                        <Setter Property="Background" Value="Transparent" />
+                                    </Style>
+                                    <Style Selector="Border#ItemBorder:pointerover">
+                                        <Setter Property="Background" Value="{DynamicResource ButtonDefaultBackground}" />
+                                    </Style>
+                                </Border.Styles>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <Border
+                                        ClipToBounds="True"
+                                        CornerRadius="10"
+                                        Height="42"
+                                        VerticalAlignment="Center"
+                                        Width="42">
+                                        <Image Source="{Binding Icon}" Stretch="UniformToFill" />
+                                    </Border>
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Spacing="3"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            FontSize="15"
+                                            FontWeight="SemiBold"
+                                            MaxLines="1"
+                                            Text="{Binding Name}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            MaxLines="1"
+                                            Text="{Binding Details}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <Button
+                                        Click="PlayButton_OnClick"
+                                        Cursor="Hand"
+                                        FontSize="13"
+                                        Grid.Column="2"
+                                        IsVisible="{Binding CanPlay}"
+                                        Padding="13,0"
+                                        Tag="{Binding}"
+                                        ToolTip.Tip="{Binding PlayText}"
+                                        VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="7">
+                                            <TextBlock
+                                                FontFamily="{StaticResource IconFont}"
+                                                FontSize="16"
+                                                Text="&#xe613;"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding StartGameText}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </controls:ScrollView>
+            <TextBlock
+                HorizontalAlignment="Center"
+                MaxWidth="260"
+                Name="EmptyTextBlock"
+                TextAlignment="Center"
+                TextWrapping="Wrap"
+                VerticalAlignment="Center" />
+        </Grid>
+    </Grid>
+</UserControl>

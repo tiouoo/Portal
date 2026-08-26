@@ -31,6 +31,7 @@
                 <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_newTab}}" />
                 <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_homePage}}" />
                 <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_widgets}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_mainPage}}" />
             </ComboBox>
         </StackPanel>
         <StackPanel Spacing="5">

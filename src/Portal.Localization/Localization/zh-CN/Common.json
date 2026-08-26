@@ -1111,6 +1111,16 @@
     "quickWorldDescription": "选择实例与存档，一键进入",
     "quickServer": "快速进入服务器",
     "quickServerDescription": "选择实例并输入地址，一键进入",
+    "serverList": "服务器",
+    "serverListDescription": "管理常用服务器并快速进入",
+    "instanceList": "实例列表",
+    "instanceListDescription": "管理常用实例并快速启动",
+    "worldList": "世界",
+    "worldListDescription": "管理常用存档并快速进入",
+    "recentPlayList": "最近游玩的存档和服务器",
+    "recentPlayListDescription": "按最近游玩时间显示存档和服务器",
+    "recentInstanceList": "最近游玩的实例",
+    "recentInstanceListDescription": "按最近游玩时间显示实例",
     "news": "新闻",
     "newsDescription": "展示最新 Minecraft 新闻（Java 版 / 基岩版）",
     "cpu": "CPU 占用",
@@ -1715,6 +1725,18 @@
   "newTabPage": {
     "pageTitle": "新标签页"
   },
+  "homePage": {
+    "pageTitle": "主页",
+    "greetingAfterMidnight": "夜深了，{0}。忙完这一会儿，也记得让自己好好休息。",
+    "greetingBeforeDawn": "天还没亮，{0}。愿此刻一切顺利，也别忘了照顾好自己。",
+    "greetingEarlyMorning": "早上好，{0}。新的一天刚刚开始，愿你从容又有好心情。",
+    "greetingMorning": "上午好，{0}。愿今天的每一步都顺手，忙碌之余也记得喝水。",
+    "greetingNoon": "中午好，{0}。先放松一会儿，好好吃饭，再继续今天的旅程。",
+    "greetingAfternoon": "下午好，{0}。愿接下来的时光轻松顺利，累了就稍作休息。",
+    "greetingEvening": "傍晚好，{0}。辛苦了一天，愿今晚留一些惬意给自己。",
+    "greetingNight": "晚上好，{0}。愿你享受此刻的闲暇，也为今天画上温柔的句号。",
+    "greetingLateNight": "已经很晚了，{0}。手头的事可以慢一点，早点休息更重要。"
+  },
   "notification": {
     "test": "通知测试"
   },
@@ -2038,6 +2060,8 @@
   "pages": {
     "download": "下载",
     "downloadPath": "下载",
+    "home": "主页",
+    "homePath": "主页",
     "instances": "实例",
     "instancesPath": "实例",
     "multiplayer": "联机",

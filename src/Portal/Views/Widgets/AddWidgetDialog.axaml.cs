@@ -76,6 +76,13 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
 
         switch (definition.Kind)
         {
+            case WidgetKind.ServerList:
+            case WidgetKind.InstanceList:
+            case WidgetKind.WorldList:
+            case WidgetKind.RecentPlayList:
+            case WidgetKind.RecentInstanceList:
+                template = new WidgetLayoutData { Data = new GameListWidgetData() };
+                break;
             case WidgetKind.Instance:
             {
                 var instance = await PickInstanceAsync();

@@ -116,6 +116,7 @@ public partial class TabWindow : TioTabWindowBase
                 NewTabContent.NewTabPage => new NewTabPage(),
                 NewTabContent.StartPage => new StartPage(),
                 NewTabContent.Widget => new WidgetsPage(),
+                NewTabContent.HomePage => new HomePage(),
                 _ => new NewTabPage()
             };
             var tab = new TabEntry(this, page)

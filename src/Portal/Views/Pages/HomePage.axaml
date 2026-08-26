@@ -1,0 +1,22 @@
+<UserControl
+    d:DesignHeight="720"
+    d:DesignWidth="1200"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.HomePage"
+    x:DataType="pages:HomePageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24,20">
+        <TextBlock
+            FontSize="22"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding HasGreeting}"
+            MaxWidth="900"
+            Text="{Binding Greeting}"
+            TextWrapping="Wrap"
+            VerticalAlignment="Top" />
+    </Grid>
+</UserControl>

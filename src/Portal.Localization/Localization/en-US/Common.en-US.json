@@ -1111,6 +1111,16 @@
     "quickWorldDescription": "Pick an instance and save to enter with one click",
     "quickServer": "Quick Enter Server",
     "quickServerDescription": "Pick an instance and enter an address to join with one click",
+    "serverList": "Servers",
+    "serverListDescription": "Manage frequently used servers and join quickly",
+    "instanceList": "Instances List",
+    "instanceListDescription": "Manage frequently used instances and launch quickly",
+    "worldList": "Worlds",
+    "worldListDescription": "Manage frequently used saves and enter quickly",
+    "recentPlayList": "Recently Played Saves and Servers",
+    "recentPlayListDescription": "Show saves and servers ordered by last played time",
+    "recentInstanceList": "Recently Played Instances",
+    "recentInstanceListDescription": "Show instances ordered by last played time",
     "news": "News",
     "newsDescription": "Show the latest Minecraft news (Java Edition / Bedrock Edition)",
     "cpu": "CPU Usage",
@@ -1715,6 +1725,18 @@
   "newTabPage": {
     "pageTitle": "New Tab"
   },
+  "homePage": {
+    "pageTitle": "Home",
+    "greetingAfterMidnight": "It's well past midnight, {0}. When you're done here, give yourself time to rest.",
+    "greetingBeforeDawn": "The day has not quite begun, {0}. Take care of yourself while you are here.",
+    "greetingEarlyMorning": "Good morning, {0}. A new day is beginning; may it feel calm and bright.",
+    "greetingMorning": "Good morning, {0}. May everything go smoothly today, and remember to stay hydrated.",
+    "greetingNoon": "Good afternoon, {0}. Take a proper break and enjoy something to eat before carrying on.",
+    "greetingAfternoon": "Good afternoon, {0}. May the rest of your day go smoothly; pause for a moment when you need to.",
+    "greetingEvening": "Good evening, {0}. You have made it through the day; save a little quiet time for yourself.",
+    "greetingNight": "Good evening, {0}. Enjoy the slower hours and bring your day to a gentle close.",
+    "greetingLateNight": "It's getting late, {0}. What remains can wait a little; getting enough rest matters more."
+  },
   "notification": {
     "test": "Notification Test"
   },
@@ -2038,6 +2060,8 @@
   "pages": {
     "download": "Download",
     "downloadPath": "Download",
+    "home": "Home",
+    "homePath": "Home",
     "instances": "Instances",
     "instancesPath": "Instances",
     "multiplayer": "Multiplayer",

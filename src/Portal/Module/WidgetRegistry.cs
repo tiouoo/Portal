@@ -179,6 +179,22 @@ public static class WidgetRegistry
             .AddPage<QuickServerWidget1x1>(new WidgetCellSize(1, 1))
             .AddPage<QuickServerWidget2x1>(new WidgetCellSize(2, 1)));
 
+        RegisterGameListWidget(WidgetKind.ServerList,
+            CommonLanguageManager.Instance.widgets_serverList.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_serverListDescription.CurrentValue());
+        RegisterGameListWidget(WidgetKind.InstanceList,
+            CommonLanguageManager.Instance.widgets_instanceList.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_instanceListDescription.CurrentValue());
+        RegisterGameListWidget(WidgetKind.WorldList,
+            CommonLanguageManager.Instance.widgets_worldList.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_worldListDescription.CurrentValue());
+        RegisterGameListWidget(WidgetKind.RecentPlayList,
+            CommonLanguageManager.Instance.widgets_recentPlayList.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_recentPlayListDescription.CurrentValue());
+        RegisterGameListWidget(WidgetKind.RecentInstanceList,
+            CommonLanguageManager.Instance.widgets_recentInstanceList.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_recentInstanceListDescription.CurrentValue());
+
 
         var newsDef = new WidgetDefinition
         {
@@ -235,5 +251,25 @@ public static class WidgetRegistry
                  })
             def.AddPage(size, () => factory(size));
         Register(def);
+    }
+
+    private static void RegisterGameListWidget(WidgetKind kind, string name, string description)
+    {
+        var definition = new WidgetDefinition
+        {
+            Kind = kind,
+            Name = name,
+            Description = description,
+            Category = WidgetCategory.Game,
+            DefaultSize = new WidgetCellSize(2, 2)
+        };
+        for (var columns = 2; columns <= 16; columns++)
+        for (var rows = 2; rows <= 16; rows++)
+        {
+            var size = new WidgetCellSize(columns, rows);
+            definition.AddPage(size, () => new GameListWidget(size));
+        }
+
+        Register(definition);
     }
 }
