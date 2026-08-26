@@ -64,8 +64,7 @@
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
                         CommandParameter="{x:Type downloadPages:ModSearchPage}"
-                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Mods}}"
-                        IsSelected="True">
+                        Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Mods}}">
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"

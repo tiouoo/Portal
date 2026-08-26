@@ -77,11 +77,20 @@ public partial class DownloadPage : Dsc, ITioTabPage
         };
     }
 
-    private static IEnumerable<NavMenuItem> GetLeafItems(NavMenu navMenu)
+    private static IEnumerable<NavMenuItem> GetLeafItems(ItemsControl parent)
     {
-        foreach (var topItem in navMenu.Items.OfType<NavMenuItem>())
-        foreach (var childItem in topItem.Items.OfType<NavMenuItem>())
-            yield return childItem;
+        foreach (var item in parent.Items.OfType<NavMenuItem>())
+        {
+            if (item.Items.OfType<NavMenuItem>().Any())
+            {
+                foreach (var child in GetLeafItems(item))
+                    yield return child;
+            }
+            else
+            {
+                yield return item;
+            }
+        }
     }
 
     public PageInfo PageInfo { get; init; } = new()
@@ -105,11 +114,6 @@ public partial class DownloadPageViewModel : ObservableObject, IDisposable
     private readonly Dictionary<Type, UserControl> _pageCache = new();
     
     public Data Data => Data.Instance;
-
-    public DownloadPageViewModel()
-    {
-        NavigateType(typeof(ModSearchPage));
-    }
 
     [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
     public bool IsBedrockInstallationSupported => BedrockInstallationService.DefaultInstaller is not null;
