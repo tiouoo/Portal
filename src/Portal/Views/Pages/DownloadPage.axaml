@@ -31,9 +31,9 @@
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
-                            FontSize="19"
+                            FontSize="17"
                             Margin="0,-1"
-                            Text="&#xe644;" />
+                            Text="&#xe66e;" />
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem
@@ -43,9 +43,10 @@
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
-                            FontSize="19"
+                            FontSize="17"
                             Margin="0,-1"
-                            Text="&#xe652;" />
+                            Padding="2,0,0,0"
+                            Text="&#xe65f;" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
@@ -147,9 +148,10 @@
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
-                            FontSize="19"
-                            Margin="0,-1"
-                            Text="&#xe60f;" />
+                            FontSize="16"
+                            Margin="-1,-1,0,-1"
+                            Padding="1,0"
+                            Text="&#xe670;" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
@@ -186,9 +188,10 @@
                     <tio:NavMenuItem.Icon>
                         <TextBlock
                             FontFamily="{StaticResource IconFont}"
-                            FontSize="19"
+                            FontSize="17"
                             Margin="0,-1"
-                            Text="&#xe613;" />
+                            Padding="1,0,0,0"
+                            Text="&#xe668;" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
