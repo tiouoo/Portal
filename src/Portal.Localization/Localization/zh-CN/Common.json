@@ -1153,6 +1153,9 @@
     "changeImage": "更换图片",
     "toggleStretchMode": "切换填充方式",
     "toggleSize": "切换尺寸",
+    "alignGrid": "对齐网格",
+    "alignAuto": "自动对齐",
+    "alignFree": "不对齐",
     "addWidget": "添加组件"
   },
   "versionModify": {

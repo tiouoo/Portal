@@ -1153,6 +1153,9 @@
     "changeImage": "Change Image",
     "toggleStretchMode": "Toggle Stretch Mode",
     "toggleSize": "Toggle Size",
+    "alignGrid": "Align to Grid",
+    "alignAuto": "Auto Align",
+    "alignFree": "No Align",
     "addWidget": "Add Widget"
   },
   "versionModify": {

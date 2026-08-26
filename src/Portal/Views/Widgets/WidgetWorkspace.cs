@@ -101,6 +101,18 @@ public class WidgetWorkspace : UserControl
         backgroundMenu.Items.Add(hideItem);
         _widgetContextMenu.Items.Add(backgroundMenu);
 
+        var alignMenu = new MenuItem
+        {
+            Header = CommonLanguageManager.Instance.widgets_alignGrid.CurrentValue(), Icon = IconResources.CreateIcon("\ue64f", 16)
+        };
+        var alignAutoItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_alignAuto.CurrentValue(), Classes = { "hide-icon" } };
+        alignAutoItem.Click += (_, _) => SetWidgetAlign(_contextMenuWidget, true);
+        var alignFreeItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_alignFree.CurrentValue(), Classes = { "hide-icon" } };
+        alignFreeItem.Click += (_, _) => SetWidgetAlign(_contextMenuWidget, false);
+        alignMenu.Items.Add(alignAutoItem);
+        alignMenu.Items.Add(alignFreeItem);
+        _widgetContextMenu.Items.Add(alignMenu);
+
         var memoryModeItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_toggleDisplayMode.CurrentValue(),
@@ -176,6 +188,9 @@ public class WidgetWorkspace : UserControl
             showItem.IsChecked = value == true;
             hideItem.IsChecked = value == false;
 
+            alignAutoItem.IsChecked = _contextMenuWidget.Layout.AlignToGrid;
+            alignFreeItem.IsChecked = !_contextMenuWidget.Layout.AlignToGrid;
+
             memoryModeItem.IsVisible = _contextMenuWidget.WidgetContent is MemoryResourceWidget;
             var isImage = _contextMenuWidget.WidgetContent is ImageViewWidget;
             imageChangeItem.IsVisible = isImage;
@@ -224,6 +239,33 @@ public class WidgetWorkspace : UserControl
 
         host.Layout.ShowBackground = value;
         host.ApplyBackground();
+        SaveLayout();
+    }
+
+    private void SetWidgetAlign(WidgetHost? widget, bool alignToGrid)
+    {
+        if (widget == null || _canvas == null)
+            return;
+
+        if (widget.Layout.AlignToGrid == alignToGrid)
+            return;
+
+        widget.Layout.AlignToGrid = alignToGrid;
+        if (alignToGrid)
+        {
+            var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
+            var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
+            PlaceWidgetAtGrid(widget, freeGridPos);
+        }
+        else
+        {
+            widget.Layout.FreeX = Canvas.GetLeft(widget);
+            widget.Layout.FreeY = Canvas.GetTop(widget);
+            ClearWidgetOccupancy(widget);
+        }
+
+        NormalizeZOrder();
+        UpdateCanvasSize();
         SaveLayout();
     }
 
@@ -303,9 +345,22 @@ public class WidgetWorkspace : UserControl
             _allWidgets.Add(host);
             HookWidget(host);
             host.ApplyBackground();
-            PlaceWidgetAtGrid(host, new Point(data.GridX, data.GridY));
+            if (data.AlignToGrid)
+            {
+                PlaceWidgetAtGrid(host, new Point(data.GridX, data.GridY));
+            }
+            else
+            {
+                var pixelX = double.IsNaN(data.FreeX) ? data.GridX * WidgetGeometry.Pitch : data.FreeX;
+                var pixelY = double.IsNaN(data.FreeY) ? data.GridY * WidgetGeometry.Pitch : data.FreeY;
+                data.FreeX = pixelX;
+                data.FreeY = pixelY;
+                Canvas.SetLeft(host, pixelX);
+                Canvas.SetTop(host, pixelY);
+            }
         }
 
+        NormalizeZOrder();
         UpdateCanvasSize();
     }
 
@@ -339,6 +394,7 @@ public class WidgetWorkspace : UserControl
         HookWidget(host);
         host.ApplyBackground();
 
+        NormalizeZOrder();
         UpdateCanvasSize();
         SaveLayout();
         return host;
@@ -379,10 +435,20 @@ public class WidgetWorkspace : UserControl
         if (widget == null || _canvas == null)
             return;
 
-        ClearWidgetOccupancy(widget);
-        var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
-        var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
-        PlaceWidgetAtGrid(widget, freeGridPos);
+        if (widget.Layout.AlignToGrid)
+        {
+            ClearWidgetOccupancy(widget);
+            var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
+            var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
+            PlaceWidgetAtGrid(widget, freeGridPos);
+        }
+        else
+        {
+            widget.Layout.FreeX = Canvas.GetLeft(widget);
+            widget.Layout.FreeY = Canvas.GetTop(widget);
+        }
+
+        NormalizeZOrder();
         UpdateCanvasSize();
         SaveLayout();
     }
@@ -453,8 +519,11 @@ public class WidgetWorkspace : UserControl
         _dragStartPoint = _pendingStartPoint;
         _widgetInitialPosition = _pendingInitialPosition;
 
-        ClearWidgetOccupancy(widget);
-        CreateGhostPlaceholder(widget);
+        if (widget.Layout.AlignToGrid)
+        {
+            ClearWidgetOccupancy(widget);
+            CreateGhostPlaceholder(widget);
+        }
 
         _canvas?.Children.Remove(widget);
         _canvas?.Children.Add(widget);
@@ -492,9 +561,19 @@ public class WidgetWorkspace : UserControl
         _draggingWidget = null;
         RemoveGhostPlaceholder();
 
-        var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
-        var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
-        PlaceWidgetAtGrid(widget, freeGridPos);
+        if (widget.Layout.AlignToGrid)
+        {
+            var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
+            var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
+            PlaceWidgetAtGrid(widget, freeGridPos);
+        }
+        else
+        {
+            widget.Layout.FreeX = Canvas.GetLeft(widget);
+            widget.Layout.FreeY = Canvas.GetTop(widget);
+        }
+
+        NormalizeZOrder();
         UpdateCanvasSize();
         SaveLayout();
     }
@@ -673,6 +752,20 @@ public class WidgetWorkspace : UserControl
 
         _canvas.Width = Math.Max(0, Bounds.Width - 2 * WidgetGeometry.Spacing);
         _canvas.Height = Math.Max(0, Bounds.Height - 2 * WidgetGeometry.Spacing);
+    }
+
+    private void NormalizeZOrder()
+    {
+        if (_canvas == null)
+            return;
+
+        var gridWidgets = _canvas.Children.OfType<WidgetHost>().Where(w => w.Layout.AlignToGrid).ToList();
+        var freeWidgets = _canvas.Children.OfType<WidgetHost>().Where(w => !w.Layout.AlignToGrid).ToList();
+        if (freeWidgets.Count == 0)
+            return;
+
+        foreach (var widget in gridWidgets) { _canvas.Children.Remove(widget); _canvas.Children.Add(widget); }
+        foreach (var widget in freeWidgets) { _canvas.Children.Remove(widget); _canvas.Children.Add(widget); }
     }
 
     private void SaveLayout()

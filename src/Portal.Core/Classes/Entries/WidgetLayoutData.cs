@@ -12,6 +12,9 @@ public sealed class WidgetLayoutData
     public int Columns { get; set; } = 1;
     public int Rows { get; set; } = 1;
     public bool? ShowBackground { get; set; }
+    public bool AlignToGrid { get; set; } = true;
+    public double FreeX { get; set; }
+    public double FreeY { get; set; }
 
     public WidgetData? Data { get; set; }
 
