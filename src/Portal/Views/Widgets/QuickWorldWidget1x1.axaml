@@ -1,12 +1,14 @@
 ﻿<UserControl
+    Margin="-5"
     d:DesignHeight="130"
     d:DesignWidth="130"
     mc:Ignorable="d"
     x:Class="Portal.Views.Widgets.QuickWorldWidget1x1"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Border
         Background="Transparent"
         CornerRadius="10"
@@ -24,59 +26,64 @@
                 </Style>
             </Style>
         </Border.Styles>
-        <DockPanel Margin="10,10,10,8">
-            <Border
-                ClipToBounds="True"
-                CornerRadius="8"
-                DockPanel.Dock="Top"
-                Height="56"
-                HorizontalAlignment="Center"
-                Margin="0,2,0,6"
-                Width="56">
-                <Image
-                    Height="56"
-                    Name="IconImage"
-                    Width="56" />
-            </Border>
-            <DockPanel DockPanel.Dock="Bottom">
+        <Panel>
+            <StackPanel Margin="5,5,5,0">
+                <Border
+                    ClipToBounds="True"
+                    CornerRadius="10"
+                    Height="60"
+                    HorizontalAlignment="Center"
+                    Margin="0,5,0,6"
+                    Width="60">
+                    <Image
+                        Height="60"
+                        Name="IconImage"
+                        Width="60" />
+                </Border>
+                <StackPanel Margin="0,3,0,0">
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,2,0,2"
+                        MaxLines="1"
+                        Name="TitleText"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,0,12,0"
+                        MaxLines="1"
+                        Name="SourceText"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap" />
+                </StackPanel>
+            </StackPanel>
+            <Button
+                Background="Transparent"
+                BorderThickness="0"
+                Click="LaunchButton_OnClick"
+                Cursor="Hand"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,3"
+                Theme="{StaticResource TransparentButton}"
+                ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickworldwidget1x1_quickJoinWorld}}"
+                VerticalAlignment="Bottom"
+                x:Name="LaunchButton">
                 <TextBlock
-                    DockPanel.Dock="Left"
-                    FontSize="12"
-                    FontWeight="SemiBold"
-                    MaxLines="1"
-                    Name="TitleText"
-                    TextTrimming="CharacterEllipsis"
-                    VerticalAlignment="Bottom" />
-                <Button
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Click="LaunchButton_OnClick"
-                    Cursor="Hand"
-                    DockPanel.Dock="Right"
-                    HorizontalAlignment="Right"
-                    Padding="2,-2,0,0"
-                    Theme="{StaticResource TransparentButton}"
-                    ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickworldwidget1x1_quickJoinWorld}}"
-                    VerticalAlignment="Bottom"
-                    x:Name="LaunchButton">
-                    <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="13" Foreground="{DynamicResource InnerForegroundColor}" />
-                    <Button.Transitions>
-                        <Transitions>
-                            <DoubleTransition
-                                Duration="0:0:0.15"
-                                Easing="SineEaseOut"
-                                Property="Opacity" />
-                        </Transitions>
-                    </Button.Transitions>
-                </Button>
-            </DockPanel>
-            <TextBlock
-                FontSize="11"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Margin="0,0,0,2"
-                MaxLines="1"
-                Name="SourceText"
-                TextTrimming="CharacterEllipsis" />
-        </DockPanel>
+                    FontFamily="{StaticResource IconFont}"
+                    FontSize="16"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="&#xe613;" />
+                <Button.Transitions>
+                    <Transitions>
+                        <DoubleTransition
+                            Duration="0:0:0.15"
+                            Easing="SineEaseOut"
+                            Property="Opacity" />
+                    </Transitions>
+                </Button.Transitions>
+            </Button>
+        </Panel>
     </Border>
 </UserControl>
