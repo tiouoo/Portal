@@ -6,8 +6,9 @@
     x:Class="Portal.Views.Widgets.QuickServerWidget2x1"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Border
         Background="Transparent"
         CornerRadius="10"
@@ -25,106 +26,110 @@
                 </Style>
             </Style>
         </Border.Styles>
-        <DockPanel Margin="10,8,10,6">
-            <DockPanel DockPanel.Dock="Top">
-                <Border
-                    ClipToBounds="True"
-                    CornerRadius="10"
-                    Height="40"
-                    HorizontalAlignment="Left"
-                    Margin="0,0,8,0"
-                    Width="40">
-                    <Image
-                        Height="40"
-                        Name="IconImage"
-                        Width="40" />
-                </Border>
-                <StackPanel
-                    Margin="2,0,0,0"
-                    Spacing="4"
-                    VerticalAlignment="Center">
+        <Panel>
+            <DockPanel Margin="9,7,8,5">
+                <DockPanel DockPanel.Dock="Top">
+                    <Border
+                        ClipToBounds="True"
+                        CornerRadius="10"
+                        Height="46"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,8,0"
+                        Width="46">
+                        <Image
+                            Height="46"
+                            Name="IconImage"
+                            Width="46" />
+                    </Border>
                     <StackPanel
-                        Orientation="Horizontal"
-                        Spacing="5">
-                        <Ellipse
-                            Height="6"
-                            Name="StatusDot"
-                            VerticalAlignment="Center"
-                            Width="6" />
+                        Margin="0,5,0,5"
+                        Spacing="2"
+                        VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Ellipse
+                                Height="6"
+                                Margin="2,0,0,0"
+                                Name="StatusDot"
+                                VerticalAlignment="Center"
+                                Width="6" />
+                            <TextBlock
+                                FontSize="12"
+                                MaxLines="1"
+                                Name="StatusText"
+                                TextTrimming="CharacterEllipsis"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                FontSize="12"
+                                IsVisible="False"
+                                MaxLines="1"
+                                Name="PingText"
+                                TextTrimming="CharacterEllipsis"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
                         <TextBlock
-                            FontSize="12"
-                            MaxLines="1"
-                            Name="StatusText"
-                            TextTrimming="CharacterEllipsis"
-                            VerticalAlignment="Center" />
-                        <TextBlock
-                            FontSize="12"
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
                             IsVisible="False"
                             MaxLines="1"
-                            Name="PingText"
-                            TextTrimming="CharacterEllipsis"
-                            VerticalAlignment="Center" />
+                            Name="PlayersText"
+                            TextTrimming="CharacterEllipsis" />
                     </StackPanel>
+                </DockPanel>
+                <StackPanel
+                    DockPanel.Dock="Bottom"
+                    Margin="0,0,0,1"
+                    Spacing="2"
+                    VerticalAlignment="Bottom">
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        IsVisible="False"
+                        Margin="0,2,0,0"
                         MaxLines="1"
-                        Name="PlayersText"
+                        Name="AddressText"
                         TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        MaxLines="1"
+                        Name="InstanceText"
+                        TextTrimming="CharacterEllipsis" />
+                    <DockPanel>
+                        <TextBlock
+                            DockPanel.Dock="Left"
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            MaxLines="1"
+                            Name="HintText"
+                            TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
                 </StackPanel>
             </DockPanel>
-            <StackPanel
-                DockPanel.Dock="Bottom"
-                Margin="0,0,0,1"
-                Spacing="2"
-                VerticalAlignment="Bottom">
+            <Button
+                Background="Transparent"
+                BorderThickness="0"
+                Click="LaunchButton_OnClick"
+                Cursor="Hand"
+                DockPanel.Dock="Right"
+                HorizontalAlignment="Right"
+                Margin="0,0,4,3"
+                Theme="{StaticResource TransparentButton}"
+                ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickworldwidget2x1_quickJoinWorld}}"
+                VerticalAlignment="Bottom"
+                x:Name="LaunchButton">
                 <TextBlock
-                    FontSize="11"
+                    FontFamily="{StaticResource IconFont}"
+                    FontSize="16"
                     Foreground="{DynamicResource InnerForegroundColor}"
-                    Margin="0,2,0,0"
-                    MaxLines="1"
-                    Name="AddressText"
-                    TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    FontSize="11"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    MaxLines="1"
-                    Name="InstanceText"
-                    TextTrimming="CharacterEllipsis" />
-                <DockPanel>
-                    <TextBlock
-                        DockPanel.Dock="Left"
-                        FontSize="11"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        MaxLines="1"
-                        Name="HintText"
-                        TextTrimming="CharacterEllipsis" />
-                    <Button
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Click="LaunchButton_OnClick"
-                        Cursor="Hand"
-                        DockPanel.Dock="Right"
-                        HorizontalAlignment="Right"
-                        MinHeight="18"
-                        Padding="4,-4,2,-4"
-                        Theme="{StaticResource TransparentButton}"
-                        ToolTip.Tip="{Translate {x:Static loc:WidgetsLanguageManager+Keys.quickserverwidget2x1_quickJoinServer}}"
-                        VerticalAlignment="Center"
-                        x:Name="LaunchButton">
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe613;" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" />
-                        <Button.Transitions>
-                            <Transitions>
-                                <DoubleTransition
-                                    Duration="0:0:0.15"
-                                    Easing="SineEaseOut"
-                                    Property="Opacity" />
-                            </Transitions>
-                        </Button.Transitions>
-                    </Button>
-                </DockPanel>
-            </StackPanel>
-        </DockPanel>
+                    Text="&#xe613;" />
+                <Button.Transitions>
+                    <Transitions>
+                        <DoubleTransition
+                            Duration="0:0:0.15"
+                            Easing="SineEaseOut"
+                            Property="Opacity" />
+                    </Transitions>
+                </Button.Transitions>
+            </Button>
+        </Panel>
     </Border>
 </UserControl>
