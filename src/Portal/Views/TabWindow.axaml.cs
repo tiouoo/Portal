@@ -19,6 +19,7 @@ using Portal.Core.Module.Initialize;
 using Portal.Localization;
 using Portal.Module;
 using Portal.Module.DefaultPage;
+using Portal.Platform.Windows;
 using Portal.Views.Components;
 using Portal.Views.Components.Operations.OpenFile;
 using Portal.Views.Pages;
@@ -47,6 +48,10 @@ public partial class TabWindow : TioTabWindowBase
     private Border? _backgroundMaskLayer;
     private string? _cachedBackgroundPath;
     private Bitmap? _cachedOriginalBackground;
+    private WindowCompositionMaterial? _compositionMaterial;
+    private int _compositionMaterialAttachAttempt;
+    private bool _compositionMaterialAttachPending;
+    private WindowCompositionMaterialKind _compositionMaterialKind;
     private Debouncer _hideDropTipDebouncer;
 
 
@@ -203,6 +208,12 @@ public partial class TabWindow : TioTabWindowBase
         NavScrollViewer.ScrollChanged += (_, _) => { IsTabMaskVisible = NavScrollViewer.Offset.X > 0; };
         SizeChanged += TabWindow_OnSizeChanged;
         Resized += TabWindow_OnResized;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            PropertyChanged += TabWindow_OnWindowPropertyChanged;
+            ScalingChanged += TabWindow_OnScalingChanged;
+            ActualThemeVariantChanged += TabWindow_OnActualThemeVariantChanged;
+        }
         return;
 
         void MacOsWindowHandler(IntPtr nsWindow)
@@ -254,8 +265,13 @@ public partial class TabWindow : TioTabWindowBase
 
         SizeChanged -= TabWindow_OnSizeChanged;
         Resized -= TabWindow_OnResized;
+        PropertyChanged -= TabWindow_OnWindowPropertyChanged;
+        ScalingChanged -= TabWindow_OnScalingChanged;
+        ActualThemeVariantChanged -= TabWindow_OnActualThemeVariantChanged;
         Closed -= TabWindow_OnClosed;
 
+        _compositionMaterial?.Dispose();
+        _compositionMaterial = null;
         ClearBackgroundLayers();
         ClearOriginalBackgroundCache();
         DataContext = null;
@@ -263,6 +279,8 @@ public partial class TabWindow : TioTabWindowBase
 
     private void TabWindow_OnSizeChanged(object? sender, SizeChangedEventArgs e)
     {
+        UpdateCompositionMaterialGeometry();
+
         if (Data.ConfigEntry.BackgroundMode != BackgroundMode.Image || _cachedOriginalBackground == null)
             return;
 
@@ -275,6 +293,24 @@ public partial class TabWindow : TioTabWindowBase
             ClearOriginalBackgroundCache();
             ApplyBackground();
         }
+    }
+
+    private void TabWindow_OnWindowPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(WindowState))
+            UpdateCompositionMaterialGeometry();
+    }
+
+    private void TabWindow_OnScalingChanged(object? sender, EventArgs e)
+    {
+        UpdateCompositionMaterialGeometry();
+    }
+
+    private void TabWindow_OnActualThemeVariantChanged(object? sender, EventArgs e)
+    {
+        if (_compositionMaterial != null && Data.ConfigEntry.EnableManagedWindowDecorationsOnWindows &&
+            Data.ConfigEntry.BackgroundMode is BackgroundMode.Acrylic or BackgroundMode.Mica)
+            ApplyCompositionMaterial(_compositionMaterialKind);
     }
 
     private void TabWindow_OnResized(object? sender, WindowResizedEventArgs e)
@@ -510,6 +546,9 @@ public partial class TabWindow : TioTabWindowBase
     public void ApplyBackground()
     {
         var entry = Data.ConfigEntry;
+        var useManagedCompositionMaterial = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                                            entry.EnableManagedWindowDecorationsOnWindows &&
+                                            entry.BackgroundMode is BackgroundMode.Acrylic or BackgroundMode.Mica;
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -535,6 +574,7 @@ public partial class TabWindow : TioTabWindowBase
         switch (entry.BackgroundMode)
         {
             case BackgroundMode.Default:
+                HideCompositionMaterial();
                 ClearOriginalBackgroundCache();
                 ClearBackgroundLayers();
                 ClearValue(BackgroundProperty);
@@ -543,6 +583,7 @@ public partial class TabWindow : TioTabWindowBase
                 break;
 
             case BackgroundMode.Transparent:
+                HideCompositionMaterial();
                 ClearOriginalBackgroundCache();
                 ClearBackgroundLayers();
                 Background = Brushes.Transparent;
@@ -551,6 +592,7 @@ public partial class TabWindow : TioTabWindowBase
                 break;
 
             case BackgroundMode.Image:
+                HideCompositionMaterial();
                 if (!string.IsNullOrEmpty(entry.BackgroundImagePath) && File.Exists(entry.BackgroundImagePath))
                 {
                     try
@@ -581,6 +623,7 @@ public partial class TabWindow : TioTabWindowBase
                 break;
 
             case BackgroundMode.Color:
+                HideCompositionMaterial();
                 ClearOriginalBackgroundCache();
                 ClearBackgroundLayers();
                 Background = Brushes.Transparent;
@@ -600,7 +643,16 @@ public partial class TabWindow : TioTabWindowBase
                 if (RootBorder != null)
                     RootBorder.Background = acrylicBrush;
                 TransparencyBackgroundFallback = new SolidColorBrush(Color.FromArgb(255, color.R, color.G, color.B));
-                TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
+                TransparencyLevelHint = new[]
+                {
+                    useManagedCompositionMaterial
+                        ? WindowTransparencyLevel.Transparent
+                        : WindowTransparencyLevel.AcrylicBlur
+                };
+                if (useManagedCompositionMaterial)
+                    ApplyCompositionMaterial(WindowCompositionMaterialKind.Acrylic);
+                else
+                    HideCompositionMaterial();
                 break;
 
 
@@ -615,11 +667,85 @@ public partial class TabWindow : TioTabWindowBase
                     RootBorder.Background = micaBrush;
                 TransparencyBackgroundFallback =
                     new SolidColorBrush(Color.FromArgb(255, micaColor.R, micaColor.G, micaColor.B));
-                TransparencyLevelHint = new[] { WindowTransparencyLevel.Mica };
+                TransparencyLevelHint = new[]
+                {
+                    useManagedCompositionMaterial
+                        ? WindowTransparencyLevel.Transparent
+                        : WindowTransparencyLevel.Mica
+                };
+                if (useManagedCompositionMaterial)
+                    ApplyCompositionMaterial(WindowCompositionMaterialKind.Mica);
+                else
+                    HideCompositionMaterial();
                 break;
         }
 
         ApplyImageMaskOverlay();
+    }
+
+    private void ApplyCompositionMaterial(WindowCompositionMaterialKind kind)
+    {
+        _compositionMaterialKind = kind;
+        _compositionMaterial ??= WindowCompositionMaterial.TryCreate(this);
+        var active = _compositionMaterial?.Apply(kind, GetCompositionMaterialCornerRadius()) == true;
+        if (active)
+        {
+            _compositionMaterialAttachAttempt = 0;
+            ApplyCompositionMaterialTint(kind);
+            return;
+        }
+
+        _compositionMaterial?.Dispose();
+        _compositionMaterial = null;
+
+        if (RootBorder != null)
+        {
+            var color = Data.ConfigEntry.BackgroundSolidColor;
+            RootBorder.Background = new SolidColorBrush(Color.FromArgb(255, color.R, color.G, color.B));
+        }
+
+        if (_compositionMaterialAttachPending || ++_compositionMaterialAttachAttempt >= 12) return;
+        _compositionMaterialAttachPending = true;
+        RequestAnimationFrame(_ =>
+        {
+            _compositionMaterialAttachPending = false;
+            if (Data.ConfigEntry.EnableManagedWindowDecorationsOnWindows &&
+                Data.ConfigEntry.BackgroundMode is BackgroundMode.Acrylic or BackgroundMode.Mica)
+                ApplyCompositionMaterial(_compositionMaterialKind);
+        });
+    }
+
+    private void HideCompositionMaterial()
+    {
+        _compositionMaterialAttachAttempt = 0;
+        _compositionMaterialAttachPending = false;
+        _compositionMaterial?.Hide();
+    }
+
+    private void ApplyCompositionMaterialTint(WindowCompositionMaterialKind kind)
+    {
+        if (RootBorder == null) return;
+        var entry = Data.ConfigEntry;
+        var alpha = (byte)((kind == WindowCompositionMaterialKind.Acrylic
+            ? entry.AcrylicOpacity
+            : entry.MicaOpacity) * 255);
+        var color = entry.BackgroundSolidColor;
+        RootBorder.Background = new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B));
+    }
+
+    private void UpdateCompositionMaterialGeometry()
+    {
+        if (_compositionMaterial?.UpdateGeometry(GetCompositionMaterialCornerRadius()) != false) return;
+        _compositionMaterial.Dispose();
+        _compositionMaterial = null;
+        if (Data.ConfigEntry.EnableManagedWindowDecorationsOnWindows &&
+            Data.ConfigEntry.BackgroundMode is BackgroundMode.Acrylic or BackgroundMode.Mica)
+            ApplyCompositionMaterial(_compositionMaterialKind);
+    }
+
+    private double GetCompositionMaterialCornerRadius()
+    {
+        return WindowState == WindowState.Maximized ? 0 : Data.ConfigEntry.CustomWindowBorderCornerRadius;
     }
 
     private void ApplyImageMaskOverlay()
