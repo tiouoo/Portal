@@ -6,17 +6,40 @@
     x:DataType="pages:HomePageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Portal.Localization;assembly=Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Margin="24,20">
+    <StackPanel Margin="24,0,24,60" VerticalAlignment="Center">
         <TextBlock
             FontSize="22"
             HorizontalAlignment="Center"
             IsVisible="{Binding HasGreeting}"
             MaxWidth="900"
+            Name="Title"
             Text="{Binding Greeting}"
-            TextWrapping="Wrap"
-            VerticalAlignment="Top" />
-    </Grid>
+            TextWrapping="NoWrap" />
+        <Border Margin="0,12,0,45" Width="{Binding ElementName=Title, Path=Bounds.Width}">
+            <Border
+                Background="{DynamicResource SystemAccentColor}"
+                CornerRadius="10"
+                Height="3"
+                HorizontalAlignment="Stretch"
+                Margin="40,0" />
+        </Border>
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="18"
+            Margin="30,0"
+            MaxWidth="768"
+            MinHeight="90">
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Center"
+                Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.contextmenu_emptyList}}"
+                VerticalAlignment="Center" />
+        </Border>
+    </StackPanel>
 </UserControl>
