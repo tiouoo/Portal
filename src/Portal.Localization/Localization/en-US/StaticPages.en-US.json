@@ -1,5 +1,7 @@
 {
   "imageviewer": {
+    "previousImage": "Previous Image",
+    "nextImage": "Next Image",
     "zoomOutTooltip": "Zoom Out 10%",
     "zoomInTooltip": "Zoom In 10%",
     "openWithDefault": "Open with Default App",

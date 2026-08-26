@@ -28,55 +28,99 @@
                 Stretch="Uniform"
                 VerticalAlignment="Center" />
         </controls1:ScrollView>
-        <Border
-            Background="{DynamicResource TranslucentBackgroundColor}"
-            BorderBrush="{DynamicResource TranslucentBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="999"
+        <StackPanel
             HorizontalAlignment="Right"
             Margin="0,0,16,16"
-            VerticalAlignment="Bottom">
-            <StackPanel
-                Orientation="Horizontal"
-                Spacing="4"
-                ZIndex="1">
-                <RepeatButton
-                    Background="Transparent"
-                    Click="ZoomOut_OnClick"
-                    Height="32"
-                    Theme="{StaticResource TransparentButton}"
-                    ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomOutTooltip}}"
-                    Width="32">
+            Spacing="8"
+            VerticalAlignment="Bottom"
+            ZIndex="1">
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999"
+                HorizontalAlignment="Right"
+                Padding="5,0">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button
+                        Background="Transparent"
+                        Click="NavigatePrevious_OnClick"
+                        Height="32"
+                        IsEnabled="{Binding CanNavigatePrevious}"
+                        Theme="{StaticResource TransparentButton}"
+                        ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_previousImage}}"
+                        Width="32">
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Text="&#xe66d;"
+                            VerticalAlignment="Center" />
+                    </Button>
+                    <Button
+                        Background="Transparent"
+                        Click="NavigateNext_OnClick"
+                        Height="32"
+                        IsEnabled="{Binding CanNavigateNext}"
+                        Theme="{StaticResource TransparentButton}"
+                        ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_nextImage}}"
+                        Width="32">
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Text="&#xe61b;"
+                            VerticalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <RepeatButton
+                        Background="Transparent"
+                        Click="ZoomOut_OnClick"
+                        Height="32"
+                        Theme="{StaticResource TransparentButton}"
+                        ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomOutTooltip}}"
+                        Width="32">
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Text="&#xe608;"
+                            VerticalAlignment="Center" />
+                    </RepeatButton>
                     <TextBlock
-                        FontFamily="{StaticResource IconFont}"
-                        FontSize="16"
-                        FontWeight="Thin"
-                        HorizontalAlignment="Center"
-                        Text="&#xe608;"
-                        VerticalAlignment="Center" />
-                </RepeatButton>
-                <TextBlock
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="{Binding #ImageScrollView.ZoomFactor, StringFormat={}{0:P0}}"
-                    TextAlignment="Center"
-                    VerticalAlignment="Center"
-                    Width="52" />
-                <RepeatButton
-                    Background="Transparent"
-                    Click="ZoomIn_OnClick"
-                    Height="32"
-                    Theme="{StaticResource TransparentButton}"
-                    ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomInTooltip}}"
-                    Width="32">
-                    <TextBlock
-                        FontFamily="{StaticResource IconFont}"
-                        FontSize="16"
-                        FontWeight="Thin"
-                        HorizontalAlignment="Center"
-                        Text="&#xe645;"
-                        VerticalAlignment="Center" />
-                </RepeatButton>
-            </StackPanel>
-        </Border>
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Padding="1,0,0,0"
+                        Text="{Binding #ImageScrollView.ZoomFactor, StringFormat={}{0:P0}}"
+                        TextAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="60" />
+                    <RepeatButton
+                        Background="Transparent"
+                        Click="ZoomIn_OnClick"
+                        Height="32"
+                        Theme="{StaticResource TransparentButton}"
+                        ToolTip.Tip="{Translate {x:Static loc:StaticPagesLanguageManager+Keys.imageviewer_zoomInTooltip}}"
+                        Width="32">
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            FontWeight="Thin"
+                            HorizontalAlignment="Center"
+                            Text="&#xe645;"
+                            VerticalAlignment="Center" />
+                    </RepeatButton>
+                </StackPanel>
+            </Border>
+        </StackPanel>
     </Grid>
 </UserControl>

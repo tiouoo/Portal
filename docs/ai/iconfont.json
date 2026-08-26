@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "48399780",
+      "name": "arrow-left",
+      "font_class": "arrow-left-solid-full",
+      "unicode": "e66d",
+      "unicode_decimal": 58989
+    },
+    {
       "icon_id": "48397463",
       "name": "key-outline",
       "font_class": "a-FontAwesome7ProLight-Key",

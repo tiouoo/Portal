@@ -149,7 +149,7 @@ public partial class Screenshots : UserControl, INotifyPropertyChanged, IDisposa
             TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
 
-        ImageViewer.Open(item.FilePath, topLevel);
+        ImageViewer.Open(item.FilePath, topLevel, ScreenshotItems.Select(s => s.FilePath).ToArray());
         e.Handled = true;
     }
 

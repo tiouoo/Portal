@@ -18,17 +18,35 @@ namespace Portal.Views.Pages.StaticPages;
 
 public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage, INotifyPropertyChanged, IDisposable
 {
+    private readonly IReadOnlyList<string> _filePaths;
     private bool _isDisposed;
     private Bitmap? _image;
+    private int _currentIndex;
+    private int _loadVersion;
 
-    public ImageViewer() : this(string.Empty)
+    public ImageViewer() : this(string.Empty, null)
     {
     }
 
-    public ImageViewer(string filePath)
+    public ImageViewer(string filePath) : this(filePath, null)
+    {
+    }
+
+    public ImageViewer(string filePath, IReadOnlyList<string>? filePaths)
     {
         FilePath = filePath;
         FileName = Path.GetFileName(filePath);
+
+        _filePaths = filePaths is { Count: > 0 } ? filePaths : [filePath];
+        _currentIndex = -1;
+        for (var i = 0; i < _filePaths.Count; i++)
+        {
+            if (string.Equals(_filePaths[i], filePath, StringComparison.OrdinalIgnoreCase))
+            {
+                _currentIndex = i;
+                break;
+            }
+        }
 
         PageInfo = new PageInfo
         {
@@ -42,8 +60,12 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
         _ = LoadImageAsync();
     }
 
-    public string FilePath { get; }
-    public string FileName { get; }
+    public string FilePath { get; private set; }
+    public string FileName { get; private set; }
+
+    public bool CanNavigatePrevious => _currentIndex > 0;
+
+    public bool CanNavigateNext => _currentIndex >= 0 && _currentIndex < _filePaths.Count - 1;
 
     public Bitmap? Image
     {
@@ -62,6 +84,7 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
         if (_isDisposed || !File.Exists(FilePath))
             return;
 
+        var version = ++_loadVersion;
         Bitmap? bitmap;
         try
         {
@@ -72,7 +95,7 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
             return;
         }
 
-        if (_isDisposed)
+        if (_isDisposed || version != _loadVersion)
         {
             bitmap.Dispose();
             return;
@@ -178,14 +201,48 @@ public partial class ImageViewer : UserControl, ITioTabPage, IContextMenuTabPage
         Image.Save(stream, PngBitmapEncoderOptions.Default);
     }
 
-    public static void Open(string filePath, TopLevel sender)
+    public static void Open(string filePath, TopLevel sender, IReadOnlyList<string>? filePaths = null)
     {
         if (!File.Exists(filePath) || sender is not TioTabWindowBase window)
             return;
 
-        var tab = new TabEntry(window, new ImageViewer(filePath));
+        var tab = new TabEntry(window, new ImageViewer(filePath, filePaths));
         window.CreateTab(tab);
         window.SelectTab(tab);
+    }
+
+    private void NavigatePrevious_OnClick(object? sender, RoutedEventArgs e)
+    {
+        NavigateTo(_currentIndex - 1);
+    }
+
+    private void NavigateNext_OnClick(object? sender, RoutedEventArgs e)
+    {
+        NavigateTo(_currentIndex + 1);
+    }
+
+    private void NavigateTo(int index)
+    {
+        if (index < 0 || index >= _filePaths.Count || index == _currentIndex)
+            return;
+
+        _currentIndex = index;
+        FilePath = _filePaths[index];
+        FileName = Path.GetFileName(FilePath);
+
+        PageInfo.Title = FileName;
+        if (HostTab != null)
+        {
+            HostTab.Title = FileName;
+            HostTab.Header = FileName;
+        }
+
+        Image?.Dispose();
+        _image = null;
+        _ = LoadImageAsync();
+
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CanNavigatePrevious)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CanNavigateNext)));
     }
 
     private void ZoomIn_OnClick(object? sender, RoutedEventArgs e)

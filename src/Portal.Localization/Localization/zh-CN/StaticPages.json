@@ -1,5 +1,7 @@
 {
   "imageviewer": {
+    "previousImage": "上一张",
+    "nextImage": "下一张",
     "zoomOutTooltip": "缩小 10%",
     "zoomInTooltip": "放大 10%",
     "openWithDefault": "用默认方式打开",

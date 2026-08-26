@@ -305,7 +305,7 @@
     "openFolder": "打开文件夹",
     "title": "截图",
     "loading": "正在读取截图...",
-    "empty": "此实例没有可识别的存档",
+    "empty": "此实例没有可识别的截图",
     "copyImage": "复制图像",
     "openImage": "用默认方式打开",
     "saveAs": "另存为",
