@@ -35,6 +35,7 @@ public class WidgetWorkspace : UserControl
     private Point _pendingStartPoint;
 
     private ContextMenu? _widgetContextMenu;
+    private int _customContextMenuItemCount;
     private Point _widgetInitialPosition;
 
     public WidgetWorkspace()
@@ -81,14 +82,14 @@ public class WidgetWorkspace : UserControl
 
         var deleteItem = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = IconResources.CreateIcon("\ue640", 16)
+            Header = CommonLanguageManager.Instance.widgets_deleteWidget.CurrentValue(), Icon = IconResources.CreateIcon("\ue640", 18)
         };
         deleteItem.Click += OnDeleteWidgetClick;
         _widgetContextMenu.Items.Add(deleteItem);
 
         var backgroundMenu = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = IconResources.CreateIcon("\ue646", 16)
+            Header = CommonLanguageManager.Instance.widgets_background.CurrentValue(), Icon = IconResources.CreateIcon("\ue646", 18)
         };
         var followItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_backgroundFollow.CurrentValue(), Classes = { "hide-icon" } };
         followItem.Click += (_, _) => SetBackgroundOverride(_contextMenuWidget, null);
@@ -103,7 +104,7 @@ public class WidgetWorkspace : UserControl
 
         var alignMenu = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_alignGrid.CurrentValue(), Icon = IconResources.CreateIcon("\ue64f", 16)
+            Header = CommonLanguageManager.Instance.widgets_alignGrid.CurrentValue(), Icon = IconResources.CreateIcon("\ue64f", 18)
         };
         var alignAutoItem = new MenuItem { Header = CommonLanguageManager.Instance.widgets_alignAuto.CurrentValue(), Classes = { "hide-icon" } };
         alignAutoItem.Click += (_, _) => SetWidgetAlign(_contextMenuWidget, true);
@@ -116,7 +117,7 @@ public class WidgetWorkspace : UserControl
         var memoryModeItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_toggleDisplayMode.CurrentValue(),
-            Icon = IconResources.CreateIcon("\ue63c", 16),
+            Icon = IconResources.CreateIcon("\ue63c", 18),
             IsVisible = false
         };
         memoryModeItem.Click += (_, _) =>
@@ -133,7 +134,7 @@ public class WidgetWorkspace : UserControl
         var newsFilterMenu = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_newsFilter.CurrentValue(),
-            Icon = IconResources.CreateIcon("\ue63d", 16),
+            Icon = IconResources.CreateIcon("\ue63d", 18),
             IsVisible = false
         };
         var newsAllItem = new MenuItem { Header = CommonLanguageManager.Instance.news_filterAll.CurrentValue(), Classes = { "hide-icon" } };
@@ -150,7 +151,7 @@ public class WidgetWorkspace : UserControl
         var imageChangeItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_changeImage.CurrentValue(),
-            Icon = IconResources.CreateIcon("\ue635", 16),
+            Icon = IconResources.CreateIcon("\ue635", 18),
             IsVisible = false
         };
         imageChangeItem.Click += (_, _) => _ = ChangeImageAsync();
@@ -159,7 +160,7 @@ public class WidgetWorkspace : UserControl
         var imageStretchItem = new MenuItem
         {
             Header = CommonLanguageManager.Instance.widgets_toggleStretchMode.CurrentValue(),
-            Icon = IconResources.CreateIcon("\ue64a", 16),
+            Icon = IconResources.CreateIcon("\ue64a", 18),
             IsVisible = false
         };
         imageStretchItem.Click += (_, _) =>
@@ -174,7 +175,7 @@ public class WidgetWorkspace : UserControl
 
         var sizeMenu = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = IconResources.CreateIcon("\ue64a", 16)
+            Header = CommonLanguageManager.Instance.widgets_toggleSize.CurrentValue(), Icon = IconResources.CreateIcon("\ue64a", 18)
         };
         _widgetContextMenu.Items.Add(sizeMenu);
 
@@ -190,6 +191,7 @@ public class WidgetWorkspace : UserControl
 
             alignAutoItem.IsChecked = _contextMenuWidget.Layout.AlignToGrid;
             alignFreeItem.IsChecked = !_contextMenuWidget.Layout.AlignToGrid;
+            sizeMenu.IsEnabled = _contextMenuWidget.Layout.AlignToGrid;
 
             memoryModeItem.IsVisible = _contextMenuWidget.WidgetContent is MemoryResourceWidget;
             var isImage = _contextMenuWidget.WidgetContent is ImageViewWidget;
@@ -226,7 +228,7 @@ public class WidgetWorkspace : UserControl
         _emptyContextMenu = new ContextMenu();
         var addItem = new MenuItem
         {
-            Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = IconResources.CreateIcon("\ue645", 16)
+            Header = CommonLanguageManager.Instance.widgets_addWidget.CurrentValue(), Icon = IconResources.CreateIcon("\ue645", 18)
         };
         addItem.Click += (_, _) => AddWidgetCallOn?.Invoke(this, EventArgs.Empty);
         _emptyContextMenu.Items.Add(addItem);
@@ -253,6 +255,8 @@ public class WidgetWorkspace : UserControl
         widget.Layout.AlignToGrid = alignToGrid;
         if (alignToGrid)
         {
+            widget.SnapToNearestSize();
+            widget.UpdateSizeConstraints();
             var currentPos = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
             var freeGridPos = FindNearestFreeGridPosition(currentPos, widget);
             PlaceWidgetAtGrid(widget, freeGridPos);
@@ -261,6 +265,9 @@ public class WidgetWorkspace : UserControl
         {
             widget.Layout.FreeX = Canvas.GetLeft(widget);
             widget.Layout.FreeY = Canvas.GetTop(widget);
+            widget.Layout.FreeWidth = widget.Width;
+            widget.Layout.FreeHeight = widget.Height;
+            widget.UpdateSizeConstraints();
             ClearWidgetOccupancy(widget);
         }
 
@@ -340,7 +347,7 @@ public class WidgetWorkspace : UserControl
                 continue;
 
             host.Layout = data;
-            host.SetSize(data.Size);
+            host.ApplyLayoutSize();
             _canvas.Children.Add(host);
             _allWidgets.Add(host);
             HookWidget(host);
@@ -425,9 +432,32 @@ public class WidgetWorkspace : UserControl
         if (sender is WidgetHost widget)
         {
             _contextMenuWidget = widget;
+            UpdateCustomContextMenuItems(widget);
             _widgetContextMenu?.Open(widget);
             e.Handled = true;
         }
+    }
+
+    private void UpdateCustomContextMenuItems(WidgetHost widget)
+    {
+        if (_widgetContextMenu == null)
+            return;
+
+        for (var i = 0; i < _customContextMenuItemCount; i++)
+            _widgetContextMenu.Items.RemoveAt(0);
+        _customContextMenuItemCount = 0;
+
+        if (widget.WidgetContent is not IWidgetContextMenuProvider provider)
+            return;
+
+        var items = provider.CreateContextMenuItems(SaveLayout);
+        if (items.Count == 0)
+            return;
+
+        for (var i = 0; i < items.Count; i++)
+            _widgetContextMenu.Items.Insert(i, items[i]);
+        _widgetContextMenu.Items.Insert(items.Count, new Separator());
+        _customContextMenuItemCount = items.Count + 1;
     }
 
     private void OnWidgetResized(WidgetHost widget)
@@ -775,6 +805,9 @@ public class WidgetWorkspace : UserControl
 
     private void SetWidgetSize(WidgetHost widget, WidgetCellSize size)
     {
+        if (!widget.Layout.AlignToGrid)
+            return;
+
         widget.SetSize(size);
         OnWidgetResized(widget);
     }

@@ -21,6 +21,34 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
     private bool _loading;
     private WorldSaveInfo? _world;
 
+    protected override WidgetClickAction DefaultClickAction => WidgetClickAction.ShowDetails;
+    protected override bool CanPlayFromContextMenu => CanQuickEnterWorld;
+
+    protected override IReadOnlyList<(WidgetClickAction Action, string Header)> ClickActionOptions =>
+        CanQuickEnterWorld
+            ?
+            [
+                (WidgetClickAction.QuickEnterWorld,
+                    WidgetsLanguageManager.Instance.contextmenu_quickEnterWorld.CurrentValue()),
+                (WidgetClickAction.ShowDetails,
+                    WidgetsLanguageManager.Instance.contextmenu_showWorldDetails.CurrentValue()),
+            ]
+            :
+            [
+                (WidgetClickAction.ShowDetails,
+                    WidgetsLanguageManager.Instance.contextmenu_showWorldDetails.CurrentValue())
+            ];
+
+    protected override void ViewDetailsFromContextMenu()
+    {
+        _ = ShowWorldDetailsAsync();
+    }
+
+    protected override void PlayFromContextMenu()
+    {
+        QuickEnterWorld();
+    }
+
     public QuickWorldWidget1x1()
     {
         Size = new WidgetCellSize(1, 1);
@@ -112,6 +140,17 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
 
     public override async void PerformClick()
     {
+        if (ClickAction == WidgetClickAction.QuickEnterWorld && CanQuickEnterWorld)
+        {
+            QuickEnterWorld();
+            return;
+        }
+
+        await ShowWorldDetailsAsync();
+    }
+
+    private async Task ShowWorldDetailsAsync()
+    {
         var instance = Instance;
         var folderName = GetData<QuickWorldWidgetData>()?.WorldFolderName;
         if (instance == null || string.IsNullOrEmpty(folderName))
@@ -145,7 +184,13 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
 
     private void LaunchButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (Instance == null || GetData<QuickWorldWidgetData>()?.WorldFolderName is not { } folderName)
+        QuickEnterWorld();
+    }
+
+    private void QuickEnterWorld()
+    {
+        if (!CanQuickEnterWorld || Instance == null ||
+            GetData<QuickWorldWidgetData>()?.WorldFolderName is not { } folderName)
             return;
         if (TopLevel.GetTopLevel(this) is not { } topLevel)
             return;
@@ -167,17 +212,5 @@ public partial class QuickWorldWidget1x1 : InstanceBoundWidgetBase
         _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
             MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)),
             target);
-    }
-
-    private static string GetGameModeText(int? gameMode)
-    {
-        return gameMode switch
-        {
-            0 => CommonLanguageManager.Instance.recentPlay_gameModeSurvival.CurrentValue(),
-            1 => CommonLanguageManager.Instance.recentPlay_gameModeCreative.CurrentValue(),
-            2 => CommonLanguageManager.Instance.recentPlay_gameModeAdventure.CurrentValue(),
-            3 => CommonLanguageManager.Instance.recentPlay_gameModeSpectator.CurrentValue(),
-            _ => CommonLanguageManager.Instance.recentPlay_gameModeUnknown.CurrentValue()
-        };
     }
 }

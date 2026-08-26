@@ -13,6 +13,7 @@ namespace Portal.Views.Widgets;
 
 public partial class WidgetHost : UserControl
 {
+    private const double MinimumFreeSize = 48;
     private readonly Border? _card;
     private readonly Border? _resizeHandle;
     private readonly TextBlock? _resizeIcon;
@@ -82,6 +83,15 @@ public partial class WidgetHost : UserControl
 
     public void UpdateSizeConstraints()
     {
+        if (!Layout.AlignToGrid)
+        {
+            MinWidth = MinimumFreeSize;
+            MinHeight = MinimumFreeSize;
+            MaxWidth = double.PositiveInfinity;
+            MaxHeight = double.PositiveInfinity;
+            return;
+        }
+
         var definition = WidgetRegistry.Get(Layout.Kind);
         if (definition?.SupportedSizes.Count is not > 0)
             return;
@@ -123,6 +133,20 @@ public partial class WidgetHost : UserControl
             WidgetContent = definition.Create(nearest);
             UpdateSizeConstraints();
         }
+    }
+
+    public void ApplyLayoutSize()
+    {
+        SetSize(Layout.Size);
+        UpdateSizeConstraints();
+
+        if (Layout.AlignToGrid)
+            return;
+
+        Width = Math.Max(MinimumFreeSize, Layout.FreeWidth ?? Width);
+        Height = Math.Max(MinimumFreeSize, Layout.FreeHeight ?? Height);
+        Layout.FreeWidth = Width;
+        Layout.FreeHeight = Height;
     }
 
     public void SnapToNearestSize()
@@ -227,7 +251,16 @@ public partial class WidgetHost : UserControl
             }
         };
 
-        SnapToNearestSize();
+        if (Layout.AlignToGrid)
+        {
+            SnapToNearestSize();
+        }
+        else
+        {
+            Layout.FreeWidth = Width;
+            Layout.FreeHeight = Height;
+        }
+
         Resized?.Invoke(this);
     }
 }

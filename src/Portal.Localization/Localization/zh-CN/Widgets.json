@@ -76,6 +76,17 @@
     "emptyText": "此实例没有可识别的存档",
     "cancel": "取消"
   },
+  "contextmenu": {
+    "clickAction": "点击操作",
+    "viewDetails": "查看详情",
+    "play": "游玩",
+    "noAction": "无操作",
+    "showInstanceDetails": "打开实例详情",
+    "showWorldDetails": "打开世界详情",
+    "launchInstance": "直接启动实例",
+    "quickEnterWorld": "快速进入世界",
+    "quickEnterServer": "快速进入服务器"
+  },
   "clock1x1": {},
   "clock2x1": {},
   "resourcewidgetview1x1": {},

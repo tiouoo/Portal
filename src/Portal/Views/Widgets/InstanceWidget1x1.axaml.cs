@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft;
 using Portal.Core.Module.Widgets;
 using Portal.Core.Minecraft.Services;
@@ -10,6 +11,21 @@ namespace Portal.Views.Widgets;
 
 public partial class InstanceWidget1x1 : InstanceBoundWidgetBase
 {
+    protected override WidgetClickAction DefaultClickAction => WidgetClickAction.ShowDetails;
+    protected override IReadOnlyList<(WidgetClickAction Action, string Header)> ClickActionOptions =>
+        CanQuickEnterWorld
+            ?
+            [
+                (WidgetClickAction.ShowDetails, WidgetsLanguageManager.Instance.contextmenu_showInstanceDetails.CurrentValue()),
+                (WidgetClickAction.LaunchInstance, WidgetsLanguageManager.Instance.contextmenu_launchInstance.CurrentValue()),
+                (WidgetClickAction.QuickEnterWorld, WidgetsLanguageManager.Instance.contextmenu_quickEnterWorld.CurrentValue())
+            ]
+            :
+            [
+                (WidgetClickAction.ShowDetails, WidgetsLanguageManager.Instance.contextmenu_showInstanceDetails.CurrentValue()),
+                (WidgetClickAction.LaunchInstance, WidgetsLanguageManager.Instance.contextmenu_launchInstance.CurrentValue())
+            ];
+
     public InstanceWidget1x1()
     {
         Size = new WidgetCellSize(1, 1);
@@ -48,20 +64,22 @@ public partial class InstanceWidget1x1 : InstanceBoundWidgetBase
 
     public override void PerformClick()
     {
-        if (Instance == null)
-            return;
-        if (TopLevel.GetTopLevel(this) is { } topLevel)
-            InstanceDetailPage.Open(Instance, topLevel);
+        switch (ClickAction)
+        {
+            case WidgetClickAction.LaunchInstance:
+                LaunchInstance();
+                break;
+            case WidgetClickAction.QuickEnterWorld when CanQuickEnterWorld:
+                _ = PickAndQuickEnterWorldAsync();
+                break;
+            default:
+                OpenInstanceDetails();
+                break;
+        }
     }
 
     private void LaunchButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (Instance == null)
-            return;
-        if (TopLevel.GetTopLevel(this) is not { } topLevel)
-            return;
-
-        _ = MinecraftLaunchService.LaunchAsync(Instance, topLevel,
-            MinecraftLaunchOptionsFactory.Create(Instance, logSession => MinecraftLogPage.Open(logSession, topLevel)));
+        LaunchInstance();
     }
 }

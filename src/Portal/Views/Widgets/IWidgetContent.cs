@@ -17,3 +17,8 @@ public abstract class IWidgetContent : UserControl
     {
     }
 }
+
+public interface IWidgetContextMenuProvider
+{
+    IReadOnlyList<MenuItem> CreateContextMenuItems(Action saveLayout);
+}

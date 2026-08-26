@@ -15,6 +15,8 @@ public sealed class WidgetLayoutData
     public bool AlignToGrid { get; set; } = true;
     public double FreeX { get; set; }
     public double FreeY { get; set; }
+    public double? FreeWidth { get; set; }
+    public double? FreeHeight { get; set; }
 
     public WidgetData? Data { get; set; }
 
@@ -37,6 +39,16 @@ public class WidgetData
 public class InstanceBoundWidgetData : WidgetData
 {
     public string? InstanceFolderPath { get; set; }
+    public WidgetClickAction? ClickAction { get; set; }
+}
+
+public enum WidgetClickAction
+{
+    None,
+    ShowDetails,
+    LaunchInstance,
+    QuickEnterWorld,
+    QuickEnterServer
 }
 
 public sealed class InstanceWidgetData : InstanceBoundWidgetData

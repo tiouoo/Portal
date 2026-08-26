@@ -16,6 +16,17 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
     private readonly ServerPing _ping = new();
     private string? _pingAddress;
 
+    protected override IReadOnlyList<(WidgetClickAction Action, string Header)> ClickActionOptions =>
+    [
+        (WidgetClickAction.None, WidgetsLanguageManager.Instance.contextmenu_noAction.CurrentValue()),
+        (WidgetClickAction.QuickEnterServer, WidgetsLanguageManager.Instance.contextmenu_quickEnterServer.CurrentValue())
+    ];
+
+    protected override void PlayFromContextMenu()
+    {
+        QuickEnterServer();
+    }
+
     public QuickServerWidget2x1()
     {
         Size = new WidgetCellSize(2, 1);
@@ -99,6 +110,17 @@ public partial class QuickServerWidget2x1 : InstanceBoundWidgetBase
     }
 
     private void LaunchButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        QuickEnterServer();
+    }
+
+    public override void PerformClick()
+    {
+        if (ClickAction == WidgetClickAction.QuickEnterServer)
+            QuickEnterServer();
+    }
+
+    private void QuickEnterServer()
     {
         var data = GetData<QuickServerWidgetData>();
         if (Instance == null || string.IsNullOrEmpty(data?.ServerAddress))

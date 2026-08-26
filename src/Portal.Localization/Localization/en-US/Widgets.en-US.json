@@ -76,6 +76,17 @@
     "emptyText": "This instance has no recognized saves",
     "cancel": "Cancel"
   },
+  "contextmenu": {
+    "clickAction": "Click Action",
+    "viewDetails": "View Details",
+    "play": "Play",
+    "noAction": "No Action",
+    "showInstanceDetails": "Open Instance Details",
+    "showWorldDetails": "Open World Details",
+    "launchInstance": "Launch Instance",
+    "quickEnterWorld": "Quick Enter World",
+    "quickEnterServer": "Quick Join Server"
+  },
   "clock1x1": {},
   "clock2x1": {},
   "resourcewidgetview1x1": {},
