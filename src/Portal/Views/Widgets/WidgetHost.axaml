@@ -28,13 +28,20 @@
         <Border
             Background="#01FFFFFF"
             Cursor="BottomRightCorner"
-            Height="10"
+            Height="16"
             HorizontalAlignment="Right"
-            Margin="0,0,8,8"
+            Margin="0,0,6,6"
             VerticalAlignment="Bottom"
-            Width="10"
+            Width="16"
             x:Name="ResizeHandle">
-            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe64e;" FontSize="14" Foreground="{DynamicResource InnerForegroundColor}" Opacity="0" x:Name="ResizeIcon" />
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
+                FontWeight="Thin"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Opacity="0"
+                Text="&#xe9e8;"
+                x:Name="ResizeIcon" />
         </Border>
     </Panel>
 </UserControl>
