@@ -218,17 +218,10 @@
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_backgroundImageLabel}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <tio:PathPicker
-                FileFilter="[ImageAll]"
-                SelectedPathsText="{Binding BackgroundImagePath, Source={x:Static const1:Data.ConfigEntry}}"
-                Title="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_selectBackgroundImage}}"
-                UsePickerType="OpenFile" />
-            <TextBlock
-                FontSize="12"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Binding BackgroundImagePath, Source={x:Static const1:Data.ConfigEntry}}"
-                TextTrimming="CharacterEllipsis"
-                TextWrapping="NoWrap" />
+            <Button
+                Click="ChangeBackgroundImage_OnClick"
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_changeBackgroundImage}}"
+                HorizontalAlignment="Left" />
         </StackPanel>
         <StackPanel IsVisible="{Binding BackgroundMode, Source={x:Static const1:Data.ConfigEntry}, Converter={StaticResource BackgroundModeCompareConverter}, ConverterParameter='Image'}" Spacing="5">
             <Label

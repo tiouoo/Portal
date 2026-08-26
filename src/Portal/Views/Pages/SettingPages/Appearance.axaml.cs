@@ -4,8 +4,10 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Irihi.Lingua;
 using Portal.Core.Const;
@@ -13,7 +15,10 @@ using Portal.Core.Module.AggregatedSearch;
 using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Components;
+using Tio.Avalonia.Standard.Modules.DiskIO;
+using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common.Extensions;
+using TioUi.Common;
 using TioUi.Controls;
 using TioUi.Shared;
 
@@ -160,6 +165,55 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
     {
         Data.ConfigEntry.AppScale = scale;
         UpdateApplyButtonState();
+    }
+
+    private async void ChangeBackgroundImage_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (TopLevel.GetTopLevel(this)?.StorageProvider is not { } storageProvider)
+            return;
+
+        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = SettingsLanguageManager.Instance.appearance_changeBackgroundImage.CurrentValue(),
+            AllowMultiple = false,
+            FileTypeFilter = [FilePickerFileTypes.ImageAll]
+        });
+        if (files.Count == 0)
+            return;
+
+        var extension = Path.GetExtension(files[0].Name);
+        var targetPath = Path.Combine(ConfigPath.BackgroundFolderPath, $"{Guid.NewGuid():N}{extension}");
+        try
+        {
+            Directory.CreateDirectory(ConfigPath.BackgroundFolderPath);
+            await using (var source = await files[0].OpenReadAsync())
+            await using (var target = File.Create(targetPath))
+                await source.CopyToAsync(target);
+
+            var previousPath = Data.ConfigEntry.BackgroundImagePath;
+            Data.ConfigEntry.BackgroundImagePath = targetPath;
+            DeleteManagedBackground(previousPath, targetPath);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+            if (File.Exists(targetPath))
+                File.Delete(targetPath);
+            TopLevel.GetTopLevel(this)?.Notice(
+                string.Format(SettingsLanguageManager.Instance.appearance_changeBackgroundImageFailed.CurrentValue(),
+                    exception.Message), NotificationType.Error);
+        }
+    }
+
+    private static void DeleteManagedBackground(string? path, string currentPath)
+    {
+        if (string.IsNullOrEmpty(path) || string.Equals(path, currentPath, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var relativePath = Path.GetRelativePath(ConfigPath.BackgroundFolderPath, path);
+        if (!relativePath.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) &&
+            relativePath != ".." && File.Exists(path))
+            File.Delete(path);
     }
 
     private void UpdateApplyButtonState()

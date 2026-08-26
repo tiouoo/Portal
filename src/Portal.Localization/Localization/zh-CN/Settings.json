@@ -22,6 +22,8 @@
     "backgroundColor": "背景颜色",
     "backgroundImageLabel": "背景图片",
     "selectBackgroundImage": "选择背景图片",
+    "changeBackgroundImage": "更改背景图片",
+    "changeBackgroundImageFailed": "更改背景图片失败：{0}",
     "imageBlurRadius": "模糊程度",
     "enableImageMask": "启用背景遮罩",
     "imageMaskColor": "遮罩颜色",

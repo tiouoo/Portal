@@ -22,6 +22,8 @@
     "backgroundColor": "Background Color",
     "backgroundImageLabel": "Background Image",
     "selectBackgroundImage": "Select Background Image",
+    "changeBackgroundImage": "Change Background Image",
+    "changeBackgroundImageFailed": "Failed to change background image: {0}",
     "imageBlurRadius": "Blur",
     "enableImageMask": "Enable Background Mask",
     "imageMaskColor": "Mask Color",
