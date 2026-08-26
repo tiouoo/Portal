@@ -4,9 +4,7 @@
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ItemsRepeater
-        ItemsSource="{x:Static components:ResourceSearchSkeleton.Items}"
-        Margin="0,0,10,0">
+    <ItemsRepeater ItemsSource="{x:Static components:ResourceSearchSkeleton.Items}" Margin="0,0,10,0">
         <ItemsRepeater.Layout>
             <UniformGridLayout
                 ItemsStretch="Fill"
@@ -32,16 +30,21 @@
                                 IsActive="True"
                                 IsLoading="True"
                                 Width="56" />
-                            <StackPanel Margin="10,1,0,0" Spacing="5" VerticalAlignment="Center">
+                            <StackPanel
+                                Margin="10,1,0,0"
+                                Spacing="5"
+                                VerticalAlignment="Center">
                                 <tio:Skeleton
                                     CornerRadius="4"
                                     Height="16"
+                                    HorizontalAlignment="Left"
                                     IsActive="True"
                                     IsLoading="True"
                                     Width="150" />
                                 <tio:Skeleton
                                     CornerRadius="3"
                                     Height="12"
+                                    HorizontalAlignment="Left"
                                     IsActive="True"
                                     IsLoading="True"
                                     Width="105" />
@@ -49,12 +52,14 @@
                                     <tio:Skeleton
                                         CornerRadius="999"
                                         Height="17"
+                                        HorizontalAlignment="Left"
                                         IsActive="True"
                                         IsLoading="True"
                                         Width="52" />
                                     <tio:Skeleton
                                         CornerRadius="999"
                                         Height="17"
+                                        HorizontalAlignment="Left"
                                         IsActive="True"
                                         IsLoading="True"
                                         Width="40" />
@@ -71,6 +76,7 @@
                             <tio:Skeleton
                                 CornerRadius="3"
                                 Height="12"
+                                HorizontalAlignment="Left"
                                 IsActive="True"
                                 IsLoading="True"
                                 Width="190" />
