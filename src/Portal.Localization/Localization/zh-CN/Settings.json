@@ -83,7 +83,7 @@
     "gameOverlay": "游戏内覆盖层",
     "gameOverlayHint": " *在游戏内按下 Shift+Tab 显示或隐藏覆盖层",
     "gameFullscreen": "游戏全屏",
-    "gameFullscreenHint": " *启动游戏后默认以全屏模式打开游戏窗口，开启后不再传入窗口大小",
+    "gameFullscreenHint": " *启动游戏后默认以全屏模式打开游戏窗口",
     "minecraftWindowTitle": "Minecraft窗口标题",
     "leaveEmptyForDefault": "留空默认",
     "minecraftWindowSize": "Minecraft窗口大小",

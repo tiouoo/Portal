@@ -531,10 +531,7 @@
             <ToggleSwitch IsChecked="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
         <Border IsVisible="{Binding Data.ConfigEntry.EnableManagedWindowDecorationsOnWindows}" Margin="0,-5,0,0">
-            <StackPanel
-                IsVisible="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}"
-                Margin="0,5,0,15"
-                Spacing="5">
+            <StackPanel IsVisible="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
                 <Label
                     Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_borderColor}}"
                     FontSize="13"
@@ -588,7 +585,7 @@
                 </Grid>
             </StackPanel>
         </Border>
-        <StackPanel Margin="0,-15,0,0" Spacing="5">
+        <StackPanel Margin="0,0,0,0" Spacing="5">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_showWidgetBackground}}"
                 FontSize="13"

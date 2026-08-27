@@ -6,9 +6,10 @@
     x:DataType="settingPages:Agent"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
         <StackPanel Spacing="5">
             <Label
@@ -57,10 +58,6 @@
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.DisableSystemProxy}" IsEnabled="{Binding Data.ConfigEntry.CanDisableSystemProxy}" />
-            <TextBlock
-                FontSize="11"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.agent_disableSystemProxyHint}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding Data.ConfigEntry.EnableProxyServer}" Spacing="5">
             <Label
