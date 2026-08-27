@@ -159,7 +159,40 @@ public partial class TabWindow : TioTabWindowBase
                 BeginMoveDrag(e);
             };
 
-        Loaded += (_, _) => ApplyBackground();
+        Loaded += TabWindow_OnLoaded;
+    }
+
+    private async void TabWindow_OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        Loaded -= TabWindow_OnLoaded;
+        var entry = Data.ConfigEntry;
+        var path = entry.BackgroundImagePath;
+        if (entry.BackgroundMode != BackgroundMode.Image || string.IsNullOrEmpty(path) || !File.Exists(path))
+        {
+            ApplyBackground();
+            return;
+        }
+
+        try
+        {
+            var targetWidth = Math.Max(1, Bounds.Width * RenderScaling * 1.25);
+            var targetHeight = Math.Max(1, Bounds.Height * RenderScaling * 1.25);
+            using var decoded = await Task.Run(() => DecodeBackground(path, targetWidth, targetHeight));
+            if (Data.ConfigEntry.BackgroundMode != BackgroundMode.Image ||
+                !string.Equals(Data.ConfigEntry.BackgroundImagePath, path, StringComparison.Ordinal))
+                return;
+
+            _cachedOriginalBackground?.Dispose();
+            _cachedOriginalBackground = CreateAvaloniaBitmapFromSkBitmap(decoded);
+            _cachedBackgroundPath = path;
+            ApplyBackground();
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception);
+            ClearOriginalBackgroundCache();
+            ClearBackgroundLayers();
+        }
     }
 
 #if DEBUG
@@ -845,7 +878,9 @@ public partial class TabWindow : TioTabWindowBase
             return _cachedOriginalBackground;
 
         _cachedOriginalBackground?.Dispose();
-        using var sk = DecodeBackground(path);
+        var targetWidth = Math.Max(1, Bounds.Width * RenderScaling * 1.25);
+        var targetHeight = Math.Max(1, Bounds.Height * RenderScaling * 1.25);
+        using var sk = DecodeBackground(path, targetWidth, targetHeight);
         _cachedOriginalBackground = CreateAvaloniaBitmapFromSkBitmap(sk);
         _cachedBackgroundPath = path;
         return _cachedOriginalBackground;
@@ -869,14 +904,11 @@ public partial class TabWindow : TioTabWindowBase
             bitmap.RowBytes);
     }
 
-    private SKBitmap DecodeBackground(string path)
+    private static SKBitmap DecodeBackground(string path, double targetWidth, double targetHeight)
     {
         using var codec = SKCodec.Create(path) ?? throw new InvalidDataException(
             CommonLanguageManager.Instance.tabWindow_cannotReadBackground.CurrentValue());
         var source = codec.Info;
-        var renderScale = RenderScaling;
-        var targetWidth = Math.Max(1, Bounds.Width * renderScale * 1.25);
-        var targetHeight = Math.Max(1, Bounds.Height * renderScale * 1.25);
         var scale = Math.Min(1, Math.Max(targetWidth / source.Width, targetHeight / source.Height));
         var dimensions = codec.GetScaledDimensions((float)scale);
         var info = new SKImageInfo(Math.Max(1, dimensions.Width), Math.Max(1, dimensions.Height),

@@ -64,7 +64,6 @@ public partial class App : Application
         {
 #if DEBUG
             Logger.Debug(LogLanguageManager.Instance.app_attachDevtools.CurrentValue());
-            this.AttachDeveloperTools();
 #else
             Logger.Info(LogLanguageManager.Instance.app_registerGlobalExceptionHandling.CurrentValue());
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -102,6 +101,10 @@ public partial class App : Application
             }
 
             Logger.Info(LogLanguageManager.Instance.app_uiConfigComplete.CurrentValue());
+#if DEBUG
+            if (desktop.MainWindow is { } debugWindow)
+                debugWindow.Opened += AttachDeveloperToolsAfterWindowOpened;
+#endif
         }
 
         if (BedrockPackagePath == null)
@@ -115,6 +118,16 @@ public partial class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
+
+#if DEBUG
+    private async void AttachDeveloperToolsAfterWindowOpened(object? sender, EventArgs e)
+    {
+        if (sender is Window window)
+            window.Opened -= AttachDeveloperToolsAfterWindowOpened;
+        await Task.Delay(1000);
+        this.AttachDeveloperTools();
+    }
+#endif
 
     private void OnActivated(object? sender, ActivatedEventArgs e)
     {
