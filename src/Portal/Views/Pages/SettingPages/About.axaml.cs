@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -31,9 +32,12 @@ public partial class About : Dsc
         InitializeComponent();
         AboutViewModel = new AboutViewModel();
         DataContext = AboutViewModel;
-        if (Data.ConfigEntry.UpdateSource != UpdateSource.Github)
-            Data.UiProperty.OverrideUpdateChannel = "release";
-        UpdateChannel.IsEnabled = Data.ConfigEntry.UpdateSource == UpdateSource.Github;
+        AboutViewModel.PropertyChanged += AboutViewModel_OnPropertyChanged;
+        Loaded += (_, _) =>
+        {
+            if (Data.UiProperty.IsUpdateDownloading)
+                this.AsTopLevel().Notice(CommonLanguageManager.Instance.update_packageDownloading.CurrentValue());
+        };
     }
 
     private async void Button_OnClick(object? sender, RoutedEventArgs e)
@@ -72,18 +76,11 @@ public partial class About : Dsc
         Data.UiProperty.FoundNewVersion = true;
     }
 
-    private void UpdateChannel_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void AboutViewModel_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.RemovedItems.Count > 0 && AppVersionService.Instance.Version.Type != "dev")
-            _ = Check(sender!);
-    }
-
-    private void UpdateSource_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        var supportsPreviewChannels = Data.ConfigEntry.UpdateSource == UpdateSource.Github;
-        if (!supportsPreviewChannels) Data.UiProperty.OverrideUpdateChannel = "release";
-        UpdateChannel.IsEnabled = supportsPreviewChannels;
-        if (e.RemovedItems.Count > 0 && AppVersionService.Instance.Version.Type != "dev") _ = Check(sender!);
+        if (e.PropertyName == nameof(AboutViewModel.SelectedUpdateSource) &&
+            AppVersionService.Instance.Version.Type != "dev")
+            _ = Check(UpdateSource);
     }
 
     private async void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
@@ -131,6 +128,22 @@ public partial class About : Dsc
         }
     }
 
+    private async void RestartUpdate_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (UpdateApp.ReadyUpdate is not { } update) return;
+        try
+        {
+            await UpdateApp.Apply(update);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(LogLanguageManager.Instance.about_updateStartFailed.CurrentValue(), exception);
+            this.AsTopLevel().Notice(string.Format(
+                CommonLanguageManager.Instance.about_cannotStartUpdate.CurrentValue(), exception.Message),
+                NotificationType.Error);
+        }
+    }
+
     private void OpenLink_OnClick(object? sender, RoutedEventArgs e)
     {
         if (sender is not HyperlinkButton { CommandParameter: string url }) return;
@@ -141,10 +154,75 @@ public partial class About : Dsc
 
 public class AboutViewModel : ObservableObject
 {
+    private UpdateSourceOption? _selectedUpdateSource;
+
+    public AboutViewModel()
+    {
+        var release = SettingsLanguageManager.Instance.about_channelRelease.CurrentValue();
+        var commit = SettingsLanguageManager.Instance.about_channelCommitBuild.CurrentValue();
+        var githubRelease = new UpdateSourceOption(release, $"GitHub → {release}", UpdateSource.Github, "release");
+        var githubCommit = new UpdateSourceOption(commit, $"GitHub → {commit}", UpdateSource.Github, "commit");
+        var cnbRelease = new UpdateSourceOption(release, $"Cnb → {release}", UpdateSource.Cnb, "release");
+
+        UpdateSources =
+        [
+            new UpdateSourceOption("GitHub", children: [githubRelease, githubCommit]),
+            new UpdateSourceOption("Cnb", children: [cnbRelease])
+        ];
+
+        _selectedUpdateSource = Data.ConfigEntry.UpdateSource == UpdateSource.Cnb
+            ? cnbRelease
+            : Data.UiProperty.OverrideUpdateChannel == "commit" ? githubCommit : githubRelease;
+        ApplyUpdateSource(_selectedUpdateSource);
+    }
+
     public Data Data => Data.Instance;
     public string Info => $"{AppVersionService.Instance.Version.Type}.{Data.PackageType}";
+    public IReadOnlyList<UpdateSourceOption> UpdateSources { get; }
+    public bool IsGithubUpdateSource => SelectedUpdateSource?.Source == UpdateSource.Github;
+
+    public UpdateSourceOption? SelectedUpdateSource
+    {
+        get => _selectedUpdateSource;
+        set
+        {
+            if (ReferenceEquals(_selectedUpdateSource, value) || value?.Source is null) return;
+            _selectedUpdateSource = value;
+            ApplyUpdateSource(value);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsGithubUpdateSource));
+        }
+    }
 
     public IReadOnlyList<OpenSourceProject> OpenSourceProjects { get; } = Portal.Classes.OpenSourceProjects.All
         .OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase)
         .ToArray();
+
+    private static void ApplyUpdateSource(UpdateSourceOption option)
+    {
+        if (option.Source is not { } source || option.Channel is not { } channel) return;
+        Data.ConfigEntry.UpdateSource = source;
+        Data.UiProperty.OverrideUpdateChannel = channel;
+    }
+}
+
+public sealed class UpdateSourceOption
+{
+    public UpdateSourceOption(string displayName, string? pathDisplayName = null,
+        UpdateSource? source = null, string? channel = null,
+        IReadOnlyList<UpdateSourceOption>? children = null)
+    {
+        DisplayName = displayName;
+        PathDisplayName = pathDisplayName ?? displayName;
+        Source = source;
+        Channel = channel;
+        Children = children ?? [];
+    }
+
+    public string DisplayName { get; }
+    public string PathDisplayName { get; }
+    public UpdateSource? Source { get; }
+    public string? Channel { get; }
+    public IReadOnlyList<UpdateSourceOption> Children { get; }
+    public bool IsSelectable => Source is not null;
 }

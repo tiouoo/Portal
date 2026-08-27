@@ -27,86 +27,142 @@ public static class UpdateApp
 
     private const int DownloadBufferSize = 81920;
     private const double DownloadRetryBackoffSeconds = 1.5;
+    private static readonly Lock PreparationLock = new();
+    private static Task<PreparedUpdate?>? _preparationTask;
 
-    public static async Task<PreparedUpdate?> Prepare(TopLevel sender)
+    public static PreparedUpdate? ReadyUpdate { get; private set; }
+
+    public static Task<PreparedUpdate?> Prepare(TopLevel? sender, bool silent = false)
+    {
+        lock (PreparationLock)
+        {
+            if (_preparationTask is { IsCompleted: false })
+            {
+                if (!silent && sender is not null)
+                    sender.Notice(CommonLanguageManager.Instance.update_packageDownloading.CurrentValue());
+                return _preparationTask;
+            }
+
+            _preparationTask = PrepareCore(sender, silent);
+            return _preparationTask;
+        }
+    }
+
+    private static async Task<PreparedUpdate?> PrepareCore(TopLevel? sender, bool silent)
     {
         var stopwatch = Stopwatch.StartNew();
         Logger.Info(LogLanguageManager.Instance.update_prepareStart.CurrentValue());
         try
         {
-            var release = await UpdateChecker.GetRelease();
-            if (!UpdateChecker.IsNewer(release))
+            while (true)
             {
-                sender.Notice(CommonLanguageManager.Instance.update_alreadyLatest.CurrentValue(), NotificationType.Success);
-                return null;
+                var release = await UpdateChecker.GetRelease();
+                if (!UpdateChecker.IsNewer(release))
+                {
+                    ReadyUpdate = null;
+                    Data.UiProperty.IsUpdateReady = false;
+                    Data.UiProperty.FoundNewVersion = false;
+                    Data.UiProperty.IsLatestVersion = true;
+                    if (!silent && sender is not null)
+                        sender.Notice(CommonLanguageManager.Instance.update_alreadyLatest.CurrentValue(), NotificationType.Success);
+                    return null;
+                }
+
+                Data.UiProperty.IsLatestVersion = false;
+                Data.UiProperty.NewVersion = release.Title;
+                Data.UiProperty.FoundNewVersion = true;
+                var packageType = Data.Instance.PackageType.Trim().ToLowerInvariant();
+                var asset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(release, packageType));
+                var releaseIdentity = GetReleaseIdentity(release, asset);
+                var updateDirectory = Path.Combine(ConfigPath.UpdateFolderPath, releaseIdentity[..16]);
+                Directory.CreateDirectory(updateDirectory);
+                CleanupOldUpdateDirectories(updateDirectory);
+                var packagePath = Path.Combine(updateDirectory, asset.Name);
+                Logger.Info(string.Format(LogLanguageManager.Instance.update_packageSelected.CurrentValue(), asset.Name, updateDirectory));
+
+                if (!silent && sender is not null)
+                    sender.Notice(string.Format(CommonLanguageManager.Instance.update_downloading.CurrentValue(), asset.Name));
+                Data.UiProperty.IsUpdateDownloading = true;
+                Data.UiProperty.UpdateDownloadPercent = 0;
+                ReadyUpdate = null;
+                Data.UiProperty.IsUpdateReady = false;
+                var taskHandle = await Download(asset, packagePath);
+                Data.UiProperty.IsUpdateDownloading = false;
+
+                var latestRelease = await UpdateChecker.GetRelease();
+                var latestAsset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(latestRelease, packageType));
+                if (!releaseIdentity.Equals(GetReleaseIdentity(latestRelease, latestAsset), StringComparison.Ordinal))
+                {
+                    Directory.Delete(updateDirectory, true);
+                    if (!silent && sender is not null)
+                        sender.Notice(CommonLanguageManager.Instance.update_newReleaseDownloading.CurrentValue());
+                    continue;
+                }
+
+                PreparedUpdate preparedUpdate;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "installer")
+                {
+                    preparedUpdate = new PreparedUpdate(
+                        await Task.Run(() => PrepareWindowsInstaller(packagePath, updateDirectory)), true,
+                        ReleaseIdentity: releaseIdentity);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType is "deb" or "rpm")
+                {
+                    var processPath = Environment.ProcessPath
+                                      ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotDetermineCurrentPath.CurrentValue());
+                    preparedUpdate = new PreparedUpdate(
+                        await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType, processPath)),
+                        true, true, releaseIdentity);
+                }
+                else
+                {
+                    var path = Environment.ProcessPath
+                               ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotDetermineCurrentPath.CurrentValue());
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType == "appimage")
+                    {
+                        var appImageUpdate = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
+                        preparedUpdate = appImageUpdate with
+                        {
+                            ReleaseIdentity = releaseIdentity
+                        };
+                    }
+                    else
+                    {
+                        ProcessStartInfo updater;
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "portable")
+                            updater = await Task.Run(() => PrepareWindowsPortable(packagePath, updateDirectory, path));
+                        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && packageType is "app" or "dmg")
+                            updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, path));
+                        else
+                            throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedInstallType.CurrentValue(), packageType));
+                        preparedUpdate = new PreparedUpdate(updater, false, ReleaseIdentity: releaseIdentity);
+                    }
+                }
+
+                CompletePreparation(taskHandle, preparedUpdate);
+                ReadyUpdate = preparedUpdate;
+                Data.UiProperty.IsUpdateReady = true;
+                Logger.Info(string.Format(LogLanguageManager.Instance.update_prepareComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
+                return preparedUpdate;
             }
-
-            var packageType = Data.Instance.PackageType.Trim().ToLowerInvariant();
-            var asset = SelectAsset(release, packageType);
-            asset = await UpdateChecker.ResolveDownloadMetadata(asset);
-            var updateDirectory = Path.Combine(ConfigPath.UpdateFolderPath, release.Sequence > 0
-                ? release.Sequence.ToString()
-                : DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString());
-            Directory.CreateDirectory(updateDirectory);
-            CleanupOldUpdateDirectories(updateDirectory);
-            var packagePath = Path.Combine(updateDirectory, asset.Name);
-            Logger.Info(string.Format(LogLanguageManager.Instance.update_packageSelected.CurrentValue(), asset.Name, updateDirectory));
-
-            sender.Notice(string.Format(CommonLanguageManager.Instance.update_downloading.CurrentValue(), asset.Name));
-            var taskHandle = await Download(asset, packagePath);
-
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "installer")
-            {
-                var installerUpdate = new PreparedUpdate(
-                    await Task.Run(() => PrepareWindowsInstaller(packagePath, updateDirectory)), true);
-                CompletePreparation(taskHandle, installerUpdate);
-                return installerUpdate;
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType is "deb" or "rpm")
-            {
-                var processPath = Environment.ProcessPath
-                                  ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotDetermineCurrentPath.CurrentValue());
-                var packageUpdate = new PreparedUpdate(
-                    await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType, processPath)),
-                    true, true);
-                CompletePreparation(taskHandle, packageUpdate);
-                return packageUpdate;
-            }
-
-            var path = Environment.ProcessPath
-                       ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotDetermineCurrentPath.CurrentValue());
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType == "appimage")
-            {
-                var appImageUpdate = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
-                CompletePreparation(taskHandle, appImageUpdate);
-                return appImageUpdate;
-            }
-
-            ProcessStartInfo updater;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && packageType == "portable")
-                updater = await Task.Run(() => PrepareWindowsPortable(packagePath, updateDirectory, path));
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && packageType is "app" or "dmg")
-                updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, path));
-            else
-                throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedInstallType.CurrentValue(), packageType));
-
-            var preparedUpdate = new PreparedUpdate(updater, false);
-            CompletePreparation(taskHandle, preparedUpdate);
-            Logger.Info(string.Format(LogLanguageManager.Instance.update_prepareComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
-            return preparedUpdate;
         }
         catch (Exception ex)
         {
+            Data.UiProperty.IsUpdateDownloading = false;
             Logger.Error(LogLanguageManager.Instance.update_prepareFailed.CurrentValue(), ex);
-            sender.Notice(string.Format(CommonLanguageManager.Instance.update_failed.CurrentValue(), ex.Message), NotificationType.Error);
+            if (!silent && sender is not null)
+                sender.Notice(string.Format(CommonLanguageManager.Instance.update_failed.CurrentValue(), ex.Message), NotificationType.Error);
             return null;
         }
     }
 
     public static async Task Apply(PreparedUpdate update)
     {
+        var release = await UpdateChecker.GetRelease();
+        var packageType = Data.Instance.PackageType.Trim().ToLowerInvariant();
+        var asset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(release, packageType));
+        if (!GetReleaseIdentity(release, asset).Equals(update.ReleaseIdentity, StringComparison.Ordinal))
+            throw new InvalidOperationException(CommonLanguageManager.Instance.update_downloadedReleaseChanged.CurrentValue());
         if (!await ApplicationEvents.RaiseAppExiting()) return;
         ConfigSaver.FlushConfig();
         using var process = Process.Start(update.StartInfo)
@@ -167,8 +223,14 @@ public static class UpdateApp
                ?? throw new FileNotFoundException(string.Format(CommonLanguageManager.Instance.update_packageNotFound.CurrentValue(), expectedName));
     }
 
-    private static async Task<UpdateTaskHandle> Download(UpdateAsset asset, string destination)
+    private static async Task<UpdateTaskHandle?> Download(UpdateAsset asset, string destination)
     {
+        if (await IsValidPackage(destination, asset))
+        {
+            Data.UiProperty.UpdateDownloadPercent = 100;
+            return null;
+        }
+
         var downloadUrl = GithubMirror.Apply(asset.DownloadUrl);
         if (!downloadUrl.Equals(asset.DownloadUrl, StringComparison.Ordinal))
             Logger.Info($"Downloading update via GitHub mirror: {downloadUrl}");
@@ -216,12 +278,13 @@ public static class UpdateApp
                 progress => Dispatcher.UIThread.Post(() =>
                 {
                     if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                    var fraction = progress.TotalBytes > 0
+                     var fraction = progress.TotalBytes > 0
                         ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
                         : (double?)null;
                     var speed = DefaultDownloader.FormatSize(progress.Speed, true);
-                    context.SetDescription(string.Format(CommonLanguageManager.Instance.update_downloadSpeed.CurrentValue(), speed));
-                    context.ReportProgress(fraction);
+                     context.SetDescription(string.Format(CommonLanguageManager.Instance.update_downloadSpeed.CurrentValue(), speed));
+                     context.ReportProgress(fraction);
+                     Data.UiProperty.UpdateDownloadPercent = fraction is null ? 0 : (int)Math.Round(fraction.Value * 100);
                 }), context.CancellationToken);
             context.SetDescription(CommonLanguageManager.Instance.update_downloadCompleteVerifying.CurrentValue());
             context.ReportProgress(1);
@@ -254,6 +317,15 @@ public static class UpdateApp
 
         File.Move(temporary, destination, true);
         return handle;
+    }
+
+    private static async Task<bool> IsValidPackage(string path, UpdateAsset asset)
+    {
+        if (!File.Exists(path) || new FileInfo(path).Length != asset.Size) return false;
+        if (asset.Sha256 is null) return true;
+        await using var package = File.OpenRead(path);
+        var actualHash = Convert.ToHexString(await SHA256.HashDataAsync(package));
+        return actualHash.Equals(asset.Sha256, StringComparison.OrdinalIgnoreCase);
     }
 
 
@@ -391,10 +463,17 @@ public static class UpdateApp
         });
     }
 
-    private static void CompletePreparation(UpdateTaskHandle handle, PreparedUpdate update)
+    private static void CompletePreparation(UpdateTaskHandle? handle, PreparedUpdate update)
     {
+        if (handle is null) return;
         handle.PreparedUpdate = update;
         handle.Task.RefreshActions();
+    }
+
+    private static string GetReleaseIdentity(UpdateRelease release, UpdateAsset asset)
+    {
+        var identity = $"{release.Title}\n{release.Sequence}\n{asset.Name}\n{asset.DownloadUrl}\n{asset.Size}\n{asset.Sha256}";
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..16];
     }
 
     private static void CleanupOldUpdateDirectories(string currentDirectory)
@@ -786,7 +865,8 @@ public static class UpdateApp
             .Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
     }
 
-    public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller, bool WaitForStart = false);
+    public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller, bool WaitForStart = false,
+        string ReleaseIdentity = "");
 
     private sealed class UpdateTaskHandle
     {

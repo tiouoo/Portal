@@ -492,7 +492,7 @@
     "cleanupOldDirectoryFailed": "删除过期更新目录失败：{0}",
     "cleanupOldDirectoriesFailed": "清理过期更新目录失败。",
     "writePermissionCheckFailed": "检测目录写入权限失败：{0}{1}",
-    "autoUpdateCheckEnabled": "已启用自动更新检查，正在后台检查更新。",
+    "autoUpdateCheckEnabled": "已启用自动更新，正在后台检查并下载更新。",
     "checkComplete": "应用更新检查完成，结果：{0}，耗时 {1} ms。"
   },
   "versionModify": {

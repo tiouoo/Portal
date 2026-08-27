@@ -6,17 +6,12 @@
     x:DataType="settingPages:AboutViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:classes="clr-namespace:Portal.Classes"
-    xmlns:converter="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <UserControl.Resources>
-        <converter:UpdateChannelToIndexConverter x:Key="UpdateChannelToIndexConverter" />
-        <converter:UpdateSourceCompareConverter x:Key="UpdateSourceCompareConverter" />
-        <converter:UpdateSourceToIndexConverter x:Key="UpdateSourceToIndexConverter" />
-    </UserControl.Resources>
     <StackPanel Spacing="15">
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
@@ -97,6 +92,29 @@
                             HorizontalAlignment="Right"
                             Margin="0,2,5,0"
                             Name="UpdateHyperlinkButton"
+                            IsVisible="{Binding Data.UiProperty.ShowManualUpdateDownload}"
+                            Theme="{StaticResource TransparentHyperlinkButton}"
+                            VerticalAlignment="Top" />
+                        <HyperlinkButton
+                            FontSize="12"
+                            HorizontalAlignment="Right"
+                            IsEnabled="False"
+                            IsVisible="{Binding Data.UiProperty.IsUpdateDownloading}"
+                            Margin="0,2,5,0"
+                            Theme="{StaticResource TransparentHyperlinkButton}"
+                            VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_downloadingUpdate}}" />
+                                <TextBlock Text="{Binding Data.UiProperty.UpdateDownloadPercent, StringFormat='{}{0}%'}" />
+                            </StackPanel>
+                        </HyperlinkButton>
+                        <HyperlinkButton
+                            Click="RestartUpdate_OnClick"
+                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_restartUpdate}}"
+                            FontSize="12"
+                            HorizontalAlignment="Right"
+                            IsVisible="{Binding Data.UiProperty.IsUpdateReady}"
+                            Margin="0,2,5,0"
                             Theme="{StaticResource TransparentHyperlinkButton}"
                             VerticalAlignment="Top" />
                     </Panel>
@@ -119,39 +137,33 @@
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_updateSource}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
-            <ComboBox
+            <tio:TreeComboBox
                 HorizontalAlignment="Stretch"
-                Name="UpdateSourceComboBox"
-                SelectedIndex="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceToIndexConverter}, Mode=TwoWay}"
-                SelectionChanged="UpdateSource_OnSelectionChanged">
-                <ComboBoxItem Content="Github" />
-                <ComboBoxItem Content="Cnb" />
-            </ComboBox>
+                ItemsSource="{Binding UpdateSources}"
+                Name="UpdateSource"
+                SelectedItem="{Binding SelectedUpdateSource, Mode=TwoWay}">
+                <tio:TreeComboBox.Styles>
+                    <Style Selector="tio|TreeComboBoxItem" x:DataType="settingPages:UpdateSourceOption">
+                        <Setter Property="IsExpanded" Value="True" />
+                        <Setter Property="IsSelectable" Value="{Binding IsSelectable}" />
+                    </Style>
+                </tio:TreeComboBox.Styles>
+                <tio:TreeComboBox.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="settingPages:UpdateSourceOption">
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </TreeDataTemplate>
+                </tio:TreeComboBox.ItemTemplate>
+                <tio:TreeComboBox.SelectedItemTemplate>
+                    <DataTemplate x:DataType="settingPages:UpdateSourceOption">
+                        <TextBlock Text="{Binding PathDisplayName}" />
+                    </DataTemplate>
+                </tio:TreeComboBox.SelectedItemTemplate>
+            </tio:TreeComboBox>
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Github}"
+                IsVisible="{Binding IsGithubUpdateSource}"
                 Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_githubMirrorHint}}" />
-        </StackPanel>
-        <StackPanel Spacing="5">
-            <Label
-                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_updateChannel}}"
-                FontSize="13"
-                Foreground="{DynamicResource InnerForegroundColor}" />
-            <ComboBox
-                HorizontalAlignment="Stretch"
-                Name="UpdateChannel"
-                SelectedIndex="{Binding Data.UiProperty.OverrideUpdateChannel, Converter={StaticResource UpdateChannelToIndexConverter}, Mode=TwoWay}"
-                SelectionChanged="UpdateChannel_OnSelectionChanged">
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_channelRelease}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_channelDailyBuild}}" />
-                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_channelCommitBuild}}" />
-            </ComboBox>
-            <TextBlock
-                FontSize="11"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                IsVisible="{Binding Data.ConfigEntry.UpdateSource, Converter={StaticResource UpdateSourceCompareConverter}, ConverterParameter=Cnb}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_cnbChannelHint}}" />
         </StackPanel>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
         <StackPanel Margin="5,0,0,0" Spacing="5">

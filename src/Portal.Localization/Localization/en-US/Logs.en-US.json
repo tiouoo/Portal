@@ -492,7 +492,7 @@
     "cleanupOldDirectoryFailed": "Failed to delete the stale update directory: {0}",
     "cleanupOldDirectoriesFailed": "Failed to clean up stale update directories.",
     "writePermissionCheckFailed": "Failed to check the directory write permission: {0}{1}",
-    "autoUpdateCheckEnabled": "Automatic update check enabled; checking for updates in the background.",
+    "autoUpdateCheckEnabled": "Automatic updates enabled; checking for and downloading updates in the background.",
     "checkComplete": "Update check complete, result: {0}, took {1} ms."
   },
   "versionModify": {

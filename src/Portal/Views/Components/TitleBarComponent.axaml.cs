@@ -9,11 +9,13 @@ using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Multiplayer;
+using Portal.Core.Module.Update;
 using Portal.Localization;
 using Portal.Views.Components.Operations.Account;
 using Portal.Views.Pages;
 using Portal.Views.Pages.DownloadPages;
 using Portal.Views.Pages.SettingPages;
+using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
@@ -291,6 +293,27 @@ public partial class TitleBarComponent : Grid
         var tabEntry = new TabEntry(tioTabWindowBase!, tioTabPage);
         tioTabWindowBase.CreateTab(tabEntry);
         tioTabWindowBase.SelectTab(tabEntry);
+    }
+
+    private void ShowUpdateDownloadingNotice(object? sender, RoutedEventArgs e)
+    {
+        Root.GetTopLevel().Notice(CommonLanguageManager.Instance.update_packageDownloading.CurrentValue());
+    }
+
+    private async void RestartUpdate(object? sender, RoutedEventArgs e)
+    {
+        if (UpdateApp.ReadyUpdate is not { } update) return;
+        try
+        {
+            await UpdateApp.Apply(update);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(LogLanguageManager.Instance.about_updateStartFailed.CurrentValue(), exception);
+            Root.GetTopLevel().Notice(string.Format(
+                CommonLanguageManager.Instance.about_cannotStartUpdate.CurrentValue(), exception.Message),
+                NotificationType.Error);
+        }
     }
 
     private async void ChangeSkin_OnClick(object? sender, RoutedEventArgs e)

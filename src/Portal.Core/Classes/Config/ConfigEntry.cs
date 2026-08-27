@@ -173,6 +173,9 @@ public partial class ConfigEntry : ObservableObject
             case nameof(DownloadMaxRetryCount):
                 DownloadManager.MaxRetryCount = DownloadMaxRetryCount;
                 break;
+            case nameof(EnableCheckAutoUpdate):
+                Data.UiProperty.RefreshAutomaticUpdateVisibility();
+                break;
             case nameof(DownloadMaxFragmentCount):
                 DownloadManager.MaxFragment = DownloadMaxFragmentCount;
                 break;

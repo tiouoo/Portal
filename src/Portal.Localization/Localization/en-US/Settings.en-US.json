@@ -52,7 +52,7 @@
     "checkForUpdates": "Check for Updates",
     "newVersionFound": "A new version is available",
     "downloadNewVersion": "Download New Version",
-    "autoCheckForUpdates": "Check for Updates Automatically",
+    "autoCheckForUpdates": "Automatic Updates",
     "updateSource": "Update Source",
     "githubMirrorHint": " *Go to Settings - Network Proxy to enable the GitHub mirror to speed up updates",
     "updateChannel": "Update Channel",

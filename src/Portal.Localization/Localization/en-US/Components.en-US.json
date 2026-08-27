@@ -48,6 +48,8 @@
   },
   "titlebarcomponent": {
     "newVersionTip": "A new version is available",
+    "downloadingUpdate": "Downloading update",
+    "restartUpdate": "Restart to update",
     "tasksToolTip": "Tasks",
     "searchToolTip": "Search",
     "multiplayerToolTip": "Multiplayer",

@@ -105,10 +105,12 @@ public static partial class Initializer
             Application.Current.Resources["TranslucentBackGroundOpacity"] = Data.ConfigEntry.TranslucentControlOpacity;
         }
 
-        if (Data.ConfigEntry.EnableCheckAutoUpdate && AppVersionService.Instance.Version.Type != "dev")
+        if (Data.ConfigEntry.EnableCheckAutoUpdate &&
+            (AppVersionService.Instance.Version.Type != "dev" || DebugSettings.EnableAutomaticUpdates))
         {
             Logger.Info(LogLanguageManager.Instance.update_autoUpdateCheckEnabled.CurrentValue());
-            CheckUpdate().Forget(CommonLanguageManager.Instance.update_checkForUpdatesForget.CurrentValue());
+            UpdateApp.Prepare(null, true)
+                .Forget(CommonLanguageManager.Instance.update_checkForUpdatesForget.CurrentValue());
         }
 
         Logger.Info(LogLanguageManager.Instance.multiplayer_prefetchRelaysStart.CurrentValue());
@@ -154,26 +156,4 @@ public static partial class Initializer
         Task.Run(NewsService.FetchAndRefreshAsync).Forget(CommonLanguageManager.Instance.news_refreshNewsForget.CurrentValue());
     }
 
-    private static async Task CheckUpdate()
-    {
-        var stopwatch = Stopwatch.StartNew();
-        var result = await UpdateChecker.Check(null, true);
-        Logger.Info(string.Format(LogLanguageManager.Instance.update_checkComplete.CurrentValue(),
-            result ?? CommonLanguageManager.Instance.update_noResult.CurrentValue(),
-            stopwatch.ElapsedMilliseconds));
-        switch (result)
-        {
-            case null:
-                Data.UiProperty.FoundNewVersion = false;
-                Data.UiProperty.IsLatestVersion = false;
-                return;
-            case "latest":
-                Data.UiProperty.IsLatestVersion = true;
-                return;
-            default:
-                Data.UiProperty.NewVersion = result;
-                Data.UiProperty.FoundNewVersion = true;
-                break;
-        }
-    }
 }

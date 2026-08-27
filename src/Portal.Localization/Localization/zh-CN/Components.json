@@ -48,6 +48,8 @@
   },
   "titlebarcomponent": {
     "newVersionTip": "发现新版本",
+    "downloadingUpdate": "正在下载更新",
+    "restartUpdate": "重启更新",
     "tasksToolTip": "任务",
     "searchToolTip": "搜索",
     "multiplayerToolTip": "联机",

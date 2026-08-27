@@ -59,10 +59,30 @@ public partial class UiProperty : ObservableObject
     [ObservableProperty] public partial bool ConfigLoaded { get; set; }
     [ObservableProperty] public partial bool FoundNewVersion { get; set; }
     [ObservableProperty] public partial bool IsLatestVersion { get; set; }
+    [ObservableProperty] public partial bool IsUpdateDownloading { get; set; }
+    [ObservableProperty] public partial bool IsUpdateReady { get; set; }
+    [ObservableProperty] public partial int UpdateDownloadPercent { get; set; }
     [ObservableProperty] public partial string NewVersion { get; set; }
     [ObservableProperty] public partial string OverrideUpdateChannel { get; set; }
     [ObservableProperty] public partial string? LastModInstallInstancePath { get; set; }
     public ObservableCollection<AggregatedSearchEntry> AggregatedSearchResults { get; set; } = [];
+
+    public bool ShowAutomaticUpdateDownload => Data.ConfigEntry.EnableCheckAutoUpdate && IsUpdateDownloading;
+    public bool ShowAutomaticUpdateReady => Data.ConfigEntry.EnableCheckAutoUpdate && IsUpdateReady;
+    public bool ShowNewVersionTip => FoundNewVersion && !ShowAutomaticUpdateDownload && !ShowAutomaticUpdateReady;
+    public bool ShowManualUpdateDownload => FoundNewVersion && !IsUpdateDownloading && !IsUpdateReady;
+
+    public void RefreshAutomaticUpdateVisibility()
+    {
+        OnPropertyChanged(nameof(ShowAutomaticUpdateDownload));
+        OnPropertyChanged(nameof(ShowAutomaticUpdateReady));
+        OnPropertyChanged(nameof(ShowNewVersionTip));
+        OnPropertyChanged(nameof(ShowManualUpdateDownload));
+    }
+
+    partial void OnIsUpdateDownloadingChanged(bool value) => RefreshAutomaticUpdateVisibility();
+    partial void OnIsUpdateReadyChanged(bool value) => RefreshAutomaticUpdateVisibility();
+    partial void OnFoundNewVersionChanged(bool value) => RefreshAutomaticUpdateVisibility();
 
     [ObservableProperty]
     public partial AggregatedSearchType AggregatedSelectedType { get; set; } = AggregatedSearchTypes[0];

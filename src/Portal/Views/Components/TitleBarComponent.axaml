@@ -83,6 +83,39 @@
             </Border>
         </Border>
         <Button
+            Click="ShowUpdateDownloadingNotice"
+            IsVisible="{Binding Data.UiProperty.ShowAutomaticUpdateDownload}"
+            Margin="3,0"
+            Theme="{StaticResource TransparentButton}"
+            VerticalAlignment="Center">
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999"
+                Padding="8,3,8,2">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock FontSize="13" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_downloadingUpdate}}" />
+                    <TextBlock FontSize="13" Text="{Binding Data.UiProperty.UpdateDownloadPercent, StringFormat='{}{0}%'}" />
+                </StackPanel>
+            </Border>
+        </Button>
+        <Button
+            Click="RestartUpdate"
+            IsVisible="{Binding Data.UiProperty.ShowAutomaticUpdateReady}"
+            Margin="3,0"
+            Theme="{StaticResource TransparentButton}"
+            VerticalAlignment="Center">
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999"
+                Padding="8,3,8,2">
+                <TextBlock FontSize="13" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_restartUpdate}}" />
+            </Border>
+        </Button>
+        <Button
             Click="GoToAbout"
             IsVisible="{Binding Data.ConfigEntry.ShowUpdateTip}"
             Margin="3,0"
@@ -93,7 +126,7 @@
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
-                IsVisible="{Binding Data.UiProperty.FoundNewVersion}"
+                IsVisible="{Binding Data.UiProperty.ShowNewVersionTip}"
                 Padding="8,3,8,2"
                 VerticalAlignment="Center">
                 <Panel>
