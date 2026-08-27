@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,8 @@ public sealed class BedrockInstaller : IBedrockInstaller
     private const int DownloadBufferSize = 1024 * 256;
     private const int SourceProbeBytes = 1024 * 1024;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> PackageLocks =
+        new(StringComparer.OrdinalIgnoreCase);
     private static readonly object DownloadClientLock = new();
     private static HttpClient? _downloadClient;
     private static int _downloadClientConfigurationVersion = -1;
@@ -98,30 +101,42 @@ public sealed class BedrockInstaller : IBedrockInstaller
         var packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "cc.tiouo.Portal", "Cache", "Bedrock", $"{request.Version.Id}-{request.Version.BuildLabel}.insPack");
 
-        await DownloadPackageAsync(packageUrl, packagePath, build, request.Version.BuildType, progress,
-            request.CancellationToken);
-        request.CancellationToken.ThrowIfCancellationRequested();
-        progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, "Extracting"));
-        await core.InstallPackageAsync(new LocalGamePackageOptions
+        var packageLock = PackageLocks.GetOrAdd(packagePath, static _ => new SemaphoreSlim(1, 1));
+        await packageLock.WaitAsync(request.CancellationToken);
+        try
         {
-            FileFullPath = packagePath,
-            InstallDstFolder = destination,
-            Type = request.Version.BuildType == BedrockBuildType.GDK
-                ? MinecraftBuildTypeVersion.GDK
-                : MinecraftBuildTypeVersion.UWP,
-            GameTypeVersion = request.Version.IsPreview
-                ? MinecraftGameTypeVersion.Preview
-                : MinecraftGameTypeVersion.Release,
-            CancellationToken = request.CancellationToken,
-            InstallStates = new Progress<InstallStates>(state =>
-                progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, state.ToString()))),
-            ExtractionProgress = new Progress<DecompressProgress>(extraction =>
-                progress?.Report(new BedrockInstallProgress(
-                    extraction.CurrentCount,
-                    extraction.TotalCount,
-                    extraction.FileName,
-                    InstallStates.Extracting.ToString())))
-        });
+            if (Directory.Exists(destination))
+                throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_destinationExists.CurrentValue());
+
+            await DownloadPackageAsync(packageUrl, packagePath, build, request.Version.BuildType, progress,
+                request.CancellationToken);
+            request.CancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, "Extracting"));
+            await core.InstallPackageAsync(new LocalGamePackageOptions
+            {
+                FileFullPath = packagePath,
+                InstallDstFolder = destination,
+                Type = request.Version.BuildType == BedrockBuildType.GDK
+                    ? MinecraftBuildTypeVersion.GDK
+                    : MinecraftBuildTypeVersion.UWP,
+                GameTypeVersion = request.Version.IsPreview
+                    ? MinecraftGameTypeVersion.Preview
+                    : MinecraftGameTypeVersion.Release,
+                CancellationToken = request.CancellationToken,
+                InstallStates = new Progress<InstallStates>(state =>
+                    progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, state.ToString()))),
+                ExtractionProgress = new Progress<DecompressProgress>(extraction =>
+                    progress?.Report(new BedrockInstallProgress(
+                        extraction.CurrentCount,
+                        extraction.TotalCount,
+                        extraction.FileName,
+                        InstallStates.Extracting.ToString())))
+            });
+        }
+        finally
+        {
+            packageLock.Release();
+        }
 
         try
         {

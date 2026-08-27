@@ -1183,7 +1183,10 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         if (string.IsNullOrWhiteSpace(id)) return CommonLanguageManager.Instance.createInstance_idEmpty.CurrentValue();
         if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             return CommonLanguageManager.Instance.createInstance_idInvalidChars.CurrentValue();
-        if (Directory.Exists(Path.Combine(SelectedMinecraftFolder.FolderPath, "versions", id)))
+        var instanceDirectory = SelectedMinecraftFolder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc
+            ? Path.Combine(SelectedMinecraftFolder.FolderPath, "instances", id)
+            : Path.Combine(SelectedMinecraftFolder.FolderPath, "versions", id);
+        if (Directory.Exists(instanceDirectory))
             return CommonLanguageManager.Instance.createInstance_idExists.CurrentValue();
         return null;
     }
@@ -1195,7 +1198,7 @@ public partial class CreateInstanceDialogViewModel : ObservableObject, IDialogCo
         var versionId = InstanceId.Trim();
         if (string.IsNullOrWhiteSpace(versionId)) versionId = vanilla.Id;
         var entries = EffectiveLoaderEntries();
-        var javaPath = MinecraftInstallationViewModel.GetJavaPath();
+        var javaPath = MinecraftInstallationViewModel.GetJavaPath(vanilla.Id);
         Logger.Info(
             $"[CreateInstance] Queuing Java installation {versionId} in {folder.FolderPath} with {entries.Count} loader(s).");
         var task = MinecraftInstallationViewModel.CreateInstallationTask(vanilla, folder, versionId, entries, javaPath);

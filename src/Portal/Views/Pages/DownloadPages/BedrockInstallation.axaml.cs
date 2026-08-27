@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -58,6 +59,8 @@ public partial class BedrockInstallation : UserControl
 public partial class BedrockInstallationViewModel : ObservableObject, IDisposable
 {
     private static IReadOnlyList<BedrockVersion>? _versionCache;
+    private static readonly ConcurrentDictionary<string, byte> ActiveInstallations =
+        new(StringComparer.OrdinalIgnoreCase);
     private readonly List<BedrockVersion> _allVersions = [];
     private readonly CancellationTokenSource _pageCancellation = new();
     private bool _disposed;
@@ -149,7 +152,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
 
     public async Task InstallAsync(BedrockVersion version, MinecraftFolderEntry folder)
     {
-        if (!CanInstall ||
+        if (IsInstalling ||
             folder.DetectedLayout.Kind is not (MinecraftFolderKind.Standard or MinecraftFolderKind.PortalMc) ||
             BedrockInstallationService.DefaultInstaller is null) return;
 
@@ -159,6 +162,11 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         var destination = Path.Combine(folder.FolderPath,
             folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc ? "bedrock_instances" : "bedrock_versions",
             instanceName);
+        if (!ActiveInstallations.TryAdd(destination, 0))
+        {
+            StatusText = CommonLanguageManager.Instance.bedrock_instanceExists.CurrentValue();
+            return;
+        }
         Logger.Info($"[BedrockInstall] Queuing {buildLabel} {instanceName} installation to {destination}.");
         IsInstalling = true;
 
@@ -290,11 +298,11 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         });
 
         task.Start();
-        _ = ObserveInstallationAsync(task, new WeakReference<BedrockInstallationViewModel>(this));
+        _ = ObserveInstallationAsync(task, destination, new WeakReference<BedrockInstallationViewModel>(this));
         await Task.CompletedTask;
     }
 
-    private static async Task ObserveInstallationAsync(ManagedTask task,
+    private static async Task ObserveInstallationAsync(ManagedTask task, string destination,
         WeakReference<BedrockInstallationViewModel> viewModelReference)
     {
         try
@@ -308,6 +316,10 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         catch (Exception exception)
         {
             Logger.Error(exception);
+        }
+        finally
+        {
+            ActiveInstallations.TryRemove(destination, out _);
         }
 
         if (viewModelReference.TryGetTarget(out var viewModel) && !viewModel._disposed)

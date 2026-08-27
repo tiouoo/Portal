@@ -105,7 +105,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     public bool CanInstall => !IsInstalling && _loadingCount == 0 && SelectedMinecraftFolder is not null &&
                               IsVersionIdValid() && SelectedLoadersAreReady();
 
-    public bool HasMissingRequiredJavaRuntime => RequiresJava && GetJavaPath() is null;
+    public bool HasMissingRequiredJavaRuntime => RequiresJava && GetJavaPath(_vanilla.Id) is null;
     public bool CanSelectLoaderVersion => HasModLoader && _loadingCount == 0 && SelectedLoadersAreReady();
 
     public void Close()
@@ -304,7 +304,7 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
         var versionId = EffectiveVersionId();
         var folder = SelectedMinecraftFolder;
         var selectedEntries = _selectedLoaders.ToDictionary(x => x.Key, x => x.Value);
-        var javaPath = GetJavaPath();
+        var javaPath = GetJavaPath(_vanilla.Id);
         IsInstalling = true;
         var task = CreateInstallationTask(_vanilla, folder, versionId, selectedEntries, javaPath);
         task.Start();
@@ -378,6 +378,12 @@ public partial class MinecraftInstallationViewModel : ObservableObject, INotifyD
     internal static string? GetJavaPath()
     {
         return MinecraftInstallationTasks.GetJavaPath();
+    }
+
+    internal static string? GetJavaPath(string minecraftVersion)
+    {
+        return MinecraftInstallationTasks.GetJavaPath(
+            MinecraftInstallationTasks.GetRecommendedJavaVersion(minecraftVersion));
     }
 
     internal static int GetRecommendedJavaVersion(string minecraftVersion)

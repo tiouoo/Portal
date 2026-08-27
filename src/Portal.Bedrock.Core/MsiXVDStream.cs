@@ -66,7 +66,7 @@ public class MsiXVDStream : IDisposable
 		{
 			throw new FileNotFoundException("Can't found the file");
 		}
-		XvdFileStream = File.Open(fileUri, FileMode.Open, FileAccess.ReadWrite);
+		XvdFileStream = new FileStream(fileUri, FileMode.Open, FileAccess.Read, FileShare.Read);
 		Reader = new BinaryReader(XvdFileStream);
 	}
 

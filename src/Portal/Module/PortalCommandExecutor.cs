@@ -82,7 +82,7 @@ public static class PortalCommandExecutor
                           CommonLanguageManager.Instance.minecraft_versionNotFound.CurrentValue(), version));
 
         var loaders = await ResolveLoadersAsync(command.Loaders, vanilla.Id);
-        var javaPath = MinecraftInstallationViewModel.GetJavaPath();
+        var javaPath = MinecraftInstallationViewModel.GetJavaPath(vanilla.Id);
         if (MinecraftInstallationViewModel.RequiresJavaRuntime(loaders.Keys) && string.IsNullOrWhiteSpace(javaPath))
             throw new InvalidOperationException(CommonLanguageManager.Instance.minecraft_loaderNeedsJava.CurrentValue());
 

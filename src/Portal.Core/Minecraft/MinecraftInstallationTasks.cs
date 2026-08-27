@@ -536,8 +536,23 @@ public static class MinecraftInstallationTasks
         };
     }
 
-    public static string? GetJavaPath()
+    public static string? GetJavaPath(int? majorVersion = null)
     {
+        if (majorVersion is { } requiredVersion)
+        {
+            if (Data.ConfigEntry.JavaVersionDefaultPaths.TryGetValue(requiredVersion, out var defaultPath) &&
+                Data.ConfigEntry.JavaRuntimes.FirstOrDefault(runtime =>
+                    runtime.MajorVersion == requiredVersion &&
+                    string.Equals(runtime.JavaPath, defaultPath, StringComparison.OrdinalIgnoreCase) &&
+                    File.Exists(runtime.JavaPath)) is { } defaultRuntime)
+                return defaultRuntime.JavaPath;
+
+            return Data.ConfigEntry.JavaRuntimes
+                .Where(runtime => runtime.MajorVersion == requiredVersion)
+                .Select(runtime => runtime.JavaPath)
+                .FirstOrDefault(File.Exists);
+        }
+
         foreach (var defaultPath in Data.ConfigEntry.JavaVersionDefaultPaths.Values)
             if (Data.ConfigEntry.JavaRuntimes.FirstOrDefault(runtime =>
                     string.Equals(runtime.JavaPath, defaultPath, StringComparison.OrdinalIgnoreCase) &&
