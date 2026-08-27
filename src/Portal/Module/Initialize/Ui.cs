@@ -120,7 +120,9 @@ public static partial class Initializer
         Logger.Info(LogLanguageManager.Instance.ui_initializingServices.CurrentValue());
         RecentPlayListService.Initialize();
         BlockListService.Initialize();
-        SystemResourceService.Initialize();
+        Task.Run(SystemResourceService.Initialize).Forget(
+            LogLanguageManager.Instance.systemResources_gpuWarmupFailed.CurrentValue());
+        CleanupTempFolderAsync().Forget(LogLanguageManager.Instance.config_tempCleared.CurrentValue());
         await LoadUiDataAsync();
 
         InitializationEvents.RaiseAfterUiLoaded();
@@ -154,6 +156,13 @@ public static partial class Initializer
         Logger.Info(LogLanguageManager.Instance.ui_newsCacheLoadedNotify.CurrentValue());
         NewsService.RaiseNewsUpdated();
         Task.Run(NewsService.FetchAndRefreshAsync).Forget(CommonLanguageManager.Instance.news_refreshNewsForget.CurrentValue());
+    }
+
+    private static async Task CleanupTempFolderAsync()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+        await Task.Run(() => Helper.ClearFolder(ConfigPath.TempFolderPath)).ConfigureAwait(false);
+        Logger.Debug(LogLanguageManager.Instance.config_tempCleared.CurrentValue());
     }
 
 }

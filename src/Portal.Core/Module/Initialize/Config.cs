@@ -116,8 +116,6 @@ public class Config
 
         ConfigIdentifyExtension.Window(Data.ConfigEntry);
 
-        Helper.ClearFolder(ConfigPath.TempFolderPath);
-        Logger.Debug(LogLanguageManager.Instance.config_tempCleared.CurrentValue());
         ConfigSaver.SaveConfig();
 
         Data.UiProperty.ConfigLoaded = true;

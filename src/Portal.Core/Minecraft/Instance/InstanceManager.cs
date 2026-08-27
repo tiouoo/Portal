@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -29,7 +30,7 @@ public class InstanceManager
         get { return _instance ??= new InstanceManager(); }
     }
 
-    public ObservableCollection<MinecraftInstance> Instances { get; } = [];
+    public ObservableCollection<MinecraftInstance> Instances { get; } = new InstanceCollection();
 
     public List<string> VersionFolders { get; } = new() { "versions" };
 
@@ -116,12 +117,23 @@ public class InstanceManager
     {
         var loadedInstances = instances as ICollection<MinecraftInstance> ?? instances.ToList();
         Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_applyStart.CurrentValue(), loadedInstances.Count));
-        Instances.Clear();
-        foreach (var instance in loadedInstances)
-            Instances.Add(instance);
+        ((InstanceCollection)Instances).ReplaceWith(loadedInstances);
 
         InstancesChanged?.Invoke(this, EventArgs.Empty);
         NotifyStatisticsChanged();
+    }
+
+    private sealed class InstanceCollection : ObservableCollection<MinecraftInstance>
+    {
+        public void ReplaceWith(IEnumerable<MinecraftInstance> items)
+        {
+            Items.Clear();
+            foreach (var item in items)
+                Items.Add(item);
+            OnPropertyChanged(new(nameof(Count)));
+            OnPropertyChanged(new("Item[]"));
+            OnCollectionChanged(new(NotifyCollectionChangedAction.Reset));
+        }
     }
 
     public static MinecraftInstanceType GetInstanceType(string instanceFolder)
