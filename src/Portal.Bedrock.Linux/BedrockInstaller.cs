@@ -13,11 +13,15 @@ public sealed class BedrockInstaller : IBedrockInstaller
 {
     private const string VersionDatabaseUrl = "https://data.mcappx.com/v2/bedrock.json";
     private const int DownloadBufferSize = 1024 * 256;
+    private const int RetainedPackageCount = 2;
     private static readonly SemaphoreSlim VersionLoadLock = new(1, 1);
     private static readonly object DownloadClientLock = new();
     private static HttpClient? _downloadClient;
     private static int _downloadClientConfigurationVersion = -1;
     private static IReadOnlyList<BedrockGdkVersion>? _cachedVersions;
+    private static readonly Dictionary<string, int> ActivePackages =
+        new(StringComparer.OrdinalIgnoreCase);
+    private static readonly object PackageCleanupLock = new();
 
     public async Task<IReadOnlyList<BedrockGdkVersion>> GetGdkVersionsAsync(bool refresh,
         CancellationToken cancellationToken)
@@ -73,29 +77,40 @@ public sealed class BedrockInstaller : IBedrockInstaller
         var core = new BedrockCore();
         var packageUrl = await core.GetPackageUri(build, Architecture.X64).ConfigureAwait(false);
         var packagePath = GetPackagePath(request.Version.Id);
-        await DownloadPackageAsync(packageUrl, packagePath, variation.MD5, progress, request.CancellationToken)
-            .ConfigureAwait(false);
-
-        request.CancellationToken.ThrowIfCancellationRequested();
-        progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, InstallStates.Extracting.ToString()));
-        var installed = await core.InstallPackageAsync(new LocalGamePackageOptions
+        MarkPackageActive(packagePath);
+        try
         {
-            FileFullPath = packagePath,
-            InstallDstFolder = destination,
-            Type = MinecraftBuildTypeVersion.GDK,
-            GameTypeVersion = request.Version.IsPreview
-                ? MinecraftGameTypeVersion.Preview
-                : MinecraftGameTypeVersion.Release,
-            CancellationToken = request.CancellationToken,
-            InstallStates = new Progress<InstallStates>(state =>
-                progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, state.ToString()))),
-            ExtractionProgress = new Progress<DecompressProgress>(extraction =>
-                progress?.Report(new BedrockInstallProgress(extraction.CurrentCount, extraction.TotalCount,
-                    extraction.FileName, InstallStates.Extracting.ToString())))
-        }).ConfigureAwait(false);
+            await DownloadPackageAsync(packageUrl, packagePath, variation.MD5, progress, request.CancellationToken)
+                .ConfigureAwait(false);
 
-        if (installed is null || !File.Exists(Path.Combine(destination, "Minecraft.Windows.exe")))
-            throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_gdkInstanceInvalid.CurrentValue());
+            request.CancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, InstallStates.Extracting.ToString()));
+            var installed = await core.InstallPackageAsync(new LocalGamePackageOptions
+            {
+                FileFullPath = packagePath,
+                InstallDstFolder = destination,
+                Type = MinecraftBuildTypeVersion.GDK,
+                GameTypeVersion = request.Version.IsPreview
+                    ? MinecraftGameTypeVersion.Preview
+                    : MinecraftGameTypeVersion.Release,
+                CancellationToken = request.CancellationToken,
+                InstallStates = new Progress<InstallStates>(state =>
+                    progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, state.ToString()))),
+                ExtractionProgress = new Progress<DecompressProgress>(extraction =>
+                    progress?.Report(new BedrockInstallProgress(extraction.CurrentCount, extraction.TotalCount,
+                        extraction.FileName, InstallStates.Extracting.ToString())))
+            }).ConfigureAwait(false);
+
+            if (installed is null || !File.Exists(Path.Combine(destination, "Minecraft.Windows.exe")))
+                throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_gdkInstanceInvalid.CurrentValue());
+            TouchPackage(packagePath);
+        }
+        finally
+        {
+            MarkPackageInactive(packagePath);
+        }
+
+        CleanupPackageCache(Path.GetDirectoryName(packagePath)!);
         Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockInstall_installGdkComplete.CurrentValue(), request.Version.Id, destination));
     }
 
@@ -234,4 +249,52 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
     private static DateTime ParseReleaseTime(string date) =>
         DateTime.TryParse(date, out var parsed) ? parsed : DateTime.MinValue;
+
+    private static void CleanupPackageCache(string cacheDirectory)
+    {
+        lock (PackageCleanupLock)
+        {
+            try
+            {
+                foreach (var package in new DirectoryInfo(cacheDirectory).EnumerateFiles("*.insPack")
+                             .Where(file => !ActivePackages.ContainsKey(file.FullName))
+                             .OrderByDescending(file => file.LastWriteTimeUtc)
+                             .Skip(RetainedPackageCount))
+                    package.Delete();
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Trace.TraceWarning($"Failed to clean Bedrock package cache: {exception}");
+            }
+        }
+    }
+
+    private static void MarkPackageActive(string packagePath)
+    {
+        lock (PackageCleanupLock)
+            ActivePackages[packagePath] = ActivePackages.GetValueOrDefault(packagePath) + 1;
+    }
+
+    private static void MarkPackageInactive(string packagePath)
+    {
+        lock (PackageCleanupLock)
+        {
+            if (ActivePackages.GetValueOrDefault(packagePath) <= 1)
+                ActivePackages.Remove(packagePath);
+            else
+                ActivePackages[packagePath]--;
+        }
+    }
+
+    private static void TouchPackage(string packagePath)
+    {
+        try
+        {
+            File.SetLastWriteTimeUtc(packagePath, DateTime.UtcNow);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Trace.TraceWarning($"Failed to update Bedrock package cache time: {exception}");
+        }
+    }
 }
