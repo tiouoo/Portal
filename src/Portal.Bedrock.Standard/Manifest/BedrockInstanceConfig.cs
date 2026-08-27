@@ -17,5 +17,7 @@ public class BedrockInstanceConfig
     [JsonPropertyName("mouseLockHotkey")] public string MouseLockHotkey { get; set; } = "Ctrl+Alt";
     [JsonPropertyName("launchArguments")] public string LaunchArguments { get; set; } = string.Empty;
     [JsonPropertyName("enableCreatorEditor")] public bool EnableCreatorEditor { get; set; }
+    [JsonPropertyName("enableLaunchInfo")] public bool EnableLaunchInfo { get; set; } = true;
+    [JsonIgnore] public string LauncherVersion { get; set; } = "local-build";
     [JsonIgnore] public string InstancePath { get; set; }
 }

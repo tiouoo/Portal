@@ -214,6 +214,8 @@
     "notePlaceholder": "Enter a note",
     "mouseLock": "Mouse Lock",
     "mouseLockHint": "*Press ctrl+alt in-game to toggle mouse lock",
+    "launchInfo": "Show Portal Launch Information",
+    "launchInfoHint": "Show the Portal version at the bottom-left of the Bedrock main menu without modifying game resources",
     "independentData": "Independent Data",
     "sharedData": "Share Data Between Launchers",
     "independentInstance": "Independent Instance",

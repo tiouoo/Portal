@@ -5,9 +5,11 @@
     <Project Path="src/Portal.LitematicaViewer/LitematicaViewer.csproj" />
   </Folder>
   <Folder Name="/Module/Bedrock/">
+    <Project Path="src/Portal.Bedrock.Bootstrap/Portal.Bedrock.Bootstrap.vcxproj" />
     <Project Path="src/Portal.Bedrock.Core/Portal.Bedrock.Core.csproj" />
     <Project Path="src/Portal.Bedrock.Core.Windows/Portal.Bedrock.Core.Windows.csproj" />
     <Project Path="src/Portal.Bedrock.Hook/Portal.Bedrock.Hook.csproj" />
+    <Project Path="src/Portal.Bedrock.Injector/Portal.Bedrock.Injector.vcxproj" />
     <Project Path="src/Portal.Bedrock.Linux/Portal.Bedrock.Linux.csproj" />
     <Project Path="src/Portal.Bedrock.PeNet/src/PeNet/Portal.Bedrock.PeNet.csproj" />
     <Project Path="src/Portal.Bedrock.Preload/Portal.Bedrock.Preload.csproj" />

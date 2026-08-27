@@ -33,6 +33,13 @@ public partial class Properties : Dsc, INotifyPropertyChanged
     public bool IsUwpBedrock => Instance?.BedrockConfig?.BuildType == BedrockBuildType.UWP;
     public bool IsGdkBedrock => Instance?.BedrockConfig?.BuildType == BedrockBuildType.GDK;
     public bool SupportsBedrockDataIsolation => Instance?.IsBedrock == true && !IsUwpBedrock;
+    public bool IsBedrock => Instance?.IsBedrock == true;
+
+    public bool EnableLaunchInfo
+    {
+        get => Instance?.BedrockConfig?.EnableLaunchInfo ?? true;
+        set => UpdateBedrockConfig(config => config.EnableLaunchInfo = value);
+    }
 
     public bool EnableMouseLock
     {

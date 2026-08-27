@@ -42,7 +42,7 @@ public partial class PeFile
         
         AddSection(".addImp", (int)(impSection!.SizeOfRawData + newUnalignedRawSecSize),
             (ScnCharacteristicsType)0xC0000000);
-        var newImpSec = ImageSectionHeaders.First(sh => sh.Name == ".addImp");
+        var newImpSec = ImageSectionHeaders.Last(sh => sh.Name == ".addImp");
         var oldImpDescBytes = RawFile.AsSpan(importRva.RvaToOffset(ImageSectionHeaders), importSize);
         RawFile.WriteBytes(newImpSec.PointerToRawData, oldImpDescBytes);
 

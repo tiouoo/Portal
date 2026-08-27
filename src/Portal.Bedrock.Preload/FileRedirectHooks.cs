@@ -1,10 +1,11 @@
 using System;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace Portal.Bedrock.Preload;
 
 /// <summary>
-/// 挂钩 ntdll 文件相关 API，把基岩版存档访问重定向到隔离目录。
+/// 挂钩 ntdll 文件相关 API，处理基岩版数据隔离和启动信息语言文件重定向。
 /// </summary>
 internal static unsafe partial class FileRedirectHooks
 {
@@ -13,6 +14,7 @@ internal static unsafe partial class FileRedirectHooks
 
     private static ConfigManager? _config;
     private static bool _detailedLog;
+    private static int _launchInfoRedirectLogged;
 
     private static nint _createFile;
     private static nint _openFile;
@@ -108,6 +110,25 @@ internal static unsafe partial class FileRedirectHooks
             Logger.WriteFromHook(LogLevel.Info, $"{operation}: {path}");
 
         string redirect = PathRedirector.GetRedirectedRelativePath(path);
+        if (TryRedirectLaunchInfo(path, attributes->RootDirectory, out string launchInfoPath))
+        {
+            if (launchInfoPath.Length >= BufferChars)
+                return false;
+            launchInfoPath.AsSpan().CopyTo(new Span<char>(buffer, launchInfoPath.Length));
+            buffer[launchInfoPath.Length] = '\0';
+            *name = new UnicodeString
+            {
+                Length = (ushort)(launchInfoPath.Length * 2),
+                MaximumLength = (ushort)((launchInfoPath.Length + 1) * 2),
+                Buffer = buffer,
+            };
+            *patched = *attributes;
+            patched->ObjectName = name;
+            patched->RootDirectory = nint.Zero;
+            patched->SecurityDescriptor = nint.Zero;
+            relative = launchInfoPath;
+            return true;
+        }
         if (redirect.Length == 0)
             return false;
 
@@ -132,6 +153,44 @@ internal static unsafe partial class FileRedirectHooks
         patched->SecurityDescriptor = nint.Zero;
 
         relative = redirect;
+        return true;
+    }
+
+    private static bool TryRedirectLaunchInfo(string path, nint rootDirectory, out string redirectedPath)
+    {
+        redirectedPath = string.Empty;
+        if (_config?.GetConfigBool("launchInfoEnabled") != true ||
+            !path.EndsWith(".lang", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        string normalizedPath = path.Replace('/', '\\');
+        bool isVanillaText = normalizedPath.IndexOf(@"\data\resource_packs\vanilla\texts\",
+            StringComparison.OrdinalIgnoreCase) >= 0;
+        if (!isVanillaText && rootDirectory != 0)
+        {
+            char* rootPath = stackalloc char[BufferChars];
+            uint length = NativeMethods.GetFinalPathNameByHandleW(rootDirectory, rootPath, BufferChars, 0);
+            if (length > 0 && length < BufferChars)
+            {
+                var root = new string(rootPath, 0, (int)length).TrimEnd('\\');
+                var combined = root + "\\" + normalizedPath.TrimStart('\\');
+                isVanillaText = combined.IndexOf(@"\data\resource_packs\vanilla\texts\",
+                    StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+        }
+        if (!isVanillaText)
+            return false;
+
+        var gameDirectory = Path.GetDirectoryName(Environment.ProcessPath);
+        if (string.IsNullOrEmpty(gameDirectory))
+            return false;
+        var shadowPath = Path.Combine(gameDirectory, "config", "Portal", "launch-info", Path.GetFileName(path));
+        if (!File.Exists(shadowPath))
+            return false;
+
+        redirectedPath = @"\??\" + Path.GetFullPath(shadowPath);
+        if (System.Threading.Interlocked.Exchange(ref _launchInfoRedirectLogged, 1) == 0)
+            Logger.WriteFromHook(LogLevel.Success, $"Launch info language redirected: {Path.GetFileName(path)}");
         return true;
     }
 

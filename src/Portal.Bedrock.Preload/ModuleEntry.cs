@@ -90,7 +90,7 @@ internal static unsafe class ModuleEntry
 
         try
         {
-            if (Config.GetConfigBool("isVersionIsolated"))
+            if (Config.GetConfigBool("isVersionIsolated") || Config.GetConfigBool("launchInfoEnabled"))
             {
                 Logger.Info("Initializing File Hook.");
                 FileRedirectHooks.Install(Config);

@@ -5,6 +5,7 @@
         <RootNamespace>Portal.Bedrock</RootNamespace>
         <PlatformTarget>x64</PlatformTarget>
         <NativeInjectorResource>$(MSBuildThisFileDirectory)..\Portal.Bedrock.Injector\Portal.Inject.dll</NativeInjectorResource>
+        <NativeBootstrapResource>$(MSBuildThisFileDirectory)..\Portal.Bedrock.Bootstrap\Portal.Bootstrap.dll</NativeBootstrapResource>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,6 +24,8 @@
                         LogicalName="Portal.Bedrock.XUserHook.dll" />
       <EmbeddedResource Include="$(NativeInjectorResource)"
                         LogicalName="Portal.Inject.dll" />
+      <EmbeddedResource Include="$(NativeBootstrapResource)"
+                        LogicalName="Portal.Bootstrap.dll" />
     </ItemGroup>
 
 </Project>

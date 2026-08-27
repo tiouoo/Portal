@@ -19,6 +19,8 @@ internal static class BedrockDataIsolation
     private const string PreloadResourceName = "Portal.Preload.dll";
     private const string FallbackPreloadDllPrefix = "P";
     private const string LegacyPreloadHookName = "XUserHook.dll";
+    private const string BootstrapDllName = "Portal.Bootstrap.dll";
+    private const string OriginalExecutableName = "Minecraft.Windows.portal-original.exe";
 
     public static string Prepare(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log = null)
     {
@@ -27,12 +29,17 @@ internal static class BedrockDataIsolation
             throw new FileNotFoundException(CommonLanguageManager.Instance.bedrockLaunch_mainExecutableNotFound.CurrentValue(), gameExecutable);
 
         log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_preparingDataIsolation.CurrentValue(), gameExecutable), BedrockLogLevel.Information);
+        EnsureOriginalExecutable(config.InstancePath, gameExecutable);
+        RestoreOriginalExecutable(config.InstancePath, gameExecutable);
+        RepairDuplicateImportSections(gameExecutable, log);
+        PrepareLaunchInfo(config, log);
         SyncPreloadMods(config, log);
         var preloadDllName = DeployPreloadDll(config.InstancePath);
+        DeployBootstrapDll(config.InstancePath);
         var nativeLogPath = WritePreloadConfiguration(config);
         try
         {
-            AddPreloadImport(gameExecutable, preloadDllName);
+            AddBootstrapImport(gameExecutable);
             CleanupStalePreloadArtifacts(config.InstancePath, preloadDllName, log);
         }
         catch
@@ -41,6 +48,129 @@ internal static class BedrockDataIsolation
             throw;
         }
         return nativeLogPath;
+    }
+
+    private static void EnsureOriginalExecutable(string instancePath, string gameExecutable)
+    {
+        var originalPath = Path.Combine(instancePath, "config", "Portal", OriginalExecutableName);
+        if (File.Exists(originalPath) && HasPortalImportSection(gameExecutable))
+            return;
+        Directory.CreateDirectory(Path.GetDirectoryName(originalPath)!);
+        File.Copy(gameExecutable, originalPath, true);
+    }
+
+    private static bool HasPortalImportSection(string gameExecutable)
+    {
+        using var stream = new FileStream(gameExecutable, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        var peFile = new PeFile(stream);
+        return peFile.ImageSectionHeaders?.Any(section => section.Name == ".addImp") == true;
+    }
+
+    private static void RestoreOriginalExecutable(string instancePath, string gameExecutable)
+    {
+        var originalPath = Path.Combine(instancePath, "config", "Portal", OriginalExecutableName);
+        File.Copy(originalPath, gameExecutable, true);
+    }
+
+    private static void RepairDuplicateImportSections(string gameExecutable,
+        Action<string, BedrockLogLevel>? log)
+    {
+        using var stream = new FileStream(gameExecutable, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
+        var peFile = new PeFile(stream);
+        var sections = peFile.ImageSectionHeaders?.Where(section => section.Name == ".addImp").ToArray();
+        if (sections is not { Length: 2 } || peFile.ImageNtHeaders == null)
+            return;
+
+        var first = sections[0];
+        var importDirectory = peFile.ImageNtHeaders.OptionalHeader.DataDirectory[(int)PeNet.Header.Pe.DataDirectoryType.Import];
+        if (importDirectory.VirtualAddress != sections[1].VirtualAddress)
+            return;
+        importDirectory.VirtualAddress = first.VirtualAddress;
+        importDirectory.Size -= 0x14;
+        peFile.Flush();
+        log?.Invoke("Repaired duplicate Portal import sections from an interrupted launch preparation.",
+            BedrockLogLevel.Warning);
+    }
+
+    private static void DeployBootstrapDll(string instancePath)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream(BootstrapDllName)
+                           ?? throw new InvalidOperationException("Portal.Bedrock.Windows does not include Portal.Bootstrap.dll.");
+        using var file = new FileStream(Path.Combine(instancePath, BootstrapDllName), FileMode.Create,
+            FileAccess.Write, FileShare.Read);
+        stream.CopyTo(file);
+    }
+
+    private static void PrepareLaunchInfo(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
+    {
+        try
+        {
+            var outputDirectory = Path.Combine(config.InstancePath, "config", "Portal", "launch-info");
+            Directory.CreateDirectory(outputDirectory);
+
+            foreach (var staleFile in Directory.EnumerateFiles(outputDirectory, "*.lang"))
+                File.Delete(staleFile);
+
+            if (!config.EnableLaunchInfo)
+                return;
+
+            var textsDirectory = Path.Combine(config.InstancePath, "data", "resource_packs", "vanilla", "texts");
+            if (!Directory.Exists(textsDirectory))
+                return;
+
+            var version = string.IsNullOrWhiteSpace(config.LauncherVersion)
+                ? "local-build"
+                : config.LauncherVersion.Trim().Replace('\r', ' ').Replace('\n', ' ');
+            var launchText = $"©Mojang AB· Portal {version}";
+            var languageCount = 0;
+            foreach (var sourcePath in Directory.EnumerateFiles(textsDirectory, "*.lang", SearchOption.TopDirectoryOnly))
+            {
+                var bytes = File.ReadAllBytes(sourcePath);
+                var rewritten = RewriteCopyright(bytes, launchText);
+                File.WriteAllBytes(Path.Combine(outputDirectory, Path.GetFileName(sourcePath)), rewritten);
+                languageCount++;
+            }
+
+            log?.Invoke($"Prepared Portal launch information for {languageCount} languages.",
+                BedrockLogLevel.Information);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            log?.Invoke($"Portal launch information is unavailable: {exception.Message}", BedrockLogLevel.Warning);
+        }
+    }
+
+    private static byte[] RewriteCopyright(byte[] input, string launchText)
+    {
+        var hasBom = input.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF });
+        var offset = hasBom ? 3 : 0;
+        var content = System.Text.Encoding.UTF8.GetString(input, offset, input.Length - offset);
+        var newline = content.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+        var lines = content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        var found = false;
+        for (var index = 0; index < lines.Length; index++)
+        {
+            if (!lines[index].StartsWith("menu.copyright=", StringComparison.Ordinal))
+                continue;
+            lines[index] = $"menu.copyright={launchText}";
+            found = true;
+        }
+
+        if (!found)
+            content = string.Join(newline, lines).TrimEnd('\r', '\n') + newline + $"menu.copyright={launchText}" + newline;
+        else
+            content = string.Join(newline, lines);
+
+        var body = System.Text.Encoding.UTF8.GetBytes(content);
+        if (!hasBom)
+            return body;
+        var result = new byte[body.Length + 3];
+        result[0] = 0xEF;
+        result[1] = 0xBB;
+        result[2] = 0xBF;
+        body.CopyTo(result, 3);
+        return result;
     }
 
     private static void SyncPreloadMods(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
@@ -125,6 +255,7 @@ internal static class BedrockDataIsolation
                 
                 isVersionIsolated = config.BuildType == BedrockBuildType.GDK && !config.EnableLauncherSharedData,
                 isDetailedLog = false,
+                launchInfoEnabled = config.EnableLaunchInfo,
                 folderPolicyString = GetFolderPolicy(config),
                 nativeLogFile
             },
@@ -205,6 +336,24 @@ internal static class BedrockDataIsolation
         {
             throw new InvalidOperationException(
                 string.Format(CommonLanguageManager.Instance.bedrockLaunch_cannotPatchImportTable.CurrentValue(), preloadDllName), exception);
+        }
+    }
+
+    private static void AddBootstrapImport(string gameExecutable)
+    {
+        try
+        {
+            using var stream = new FileStream(gameExecutable, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
+            var peFile = new PeFile(stream);
+            if (peFile.ImportedFunctions?.Any(import =>
+                    string.Equals(import.DLL, BootstrapDllName, StringComparison.OrdinalIgnoreCase)) == true)
+                return;
+            peFile.AddImport(BootstrapDllName, "Load");
+            peFile.Flush();
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException($"Cannot add {BootstrapDllName} to the Minecraft import table.", exception);
         }
     }
 

@@ -1,6 +1,7 @@
 using Portal.Bedrock;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Core.Minecraft;
+using Portal.Core.Services;
 
 namespace Portal.Desktop;
 
@@ -11,7 +12,11 @@ internal static class AppSetup
     {
 #if WINDOWS
         MinecraftLaunchService.DefaultBedrockLauncherFactory =
-            config => new BedrockLaunch(config);
+            config =>
+            {
+                config.LauncherVersion = AppVersionService.Instance.Version.VersionTitle;
+                return new BedrockLaunch(config);
+            };
         BedrockInstallationService.DefaultInstaller =
             new BedrockInstaller();
         BedrockToolsService.Default =

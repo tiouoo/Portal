@@ -45,6 +45,17 @@
                             Foreground="{DynamicResource InnerForegroundColor}"
                             Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_mouseLockHint}}" />
                     </StackPanel>
+                    <StackPanel IsVisible="{Binding IsBedrock}" Spacing="5">
+                        <Label
+                            Content="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launchInfo}}"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}" />
+                        <ToggleSwitch IsChecked="{Binding EnableLaunchInfo}" />
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Translate {x:Static loc:InstancesLanguageManager+Keys.properties_launchInfoHint}}" />
+                    </StackPanel>
                     <StackPanel IsVisible="{Binding IsGdkBedrock}" Spacing="12">
                         <StackPanel Spacing="5">
                             <Label

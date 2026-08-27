@@ -79,4 +79,7 @@ internal static unsafe partial class NativeMethods
 
     [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
     internal static partial nint LoadLibraryW(string path);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    internal static partial uint GetFinalPathNameByHandleW(nint file, char* path, uint pathLength, uint flags);
 }

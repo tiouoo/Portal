@@ -214,6 +214,8 @@
     "notePlaceholder": "请输入备注",
     "mouseLock": "鼠标锁",
     "mouseLockHint": "*在游戏中使用 ctrl+alt 切换鼠标锁定",
+    "launchInfo": "显示 Portal 启动信息",
+    "launchInfoHint": "在基岩版主菜单左下角显示 Portal 版本，不修改游戏资源文件",
     "independentData": "独立数据",
     "sharedData": "启动器间共享数据",
     "independentInstance": "独立实例",
