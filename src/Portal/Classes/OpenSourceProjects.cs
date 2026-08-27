@@ -38,6 +38,7 @@ public static class OpenSourceProjects
         new("Uwp.Injector", "Apache License 2.0", "https://github.com/Round-Studio/Uwp.Injector"),
         new("GravityCone", "MIT License", "https://github.com/Tianpao/GravityCone"),
         new("EasyTier", "GNU LGPL v3.0", "https://github.com/EasyTier/EasyTier"),
+        new("BedrockLauncher.Core", "MIT license", "https://github.com/Round-Studio/BedrockLauncher.Core"),
         new("GDK-Proton", CommonLanguageManager.Instance.about_noLicense.CurrentValue(),
             "https://github.com/Weather-OS/GDK-Proton")
     ];
