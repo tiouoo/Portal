@@ -10,15 +10,6 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel>
-        <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-            <Button
-                Command="{Binding RefreshStorageDataAsync}"
-                Margin="0,0,0,3"
-                Theme="{StaticResource TransparentButton}"
-                VerticalAlignment="Bottom">
-                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe63c;" FontSize="18" Foreground="{DynamicResource InnerForegroundColor}" />
-            </Button>
-        </StackPanel>
         <DockPanel Margin="10,5,10,10">
             <StackPanel DockPanel.Dock="Left" HorizontalAlignment="Left">
                 <Border

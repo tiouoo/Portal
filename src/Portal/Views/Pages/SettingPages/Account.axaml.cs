@@ -232,7 +232,7 @@ public partial class Account : Dsc
         });
     }
 
-    private async void AddAccountClick(object? sender, RoutedEventArgs e)
+    public async Task AddAccountAsync()
     {
         var tryGetHostId = this.TryGetHostId()!;
         var result = await AddAccount.Main(tryGetHostId, Data.ConfigEntry.AuthServers);

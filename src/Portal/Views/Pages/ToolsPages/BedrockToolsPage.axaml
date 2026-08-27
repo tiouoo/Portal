@@ -11,14 +11,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <ScrollViewer Classes="Flat">
         <StackPanel
-            Margin="10,2,10,20"
+            Margin="0,0,0,20"
             MaxWidth="900"
             Spacing="10">
-            <TextBlock
-                FontSize="22"
-                FontWeight="SemiBold"
-                Margin="4,4,0,6"
-                Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_pageTitle}}" />
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"

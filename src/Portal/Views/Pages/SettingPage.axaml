@@ -237,11 +237,10 @@
             </tio:NavMenu>
         </controls:ScrollView>
         <Grid RowDefinitions="Auto,*">
-            <StackPanel
+            <Grid
+                ColumnDefinitions="Auto,Auto,Auto,*"
                 HorizontalAlignment="Stretch"
-                Margin="20,15,30,20"
-                Orientation="Horizontal"
-                Spacing="10">
+                Margin="20,15,30,20">
                 <TextBlock
                     FontFamily="{StaticResource IconFont}"
                     FontSize="{Binding CurrentIconFontSize}"
@@ -252,9 +251,39 @@
                 <TextBlock
                     FontSize="26"
                     FontWeight="Thin"
+                    Grid.Column="1"
+                    Margin="10,0,0,0"
                     Text="{Binding CurrentTitle}"
                     VerticalAlignment="Center" />
-            </StackPanel>
+                <Button
+                    Click="RefreshStorage_OnClick"
+                    Grid.Column="2"
+                    IsVisible="{Binding IsStoragePage}"
+                    Margin="12,0,0,0"
+                    Theme="{StaticResource TransparentButton}"
+                    VerticalAlignment="Center">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="&#xe63c;" />
+                </Button>
+                <Button
+                    Click="AddAccount_OnClick"
+                    Grid.Column="2"
+                    IsVisible="{Binding IsAccountPage}"
+                    Margin="12,0,0,0"
+                    Theme="{StaticResource TransparentButton}"
+                    VerticalAlignment="Center">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="22"
+                        FontWeight="Thin"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="&#xe645;" />
+                </Button>
+            </Grid>
             <controls:ScrollView Grid.Row="1" Margin="0,0,5,0">
                 <TransitioningContentControl
                     Content="{Binding CurrentPage}"

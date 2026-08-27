@@ -17,15 +17,6 @@
             <converter:AccountTypeToBrushConverter x:Key="AccountTypeToBrushConverter" />
             <converter:AccountTypeToBoolConverter x:Key="AccountTypeToBoolConverter" />
         </StackPanel.Resources>
-        <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button
-                Click="AddAccountClick"
-                Margin="0,0,0,2"
-                Theme="{StaticResource TransparentButton}"
-                VerticalAlignment="Bottom">
-                <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe645;" FontSize="22" Foreground="{DynamicResource InnerForegroundColor}" />
-            </Button>
-        </StackPanel>
         <ListBox
             HorizontalAlignment="Center"
             IsVisible="{Binding Data.ConfigEntry.HasJavaAccounts}"

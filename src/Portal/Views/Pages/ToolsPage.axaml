@@ -27,16 +27,41 @@
                     IsSelected="True"
                     IsVisible="{Binding IsWindows}">
                     <tio:NavMenuItem.Icon>
-                        <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe60f;" FontSize="16" />
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="16"
+                            Margin="-1,-1,0,-1"
+                            Padding="1,0"
+                            Text="&#xe670;" />
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
             </tio:NavMenu>
         </controls:ScrollView>
 
-        <TransitioningContentControl Content="{Binding CurrentPage}" Margin="0,10,10,10">
-            <TransitioningContentControl.PageTransition>
-                <CrossFade Duration="0:0:0.2" />
-            </TransitioningContentControl.PageTransition>
-        </TransitioningContentControl>
+        <Grid RowDefinitions="Auto,*">
+            <StackPanel
+                HorizontalAlignment="Stretch"
+                Margin="20,15,30,20"
+                Orientation="Horizontal"
+                Spacing="10">
+                <TextBlock
+                    FontFamily="{StaticResource IconFont}"
+                    FontSize="22"
+                    HorizontalAlignment="Center"
+                    Text="&#xe670;"
+                    VerticalAlignment="Center"
+                    Width="26" />
+                <TextBlock
+                    FontSize="26"
+                    FontWeight="Thin"
+                    Text="{Translate {x:Static loc:PagesLanguageManager+Keys.toolspage_BedrockEdition}}"
+                    VerticalAlignment="Center" />
+            </StackPanel>
+            <TransitioningContentControl Content="{Binding CurrentPage}" Grid.Row="1" Margin="10,0,10,10">
+                <TransitioningContentControl.PageTransition>
+                    <CrossFade Duration="0:0:0.2" />
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
+        </Grid>
     </DockPanel>
 </UserControl>

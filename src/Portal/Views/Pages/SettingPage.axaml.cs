@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -107,6 +108,16 @@ public partial class SettingPage : UserControl, ITioTabPage
             viewModel.CurrentIconFontSize = icon.FontSize + HeaderIconFontSizeOffset;
         }
     }
+
+    private void RefreshStorage_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (SettingPageViewModel.CurrentPage is Storage storage) storage.TriggerRefresh();
+    }
+
+    private async void AddAccount_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (SettingPageViewModel.CurrentPage is Account account) await account.AddAccountAsync();
+    }
 }
 
 public partial class SettingPageViewModel : ObservableObject, IDisposable
@@ -120,10 +131,16 @@ public partial class SettingPageViewModel : ObservableObject, IDisposable
         NavigateType(typeof(Appearance));
     }
 
-    [ObservableProperty] public partial UserControl? CurrentPage { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStoragePage))]
+    [NotifyPropertyChangedFor(nameof(IsAccountPage))]
+    public partial UserControl? CurrentPage { get; set; }
     [ObservableProperty] public partial string CurrentTitle { get; set; } = string.Empty;
     [ObservableProperty] public partial string CurrentIconGlyph { get; set; } = string.Empty;
     [ObservableProperty] public partial double CurrentIconFontSize { get; set; } = 17;
+
+    public bool IsStoragePage => CurrentPage is Storage;
+    public bool IsAccountPage => CurrentPage is Account;
 
     public void Dispose()
     {
