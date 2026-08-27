@@ -1,10 +1,8 @@
-using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Classes;
 using Portal.Core.Classes;
 using Portal.Core.Const;
@@ -32,7 +30,6 @@ public partial class About : Dsc
         InitializeComponent();
         AboutViewModel = new AboutViewModel();
         DataContext = AboutViewModel;
-        AboutViewModel.PropertyChanged += AboutViewModel_OnPropertyChanged;
     }
 
     private async void Button_OnClick(object? sender, RoutedEventArgs e)
@@ -70,13 +67,6 @@ public partial class About : Dsc
         Data.UiProperty.NewVersion = result;
         Data.UiProperty.FoundNewVersion = true;
         if (sender is not null) _ = UpdateApp.Prepare(sender.AsTopLevel());
-    }
-
-    private void AboutViewModel_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(AboutViewModel.SelectedUpdateSource) &&
-            AppVersionService.Instance.Version.Type != "dev")
-            _ = Check(UpdateSource);
     }
 
     private async void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)
@@ -131,84 +121,12 @@ public partial class About : Dsc
     }
 }
 
-public class AboutViewModel : ObservableObject
+public class AboutViewModel
 {
-    private UpdateSourceOption? _selectedUpdateSource;
-
-    public AboutViewModel()
-    {
-        var release = SettingsLanguageManager.Instance.about_channelRelease.CurrentValue();
-        var nightly = SettingsLanguageManager.Instance.about_channelDailyBuild.CurrentValue();
-        var commit = SettingsLanguageManager.Instance.about_channelCommitBuild.CurrentValue();
-        var githubRelease = new UpdateSourceOption(release, $"GitHub → {release}", UpdateSource.Github, "release");
-        var githubNightly = new UpdateSourceOption(nightly, $"GitHub → {nightly}", UpdateSource.Github, "nightly");
-        var githubCommit = new UpdateSourceOption(commit, $"GitHub → {commit}", UpdateSource.Github, "commit");
-        var cnbRelease = new UpdateSourceOption(release, $"Cnb → {release}", UpdateSource.Cnb, "release");
-
-        UpdateSources =
-        [
-            new UpdateSourceOption("Cnb", children: [cnbRelease]),
-            new UpdateSourceOption("GitHub", children: [githubRelease, githubNightly, githubCommit])
-        ];
-
-        _selectedUpdateSource = Data.ConfigEntry.UpdateSource == UpdateSource.Cnb
-            ? cnbRelease
-            : Data.UiProperty.OverrideUpdateChannel switch
-            {
-                "nightly" => githubNightly,
-                "commit" => githubCommit,
-                _ => githubRelease
-            };
-        ApplyUpdateSource(_selectedUpdateSource);
-    }
-
     public Data Data => Data.Instance;
     public string Info => $"{AppVersionService.Instance.Version.Type}.{Data.PackageType}";
-    public IReadOnlyList<UpdateSourceOption> UpdateSources { get; }
-    public bool IsGithubUpdateSource => SelectedUpdateSource?.Source == UpdateSource.Github;
-
-    public UpdateSourceOption? SelectedUpdateSource
-    {
-        get => _selectedUpdateSource;
-        set
-        {
-            if (ReferenceEquals(_selectedUpdateSource, value) || value?.Source is null) return;
-            _selectedUpdateSource = value;
-            ApplyUpdateSource(value);
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsGithubUpdateSource));
-        }
-    }
 
     public IReadOnlyList<OpenSourceProject> OpenSourceProjects { get; } = Portal.Classes.OpenSourceProjects.All
         .OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase)
         .ToArray();
-
-    private static void ApplyUpdateSource(UpdateSourceOption option)
-    {
-        if (option.Source is not { } source || option.Channel is not { } channel) return;
-        Data.ConfigEntry.UpdateSource = source;
-        Data.UiProperty.OverrideUpdateChannel = channel;
-    }
-}
-
-public sealed class UpdateSourceOption
-{
-    public UpdateSourceOption(string displayName, string? pathDisplayName = null,
-        UpdateSource? source = null, string? channel = null,
-        IReadOnlyList<UpdateSourceOption>? children = null)
-    {
-        DisplayName = displayName;
-        PathDisplayName = pathDisplayName ?? displayName;
-        Source = source;
-        Channel = channel;
-        Children = children ?? [];
-    }
-
-    public string DisplayName { get; }
-    public string PathDisplayName { get; }
-    public UpdateSource? Source { get; }
-    public string? Channel { get; }
-    public IReadOnlyList<UpdateSourceOption> Children { get; }
-    public bool IsSelectable => Source is not null;
 }

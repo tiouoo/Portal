@@ -6,9 +6,11 @@
     x:DataType="settingPages:ApplicationDebug"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="15">
         <StackPanel Spacing="5">
             <Label
@@ -46,6 +48,48 @@
                 FontSize="11"
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_restartRequiredHint}}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_autoCheckForUpdates}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch HorizontalAlignment="Stretch" IsChecked="{Binding Data.ConfigEntry.EnableCheckAutoUpdate}" />
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_updateSource}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <tio:TreeComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding UpdateSettings.UpdateSources}"
+                Name="UpdateSource"
+                SelectedItem="{Binding UpdateSettings.SelectedUpdateSource, Mode=TwoWay}">
+                <tio:TreeComboBox.Styles>
+                    <Style Selector="tio|TreeComboBoxItem" x:DataType="settingPages:UpdateSourceOption">
+                        <Setter Property="IsExpanded" Value="True" />
+                        <Setter Property="IsSelectable" Value="{Binding IsSelectable}" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="MinHeight" Value="32" />
+                    </Style>
+                </tio:TreeComboBox.Styles>
+                <tio:TreeComboBox.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="settingPages:UpdateSourceOption">
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </TreeDataTemplate>
+                </tio:TreeComboBox.ItemTemplate>
+                <tio:TreeComboBox.SelectedItemTemplate>
+                    <DataTemplate x:DataType="settingPages:UpdateSourceOption">
+                        <TextBlock Text="{Binding PathDisplayName}" />
+                    </DataTemplate>
+                </tio:TreeComboBox.SelectedItemTemplate>
+            </tio:TreeComboBox>
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding UpdateSettings.IsGithubUpdateSource}"
+                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_githubMirrorHint}}" />
         </StackPanel>
         <StackPanel IsVisible="{Binding CanRegisterProtocol}" Spacing="5">
             <Label
