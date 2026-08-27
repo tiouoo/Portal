@@ -179,6 +179,7 @@ jobs:
         run: |
           cd ./assets/conf
           pupnet -r win-x64 -k setup -y -o Portal.win.x64.installer.exe --app-version ${{ needs.prepare.outputs.app_version }}
+          ../../scripts/configure-windows-installer.ps1
           Compress-Archive -Path "Deploy/OUT/Portal.win.x64.installer.exe" -DestinationPath "Deploy/OUT/Portal.win.x64.installer.zip" -Force
 
       - name: Upload Artifacts

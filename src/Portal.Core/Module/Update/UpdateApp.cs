@@ -588,7 +588,12 @@ public static class UpdateApp
         ZipFile.ExtractToDirectory(zipPath, extracted);
         var installer = Directory.GetFiles(extracted, "*.exe", SearchOption.AllDirectories).SingleOrDefault()
                         ?? throw new InvalidDataException(CommonLanguageManager.Instance.update_installerMustHaveOneExe.CurrentValue());
-        return new ProcessStartInfo(installer) { UseShellExecute = true };
+        var startInfo = new ProcessStartInfo(installer) { UseShellExecute = true };
+        startInfo.ArgumentList.Add("/VERYSILENT");
+        startInfo.ArgumentList.Add("/SUPPRESSMSGBOXES");
+        startInfo.ArgumentList.Add("/NORESTART");
+        startInfo.ArgumentList.Add("/SP-");
+        return startInfo;
     }
 
     private static PreparedUpdate PrepareAppImage(string packagePath, string updateDirectory)
