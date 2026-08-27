@@ -89,7 +89,8 @@
     "Or": "or",
     "CreateNewInstance": "Create New Instance",
     "NoMatchingInstancesGoTo": "No matching instances. Adjust the filters, or go to",
-    "SwitchLayout": "Switch Layout"
+    "SwitchLayout": "Switch Layout",
+    "VisibleInstanceRows": "Visible Instance Rows"
   },
   "newsdetailspage": {
     "LoadingNewsContent": "Loading news content…",

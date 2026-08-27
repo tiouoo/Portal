@@ -84,6 +84,29 @@ public partial class NewTabPage : InstanceListPageBase, IContextMenuTabPage
             },
             Command = new RelayCommand(ToggleLayout)
         });
+
+        if (Data.ConfigEntry.NewTabLayout != NewTabLayout.CardsOnTop)
+            return;
+
+        var rowsMenu = new MenuItem
+        {
+            Header = PagesLanguageManager.Instance.newtabpage_VisibleInstanceRows.CurrentValue(),
+            Icon = IconResources.CreateIcon("\ue64f", 18)
+        };
+        for (var rows = 1; rows <= 10; rows++)
+        {
+            var selectedRows = rows;
+            var item = new MenuItem
+            {
+                Header = rows.ToString(),
+                IsChecked = Data.ConfigEntry.NewTabVerticalInstanceRows == rows,
+                Classes = { "hide-icon" }
+            };
+            item.Click += (_, _) => Data.ConfigEntry.NewTabVerticalInstanceRows = selectedRows;
+            rowsMenu.Items.Add(item);
+        }
+
+        menuItems.Add(rowsMenu);
     }
 
     private static void ToggleLayout()
@@ -95,7 +118,8 @@ public partial class NewTabPage : InstanceListPageBase, IContextMenuTabPage
 
     private void OnConfigPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Data.ConfigEntry.NewTabLayout))
+        if (e.PropertyName is nameof(Data.ConfigEntry.NewTabLayout) or
+            nameof(Data.ConfigEntry.NewTabVerticalInstanceRows))
             Dispatcher.UIThread.Post(ApplyLayout);
     }
 
@@ -103,8 +127,10 @@ public partial class NewTabPage : InstanceListPageBase, IContextMenuTabPage
     {
         if (Data.ConfigEntry.NewTabLayout == NewTabLayout.CardsOnTop)
         {
+            var visibleRows = Math.Clamp(Data.ConfigEntry.NewTabVerticalInstanceRows, 1, 10);
+            var instanceHeight = 340 + (visibleRows - 2) * (130 + 12);
             LayoutGrid.ColumnDefinitions = new ColumnDefinitions("*,12,*,12,260");
-            LayoutGrid.RowDefinitions = new RowDefinitions("115,12,340");
+            LayoutGrid.RowDefinitions = new RowDefinitions($"115,12,{instanceHeight}");
             Position(RecentInstanceCard, 0, 0);
             Position(RecentTargetCard, 0, 2);
             Position(PlayTimeCard, 0, 4);
@@ -112,6 +138,7 @@ public partial class NewTabPage : InstanceListPageBase, IContextMenuTabPage
             RecentInstanceCard.Width = double.NaN;
             RecentInstanceCard.Height = 115;
             PlayTimeCard.Height = 115;
+            Border.Height = instanceHeight;
         }
         else
         {
@@ -124,6 +151,7 @@ public partial class NewTabPage : InstanceListPageBase, IContextMenuTabPage
             RecentInstanceCard.Width = 260;
             RecentInstanceCard.Height = 114;
             PlayTimeCard.Height = 87;
+            Border.Height = 340;
         }
     }
 

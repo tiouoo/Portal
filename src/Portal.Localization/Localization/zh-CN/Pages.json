@@ -89,7 +89,8 @@
     "Or": "或",
     "CreateNewInstance": "创建新实例",
     "NoMatchingInstancesGoTo": "暂无匹配实例，请修改筛选条件，前往",
-    "SwitchLayout": "切换布局"
+    "SwitchLayout": "切换布局",
+    "VisibleInstanceRows": "实例显示行数"
   },
   "newsdetailspage": {
     "LoadingNewsContent": "正在加载新闻正文…",

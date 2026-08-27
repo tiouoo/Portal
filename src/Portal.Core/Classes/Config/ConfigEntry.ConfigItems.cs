@@ -75,6 +75,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial double CustomWindowBorderCornerRadius { get; set; } = 10;
     [ObservableProperty] public partial NewTabContent NewTabContent { get; set; } = NewTabContent.NewTabPage;
     [ObservableProperty] public partial NewTabLayout NewTabLayout { get; set; } = NewTabLayout.SideBySide;
+    [ObservableProperty] public partial int NewTabVerticalInstanceRows { get; set; } = 2;
     [ObservableProperty] public partial GithubMirrorMode GithubMirrorMode { get; set; } = GithubMirrorMode.Prefix;
     [ObservableProperty] public partial NoticeWay NoticeWay { get; set; } = NoticeWay.Toast;
     [ObservableProperty] public partial Theme Theme { get; set; } = Theme.Light;

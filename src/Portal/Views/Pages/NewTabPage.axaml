@@ -345,7 +345,7 @@
                         CornerRadius="16"
                         Height="87"
                         Name="PlayTimeCard">
-                        <StackPanel Margin="13,13,0,10">
+                        <Grid Margin="13,13,13,10" RowDefinitions="Auto,*">
                             <StackPanel
                                 Orientation="Horizontal"
                                 Spacing="5"
@@ -362,9 +362,11 @@
                                     VerticalAlignment="Center" />
                             </StackPanel>
                             <StackPanel
-                                Margin="3,10,0,0"
+                                Grid.Row="1"
+                                HorizontalAlignment="Center"
                                 Orientation="Horizontal"
-                                Spacing="7">
+                                Spacing="7"
+                                VerticalAlignment="Center">
                                 <TextBlock VerticalAlignment="Center">
                                     <Run FontSize="28" Text="{Binding DisplayTotalPlayTime}" />
                                     <Run
@@ -384,7 +386,7 @@
                                         Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_Sessions}}" />
                                 </TextBlock>
                             </StackPanel>
-                        </StackPanel>
+                        </Grid>
                     </Border>
                 <StackPanel Name="InstanceContainer" Spacing="12">
                     <Border
