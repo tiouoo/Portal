@@ -6,6 +6,8 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
+using System.ComponentModel;
+using Portal.Core.Classes;
 using Portal.Core.Minecraft;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Instance;
@@ -18,6 +20,7 @@ using Portal.Localization;
 using Portal.ViewModels;
 using Portal.Views.Pages.InstancePages;
 using Tio.Avalonia.Standard.Tab.Entries;
+using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
@@ -27,7 +30,7 @@ namespace Portal.Views.Pages;
 
 [AggregatedSearchPage("pages_newTab", "pages_newTabPath", "NewTab")]
 [DefaultPage("pages_newTab")]
-public partial class NewTabPage : InstanceListPageBase
+public partial class NewTabPage : InstanceListPageBase, IContextMenuTabPage
 {
     public NewTabViewModel NewTabViewModel;
     private bool _isInitialized;
@@ -46,6 +49,8 @@ public partial class NewTabPage : InstanceListPageBase
             NewTabViewModel.ApplyFilterAndSort();
         };
         InstanceManager.Instance.StatisticsChanged += OnStatisticsChanged;
+        Data.ConfigEntry.PropertyChanged += OnConfigPropertyChanged;
+        ApplyLayout();
     }
 
     public override PageInfo PageInfo { get; init; } = new()
@@ -59,7 +64,75 @@ public partial class NewTabPage : InstanceListPageBase
     public override void OnClose()
     {
         InstanceManager.Instance.StatisticsChanged -= OnStatisticsChanged;
+        Data.ConfigEntry.PropertyChanged -= OnConfigPropertyChanged;
         base.OnClose();
+    }
+
+    public void BuildContextMenu(IList<MenuItem> menuItems)
+    {
+        menuItems.Add(new MenuItem
+        {
+            Header = PagesLanguageManager.Instance.newtabpage_SwitchLayout.CurrentValue(),
+            Icon = new TextBlock
+            {
+                FontFamily = IconResources.IconFont,
+                FontSize = 18,
+                FontWeight = FontWeight.Thin,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Text = "\ue621"
+            },
+            Command = new RelayCommand(ToggleLayout)
+        });
+    }
+
+    private static void ToggleLayout()
+    {
+        Data.ConfigEntry.NewTabLayout = Data.ConfigEntry.NewTabLayout == NewTabLayout.SideBySide
+            ? NewTabLayout.CardsOnTop
+            : NewTabLayout.SideBySide;
+    }
+
+    private void OnConfigPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Data.ConfigEntry.NewTabLayout))
+            Dispatcher.UIThread.Post(ApplyLayout);
+    }
+
+    private void ApplyLayout()
+    {
+        if (Data.ConfigEntry.NewTabLayout == NewTabLayout.CardsOnTop)
+        {
+            LayoutGrid.ColumnDefinitions = new ColumnDefinitions("*,12,*,12,260");
+            LayoutGrid.RowDefinitions = new RowDefinitions("115,12,340");
+            Position(RecentInstanceCard, 0, 0);
+            Position(RecentTargetCard, 0, 2);
+            Position(PlayTimeCard, 0, 4);
+            Position(InstanceContainer, 2, 0, 5);
+            RecentInstanceCard.Width = double.NaN;
+            RecentInstanceCard.Height = 115;
+            PlayTimeCard.Height = 115;
+        }
+        else
+        {
+            LayoutGrid.ColumnDefinitions = new ColumnDefinitions("*,12,260");
+            LayoutGrid.RowDefinitions = new RowDefinitions("114,12,115,12,87");
+            Position(InstanceContainer, 0, 0, 1, 5);
+            Position(RecentInstanceCard, 0, 2);
+            Position(RecentTargetCard, 2, 2);
+            Position(PlayTimeCard, 4, 2);
+            RecentInstanceCard.Width = 260;
+            RecentInstanceCard.Height = 114;
+            PlayTimeCard.Height = 87;
+        }
+    }
+
+    private static void Position(Control control, int row, int column, int columnSpan = 1, int rowSpan = 1)
+    {
+        Grid.SetRow(control, row);
+        Grid.SetColumn(control, column);
+        Grid.SetColumnSpan(control, columnSpan);
+        Grid.SetRowSpan(control, rowSpan);
     }
 
     private void OnStatisticsChanged(object? sender, EventArgs e)

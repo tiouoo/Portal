@@ -1,0 +1,114 @@
+<UserControl
+    Padding="3,3,0,0"
+    d:DesignHeight="130"
+    d:DesignWidth="272"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.ContinuePlayWidget"
+    x:CompileBindings="False"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="-2,-2,-2,-3">
+        <StackPanel
+            IsVisible="{Binding !HasItem}"
+            Margin="0,0,0,8"
+            Spacing="5"
+            VerticalAlignment="Center">
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="30"
+                FontWeight="Thin"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Center"
+                Text="&#xe628;" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Center"
+                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_NoRecentSaveOrServer}}" />
+        </StackPanel>
+        <DockPanel
+            Background="Transparent"
+            IsVisible="{Binding HasItem}"
+            Margin="2,0">
+            <DockPanel DockPanel.Dock="Top">
+                <Border
+                    ClipToBounds="True"
+                    CornerRadius="10"
+                    Height="40"
+                    Margin="0,0,8,0"
+                    Width="40">
+                    <Image
+                        Height="40"
+                        Source="{Binding Item.Icon}"
+                        Width="40" />
+                </Border>
+                <StackPanel Margin="2,3,0,0" Spacing="2">
+                    <TextBlock
+                        MaxLines="1"
+                        Text="{Binding Item.Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding Item.HasSubtitle}"
+                        MaxLines="1"
+                        Text="{Binding Item.SubtitleText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </DockPanel>
+            <StackPanel
+                DockPanel.Dock="Bottom"
+                Margin="2,6,0,0"
+                Spacing="2">
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    MaxLines="1"
+                    Text="{Binding Item.InstanceName}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    IsVisible="{Binding !Item.IsServer}"
+                    MaxLines="1"
+                    Text="{Binding Item.Details}"
+                    TextTrimming="CharacterEllipsis" />
+                <StackPanel
+                    IsVisible="{Binding Item.IsServer}"
+                    Orientation="Horizontal"
+                    Spacing="5">
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{Binding Item.StatusBrush}"
+                        Text="{Binding Item.StatusText}" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{Binding Item.PingBrush}"
+                        IsVisible="{Binding Item.HasPing}"
+                        Text="{Binding Item.PingText}" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding Item.HasPlayers}"
+                        Text="{Binding Item.PlayersText}" />
+                </StackPanel>
+                <DockPanel>
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding Item.RelativeTime}" />
+                    <HyperlinkButton
+                        Click="ContinueGame_Click"
+                        Content="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_ContinueGame}}"
+                        DockPanel.Dock="Right"
+                        FontSize="13"
+                        HorizontalAlignment="Right"
+                        IsVisible="{Binding Item.CanQuickPlay}"
+                        Theme="{StaticResource TransparentHyperlinkButton}" />
+                </DockPanel>
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

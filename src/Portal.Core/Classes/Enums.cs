@@ -42,6 +42,12 @@ public enum NewTabContent
     HomePage
 }
 
+public enum NewTabLayout
+{
+    SideBySide,
+    CardsOnTop
+}
+
 public enum DownloadSearchSource
 {
     CurseForge,

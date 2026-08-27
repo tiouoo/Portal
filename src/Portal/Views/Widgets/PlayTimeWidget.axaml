@@ -1,0 +1,55 @@
+<UserControl
+    d:DesignHeight="130"
+    d:DesignWidth="272"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.PlayTimeWidget"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="1">
+        <StackPanel
+            DockPanel.Dock="Top"
+            Orientation="Horizontal"
+            Spacing="5"
+            VerticalAlignment="Top">
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="20"
+                FontWeight="Thin"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="&#xe637;" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Name="TitleText"
+                VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel
+            DockPanel.Dock="Bottom"
+            HorizontalAlignment="Center"
+            Name="StatsPanel"
+            Orientation="Horizontal"
+            Spacing="7"
+            VerticalAlignment="Center">
+            <TextBlock VerticalAlignment="Center">
+                <Run FontSize="28" Name="TimeValue" />
+                <Run
+                    FontSize="18"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Name="TimeUnit" />
+            </TextBlock>
+            <Rectangle
+                Fill="{DynamicResource TranslucentBorderBrush}"
+                Margin="0,3"
+                Name="Divider"
+                Width="1" />
+            <TextBlock VerticalAlignment="Center">
+                <Run FontSize="28" Name="SessionsValue" />
+                <Run
+                    FontSize="14"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Name="SessionsUnit" />
+            </TextBlock>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

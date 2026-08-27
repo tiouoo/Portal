@@ -1,0 +1,90 @@
+<UserControl
+    Padding="3,3,0,0"
+    d:DesignHeight="130"
+    d:DesignWidth="272"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.ContinueInstanceWidget"
+    x:CompileBindings="False"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="-2,-2,-2,-3">
+        <StackPanel
+            IsVisible="{Binding !HasRecentInstance}"
+            Margin="0,0,0,8"
+            Spacing="5"
+            VerticalAlignment="Center">
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="30"
+                FontWeight="Thin"
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Center"
+                Text="&#xe651;" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                HorizontalAlignment="Center"
+                Text="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_NoRecentGames}}" />
+        </StackPanel>
+        <Panel IsVisible="{Binding HasRecentInstance}">
+            <DockPanel
+                Background="Transparent"
+                Margin="2,0,2,0"
+                Tag="{Binding RecentInstance}">
+                <StackPanel
+                    DockPanel.Dock="Top"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <Border
+                        ClipToBounds="True"
+                        CornerRadius="12"
+                        Height="42"
+                        Margin="0,0,8,0"
+                        Width="42">
+                        <Image
+                            Height="42"
+                            Source="{Binding RecentInstance.Icon}"
+                            Width="42" />
+                    </Border>
+                    <TextBlock
+                        Margin="2,3,0,0"
+                        MaxLines="2"
+                        Text="{Binding RecentInstance.InstanceName}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="WrapWithOverflow"
+                        VerticalAlignment="Center"
+                        Width="170" />
+                </StackPanel>
+                <StackPanel
+                    DockPanel.Dock="Bottom"
+                    Margin="2,1,0,2"
+                    Spacing="2"
+                    VerticalAlignment="Bottom">
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,4,0,0"
+                        Text="{Binding RecentInstance.FolderName}" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding RecentInstance.ShortDisplay}" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding RecentInstance.DisplayLastPlayTime}" />
+                </StackPanel>
+            </DockPanel>
+            <HyperlinkButton
+                Click="ContinueGame_Click"
+                Content="{Translate {x:Static loc:PagesLanguageManager+Keys.newtabpage_ContinueGame}}"
+                FontSize="13"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+                Theme="{StaticResource TransparentHyperlinkButton}"
+                VerticalAlignment="Bottom" />
+        </Panel>
+    </Grid>
+</UserControl>

@@ -19,7 +19,7 @@
         CornerRadius="10"
         Height="{Binding CardHeight, ElementName=Root}"
         Name="InstanceCardBorder"
-        PointerPressed="InstanceCard_OnPointerPressed">
+        PointerReleased="InstanceCard_OnPointerReleased">
         <Border.ContextMenu>
             <ContextMenu>
                 <MenuItem

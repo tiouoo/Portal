@@ -1,9 +1,11 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using System.Diagnostics;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
@@ -17,6 +19,7 @@ namespace Portal.Views.Widgets;
 public class WidgetWorkspace : UserControl
 {
     private const double DragThreshold = 6;
+    private static readonly TimeSpan LongPressDuration = TimeSpan.FromMilliseconds(350);
     private readonly List<WidgetHost> _allWidgets = [];
 
     private readonly Canvas? _canvas;
@@ -31,6 +34,8 @@ public class WidgetWorkspace : UserControl
     private Border? _ghostPlaceholder;
 
     private WidgetHost? _pendingDragHost;
+    private readonly DispatcherTimer _longPressTimer;
+    private long _pendingPressedTimestamp;
     private Point _pendingInitialPosition;
     private Point _pendingStartPoint;
 
@@ -40,6 +45,8 @@ public class WidgetWorkspace : UserControl
 
     public WidgetWorkspace()
     {
+        _longPressTimer = new DispatcherTimer { Interval = LongPressDuration };
+        _longPressTimer.Tick += OnLongPressTimerTick;
         _canvas = new Canvas
         {
             Background = new SolidColorBrush(Colors.Transparent)
@@ -339,6 +346,7 @@ public class WidgetWorkspace : UserControl
         ClearAllWidgets();
         foreach (var data in Data.ConfigEntry.WidgetLayout ?? [])
         {
+            MigrateLegacyList(data);
             if (WidgetRegistry.Get(data.Kind) == null)
                 continue;
 
@@ -369,6 +377,23 @@ public class WidgetWorkspace : UserControl
 
         NormalizeZOrder();
         UpdateCanvasSize();
+    }
+
+    private static void MigrateLegacyList(WidgetLayoutData layout)
+    {
+        if (layout.Kind is not (WidgetKind.ServerList or WidgetKind.InstanceList or WidgetKind.WorldList) ||
+            layout.Data is not GameListWidgetData data)
+            return;
+
+        var itemKind = layout.Kind switch
+        {
+            WidgetKind.ServerList => HomePageItemKind.Server,
+            WidgetKind.WorldList => HomePageItemKind.World,
+            _ => HomePageItemKind.Instance
+        };
+        foreach (var item in data.Items)
+            item.ItemKind ??= itemKind;
+        layout.Kind = WidgetKind.FixedList;
     }
 
     public WidgetHost? AddWidget(WidgetKind kind)
@@ -502,7 +527,9 @@ public class WidgetWorkspace : UserControl
             return;
 
 
-        if (source.FindAncestorOfType<Button>() != null)
+        if (source.FindAncestorOfType<Button>() != null ||
+            source.FindAncestorOfType<ComboBox>() != null ||
+            source.FindAncestorOfType<TextBox>() != null)
             return;
         if (source.FindAncestorOfType<WidgetHost>()?.IsResizeHandleArea(source) == true)
             return;
@@ -512,8 +539,10 @@ public class WidgetWorkspace : UserControl
             return;
 
         _pendingDragHost = widget;
+        _pendingPressedTimestamp = Stopwatch.GetTimestamp();
         _pendingStartPoint = e.GetPosition(_canvas);
         _pendingInitialPosition = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
+        _longPressTimer.Start();
         e.Pointer.Capture(this);
     }
 
@@ -545,14 +574,23 @@ public class WidgetWorkspace : UserControl
         var distance = Math.Sqrt(
             Math.Pow(current.X - _pendingStartPoint.X, 2) +
             Math.Pow(current.Y - _pendingStartPoint.Y, 2));
-        if (distance < DragThreshold)
+        if (distance < DragThreshold && GetPendingPressDuration() < LongPressDuration)
             return;
 
+        _longPressTimer.Stop();
         BeginDrag(_pendingDragHost);
+    }
+
+    private void OnLongPressTimerTick(object? sender, EventArgs e)
+    {
+        _longPressTimer.Stop();
+        if (_pendingDragHost != null)
+            BeginDrag(_pendingDragHost);
     }
 
     private void BeginDrag(WidgetHost widget)
     {
+        _longPressTimer.Stop();
         _pendingDragHost = null;
         _draggingWidget = widget;
         _dragStartPoint = _pendingStartPoint;
@@ -570,6 +608,7 @@ public class WidgetWorkspace : UserControl
 
     private void OnWorkspacePointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        _longPressTimer.Stop();
         if (_draggingWidget != null)
         {
             EndDrag();
@@ -580,16 +619,21 @@ public class WidgetWorkspace : UserControl
         if (_pendingDragHost is { } clickedHost)
         {
             _pendingDragHost = null;
-            clickedHost.WidgetContent?.PerformClick();
+            if (GetPendingPressDuration() < LongPressDuration)
+                clickedHost.WidgetContent?.PerformClick();
         }
     }
 
     private void OnWorkspacePointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
     {
+        _longPressTimer.Stop();
         _pendingDragHost = null;
         if (_draggingWidget != null)
             EndDrag();
     }
+
+    private TimeSpan GetPendingPressDuration() =>
+        Stopwatch.GetElapsedTime(_pendingPressedTimestamp);
 
     private void EndDrag()
     {

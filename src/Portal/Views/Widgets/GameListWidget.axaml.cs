@@ -45,15 +45,18 @@ public partial class GameListWidget : IWidgetContent, IWidgetContextMenuProvider
 
     public ObservableCollection<GameListItem> Items { get; } = [];
 
-    public string Title => Kind switch
-    {
-        WidgetKind.ServerList => CommonLanguageManager.Instance.widgets_serverList.CurrentValue(),
-        WidgetKind.InstanceList => CommonLanguageManager.Instance.widgets_instanceList.CurrentValue(),
-        WidgetKind.WorldList => CommonLanguageManager.Instance.widgets_worldList.CurrentValue(),
-        WidgetKind.RecentPlayList => CommonLanguageManager.Instance.widgets_recentPlayList.CurrentValue(),
-        WidgetKind.RecentInstanceList => CommonLanguageManager.Instance.widgets_recentInstanceList.CurrentValue(),
-        _ => string.Empty
-    };
+    public string Title => Kind == WidgetKind.FixedList && !string.IsNullOrWhiteSpace(Data.Title)
+        ? Data.Title
+        : Kind switch
+        {
+            WidgetKind.ServerList => CommonLanguageManager.Instance.widgets_serverList.CurrentValue(),
+            WidgetKind.InstanceList => CommonLanguageManager.Instance.widgets_instanceList.CurrentValue(),
+            WidgetKind.WorldList => CommonLanguageManager.Instance.widgets_worldList.CurrentValue(),
+            WidgetKind.RecentPlayList => CommonLanguageManager.Instance.widgets_recentPlayList.CurrentValue(),
+            WidgetKind.RecentInstanceList => CommonLanguageManager.Instance.widgets_recentInstanceList.CurrentValue(),
+            WidgetKind.FixedList => CommonLanguageManager.Instance.widgets_fixedList.CurrentValue(),
+            _ => string.Empty
+        };
 
     public string CountText => Items.Count.ToString();
     public bool IsEmpty => Items.Count == 0;
@@ -86,13 +89,38 @@ public partial class GameListWidget : IWidgetContent, IWidgetContextMenuProvider
         _saveLayout = saveLayout;
         if (!IsRecent)
         {
+            var items = new List<MenuItem>();
+            if (Kind == WidgetKind.FixedList)
+            {
+                var renameItem = new MenuItem
+                {
+                    Header = WidgetsLanguageManager.Instance.contextmenu_rename.CurrentValue(),
+                    Icon = IconResources.CreateIcon("\ue62c", 18)
+                };
+                renameItem.Click += (_, _) => _ = RenameAsync();
+                items.Add(renameItem);
+            }
+
             var addItem = new MenuItem
             {
                 Header = WidgetsLanguageManager.Instance.contextmenu_addItem.CurrentValue(),
                 Icon = IconResources.CreateIcon("\ue645", 18)
             };
-            addItem.Click += (_, _) => _ = AddItemAsync();
-            return [addItem];
+            if (Kind == WidgetKind.FixedList)
+            {
+                AddTypeMenuItem(addItem, HomePageItemKind.Instance,
+                    CommonLanguageManager.Instance.widgets_instance.CurrentValue(), "\ue653");
+                AddTypeMenuItem(addItem, HomePageItemKind.World,
+                    CommonLanguageManager.Instance.widgets_worldList.CurrentValue(), "\ue628");
+                AddTypeMenuItem(addItem, HomePageItemKind.Server,
+                    CommonLanguageManager.Instance.widgets_serverList.CurrentValue(), "\ue621");
+            }
+            else
+            {
+                addItem.Click += (_, _) => _ = AddItemAsync();
+            }
+            items.Add(addItem);
+            return items;
         }
 
         var limitMenu = new MenuItem
@@ -125,6 +153,28 @@ public partial class GameListWidget : IWidgetContent, IWidgetContextMenuProvider
         _saveLayout = saveLayout;
     }
 
+    private async Task RenameAsync()
+    {
+        if (Kind != WidgetKind.FixedList)
+            return;
+
+        var result = await OverlayDialog.ShowCustomAsync<FixedListRenameDialog,
+            FixedListRenameDialogViewModel, string>(new FixedListRenameDialogViewModel(Title),
+            this.TryGetHostId(), new OverlayDialogOptions
+            {
+                Buttons = DialogButton.None,
+                CanLightDismiss = false,
+                CanResize = false
+            });
+        if (string.IsNullOrWhiteSpace(result))
+            return;
+
+        Data.Title = result;
+        if (this.FindControl<TextBlock>("TitleTextBlock") is { } title)
+            title.Text = Title;
+        _saveLayout?.Invoke();
+    }
+
     private void OnSourceChanged(object? sender, EventArgs e) => _ = RefreshAsync();
 
     private void OnInstanceIconChanged(object? sender, MinecraftInstance instance) => _ = RefreshAsync();
@@ -147,6 +197,7 @@ public partial class GameListWidget : IWidgetContent, IWidgetContextMenuProvider
             WidgetKind.WorldList => await CreateWorldItemsAsync(Data.Items),
             WidgetKind.RecentPlayList => CreateRecentPlayItems(),
             WidgetKind.RecentInstanceList => CreateRecentInstanceItems(),
+            WidgetKind.FixedList => await CreateFixedItemsAsync(Data.Items),
             _ => []
         };
         if (version != _refreshVersion)
@@ -184,6 +235,48 @@ public partial class GameListWidget : IWidgetContent, IWidgetContextMenuProvider
             .Where(item => item != null).Cast<GameListItem>().ToArray();
     }
 
+    private async Task<IReadOnlyList<GameListItem>> CreateFixedItemsAsync(
+        IEnumerable<GameListWidgetEntry> entries)
+    {
+        var result = new List<GameListItem>();
+        foreach (var (entry, index) in entries.Select((entry, index) => (entry, index)))
+        {
+            var instance = ResolveInstance(entry.InstanceFolderPath);
+            if (instance == null) continue;
+
+            switch (entry.ItemKind)
+            {
+                case HomePageItemKind.Instance:
+                    result.Add(GameListItem.ForInstance(instance, entry, index));
+                    break;
+                case HomePageItemKind.Server when !string.IsNullOrWhiteSpace(entry.ServerAddress):
+                {
+                    var port = entry.ServerPort ?? 25565;
+                    var name = entry.DisplayName ?? ServerPing.BuildDisplayAddress(entry.ServerAddress, port);
+                    result.Add(GameListItem.ForTarget(instance, entry, index, RecentPlayTargetType.Server,
+                        entry.TargetId ?? $"server:{entry.ServerAddress}:{port}", name,
+                        $"{ServerPing.BuildDisplayAddress(entry.ServerAddress, port)} · {instance.ShortDisplay}",
+                        true, serverAddress: entry.ServerAddress, serverPort: port));
+                    break;
+                }
+                case HomePageItemKind.World when !string.IsNullOrWhiteSpace(entry.TargetId):
+                {
+                    var world = (await new WorldSaveService().ScanAsync(instance))
+                        .FirstOrDefault(item => item.FolderName == entry.TargetId);
+                    if (world != null)
+                        result.Add(GameListItem.ForTarget(instance, entry, index, RecentPlayTargetType.World,
+                            world.FolderName,
+                            string.IsNullOrWhiteSpace(world.LevelName) ? world.FolderName : world.LevelName,
+                            $"{world.Version ?? "?"} · {instance.ShortDisplay}", CanQuickEnterWorld(instance),
+                            world));
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
     private async Task<IReadOnlyList<GameListItem>> CreateWorldItemsAsync(IEnumerable<GameListWidgetEntry> entries)
     {
         var result = new List<GameListItem>();
@@ -211,12 +304,12 @@ public partial class GameListWidget : IWidgetContent, IWidgetContextMenuProvider
             .ToArray();
     }
 
-    private IReadOnlyList<GameListItem> CreateRecentInstanceItems()
+    private IReadOnlyList<GameListItem> CreateRecentInstanceItems(int? limit = null)
     {
         return InstanceManager.Instance.Instances
             .Where(instance => instance.LastPlayTime != DateTime.MinValue)
             .OrderByDescending(instance => instance.LastPlayTime)
-            .Take(Math.Clamp(Data.Limit, 1, 20))
+            .Take(limit ?? Math.Clamp(Data.Limit, 1, 20))
             .Select((instance, index) => GameListItem.ForInstance(instance, null, index))
             .ToArray();
     }
@@ -232,20 +325,37 @@ public partial class GameListWidget : IWidgetContent, IWidgetContextMenuProvider
         }
     }
 
-    private async Task AddItemAsync()
+    private void AddTypeMenuItem(MenuItem parent, HomePageItemKind kind, string header, string icon)
+    {
+        var item = new MenuItem { Header = header, Icon = IconResources.CreateIcon(icon, 18) };
+        item.Click += (_, _) => _ = AddItemAsync(kind);
+        parent.Items.Add(item);
+    }
+
+    private async Task AddItemAsync(HomePageItemKind? selectedKind = null)
     {
         var instance = await PickInstanceAsync();
         if (instance == null) return;
 
-        var entry = new GameListWidgetEntry { InstanceFolderPath = instance.InstanceFolderPath };
-        if (Kind == WidgetKind.WorldList)
+        var itemKind = selectedKind ?? Kind switch
+        {
+            WidgetKind.WorldList => HomePageItemKind.World,
+            WidgetKind.ServerList => HomePageItemKind.Server,
+            _ => HomePageItemKind.Instance
+        };
+        var entry = new GameListWidgetEntry
+        {
+            InstanceFolderPath = instance.InstanceFolderPath,
+            ItemKind = itemKind
+        };
+        if (itemKind == HomePageItemKind.World)
         {
             var world = await PickWorldAsync(instance);
             if (world == null) return;
             entry.TargetId = world.FolderName;
             entry.DisplayName = world.DisplayName;
         }
-        else if (Kind == WidgetKind.ServerList)
+        else if (itemKind == HomePageItemKind.Server)
         {
             var server = await PickServerAsync(instance);
             if (server == null) return;

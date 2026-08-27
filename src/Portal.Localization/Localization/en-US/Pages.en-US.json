@@ -88,7 +88,8 @@
     "AddFolder": "Add Folder",
     "Or": "or",
     "CreateNewInstance": "Create New Instance",
-    "NoMatchingInstancesGoTo": "No matching instances. Adjust the filters, or go to"
+    "NoMatchingInstancesGoTo": "No matching instances. Adjust the filters, or go to",
+    "SwitchLayout": "Switch Layout"
   },
   "newsdetailspage": {
     "LoadingNewsContent": "Loading news content…",

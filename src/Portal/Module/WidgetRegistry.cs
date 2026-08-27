@@ -182,9 +182,21 @@ public static class WidgetRegistry
         RegisterGameListWidget(WidgetKind.ServerList,
             CommonLanguageManager.Instance.widgets_serverList.CurrentValue(),
             CommonLanguageManager.Instance.widgets_serverListDescription.CurrentValue());
-        RegisterGameListWidget(WidgetKind.InstanceList,
-            CommonLanguageManager.Instance.widgets_instanceList.CurrentValue(),
-            CommonLanguageManager.Instance.widgets_instanceListDescription.CurrentValue());
+        var instanceListDefinition = new WidgetDefinition
+        {
+            Kind = WidgetKind.InstanceList,
+            Name = CommonLanguageManager.Instance.widgets_instanceList.CurrentValue(),
+            Description = CommonLanguageManager.Instance.widgets_instanceListDescription.CurrentValue(),
+            Category = WidgetCategory.Game,
+            DefaultSize = new WidgetCellSize(6, 3)
+        };
+        for (var columns = 3; columns <= 16; columns++)
+        for (var rows = 3; rows <= 16; rows++)
+        {
+            var size = new WidgetCellSize(columns, rows);
+            instanceListDefinition.AddPage(size, () => new InstanceListWidget(size));
+        }
+        Register(instanceListDefinition);
         RegisterGameListWidget(WidgetKind.WorldList,
             CommonLanguageManager.Instance.widgets_worldList.CurrentValue(),
             CommonLanguageManager.Instance.widgets_worldListDescription.CurrentValue());
@@ -194,6 +206,28 @@ public static class WidgetRegistry
         RegisterGameListWidget(WidgetKind.RecentInstanceList,
             CommonLanguageManager.Instance.widgets_recentInstanceList.CurrentValue(),
             CommonLanguageManager.Instance.widgets_recentInstanceListDescription.CurrentValue());
+        RegisterGameListWidget(WidgetKind.FixedList,
+            CommonLanguageManager.Instance.widgets_fixedList.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_fixedListDescription.CurrentValue());
+
+        RegisterContinueWidget(WidgetKind.ContinuePlay,
+            CommonLanguageManager.Instance.widgets_continuePlay.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_continuePlayDescription.CurrentValue(),
+            () => new ContinuePlayWidget());
+        RegisterContinueWidget(WidgetKind.ContinueInstance,
+            CommonLanguageManager.Instance.widgets_continueInstance.CurrentValue(),
+            CommonLanguageManager.Instance.widgets_continueInstanceDescription.CurrentValue(),
+            () => new ContinueInstanceWidget());
+
+        Register(new WidgetDefinition
+            {
+                Kind = WidgetKind.PlayTime,
+                Name = CommonLanguageManager.Instance.widgets_playTime.CurrentValue(),
+                Description = CommonLanguageManager.Instance.widgets_playTimeDescription.CurrentValue(),
+                Category = WidgetCategory.Game,
+                DefaultSize = new WidgetCellSize(2, 1)
+            }
+            .AddPage(new WidgetCellSize(2, 1), () => new PlayTimeWidget(new WidgetCellSize(2, 1))));
 
 
         var newsDef = new WidgetDefinition
@@ -271,5 +305,19 @@ public static class WidgetRegistry
         }
 
         Register(definition);
+    }
+
+    private static void RegisterContinueWidget(
+        WidgetKind kind, string name, string description, Func<IWidgetContent> factory)
+    {
+        var size = new WidgetCellSize(2, 1);
+        Register(new WidgetDefinition
+        {
+            Kind = kind,
+            Name = name,
+            Description = description,
+            Category = WidgetCategory.Game,
+            DefaultSize = size
+        }.AddPage(size, factory));
     }
 }

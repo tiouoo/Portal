@@ -60,6 +60,7 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
         var keyword = SearchText?.Trim();
         var list = WidgetRegistry.Definitions
             .Where(d => d.Category == SelectedCategory)
+            .Where(d => d.Kind is not (WidgetKind.ServerList or WidgetKind.WorldList))
             .Where(d => string.IsNullOrEmpty(keyword) ||
                         d.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
                         d.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase))
@@ -77,10 +78,10 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
         switch (definition.Kind)
         {
             case WidgetKind.ServerList:
-            case WidgetKind.InstanceList:
             case WidgetKind.WorldList:
             case WidgetKind.RecentPlayList:
             case WidgetKind.RecentInstanceList:
+            case WidgetKind.FixedList:
                 template = new WidgetLayoutData { Data = new GameListWidgetData() };
                 break;
             case WidgetKind.Instance:

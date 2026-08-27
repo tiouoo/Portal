@@ -84,6 +84,7 @@ public sealed class NewsWidgetData : WidgetData
 
 public sealed class GameListWidgetData : WidgetData
 {
+    public string? Title { get; set; }
     public List<GameListWidgetEntry> Items { get; set; } = [];
     public int Limit { get; set; } = 4;
 }

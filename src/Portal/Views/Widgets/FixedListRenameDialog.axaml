@@ -1,0 +1,44 @@
+<UserControl
+    Height="210"
+    MinWidth="440"
+    Width="480"
+    d:DesignHeight="210"
+    d:DesignWidth="480"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.FixedListRenameDialog"
+    x:DataType="widgets:FixedListRenameDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
+    xmlns:widgets="clr-namespace:Portal.Views.Widgets"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,*,Auto"
+        RowSpacing="16">
+        <TextBlock
+            FontSize="20"
+            FontWeight="SemiBold"
+            Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.fixedlistrenamedialog_title}}" />
+        <StackPanel Grid.Row="1" Spacing="6">
+            <Label
+                Content="{Translate {x:Static loc:WidgetsLanguageManager+Keys.fixedlistrenamedialog_nameLabel}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                MaxLength="64"
+                Text="{Binding Name}"
+                tio:FocusHelper.DialogFocusHint="True" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:WidgetsLanguageManager+Keys.fixedlistrenamedialog_cancel}}" />
+            <Button Command="{Binding ConfirmCommand}" Content="{Translate {x:Static loc:WidgetsLanguageManager+Keys.fixedlistrenamedialog_confirm}}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

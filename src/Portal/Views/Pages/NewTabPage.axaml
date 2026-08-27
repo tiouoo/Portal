@@ -21,20 +21,14 @@
     </UserControl.Styles>
     <tio:ScrollView Classes="Flat" Margin="12,2,5,10">
         <StackPanel Margin="0,0,7,0" Spacing="0">
-            <DockPanel VerticalAlignment="Top">
-                <StackPanel
-                    DockPanel.Dock="Right"
-                    HorizontalAlignment="Right"
-                    Margin="12,0,0,0"
-                    Name="StackPanel"
-                    Spacing="12"
-                    VerticalAlignment="Top">
+            <Grid Name="LayoutGrid" VerticalAlignment="Top">
                     <Border
                         Background="{DynamicResource TranslucentBackgroundColor}"
                         BorderBrush="{DynamicResource TranslucentBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="16"
                         Height="114"
+                        Name="RecentInstanceCard"
                         Width="260">
                         <Grid>
                             <StackPanel
@@ -175,7 +169,8 @@
                         BorderBrush="{DynamicResource TranslucentBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="16"
-                        Height="115">
+                        Height="115"
+                        Name="RecentTargetCard">
                         <Grid>
                             <StackPanel
                                 IsVisible="{Binding !HasRecentPlayTargetItem}"
@@ -348,7 +343,8 @@
                         BorderBrush="{DynamicResource TranslucentBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="16"
-                        Height="87">
+                        Height="87"
+                        Name="PlayTimeCard">
                         <StackPanel Margin="13,13,0,10">
                             <StackPanel
                                 Orientation="Horizontal"
@@ -390,16 +386,7 @@
                             </StackPanel>
                         </StackPanel>
                     </Border>
-                    <StackPanel.Transitions>
-                        <Transitions>
-                            <DoubleTransition
-                                Duration="0:0:0.1"
-                                Easing="SineEaseOut"
-                                Property="Opacity" />
-                        </Transitions>
-                    </StackPanel.Transitions>
-                </StackPanel>
-                <StackPanel Spacing="12">
+                <StackPanel Name="InstanceContainer" Spacing="12">
                     <Border
                         Background="{DynamicResource TranslucentBackgroundColor}"
                         BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -494,7 +481,7 @@
                         </DockPanel>
                     </Border>
                 </StackPanel>
-            </DockPanel>
+            </Grid>
             <Border IsVisible="{Binding HasRecentPlays}">
                 <Border IsVisible="{Binding Data.ConfigEntry.ShowRecentPlays}" Margin="0,8,0,0">
                     <widgets:RecentPlaysSection />

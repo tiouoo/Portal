@@ -76,6 +76,12 @@
     "emptyText": "This instance has no recognized saves",
     "cancel": "Cancel"
   },
+  "fixedlistrenamedialog": {
+    "title": "Rename Fixed List",
+    "nameLabel": "New Name",
+    "cancel": "Cancel",
+    "confirm": "OK"
+  },
   "contextmenu": {
     "clickAction": "Click Action",
     "viewDetails": "View Details",
@@ -87,6 +93,7 @@
     "quickEnterWorld": "Quick Enter World",
     "quickEnterServer": "Quick Join Server",
     "addItem": "Add Item",
+    "rename": "Rename",
     "enterServer": "Join Server",
     "enterWorld": "Enter World",
     "startGame": "Start Game",
@@ -97,7 +104,8 @@
     "displayLimit": "Display Limit",
     "deleteConfirm": "Permanently delete \"{0}\"? This action cannot be undone.",
     "emptyList": "Right-click the widget to add an item",
-    "noRecentItems": "No recently played items"
+    "noRecentItems": "No recently played items",
+    "noInstances": "No instances available"
   },
   "clock1x1": {},
   "clock2x1": {},

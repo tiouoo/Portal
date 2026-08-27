@@ -76,6 +76,12 @@
     "emptyText": "此实例没有可识别的存档",
     "cancel": "取消"
   },
+  "fixedlistrenamedialog": {
+    "title": "重命名固定列表",
+    "nameLabel": "新名称",
+    "cancel": "取消",
+    "confirm": "确定"
+  },
   "contextmenu": {
     "clickAction": "点击操作",
     "viewDetails": "查看详情",
@@ -87,6 +93,7 @@
     "quickEnterWorld": "快速进入世界",
     "quickEnterServer": "快速进入服务器",
     "addItem": "添加项目",
+    "rename": "重命名",
     "enterServer": "进入服务器",
     "enterWorld": "进入世界",
     "startGame": "开始游戏",
@@ -97,7 +104,8 @@
     "displayLimit": "显示数量",
     "deleteConfirm": "确定要永久删除“{0}”吗？此操作无法撤销。",
     "emptyList": "右键点击组件以添加项目",
-    "noRecentItems": "没有最近游玩的项目"
+    "noRecentItems": "没有最近游玩的项目",
+    "noInstances": "没有可用的实例"
   },
   "clock1x1": {},
   "clock2x1": {},

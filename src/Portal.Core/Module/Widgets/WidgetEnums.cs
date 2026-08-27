@@ -18,7 +18,11 @@ public enum WidgetKind
     InstanceList,
     WorldList,
     RecentPlayList,
-    RecentInstanceList
+    RecentInstanceList,
+    ContinuePlay,
+    ContinueInstance,
+    PlayTime,
+    FixedList
 }
 
 public enum WidgetCategory

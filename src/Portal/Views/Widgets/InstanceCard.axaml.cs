@@ -113,9 +113,9 @@ public partial class InstanceCard : UserControl
         set => SetValue(ActionIconSizeProperty, value);
     }
 
-    private void InstanceCard_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private void InstanceCard_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        if (e.InitialPressMouseButton != MouseButton.Left)
             return;
         if (e.Source is Visual visual && (visual is Button || visual.FindAncestorOfType<Button>() != null))
             return;
