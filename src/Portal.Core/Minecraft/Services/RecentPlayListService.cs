@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using Avalonia.Threading;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
@@ -22,7 +23,7 @@ public sealed class RecentPlayListService
 
     public static RecentPlayListService Instance { get; } = new();
 
-    public ObservableCollection<RecentPlayTarget> Items { get; } = [];
+    public ObservableCollection<RecentPlayTarget> Items { get; } = new RecentPlayCollection();
 
     public event EventHandler? Refreshed;
 
@@ -49,9 +50,7 @@ public sealed class RecentPlayListService
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Items.Clear();
-                foreach (var target in targets)
-                    Items.Add(target);
+                ((RecentPlayCollection)Items).ReplaceWith(targets);
                 Refreshed?.Invoke(this, EventArgs.Empty);
             });
         }
@@ -65,6 +64,19 @@ public sealed class RecentPlayListService
             {
                 _refreshTask = null;
             }
+        }
+    }
+
+    private sealed class RecentPlayCollection : ObservableCollection<RecentPlayTarget>
+    {
+        public void ReplaceWith(IEnumerable<RecentPlayTarget> items)
+        {
+            Items.Clear();
+            foreach (var item in items)
+                Items.Add(item);
+            OnPropertyChanged(new(nameof(Count)));
+            OnPropertyChanged(new("Item[]"));
+            OnCollectionChanged(new(NotifyCollectionChangedAction.Reset));
         }
     }
 }

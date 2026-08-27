@@ -270,7 +270,7 @@ public partial class ConfigEntry : ObservableObject
         try
         {
             var folders = MinecraftFolders.ToArray();
-            var instances = await Task.Run(() => InstanceManager.Instance.ScanAll(folders));
+            var instances = await InstanceManager.ScanAllAsync(folders);
             InstanceManager.Instance.ApplyInstances(instances);
         }
         catch (Exception exception)

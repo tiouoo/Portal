@@ -14,39 +14,40 @@ namespace Portal.Core.Minecraft.Instance.Java;
 
 internal static class ExternalMinecraftScanner
 {
-    public static async Task<IReadOnlyList<MinecraftInstance>> ScanAsync(MinecraftFolderEntry folder)
+    public static async Task<IReadOnlyList<MinecraftInstance>> ScanAsync(MinecraftFolderEntry folder,
+        CancellationToken cancellationToken = default)
     {
         var layout = folder.DetectedLayout;
         return layout.Kind switch
         {
             MinecraftFolderKind.Modrinth or MinecraftFolderKind.ModrinthInstance
-                => await ScanModrinthAsync(folder, layout),
+                => await ScanModrinthAsync(folder, layout, cancellationToken),
             MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance
-                => await ScanMultiMcAsync(folder, layout),
-            MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => await ScanCurseForgeAsync(folder, layout),
-            MinecraftFolderKind.PortalMc => await ScanPortalMcAsync(folder, layout),
+                => await ScanMultiMcAsync(folder, layout, cancellationToken),
+            MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => await ScanCurseForgeAsync(folder, layout, cancellationToken),
+            MinecraftFolderKind.PortalMc => await ScanPortalMcAsync(folder, layout, cancellationToken),
             _ => []
         };
     }
 
     private static async Task<IReadOnlyList<MinecraftInstance>> ScanPortalMcAsync(MinecraftFolderEntry folder,
-        MinecraftFolderLayout folderLayout)
+        MinecraftFolderLayout folderLayout, CancellationToken cancellationToken)
     {
         var result = new List<MinecraftInstance>();
-        result.AddRange(await ScanPortalMcJavaAsync(folder, folderLayout));
+        result.AddRange(await ScanPortalMcJavaAsync(folder, folderLayout, cancellationToken));
         result.AddRange(ScanPortalMcBedrock(folder, folderLayout));
         return result;
     }
 
     private static async Task<IReadOnlyList<MinecraftInstance>> ScanPortalMcJavaAsync(MinecraftFolderEntry folder,
-        MinecraftFolderLayout folderLayout)
+        MinecraftFolderLayout folderLayout, CancellationToken cancellationToken)
     {
         var root = folderLayout.RootPath;
         var metadataRoot = Path.Combine(root, "meta");
         var result = new List<MinecraftInstance>();
 
         foreach (var context in await new MinecraftProvider(new DirectoryInfo(root),
-                     [new PortalMcProvider()]).GetMinecraftsAsync())
+                     [new PortalMcProvider()]).GetMinecraftsAsync(cancellationToken))
         {
             try
             {
@@ -88,14 +89,14 @@ internal static class ExternalMinecraftScanner
     }
 
     private static async Task<IReadOnlyList<MinecraftInstance>> ScanMultiMcAsync(MinecraftFolderEntry folder,
-        MinecraftFolderLayout folderLayout)
+        MinecraftFolderLayout folderLayout, CancellationToken cancellationToken)
     {
         var root = folderLayout.RootPath;
         var metadataRoot = Path.Combine(root, "meta");
         var result = new List<MinecraftInstance>();
 
         foreach (var context in await new MinecraftProvider(new DirectoryInfo(root),
-                     [new PrismMinecraftProvider()]).GetMinecraftsAsync())
+                     [new PrismMinecraftProvider()]).GetMinecraftsAsync(cancellationToken))
         {
             try
             {
@@ -122,14 +123,14 @@ internal static class ExternalMinecraftScanner
     }
 
     private static async Task<IReadOnlyList<MinecraftInstance>> ScanCurseForgeAsync(MinecraftFolderEntry folder,
-        MinecraftFolderLayout folderLayout)
+        MinecraftFolderLayout folderLayout, CancellationToken cancellationToken)
     {
         var root = folderLayout.RootPath;
         var metadataRoot = Path.Combine(root, "Install");
         var result = new List<MinecraftInstance>();
 
         foreach (var context in await new MinecraftProvider(new DirectoryInfo(root),
-                     [new CurseForgeProvider()]).GetMinecraftsAsync())
+                     [new CurseForgeProvider()]).GetMinecraftsAsync(cancellationToken))
         {
             try
             {
@@ -147,14 +148,14 @@ internal static class ExternalMinecraftScanner
     }
 
     private static async Task<IReadOnlyList<MinecraftInstance>> ScanModrinthAsync(MinecraftFolderEntry folder,
-        MinecraftFolderLayout folderLayout)
+        MinecraftFolderLayout folderLayout, CancellationToken cancellationToken)
     {
         var root = folderLayout.RootPath;
         var metadataRoot = Path.Combine(root, "meta");
         var result = new List<MinecraftInstance>();
 
         var instances = await new MinecraftProvider(new DirectoryInfo(root),
-            [new ModrinthProvider()]).GetMinecraftsAsync();
+            [new ModrinthProvider()]).GetMinecraftsAsync(cancellationToken);
         if (folderLayout.Kind is MinecraftFolderKind.ModrinthInstance)
         {
             var selected = Path.GetFullPath(folderLayout.SelectedPath);

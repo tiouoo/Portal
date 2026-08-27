@@ -145,7 +145,7 @@ public static partial class Initializer
         var stopwatch = Stopwatch.StartNew();
         var folders = Data.ConfigEntry.MinecraftFolders.ToArray();
         Logger.Info(string.Format(LogLanguageManager.Instance.ui_scanInstances.CurrentValue(), folders.Length));
-        var instancesTask = Task.Run(() => InstanceManager.Instance.ScanAll(folders));
+        var instancesTask = InstanceManager.ScanAllAsync(folders);
         var newsTask = Task.Run(NewsService.InitializeFromCache);
 
         var instances = await instancesTask;

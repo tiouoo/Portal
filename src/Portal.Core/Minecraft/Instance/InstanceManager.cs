@@ -16,6 +16,7 @@ namespace Portal.Core.Minecraft.Instance;
 
 public class InstanceManager
 {
+    private const int MaxScanConcurrency = 2;
     private static InstanceManager? _instance;
 
     private InstanceManager()
@@ -59,29 +60,47 @@ public class InstanceManager
     public List<MinecraftInstance> ScanAll(IEnumerable<MinecraftFolderEntry> folders)
         => Task.Run(() => ScanAllAsync(folders)).GetAwaiter().GetResult();
 
-    private static async Task<List<MinecraftInstance>> ScanAllAsync(IEnumerable<MinecraftFolderEntry> folders)
+    public static async Task<List<MinecraftInstance>> ScanAllAsync(IEnumerable<MinecraftFolderEntry> folders,
+        CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        var result = new List<MinecraftInstance>();
-        foreach (var folder in folders)
+        var folderList = folders.ToArray();
+        using var gate = new SemaphoreSlim(MaxScanConcurrency);
+        var scans = folderList.Select(async folder =>
         {
-            var folderPath = folder.FolderPath;
-            if (!Directory.Exists(folderPath))
+            await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_folderMissing.CurrentValue(), folderPath));
-                continue;
+                return await ScanFolderAsync(folder, cancellationToken).ConfigureAwait(false);
             }
+            finally
+            {
+                gate.Release();
+            }
+        }).ToArray();
 
-            Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_folderScanStart.CurrentValue(), folderPath));
-            var layout = folder.DetectedLayout;
-            var instances = layout.Kind == MinecraftFolderKind.Standard
-                ? await new FolderScanner(layout.RootPath, folder.FolderName, Instance.VersionFolders).ScanAsync()
-                : await ExternalMinecraftScanner.ScanAsync(folder);
-            result.AddRange(instances);
-        }
+        var result = (await Task.WhenAll(scans).ConfigureAwait(false)).SelectMany(items => items).ToList();
 
         Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_scanComplete.CurrentValue(), result.Count, stopwatch.ElapsedMilliseconds));
         return result;
+    }
+
+    private static async Task<IReadOnlyList<MinecraftInstance>> ScanFolderAsync(MinecraftFolderEntry folder,
+        CancellationToken cancellationToken)
+    {
+        var folderPath = folder.FolderPath;
+        if (!Directory.Exists(folderPath))
+        {
+            Logger.Warning(string.Format(LogLanguageManager.Instance.instanceManager_folderMissing.CurrentValue(), folderPath));
+            return [];
+        }
+
+        Logger.Info(string.Format(LogLanguageManager.Instance.instanceManager_folderScanStart.CurrentValue(), folderPath));
+        var layout = folder.DetectedLayout;
+        return layout.Kind == MinecraftFolderKind.Standard
+            ? await new FolderScanner(layout.RootPath, folder.FolderName, Instance.VersionFolders)
+                .ScanAsync(cancellationToken).ConfigureAwait(false)
+            : await ExternalMinecraftScanner.ScanAsync(folder, cancellationToken).ConfigureAwait(false);
     }
 
     public List<MinecraftInstance> ScanBedrock(IEnumerable<MinecraftFolderEntry> folders)
@@ -160,18 +179,21 @@ internal class FolderScanner
         _versionFolders = versionFolders;
     }
 
-    public async Task<List<MinecraftInstance>> ScanAsync()
+    public async Task<List<MinecraftInstance>> ScanAsync(CancellationToken cancellationToken = default)
     {
         var instances = new List<MinecraftInstance>();
 
         var provider = new MinecraftProvider(new DirectoryInfo(_gameRootFolder),
             [new StandardMinecraftProvider()]);
-        var parsedContexts = await provider.GetMinecraftsAsync();
+        var parsedContexts = await provider.GetMinecraftsAsync(cancellationToken);
         var parsedJavaEntries = parsedContexts.Select(context => context.Entry).ToList();
+        var inheritedIds = parsedJavaEntries
+            .Select(entry => entry.InheritsFrom)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var internalBaseIds = parsedJavaEntries
-            .Where(entry => HasClientVersionMetadata(parsedContexts.First(context => context.Entry == entry)) &&
-                            parsedJavaEntries.Any(other =>
-                                string.Equals(other.InheritsFrom, entry.Id, StringComparison.OrdinalIgnoreCase)))
+            .Where(entry => inheritedIds.Contains(entry.Id) &&
+                            HasClientVersionMetadata(parsedContexts.First(context => context.Entry == entry)))
             .Select(entry => entry.Id)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var javaContexts = parsedContexts
@@ -192,6 +214,7 @@ internal class FolderScanner
 
             foreach (var instanceFolder in Directory.GetDirectories(versionsFolderPath))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var folderKey = Path.GetFullPath(instanceFolder);
                 if (processedFolders.Contains(folderKey))
                     continue;

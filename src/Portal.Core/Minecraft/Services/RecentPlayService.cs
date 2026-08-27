@@ -9,6 +9,7 @@ namespace Portal.Core.Minecraft.Services;
 public sealed class RecentPlayService
 {
     private const string HistoryFileName = "Portal.recent-play.json";
+    private const int MaxScanConcurrency = 4;
 
     private static readonly object HistoryLock = new();
 
@@ -18,52 +19,72 @@ public sealed class RecentPlayService
     public Task<IReadOnlyList<RecentPlayTarget>> ScanAsync(IEnumerable<MinecraftInstance> instances,
         CancellationToken cancellationToken = default)
     {
-        return Task.Run(() => Scan(instances.ToArray(), cancellationToken), cancellationToken);
+        var javaInstances = instances.Where(instance => instance.Type == MinecraftInstanceType.Java).ToArray();
+        return Task.Run(() => ScanAsyncCore(javaInstances, cancellationToken), cancellationToken);
     }
 
-    private IReadOnlyList<RecentPlayTarget> Scan(IReadOnlyList<MinecraftInstance> instances,
+    private async Task<IReadOnlyList<RecentPlayTarget>> ScanAsyncCore(IReadOnlyList<MinecraftInstance> instances,
         CancellationToken cancellationToken)
     {
-        var targets = new List<RecentPlayTarget>();
-        foreach (var instance in instances.Where(instance => instance.Type == MinecraftInstanceType.Java))
+        using var gate = new SemaphoreSlim(MaxScanConcurrency);
+        var scans = instances.Select(async instance =>
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var history = ReadHistory(instance);
-            var servers = JavaServerManager.Read(instance).ToArray();
-            var worlds = _worldSaveService.ScanAsync(instance, cancellationToken).GetAwaiter().GetResult();
-            targets.AddRange(worlds
-                .Where(world => world.LastPlayedTime.HasValue)
-                .Select(world => new RecentPlayTarget(instance, RecentPlayTargetType.World, world.FolderName,
-                    string.IsNullOrWhiteSpace(world.LevelName) ? world.FolderName : world.LevelName,
-                    string.Format(CommonLanguageManager.Instance.recentPlay_saveDescription.CurrentValue(),
-                        world.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
-                        GetGameModeText(world.GameMode)),
-                    world.LastPlayedTime!.Value, world.IconPath)));
-
-            foreach (var server in servers.Where(server => !IsLanAddress(server.Host)))
+            await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                var recorded = history.FirstOrDefault(item => IsSameServer(item, server.Host, server.Port));
-                if (recorded == null)
-                    continue;
-
-                targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
-                    GetServerHistoryKey(server.Address, server.Port), server.Name,
-                    string.Format(CommonLanguageManager.Instance.recentPlay_serverDescription.CurrentValue(), server.Address),
-                    recorded.LastPlayedTime, ServerIconData: server.IconData, ServerAddress: server.Host,
-                    ServerPort: server.Port));
+                return await ScanInstanceAsync(instance, cancellationToken).ConfigureAwait(false);
             }
+            finally
+            {
+                gate.Release();
+            }
+        }).ToArray();
 
+        return (await Task.WhenAll(scans).ConfigureAwait(false))
+            .SelectMany(items => items)
+            .OrderByDescending(target => target.LastPlayedTime)
+            .ToArray();
+    }
 
-            foreach (var recorded in history.Where(item => !item.WasSaved && !IsLanAddress(item.Address) &&
-                                                           !servers.Any(server =>
-                                                               IsSameServer(item, server.Host, server.Port))))
-                targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
-                    GetServerHistoryKey(recorded.Address, recorded.Port), recorded.Name ?? recorded.Address,
-                    string.Format(CommonLanguageManager.Instance.recentPlay_serverDescriptionWithPort.CurrentValue(), recorded.Address, recorded.Port),
-                    recorded.LastPlayedTime, ServerAddress: recorded.Address, ServerPort: recorded.Port));
+    private async Task<IReadOnlyList<RecentPlayTarget>> ScanInstanceAsync(MinecraftInstance instance,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var history = ReadHistory(instance);
+        var servers = JavaServerManager.Read(instance).ToArray();
+        var worlds = await _worldSaveService.ScanAsync(instance, cancellationToken).ConfigureAwait(false);
+        var targets = worlds
+            .Where(world => world.LastPlayedTime.HasValue)
+            .Select(world => new RecentPlayTarget(instance, RecentPlayTargetType.World, world.FolderName,
+                string.IsNullOrWhiteSpace(world.LevelName) ? world.FolderName : world.LevelName,
+                string.Format(CommonLanguageManager.Instance.recentPlay_saveDescription.CurrentValue(),
+                    world.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
+                    GetGameModeText(world.GameMode)),
+                world.LastPlayedTime!.Value, world.IconPath))
+            .ToList();
+
+        foreach (var server in servers.Where(server => !IsLanAddress(server.Host)))
+        {
+            var recorded = history.FirstOrDefault(item => IsSameServer(item, server.Host, server.Port));
+            if (recorded == null)
+                continue;
+
+            targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
+                GetServerHistoryKey(server.Address, server.Port), server.Name,
+                string.Format(CommonLanguageManager.Instance.recentPlay_serverDescription.CurrentValue(), server.Address),
+                recorded.LastPlayedTime, ServerIconData: server.IconData, ServerAddress: server.Host,
+                ServerPort: server.Port));
         }
 
-        return targets.OrderByDescending(target => target.LastPlayedTime).ToArray();
+        foreach (var recorded in history.Where(item => !item.WasSaved && !IsLanAddress(item.Address) &&
+                                                       !servers.Any(server =>
+                                                           IsSameServer(item, server.Host, server.Port))))
+            targets.Add(new RecentPlayTarget(instance, RecentPlayTargetType.Server,
+                GetServerHistoryKey(recorded.Address, recorded.Port), recorded.Name ?? recorded.Address,
+                string.Format(CommonLanguageManager.Instance.recentPlay_serverDescriptionWithPort.CurrentValue(), recorded.Address, recorded.Port),
+                recorded.LastPlayedTime, ServerAddress: recorded.Address, ServerPort: recorded.Port));
+
+        return targets;
     }
 
     public void RecordServerPlay(MinecraftInstance instance, string address, int port)
