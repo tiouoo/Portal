@@ -83,8 +83,8 @@
             </Border>
         </Border>
         <Button
-            Click="ShowUpdateDownloadingNotice"
-            IsVisible="{Binding Data.UiProperty.ShowAutomaticUpdateDownload}"
+            IsHitTestVisible="False"
+            IsVisible="{Binding Data.UiProperty.ShowAutomaticUpdateProgress}"
             Margin="3,0"
             Theme="{StaticResource TransparentButton}"
             VerticalAlignment="Center">
@@ -94,15 +94,14 @@
                 BorderThickness="1"
                 CornerRadius="999"
                 Padding="8,3,8,2">
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                    <TextBlock FontSize="13" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_downloadingUpdate}}" />
-                    <TextBlock FontSize="13" Text="{Binding Data.UiProperty.UpdateDownloadPercent, StringFormat='{}{0}%'}" />
-                </StackPanel>
+                <TextBlock
+                    FontSize="13"
+                    Text="{Binding Data.UiProperty.AutomaticUpdateProgressText}" />
             </Border>
         </Button>
         <Button
             Click="RestartUpdate"
-            IsVisible="{Binding Data.UiProperty.ShowAutomaticUpdateReady}"
+            IsVisible="{Binding Data.UiProperty.ShowUpdateReady}"
             Margin="3,0"
             Theme="{StaticResource TransparentButton}"
             VerticalAlignment="Center">

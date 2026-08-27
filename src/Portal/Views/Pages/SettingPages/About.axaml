@@ -78,7 +78,7 @@
                         Theme="{StaticResource TransparentHyperlinkButton}"
                         VerticalAlignment="Top" />
                 </Panel>
-                <StackPanel IsVisible="{Binding Data.UiProperty.FoundNewVersion}">
+                <StackPanel IsVisible="{Binding Data.UiProperty.ShowUpdateDetails}">
                     <Separator Background="{DynamicResource TranslucentBorderBrush}" Margin="0,8" />
                     <Panel>
                         <TextBlock
@@ -90,24 +90,11 @@
                             Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_downloadNewVersion}}"
                             FontSize="12"
                             HorizontalAlignment="Right"
+                            IsVisible="{Binding Data.UiProperty.ShowManualUpdateDownload}"
                             Margin="0,2,5,0"
                             Name="UpdateHyperlinkButton"
-                            IsVisible="{Binding Data.UiProperty.ShowManualUpdateDownload}"
                             Theme="{StaticResource TransparentHyperlinkButton}"
                             VerticalAlignment="Top" />
-                        <HyperlinkButton
-                            FontSize="12"
-                            HorizontalAlignment="Right"
-                            IsEnabled="False"
-                            IsVisible="{Binding Data.UiProperty.IsUpdateDownloading}"
-                            Margin="0,2,5,0"
-                            Theme="{StaticResource TransparentHyperlinkButton}"
-                            VerticalAlignment="Top">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_downloadingUpdate}}" />
-                                <TextBlock Text="{Binding Data.UiProperty.UpdateDownloadPercent, StringFormat='{}{0}%'}" />
-                            </StackPanel>
-                        </HyperlinkButton>
                         <HyperlinkButton
                             Click="RestartUpdate_OnClick"
                             Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_restartUpdate}}"
@@ -146,6 +133,8 @@
                     <Style Selector="tio|TreeComboBoxItem" x:DataType="settingPages:UpdateSourceOption">
                         <Setter Property="IsExpanded" Value="True" />
                         <Setter Property="IsSelectable" Value="{Binding IsSelectable}" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="MinHeight" Value="32" />
                     </Style>
                 </tio:TreeComboBox.Styles>
                 <tio:TreeComboBox.ItemTemplate>

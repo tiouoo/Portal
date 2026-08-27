@@ -33,11 +33,6 @@ public partial class About : Dsc
         AboutViewModel = new AboutViewModel();
         DataContext = AboutViewModel;
         AboutViewModel.PropertyChanged += AboutViewModel_OnPropertyChanged;
-        Loaded += (_, _) =>
-        {
-            if (Data.UiProperty.IsUpdateDownloading)
-                this.AsTopLevel().Notice(CommonLanguageManager.Instance.update_packageDownloading.CurrentValue());
-        };
     }
 
     private async void Button_OnClick(object? sender, RoutedEventArgs e)
@@ -74,6 +69,7 @@ public partial class About : Dsc
 
         Data.UiProperty.NewVersion = result;
         Data.UiProperty.FoundNewVersion = true;
+        if (sender is not null) _ = UpdateApp.Prepare(sender.AsTopLevel());
     }
 
     private void AboutViewModel_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -91,15 +87,16 @@ public partial class About : Dsc
         var update = await UpdateApp.Prepare(control.GetTopLevel()!);
         UpdateHyperlinkButton.Content = CommonLanguageManager.Instance.about_downloadNewVersion.CurrentValue();
         UpdateHyperlinkButton.IsEnabled = true;
-        if (update is null) return;
+    }
 
+    private async void RestartUpdate_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (UpdateApp.ReadyUpdate is not { } update) return;
         var result = await OverlayDialog.ShowStandardAsync(
             new TextBlock
             {
                 Margin = new Thickness(24),
-                Text = update.RunsInstaller
-                    ? CommonLanguageManager.Instance.about_installerReadyText.CurrentValue()
-                    : CommonLanguageManager.Instance.about_restartReadyText.CurrentValue(),
+                Text = CommonLanguageManager.Instance.about_restartReadyText.CurrentValue(),
                 TextWrapping = TextWrapping.Wrap
             },
             null, this.TryGetHostId(), new OverlayDialogOptions
@@ -107,30 +104,12 @@ public partial class About : Dsc
                 Title = CommonLanguageManager.Instance.about_updateReadyTitle.CurrentValue(),
                 Mode = DialogMode.Question,
                 Buttons = DialogButton.YesNo,
-                OverrideYesButtonText = update.RunsInstaller
-                    ? CommonLanguageManager.Instance.about_exitAndInstall.CurrentValue()
-                    : CommonLanguageManager.Instance.about_restartNow.CurrentValue(),
+                OverrideYesButtonText = CommonLanguageManager.Instance.about_restartNow.CurrentValue(),
                 OverrideNoButtonText = CommonLanguageManager.Instance.about_later.CurrentValue(),
                 CanLightDismiss = false,
                 CanResize = false
             });
         if (result != DialogResult.Yes) return;
-        try
-        {
-            await UpdateApp.Apply(update);
-        }
-        catch (Exception exception)
-        {
-            Logger.Error(LogLanguageManager.Instance.about_updateStartFailed.CurrentValue(), exception);
-            this.AsTopLevel().Notice(string.Format(
-                CommonLanguageManager.Instance.about_cannotStartUpdate.CurrentValue(), exception.Message),
-                NotificationType.Error);
-        }
-    }
-
-    private async void RestartUpdate_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (UpdateApp.ReadyUpdate is not { } update) return;
         try
         {
             await UpdateApp.Apply(update);
@@ -159,20 +138,27 @@ public class AboutViewModel : ObservableObject
     public AboutViewModel()
     {
         var release = SettingsLanguageManager.Instance.about_channelRelease.CurrentValue();
+        var nightly = SettingsLanguageManager.Instance.about_channelDailyBuild.CurrentValue();
         var commit = SettingsLanguageManager.Instance.about_channelCommitBuild.CurrentValue();
         var githubRelease = new UpdateSourceOption(release, $"GitHub → {release}", UpdateSource.Github, "release");
+        var githubNightly = new UpdateSourceOption(nightly, $"GitHub → {nightly}", UpdateSource.Github, "nightly");
         var githubCommit = new UpdateSourceOption(commit, $"GitHub → {commit}", UpdateSource.Github, "commit");
         var cnbRelease = new UpdateSourceOption(release, $"Cnb → {release}", UpdateSource.Cnb, "release");
 
         UpdateSources =
         [
-            new UpdateSourceOption("GitHub", children: [githubRelease, githubCommit]),
-            new UpdateSourceOption("Cnb", children: [cnbRelease])
+            new UpdateSourceOption("Cnb", children: [cnbRelease]),
+            new UpdateSourceOption("GitHub", children: [githubRelease, githubNightly, githubCommit])
         ];
 
         _selectedUpdateSource = Data.ConfigEntry.UpdateSource == UpdateSource.Cnb
             ? cnbRelease
-            : Data.UiProperty.OverrideUpdateChannel == "commit" ? githubCommit : githubRelease;
+            : Data.UiProperty.OverrideUpdateChannel switch
+            {
+                "nightly" => githubNightly,
+                "commit" => githubCommit,
+                _ => githubRelease
+            };
         ApplyUpdateSource(_selectedUpdateSource);
     }
 

@@ -60,29 +60,42 @@ public partial class UiProperty : ObservableObject
     [ObservableProperty] public partial bool FoundNewVersion { get; set; }
     [ObservableProperty] public partial bool IsLatestVersion { get; set; }
     [ObservableProperty] public partial bool IsUpdateDownloading { get; set; }
+    [ObservableProperty] public partial bool IsAutomaticUpdateDownloading { get; set; }
     [ObservableProperty] public partial bool IsUpdateReady { get; set; }
+    [ObservableProperty] public partial bool IsManualUpdateRequested { get; set; }
     [ObservableProperty] public partial int UpdateDownloadPercent { get; set; }
+    [ObservableProperty] public partial int AutomaticUpdateDownloadPercent { get; set; }
     [ObservableProperty] public partial string NewVersion { get; set; }
     [ObservableProperty] public partial string OverrideUpdateChannel { get; set; }
     [ObservableProperty] public partial string? LastModInstallInstancePath { get; set; }
     public ObservableCollection<AggregatedSearchEntry> AggregatedSearchResults { get; set; } = [];
 
-    public bool ShowAutomaticUpdateDownload => Data.ConfigEntry.EnableCheckAutoUpdate && IsUpdateDownloading;
-    public bool ShowAutomaticUpdateReady => Data.ConfigEntry.EnableCheckAutoUpdate && IsUpdateReady;
-    public bool ShowNewVersionTip => FoundNewVersion && !ShowAutomaticUpdateDownload && !ShowAutomaticUpdateReady;
+    public bool ShowUpdateReady => IsUpdateReady && (Data.ConfigEntry.EnableCheckAutoUpdate || IsManualUpdateRequested);
+    public bool ShowAutomaticUpdateProgress => Data.ConfigEntry.EnableCheckAutoUpdate &&
+                                               IsAutomaticUpdateDownloading && !ShowUpdateReady;
+    public string AutomaticUpdateProgressText => string.Format(
+        ComponentsLanguageManager.Instance.titlebarcomponent_updateProgress.CurrentValue(),
+        AutomaticUpdateDownloadPercent);
+    public bool ShowNewVersionTip => FoundNewVersion && !IsUpdateDownloading && !ShowUpdateReady;
+    public bool ShowUpdateDetails => FoundNewVersion && !IsUpdateDownloading;
     public bool ShowManualUpdateDownload => FoundNewVersion && !IsUpdateDownloading && !IsUpdateReady;
 
     public void RefreshAutomaticUpdateVisibility()
     {
-        OnPropertyChanged(nameof(ShowAutomaticUpdateDownload));
-        OnPropertyChanged(nameof(ShowAutomaticUpdateReady));
+        OnPropertyChanged(nameof(ShowUpdateReady));
+        OnPropertyChanged(nameof(ShowAutomaticUpdateProgress));
         OnPropertyChanged(nameof(ShowNewVersionTip));
+        OnPropertyChanged(nameof(ShowUpdateDetails));
         OnPropertyChanged(nameof(ShowManualUpdateDownload));
     }
 
     partial void OnIsUpdateDownloadingChanged(bool value) => RefreshAutomaticUpdateVisibility();
+    partial void OnIsAutomaticUpdateDownloadingChanged(bool value) => RefreshAutomaticUpdateVisibility();
     partial void OnIsUpdateReadyChanged(bool value) => RefreshAutomaticUpdateVisibility();
+    partial void OnIsManualUpdateRequestedChanged(bool value) => RefreshAutomaticUpdateVisibility();
     partial void OnFoundNewVersionChanged(bool value) => RefreshAutomaticUpdateVisibility();
+    partial void OnAutomaticUpdateDownloadPercentChanged(int value) =>
+        OnPropertyChanged(nameof(AutomaticUpdateProgressText));
 
     [ObservableProperty]
     public partial AggregatedSearchType AggregatedSelectedType { get; set; } = AggregatedSearchTypes[0];

@@ -4,6 +4,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
@@ -295,14 +296,27 @@ public partial class TitleBarComponent : Grid
         tioTabWindowBase.SelectTab(tabEntry);
     }
 
-    private void ShowUpdateDownloadingNotice(object? sender, RoutedEventArgs e)
-    {
-        Root.GetTopLevel().Notice(CommonLanguageManager.Instance.update_packageDownloading.CurrentValue());
-    }
-
     private async void RestartUpdate(object? sender, RoutedEventArgs e)
     {
         if (UpdateApp.ReadyUpdate is not { } update) return;
+        var result = await OverlayDialog.ShowStandardAsync(
+            new TextBlock
+            {
+                Margin = new Thickness(24),
+                Text = CommonLanguageManager.Instance.about_restartReadyText.CurrentValue(),
+                TextWrapping = TextWrapping.Wrap
+            },
+            null, Root.TryGetHostId(), new OverlayDialogOptions
+            {
+                Title = CommonLanguageManager.Instance.about_updateReadyTitle.CurrentValue(),
+                Mode = DialogMode.Question,
+                Buttons = DialogButton.YesNo,
+                OverrideYesButtonText = CommonLanguageManager.Instance.about_restartNow.CurrentValue(),
+                OverrideNoButtonText = CommonLanguageManager.Instance.about_later.CurrentValue(),
+                CanLightDismiss = false,
+                CanResize = false
+            });
+        if (result != DialogResult.Yes) return;
         try
         {
             await UpdateApp.Apply(update);

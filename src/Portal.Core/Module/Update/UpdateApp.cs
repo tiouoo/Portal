@@ -23,12 +23,13 @@ namespace Portal.Core.Module.Update;
 
 public static class UpdateApp
 {
-    private const int RetainedUpdateDirectories = 1;
+    private const int RetainedUpdateDirectories = 4;
 
     private const int DownloadBufferSize = 81920;
     private const double DownloadRetryBackoffSeconds = 1.5;
     private static readonly Lock PreparationLock = new();
-    private static Task<PreparedUpdate?>? _preparationTask;
+    private static Task<PreparedUpdate?>? _automaticPreparationTask;
+    private static Task<PreparedUpdate?>? _manualPreparationTask;
 
     public static PreparedUpdate? ReadyUpdate { get; private set; }
 
@@ -36,15 +37,23 @@ public static class UpdateApp
     {
         lock (PreparationLock)
         {
-            if (_preparationTask is { IsCompleted: false })
+            if (ReadyUpdate is not null)
             {
-                if (!silent && sender is not null)
-                    sender.Notice(CommonLanguageManager.Instance.update_packageDownloading.CurrentValue());
-                return _preparationTask;
+                if (!silent) Data.UiProperty.IsManualUpdateRequested = true;
+                return Task.FromResult<PreparedUpdate?>(ReadyUpdate);
             }
 
-            _preparationTask = PrepareCore(sender, silent);
-            return _preparationTask;
+            if (silent)
+            {
+                if (_automaticPreparationTask is { IsCompleted: false }) return _automaticPreparationTask;
+                _automaticPreparationTask = PrepareCore(null, true);
+                return _automaticPreparationTask;
+            }
+
+            Data.UiProperty.IsManualUpdateRequested = true;
+            if (_manualPreparationTask is { IsCompleted: false }) return _manualPreparationTask;
+            _manualPreparationTask = PrepareCore(sender, false);
+            return _manualPreparationTask;
         }
     }
 
@@ -59,22 +68,28 @@ public static class UpdateApp
                 var release = await UpdateChecker.GetRelease();
                 if (!UpdateChecker.IsNewer(release))
                 {
-                    ReadyUpdate = null;
-                    Data.UiProperty.IsUpdateReady = false;
-                    Data.UiProperty.FoundNewVersion = false;
-                    Data.UiProperty.IsLatestVersion = true;
+                    if (!silent)
+                    {
+                        Data.UiProperty.IsManualUpdateRequested = false;
+                        Data.UiProperty.FoundNewVersion = false;
+                        Data.UiProperty.IsLatestVersion = true;
+                    }
                     if (!silent && sender is not null)
                         sender.Notice(CommonLanguageManager.Instance.update_alreadyLatest.CurrentValue(), NotificationType.Success);
                     return null;
                 }
 
-                Data.UiProperty.IsLatestVersion = false;
-                Data.UiProperty.NewVersion = release.Title;
-                Data.UiProperty.FoundNewVersion = true;
+                if (!silent)
+                {
+                    Data.UiProperty.IsLatestVersion = false;
+                    Data.UiProperty.NewVersion = release.Title;
+                    Data.UiProperty.FoundNewVersion = true;
+                }
                 var packageType = Data.Instance.PackageType.Trim().ToLowerInvariant();
                 var asset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(release, packageType));
                 var releaseIdentity = GetReleaseIdentity(release, asset);
-                var updateDirectory = Path.Combine(ConfigPath.UpdateFolderPath, releaseIdentity[..16]);
+                var updateDirectory = Path.Combine(ConfigPath.UpdateFolderPath,
+                    $"{releaseIdentity[..16]}-{(silent ? "auto" : "manual")}");
                 Directory.CreateDirectory(updateDirectory);
                 CleanupOldUpdateDirectories(updateDirectory);
                 var packagePath = Path.Combine(updateDirectory, asset.Name);
@@ -82,12 +97,21 @@ public static class UpdateApp
 
                 if (!silent && sender is not null)
                     sender.Notice(string.Format(CommonLanguageManager.Instance.update_downloading.CurrentValue(), asset.Name));
-                Data.UiProperty.IsUpdateDownloading = true;
-                Data.UiProperty.UpdateDownloadPercent = 0;
-                ReadyUpdate = null;
-                Data.UiProperty.IsUpdateReady = false;
-                var taskHandle = await Download(asset, packagePath);
-                Data.UiProperty.IsUpdateDownloading = false;
+                if (silent)
+                {
+                    Data.UiProperty.IsAutomaticUpdateDownloading = true;
+                    Data.UiProperty.AutomaticUpdateDownloadPercent = 0;
+                }
+                else
+                {
+                    Data.UiProperty.IsUpdateDownloading = true;
+                    Data.UiProperty.UpdateDownloadPercent = 0;
+                }
+                var taskHandle = await Download(asset, packagePath, !silent);
+                if (silent)
+                    Data.UiProperty.IsAutomaticUpdateDownloading = false;
+                else
+                    Data.UiProperty.IsUpdateDownloading = false;
 
                 var latestRelease = await UpdateChecker.GetRelease();
                 var latestAsset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(latestRelease, packageType));
@@ -140,15 +164,24 @@ public static class UpdateApp
                 }
 
                 CompletePreparation(taskHandle, preparedUpdate);
-                ReadyUpdate = preparedUpdate;
-                Data.UiProperty.IsUpdateReady = true;
+                lock (PreparationLock)
+                {
+                    if (ReadyUpdate is null)
+                    {
+                        ReadyUpdate = preparedUpdate;
+                        Data.UiProperty.IsUpdateReady = true;
+                    }
+                }
                 Logger.Info(string.Format(LogLanguageManager.Instance.update_prepareComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
-                return preparedUpdate;
+                return ReadyUpdate;
             }
         }
         catch (Exception ex)
         {
-            Data.UiProperty.IsUpdateDownloading = false;
+            if (silent)
+                Data.UiProperty.IsAutomaticUpdateDownloading = false;
+            else
+                Data.UiProperty.IsUpdateDownloading = false;
             Logger.Error(LogLanguageManager.Instance.update_prepareFailed.CurrentValue(), ex);
             if (!silent && sender is not null)
                 sender.Notice(string.Format(CommonLanguageManager.Instance.update_failed.CurrentValue(), ex.Message), NotificationType.Error);
@@ -223,11 +256,14 @@ public static class UpdateApp
                ?? throw new FileNotFoundException(string.Format(CommonLanguageManager.Instance.update_packageNotFound.CurrentValue(), expectedName));
     }
 
-    private static async Task<UpdateTaskHandle?> Download(UpdateAsset asset, string destination)
+    private static async Task<UpdateTaskHandle?> Download(UpdateAsset asset, string destination, bool showTask)
     {
         if (await IsValidPackage(destination, asset))
         {
-            Data.UiProperty.UpdateDownloadPercent = 100;
+            if (showTask)
+                Data.UiProperty.UpdateDownloadPercent = 100;
+            else
+                Data.UiProperty.AutomaticUpdateDownloadPercent = 100;
             return null;
         }
 
@@ -235,6 +271,19 @@ public static class UpdateApp
         if (!downloadUrl.Equals(asset.DownloadUrl, StringComparison.Ordinal))
             Logger.Info($"Downloading update via GitHub mirror: {downloadUrl}");
         var temporary = destination + ".download";
+        if (!showTask)
+        {
+            await ResumableDownloadAsync(downloadUrl, temporary, asset.Size, progress =>
+            {
+                if (progress.TotalBytes <= 0) return;
+                var fraction = Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1);
+                Dispatcher.UIThread.Post(() =>
+                    Data.UiProperty.AutomaticUpdateDownloadPercent = (int)Math.Round(fraction * 100));
+            }, CancellationToken.None);
+            await VerifyAndMovePackage(asset, temporary, destination);
+            return null;
+        }
+
         UpdateTaskHandle? handle = null;
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
@@ -255,20 +304,6 @@ public static class UpdateApp
                     },
                     CanExecute = managedTask => managedTask.CanBeCancelled,
                     IsVisible = managedTask => !managedTask.IsTerminal
-                },
-                new TaskActionDefinition
-                {
-                    Name = CommonLanguageManager.Instance.update_applyAndRestart.CurrentValue(),
-                    Description = CommonLanguageManager.Instance.update_applyAndRestartDescription.CurrentValue(),
-                    IconKey = "Refresh",
-                    ExecuteAsync = async (_, _) =>
-                    {
-                        if (handle?.PreparedUpdate is { } update) await Apply(update);
-                    },
-                    CanExecute = managedTask => managedTask.Status == ManagedTaskStatus.Completed
-                                                && handle?.PreparedUpdate is not null,
-                    IsVisible = managedTask => managedTask.Status == ManagedTaskStatus.Completed
-                                               && handle?.PreparedUpdate is not null
                 }
             ]
         }, async context =>
@@ -297,6 +332,12 @@ public static class UpdateApp
         if (task.Status == ManagedTaskStatus.Faulted)
             throw task.Exception ?? new IOException(CommonLanguageManager.Instance.update_downloadFailed.CurrentValue());
 
+        await VerifyAndMovePackage(asset, temporary, destination);
+        return handle;
+    }
+
+    private static async Task VerifyAndMovePackage(UpdateAsset asset, string temporary, string destination)
+    {
         var actualSize = new FileInfo(temporary).Length;
         if (asset.Size <= 0 || actualSize != asset.Size)
         {
@@ -316,7 +357,6 @@ public static class UpdateApp
         }
 
         File.Move(temporary, destination, true);
-        return handle;
     }
 
     private static async Task<bool> IsValidPackage(string path, UpdateAsset asset)
