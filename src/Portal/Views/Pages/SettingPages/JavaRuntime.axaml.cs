@@ -21,8 +21,8 @@ using TioUi.Common.Classes;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("pages_java", "pages_javaPath", "Java")]
-public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
+[AggregatedSearchPage("pages_java", "pages_javaPath", "JavaRuntime")]
+public partial class JavaRuntime : Dsc, INotifyPropertyChanged, IDisposable
 {
     private const int HostVmInfo = 2;
     private const int _ScPagesize = 29;
@@ -35,7 +35,7 @@ public partial class Java : Dsc, INotifyPropertyChanged, IDisposable
 
     public IReadOnlyList<JavaVersionOption> MainstreamJavaOptions { get; }
 
-    public Java()
+    public JavaRuntime()
     {
         InitializeComponent();
         MainstreamJavaOptions = SupportedJavaVersions

@@ -4,10 +4,10 @@ using Portal.ViewModels;
 
 namespace Portal.Views.Pages.SettingPages;
 
-[AggregatedSearchPage("pages_proxy", "pages_proxyPath", "Agent")]
-public partial class Agent : Dsc
+[AggregatedSearchPage("pages_proxy", "pages_proxyPath", "Proxy")]
+public partial class Proxy : Dsc
 {
-    public Agent()
+    public Proxy()
     {
         InitializeComponent();
         DataContext = this;

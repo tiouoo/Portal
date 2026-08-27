@@ -82,7 +82,7 @@
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
-                        CommandParameter="{x:Type p:ApplicationDebug}"
+                        CommandParameter="{x:Type p:OtherSettings}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_OtherSettings}}">
                         <tio:NavMenuItem.Icon>
                             <TextBlock
@@ -152,7 +152,7 @@
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
-                        CommandParameter="{x:Type p:Java}"
+                        CommandParameter="{x:Type p:JavaRuntime}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_JavaRuntime}}">
                         <tio:NavMenuItem.Icon>
                             <TextBlock
@@ -221,7 +221,7 @@
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
                         Command="{Binding NavigateTypeCommand}"
-                        CommandParameter="{x:Type p:Agent}"
+                        CommandParameter="{x:Type p:Proxy}"
                         Header="{Translate {x:Static loc:PagesLanguageManager+Keys.settingpage_Proxy}}">
                         <tio:NavMenuItem.Icon>
                             <TextBlock
