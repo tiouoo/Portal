@@ -555,7 +555,9 @@ public partial class TabWindow : TioTabWindowBase
             if (entry.EnableManagedWindowDecorationsOnWindows)
             {
                 WindowDecorations = WindowDecorations.None;
-                FrameBorderThickness = new Thickness(1);
+                FrameBorderThickness = new Thickness(entry.EnableManagedWindowBorderOnWindows
+                    ? Math.Clamp(entry.CustomWindowBorderThickness, 1, 6)
+                    : 1);
                 FrameBorderCornerRadius = new CornerRadius(entry.CustomWindowBorderCornerRadius);
                 FrameBorderBrush = entry.EnableManagedWindowBorderOnWindows
                     ? new SolidColorBrush(entry.CustomWindowBorderColor)

@@ -126,6 +126,7 @@ public partial class ConfigEntry : ObservableObject
             case nameof(MicaOpacity):
             case nameof(BlurOpacity):
             case nameof(CustomWindowBorderColor):
+            case nameof(CustomWindowBorderThickness):
             case nameof(CustomWindowBorderCornerRadius):
             case nameof(EnableManagedWindowBorderOnWindows):
             case nameof(EnableManagedWindowDecorationsOnWindows):

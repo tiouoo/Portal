@@ -42,6 +42,7 @@
     "disableSystemWindowBorder": "Disable System Border",
     "enableWindowBorder": "Show Border",
     "borderColor": "Border Color",
+    "borderThickness": "Border Width",
     "borderCornerRadius": "Border Corner Radius",
     "showWidgetBackground": "Widget Background"
   },
