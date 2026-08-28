@@ -1,6 +1,7 @@
 #!/bin/bash
-cd ..
-git submodule update --init --recursive --remote
-git submodule foreach --recursive "git checkout main || git checkout -b main origin/main"
-git submodule foreach --recursive "git pull origin main"
+set -e
+
+repository_root="$(cd "$(dirname "$0")/.." && pwd)"
+git -C "$repository_root" submodule update --init --recursive --remote
+
 read -p "press enter to quit"
