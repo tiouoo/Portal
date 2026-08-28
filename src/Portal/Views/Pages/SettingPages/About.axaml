@@ -112,6 +112,198 @@
             </StackPanel>
         </Border>
         <Separator Background="{DynamicResource TranslucentBorderBrush}" />
+
+        <Grid
+            ColumnDefinitions="*,*"
+            ColumnSpacing="12"
+            RowDefinitions="Auto,Auto,Auto"
+            RowSpacing="12">
+            <Button
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                Click="OpenLink_OnClick"
+                CommandParameter="https://portal.tiouo.cc"
+                Height="65"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="24"
+                        FontWeight="Thin"
+                        Text="&#xe674;"
+                        VerticalAlignment="Center" />
+                    <TextBlock
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Grid.Column="1"
+                        Text="项目网站"
+                        VerticalAlignment="Center" />
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Grid.Column="2"
+                        Text="&#xe612;"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </Button>
+            <Button
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                Click="OpenLink_OnClick"
+                CommandParameter="https://github.com/tiouoo/Portal"
+                Grid.Column="1"
+                Height="65"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="32"
+                        FontWeight="Thin"
+                        Text="&#xe673;"
+                        VerticalAlignment="Center" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Spacing="3"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="GitHub 源代码" />
+                    </StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Grid.Column="2"
+                        Text="&#xe612;"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </Button>
+            <Button
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                Click="OpenLink_OnClick"
+                CommandParameter="https://github.com/tiouoo/Portal/issues"
+                Grid.Row="1"
+                Height="65"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="24"
+                        FontWeight="Thin"
+                        Text="&#xe675;"
+                        VerticalAlignment="Center" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Spacing="3"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="问题反馈" />
+                    </StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Grid.Column="2"
+                        Text="&#xe612;"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </Button>
+            <Button
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                Click="CopyQqGroup_OnClick"
+                Grid.Column="1"
+                Grid.Row="1"
+                Height="65"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="28"
+                        FontWeight="Thin"
+                        Text="&#xe676;"
+                        VerticalAlignment="Center" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Spacing="3"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Text="官方 QQ 群" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="475032328" />
+                    </StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Grid.Column="2"
+                        Text="&#xe612;"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </Button>
+            <Button
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                Click="OpenLink_OnClick"
+                CommandParameter="https://afdian.com/a/tiouo"
+                Grid.ColumnSpan="2"
+                Grid.Row="2"
+                Height="60"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="28"
+                        FontWeight="Thin"
+                        Foreground="#946ce6"
+                        Text="&#xe600;"
+                        VerticalAlignment="Center" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Spacing="3"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Foreground="#946ce6"
+                            Text="赞助项目" />
+                    </StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="18"
+                        FontWeight="Thin"
+                        Grid.Column="2"
+                        Text="&#xe612;"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </Button>
+        </Grid>
+        <Separator Background="{DynamicResource TranslucentBorderBrush}" />
+
         <StackPanel Margin="5,0,0,0" Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="5">
                 <TextBlock Text="Source Code:" />

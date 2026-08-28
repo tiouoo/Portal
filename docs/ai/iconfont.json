@@ -6,6 +6,41 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "48413796",
+      "name": "github",
+      "font_class": "github-brands-solid-full",
+      "unicode": "e673",
+      "unicode_decimal": 58995
+    },
+    {
+      "icon_id": "48413795",
+      "name": "globe",
+      "font_class": "a-FontAwesome7ProRegular-Globe",
+      "unicode": "e674",
+      "unicode_decimal": 58996
+    },
+    {
+      "icon_id": "48413794",
+      "name": "issue",
+      "font_class": "a-FontAwesome7ProRegular-ExclamationCircle",
+      "unicode": "e675",
+      "unicode_decimal": 58997
+    },
+    {
+      "icon_id": "48413793",
+      "name": "qq",
+      "font_class": "qq-brands-solid-full",
+      "unicode": "e676",
+      "unicode_decimal": 58998
+    },
+    {
+      "icon_id": "41556939",
+      "name": "afdian",
+      "font_class": "afdian-fill",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
       "icon_id": "48404024",
       "name": "wireless",
       "font_class": "a-FontAwesome7ProLight-UE7DF",

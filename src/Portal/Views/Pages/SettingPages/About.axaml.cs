@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Portal.Classes;
@@ -115,9 +116,18 @@ public partial class About : Dsc
 
     private void OpenLink_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not HyperlinkButton { CommandParameter: string url }) return;
+        if (sender is not Button { CommandParameter: string url }) return;
 
         this.AsTopLevel().Launcher.LaunchUriAsync(new Uri(url));
+    }
+
+    private async void CopyQqGroup_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.Clipboard is not { } clipboard) return;
+
+        await clipboard.SetTextAsync("475032328");
+        topLevel.Notice("群号已复制到剪贴板", NotificationType.Success);
     }
 }
 
