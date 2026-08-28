@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Core.Minecraft.Classes;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -15,6 +16,24 @@ using TioUi.Common.Extensions;
 using TioUi.Controls;
 
 namespace Portal.Views.Pages.SettingPages;
+
+public partial class StorageChartItem : ObservableObject
+{
+    public StorageChartItem(string id, string label, long sizeBytes, string color)
+    {
+        Id = id;
+        Label = label;
+        SizeBytes = sizeBytes;
+        Color = color;
+    }
+
+    public string Id { get; }
+    public string Label { get; }
+    public string Color { get; }
+
+    [ObservableProperty]
+    public partial long SizeBytes { get; set; }
+}
 
 [AggregatedSearchPage("pages_storage", "pages_storagePath", "Storage")]
 public partial class Storage : UserControl
@@ -41,6 +60,8 @@ public partial class StorageViewModel : ObservableObject
     private readonly string _javaRuntimesPath = ConfigPath.JavaRuntimesPath;
 
     private readonly string _portalDataPath = ConfigPath.UserDataRootPath;
+    private readonly string _multiplayerPath = Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer");
+    private readonly string _updatePath = ConfigPath.UpdateFolderPath;
 
     public StorageViewModel()
     {
@@ -67,6 +88,7 @@ public partial class StorageViewModel : ObservableObject
 
     public ObservableCollection<GameFolderStorageItem> GameFolders { get; } = [];
     public ObservableCollection<GameFolderStorageItem> PortalFolders { get; } = [];
+    public ObservableCollection<StorageChartItem> ChartItems { get; } = [];
 
     [RelayCommand]
     public async Task RefreshStorageDataAsync()
@@ -81,42 +103,34 @@ public partial class StorageViewModel : ObservableObject
             $"[Storage] Refreshing storage usage for {folders.Count} Minecraft folder(s), Portal data at {portalPath}.");
 
         PortalFolders.Clear();
-        PortalFolders.Add(new GameFolderStorageItem(
-            CommonLanguageManager.Instance.storage_portalDataFolder.CurrentValue(),
-            CommonLanguageManager.Instance.storage_portalDataFolderDescription.CurrentValue(),
-            portalPath,
-            0));
-        PortalFolders.Add(new GameFolderStorageItem(
-            CommonLanguageManager.Instance.storage_portalCacheFolder.CurrentValue(),
-            CommonLanguageManager.Instance.storage_portalCacheFolderDescription.CurrentValue(),
-            _cachePath,
-            0));
-        PortalFolders.Add(new GameFolderStorageItem(
-            CommonLanguageManager.Instance.storage_runtimeFolder.CurrentValue(),
-            CommonLanguageManager.Instance.storage_runtimeFolderDescription.CurrentValue(),
-            _javaRuntimesPath,
-            0));
+        AddFolder(PortalFolders, SettingsLanguageManager.Instance.storage_portalData.CurrentValue(), portalPath,
+            portalPath);
 
         GameFolders.Clear();
 
-        if (OperatingSystem.IsWindows())
-            GameFolders.Add(new GameFolderStorageItem(
-                CommonLanguageManager.Instance.storage_bedrockSharedFolder.CurrentValue(),
-                CommonLanguageManager.Instance.storage_bedrockSharedFolderDescription.CurrentValue(),
-                _bedrockDataPath,
-                0));
-
         foreach (var folder in folders)
-            GameFolders.Add(new GameFolderStorageItem(folder.FolderName, folder.FolderPath, folder.FolderPath, 0));
+            AddFolder(GameFolders, folder.FolderName, folder.FolderPath, folder.FolderPath);
+
+        ChartItems.Clear();
+        ChartItems.Add(new StorageChartItem("portal", SettingsLanguageManager.Instance.storage_portalData.CurrentValue(), 0, "#10b981"));
+        ChartItems.Add(new StorageChartItem("cache", SettingsLanguageManager.Instance.storage_cache.CurrentValue(), 0, "#f59e0b"));
+        ChartItems.Add(new StorageChartItem("runtime", SettingsLanguageManager.Instance.storage_runtime.CurrentValue(), 0, "#8b5cf6"));
+        ChartItems.Add(new StorageChartItem("java", SettingsLanguageManager.Instance.storage_minecraftJava.CurrentValue(), 0, "#3b82f6"));
+        ChartItems.Add(new StorageChartItem("bedrock", SettingsLanguageManager.Instance.storage_minecraftBedrock.CurrentValue(), 0, "#06b6d4"));
+        ChartItems.Add(new StorageChartItem("other", SettingsLanguageManager.Instance.storage_other.CurrentValue(), 0, "#6b7280"));
 
         await Task.Run(() =>
         {
             try
             {
-                var dataBytes = GetDirectorySize(portalPath, [_cachePath, _bedrockDataPath, _javaRuntimesPath]);
+                var dataBytes = GetDirectorySize(portalPath,
+                    [_cachePath, _updatePath, _bedrockDataPath, _javaRuntimesPath, _multiplayerPath]);
                 var cacheBytes = GetDirectorySize(_cachePath);
-                var portalBytes = dataBytes + cacheBytes;
+                cacheBytes += GetDirectorySize(_updatePath);
                 var javaBytes = GetDirectorySize(_javaRuntimesPath);
+                var otherBytes = GetDirectorySize(_multiplayerPath);
+                var portalBedrockBytes = GetDirectorySize(_bedrockDataPath);
+                var portalRootBytes = dataBytes + cacheBytes + javaBytes + otherBytes + portalBedrockBytes;
 
                 long totalGameBytes = 0;
                 var gameSizes = new List<(string FolderPath, long Size)>();
@@ -127,21 +141,21 @@ public partial class StorageViewModel : ObservableObject
                     gameSizes.Add((folder.FolderPath, size));
                 }
 
-                if (OperatingSystem.IsWindows())
-                {
-                    var bedrockBytes = GetDirectorySize(_bedrockDataPath);
-                    totalGameBytes += bedrockBytes;
-                    gameSizes.Add((_bedrockDataPath, bedrockBytes));
-                }
-
                 var gameBytes = totalGameBytes;
+                var externalBedrockBytes = folders.Sum(folder =>
+                {
+                    var root = folder.DetectedLayout.RootPath;
+                    var name = folder.DetectedLayout.Kind == MinecraftFolderKind.PortalMc
+                        ? "bedrock_instances"
+                        : "bedrock_versions";
+                    return GetDirectorySize(Path.Combine(root, name));
+                });
 
                 Dispatcher.UIThread.Post(() =>
                 {
-                    PortalBytesRaw = portalBytes;
-                    PortalFolders[0].SizeBytes = dataBytes;
-                    PortalFolders[1].SizeBytes = cacheBytes;
-                    PortalFolders[2].SizeBytes = javaBytes;
+                    var portalBytes = dataBytes;
+                    PortalBytesRaw = portalRootBytes;
+                    PortalFolders[0].SizeBytes = portalRootBytes;
                     foreach (var (folderPath, size) in gameSizes)
                     {
                         var item = GameFolders.FirstOrDefault(x => x.FolderPath == folderPath);
@@ -150,7 +164,13 @@ public partial class StorageViewModel : ObservableObject
                     }
 
                     GameBytesRaw = gameBytes;
-                    TotalBytesRaw = portalBytes + gameBytes + javaBytes;
+                    TotalBytesRaw = PortalBytesRaw + gameBytes;
+                    SetChartSize("portal", dataBytes);
+                    SetChartSize("cache", cacheBytes);
+                    SetChartSize("runtime", javaBytes);
+                    SetChartSize("java", gameBytes - externalBedrockBytes);
+                    SetChartSize("bedrock", portalBedrockBytes + externalBedrockBytes);
+                    SetChartSize("other", otherBytes);
                     Logger.Info(
                         $"[Storage] Storage usage refreshed in {stopwatch.Elapsed}: Portal={portalBytes} bytes, game={gameBytes} bytes.");
                 });
@@ -160,6 +180,17 @@ public partial class StorageViewModel : ObservableObject
                 Logger.Error(ex);
             }
         });
+    }
+
+    private static void AddFolder(ICollection<GameFolderStorageItem> target, string name, string path, string description)
+    {
+        target.Add(new GameFolderStorageItem(name, description, path, 0));
+    }
+
+    private void SetChartSize(string id, long size)
+    {
+        var item = ChartItems.FirstOrDefault(x => x.Id == id);
+        if (item != null) item.SizeBytes = size;
     }
 
     private long GetDirectorySize(string path, IEnumerable<string>? excludedDirectories = null)

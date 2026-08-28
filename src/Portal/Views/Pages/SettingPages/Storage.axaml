@@ -10,76 +10,44 @@
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
     <StackPanel>
-        <DockPanel Margin="10,5,10,10">
-            <StackPanel DockPanel.Dock="Left" HorizontalAlignment="Left">
-                <Border
-                    CornerRadius="10"
-                    HorizontalAlignment="Left"
-                    Margin="0,0,0,2"
-                    Padding="5,3,5,1">
-                    <Border.Background>
-                        <SolidColorBrush Color="#1890ff" Opacity="0.2" />
-                    </Border.Background>
-                    <TextBlock
-                        FontSize="11"
-                        Foreground="#1890ff"
-                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_total}}" />
-                </Border>
-                <StackPanel Orientation="Horizontal">
-                    <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding TotalBytesRaw}" />
-                </StackPanel>
-            </StackPanel>
-
-            <StackPanel
-                DockPanel.Dock="Right"
-                HorizontalAlignment="Right"
-                Orientation="Horizontal"
-                Spacing="15">
-                <StackPanel>
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Margin="0,0,0,15"
+            Padding="20">
+            <Grid ColumnDefinitions="Auto,*,430" MinHeight="180">
+                <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
                     <Border
                         CornerRadius="10"
                         HorizontalAlignment="Left"
                         Margin="0,0,0,2"
                         Padding="5,3,5,1">
                         <Border.Background>
-                            <SolidColorBrush Color="#cc4e00" Opacity="0.2" />
+                            <SolidColorBrush Color="#1890ff" Opacity="0.2" />
                         </Border.Background>
                         <TextBlock
                             FontSize="11"
-                            Foreground="#cc4e00"
-                            Text="Portal" />
+                            Foreground="#1890ff"
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_total}}" />
                     </Border>
                     <StackPanel Orientation="Horizontal">
-                        <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding PortalBytesRaw}" />
+                        <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding TotalBytesRaw}" />
                     </StackPanel>
                 </StackPanel>
-                <Rectangle
-                    Fill="{DynamicResource TranslucentBorderBrush}"
-                    Margin="0,0,0,0"
-                    VerticalAlignment="Stretch"
-                    Width="1" />
-                <StackPanel>
-                    <Border
-                        CornerRadius="10"
-                        HorizontalAlignment="Left"
-                        Margin="0,0,0,2"
-                        Padding="5,3,5,1">
-                        <Border.Background>
-                            <SolidColorBrush Color="#953ea3" Opacity="0.2" />
-                        </Border.Background>
-                        <TextBlock
-                            FontSize="11"
-                            Foreground="#953ea3"
-                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_games}}" />
-                    </Border>
-                    <StackPanel Orientation="Horizontal">
-                        <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding GameBytesRaw}" />
-                    </StackPanel>
-                </StackPanel>
-            </StackPanel>
-        </DockPanel>
 
-        <Separator Background="{DynamicResource TranslucentBorderBrush}" Margin="0,5,0,15" />
+                <settingPages:StorageUsageChart
+                    Items="{Binding ChartItems}"
+                    FontFamily="{DynamicResource TioFontFamily}"
+                    Grid.Column="2"
+                    Height="180"
+                    LegendBackground="{DynamicResource TranslucentBackgroundColor}"
+                    Margin="-34,0,0,0"
+                    SecondaryTextBrush="{DynamicResource InnerForegroundColor}"
+                    TextBrush="{DynamicResource ForegroundColor}" />
+            </Grid>
+        </Border>
 
         <StackPanel Spacing="10">
             <ItemsControl ItemsSource="{Binding PortalFolders}">

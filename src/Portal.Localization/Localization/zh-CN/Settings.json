@@ -207,6 +207,15 @@
     "title": "存储空间",
     "total": "总计",
     "games": "游戏",
-    "openFolder": "打开文件夹"
+    "openFolder": "打开文件夹",
+    "portalData": "Portal 数据",
+    "cache": "缓存",
+    "runtime": "运行时",
+    "other": "其他",
+    "multiplayer": "多人游戏",
+    "minecraftJava": "Minecraft Java 版",
+    "minecraftBedrock": "Minecraft 基岩版",
+    "traditionalFormat": "传统格式",
+    "portalMcFormat": "PortalMC 格式"
   }
 }

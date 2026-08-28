@@ -207,6 +207,15 @@
     "title": "Storage",
     "total": "Total",
     "games": "Games",
-    "openFolder": "Open Folder"
+    "openFolder": "Open Folder",
+    "portalData": "Portal Data",
+    "cache": "Cache",
+    "runtime": "Runtime",
+    "other": "Other",
+    "multiplayer": "Multiplayer",
+    "minecraftJava": "Minecraft Java Edition",
+    "minecraftBedrock": "Minecraft Bedrock Edition",
+    "traditionalFormat": "Traditional Format",
+    "portalMcFormat": "PortalMC Format"
   }
 }
