@@ -316,38 +316,11 @@ public sealed class StorageUsageChart : Control
 
         var positiveCount = positiveValues.Count(value => value > 0);
         var minimumAngle = Math.Min(MinimumSliceAngle, 360d / positiveCount);
-        var sweeps = new double[values.Count];
-        var remainingIndices = positiveValues
-            .Select((value, index) => (value, index))
-            .Where(item => item.value > 0)
-            .Select(item => item.index)
-            .ToList();
-        var remainingAngle = 360d;
-        var remainingValue = total;
+        var proportionalAngle = 360d - minimumAngle * positiveCount;
 
-        while (remainingIndices.Count > 0)
-        {
-            var constrainedIndices = remainingIndices
-                .Where(index => positiveValues[index] / remainingValue * remainingAngle < minimumAngle)
-                .ToArray();
-
-            if (constrainedIndices.Length == 0)
-            {
-                foreach (var index in remainingIndices)
-                    sweeps[index] = positiveValues[index] / remainingValue * remainingAngle;
-                break;
-            }
-
-            foreach (var index in constrainedIndices)
-            {
-                sweeps[index] = minimumAngle;
-                remainingAngle -= minimumAngle;
-                remainingValue -= positiveValues[index];
-                remainingIndices.Remove(index);
-            }
-        }
-
-        return sweeps;
+        return positiveValues
+            .Select(value => value > 0 ? minimumAngle + value / total * proportionalAngle : 0)
+            .ToArray();
     }
 
     private static Rect GetLegendHitBounds(double x, double y, double width) =>
