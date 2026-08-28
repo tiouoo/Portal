@@ -148,7 +148,13 @@
     "portalProtocolHint": " *注册后，可在浏览器通过协议调起启动器",
     "logLevel": "日志等级",
     "debugMode": "调试模式",
-    "debugModeHint": " *显示应用启动和运行日志，需要重启程序后生效。"
+    "debugModeHint": " *显示应用启动和运行日志，需要重启程序后生效。",
+    "relayNodesTitle": "联机中央节点",
+    "relayNodesHint": "每行填写一个链接或节点地址。http/https 链接会在更新时获取其中的 peers 列表；tcp/udp/ws 等地址会直接作为中央节点使用。更新会将获取到的内容追加到下方，不会覆盖你已填写的内容，并自动剔除重复项。",
+    "updateRelayNodes": "更新节点",
+    "relayNodesUpdated": "公共节点已更新",
+    "relayAutoUpdate": "自动更新公共节点",
+    "relayAutoUpdateHint": " *启动应用时自动从上方链接获取并合并公共节点。"
   },
   "download": {
     "title": "下载设置",

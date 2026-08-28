@@ -50,5 +50,28 @@
         <ProjectReference Include="..\Portal.LitematicaViewer\LitematicaViewer.csproj"/>
         <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\Pages\ToolsPages\MultiplayerPages\RedstoneMultiplayerPage.axaml.cs">
+        <DependentUpon>RedstoneMultiplayerPage.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Pages\ToolsPages\MultiplayerPages\TerracottaMultiplayerPage.axaml.cs">
+        <DependentUpon>TerracottaMultiplayerPage.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Pages\ToolsPages\MultiplayerPages\MultiplayerPage.axaml.cs">
+        <DependentUpon>MultiplayerPage.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Pages\ToolsPages\MultiplayerPages\MultiplayerPortDialog.axaml.cs">
+        <DependentUpon>MultiplayerPortDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Pages\ToolsPages\MultiplayerPages\MultiplayerContentPage.axaml.cs">
+        <DependentUpon>MultiplayerContentPage.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
     
 </Project>

@@ -11,6 +11,7 @@ using Portal.Core.Module.Multiplayer;
 using Portal.Core.Services;
 using Portal.Localization;
 using Portal.Views.Pages;
+using MultiplayerPage = Portal.Views.Pages.ToolsPages.MultiplayerPages.MultiplayerPage;
 
 namespace Portal.Views;
 

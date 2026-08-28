@@ -5,7 +5,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
+using Portal.Core.Module.Initialize;
 using Portal.Core.Module.Ipc;
+using Portal.Core.Module.Multiplayer;
 using Portal.Core.Module.Update;
 using Portal.Localization;
 using Portal.Module.DefaultPage;
@@ -18,6 +20,8 @@ namespace Portal.Views.Pages.SettingPages;
 [AggregatedSearchPage("pages_otherSettings", "pages_otherSettingsPath", "OtherSettings")]
 public partial class OtherSettings : Dsc
 {
+    private bool _isRelayNodesUpdating;
+
     public OtherSettings()
     {
         InitializeComponent();
@@ -62,6 +66,35 @@ public partial class OtherSettings : Dsc
             topLevel?.Notice(string.Format(
                 CommonLanguageManager.Instance.appDebug_registerFailed.CurrentValue(), exception.Message),
                 NotificationType.Error);
+        }
+    }
+
+    private async void UpdateRelayNodes_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (_isRelayNodesUpdating) return;
+        _isRelayNodesUpdating = true;
+        if (sender is Button button) button.IsEnabled = false;
+        var topLevel = TopLevel.GetTopLevel(this);
+        try
+        {
+            await GravityConeRelayClient.Instance.UpdateRelaySourcesAsync(CancellationToken.None);
+            ConfigSaver.SaveConfig();
+            topLevel?.Notice(
+                SettingsLanguageManager.Instance.applicationdebug_relayNodesUpdated.CurrentValue(),
+                NotificationType.Success);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[RelayNodes] Update failed: {exception.Message}");
+            topLevel?.Notice(exception.Message, NotificationType.Error);
+        }
+        finally
+        {
+            _isRelayNodesUpdating = false;
+            if (sender is Button reloadButton) reloadButton.IsEnabled = true;
         }
     }
 }

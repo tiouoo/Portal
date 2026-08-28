@@ -3,13 +3,12 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Portal.Localization;
-using Portal.Views.Pages;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using TioUi.Common;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 
-namespace Portal.Views.Components;
+namespace Portal.Views.Pages.ToolsPages.MultiplayerPages;
 
 public partial class MultiplayerContentPage : UserControl
 {

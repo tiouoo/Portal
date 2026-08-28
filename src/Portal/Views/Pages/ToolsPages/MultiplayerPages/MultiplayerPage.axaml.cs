@@ -9,7 +9,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -19,7 +18,7 @@ using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Multiplayer;
 using Portal.Localization;
-using Portal.Views.Components;
+using Portal.Module;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
@@ -27,8 +26,7 @@ using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
 using TioUi.Controls;
 
-using Portal.Module;
-namespace Portal.Views.Pages;
+namespace Portal.Views.Pages.ToolsPages.MultiplayerPages;
 
 [AggregatedSearchPage("pages_multiplayer", "pages_multiplayerPath", "Multiplayer")]
 public partial class MultiplayerPage : UserControl, ITioTabPage
@@ -41,6 +39,8 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     private Bitmap? _redstoneBigIcon;
     private Bitmap? _terracottaBigIcon;
     private MultiplayerPageViewModel? _currentViewModel;
+    private RedstoneMultiplayerPage? _redstonePage;
+    private TerracottaMultiplayerPage? _terracottaPage;
     private bool _isSelectingSection;
     private bool _hasLoaded;
     private MultiplayerSection _selectedSection;
@@ -99,6 +99,12 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         _terracottaBigIcon = null;
         _redstoneBigIcon = null;
         Frame.Content = null;
+        _terracottaPage?.ViewModel.Deactivate();
+        _terracottaPage?.ViewModel.DisposeAsync().AsTask().Forget("Dispose Terracotta multiplayer page");
+        _redstonePage?.ViewModel.Deactivate();
+        _redstonePage?.ViewModel.DisposeAsync().AsTask().Forget("Dispose Redstone multiplayer page");
+        _terracottaPage = null;
+        _redstonePage = null;
         foreach (var viewModel in _viewModels.Values)
         {
             viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
@@ -185,14 +191,25 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
             _selectedSection = section;
             Data.ConfigEntry.MultiplayerLastSelectedPage = section.ToString();
             foreach (var existingViewModel in _viewModels.Values) existingViewModel.Deactivate();
+            _terracottaPage?.ViewModel.Deactivate();
+            _redstonePage?.ViewModel.Deactivate();
         _currentViewModel = null;
 
-            if (section is MultiplayerSection.Java or MultiplayerSection.Bedrock)
-                SelectGravityConeEdition(section == MultiplayerSection.Java
-                    ? MinecraftEdition.Java
-                    : MinecraftEdition.Bedrock);
-            else
-                SelectPlaceholder(section);
+            switch (section)
+            {
+                case MultiplayerSection.Java:
+                    SelectGravityConeEdition(MinecraftEdition.Java);
+                    break;
+                case MultiplayerSection.Bedrock:
+                    SelectGravityConeEdition(MinecraftEdition.Bedrock);
+                    break;
+                case MultiplayerSection.Terracotta:
+                    SelectTerracotta();
+                    break;
+                case MultiplayerSection.Redstone:
+                    SelectRedstone();
+                    break;
+            }
         }
         finally
         {
@@ -226,20 +243,32 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         if (_initializedEditions.Add(edition)) _ = viewModel.InitializeAsync();
     }
 
-    private void SelectPlaceholder(MultiplayerSection section)
+    private void SelectTerracotta()
     {
-        var selectedItem = section == MultiplayerSection.Terracotta ? TerracottaNavItem : RedstoneNavItem;
-        var bitmap = section == MultiplayerSection.Terracotta ? _terracottaBigIcon : _redstoneBigIcon;
-        NavMenu.SelectedItem = selectedItem;
-        HeaderTitle.Text = selectedItem.Header?.ToString() ?? string.Empty;
+        _terracottaPage ??= new TerracottaMultiplayerPage();
+        ApplyStandaloneHeader(TerracottaNavItem, _terracottaBigIcon, _terracottaPage.ViewModel);
+        Frame.Content = _terracottaPage;
+    }
+
+    private void SelectRedstone()
+    {
+        _redstonePage ??= new RedstoneMultiplayerPage();
+        ApplyStandaloneHeader(RedstoneNavItem, _redstoneBigIcon, _redstonePage.ViewModel);
+        Frame.Content = _redstonePage;
+    }
+
+    private void ApplyStandaloneHeader(NavMenuItem item, Bitmap? bitmap, IMultiplayerPageLifecycle viewModel)
+    {
+        NavMenu.SelectedItem = item;
+        HeaderTitle.Text = item.Header?.ToString() ?? string.Empty;
         HeaderIcon.IsVisible = false;
         HeaderIcon.Text = string.Empty;
         HeaderImage.Source = bitmap;
         HeaderImage.IsVisible = bitmap is not null;
         HeaderStatus.IsVisible = false;
         HeaderStatusText.Text = string.Empty;
-        Frame.Content = null;
-        Logger.Info($"[Multiplayer] Selected {section} placeholder without initializing GravityCone.");
+        viewModel.Activate();
+        Logger.Info($"[Multiplayer] Selected {item.Header} standalone section.");
     }
 
     private static MultiplayerSection GetSavedSection()
@@ -287,6 +316,12 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         Terracotta,
         Redstone
     }
+}
+
+public interface IMultiplayerPageLifecycle
+{
+    void Activate();
+    void Deactivate();
 }
 
 public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposable

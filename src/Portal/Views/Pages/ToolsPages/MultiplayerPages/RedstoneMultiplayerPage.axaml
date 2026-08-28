@@ -1,0 +1,360 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="960"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.ToolsPages.MultiplayerPages.RedstoneMultiplayerPage"
+    x:DataType="multiplayerPages:RedstoneMultiplayerViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:multiplayer="clr-namespace:Portal.Core.Module.Multiplayer;assembly=Portal.Core"
+    xmlns:multiplayerPages="clr-namespace:Portal.Views.Pages.ToolsPages.MultiplayerPages"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="15">
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowUnsupported}"
+            Padding="15">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock
+                    FontFamily="{StaticResource IconFont}"
+                    FontSize="22"
+                    Text="&#xe61f;" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneTitle}}" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,3,0,0"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneUnsupported}}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowDownloadCard}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Margin="2,0,0,0" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneDownloadKernel}}" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,3,0,0"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneBinaryMissing}}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ProgressBar
+                    IsVisible="{Binding IsDownloading}"
+                    Maximum="100"
+                    Value="{Binding DownloadProgress}" />
+
+                <Button
+                    Command="{Binding DownloadKernelCommand}"
+                    Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneDownloadKernel}}"
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding !IsBusy}"
+                    IsVisible="{Binding !IsDownloading}" />
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowBusy}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <ProgressBar
+                        IsIndeterminate="True"
+                        VerticalAlignment="Center"
+                        Width="140" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="{Binding BusyText}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="0,3,0,0"
+                            Text="{Binding BusyHintText}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+                <Button
+                    Command="{Binding StopCommand}"
+                    Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaDisconnect}}"
+                    HorizontalAlignment="Left" />
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowOpen}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="22"
+                        Foreground="{DynamicResource SystemAccentColor}"
+                        Text="&#xe61a;" />
+                    <StackPanel>
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneStatusHostReady}}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="0,3,0,0"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstonePublicAddressHint}}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12">
+                    <DockPanel>
+                        <Button
+                            Click="CopyAddress_OnClick"
+                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaCopyRoomCode}}"
+                            DockPanel.Dock="Right"
+                            VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstonePublicAddress}}" />
+                            <TextBlock
+                                FontSize="18"
+                                FontWeight="SemiBold"
+                                Margin="0,4,0,0"
+                                Text="{Binding PublicAddress}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    IsVisible="{Binding PortChanged}"
+                    Padding="12">
+                    <DockPanel>
+                        <Button
+                            Command="{Binding RestartTunnelCommand}"
+                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneRestartTunnel}}"
+                            DockPanel.Dock="Right"
+                            IsEnabled="{Binding !IsBusy}"
+                            VerticalAlignment="Center" />
+                        <StackPanel Margin="0,0,12,0">
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneLocalPort}}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Margin="0,2,0,0"
+                                Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstonePortChanged}}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <StackPanel Spacing="6">
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneNode}}" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Binding NodeLabelText}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneLocalPort}}" />
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{Binding LocalPortDisplay}" />
+                </StackPanel>
+
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneLimits}}"
+                    TextWrapping="Wrap" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Command="{Binding StopCommand}" Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaDisconnect}}" />
+                    <Button Click="OpenLogs_OnClick" Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneOpenLogs}}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowForm}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    IsVisible="{Binding ShowClosedWarning}"
+                    Padding="12">
+                    <StackPanel>
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaStatusIdle}}" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="0,2,0,0"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneClosedTunnel}}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    IsVisible="{Binding ShowErrorCard}"
+                    Padding="12">
+                    <StackPanel>
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource ErrorBrush}"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaErrorNetwork}}" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="0,2,0,0"
+                            Text="{Binding ErrorMessage}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel>
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneTitle}}" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,3,0,0"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstonePortHint}}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <Label
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneLocalPort}}"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Padding="0" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <ComboBox
+                            Grid.Column="0"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding DetectedPortOptions}"
+                            SelectedItem="{Binding SelectedPortOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="multiplayerPages:RedstonePortOption">
+                                    <TextBlock Text="{Binding Display}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                    <TextBox
+                        IsVisible="{Binding IsManualPortSelected}"
+                        Margin="0,4,0,0"
+                        PlaceholderText="25565"
+                        Text="{Binding ManualPort}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <Label
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneNode}}"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Padding="0" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <ComboBox
+                            Grid.Column="0"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding NodeOptions}"
+                            SelectedItem="{Binding SelectedNodeOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="multiplayerPages:RedstoneNodeOption">
+                                    <TextBlock Text="{Binding Display}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneLimits}}"
+                    TextWrapping="Wrap" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        Command="{Binding CreateTunnelCommand}"
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneCreateTunnel}}"
+                        IsEnabled="{Binding CanCreateTunnel}" />
+                    <Button
+                        Command="{Binding RefreshNodesCommand}"
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneRefreshNodes}}"
+                        IsEnabled="{Binding !IsNodesLoading}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -414,7 +414,9 @@
     "fetchNodeUrlFailed": "获取联机节点 {0} 地址失败。{1}{2}",
     "readNodeCacheFailed": "读取联机节点缓存失败。{0}{1}",
     "readRelayCacheFailed": "读取 Portal 中继节点缓存失败。{0}{1}",
-    "prefetchRelaysStart": "正在后台预取联机中继节点列表。"
+    "prefetchRelaysStart": "正在后台预取联机中继节点列表。",
+    "relaysUpdateFailed": "自动更新联机公共节点失败。{0}{1}",
+    "relaySourceFailed": "获取联机公共节点来源 {0} 失败，已跳过。{1}{2}"
   },
   "news": {
     "cacheLoadStart": "开始加载新闻缓存。",

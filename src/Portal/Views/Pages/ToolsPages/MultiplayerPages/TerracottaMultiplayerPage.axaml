@@ -1,0 +1,407 @@
+<UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="960"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.ToolsPages.MultiplayerPages.TerracottaMultiplayerPage"
+    x:DataType="multiplayerPages:TerracottaMultiplayerViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:multiplayer="clr-namespace:Portal.Core.Module.Multiplayer;assembly=Portal.Core"
+    xmlns:multiplayerPages="clr-namespace:Portal.Views.Pages.ToolsPages.MultiplayerPages"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="15">
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowDownloadCard}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Margin="2,0,0,0" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaDownloadCore}}" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,3,0,0"
+                        Text="{Binding DownloadHintText}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ProgressBar
+                    IsVisible="{Binding IsDownloading}"
+                    Maximum="100"
+                    Value="{Binding DownloadProgress}" />
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    IsVisible="{Binding IsDownloading}"
+                    Text="{Binding DownloadStageText}" />
+
+                <Button
+                    Command="{Binding DownloadCoreCommand}"
+                    Content="{Binding DownloadActionText}"
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding !IsBusy}"
+                    IsVisible="{Binding !IsDownloading}" />
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowStarting}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <ProgressBar
+                        IsIndeterminate="True"
+                        VerticalAlignment="Center"
+                        Width="140" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="{Binding StatusText}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="0,3,0,0"
+                            Text="{Binding StartHintText}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowSessionForm}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <RadioButton
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaHost}}"
+                        FontWeight="SemiBold"
+                        GroupName="terracottaSession"
+                        IsChecked="{Binding IsHostTabSelected}" />
+                    <RadioButton
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaJoin}}"
+                        FontWeight="SemiBold"
+                        GroupName="terracottaSession"
+                        IsChecked="{Binding IsJoinTabSelected}" />
+                </StackPanel>
+
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Binding SessionDescription}"
+                    TextWrapping="Wrap" />
+
+                <StackPanel Spacing="10">
+                    <StackPanel Spacing="4">
+                        <Label
+                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPlayerName}}"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Padding="0" />
+                        <TextBox MaxLength="16" Text="{Binding PlayerName}" />
+                    </StackPanel>
+
+                    <StackPanel IsVisible="{Binding IsJoinTabSelected}" Spacing="4">
+                        <Label
+                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCode}}"
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Padding="0" />
+                        <Grid ColumnDefinitions="Auto,Auto,*">
+                            <Button
+                                Command="{Binding ClearJoinCodeCommand}"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_clearJoinCodeButton}}"
+                                Grid.Column="0" />
+                            <Button
+                                Click="PasteJoinCode_OnClick"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_pasteJoinCodeButton}}"
+                                Grid.Column="1"
+                                Margin="8,0,8,0" />
+                            <TextBox
+                                Grid.Column="2"
+                                PlaceholderText="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCodePlaceholder}}"
+                                Text="{Binding JoinCode}" />
+                        </Grid>
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource ErrorBrush}"
+                            IsVisible="{Binding ShowRoomCodeError}"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCodeInvalid}}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        Command="{Binding HostCommand}"
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaStartHosting}}"
+                        IsEnabled="{Binding CanSubmitHost}"
+                        IsVisible="{Binding IsHostTabSelected}" />
+                    <Button
+                        Command="{Binding JoinCommand}"
+                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaJoinRoom}}"
+                        IsEnabled="{Binding CanSubmitJoin}"
+                        IsVisible="{Binding IsJoinTabSelected}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowInProgress}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <ProgressBar
+                        IsIndeterminate="True"
+                        VerticalAlignment="Center"
+                        Width="140" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="{Binding StatusText}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            IsVisible="{Binding IsHostSession}"
+                            Margin="0,3,0,0"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaLanHint}}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+                <Button
+                    Command="{Binding BackCommand}"
+                    Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaBack}}"
+                    HorizontalAlignment="Left" />
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowReady}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock
+                        FontFamily="{StaticResource IconFont}"
+                        FontSize="22"
+                        Foreground="{DynamicResource SystemAccentColor}"
+                        Text="&#xe61a;" />
+                    <StackPanel>
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="{Binding StatusText}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="0,3,0,0"
+                            Text="{Binding PlayerCountText}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    IsVisible="{Binding ShowRoomCodeCard}"
+                    Padding="12">
+                    <DockPanel>
+                        <Button
+                            Click="CopyRoomCode_OnClick"
+                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaCopyRoomCode}}"
+                            DockPanel.Dock="Right"
+                            VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding RoomCodeLabelText}" />
+                            <TextBlock
+                                FontSize="18"
+                                FontWeight="SemiBold"
+                                Margin="0,4,0,0"
+                                Text="{Binding RoomCodeOrAddress}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPlayers}}" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding HasNoPlayers}"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaNoPlayers}}" />
+                    <ItemsControl ItemsSource="{Binding Players}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="6" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="multiplayer:TerracottaPlayer">
+                                <Border
+                                    Background="{DynamicResource TranslucentBackgroundColor}"
+                                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="10,8">
+                                    <DockPanel>
+                                        <TextBlock
+                                            DockPanel.Dock="Right"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding Kind}" />
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <Button
+                    Command="{Binding DisconnectCommand}"
+                    Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaDisconnect}}"
+                    HorizontalAlignment="Left" />
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowError}"
+            Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock
+                    FontSize="17"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource ErrorBrush}"
+                    Text="{Binding ErrorTypeText}" />
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Binding ErrorMessageText}"
+                    TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Command="{Binding BackCommand}" Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRetry}}" />
+                    <Button Click="ExportReport_OnClick" Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaExportReport}}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowNotRunning}"
+            Padding="15">
+            <StackPanel Spacing="12">
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    IsVisible="{Binding ShowUpdateBanner}"
+                    Padding="12">
+                    <DockPanel>
+                        <Button
+                            Command="{Binding UpdateCoreCommand}"
+                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaUpdateCore}}"
+                            DockPanel.Dock="Right"
+                            IsEnabled="{Binding !IsBusy}"
+                            VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Text="{Binding UpdateText}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Margin="0,2,0,0"
+                                Text="{Binding InstalledVersionText}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <StackPanel Margin="2,0,0,0" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaNotRunningTitle}}" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        Margin="0,3,0,0"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaNotRunning}}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Button
+                    Command="{Binding StartServiceCommand}"
+                    Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaStartService}}"
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding !IsBusy}" />
+
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPublicNodes}}" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPublicNodesHint}}"
+                            TextWrapping="Wrap" />
+                        <TextBox
+                            AcceptsReturn="True"
+                            Height="90"
+                            Text="{Binding PublicNodes}" />
+                        <Button
+                            Command="{Binding SavePublicNodesCommand}"
+                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaSaveNodes}}"
+                            HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

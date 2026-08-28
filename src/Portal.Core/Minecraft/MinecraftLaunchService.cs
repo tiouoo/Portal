@@ -22,6 +22,7 @@ using Portal.Core.Minecraft.Classes;
 using Portal.Core.Minecraft.Graphics;
 using Portal.Core.Minecraft.Instance.Java;
 using Portal.Core.Minecraft.Services;
+using Portal.Core.Module.Multiplayer;
 using Portal.Core.Services.SystemResources;
 using Portal.Localization;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -789,6 +790,7 @@ public static class MinecraftLaunchService
         context.SetRunning(CommonLanguageManager.Instance.launch_watchingProcess.CurrentValue());
         instance.IncrementPlaySessions();
         instance.StartPlayTimer();
+        var instanceId = instance.Context?.Entry?.Id ?? instance.InstanceName;
         gameProcess.OutputDataReceived += (_, data) =>
         {
             if (string.IsNullOrEmpty(data.Data))
@@ -797,6 +799,8 @@ public static class MinecraftLaunchService
             var entry = new MinecraftLogEntry(data.Data, GetLogLevel(data.Data));
             logSession.Add(entry);
             new RecentPlayService().RecordServerConnection(instance, data.Data);
+            HongshiMultiplayerService.Instance.ObserveMinecraftLog(instanceId, instance.InstanceName,
+                gameProcess.Id.ToString(), data.Data);
         };
         task.AddAction(new TaskActionDefinition
         {
@@ -812,6 +816,7 @@ public static class MinecraftLaunchService
         process.Exited += (_, _) =>
         {
             instance.StopPlayTimer();
+            HongshiMultiplayerService.Instance.MinecraftProcessFinished(instanceId);
             Notice(topLevel, string.Format(CommonLanguageManager.Instance.launch_processExited.CurrentValue(), instance.InstanceName), NotificationType.Success);
             if (options.GameExited != null)
                 Dispatcher.UIThread.Post(options.GameExited);

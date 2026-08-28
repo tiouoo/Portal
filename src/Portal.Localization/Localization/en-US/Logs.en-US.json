@@ -414,7 +414,9 @@
     "fetchNodeUrlFailed": "Failed to fetch the address of peer node {0}. {1}{2}",
     "readNodeCacheFailed": "Failed to read the peer node cache. {0}{1}",
     "readRelayCacheFailed": "Failed to read the Portal relay node cache. {0}{1}",
-    "prefetchRelaysStart": "Prefetching the multiplayer relay node list in the background."
+    "prefetchRelaysStart": "Prefetching the multiplayer relay node list in the background.",
+    "relaysUpdateFailed": "Failed to auto-update the multiplayer public nodes. {0}{1}",
+    "relaySourceFailed": "Failed to fetch the multiplayer public node source {0}; skipped. {1}{2}"
   },
   "news": {
     "cacheLoadStart": "Start loading the news cache.",

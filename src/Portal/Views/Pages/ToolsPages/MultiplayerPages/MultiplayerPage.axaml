@@ -2,7 +2,7 @@
     d:DesignHeight="600"
     d:DesignWidth="960"
     mc:Ignorable="d"
-    x:Class="Portal.Views.Pages.MultiplayerPage"
+    x:Class="Portal.Views.Pages.ToolsPages.MultiplayerPages.MultiplayerPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"

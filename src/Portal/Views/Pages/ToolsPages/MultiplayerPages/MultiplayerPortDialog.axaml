@@ -2,13 +2,15 @@
     d:DesignHeight="180"
     d:DesignWidth="420"
     mc:Ignorable="d"
-    x:Class="Portal.Views.Components.MultiplayerPortDialog"
-    x:DataType="components:MultiplayerPortDialogViewModel"
+    x:Class="Portal.Views.Pages.ToolsPages.MultiplayerPages.MultiplayerPortDialog"
+    x:DataType="multiplayerPages:MultiplayerPortDialogViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:components="clr-namespace:Portal.Views.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:multiplayerPages="clr-namespace:Portal.Views.Pages.ToolsPages.MultiplayerPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid
         Margin="24"
         RowDefinitions="Auto, *, Auto"

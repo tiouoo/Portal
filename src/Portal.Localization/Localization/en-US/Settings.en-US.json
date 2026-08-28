@@ -148,7 +148,13 @@
     "portalProtocolHint": " *After registration, the launcher can be invoked from a browser via the protocol",
     "logLevel": "Log Level",
     "debugMode": "Debug Mode",
-    "debugModeHint": " *Shows application startup and runtime logs; requires restarting the program to take effect."
+    "debugModeHint": " *Shows application startup and runtime logs; requires restarting the program to take effect.",
+    "relayNodesTitle": "Multiplayer Central Nodes",
+    "relayNodesHint": "Enter one link or node address per line. http/https links are fetched for their peers list on update; tcp/udp/ws addresses are used directly as central nodes. Updates append fetched content below without overwriting what you entered, and automatically remove duplicates.",
+    "updateRelayNodes": "Update Nodes",
+    "relayNodesUpdated": "Public nodes updated",
+    "relayAutoUpdate": "Auto-update public nodes",
+    "relayAutoUpdateHint": " *Automatically fetches and merges public nodes from the links above when the app starts."
   },
   "download": {
     "title": "Download Settings",

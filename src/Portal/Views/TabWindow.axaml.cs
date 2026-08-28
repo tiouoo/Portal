@@ -16,6 +16,7 @@ using Portal.Core.Classes.Entries;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
 using Portal.Core.Module.Initialize;
+using Portal.Core.Module.Multiplayer;
 using Portal.Localization;
 using Portal.Module;
 using Portal.Module.DefaultPage;
@@ -286,6 +287,10 @@ public partial class TabWindow : TioTabWindowBase
             Data.ConfigEntry.PropertyChanged -= ConfigEntry_OnPropertyChanged;
             _isConfigEntrySubscribed = false;
         }
+
+        // Stop detached multiplayer daemons (Terracotta, RedStone) before the app exits.
+        _ = TerracottaMultiplayerService.Instance.StopAsync();
+        _ = HongshiMultiplayerService.Instance.StopAsync();
 
         _macOsWindowHandle = IntPtr.Zero;
 

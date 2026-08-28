@@ -26,6 +26,7 @@ using TioUi.Common.Classes;
 using TioUi.Common.Extensions;
 using TioUi.Controls;
 using TioUi.Controls.Options;
+using MultiplayerPage = Portal.Views.Pages.ToolsPages.MultiplayerPages.MultiplayerPage;
 
 namespace Portal.Views.Components;
 

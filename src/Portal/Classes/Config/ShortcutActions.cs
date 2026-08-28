@@ -8,6 +8,7 @@ using Portal.Localization;
 using Portal.Views;
 using Portal.Views.Pages;
 using TioUi.Shared;
+using MultiplayerPage = Portal.Views.Pages.ToolsPages.MultiplayerPages.MultiplayerPage;
 
 namespace Portal.Classes.Config;
 

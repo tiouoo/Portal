@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TioUi.Common.Interfaces;
 
-namespace Portal.Views.Components;
+namespace Portal.Views.Pages.ToolsPages.MultiplayerPages;
 
 public partial class MultiplayerPortDialog : UserControl
 {
