@@ -11,12 +11,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Spacing="15">
+    <StackPanel Spacing="12">
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
             BorderThickness="1"
-            CornerRadius="{DynamicResource TioCornerRadius}"
+            CornerRadius="12"
             Padding="10">
             <StackPanel>
                 <Panel>
@@ -111,8 +111,6 @@
                 </StackPanel>
             </StackPanel>
         </Border>
-        <Separator Background="{DynamicResource TranslucentBorderBrush}" />
-
         <Grid
             ColumnDefinitions="*,*"
             ColumnSpacing="12"
@@ -124,10 +122,12 @@
                 BorderThickness="1"
                 Click="OpenLink_OnClick"
                 CommandParameter="https://portal.tiouo.cc"
+                CornerRadius="12"
                 Height="65"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
-                Padding="18,14">
+                Padding="18,14"
+                Theme="{StaticResource TransparentButton}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -156,11 +156,13 @@
                 BorderThickness="1"
                 Click="OpenLink_OnClick"
                 CommandParameter="https://github.com/tiouoo/Portal"
+                CornerRadius="12"
                 Grid.Column="1"
                 Height="65"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
-                Padding="18,14">
+                Padding="18,14"
+                Theme="{StaticResource TransparentButton}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -192,11 +194,13 @@
                 BorderThickness="1"
                 Click="OpenLink_OnClick"
                 CommandParameter="https://github.com/tiouoo/Portal/issues"
+                CornerRadius="12"
                 Grid.Row="1"
                 Height="65"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
-                Padding="18,14">
+                Padding="18,14"
+                Theme="{StaticResource TransparentButton}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -227,12 +231,14 @@
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 Click="CopyQqGroup_OnClick"
+                CornerRadius="12"
                 Grid.Column="1"
                 Grid.Row="1"
                 Height="65"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
-                Padding="18,14">
+                Padding="18,14"
+                Theme="{StaticResource TransparentButton}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -268,12 +274,14 @@
                 BorderThickness="1"
                 Click="OpenLink_OnClick"
                 CommandParameter="https://afdian.com/a/tiouo"
+                CornerRadius="12"
                 Grid.ColumnSpan="2"
                 Grid.Row="2"
                 Height="60"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
-                Padding="18,14">
+                Padding="18,14"
+                Theme="{StaticResource TransparentButton}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -306,13 +314,13 @@
 
         <StackPanel Margin="5,0,0,0" Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_sourceCode}}" />
+                <TextBlock Text="Source Code:" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://github.com/tiouoo/Portal"
                     Content="tiouoo/Portal"
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
-                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_license}}" />
+                <TextBlock Text=" License:" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://www.gnu.org/licenses/agpl-3.0.html"
@@ -320,7 +328,7 @@
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_frontendFramework}}" />
+                <TextBlock Text="Frontend Framework:" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://avaloniaui.net/"
@@ -328,7 +336,7 @@
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_iconLibrary}}" />
+                <TextBlock Text="Icon Library:" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://fontawesome.com/"
@@ -336,7 +344,7 @@
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_controlLibrary}}" />
+                <TextBlock Text="Control Library:" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://github.com/tiouoo/TioUi.Avalonia"
