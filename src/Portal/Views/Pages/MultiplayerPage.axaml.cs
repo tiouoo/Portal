@@ -22,6 +22,7 @@ using Tio.Avalonia.Standard.Modules.Tasks;
 using Tio.Avalonia.Standard.Tab.Entries;
 using Tio.Avalonia.Standard.Tab.Gateway;
 using Tio.Avalonia.Standard.Tab.Interface;
+using TioUi.Controls;
 
 using Portal.Module;
 namespace Portal.Views.Pages;
@@ -29,6 +30,12 @@ namespace Portal.Views.Pages;
 [AggregatedSearchPage("pages_multiplayer", "pages_multiplayerPath", "Multiplayer")]
 public partial class MultiplayerPage : UserControl, ITioTabPage
 {
+    private readonly HashSet<MinecraftEdition> _initializedEditions = [];
+    private readonly Dictionary<MinecraftEdition, MultiplayerContentPage> _pages = new();
+    private readonly Dictionary<MinecraftEdition, MultiplayerPageViewModel> _viewModels = new();
+    private bool _hasLoaded;
+    private MinecraftEdition _selectedEdition;
+
     public MultiplayerPage() : this(MinecraftEdition.Java)
     {
     }
@@ -36,17 +43,9 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     public MultiplayerPage(MinecraftEdition edition = MinecraftEdition.Java)
     {
         InitializeComponent();
-        PageInfo.Title = OperatingSystem.IsWindows()
-            ? edition == MinecraftEdition.Java
-                ? CommonLanguageManager.Instance.multiplayer_titleJava.CurrentValue()
-                : CommonLanguageManager.Instance.multiplayer_titleBedrock.CurrentValue()
-            : CommonLanguageManager.Instance.multiplayer_title.CurrentValue();
-        ViewModel = new MultiplayerPageViewModel(edition);
-        DataContext = ViewModel;
+        _selectedEdition = edition;
         Loaded += OnLoaded;
     }
-
-    public MultiplayerPageViewModel ViewModel { get; }
 
     public PageInfo PageInfo { get; init; } = new()
     {
@@ -58,33 +57,78 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     public void OnClose()
     {
-        Logger.Info($"[Multiplayer] Page closing for {ViewModel.Edition} edition.");
+        Logger.Info($"[Multiplayer] Page closing; disposing {_viewModels.Count} edition page(s).");
         Loaded -= OnLoaded;
-        ViewModel.Deactivate();
-        DataContext = null;
+        _hasLoaded = false;
+        Frame.Content = null;
+        foreach (var viewModel in _viewModels.Values)
+        {
+            viewModel.Deactivate();
+            viewModel.DisposeAsync().AsTask().Forget($"Dispose {viewModel.Edition} multiplayer page");
+        }
+
+        _pages.Clear();
+        _viewModels.Clear();
+        _initializedEditions.Clear();
     }
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
-        Logger.Info($"[Multiplayer] Page loaded for {ViewModel.Edition} edition.");
+        _hasLoaded = true;
+        Logger.Info($"[Multiplayer] Page loaded with {_selectedEdition} selected.");
         if (TopLevel.GetTopLevel(this) is OverlayWindow)
             this.FindControl<ContentControl>("Frame")!.MaxWidth = double.PositiveInfinity;
 
-        ViewModel.Activate();
-        ShowEditionContent();
-        Loaded += (s, e) =>
-        {
-            var a = Frame.Content;
-            Frame.Content = null;
-            Frame.Content = a;
-        };
-        _ = ViewModel.InitializeAsync();
+        SelectEdition(_selectedEdition);
     }
 
-    private void ShowEditionContent()
+    public static void Open(TioTabWindowBase window, MinecraftEdition edition = MinecraftEdition.Java)
     {
-        this.FindControl<ContentControl>("Frame")!.Content = new MultiplayerContentPage(ViewModel);
+        if (window.Tabs.FirstOrDefault(tab => tab.Content is MultiplayerPage) is { } existingTab &&
+            existingTab.Content is MultiplayerPage existingPage)
+        {
+            existingPage.NavigateTo(edition);
+            window.SelectTab(existingTab);
+            window.Activate();
+            return;
+        }
+
+        var tab = new TabEntry(window, new MultiplayerPage(edition));
+        window.CreateTab(tab);
+        window.SelectTab(tab);
+        window.Activate();
+    }
+
+    public void NavigateTo(MinecraftEdition edition)
+    {
+        _selectedEdition = edition;
+        if (_hasLoaded) SelectEdition(edition);
+    }
+
+    private void NavMenu_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not NavMenu { SelectedItem: NavMenuItem { Tag: string editionName } }) return;
+        SelectEdition(editionName == "Bedrock" ? MinecraftEdition.Bedrock : MinecraftEdition.Java);
+    }
+
+    private void SelectEdition(MinecraftEdition edition)
+    {
+        _selectedEdition = edition;
+        foreach (var existingViewModel in _viewModels.Values) existingViewModel.Deactivate();
+
+        if (!_viewModels.TryGetValue(edition, out var viewModel))
+        {
+            viewModel = new MultiplayerPageViewModel(edition);
+            _viewModels[edition] = viewModel;
+            _pages[edition] = new MultiplayerContentPage(viewModel);
+        }
+
+        viewModel.Activate();
+        Frame.Content = _pages[edition];
+        NavMenu.SelectedItem = edition == MinecraftEdition.Java ? JavaNavItem : BedrockNavItem;
+
+        if (_initializedEditions.Add(edition)) _ = viewModel.InitializeAsync();
     }
 }
 
@@ -116,7 +160,9 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
 
     public bool IsJava => Edition == MinecraftEdition.Java;
     public bool IsBedrock => Edition == MinecraftEdition.Bedrock;
-    public string EditionTitle => CommonLanguageManager.Instance.multiplayer_title.CurrentValue();
+    public string EditionTitle => IsJava
+        ? CommonLanguageManager.Instance.multiplayer_titleJava.CurrentValue()
+        : CommonLanguageManager.Instance.multiplayer_titleBedrock.CurrentValue();
     public bool IsNotBusy => !IsBusy;
     public bool CanOperate => IsReady && !IsBusy;
     public bool IsNotInRoom => !IsInRoom;

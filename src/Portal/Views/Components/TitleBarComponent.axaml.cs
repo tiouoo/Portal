@@ -269,20 +269,7 @@ public partial class TitleBarComponent : Grid
     private void OpenMultiplayer(object? sender, RoutedEventArgs e)
     {
         if (Root.GetTopLevel() is not TioTabWindowBase window) return;
-        var tabEntry = new TabEntry(window, new MultiplayerPage(MinecraftEdition.Java));
-        window.CreateTab(tabEntry);
-        window.SelectTab(tabEntry);
-    }
-
-    private void OpenMultiplayerEdition(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem { Tag: string editionName } ||
-            Root.GetTopLevel() is not TioTabWindowBase window) return;
-
-        var edition = editionName == "Bedrock" ? MinecraftEdition.Bedrock : MinecraftEdition.Java;
-        var tabEntry = new TabEntry(window, new MultiplayerPage(edition));
-        window.CreateTab(tabEntry);
-        window.SelectTab(tabEntry);
+        MultiplayerPage.Open(window);
     }
 
     private void GoToAbout(object? sender, RoutedEventArgs e)

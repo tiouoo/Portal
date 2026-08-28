@@ -3,16 +3,85 @@
     d:DesignWidth="960"
     mc:Ignorable="d"
     x:Class="Portal.Views.Pages.MultiplayerPage"
-    x:DataType="pages:MultiplayerPageViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <ContentControl
+        <controls:ScrollView
+            Classes="Flat"
+            DockPanel.Dock="Left"
+            HorizontalAlignment="Left"
+            Margin="7,0,10,10"
+            Width="173">
+            <tio:NavMenu
+                Margin="0,0,10,0"
+                Name="NavMenu"
+                SelectionChanged="NavMenu_OnSelectionChanged"
+                Theme="{StaticResource FlatScrollBarTheme}">
+                <tio:NavMenuItem
+                    Header="GravityCone"
+                    IsVerticalCollapsed="False"
+                    Name="GravityConeNavItem">
+                    <tio:NavMenuItem.Icon>
+                        <TextBlock
+                            FontFamily="{StaticResource IconFont}"
+                            FontSize="18"
+                            Margin="0,-1"
+                            Padding="2,0,0,0"
+                            Text="&#xe677;" />
+                    </tio:NavMenuItem.Icon>
+                    <tio:NavMenuItem Header="Java版" Name="JavaNavItem" Tag="Java">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="17"
+                                Margin="0,-1"
+                                Padding="2,0,0,0"
+                                Text="&#xe65f;" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
+                    <tio:NavMenuItem Header="基岩版" Name="BedrockNavItem" Tag="Bedrock">
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                Margin="-1,-1,0,-1"
+                                Padding="1,0"
+                                Text="&#xe670;" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
+                </tio:NavMenuItem>
+                <tio:NavMenuItem Header="陶瓦联机" IsEnabled="False">
+                    <tio:NavMenuItem.Icon>
+                        <Image
+                            Height="20"
+                            Source="/Assets/Multiplayer/terracotta.png"
+                            Stretch="Uniform"
+                            Width="20" />
+                    </tio:NavMenuItem.Icon>
+                </tio:NavMenuItem>
+                <tio:NavMenuItem Header="红石联机" IsEnabled="False">
+                    <tio:NavMenuItem.Icon>
+                        <Image
+                            Height="20"
+                            Source="/Assets/Multiplayer/redstone.png"
+                            Stretch="Uniform"
+                            Width="20" />
+                    </tio:NavMenuItem.Icon>
+                </tio:NavMenuItem>
+            </tio:NavMenu>
+        </controls:ScrollView>
+
+        <TransitioningContentControl
             Margin="0,0,5,0"
             MaxWidth="820"
-            Name="Frame" />
+            Name="Frame">
+            <TransitioningContentControl.PageTransition>
+                <CrossFade Duration="0:0:0.2" />
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
     </DockPanel>
 </UserControl>

@@ -877,7 +877,7 @@
     "roleHost": "房主",
     "roleMember": "成员",
     "prefetchRelaysForget": "预取联机中继节点列表",
-    "title": "联机",
+    "title": "多人游戏",
     "titleJava": "联机 (Java)",
     "titleBedrock": "联机 (基岩)",
     "memberCount": "{0} 人",

@@ -225,50 +225,7 @@
         </Button>
         <Button
             Classes="custom-title-bar-button"
-            IsVisible="{Binding IsWindows}"
-            Margin="2,0,0,0"
-            ToolTip.ShowDelay="900"
-            ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_multiplayerToolTip}}">
-            <Button.Flyout>
-                <MenuFlyout>
-                    <MenuItem
-                        Click="OpenMultiplayerEdition"
-                        Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_javaEditionMenuItem}}"
-                        Tag="Java">
-                        <MenuItem.Icon>
-                            <TextBlock
-                                FontFamily="{StaticResource IconFont}"
-                                FontSize="18"
-                                FontWeight="Thin"
-                                Text="&#xe652;" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem
-                        Click="OpenMultiplayerEdition"
-                        Header="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_bedrockEditionMenuItem}}"
-                        Tag="Bedrock">
-                        <MenuItem.Icon>
-                            <TextBlock
-                                FontFamily="{StaticResource IconFont}"
-                                FontSize="18"
-                                FontWeight="Thin"
-                                Text="&#xe60f;" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </MenuFlyout>
-            </Button.Flyout>
-            <TextBlock
-                FontFamily="{StaticResource IconFont}"
-                FontSize="16"
-                FontWeight="Thin"
-                HorizontalAlignment="Center"
-                Text="&#xe614;"
-                VerticalAlignment="Center" />
-        </Button>
-        <Button
-            Classes="custom-title-bar-button"
             Click="OpenMultiplayer"
-            IsVisible="{Binding !IsWindows}"
             Margin="2,0,0,0"
             ToolTip.ShowDelay="900"
             ToolTip.Tip="{Translate {x:Static loc:ComponentsLanguageManager+Keys.titlebarcomponent_multiplayerToolTip}}">

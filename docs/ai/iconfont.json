@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "48415593",
+      "name": "sparkles",
+      "font_class": "a-FontAwesome7ProLight-UF890",
+      "unicode": "e677",
+      "unicode_decimal": 58999
+    },
+    {
       "icon_id": "48413796",
       "name": "github",
       "font_class": "github-brands-solid-full",
