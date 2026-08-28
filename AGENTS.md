@@ -14,6 +14,10 @@ dotnet build "E:\Portal\src\Portal.Desktop\Portal.Desktop.csproj" -c Debug
 ```
 主 UI：`src/Portal`（Avalonia 12）。窗口基类在 TioUi 库（`module/Tio.Avalonia.Standard/`）。改子库后重建此命令验证。
 
+## tasks
+任务进度回调通常通过 UI Dispatcher 异步排队，回调执行时任务可能已经取消或进入终态。调用 `ReportProgress`、`SetDescription`、`SetRunning`、`Complete` 等状态更新 API 前，必须再次检查任务仍处于活动状态（例如 `!task.IsTerminal && !task.IsCancellationRequested`）；检查后到调用之间仍需按竞态安全设计，不能对已取消或已完成的任务更新执行状态。取消操作也应优先请求父任务取消，让关联子任务通过链接的取消令牌一起停止。
+涉及网络请求、文件下载、解压或其他长时间异步操作时，任务必须支持取消：使用任务提供的 `CancellationToken` 创建/调用 API，并将令牌继续传递到所有下游异步操作；收到取消后应尽快停止工作，不得启动新的后续步骤或吞掉取消信号。
+
 ## docs
 - `docs/ai/ICONFONT.md` — iconfont 流程（AI）
 - `docs/command-line.md`
