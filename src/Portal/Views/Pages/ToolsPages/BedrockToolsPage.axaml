@@ -6,9 +6,10 @@
     x:DataType="toolsPages:BedrockToolsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:toolsPages="clr-namespace:Portal.Views.Pages.ToolsPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScrollViewer Classes="Flat">
         <StackPanel
             Margin="0,0,0,20"
@@ -29,7 +30,13 @@
                         Padding="14,12"
                         Theme="{StaticResource TransparentButton}">
                         <DockPanel>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe612;" FontSize="20" DockPanel.Dock="Right" />
+                            <TextBlock
+                                DockPanel.Dock="Right"
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="20"
+                                FontWeight="Thin"
+                                Text="&#xe612;"
+                                VerticalAlignment="Center" />
                             <StackPanel Spacing="3">
                                 <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_downloadFrameworkTitle}}" />
                                 <TextBlock
@@ -49,7 +56,13 @@
                         Padding="14,12"
                         Theme="{StaticResource TransparentButton}">
                         <DockPanel>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe612;" FontSize="20" DockPanel.Dock="Right" />
+                            <TextBlock
+                                DockPanel.Dock="Right"
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="20"
+                                FontWeight="Thin"
+                                Text="&#xe612;"
+                                VerticalAlignment="Center" />
                             <StackPanel Spacing="3">
                                 <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_checkSdkTitle}}" />
                                 <TextBlock
@@ -69,7 +82,13 @@
                         Padding="14,12"
                         Theme="{StaticResource TransparentButton}">
                         <DockPanel>
-                            <TextBlock FontFamily="{StaticResource IconFont}" FontWeight="Thin" Text="&#xe612;" FontSize="20" DockPanel.Dock="Right" />
+                            <TextBlock
+                                DockPanel.Dock="Right"
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="20"
+                                FontWeight="Thin"
+                                Text="&#xe612;"
+                                VerticalAlignment="Center" />
                             <StackPanel Spacing="3">
                                 <TextBlock FontWeight="SemiBold" Text="{Translate {x:Static loc:ToolsLanguageManager+Keys.bedrocktoolspage_uninstallMinecraftTitle}}" />
                                 <TextBlock
