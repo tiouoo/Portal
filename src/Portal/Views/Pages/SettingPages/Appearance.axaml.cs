@@ -89,6 +89,11 @@ public partial class Appearance : Dsc, INotifyPropertyChanged
 
     public object IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
+    public bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
+    public bool IsWindowBorderCustomizationSupported =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
     public new event PropertyChangedEventHandler? PropertyChanged;
 
     private void SubscribeRenderScaling()

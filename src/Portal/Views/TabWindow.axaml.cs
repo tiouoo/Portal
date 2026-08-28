@@ -610,6 +610,22 @@ public partial class TabWindow : TioTabWindowBase
                 IsManagedResizerVisible = false;
             }
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            // Linux uses client-side decorations by default. Apply the same
+            // user-configurable frame settings used by the Windows path.
+            WindowDecorations = WindowDecorations.None;
+            FrameBorderThickness = entry.EnableManagedWindowBorderOnWindows
+                ? new Thickness(Math.Clamp(entry.CustomWindowBorderThickness, 0, 6))
+                : new Thickness(0);
+            FrameBorderCornerRadius = entry.EnableManagedWindowBorderOnWindows
+                ? new CornerRadius(entry.CustomWindowBorderCornerRadius)
+                : new CornerRadius(0);
+            FrameBorderBrush = entry.EnableManagedWindowBorderOnWindows
+                ? new SolidColorBrush(entry.CustomWindowBorderColor)
+                : new SolidColorBrush(Colors.Transparent);
+            IsManagedResizerVisible = true;
+        }
 
         switch (entry.BackgroundMode)
         {

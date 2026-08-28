@@ -523,14 +523,20 @@
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
-        <StackPanel IsVisible="{Binding EnableManagedWindowDecorationsOnWindows, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
+        <StackPanel IsVisible="{Binding IsWindowBorderCustomizationSupported}" Spacing="5">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_enableWindowBorder}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <ToggleSwitch IsChecked="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}" />
         </StackPanel>
-        <Border IsVisible="{Binding Data.ConfigEntry.EnableManagedWindowDecorationsOnWindows}" Margin="0,-5,0,0">
+        <Border Margin="0,-5,0,0">
+            <Border.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                    <Binding Path="IsLinux" />
+                    <Binding Path="EnableManagedWindowDecorationsOnWindows" Source="{x:Static const1:Data.ConfigEntry}" />
+                </MultiBinding>
+            </Border.IsVisible>
             <StackPanel IsVisible="{Binding EnableManagedWindowBorderOnWindows, Source={x:Static const1:Data.ConfigEntry}}" Spacing="5">
                 <Label
                     Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.appearance_borderColor}}"
