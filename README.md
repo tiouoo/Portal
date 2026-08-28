@@ -91,13 +91,9 @@
 
 ## 从源代码运行
 
-```bash
-git clone https://github.com/tiouoo/Portal.git
-cd Portal
-./update.bat
-```
+贡献者开发、子模块初始化、环境变量和构建说明请参阅 [贡献者开发指南](CONTRIBUTING.md)
 
-环境变量 [`[root]/.env.example`](.env.example)
+环境变量清单见 [`[root]/.env.example`](.env.example)
 
 官网 [`[root]/web`](web) :
 
