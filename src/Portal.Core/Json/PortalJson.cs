@@ -15,7 +15,7 @@ public static class PortalJson
     [
         typeof(InstanceWidgetData), typeof(QuickWorldWidgetData), typeof(QuickServerWidgetData),
         typeof(MemoryWidgetData), typeof(ImageWidgetData), typeof(NewsWidgetData),
-        typeof(GameListWidgetData)
+        typeof(GameListWidgetData), typeof(LaunchButtonWidgetData)
     ];
 
     public static JsonSerializerOptions Options { get; } = Create();

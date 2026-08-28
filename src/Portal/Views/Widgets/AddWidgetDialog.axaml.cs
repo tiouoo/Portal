@@ -137,6 +137,13 @@ public sealed partial class AddWidgetDialogViewModel : ObservableObject, IDialog
                 };
                 break;
             }
+            case WidgetKind.LaunchButton:
+                template = new WidgetLayoutData
+                {
+                    ShowBackground = false,
+                    Data = new LaunchButtonWidgetData()
+                };
+                break;
         }
 
         var host = _workspace.AddWidget(definition.Kind, template);

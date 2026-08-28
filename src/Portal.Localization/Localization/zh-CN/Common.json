@@ -1159,6 +1159,8 @@
     "playTime": "游戏时间",
     "playTimeDescription": "显示总游戏时长与会话次数",
     "playTimeSessions": "次会话",
+    "launchButton": "启动按钮",
+    "launchButtonDescription": "固定一个实例并从首页直接启动",
     "fixedList": "固定列表",
     "fixedListDescription": "在独立列表中混合添加实例、世界和服务器",
     "news": "新闻",

@@ -38,6 +38,14 @@
   "instancewidget2x1": {
     "launchInstance": "启动实例"
   },
+  "launchbuttonwidget": {
+    "launch": "启动游戏",
+    "selectInstance": "选择实例",
+    "notPinned": "未固定实例",
+    "unpin": "取消固定",
+    "noInstances": "没有可用的实例",
+    "fromFolder": "来自文件夹：{0}"
+  },
   "quickserverwidget1x1": {
     "quickJoinServer": "快速进入服务器"
   },

@@ -22,7 +22,8 @@ public enum WidgetKind
     ContinuePlay,
     ContinueInstance,
     PlayTime,
-    FixedList
+    FixedList,
+    LaunchButton
 }
 
 public enum WidgetCategory

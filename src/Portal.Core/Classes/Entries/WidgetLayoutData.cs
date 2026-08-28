@@ -82,6 +82,11 @@ public sealed class NewsWidgetData : WidgetData
     public string? Filter { get; set; }
 }
 
+public sealed class LaunchButtonWidgetData : WidgetData
+{
+    public string? InstanceFolderPath { get; set; }
+}
+
 public sealed class GameListWidgetData : WidgetData
 {
     public string? Title { get; set; }

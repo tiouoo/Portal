@@ -34,6 +34,8 @@ public class WidgetWorkspace : UserControl
     private Border? _ghostPlaceholder;
 
     private WidgetHost? _pendingDragHost;
+    private bool _pendingDragAwareButton;
+    private IPointer? _pendingPointer;
     private readonly DispatcherTimer _longPressTimer;
     private long _pendingPressedTimestamp;
     private Point _pendingInitialPosition;
@@ -57,8 +59,8 @@ public class WidgetWorkspace : UserControl
         _canvas.PointerPressed += OnCanvasPointerPressed;
         AddHandler(PointerPressedEvent, OnWorkspacePointerPressed, RoutingStrategies.Bubble,
             true);
-        PointerMoved += OnWorkspacePointerMoved;
-        PointerReleased += OnWorkspacePointerReleased;
+        AddHandler(PointerMovedEvent, OnWorkspacePointerMoved, RoutingStrategies.Bubble, true);
+        AddHandler(PointerReleasedEvent, OnWorkspacePointerReleased, RoutingStrategies.Bubble, true);
         PointerCaptureLost += OnWorkspacePointerCaptureLost;
         SizeChanged += OnWorkspaceSizeChanged;
         InitializeContextMenus();
@@ -414,7 +416,11 @@ public class WidgetWorkspace : UserControl
         if (host == null)
             return null;
 
-        if (template != null) host.Layout.Data = template.Data;
+        if (template != null)
+        {
+            host.Layout.Data = template.Data;
+            host.Layout.ShowBackground = template.ShowBackground;
+        }
 
         host.Layout.Size = definition.DefaultSize;
         host.SetSize(definition.DefaultSize);
@@ -527,7 +533,8 @@ public class WidgetWorkspace : UserControl
             return;
 
 
-        if (source.FindAncestorOfType<Button>() != null ||
+        var button = source.FindAncestorOfType<Button>();
+        if ((button != null && !button.Classes.Contains("WidgetDragAware")) ||
             source.FindAncestorOfType<ComboBox>() != null ||
             source.FindAncestorOfType<TextBox>() != null)
             return;
@@ -539,11 +546,14 @@ public class WidgetWorkspace : UserControl
             return;
 
         _pendingDragHost = widget;
+        _pendingDragAwareButton = button != null;
+        _pendingPointer = e.Pointer;
         _pendingPressedTimestamp = Stopwatch.GetTimestamp();
         _pendingStartPoint = e.GetPosition(_canvas);
         _pendingInitialPosition = new Point(Canvas.GetLeft(widget), Canvas.GetTop(widget));
         _longPressTimer.Start();
-        e.Pointer.Capture(this);
+        if (!_pendingDragAwareButton)
+            e.Pointer.Capture(this);
     }
 
     private void OnWorkspacePointerMoved(object? sender, PointerEventArgs e)
@@ -593,6 +603,7 @@ public class WidgetWorkspace : UserControl
         _longPressTimer.Stop();
         _pendingDragHost = null;
         _draggingWidget = widget;
+        _pendingPointer?.Capture(this);
         _dragStartPoint = _pendingStartPoint;
         _widgetInitialPosition = _pendingInitialPosition;
 
@@ -612,6 +623,8 @@ public class WidgetWorkspace : UserControl
         if (_draggingWidget != null)
         {
             EndDrag();
+            _pendingDragAwareButton = false;
+            _pendingPointer = null;
             return;
         }
 
@@ -619,15 +632,23 @@ public class WidgetWorkspace : UserControl
         if (_pendingDragHost is { } clickedHost)
         {
             _pendingDragHost = null;
-            if (GetPendingPressDuration() < LongPressDuration)
+            if (!_pendingDragAwareButton && GetPendingPressDuration() < LongPressDuration)
                 clickedHost.WidgetContent?.PerformClick();
         }
+
+        _pendingDragAwareButton = false;
+        _pendingPointer = null;
     }
 
     private void OnWorkspacePointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
     {
+        if (ReferenceEquals(e.Pointer.Captured, this))
+            return;
+
         _longPressTimer.Stop();
         _pendingDragHost = null;
+        _pendingDragAwareButton = false;
+        _pendingPointer = null;
         if (_draggingWidget != null)
             EndDrag();
     }

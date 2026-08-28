@@ -229,6 +229,16 @@ public static class WidgetRegistry
             }
             .AddPage(new WidgetCellSize(2, 1), () => new PlayTimeWidget(new WidgetCellSize(2, 1))));
 
+        Register(new WidgetDefinition
+            {
+                Kind = WidgetKind.LaunchButton,
+                Name = CommonLanguageManager.Instance.widgets_launchButton.CurrentValue(),
+                Description = CommonLanguageManager.Instance.widgets_launchButtonDescription.CurrentValue(),
+                Category = WidgetCategory.Game,
+                DefaultSize = new WidgetCellSize(2, 1)
+            }
+            .AddPage<LaunchButtonWidget>(new WidgetCellSize(2, 1)));
+
 
         var newsDef = new WidgetDefinition
         {

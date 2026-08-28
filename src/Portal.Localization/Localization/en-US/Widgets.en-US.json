@@ -38,6 +38,14 @@
   "instancewidget2x1": {
     "launchInstance": "Launch Instance"
   },
+  "launchbuttonwidget": {
+    "launch": "Launch Game",
+    "selectInstance": "Select Instance",
+    "notPinned": "No instance pinned",
+    "unpin": "Unpin Instance",
+    "noInstances": "No instances available",
+    "fromFolder": "From folder: {0}"
+  },
   "quickserverwidget1x1": {
     "quickJoinServer": "Quick Join Server"
   },

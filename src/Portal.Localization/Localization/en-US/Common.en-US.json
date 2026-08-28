@@ -1159,6 +1159,8 @@
     "playTime": "Game Time",
     "playTimeDescription": "Show total game time and session count",
     "playTimeSessions": "sessions",
+    "launchButton": "Launch Button",
+    "launchButtonDescription": "Pin an instance and launch it directly from the home page",
     "fixedList": "Fixed List",
     "fixedListDescription": "Mix instances, worlds and servers in an independent list",
     "news": "News",

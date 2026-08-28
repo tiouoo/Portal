@@ -79,7 +79,7 @@
             </controls:ScrollView>
             <Rectangle
                 DockPanel.Dock="Left"
-                Fill="{DynamicResource TranslucentBorderBrush}"
+                Fill="{DynamicResource PopupBorderBrush}"
                 Margin="0,0,10,0"
                 Width="1" />
             <ScrollViewer HorizontalScrollBarVisibility="Disabled">
@@ -96,8 +96,8 @@
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate DataType="module:WidgetDefinition">
                             <Border
-                                Background="{DynamicResource TranslucentBackgroundColor}"
-                                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                Background="{DynamicResource PopupBackgroundColor}"
+                                BorderBrush="{DynamicResource PopupBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
                                 Padding="14,12">

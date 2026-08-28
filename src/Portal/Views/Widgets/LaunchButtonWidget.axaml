@@ -1,0 +1,163 @@
+<UserControl
+    d:DesignHeight="130"
+    d:DesignWidth="272"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Widgets.LaunchButtonWidget"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:widgets="clr-namespace:Portal.Views.Widgets"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Styles>
+        <Style Selector="Button.LaunchInstanceChoice">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="Padding" Value="6" />
+        </Style>
+        <Style Selector="Button.LaunchInstanceChoice.selected">
+            <Setter Property="Background" Value="{DynamicResource SelectionNormal}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+    </UserControl.Styles>
+    <Grid ColumnDefinitions="*,40" VerticalAlignment="Center">
+        <Button
+            Classes="Accent WidgetDragAware"
+            Click="LaunchButton_OnClick"
+            CornerRadius="10,0,0,10"
+            Grid.Column="0"
+            Height="58"
+            HorizontalAlignment="Stretch"
+            Padding="18,0"
+            x:Name="LaunchButton">
+            <StackPanel HorizontalAlignment="Center" Spacing="5">
+                <TextBlock
+                    FontSize="15"
+                    FontWeight="Thin"
+                    Foreground="White"
+                    HorizontalAlignment="Center"
+                    x:Name="LaunchText" />
+                <TextBlock
+                    FontSize="13"
+                    Foreground="White"
+                    HorizontalAlignment="Center"
+                    MaxLines="1"
+                    TextTrimming="CharacterEllipsis"
+                    x:Name="InstanceText" />
+            </StackPanel>
+        </Button>
+        <Button
+            Classes="Accent WidgetDragAware"
+            CornerRadius="0,10,10,0"
+            Grid.Column="1"
+            Height="58"
+            HorizontalAlignment="Stretch"
+            Padding="0"
+            x:Name="MenuButton">
+            <Button.Flyout>
+                <Flyout
+                    Opening="InstanceFlyout_OnOpening"
+                    Placement="TopEdgeAlignedRight"
+                    VerticalOffset="-6">
+                    <Grid Width="300">
+                        <ScrollViewer
+                            HorizontalScrollBarVisibility="Disabled"
+                            MaxHeight="344"
+                            VerticalScrollBarVisibility="Hidden"
+                            x:Name="InstanceScrollViewer">
+                            <ItemsRepeater x:Name="InstanceItems">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="4" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="widgets:LaunchInstanceChoice">
+                                        <Button
+                                            Classes.LaunchInstanceChoice="True"
+                                            Classes.selected="{Binding IsSelected}"
+                                            Click="InstanceChoice_OnClick"
+                                            Tag="{Binding}">
+                                            <Grid ColumnDefinitions="44,*,24" ColumnSpacing="12">
+                                                <Border
+                                                    ClipToBounds="True"
+                                                    CornerRadius="10"
+                                                    Height="38"
+                                                    VerticalAlignment="Center"
+                                                    Width="38">
+                                                    <Image Source="{Binding Instance.Icon}" Stretch="UniformToFill" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        MaxLines="1"
+                                                        Text="{Binding Instance.InstanceName}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        TextWrapping="NoWrap" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                                        MaxLines="1"
+                                                        Text="{Binding Instance.ShortDisplay}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        TextWrapping="NoWrap" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    FontFamily="{StaticResource IconFont}"
+                                                    FontSize="16"
+                                                    Foreground="{DynamicResource SystemAccentColor}"
+                                                    Grid.Column="2"
+                                                    HorizontalAlignment="Center"
+                                                    IsVisible="{Binding IsSelected}"
+                                                    Text="&#xe61a;"
+                                                    VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </ScrollViewer>
+                        <StackPanel
+                            HorizontalAlignment="Center"
+                            IsVisible="False"
+                            Margin="24,28"
+                            Spacing="8"
+                            VerticalAlignment="Center"
+                            x:Name="EmptyState">
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="28"
+                                FontWeight="Thin"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                HorizontalAlignment="Center"
+                                Text="&#xe611;" />
+                            <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:WidgetsLanguageManager+Keys.launchbuttonwidget_noInstances}}" />
+                        </StackPanel>
+                    </Grid>
+                </Flyout>
+            </Button.Flyout>
+            <TextBlock
+                FontFamily="{StaticResource IconFont}"
+                FontSize="20"
+                FontWeight="Thin"
+                Foreground="White"
+                HorizontalAlignment="Center"
+                RenderTransformOrigin="50%,50%"
+                Text="&#xe623;"
+                VerticalAlignment="Center">
+                <TextBlock.RenderTransform>
+                    <RotateTransform Angle="180" />
+                </TextBlock.RenderTransform>
+            </TextBlock>
+        </Button>
+        <Border
+            Background="{DynamicResource SystemAccentColorDark1}"
+            Grid.Column="1"
+            HorizontalAlignment="Left"
+            IsHitTestVisible="False"
+            Margin="0,11"
+            Width="1" />
+    </Grid>
+</UserControl>
