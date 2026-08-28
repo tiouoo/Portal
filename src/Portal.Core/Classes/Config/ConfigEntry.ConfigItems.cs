@@ -56,6 +56,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial DownloadSearchSort DefaultDownloadSearchSort { get; set; } = DownloadSearchSort.Relevance;
     [ObservableProperty] public partial int ResourceListSortIndex { get; set; }
     [ObservableProperty] public partial string DownloadLastSelectedPage { get; set; } = string.Empty;
+    [ObservableProperty] public partial string MultiplayerLastSelectedPage { get; set; } = "Java";
     [ObservableProperty] public partial string? BackgroundImagePath { get; set; }
     [ObservableProperty] public partial string? CustomUserAgent { get; set; }
     [ObservableProperty] public partial string? ProxyServer { get; set; }

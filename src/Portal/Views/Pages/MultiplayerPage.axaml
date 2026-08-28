@@ -15,7 +15,7 @@
             DockPanel.Dock="Left"
             HorizontalAlignment="Left"
             Margin="7,0,10,10"
-            Width="173">
+            Width="180">
             <tio:NavMenu
                 Margin="0,0,10,0"
                 Name="NavMenu"
@@ -33,7 +33,10 @@
                             Padding="2,0,0,0"
                             Text="&#xe677;" />
                     </tio:NavMenuItem.Icon>
-                    <tio:NavMenuItem Header="Java版" Name="JavaNavItem" Tag="Java">
+                    <tio:NavMenuItem
+                        Header="Java版"
+                        Name="JavaNavItem"
+                        Tag="Java">
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
@@ -43,7 +46,10 @@
                                 Text="&#xe65f;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
-                    <tio:NavMenuItem Header="基岩版" Name="BedrockNavItem" Tag="Bedrock">
+                    <tio:NavMenuItem
+                        Header="基岩版"
+                        Name="BedrockNavItem"
+                        Tag="Bedrock">
                         <tio:NavMenuItem.Icon>
                             <TextBlock
                                 FontFamily="{StaticResource IconFont}"
@@ -54,20 +60,29 @@
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="陶瓦联机" IsEnabled="False">
+                <tio:NavMenuItem
+                    Header="陶瓦联机"
+                    Name="TerracottaNavItem"
+                    Tag="Terracotta">
                     <tio:NavMenuItem.Icon>
                         <Image
                             Height="20"
-                            Source="/Assets/Multiplayer/terracotta.png"
+                            Margin="0,-2"
+                            Name="TerracottaNavIcon"
+                            RenderOptions.BitmapInterpolationMode="HighQuality"
                             Stretch="Uniform"
                             Width="20" />
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
-                <tio:NavMenuItem Header="红石联机" IsEnabled="False">
+                <tio:NavMenuItem
+                    Header="红石联机"
+                    Name="RedstoneNavItem"
+                    Tag="Redstone">
                     <tio:NavMenuItem.Icon>
                         <Image
                             Height="20"
-                            Source="/Assets/Multiplayer/redstone.png"
+                            Name="RedstoneNavIcon"
+                            RenderOptions.BitmapInterpolationMode="HighQuality"
                             Stretch="Uniform"
                             Width="20" />
                     </tio:NavMenuItem.Icon>
@@ -75,13 +90,59 @@
             </tio:NavMenu>
         </controls:ScrollView>
 
-        <TransitioningContentControl
-            Margin="0,0,5,0"
-            MaxWidth="820"
-            Name="Frame">
-            <TransitioningContentControl.PageTransition>
-                <CrossFade Duration="0:0:0.2" />
-            </TransitioningContentControl.PageTransition>
-        </TransitioningContentControl>
+        <Grid RowDefinitions="Auto,*">
+            <Grid
+                ColumnDefinitions="Auto,Auto,*"
+                HorizontalAlignment="Stretch"
+                Margin="20,15,30,20">
+                <TextBlock
+                    FontFamily="{StaticResource IconFont}"
+                    FontSize="23"
+                    HorizontalAlignment="Center"
+                    Name="HeaderIcon"
+                    VerticalAlignment="Center"
+                    Width="26" />
+                <Image
+                    Height="20"
+                    HorizontalAlignment="Center"
+                    IsVisible="False"
+                    Margin="0,-2"
+                    Name="HeaderImage"
+                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                    Stretch="Uniform"
+                    VerticalAlignment="Center"
+                    Width="26" />
+                <TextBlock
+                    FontSize="26"
+                    FontWeight="Thin"
+                    Grid.Column="1"
+                    Margin="10,0,0,0"
+                    Name="HeaderTitle"
+                    VerticalAlignment="Center" />
+                <Border
+                    Background="{DynamicResource TranslucentBackgroundColor}"
+                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    IsVisible="False"
+                    Name="HeaderStatus"
+                    Padding="10,6"
+                    VerticalAlignment="Center">
+                    <TextBlock Name="HeaderStatusText" />
+                </Border>
+            </Grid>
+            <controls:ScrollView Grid.Row="1" Margin="0,0,5,0">
+                <TransitioningContentControl
+                    Margin="20,0,30,20"
+                    MaxWidth="820"
+                    Name="Frame">
+                    <TransitioningContentControl.PageTransition>
+                        <CrossFade Duration="0:0:0.2" />
+                    </TransitioningContentControl.PageTransition>
+                </TransitioningContentControl>
+            </controls:ScrollView>
+        </Grid>
     </DockPanel>
 </UserControl>

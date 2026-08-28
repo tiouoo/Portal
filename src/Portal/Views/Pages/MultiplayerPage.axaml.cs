@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -9,6 +10,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -33,18 +36,36 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     private readonly HashSet<MinecraftEdition> _initializedEditions = [];
     private readonly Dictionary<MinecraftEdition, MultiplayerContentPage> _pages = new();
     private readonly Dictionary<MinecraftEdition, MultiplayerPageViewModel> _viewModels = new();
+    private Bitmap? _redstoneIcon;
+    private Bitmap? _terracottaIcon;
+    private MultiplayerPageViewModel? _currentViewModel;
+    private bool _isSelectingSection;
     private bool _hasLoaded;
-    private MinecraftEdition _selectedEdition;
+    private MultiplayerSection _selectedSection;
 
-    public MultiplayerPage() : this(MinecraftEdition.Java)
+    public MultiplayerPage() : this(GetSavedSection())
     {
     }
 
-    public MultiplayerPage(MinecraftEdition edition = MinecraftEdition.Java)
+    public MultiplayerPage(MinecraftEdition edition) : this(ToSection(edition))
+    {
+    }
+
+    private MultiplayerPage(MultiplayerSection section)
     {
         InitializeComponent();
-        _selectedEdition = edition;
+        _terracottaIcon = DecodeNavigationIcon("avares://Portal/Assets/Multiplayer/terracotta.png");
+        TerracottaNavIcon.Source = _terracottaIcon;
+        _redstoneIcon = DecodeNavigationIcon("avares://Portal/Assets/Multiplayer/redstone.png");
+        RedstoneNavIcon.Source = _redstoneIcon;
+        _selectedSection = section;
         Loaded += OnLoaded;
+        Loaded += (_, _) =>
+        {
+            var a = Frame.Content;
+            Frame.Content = null;
+            Frame.Content = a;
+        };
     }
 
     public PageInfo PageInfo { get; init; } = new()
@@ -60,9 +81,18 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         Logger.Info($"[Multiplayer] Page closing; disposing {_viewModels.Count} edition page(s).");
         Loaded -= OnLoaded;
         _hasLoaded = false;
+        _currentViewModel = null;
+        HeaderImage.Source = null;
+        TerracottaNavIcon.Source = null;
+        RedstoneNavIcon.Source = null;
+        _terracottaIcon?.Dispose();
+        _terracottaIcon = null;
+        _redstoneIcon?.Dispose();
+        _redstoneIcon = null;
         Frame.Content = null;
         foreach (var viewModel in _viewModels.Values)
         {
+            viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
             viewModel.Deactivate();
             viewModel.DisposeAsync().AsTask().Forget($"Dispose {viewModel.Edition} multiplayer page");
         }
@@ -72,18 +102,40 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         _initializedEditions.Clear();
     }
 
+    private static Bitmap DecodeNavigationIcon(string uri)
+    {
+        using var stream = AssetLoader.Open(new Uri(uri));
+        return Bitmap.DecodeToWidth(stream, 20, BitmapInterpolationMode.HighQuality);
+    }
+
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
         _hasLoaded = true;
-        Logger.Info($"[Multiplayer] Page loaded with {_selectedEdition} selected.");
+        Logger.Info($"[Multiplayer] Page loaded with {_selectedSection} selected.");
         if (TopLevel.GetTopLevel(this) is OverlayWindow)
             this.FindControl<ContentControl>("Frame")!.MaxWidth = double.PositiveInfinity;
 
-        SelectEdition(_selectedEdition);
+        SelectSection(_selectedSection);
     }
 
-    public static void Open(TioTabWindowBase window, MinecraftEdition edition = MinecraftEdition.Java)
+    public static void Open(TioTabWindowBase window)
+    {
+        if (window.Tabs.FirstOrDefault(tab => tab.Content is MultiplayerPage) is { } existingTab &&
+            existingTab.Content is MultiplayerPage)
+        {
+            window.SelectTab(existingTab);
+            window.Activate();
+            return;
+        }
+
+        var tab = new TabEntry(window, new MultiplayerPage());
+        window.CreateTab(tab);
+        window.SelectTab(tab);
+        window.Activate();
+    }
+
+    public static void Open(TioTabWindowBase window, MinecraftEdition edition)
     {
         if (window.Tabs.FirstOrDefault(tab => tab.Content is MultiplayerPage) is { } existingTab &&
             existingTab.Content is MultiplayerPage existingPage)
@@ -102,33 +154,129 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
 
     public void NavigateTo(MinecraftEdition edition)
     {
-        _selectedEdition = edition;
-        if (_hasLoaded) SelectEdition(edition);
+        _selectedSection = ToSection(edition);
+        if (_hasLoaded) SelectSection(_selectedSection);
     }
 
     private void NavMenu_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (sender is not NavMenu { SelectedItem: NavMenuItem { Tag: string editionName } }) return;
-        SelectEdition(editionName == "Bedrock" ? MinecraftEdition.Bedrock : MinecraftEdition.Java);
+        if (_isSelectingSection ||
+            sender is not NavMenu { SelectedItem: NavMenuItem { Tag: string sectionName } } ||
+            !Enum.TryParse<MultiplayerSection>(sectionName, out var section))
+            return;
+
+        SelectSection(section);
     }
 
-    private void SelectEdition(MinecraftEdition edition)
+    private void SelectSection(MultiplayerSection section)
     {
-        _selectedEdition = edition;
-        foreach (var existingViewModel in _viewModels.Values) existingViewModel.Deactivate();
+        _isSelectingSection = true;
+        try
+        {
+            _selectedSection = section;
+            Data.ConfigEntry.MultiplayerLastSelectedPage = section.ToString();
+            foreach (var existingViewModel in _viewModels.Values) existingViewModel.Deactivate();
+            _currentViewModel = null;
 
+            if (section is MultiplayerSection.Java or MultiplayerSection.Bedrock)
+                SelectGravityConeEdition(section == MultiplayerSection.Java
+                    ? MinecraftEdition.Java
+                    : MinecraftEdition.Bedrock);
+            else
+                SelectPlaceholder(section);
+        }
+        finally
+        {
+            _isSelectingSection = false;
+        }
+    }
+
+    private void SelectGravityConeEdition(MinecraftEdition edition)
+    {
         if (!_viewModels.TryGetValue(edition, out var viewModel))
         {
             viewModel = new MultiplayerPageViewModel(edition);
+            viewModel.PropertyChanged += ViewModelOnPropertyChanged;
             _viewModels[edition] = viewModel;
             _pages[edition] = new MultiplayerContentPage(viewModel);
         }
 
+        _currentViewModel = viewModel;
         viewModel.Activate();
         Frame.Content = _pages[edition];
-        NavMenu.SelectedItem = edition == MinecraftEdition.Java ? JavaNavItem : BedrockNavItem;
+        var selectedItem = edition == MinecraftEdition.Java ? JavaNavItem : BedrockNavItem;
+        NavMenu.SelectedItem = selectedItem;
+        HeaderTitle.Text = selectedItem.Header?.ToString() ?? string.Empty;
+        HeaderImage.IsVisible = false;
+        HeaderImage.Source = null;
+        HeaderIcon.IsVisible = true;
+        HeaderIcon.Text = edition == MinecraftEdition.Java ? "\ue65f" : "\ue670";
+        HeaderIcon.FontSize = edition == MinecraftEdition.Java ? 23 : 22;
+        UpdateHeaderStatus(viewModel);
 
         if (_initializedEditions.Add(edition)) _ = viewModel.InitializeAsync();
+    }
+
+    private void SelectPlaceholder(MultiplayerSection section)
+    {
+        var selectedItem = section == MultiplayerSection.Terracotta ? TerracottaNavItem : RedstoneNavItem;
+        var bitmap = section == MultiplayerSection.Terracotta ? _terracottaIcon : _redstoneIcon;
+        NavMenu.SelectedItem = selectedItem;
+        HeaderTitle.Text = selectedItem.Header?.ToString() ?? string.Empty;
+        HeaderIcon.IsVisible = false;
+        HeaderIcon.Text = string.Empty;
+        HeaderImage.Source = bitmap;
+        HeaderImage.IsVisible = bitmap is not null;
+        HeaderStatus.IsVisible = false;
+        HeaderStatusText.Text = string.Empty;
+        Frame.Content = null;
+        Logger.Info($"[Multiplayer] Selected {section} placeholder without initializing GravityCone.");
+    }
+
+    private static MultiplayerSection GetSavedSection()
+    {
+        return Enum.TryParse<MultiplayerSection>(Data.ConfigEntry.MultiplayerLastSelectedPage, out var section)
+            ? section
+            : MultiplayerSection.Java;
+    }
+
+    private static MultiplayerSection ToSection(MinecraftEdition edition)
+    {
+        return edition == MinecraftEdition.Bedrock ? MultiplayerSection.Bedrock : MultiplayerSection.Java;
+    }
+
+    private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not MultiplayerPageViewModel viewModel ||
+            !ReferenceEquals(viewModel, _currentViewModel) ||
+            e.PropertyName is not (nameof(MultiplayerPageViewModel.StatusText) or
+                nameof(MultiplayerPageViewModel.HasStatusText)))
+            return;
+
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            UpdateHeaderStatus(viewModel);
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ReferenceEquals(viewModel, _currentViewModel)) UpdateHeaderStatus(viewModel);
+        });
+    }
+
+    private void UpdateHeaderStatus(MultiplayerPageViewModel viewModel)
+    {
+        HeaderStatus.IsVisible = viewModel.HasStatusText;
+        HeaderStatusText.Text = viewModel.StatusText;
+    }
+
+    private enum MultiplayerSection
+    {
+        Java,
+        Bedrock,
+        Terracotta,
+        Redstone
     }
 }
 

@@ -5,32 +5,12 @@
     x:Class="Portal.Views.Components.MultiplayerContentPage"
     x:DataType="pages:MultiplayerPageViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:multiplayer="clr-namespace:Portal.Core.Module.Multiplayer;assembly=Portal.Core"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
-    <controls:ScrollView Margin="5,0,5,0">
-        <StackPanel Margin="10,10,10,20" Spacing="15">
-            <DockPanel>
-                <StackPanel>
-                    <TextBlock FontSize="26" Text="{Binding EditionTitle}" />
-                </StackPanel>
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    DockPanel.Dock="Right"
-                    HorizontalAlignment="Right"
-                    IsVisible="{Binding HasStatusText}"
-                    Padding="10,6"
-                    VerticalAlignment="Top">
-                    <TextBlock Text="{Binding StatusText}" />
-                </Border>
-            </DockPanel>
-
+        <StackPanel Spacing="15">
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -315,5 +295,4 @@
                 </Border>
             </StackPanel>
         </StackPanel>
-    </controls:ScrollView>
 </UserControl>
