@@ -20,6 +20,7 @@
   <Folder Name="/Module/Iridium/">
     <Project Path="module/Iridium/src/Iridium.Extension/Iridium.Extension.csproj" />
     <Project Path="module/Iridium/src/Iridium.Sample/Iridium.Sample.csproj" />
+    <Project Path="module/Iridium/src/Iridium.SourceGenerators/Iridium.SourceGenerators.csproj" />
     <Project Path="module/Iridium/src/Iridium/Iridium.csproj" />
   </Folder>
   <Folder Name="/Module/LiteSkinViewer/">
