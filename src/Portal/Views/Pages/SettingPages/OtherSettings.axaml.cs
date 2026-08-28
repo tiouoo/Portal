@@ -6,6 +6,7 @@ using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Module.AggregatedSearch;
 using Portal.Core.Module.Ipc;
+using Portal.Core.Module.Update;
 using Portal.Localization;
 using Portal.Module.DefaultPage;
 using Portal.ViewModels;
@@ -116,7 +117,9 @@ public sealed class UpdateSettingsViewModel : ObservableObject
     {
         if (option.Source is not { } source || option.Channel is not { } channel) return;
         Data.ConfigEntry.UpdateSource = source;
+        Data.ConfigEntry.UpdateChannel = channel;
         Data.UiProperty.OverrideUpdateChannel = channel;
+        UpdateApp.NotifyUpdateSelectionChanged();
     }
 }
 

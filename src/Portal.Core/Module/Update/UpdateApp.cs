@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using MinecraftLaunch.Base.EventArgs;
 using MinecraftLaunch.Components.Downloader;
 using MinecraftLaunch.Utilities;
+using Portal.Core.Classes;
 using Portal.Core.Const;
 using Portal.Core.Module.Initialize;
 using Portal.Localization;
@@ -28,44 +29,105 @@ public static class UpdateApp
     private const int DownloadBufferSize = 81920;
     private const double DownloadRetryBackoffSeconds = 1.5;
     private static readonly Lock PreparationLock = new();
-    private static Task<PreparedUpdate?>? _automaticPreparationTask;
-    private static Task<PreparedUpdate?>? _manualPreparationTask;
+    private static Task<PreparedUpdate?>? _preparationTask;
+    private static CancellationTokenSource? _preparationCancellation;
+    private static UpdateSelection? _activeSelection;
+    private static bool _preparationIsSilent = true;
+    private static int _preparationGeneration;
 
     public static PreparedUpdate? ReadyUpdate { get; private set; }
 
-    public static Task<PreparedUpdate?> Prepare(TopLevel? sender, bool silent = false)
+    public static void NotifyUpdateSelectionChanged()
     {
+        var selection = CaptureSelection();
+        PreparedUpdate? discardedUpdate;
+        CancellationTokenSource? cancellation;
+        bool prepareReplacement;
+        bool replacementIsSilent;
         lock (PreparationLock)
         {
-            if (ReadyUpdate is not null)
+            if (_activeSelection is null)
             {
-                if (!silent) Data.UiProperty.IsManualUpdateRequested = true;
-                return Task.FromResult<PreparedUpdate?>(ReadyUpdate);
+                _activeSelection = selection;
+                return;
             }
+            if (_activeSelection == selection) return;
 
-            if (silent)
-            {
-                if (_automaticPreparationTask is { IsCompleted: false }) return _automaticPreparationTask;
-                _automaticPreparationTask = PrepareCore(null, true);
-                return _automaticPreparationTask;
-            }
-
-            Data.UiProperty.IsManualUpdateRequested = true;
-            if (_manualPreparationTask is { IsCompleted: false }) return _manualPreparationTask;
-            _manualPreparationTask = PrepareCore(sender, false);
-            return _manualPreparationTask;
+            prepareReplacement = ReadyUpdate is not null || _preparationTask is { IsCompleted: false };
+            replacementIsSilent = ReadyUpdate is not null
+                ? !Data.UiProperty.IsManualUpdateRequested
+                : _preparationIsSilent;
+            discardedUpdate = ReadyUpdate;
+            cancellation = _preparationCancellation;
+            _activeSelection = selection;
+            _preparationGeneration++;
+            _preparationTask = null;
+            _preparationCancellation = null;
+            ReadyUpdate = null;
+            ResetUpdateState();
         }
+
+        cancellation?.Cancel();
+        DeletePreparedUpdate(discardedUpdate);
+        if (prepareReplacement)
+            _ = Prepare(null, replacementIsSilent);
     }
 
-    private static async Task<PreparedUpdate?> PrepareCore(TopLevel? sender, bool silent)
+    public static Task<PreparedUpdate?> Prepare(TopLevel? sender, bool silent = false)
+    {
+        PreparedUpdate? discardedUpdate = null;
+        CancellationTokenSource? cancellation = null;
+        Task<PreparedUpdate?> task;
+        lock (PreparationLock)
+        {
+            var selection = CaptureSelection();
+            if (_activeSelection != selection)
+            {
+                discardedUpdate = ReadyUpdate;
+                cancellation = _preparationCancellation;
+                _activeSelection = selection;
+                _preparationGeneration++;
+                _preparationTask = null;
+                _preparationCancellation = null;
+                ReadyUpdate = null;
+                ResetUpdateState();
+            }
+
+            if (ReadyUpdate is { } readyUpdate && readyUpdate.Selection == selection)
+            {
+                if (!silent) Data.UiProperty.IsManualUpdateRequested = true;
+                return Task.FromResult<PreparedUpdate?>(readyUpdate);
+            }
+
+            if (!silent) Data.UiProperty.IsManualUpdateRequested = true;
+            if (_preparationTask is { IsCompleted: false }) return _preparationTask;
+
+            _preparationCancellation = new CancellationTokenSource();
+            _preparationIsSilent = silent;
+            var generation = ++_preparationGeneration;
+            _preparationTask = PrepareCore(sender, silent, selection, generation,
+                _preparationCancellation.Token);
+            task = _preparationTask;
+        }
+
+        cancellation?.Cancel();
+        DeletePreparedUpdate(discardedUpdate);
+        return task;
+    }
+
+    private static async Task<PreparedUpdate?> PrepareCore(TopLevel? sender, bool silent,
+        UpdateSelection selection, int generation, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
+        string? updateDirectory = null;
         Logger.Info(LogLanguageManager.Instance.update_prepareStart.CurrentValue());
         try
         {
             while (true)
             {
-                var release = await UpdateChecker.GetRelease();
+                cancellationToken.ThrowIfCancellationRequested();
+                var release = await UpdateChecker.GetRelease(selection.Source, selection.Channel);
+                EnsureCurrentSelection(selection, generation, cancellationToken);
                 if (!UpdateChecker.IsNewer(release))
                 {
                     if (!silent)
@@ -85,10 +147,11 @@ public static class UpdateApp
                     Data.UiProperty.NewVersion = release.Title;
                     Data.UiProperty.FoundNewVersion = true;
                 }
-                var packageType = Data.Instance.PackageType.Trim().ToLowerInvariant();
+                var packageType = selection.PackageType;
                 var asset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(release, packageType));
+                EnsureCurrentSelection(selection, generation, cancellationToken);
                 var releaseIdentity = GetReleaseIdentity(release, asset);
-                var updateDirectory = Path.Combine(ConfigPath.UpdateFolderPath,
+                updateDirectory = Path.Combine(ConfigPath.UpdateFolderPath,
                     $"{releaseIdentity[..16]}-{(silent ? "auto" : "manual")}");
                 Directory.CreateDirectory(updateDirectory);
                 CleanupOldUpdateDirectories(updateDirectory);
@@ -107,14 +170,16 @@ public static class UpdateApp
                     Data.UiProperty.IsUpdateDownloading = true;
                     Data.UiProperty.UpdateDownloadPercent = 0;
                 }
-                var taskHandle = await Download(asset, packagePath, !silent);
+                var taskHandle = await Download(asset, packagePath, !silent, cancellationToken);
+                EnsureCurrentSelection(selection, generation, cancellationToken);
                 if (silent)
                     Data.UiProperty.IsAutomaticUpdateDownloading = false;
                 else
                     Data.UiProperty.IsUpdateDownloading = false;
 
-                var latestRelease = await UpdateChecker.GetRelease();
+                var latestRelease = await UpdateChecker.GetRelease(selection.Source, selection.Channel);
                 var latestAsset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(latestRelease, packageType));
+                EnsureCurrentSelection(selection, generation, cancellationToken);
                 if (!releaseIdentity.Equals(GetReleaseIdentity(latestRelease, latestAsset), StringComparison.Ordinal))
                 {
                     Directory.Delete(updateDirectory, true);
@@ -128,7 +193,7 @@ public static class UpdateApp
                 {
                     preparedUpdate = new PreparedUpdate(
                         await Task.Run(() => PrepareWindowsInstaller(packagePath, updateDirectory)), true,
-                        ReleaseIdentity: releaseIdentity);
+                        ReleaseIdentity: releaseIdentity, UpdateDirectory: updateDirectory, Selection: selection);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && packageType is "deb" or "rpm")
                 {
@@ -136,7 +201,7 @@ public static class UpdateApp
                                       ?? throw new InvalidOperationException(CommonLanguageManager.Instance.update_cannotDetermineCurrentPath.CurrentValue());
                     preparedUpdate = new PreparedUpdate(
                         await Task.Run(() => PrepareLinuxPackage(packagePath, updateDirectory, packageType, processPath)),
-                        true, true, releaseIdentity);
+                        true, true, releaseIdentity, updateDirectory, selection);
                 }
                 else
                 {
@@ -147,7 +212,9 @@ public static class UpdateApp
                         var appImageUpdate = await Task.Run(() => PrepareAppImage(packagePath, updateDirectory));
                         preparedUpdate = appImageUpdate with
                         {
-                            ReleaseIdentity = releaseIdentity
+                            ReleaseIdentity = releaseIdentity,
+                            UpdateDirectory = updateDirectory,
+                            Selection = selection
                         };
                     }
                     else
@@ -159,10 +226,12 @@ public static class UpdateApp
                             updater = await Task.Run(() => PrepareMacApp(packagePath, updateDirectory, path));
                         else
                             throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedInstallType.CurrentValue(), packageType));
-                        preparedUpdate = new PreparedUpdate(updater, false, ReleaseIdentity: releaseIdentity);
+                        preparedUpdate = new PreparedUpdate(updater, false, ReleaseIdentity: releaseIdentity,
+                            UpdateDirectory: updateDirectory, Selection: selection);
                     }
                 }
 
+                EnsureCurrentSelection(selection, generation, cancellationToken);
                 CompletePreparation(taskHandle, preparedUpdate);
                 lock (PreparationLock)
                 {
@@ -175,6 +244,11 @@ public static class UpdateApp
                 Logger.Info(string.Format(LogLanguageManager.Instance.update_prepareComplete.CurrentValue(), stopwatch.ElapsedMilliseconds));
                 return ReadyUpdate;
             }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            DeleteUpdateDirectory(updateDirectory);
+            return null;
         }
         catch (Exception ex)
         {
@@ -191,11 +265,25 @@ public static class UpdateApp
 
     public static async Task Apply(PreparedUpdate update)
     {
-        var release = await UpdateChecker.GetRelease();
-        var packageType = Data.Instance.PackageType.Trim().ToLowerInvariant();
-        var asset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(release, packageType));
-        if (!GetReleaseIdentity(release, asset).Equals(update.ReleaseIdentity, StringComparison.Ordinal))
-            throw new InvalidOperationException(CommonLanguageManager.Instance.update_downloadedReleaseChanged.CurrentValue());
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var selection = CaptureSelection();
+            if (update.Selection == selection)
+            {
+                var release = await UpdateChecker.GetRelease(selection.Source, selection.Channel);
+                var asset = await UpdateChecker.ResolveDownloadMetadata(SelectAsset(release, selection.PackageType));
+                if (selection == CaptureSelection() &&
+                    GetReleaseIdentity(release, asset).Equals(update.ReleaseIdentity, StringComparison.Ordinal))
+                    break;
+            }
+
+            DiscardPreparedUpdateState(update);
+            if (attempt == 1)
+                throw new InvalidOperationException(CommonLanguageManager.Instance.update_downloadedReleaseChanged.CurrentValue());
+            update = await Prepare(null) ??
+                     throw new InvalidOperationException(CommonLanguageManager.Instance.update_downloadedReleaseChanged.CurrentValue());
+        }
+
         if (!await ApplicationEvents.RaiseAppExiting()) return;
         ConfigSaver.FlushConfig();
         using var process = Process.Start(update.StartInfo)
@@ -256,7 +344,8 @@ public static class UpdateApp
                ?? throw new FileNotFoundException(string.Format(CommonLanguageManager.Instance.update_packageNotFound.CurrentValue(), expectedName));
     }
 
-    private static async Task<UpdateTaskHandle?> Download(UpdateAsset asset, string destination, bool showTask)
+    private static async Task<UpdateTaskHandle?> Download(UpdateAsset asset, string destination, bool showTask,
+        CancellationToken cancellationToken)
     {
         if (await IsValidPackage(destination, asset))
         {
@@ -275,11 +364,15 @@ public static class UpdateApp
         {
             await ResumableDownloadAsync(downloadUrl, temporary, asset.Size, progress =>
             {
+                if (cancellationToken.IsCancellationRequested) return;
                 if (progress.TotalBytes <= 0) return;
                 var fraction = Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1);
                 Dispatcher.UIThread.Post(() =>
-                    Data.UiProperty.AutomaticUpdateDownloadPercent = (int)Math.Round(fraction * 100));
-            }, CancellationToken.None);
+                {
+                    if (cancellationToken.IsCancellationRequested) return;
+                    Data.UiProperty.AutomaticUpdateDownloadPercent = (int)Math.Round(fraction * 100);
+                });
+            }, cancellationToken);
             await VerifyAndMovePackage(asset, temporary, destination);
             return null;
         }
@@ -309,9 +402,12 @@ public static class UpdateApp
         }, async context =>
         {
             context.SetRunning(string.Format(CommonLanguageManager.Instance.update_downloadingName.CurrentValue(), asset.Name));
+            using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                context.CancellationToken, cancellationToken);
             await ResumableDownloadAsync(downloadUrl, temporary, asset.Size,
                 progress => Dispatcher.UIThread.Post(() =>
                 {
+                    if (cancellationToken.IsCancellationRequested) return;
                     if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
                      var fraction = progress.TotalBytes > 0
                         ? Math.Clamp((double)progress.DownloadedBytes / progress.TotalBytes, 0, 1)
@@ -320,7 +416,7 @@ public static class UpdateApp
                      context.SetDescription(string.Format(CommonLanguageManager.Instance.update_downloadSpeed.CurrentValue(), speed));
                      context.ReportProgress(fraction);
                      Data.UiProperty.UpdateDownloadPercent = fraction is null ? 0 : (int)Math.Round(fraction.Value * 100);
-                }), context.CancellationToken);
+                }), linkedCancellation.Token);
             context.SetDescription(CommonLanguageManager.Instance.update_downloadCompleteVerifying.CurrentValue());
             context.ReportProgress(1);
         });
@@ -514,6 +610,87 @@ public static class UpdateApp
     {
         var identity = $"{release.Title}\n{release.Sequence}\n{asset.Name}\n{asset.DownloadUrl}\n{asset.Size}\n{asset.Sha256}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..16];
+    }
+
+    private static UpdateSelection CaptureSelection()
+    {
+        var source = Data.ConfigEntry.UpdateSource;
+        var channel = source == UpdateSource.Github
+            ? Data.UiProperty.OverrideUpdateChannel.Trim().ToLowerInvariant()
+            : "release";
+        return new UpdateSelection(source, channel, Data.Instance.PackageType.Trim().ToLowerInvariant());
+    }
+
+    private static void EnsureCurrentSelection(UpdateSelection selection, int generation,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (PreparationLock)
+            if (_preparationGeneration != generation || _activeSelection != selection)
+                throw new OperationCanceledException(cancellationToken);
+    }
+
+    private static void ResetUpdateState()
+    {
+        Data.UiProperty.IsUpdateReady = false;
+        Data.UiProperty.IsUpdateDownloading = false;
+        Data.UiProperty.IsAutomaticUpdateDownloading = false;
+        Data.UiProperty.FoundNewVersion = false;
+        Data.UiProperty.IsLatestVersion = false;
+        Data.UiProperty.IsManualUpdateRequested = false;
+        Data.UiProperty.UpdateDownloadPercent = 0;
+        Data.UiProperty.AutomaticUpdateDownloadPercent = 0;
+    }
+
+    private static void DeletePreparedUpdate(PreparedUpdate? update)
+    {
+        if (update is not null) DeleteUpdateDirectory(update.UpdateDirectory);
+    }
+
+    private static void DiscardPreparedUpdateState(PreparedUpdate update)
+    {
+        CancellationTokenSource? cancellation = null;
+        var deleteUpdate = true;
+        lock (PreparationLock)
+        {
+            if (ReferenceEquals(ReadyUpdate, update))
+            {
+                cancellation = _preparationCancellation;
+                _preparationGeneration++;
+                _preparationTask = null;
+                _preparationCancellation = null;
+                ReadyUpdate = null;
+                ResetUpdateState();
+            }
+            else if (ReadyUpdate is { } readyUpdate &&
+                     readyUpdate.UpdateDirectory.Equals(update.UpdateDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                deleteUpdate = false;
+            }
+        }
+
+        cancellation?.Cancel();
+        if (deleteUpdate) DeletePreparedUpdate(update);
+    }
+
+    private static void DeleteUpdateDirectory(string? directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory)) return;
+        try
+        {
+            var updateRoot = Path.GetFullPath(ConfigPath.UpdateFolderPath);
+            var fullPath = Path.GetFullPath(directory);
+            var relativePath = Path.GetRelativePath(updateRoot, fullPath);
+            if (relativePath == "." || Path.IsPathRooted(relativePath) ||
+                relativePath.Equals("..", StringComparison.Ordinal) ||
+                relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                return;
+            if (Directory.Exists(fullPath)) Directory.Delete(fullPath, true);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(string.Format(LogLanguageManager.Instance.update_cleanupOldDirectoryFailed.CurrentValue(), directory), ex);
+        }
     }
 
     private static void CleanupOldUpdateDirectories(string currentDirectory)
@@ -910,8 +1087,10 @@ public static class UpdateApp
             .Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
     }
 
+    public sealed record UpdateSelection(UpdateSource Source, string Channel, string PackageType);
+
     public sealed record PreparedUpdate(ProcessStartInfo StartInfo, bool RunsInstaller, bool WaitForStart = false,
-        string ReleaseIdentity = "");
+        string ReleaseIdentity = "", string UpdateDirectory = "", UpdateSelection? Selection = null);
 
     private sealed class UpdateTaskHandle
     {

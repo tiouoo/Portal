@@ -199,7 +199,9 @@ public partial class ConfigEntry : ObservableObject
 
     partial void OnUpdateSourceChanged(UpdateSource value)
     {
-        if (value != UpdateSource.Github) Data.UiProperty.OverrideUpdateChannel = "release";
+        if (value == UpdateSource.Github) return;
+        UpdateChannel = "release";
+        Data.UiProperty.OverrideUpdateChannel = "release";
     }
 
     partial void OnUsingMinecraftMinecraftAccountChanged(MinecraftAccount? value)

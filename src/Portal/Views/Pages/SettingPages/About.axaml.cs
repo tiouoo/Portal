@@ -33,41 +33,45 @@ public partial class About : Dsc
         DataContext = AboutViewModel;
     }
 
-    private async void Button_OnClick(object? sender, RoutedEventArgs e)
+    private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
         _ = Check(sender);
     }
 
     private async Task Check(object? sender)
     {
-        Data.UiProperty.IsLatestVersion = false;
-        Data.UiProperty.FoundNewVersion = false;
-        var channel = Data.UiProperty.OverrideUpdateChannel;
-        if (channel != "release" && channel != "nightly" && channel != "commit" && channel != "dev") return;
-
-        HyperlinkButton.Content = CommonLanguageManager.Instance.about_checkingUpdate.CurrentValue();
-        HyperlinkButton.IsEnabled = false;
-        var result = await UpdateChecker.Check(sender!.AsTopLevel());
-        HyperlinkButton.Content = CommonLanguageManager.Instance.about_checkUpdate.CurrentValue();
-        HyperlinkButton.IsEnabled = true;
-        if (result == null)
+        if (!HyperlinkButton.IsEnabled || sender is not Control control) return;
+        try
         {
-            Data.UiProperty.FoundNewVersion = false;
             Data.UiProperty.IsLatestVersion = false;
-            return;
-        }
+            Data.UiProperty.FoundNewVersion = false;
+            HyperlinkButton.Content = CommonLanguageManager.Instance.about_checkingUpdate.CurrentValue();
+            HyperlinkButton.IsEnabled = false;
+            var result = await UpdateChecker.Check(control.GetTopLevel());
+            if (result == null)
+            {
+                Data.UiProperty.FoundNewVersion = false;
+                Data.UiProperty.IsLatestVersion = false;
+                return;
+            }
 
-        if (result == "latest")
+            if (result == "latest")
+            {
+                Data.UiProperty.IsLatestVersion = true;
+                control.GetTopLevel()?.Notice(CommonLanguageManager.Instance.update_alreadyLatest.CurrentValue(),
+                    NotificationType.Success);
+                return;
+            }
+
+            Data.UiProperty.NewVersion = result;
+            Data.UiProperty.FoundNewVersion = true;
+            _ = UpdateApp.Prepare(control.GetTopLevel());
+        }
+        finally
         {
-            Data.UiProperty.IsLatestVersion = true;
-            sender!.AsTopLevel().Notice(CommonLanguageManager.Instance.update_alreadyLatest.CurrentValue(),
-                NotificationType.Success);
-            return;
+            HyperlinkButton.Content = CommonLanguageManager.Instance.about_checkUpdate.CurrentValue();
+            HyperlinkButton.IsEnabled = true;
         }
-
-        Data.UiProperty.NewVersion = result;
-        Data.UiProperty.FoundNewVersion = true;
-        if (sender is not null) _ = UpdateApp.Prepare(sender.AsTopLevel());
     }
 
     private async void UpdateHyperlinkButton_OnClickButton_OnClick(object? sender, RoutedEventArgs e)

@@ -102,8 +102,16 @@ public class Config
 
         var version = AppVersionService.Instance.Version;
         Logger.Info(string.Format(LogLanguageManager.Instance.config_versionLoaded.CurrentValue(), version.VersionTitle, version.Type));
+        var configuredUpdateChannel = (Data.ConfigEntry.UpdateChannel ?? version.Type).Trim().ToLowerInvariant() switch
+        {
+            "nightly" => "nightly",
+            "commit" or "dev" => "commit",
+            _ => "release"
+        };
+        if (Data.ConfigEntry.UpdateSource != UpdateSource.Github) configuredUpdateChannel = "release";
+        Data.ConfigEntry.UpdateChannel = configuredUpdateChannel;
         Data.UiProperty.OverrideUpdateChannel = Data.ConfigEntry.UpdateSource == UpdateSource.Github
-            ? version.Type
+            ? configuredUpdateChannel
             : "release";
 
         const string RESOURCE_NAME1 = "Portal.Core.Assets.package-type.txt";

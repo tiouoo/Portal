@@ -50,11 +50,16 @@ public static class UpdateChecker
 
     public static Task<UpdateRelease> GetRelease()
     {
-        return Data.ConfigEntry.UpdateSource switch
+        return GetRelease(Data.ConfigEntry.UpdateSource, Data.UiProperty.OverrideUpdateChannel);
+    }
+
+    public static Task<UpdateRelease> GetRelease(UpdateSource source, string channel)
+    {
+        return source switch
         {
-            UpdateSource.Github => GetGithubRelease(),
+            UpdateSource.Github => GetGithubRelease(channel),
             UpdateSource.Cnb => GetCnbRelease(),
-            _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedSource.CurrentValue(), Data.ConfigEntry.UpdateSource))
+            _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedSource.CurrentValue(), source))
         };
     }
 
@@ -82,9 +87,9 @@ public static class UpdateChecker
         return release.Sequence == 0 || release.Sequence > current;
     }
 
-    private static async Task<UpdateRelease> GetGithubRelease()
+    private static async Task<UpdateRelease> GetGithubRelease(string configuredChannel)
     {
-        var channel = NormalizeChannel(Data.UiProperty.OverrideUpdateChannel);
+        var channel = NormalizeChannel(configuredChannel);
         var apiUrl = channel == "release"
             ? GithubReleasesUrl
             : $"https://api.github.com/repos/tiouoo/Portal/releases/tags/publish-{channel}";
@@ -236,7 +241,7 @@ public static class UpdateChecker
         {
             "release" or "stable" => "release",
             "nightly" => "nightly",
-            "commit" => "commit",
+            "commit" or "dev" => "commit",
             _ => throw new NotSupportedException(string.Format(CommonLanguageManager.Instance.update_unsupportedChannel.CurrentValue(), channel))
         };
     }
