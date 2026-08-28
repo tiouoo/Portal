@@ -39,6 +39,7 @@
         <PackageReference Include="CommunityToolkit.Mvvm"/>
         <PackageReference Include="HotAvalonia" Condition="'$(Configuration)' == 'Debug'"/>
         <PackageReference Include="Irihi.Lingua"/>
+        <PackageReference Include="SkiaSharp"/>
         <PackageReference Include="Tomlyn"/>
     </ItemGroup>
 

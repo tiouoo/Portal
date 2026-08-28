@@ -4,6 +4,10 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using Avalonia.VisualTree;
+using SkiaSharp;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using Tio.Avalonia.Standard.Modules.Extensions;
@@ -28,7 +32,10 @@ public sealed class StorageUsageChart : Control
     private readonly List<double> _displayedValues = [];
     private readonly List<double> _startValues = [];
     private readonly List<double> _hoverProgress = [];
+    private WriteableBitmap? _chartBitmap;
     private const double MinimumSliceAngle = 8;
+    private const int ChartSupersampling = 4;
+    private const double SliceOverlapDip = 1;
     private const double LegendGap = 35;
     private const double LegendRightPadding = 32;
     private const double LegendColumnGap = 64;
@@ -92,32 +99,7 @@ public sealed class StorageUsageChart : Control
         var values = _displayedValues;
         var total = values.Sum();
 
-        if (total <= 0)
-        {
-            context.DrawEllipse(new SolidColorBrush(Colors.Gray, 0.2), null, center, outerRadius, outerRadius);
-            context.DrawEllipse(new SolidColorBrush(Colors.Transparent), null, center, innerRadius, innerRadius);
-        }
-        else
-        {
-            var sweeps = GetSliceSweeps(values);
-            var startAngle = -90d;
-            var selectionProgress = _hoverProgress.Count > 0 ? _hoverProgress.Max() : 0;
-            for (var index = 0; index < values.Count; index++)
-            {
-                var value = index < values.Count ? values[index] : 0;
-                if (value <= 0) continue;
-                var sweep = sweeps[index];
-                var hover = index < _hoverProgress.Count ? _hoverProgress[index] : 0;
-                var opacity = _hoveredSlice is null || _hoveredSlice == index
-                    ? 1
-                    : 1 - 0.7 * selectionProgress;
-                var highlightedOuterRadius = outerRadius +
-                                             (_hoveredSlice == index ? chartSize * 0.06 * hover : 0);
-                DrawRingSlice(context, center, innerRadius, highlightedOuterRadius, startAngle, sweep,
-                    new SolidColorBrush(Color.Parse(Items![index].Color), opacity));
-                startAngle += sweep;
-            }
-        }
+        DrawChart(context, chartSize, center.Y, innerRadius, outerRadius, values, total);
 
         var legendX = chartSize + LegendGap;
         var legendWidth = Math.Max(0, Bounds.Width - legendX - LegendRightPadding);
@@ -280,33 +262,166 @@ public sealed class StorageUsageChart : Control
         TopLevel.GetTopLevel(this)?.RequestAnimationFrame(callback);
     }
 
-    private static void DrawRingSlice(DrawingContext context, Point center, double innerRadius, double outerRadius,
-        double startAngle, double sweepAngle, IBrush brush)
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        _chartBitmap?.Dispose();
+        _chartBitmap = null;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void DrawChart(DrawingContext context, double chartSize, double centerY, double innerRadius,
+        double outerRadius, IReadOnlyList<double> values, double total)
+    {
+        var padding = chartSize * 0.06 + 2;
+        var logicalSize = chartSize + padding * 2;
+        var pixelSize = new PixelSize(
+            Math.Max(1, (int)Math.Ceiling(logicalSize * ChartSupersampling)),
+            Math.Max(1, (int)Math.Ceiling(logicalSize * ChartSupersampling)));
+
+        if (_chartBitmap?.PixelSize != pixelSize)
+        {
+            _chartBitmap?.Dispose();
+            _chartBitmap = new WriteableBitmap(pixelSize,
+                new Vector(96 * ChartSupersampling, 96 * ChartSupersampling),
+                PixelFormat.Bgra8888, AlphaFormat.Premul);
+        }
+
+        // One supersampled annulus clip gives every slice identical inner and outer antialiased edges.
+        using (var framebuffer = _chartBitmap.Lock())
+        using (var surface = SKSurface.Create(
+                   new SKImageInfo(framebuffer.Size.Width, framebuffer.Size.Height, SKColorType.Bgra8888,
+                       SKAlphaType.Premul), framebuffer.Address, framebuffer.RowBytes))
+        {
+            var canvas = surface.Canvas;
+            canvas.Clear(SKColors.Transparent);
+            canvas.Scale(ChartSupersampling);
+
+            var center = new SKPoint((float)(padding + chartSize / 2), (float)(padding + chartSize / 2));
+            using var paint = new SKPaint
+            {
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill,
+                BlendMode = SKBlendMode.Src
+            };
+            using var ringClip = CreateRingPath(center, (float)innerRadius, (float)outerRadius);
+
+            canvas.Save();
+            canvas.ClipPath(ringClip, SKClipOperation.Intersect, true);
+
+            if (total <= 0)
+            {
+                paint.Color = new SKColor(128, 128, 128, 51);
+                canvas.DrawCircle(center, (float)(outerRadius + 1), paint);
+            }
+            else
+            {
+                DrawSlices(canvas, paint, center, (float)outerRadius, values);
+            }
+
+            canvas.Restore();
+
+            if (total > 0 && _hoveredSlice is { } hoveredIndex && hoveredIndex < values.Count &&
+                values[hoveredIndex] > 0)
+            {
+                DrawHoveredSlice(canvas, paint, center, chartSize, innerRadius, outerRadius, values, hoveredIndex);
+            }
+
+            surface.Flush();
+        }
+
+        var bitmapLogicalSize = new Size(
+            _chartBitmap.PixelSize.Width / (double)ChartSupersampling,
+            _chartBitmap.PixelSize.Height / (double)ChartSupersampling);
+        var bitmapPixelBounds = new Rect(
+            0, 0, _chartBitmap.PixelSize.Width, _chartBitmap.PixelSize.Height);
+        var destination = new Rect(-padding, centerY - chartSize / 2 - padding,
+            bitmapLogicalSize.Width, bitmapLogicalSize.Height);
+        using (context.PushRenderOptions(new RenderOptions
+               {
+                   EdgeMode = EdgeMode.Antialias,
+                   BitmapInterpolationMode = BitmapInterpolationMode.HighQuality
+               }))
+            context.DrawImage(_chartBitmap, bitmapPixelBounds, destination);
+    }
+
+    private void DrawSlices(SKCanvas canvas, SKPaint paint, SKPoint center, float outerRadius,
+        IReadOnlyList<double> values)
+    {
+        var sweeps = GetSliceSweeps(values);
+        var lastVisibleIndex = Enumerable.Range(0, values.Count).Last(index => values[index] > 0);
+        var overlapAngle = GetOverlapAngle(outerRadius);
+        var selectionProgress = _hoverProgress.Count > 0 ? _hoverProgress.Max() : 0;
+        var startAngle = -90d;
+
+        for (var index = 0; index < values.Count; index++)
+        {
+            if (values[index] <= 0) continue;
+
+            var endAngle = index == lastVisibleIndex ? 270d : startAngle + sweeps[index];
+            var opacity = _hoveredSlice is null || _hoveredSlice == index
+                ? 1
+                : 1 - 0.7 * selectionProgress;
+            paint.Color = ToSkColor(Color.Parse(Items![index].Color), opacity);
+            DrawWedge(canvas, paint, center, outerRadius + 1,
+                startAngle - overlapAngle / 2, endAngle - startAngle + overlapAngle);
+            startAngle = endAngle;
+        }
+    }
+
+    private void DrawHoveredSlice(SKCanvas canvas, SKPaint paint, SKPoint center, double chartSize,
+        double innerRadius, double outerRadius, IReadOnlyList<double> values, int hoveredIndex)
+    {
+        var hover = hoveredIndex < _hoverProgress.Count ? _hoverProgress[hoveredIndex] : 0;
+        var highlightedRadius = outerRadius + chartSize * 0.06 * hover;
+
+        var sweeps = GetSliceSweeps(values);
+        var lastVisibleIndex = Enumerable.Range(0, values.Count).Last(index => values[index] > 0);
+        var startAngle = -90d;
+        for (var index = 0; index < hoveredIndex; index++) startAngle += sweeps[index];
+        var endAngle = hoveredIndex == lastVisibleIndex ? 270d : startAngle + sweeps[hoveredIndex];
+        var overlapAngle = GetOverlapAngle((float)outerRadius);
+
+        using var highlightedClip = CreateRingPath(center, (float)innerRadius, (float)highlightedRadius);
+        canvas.Save();
+        canvas.ClipPath(highlightedClip, SKClipOperation.Intersect, true);
+        paint.BlendMode = SKBlendMode.SrcOver;
+        paint.Color = ToSkColor(Color.Parse(Items![hoveredIndex].Color), 1);
+        DrawWedge(canvas, paint, center, (float)(highlightedRadius + 1),
+            startAngle - overlapAngle / 2, endAngle - startAngle + overlapAngle);
+        canvas.Restore();
+    }
+
+    private static SKPath CreateRingPath(SKPoint center, float innerRadius, float outerRadius)
+    {
+        using var builder = new SKPathBuilder { FillType = SKPathFillType.EvenOdd };
+        builder.AddCircle(center.X, center.Y, outerRadius, SKPathDirection.Clockwise);
+        builder.AddCircle(center.X, center.Y, innerRadius, SKPathDirection.Clockwise);
+        return builder.Detach();
+    }
+
+    private static void DrawWedge(SKCanvas canvas, SKPaint paint, SKPoint center, float radius,
+        double startAngle, double sweepAngle)
     {
         if (sweepAngle >= 359.999)
         {
-            context.DrawEllipse(null, new Pen(brush, outerRadius - innerRadius), center,
-                (outerRadius + innerRadius) / 2, (outerRadius + innerRadius) / 2);
+            canvas.DrawCircle(center, radius, paint);
             return;
         }
 
-        var sliceGeometry = new StreamGeometry();
-        using (var path = sliceGeometry.Open())
-        {
-            var outerStart = PointOnCircle(center, outerRadius, startAngle);
-            var outerEnd = PointOnCircle(center, outerRadius, startAngle + sweepAngle);
-            var innerEnd = PointOnCircle(center, innerRadius, startAngle + sweepAngle);
-            var innerStart = PointOnCircle(center, innerRadius, startAngle);
-            path.BeginFigure(outerStart, true);
-            path.ArcTo(outerEnd, new Size(outerRadius, outerRadius), 0, sweepAngle > 180,
-                SweepDirection.Clockwise);
-            path.LineTo(innerEnd);
-            path.ArcTo(innerStart, new Size(innerRadius, innerRadius), 0, sweepAngle > 180,
-                SweepDirection.CounterClockwise);
-            path.EndFigure(true);
-        }
-        context.DrawGeometry(brush, null, sliceGeometry);
+        using var builder = new SKPathBuilder();
+        builder.MoveTo(center);
+        var bounds = new SKRect(center.X - radius, center.Y - radius, center.X + radius, center.Y + radius);
+        builder.ArcTo(bounds, (float)startAngle, (float)sweepAngle, false);
+        builder.Close();
+        using var path = builder.Detach();
+        canvas.DrawPath(path, paint);
     }
+
+    private static SKColor ToSkColor(Color color, double opacity) =>
+        new(color.R, color.G, color.B, (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)));
+
+    private static double GetOverlapAngle(float outerRadius) =>
+        Math.Min(2, SliceOverlapDip / Math.Max(1, outerRadius) * 180 / Math.PI);
 
     private static double[] GetSliceSweeps(IReadOnlyList<double> values)
     {
@@ -325,12 +440,6 @@ public sealed class StorageUsageChart : Control
 
     private static Rect GetLegendHitBounds(double x, double y, double width) =>
         new(x - 6, y - (LegendRowHeight - LegendContentHeight) / 2, width + 12, LegendRowHeight);
-
-    private static Point PointOnCircle(Point center, double radius, double angle)
-    {
-        var radians = angle * Math.PI / 180;
-        return new Point(center.X + radius * Math.Cos(radians), center.Y + radius * Math.Sin(radians));
-    }
 
     private static double Lerp(double from, double to, double progress) => from + (to - from) * progress;
 }
