@@ -23,7 +23,11 @@ internal static class AppSetup
             new BedrockWindowsToolsService();
 #elif LINUX
         MinecraftLaunchService.DefaultBedrockLauncherFactory =
-            config => new Bedrock.Linux.BedrockLaunch(config);
+            config =>
+            {
+                config.LauncherVersion = AppVersionService.Instance.Version.VersionTitle;
+                return new Bedrock.Linux.BedrockLaunch(config);
+            };
         Bedrock.Standard.Interface.BedrockInstallationService.DefaultInstaller =
             new Bedrock.Linux.BedrockInstaller();
 #endif

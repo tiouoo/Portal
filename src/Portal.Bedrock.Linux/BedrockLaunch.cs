@@ -51,6 +51,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         }
         await EnsureGameInputAsync(runtime, cancellationToken).ConfigureAwait(false);
         await EnsureGamePatchAsync(executablePath, cancellationToken).ConfigureAwait(false);
+        LinuxBedrockDataIsolation.Prepare(_instanceConfig, (message, level) => Log(level, message));
         cancellationToken.ThrowIfCancellationRequested();
         var startInfo = new ProcessStartInfo
         {
