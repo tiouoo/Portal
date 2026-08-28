@@ -114,9 +114,9 @@ public partial class StorageViewModel : ObservableObject
         ChartItems.Clear();
         ChartItems.Add(new StorageChartItem("portal", SettingsLanguageManager.Instance.storage_portalData.CurrentValue(), 0, "#10b981"));
         ChartItems.Add(new StorageChartItem("cache", SettingsLanguageManager.Instance.storage_cache.CurrentValue(), 0, "#f59e0b"));
-        ChartItems.Add(new StorageChartItem("runtime", SettingsLanguageManager.Instance.storage_runtime.CurrentValue(), 0, "#8b5cf6"));
         ChartItems.Add(new StorageChartItem("java", SettingsLanguageManager.Instance.storage_minecraftJava.CurrentValue(), 0, "#3b82f6"));
         ChartItems.Add(new StorageChartItem("bedrock", SettingsLanguageManager.Instance.storage_minecraftBedrock.CurrentValue(), 0, "#06b6d4"));
+        ChartItems.Add(new StorageChartItem("runtime", SettingsLanguageManager.Instance.storage_runtime.CurrentValue(), 0, "#8b5cf6"));
         ChartItems.Add(new StorageChartItem("other", SettingsLanguageManager.Instance.storage_other.CurrentValue(), 0, "#6b7280"));
 
         await Task.Run(() =>
@@ -163,13 +163,15 @@ public partial class StorageViewModel : ObservableObject
                             item.SizeBytes = size;
                     }
 
-                    GameBytesRaw = gameBytes;
+                    var javaGameBytes = Math.Max(0, gameBytes - externalBedrockBytes);
+                    var bedrockGameBytes = portalBedrockBytes + externalBedrockBytes;
+                    GameBytesRaw = javaGameBytes + bedrockGameBytes;
                     TotalBytesRaw = PortalBytesRaw + gameBytes;
                     SetChartSize("portal", dataBytes);
                     SetChartSize("cache", cacheBytes);
                     SetChartSize("runtime", javaBytes);
-                    SetChartSize("java", gameBytes - externalBedrockBytes);
-                    SetChartSize("bedrock", portalBedrockBytes + externalBedrockBytes);
+                    SetChartSize("java", javaGameBytes);
+                    SetChartSize("bedrock", bedrockGameBytes);
                     SetChartSize("other", otherBytes);
                     Logger.Info(
                         $"[Storage] Storage usage refreshed in {stopwatch.Elapsed}: Portal={portalBytes} bytes, game={gameBytes} bytes.");

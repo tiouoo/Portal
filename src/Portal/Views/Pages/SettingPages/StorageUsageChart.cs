@@ -24,14 +24,16 @@ public sealed class StorageUsageChart : Control
     public static readonly StyledProperty<FontFamily> FontFamilyProperty =
         AvaloniaProperty.Register<StorageUsageChart, FontFamily>(nameof(FontFamily), FontFamily.Default);
 
-    public static readonly StyledProperty<IBrush> LegendBackgroundProperty =
-        AvaloniaProperty.Register<StorageUsageChart, IBrush>(nameof(LegendBackground), Brushes.Transparent);
-
     private readonly CubicEaseOut _ease = new();
     private readonly List<double> _displayedValues = [];
     private readonly List<double> _startValues = [];
     private readonly List<double> _hoverProgress = [];
     private const double MinimumSliceAngle = 8;
+    private const double LegendGap = 35;
+    private const double LegendRightPadding = 32;
+    private const double LegendColumnGap = 64;
+    private const double LegendRowHeight = 54;
+    private const double LegendContentHeight = 36;
     private int? _hoveredSlice;
     private int _hoverAnimationToken;
     private int _valueAnimationToken;
@@ -59,12 +61,6 @@ public sealed class StorageUsageChart : Control
         set => SetValue(FontFamilyProperty, value);
     }
 
-    public IBrush LegendBackground
-    {
-        get => GetValue(LegendBackgroundProperty);
-        set => SetValue(LegendBackgroundProperty, value);
-    }
-
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -78,7 +74,7 @@ public sealed class StorageUsageChart : Control
             AnimateValues();
         }
         else if (change.Property == TextBrushProperty || change.Property == SecondaryTextBrushProperty ||
-                 change.Property == FontFamilyProperty || change.Property == LegendBackgroundProperty)
+                 change.Property == FontFamilyProperty)
             InvalidateVisual();
     }
 
@@ -105,40 +101,40 @@ public sealed class StorageUsageChart : Control
         {
             var sweeps = GetSliceSweeps(values);
             var startAngle = -90d;
+            var selectionProgress = _hoverProgress.Count > 0 ? _hoverProgress.Max() : 0;
             for (var index = 0; index < values.Count; index++)
             {
                 var value = index < values.Count ? values[index] : 0;
                 if (value <= 0) continue;
                 var sweep = sweeps[index];
                 var hover = index < _hoverProgress.Count ? _hoverProgress[index] : 0;
-                var opacity = _hoveredSlice == index || (_hoveredSlice is null && hover >= 0.999)
+                var opacity = _hoveredSlice is null || _hoveredSlice == index
                     ? 1
-                    : 0.3 + 0.7 * hover;
-                var offset = _hoveredSlice == index ? chartSize * 0.06 * hover : 0;
-                var middleAngle = (startAngle + sweep / 2) * Math.PI / 180;
-                var sliceCenter = new Point(center.X + Math.Cos(middleAngle) * offset,
-                    center.Y + Math.Sin(middleAngle) * offset);
-                DrawRingSlice(context, sliceCenter, innerRadius, outerRadius, startAngle, sweep,
+                    : 1 - 0.7 * selectionProgress;
+                var highlightedOuterRadius = outerRadius +
+                                             (_hoveredSlice == index ? chartSize * 0.06 * hover : 0);
+                DrawRingSlice(context, center, innerRadius, highlightedOuterRadius, startAngle, sweep,
                     new SolidColorBrush(Color.Parse(Items![index].Color), opacity));
                 startAngle += sweep;
             }
         }
 
-        var legendX = chartSize + 8;
-        var legendWidth = Math.Max(0, Bounds.Width - legendX);
+        var legendX = chartSize + LegendGap;
+        var legendWidth = Math.Max(0, Bounds.Width - legendX - LegendRightPadding);
         if (Items is null) return;
-        var columnGap = 28d;
-        var columnWidth = Math.Max(100, (legendWidth - columnGap) / 2);
-        var rowHeight = 54d;
+        var columnWidth = Math.Max(100, (legendWidth - LegendColumnGap) / 2);
         var rowCount = (Items.Count + 1) / 2;
-        var legendTop = Bounds.Height / 2 - rowHeight * rowCount / 2;
+        var legendHeight = Math.Max(0, (rowCount - 1) * LegendRowHeight + LegendContentHeight);
+        var legendTop = (Bounds.Height - legendHeight) / 2;
         for (var index = 0; index < Items.Count; index++)
         {
             var value = index < values.Count ? values[index] : 0;
             var column = index % 2;
             var row = index / 2;
-            DrawLegend(context, index, Items[index].Label, value, total,
-                legendX + column * (columnWidth + columnGap), legendTop + row * rowHeight, columnWidth);
+            var itemX = legendX + column * (columnWidth + LegendColumnGap);
+            var itemY = legendTop + row * LegendRowHeight;
+            context.DrawRectangle(Brushes.Transparent, null, GetLegendHitBounds(itemX, itemY, columnWidth));
+            DrawLegend(context, index, Items[index].Label, value, total, itemX, itemY);
         }
     }
 
@@ -147,56 +143,30 @@ public sealed class StorageUsageChart : Control
         base.OnPointerMoved(e);
         var position = e.GetPosition(this);
         var chartSize = Math.Min(Bounds.Height, Math.Min(150, Bounds.Width * 0.42));
-        var center = new Point(chartSize / 2, Bounds.Height / 2);
-        var distance = Math.Sqrt(Math.Pow(position.X - center.X, 2) + Math.Pow(position.Y - center.Y, 2));
-        var outerRadius = chartSize * 0.46;
-        var innerRadius = chartSize * 0.25;
         int? hovered = null;
 
-        if (distance >= innerRadius - 24 && distance <= outerRadius + 24)
+        if (position.X >= chartSize + LegendGap - 6)
         {
-            var angle = (Math.Atan2(position.Y - center.Y, position.X - center.X) * 180 / Math.PI + 450) % 360;
-            var total = _displayedValues.Sum();
-            if (total > 0)
+            var legendX = chartSize + LegendGap;
+            var legendWidth = Math.Max(0, Bounds.Width - legendX - LegendRightPadding);
+            var columnWidth = Math.Max(100, (legendWidth - LegendColumnGap) / 2);
+            var rowCount = (_displayedValues.Count + 1) / 2;
+            var legendHeight = Math.Max(0, (rowCount - 1) * LegendRowHeight + LegendContentHeight);
+            var legendTop = (Bounds.Height - legendHeight) / 2;
+            for (var index = 0; index < _displayedValues.Count; index++)
             {
-                var sweeps = GetSliceSweeps(_displayedValues);
-                var accumulated = 0d;
-                for (var index = 0; index < _displayedValues.Count; index++)
+                var column = index % 2;
+                var row = index / 2;
+                var cellX = legendX + column * (columnWidth + LegendColumnGap);
+                var cellY = legendTop + row * LegendRowHeight;
+                if (GetLegendHitBounds(cellX, cellY, columnWidth).Contains(position))
                 {
-                    accumulated += sweeps[index];
-                    if (angle < accumulated)
-                    {
-                        hovered = index;
-                        break;
-                    }
+                    hovered = index;
+                    break;
                 }
             }
         }
-        else if (position.X >= chartSize - 2)
-        {
-            var legendX = chartSize + 8;
-            var columnGap = 28d;
-            var columnWidth = Math.Max(100, (Bounds.Width - legendX - columnGap) / 2);
-            var rowHeight = 54d;
-            var rowCount = (_displayedValues.Count + 1) / 2;
-            var legendTop = Bounds.Height / 2 - rowHeight * rowCount / 2;
-            var column = (int)Math.Floor((position.X - legendX) / (columnWidth + columnGap));
-            var row = (int)Math.Floor((position.Y - legendTop + 8) / rowHeight);
-            if (column is >= 0 and <= 1 && row >= 0)
-            {
-                var index = row * 2 + column;
-                var cellX = legendX + column * (columnWidth + columnGap);
-                var cellY = legendTop + row * rowHeight;
-                if (position.X >= cellX && position.X <= cellX + columnWidth &&
-                    position.Y >= cellY - 4 && position.Y <= cellY + 44 &&
-                    index < _displayedValues.Count)
-                    hovered = index;
-            }
-        }
 
-        if (hovered is null && _hoveredSlice is not null &&
-            distance >= innerRadius - 20 && distance <= outerRadius + 20)
-            hovered = _hoveredSlice;
         SetHoveredSlice(hovered);
     }
 
@@ -230,7 +200,7 @@ public sealed class StorageUsageChart : Control
         _hoverProgress.Clear();
         var starts = previous.Length == _displayedValues.Count
             ? previous
-            : Enumerable.Repeat(1d, _displayedValues.Count).ToArray();
+            : Enumerable.Repeat(0d, _displayedValues.Count).ToArray();
         _hoverProgress.AddRange(starts);
         var token = ++_hoverAnimationToken;
         StartAnimation(token, () => _hoverAnimationToken, TimeSpan.FromMilliseconds(150), progress =>
@@ -265,25 +235,21 @@ public sealed class StorageUsageChart : Control
     }
 
     private void DrawLegend(DrawingContext context, int index, string label, double value, double total,
-        double x, double y, double width)
+        double x, double y)
     {
-        var hover = index < _hoverProgress.Count ? _hoverProgress[index] : 0;
-        var opacity = _hoveredSlice == index || (_hoveredSlice is null && hover >= 0.999)
+        var selectionProgress = _hoverProgress.Count > 0 ? _hoverProgress.Max() : 0;
+        var opacity = _hoveredSlice is null || _hoveredSlice == index
             ? 1
-            : 0.3 + 0.7 * hover;
+            : 1 - 0.7 * selectionProgress;
         var color = Color.Parse(Items![index].Color);
-        var backgroundOpacity = _hoveredSlice == index ? 0.2 : 0.08;
-        var backgroundBounds = new Rect(x - 6, y - 4, width, 48);
-        context.DrawRectangle(LegendBackground, null, backgroundBounds, 6, 6);
-        context.DrawRectangle(new SolidColorBrush(color, backgroundOpacity), null, backgroundBounds, 6, 6);
-        context.DrawEllipse(new SolidColorBrush(color, opacity), null, new Point(x + 5, y + 9), 5, 5);
+        context.DrawEllipse(new SolidColorBrush(color, opacity), null, new Point(x + 5, y + 8), 5, 5);
 
         var labelText = CreateText(label, 14, TextBrush, FontWeight.SemiBold);
         context.DrawText(labelText, new Point(x + 18, y));
-        var sizeText = CreateText(((long)value).ToHumanReadableSize(1), 12, SecondaryTextBrush);
-        context.DrawText(sizeText, new Point(x + 18, y + 22));
-        var percentText = CreateText(total > 0 ? $"{value / total:P1}" : "0.0%", 12, SecondaryTextBrush);
-        context.DrawText(percentText, new Point(Math.Max(x + 18, x + width - percentText.Width), y + 22));
+        var sizeText = ((long)value).ToHumanReadableSize(1);
+        var percentage = total > 0 ? value / total * 100 : 0;
+        var usageText = CreateText($"{sizeText}·{percentage:0.0} %", 12, SecondaryTextBrush);
+        context.DrawText(usageText, new Point(x + 18, y + 22));
     }
 
     private void SubscribeItems()
@@ -350,18 +316,42 @@ public sealed class StorageUsageChart : Control
 
         var positiveCount = positiveValues.Count(value => value > 0);
         var minimumAngle = Math.Min(MinimumSliceAngle, 360d / positiveCount);
-        var remainingAngle = 360 - minimumAngle * positiveCount;
-        var remainingValue = positiveValues.Sum(value => Math.Max(0, value - total * minimumAngle / 360));
+        var sweeps = new double[values.Count];
+        var remainingIndices = positiveValues
+            .Select((value, index) => (value, index))
+            .Where(item => item.value > 0)
+            .Select(item => item.index)
+            .ToList();
+        var remainingAngle = 360d;
+        var remainingValue = total;
 
-        return positiveValues.Select(value =>
+        while (remainingIndices.Count > 0)
         {
-            if (value <= 0) return 0;
-            var proportionalAngle = remainingValue > 0
-                ? Math.Max(0, value - total * minimumAngle / 360) / remainingValue * remainingAngle
-                : 0;
-            return minimumAngle + proportionalAngle;
-        }).ToArray();
+            var constrainedIndices = remainingIndices
+                .Where(index => positiveValues[index] / remainingValue * remainingAngle < minimumAngle)
+                .ToArray();
+
+            if (constrainedIndices.Length == 0)
+            {
+                foreach (var index in remainingIndices)
+                    sweeps[index] = positiveValues[index] / remainingValue * remainingAngle;
+                break;
+            }
+
+            foreach (var index in constrainedIndices)
+            {
+                sweeps[index] = minimumAngle;
+                remainingAngle -= minimumAngle;
+                remainingValue -= positiveValues[index];
+                remainingIndices.Remove(index);
+            }
+        }
+
+        return sweeps;
     }
+
+    private static Rect GetLegendHitBounds(double x, double y, double width) =>
+        new(x - 6, y - (LegendRowHeight - LegendContentHeight) / 2, width + 12, LegendRowHeight);
 
     private static Point PointOnCircle(Point center, double radius, double angle)
     {

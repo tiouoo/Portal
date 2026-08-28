@@ -6,43 +6,63 @@
     x:DataType="settingPages:StorageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel>
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
             BorderThickness="1"
-            CornerRadius="8"
+            CornerRadius="12"
             Margin="0,0,0,15"
             Padding="20">
-            <Grid ColumnDefinitions="Auto,*,430" MinHeight="180">
-                <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <Border
-                        CornerRadius="10"
-                        HorizontalAlignment="Left"
-                        Margin="0,0,0,2"
-                        Padding="5,3,5,1">
-                        <Border.Background>
-                            <SolidColorBrush Color="#1890ff" Opacity="0.2" />
-                        </Border.Background>
-                        <TextBlock
-                            FontSize="11"
-                            Foreground="#1890ff"
-                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_total}}" />
-                    </Border>
-                    <StackPanel Orientation="Horizontal">
+            <Grid ColumnDefinitions="Auto,*,470" MinHeight="180">
+                <Grid
+                    HorizontalAlignment="Left"
+                    Margin="12,12,0,12"
+                    RowDefinitions="Auto,*,Auto">
+                    <StackPanel>
+                        <Border
+                            CornerRadius="10"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,2"
+                            Padding="5,3,5,1">
+                            <Border.Background>
+                                <SolidColorBrush Color="#1890ff" Opacity="0.2" />
+                            </Border.Background>
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="#1890ff"
+                                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_total}}" />
+                        </Border>
                         <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding TotalBytesRaw}" />
                     </StackPanel>
-                </StackPanel>
+
+                    <StackPanel Grid.Row="2">
+                        <Border
+                            CornerRadius="10"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,2"
+                            Padding="5,3,5,1">
+                            <Border.Background>
+                                <SolidColorBrush Color="#06b6d4" Opacity="0.2" />
+                            </Border.Background>
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="#06b6d4"
+                                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.storage_games}}" />
+                        </Border>
+                        <settingPages:ByteSizeDisplayer FontSize="42" Value="{Binding GameBytesRaw}" />
+                    </StackPanel>
+                </Grid>
 
                 <settingPages:StorageUsageChart
-                    Items="{Binding ChartItems}"
                     FontFamily="{DynamicResource TioFontFamily}"
                     Grid.Column="2"
                     Height="180"
-                    LegendBackground="{DynamicResource TranslucentBackgroundColor}"
+                    Items="{Binding ChartItems}"
                     Margin="-34,0,0,0"
                     SecondaryTextBrush="{DynamicResource InnerForegroundColor}"
                     TextBrush="{DynamicResource ForegroundColor}" />
@@ -62,7 +82,7 @@
                             Background="{DynamicResource TranslucentBackgroundColor}"
                             BorderBrush="{DynamicResource TranslucentBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="10"
+                            CornerRadius="12"
                             Padding="10">
                             <StackPanel>
                                 <DockPanel>
