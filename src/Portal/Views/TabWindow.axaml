@@ -134,7 +134,6 @@
         </DockPanel>
     </tio:TioWindow.TitleBarRightContent>
     <Grid Background="Transparent">
-
         <ScrollViewer
             Background="Transparent"
             Classes="Flat"
@@ -147,6 +146,11 @@
             PointerWheelChanged="InputElement_OnPointerWheelChanged"
             VerticalAlignment="Top"
             VerticalScrollBarVisibility="Disabled">
+            <ScrollViewer.Styles>
+                <Style Selector="ScrollViewer#NavScrollViewer /template/ ScrollBar#PART_HorizontalScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,1" />
+                </Style>
+            </ScrollViewer.Styles>
             <DockPanel>
                 <tio:SelectionList
                     Indicator="{x:Null}"
