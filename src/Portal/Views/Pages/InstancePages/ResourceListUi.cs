@@ -169,7 +169,7 @@ public static class ResourceListUi
         {
             value /= 1024.0;
             if (value < 1024.0 || unit == "TiB")
-                return $"{value.ToString("0.##", CultureInfo.InvariantCulture)}{unit}";
+                return $"{value.ToString("0.##", CultureInfo.InvariantCulture)} {unit}";
         }
 
         return $"{size} B";

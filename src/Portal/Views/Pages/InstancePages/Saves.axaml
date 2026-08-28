@@ -93,7 +93,7 @@
                     <UniformGridLayout
                         ItemsStretch="Fill"
                         MinColumnSpacing="16"
-                        MinItemHeight="100"
+                        MinItemHeight="83"
                         MinItemWidth="284"
                         MinRowSpacing="16"
                         Orientation="Horizontal" />
@@ -222,13 +222,6 @@
                                             TextWrapping="NoWrap"
                                             VerticalAlignment="Bottom" />
                                     </DockPanel>
-                                    <TextBlock
-                                        FontSize="13"
-                                        Foreground="{DynamicResource InnerForegroundColor}"
-                                        Margin="0,1,0,0"
-                                        Text="{Binding SizeAndFolderText}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="NoWrap" />
                                     <TextBlock
                                         FontSize="13"
                                         Foreground="{DynamicResource InnerForegroundColor}"

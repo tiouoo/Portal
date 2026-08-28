@@ -634,7 +634,6 @@ public sealed class SaveItem(WorldSaveInfo info, MinecraftInstance? instance = n
         : $"{FolderName}";
 
     public long FolderSize => _folderSize ??= ResourceListUi.GetFolderSize(Info.FolderPath);
-    public string SizeAndFolderText => $"{ResourceListUi.FormatSize(FolderSize)}·{FolderName}";
     public string? IconPath => Info.IconPath;
     public bool HasIcon => IconPath != null;
     public IAsyncImageLoader ImageLoader { get; } = new LocalImageLoader(112);
@@ -646,6 +645,7 @@ public sealed class SaveItem(WorldSaveInfo info, MinecraftInstance? instance = n
             var summary = string.Format(CommonLanguageManager.Instance.saves_summary.CurrentValue(),
                 Info.Version ?? CommonLanguageManager.Instance.recentPlay_unknownVersion.CurrentValue(),
                 GetGameModeText(Info.GameMode));
+            summary = $"{ResourceListUi.FormatSize(FolderSize)}·{summary}";
             if (Info.AllowCommands == true)
                 summary += CommonLanguageManager.Instance.saves_allowCheats.CurrentValue();
             if (Info.IsLocked)
