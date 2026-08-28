@@ -144,7 +144,7 @@ public sealed class HongshiMultiplayerService
         {
             lock (_stateLock)
             {
-                return _child is { HasExited: false } || _state.Status is HongshiStatus.Starting or HongshiStatus.Open
+                return IsProcessRunning(_child) || _state.Status is HongshiStatus.Starting or HongshiStatus.Open
                     or HongshiStatus.SelectingNode;
             }
         }
@@ -294,7 +294,7 @@ public sealed class HongshiMultiplayerService
                                                UnixFileMode.OtherExecute);
             }
 
-            File.Move(temporary, BinaryPath, true);
+            ReplaceBinary(temporary, BinaryPath);
 
             UpdateState(state =>
             {
@@ -532,7 +532,7 @@ public sealed class HongshiMultiplayerService
         if (localPort <= 0 || localPort > 65535)
             throw new ArgumentOutOfRangeException(nameof(localPort),
                 CommonLanguageManager.Instance.multiplayer_redstoneInvalidPort.CurrentValue());
-        if (_child is { HasExited: false })
+        if (IsProcessRunning(_child))
             throw new InvalidOperationException(
                 CommonLanguageManager.Instance.multiplayer_redstoneAlreadyRunning.CurrentValue());
 
@@ -666,20 +666,43 @@ public sealed class HongshiMultiplayerService
         return BinaryPath;
     }
 
+    private static void ReplaceBinary(string temporary, string destination)
+    {
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            try
+            {
+                if (File.Exists(destination)) File.SetAttributes(destination, FileAttributes.Normal);
+                File.Move(temporary, destination, true);
+                return;
+            }
+            catch (UnauthorizedAccessException) when (attempt < 3)
+            {
+                Thread.Sleep(100 * (attempt + 1));
+            }
+            catch (IOException) when (attempt < 3)
+            {
+                Thread.Sleep(100 * (attempt + 1));
+            }
+        }
+
+        File.Move(temporary, destination, true);
+    }
+
     private async Task<(TunnelStatus? Tunnel, int ExitCode)> WaitUntilOpenAsync(Process child, string statusFile,
         DateTime startedAt, CancellationToken cancellationToken)
     {
         var deadline = DateTime.UtcNow + StartTimeout;
         while (true)
         {
-            if (child.HasExited)
-                return (null, child.ExitCode);
+            if (HasProcessExited(child))
+                return (null, GetExitCode(child));
 
             var status = ReadFreshStatus(statusFile, startedAt);
             if (status is not null)
             {
                 if (status.Status == "open")
-                    return (child.HasExited ? (null, child.ExitCode) : (status, 0));
+                    return (HasProcessExited(child) ? (null, GetExitCode(child)) : (status, 0));
                 return (null, 0);
             }
 
@@ -747,7 +770,7 @@ public sealed class HongshiMultiplayerService
         try
         {
             await child.WaitForExitAsync();
-            var exitCode = child.ExitCode;
+            var exitCode = GetExitCode(child);
             if (!ReferenceEquals(_child, child)) return;
             UpdateState(state =>
             {
@@ -892,15 +915,33 @@ public sealed class HongshiMultiplayerService
 
     private static void TryKill(Process? process)
     {
-        if (process is null || process.HasExited) return;
         try
         {
+            if (process is null || process.HasExited) return;
             process.Kill(true);
         }
         catch (Exception exception)
         {
             Logger.Debug($"[RedStone] Failed to kill process: {exception.Message}");
         }
+    }
+
+    private static bool IsProcessRunning(Process? process)
+    {
+        try { return process is not null && !process.HasExited; }
+        catch (Exception) { return false; }
+    }
+
+    private static bool HasProcessExited(Process process)
+    {
+        try { return process.HasExited; }
+        catch (Exception) { return true; }
+    }
+
+    private static int GetExitCode(Process process)
+    {
+        try { return process.ExitCode; }
+        catch (Exception) { return -1; }
     }
 
     private sealed record TunnelStatus(string Status, string Server, int Port, string? Created);

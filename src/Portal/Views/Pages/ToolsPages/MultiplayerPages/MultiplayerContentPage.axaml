@@ -39,39 +39,46 @@
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="12"
+                IsVisible="{Binding IsNotInRoom}"
                 Padding="15">
-                <StackPanel Spacing="10">
+                <StackPanel Spacing="8">
                     <TextBlock
                         FontSize="17"
                         FontWeight="SemiBold"
-                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_identityAndNetworkSectionTitle}}" />
-                    <Label
-                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNameLabel}}"
-                        FontSize="13"
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNameLabel}}" />
+                    <TextBlock
+                        FontSize="12"
                         Foreground="{DynamicResource InnerForegroundColor}"
-                        IsVisible="{Binding IsNotInRoom}" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNamePlaceholder}}" />
                     <TextBox
-                        IsVisible="{Binding IsNotInRoom}"
-                        Margin="0,-4,0,0"
+                        MaxLength="16"
                         PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNamePlaceholder}}"
                         Text="{Binding PlayerName}" />
-                    <Label
-                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_natTypeLabel}}"
-                        FontSize="13"
-                        Foreground="{DynamicResource InnerForegroundColor}" />
+                </StackPanel>
+            </Border>
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="False"
+                Padding="15">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_natTypeLabel}}" />
                     <Button
                         Background="Transparent"
                         Command="{Binding ProbeNatCommand}"
                         HorizontalAlignment="Left"
                         IsVisible="{Binding !HasNatSummary}"
-                        Margin="0,-6,0,0"
                         Theme="{StaticResource TransparentButton}">
                         <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Binding NatProbeButtonText}" />
                     </Button>
                     <TextBlock
                         Foreground="{DynamicResource InnerForegroundColor}"
                         IsVisible="{Binding HasNatSummary}"
-                        Margin="0,-6,0,0"
                         Text="{Binding NatSummary}" />
                 </StackPanel>
             </Border>

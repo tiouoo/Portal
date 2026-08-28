@@ -92,6 +92,10 @@ public sealed class GravityConeRelayClient
         return result;
     }
 
+    /// <summary>Returns the shared public relay set used by all multiplayer backends.</summary>
+    public async Task<IReadOnlyList<string>> GetAvailableRelaysAsync(CancellationToken cancellationToken)
+        => await TryReadCacheAsync(cancellationToken) ?? await FetchRelaysAsync(cancellationToken);
+
     /// <summary>
     /// 获取所有 http/https 来源的节点列表，并与用户已填写的内容合并（追加、去重），
     /// 更新到配置输入框中，返回合并后的文本。不会覆盖用户自己填写的内容。

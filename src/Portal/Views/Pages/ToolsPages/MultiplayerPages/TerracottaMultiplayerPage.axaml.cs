@@ -93,7 +93,6 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
         PlayerName = string.IsNullOrWhiteSpace(Data.ConfigEntry.OnlinePlayerName)
             ? Data.ConfigEntry.UsingMinecraftMinecraftAccount?.Name ?? string.Empty
             : Data.ConfigEntry.OnlinePlayerName;
-        PublicNodes = _service.GetConfiguredPublicNodesText();
     }
 
     [ObservableProperty]
@@ -151,8 +150,6 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
     [NotifyPropertyChangedFor(nameof(CanSubmitJoin))]
     [NotifyPropertyChangedFor(nameof(ShowRoomCodeError))]
     public partial string JoinCode { get; set; } = string.Empty;
-
-    [ObservableProperty] public partial string PublicNodes { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DownloadActionText))]
@@ -272,9 +269,8 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
         CommonLanguageManager.Instance.multiplayer_terracottaInstalledVersion.CurrentValue(),
         State?.InstalledVersion ?? string.Empty);
 
-    public bool CanSubmitHost => !IsBusy && IsHostTabSelected && !string.IsNullOrWhiteSpace(PlayerName);
-    public bool CanSubmitJoin => !IsBusy && IsJoinTabSelected && !string.IsNullOrWhiteSpace(PlayerName) &&
-                                 IsRoomCodeValid;
+    public bool CanSubmitHost => !IsBusy && !string.IsNullOrWhiteSpace(PlayerName);
+    public bool CanSubmitJoin => !IsBusy && !string.IsNullOrWhiteSpace(PlayerName) && IsRoomCodeValid;
     public bool IsRoomCodeValid => Regex.IsMatch(JoinCode.Trim(), RoomCodePattern, RegexOptions.IgnoreCase);
     public bool ShowRoomCodeError => IsJoinTabSelected && IsRoomCodeTouched && !IsRoomCodeValid;
 
@@ -294,6 +290,7 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
     {
         _isActive = true;
         RefreshFromService();
+        _ = AutoStartServiceAsync();
         _ = CheckForUpdateAsync();
     }
 
@@ -445,7 +442,33 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
         {
             IsBusy = false;
             if (task.Status == ManagedTaskStatus.Completed)
+            {
+                RefreshFromService();
+                _ = AutoStartServiceAsync();
                 _ = CheckForUpdateAsync();
+            }
+        }
+    }
+
+    private async Task AutoStartServiceAsync()
+    {
+        if (!_isActive || IsBusy || _service.IsRunning || !_service.IsBinaryInstalled()) return;
+        IsBusy = true;
+        try
+        {
+            await _service.StartAsync(false, _lifetime.Token);
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Terracotta] Automatic service start failed: {exception.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+            RefreshFromService();
         }
     }
 
@@ -475,6 +498,8 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
     private async Task HostAsync()
     {
         if (!CanSubmitHost) return;
+        IsHostTabSelected = true;
+        IsJoinTabSelected = false;
         await RunRoomOperationAsync(NotificationType.Success);
     }
 
@@ -482,6 +507,8 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
     private async Task JoinAsync()
     {
         if (!CanSubmitJoin) return;
+        IsHostTabSelected = false;
+        IsJoinTabSelected = true;
         await RunRoomOperationAsync(NotificationType.Success);
     }
 
@@ -534,21 +561,6 @@ public partial class TerracottaMultiplayerViewModel : ObservableObject, IAsyncDi
     [RelayCommand]
     private Task BackAsync() => DisconnectAsync();
 
-    [RelayCommand]
-    private void SavePublicNodes()
-    {
-        try
-        {
-            _service.SaveConfiguredPublicNodes(PublicNodes);
-            ConfigSaver.SaveConfig();
-            Notify(CommonLanguageManager.Instance.multiplayer_terracottaPublicNodesSaved.CurrentValue(),
-                NotificationType.Success);
-        }
-        catch (Exception exception)
-        {
-            Notify(exception.Message, NotificationType.Warning);
-        }
-    }
 
     public string GetDiagnosticReport() => _service.GetDiagnosticReport();
 

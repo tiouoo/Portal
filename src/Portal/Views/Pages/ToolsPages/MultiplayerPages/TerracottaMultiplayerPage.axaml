@@ -63,9 +63,12 @@
             <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <ProgressBar
+                        BorderThickness="4"
+                        Height="32"
                         IsIndeterminate="True"
+                        Theme="{StaticResource ProgressRing}"
                         VerticalAlignment="Center"
-                        Width="140" />
+                        Width="32" />
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock
                             FontSize="17"
@@ -88,77 +91,72 @@
             CornerRadius="12"
             IsVisible="{Binding ShowSessionForm}"
             Padding="15">
-            <StackPanel Spacing="12">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <RadioButton
-                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaHost}}"
-                        FontWeight="SemiBold"
-                        GroupName="terracottaSession"
-                        IsChecked="{Binding IsHostTabSelected}" />
-                    <RadioButton
-                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaJoin}}"
-                        FontWeight="SemiBold"
-                        GroupName="terracottaSession"
-                        IsChecked="{Binding IsJoinTabSelected}" />
-                </StackPanel>
-
+            <StackPanel Spacing="8">
                 <TextBlock
-                    FontSize="13"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Text="{Binding SessionDescription}"
-                    TextWrapping="Wrap" />
+                    FontSize="17"
+                    FontWeight="SemiBold"
+                    Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPlayerName}}" />
+                <TextBox MaxLength="16" Text="{Binding PlayerName}" />
+            </StackPanel>
+        </Border>
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowSessionForm}"
+            Padding="15">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    FontSize="17"
+                    FontWeight="SemiBold"
+                    Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaHost}}" />
+                <Button
+                    Command="{Binding HostCommand}"
+                    Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaStartHosting}}"
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding CanSubmitHost}" />
+            </StackPanel>
+        </Border>
 
-                <StackPanel Spacing="10">
-                    <StackPanel Spacing="4">
-                        <Label
-                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPlayerName}}"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Padding="0" />
-                        <TextBox MaxLength="16" Text="{Binding PlayerName}" />
-                    </StackPanel>
-
-                    <StackPanel IsVisible="{Binding IsJoinTabSelected}" Spacing="4">
-                        <Label
-                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCode}}"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Padding="0" />
-                        <Grid ColumnDefinitions="Auto,Auto,*">
-                            <Button
-                                Command="{Binding ClearJoinCodeCommand}"
-                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_clearJoinCodeButton}}"
-                                Grid.Column="0" />
-                            <Button
-                                Click="PasteJoinCode_OnClick"
-                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_pasteJoinCodeButton}}"
-                                Grid.Column="1"
-                                Margin="8,0,8,0" />
-                            <TextBox
-                                Grid.Column="2"
-                                PlaceholderText="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCodePlaceholder}}"
-                                Text="{Binding JoinCode}" />
-                        </Grid>
-                        <TextBlock
-                            FontSize="12"
-                            Foreground="{DynamicResource ErrorBrush}"
-                            IsVisible="{Binding ShowRoomCodeError}"
-                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCodeInvalid}}" />
-                    </StackPanel>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Spacing="8">
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding ShowSessionForm}"
+            Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock
+                    FontSize="17"
+                    FontWeight="SemiBold"
+                    Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaJoin}}" />
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                     <Button
-                        Command="{Binding HostCommand}"
-                        Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaStartHosting}}"
-                        IsEnabled="{Binding CanSubmitHost}"
-                        IsVisible="{Binding IsHostTabSelected}" />
+                        Command="{Binding ClearJoinCodeCommand}"
+                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_clearJoinCodeButton}}"
+                        Grid.Column="0" />
+                    <Button
+                        Click="PasteJoinCode_OnClick"
+                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_pasteJoinCodeButton}}"
+                        Grid.Column="1"
+                        Margin="8,0,8,0" />
+                    <TextBox
+                        Grid.Column="2"
+                        PlaceholderText="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCodePlaceholder}}"
+                        Text="{Binding JoinCode}" />
                     <Button
                         Command="{Binding JoinCommand}"
                         Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaJoinRoom}}"
+                        Grid.Column="3"
                         IsEnabled="{Binding CanSubmitJoin}"
-                        IsVisible="{Binding IsJoinTabSelected}" />
-                </StackPanel>
+                        Margin="8,0,0,0" />
+                </Grid>
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource ErrorBrush}"
+                    IsVisible="{Binding ShowRoomCodeError}"
+                    Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaRoomCodeInvalid}}" />
             </StackPanel>
         </Border>
 
@@ -172,9 +170,12 @@
             <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <ProgressBar
+                        BorderThickness="4"
+                        Height="32"
                         IsIndeterminate="True"
+                        Theme="{StaticResource ProgressRing}"
                         VerticalAlignment="Center"
-                        Width="140" />
+                        Width="32" />
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock
                             FontSize="17"
@@ -269,19 +270,17 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="multiplayer:TerracottaPlayer">
                                 <Border
-                                    Background="{DynamicResource TranslucentBackgroundColor}"
                                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="8"
-                                    Padding="10,8">
-                                    <DockPanel>
+                                    Padding="10">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
                                         <TextBlock
-                                            DockPanel.Dock="Right"
                                             FontSize="12"
                                             Foreground="{DynamicResource InnerForegroundColor}"
-                                            Text="{Binding Kind}" />
-                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                                    </DockPanel>
+                                            Text="{Binding DisplayKind}" />
+                                    </StackPanel>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -375,32 +374,6 @@
                     HorizontalAlignment="Left"
                     IsEnabled="{Binding !IsBusy}" />
 
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="12">
-                    <StackPanel Spacing="8">
-                        <TextBlock
-                            FontSize="14"
-                            FontWeight="SemiBold"
-                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPublicNodes}}" />
-                        <TextBlock
-                            FontSize="12"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaPublicNodesHint}}"
-                            TextWrapping="Wrap" />
-                        <TextBox
-                            AcceptsReturn="True"
-                            Height="90"
-                            Text="{Binding PublicNodes}" />
-                        <Button
-                            Command="{Binding SavePublicNodesCommand}"
-                            Content="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaSaveNodes}}"
-                            HorizontalAlignment="Left" />
-                    </StackPanel>
-                </Border>
             </StackPanel>
         </Border>
     </StackPanel>

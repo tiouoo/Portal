@@ -48,7 +48,15 @@ public enum TerracottaErrorType
     Unknown
 }
 
-public sealed record TerracottaPlayer(string MachineId, string Name, string Vendor, string Kind);
+public sealed record TerracottaPlayer(string MachineId, string Name, string Vendor, string Kind)
+{
+    public string DisplayKind => Kind.Trim().ToLowerInvariant() switch
+    {
+        "host" => CommonLanguageManager.Instance.multiplayer_terracottaHostLabel.CurrentValue(),
+        "guest" => CommonLanguageManager.Instance.multiplayer_terracottaGuestLabel.CurrentValue(),
+        _ => CommonLanguageManager.Instance.multiplayer_terracottaUnknownRole.CurrentValue()
+    };
+}
 
 public sealed class TerracottaState
 {
@@ -86,8 +94,6 @@ public sealed class TerracottaMultiplayerService
     private const int MaxConsecutivePollFailures = 3;
     private static readonly TimeSpan ApiTimeout = TimeSpan.FromSeconds(10);
 
-    private static readonly string[] PublicNodeSchemes = ["http", "https", "tcp", "tls", "udp", "ws", "wss"];
-
     private readonly object _stateLock = new();
     private readonly SemaphoreSlim _operation = new(1, 1);
     private readonly ConcurrentQueue<string> _diagnosticOutput = new();
@@ -98,6 +104,13 @@ public sealed class TerracottaMultiplayerService
 
     private TerracottaMultiplayerService()
     {
+        // Initialize from disk immediately. Without this, the default state
+        // reports BinaryInstalled=false until a start/stop operation refreshes it.
+        _state = new TerracottaState
+        {
+            BinaryInstalled = IsBinaryInstalled(),
+            InstalledVersion = GetInstalledVersion()
+        };
     }
 
     public static TerracottaMultiplayerService Instance { get; } = new();
@@ -147,7 +160,7 @@ public sealed class TerracottaMultiplayerService
         {
             lock (_stateLock)
             {
-                return _state.HttpPort is not null || _process is { HasExited: false };
+                return _state.HttpPort is not null || IsProcessRunning(_process);
             }
         }
     }
@@ -561,10 +574,15 @@ public sealed class TerracottaMultiplayerService
         var backup = destination + ".old";
         try
         {
-            if (File.Exists(backup)) File.Delete(backup);
-            if (File.Exists(destination)) File.Move(destination, backup);
-            await Task.Run(() => File.Move(source, destination), cancellationToken);
-            if (File.Exists(backup)) File.Delete(backup);
+            if (File.Exists(backup) && !TryDeleteFile(backup))
+                backup = destination + ".old." + Guid.NewGuid().ToString("N");
+            if (File.Exists(destination))
+            {
+                File.SetAttributes(destination, FileAttributes.Normal);
+                MoveWithRetry(destination, backup);
+            }
+            await Task.Run(() => MoveWithRetry(source, destination), cancellationToken);
+            TryDeleteFile(backup);
         }
         catch
         {
@@ -572,6 +590,56 @@ public sealed class TerracottaMultiplayerService
                 File.Move(backup, destination);
             throw;
         }
+    }
+
+    private static bool TryDeleteFile(string path)
+    {
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            try
+            {
+                if (!File.Exists(path)) return true;
+                File.SetAttributes(path, FileAttributes.Normal);
+                File.Delete(path);
+                return !File.Exists(path);
+            }
+            catch (UnauthorizedAccessException) when (attempt < 3)
+            {
+                Thread.Sleep(100 * (attempt + 1));
+            }
+            catch (IOException) when (attempt < 3)
+            {
+                Thread.Sleep(100 * (attempt + 1));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private static void MoveWithRetry(string source, string destination)
+    {
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            try
+            {
+                File.Move(source, destination, true);
+                return;
+            }
+            catch (UnauthorizedAccessException) when (attempt < 3)
+            {
+                Thread.Sleep(100 * (attempt + 1));
+            }
+            catch (IOException) when (attempt < 3)
+            {
+                Thread.Sleep(100 * (attempt + 1));
+            }
+        }
+
+        File.Move(source, destination, true);
     }
 
     private async Task PersistVersionAsync(string version, CancellationToken cancellationToken)
@@ -596,14 +664,8 @@ public sealed class TerracottaMultiplayerService
                     name.EndsWith(".tar.gz", StringComparison.Ordinal) ||
                     name.EndsWith(".old", StringComparison.Ordinal))
                 {
-                    try
-                    {
-                        File.Delete(file);
-                    }
-                    catch (Exception exception)
-                    {
-                        Logger.Warning($"[Terracotta] Failed to clean up {file}: {exception.Message}");
-                    }
+                    if (!TryDeleteFile(file))
+                        Logger.Warning($"[Terracotta] Failed to clean up {file}: access denied or file is still in use.");
                 }
             }
         }
@@ -760,7 +822,7 @@ public sealed class TerracottaMultiplayerService
                 return port.Value;
             }
 
-            if (process.HasExited)
+            if (HasProcessExited(process))
             {
                 if (TryReadPortFile() is { } latePort)
                 {
@@ -771,9 +833,9 @@ public sealed class TerracottaMultiplayerService
                 var output = string.Join(Environment.NewLine, _diagnosticOutput.TakeLast(50));
                 var message = output.Length > 0
                     ? string.Format(CommonLanguageManager.Instance.multiplayer_terracottaExited.CurrentValue(),
-                        process.ExitCode, output)
+                        GetExitCode(process), output)
                     : string.Format(CommonLanguageManager.Instance.multiplayer_terracottaExited.CurrentValue(),
-                        process.ExitCode, string.Empty);
+                        GetExitCode(process), string.Empty);
                 SetStartError(message);
                 throw new InvalidOperationException(message);
             }
@@ -994,7 +1056,7 @@ public sealed class TerracottaMultiplayerService
             if (name.Length == 0)
                 throw new ArgumentException(CommonLanguageManager.Instance.multiplayer_enterPlayerName.CurrentValue());
             var port = GetPortOrThrow();
-            var nodes = GetConfiguredPublicNodes();
+            var nodes = await GetSharedPublicNodesAsync(cancellationToken);
             var url = BuildRoomUrl(port, "/state/scanning", roomCode ?? string.Empty, name, nodes);
             await SendStateRequestAsync(url, cancellationToken);
         }
@@ -1014,7 +1076,7 @@ public sealed class TerracottaMultiplayerService
                 throw new ArgumentException(CommonLanguageManager.Instance.multiplayer_enterPlayerName.CurrentValue());
             var code = ParseRoomCode(roomCode);
             var port = GetPortOrThrow();
-            var nodes = GetConfiguredPublicNodes();
+            var nodes = await GetSharedPublicNodesAsync(cancellationToken);
             var url = BuildRoomUrl(port, "/state/guesting", code, name, nodes);
             await SendStateRequestAsync(url, cancellationToken);
         }
@@ -1131,40 +1193,9 @@ public sealed class TerracottaMultiplayerService
             CommonLanguageManager.Instance.multiplayer_terracottaInvalidRoomCode.CurrentValue());
     }
 
-    public static void ValidatePublicNodes(IReadOnlyList<string> nodes)
+    private static async Task<IReadOnlyList<string>> GetSharedPublicNodesAsync(CancellationToken cancellationToken)
     {
-        foreach (var node in nodes)
-        {
-            if (!Uri.TryCreate(node, UriKind.Absolute, out var uri) ||
-                !PublicNodeSchemes.Contains(uri.Scheme) ||
-                string.IsNullOrEmpty(uri.Host))
-                throw new ArgumentException(string.Format(
-                    CommonLanguageManager.Instance.multiplayer_terracottaInvalidNode.CurrentValue(), node));
-        }
-    }
-
-    public List<string> GetConfiguredPublicNodes()
-    {
-        var raw = Data.ConfigEntry.TerracottaPublicNodes ?? string.Empty;
-        var nodes = raw
-            .Split(['\n', '\r', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-        ValidatePublicNodes(nodes);
-        return nodes;
-    }
-
-    public string GetConfiguredPublicNodesText()
-    {
-        return Data.ConfigEntry.TerracottaPublicNodes ?? string.Empty;
-    }
-
-    public void SaveConfiguredPublicNodes(string text)
-    {
-        var nodes = text
-            .Split(['\n', '\r', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-        ValidatePublicNodes(nodes);
-        Data.ConfigEntry.TerracottaPublicNodes = text;
+        return await GravityConeRelayClient.Instance.GetAvailableRelaysAsync(cancellationToken);
     }
 
     private void ResetStateInternal()
@@ -1183,15 +1214,33 @@ public sealed class TerracottaMultiplayerService
 
     private static void TryKill(Process? process)
     {
-        if (process is null || process.HasExited) return;
         try
         {
+            if (process is null || process.HasExited) return;
             process.Kill(true);
         }
         catch (Exception exception)
         {
             Logger.Debug($"[Terracotta] Failed to kill process: {exception.Message}");
         }
+    }
+
+    private static bool IsProcessRunning(Process? process)
+    {
+        try { return process is not null && !process.HasExited; }
+        catch (Exception) { return false; }
+    }
+
+    private static bool HasProcessExited(Process process)
+    {
+        try { return process.HasExited; }
+        catch (Exception) { return true; }
+    }
+
+    private static int GetExitCode(Process process)
+    {
+        try { return process.ExitCode; }
+        catch (Exception) { return -1; }
     }
 
     private sealed class TerracottaApiState

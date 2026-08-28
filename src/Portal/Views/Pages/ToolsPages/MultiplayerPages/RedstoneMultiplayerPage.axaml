@@ -20,7 +20,10 @@
             CornerRadius="12"
             IsVisible="{Binding ShowUnsupported}"
             Padding="15">
-            <StackPanel Orientation="Horizontal" Spacing="12">
+            <StackPanel
+                Margin="2,0,0,0"
+                Orientation="Horizontal"
+                Spacing="12">
                 <TextBlock
                     FontFamily="{StaticResource IconFont}"
                     FontSize="22"
@@ -82,12 +85,15 @@
             CornerRadius="12"
             IsVisible="{Binding ShowBusy}"
             Padding="15">
-            <StackPanel Spacing="12">
+            <StackPanel Margin="2,0,0,0" Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <ProgressBar
                         IsIndeterminate="True"
+                        Theme="{StaticResource ProgressRing}"
+                        Height="32"
                         VerticalAlignment="Center"
-                        Width="140" />
+                        Width="32"
+                        BorderThickness="4" />
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock
                             FontSize="17"
@@ -127,12 +133,6 @@
                             FontSize="17"
                             FontWeight="SemiBold"
                             Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneStatusHostReady}}" />
-                        <TextBlock
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            Margin="0,3,0,0"
-                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstonePublicAddressHint}}"
-                            TextWrapping="Wrap" />
                     </StackPanel>
                 </StackPanel>
 
@@ -278,17 +278,11 @@
                     </StackPanel>
                 </Border>
 
-                <StackPanel>
+                <StackPanel Margin="2,0,0,0">
                     <TextBlock
                         FontSize="17"
                         FontWeight="SemiBold"
                         Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneTitle}}" />
-                    <TextBlock
-                        FontSize="13"
-                        Foreground="{DynamicResource InnerForegroundColor}"
-                        Margin="0,3,0,0"
-                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstonePortHint}}"
-                        TextWrapping="Wrap" />
                 </StackPanel>
 
                 <StackPanel Spacing="4">
@@ -297,7 +291,7 @@
                         FontSize="13"
                         Foreground="{DynamicResource InnerForegroundColor}"
                         Padding="0" />
-                    <Grid ColumnDefinitions="*,Auto">
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="False">
                         <ComboBox
                             Grid.Column="0"
                             HorizontalAlignment="Stretch"

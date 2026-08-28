@@ -141,10 +141,7 @@ public sealed class GravityConeClient : IAsyncDisposable
 
         try
         {
-            if (await GravityConeRelayClient.Instance.TryReadCacheAsync(cancellationToken) is { } cachedRelays)
-                peers.AddRange(cachedRelays);
-            else
-                peers.AddRange(await GravityConeRelayClient.Instance.FetchRelaysAsync(cancellationToken));
+            peers.AddRange(await GravityConeRelayClient.Instance.GetAvailableRelaysAsync(cancellationToken));
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
                                    ex is HttpRequestException or JsonException or InvalidOperationException

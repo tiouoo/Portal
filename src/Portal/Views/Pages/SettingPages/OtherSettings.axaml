@@ -127,42 +127,28 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_debugModeHint}}" />
         </StackPanel>
-
-        <Separator Margin="0,8" />
-
         <StackPanel Spacing="5">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayNodesTitle}}"
-                FontSize="14"
+                FontSize="13"
                 FontWeight="SemiBold"
                 Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
                 AcceptsReturn="True"
-                Height="150"
+                LineHeight="19"
+                Padding="12,6"
                 Text="{Binding Data.ConfigEntry.GravityConeRelaySources}" />
-            <TextBlock
-                FontSize="11"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayNodesHint}}"
-                TextWrapping="Wrap" />
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <Button
-                    Click="UpdateRelayNodes_OnClick"
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_updateRelayNodes}}" />
+            <StackPanel
+                Margin="0,5,0,0"
+                Orientation="Horizontal"
+                Spacing="16">
+                <Button Click="UpdateRelayNodes_OnClick" Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_updateRelayNodes}}" />
                 <ToggleSwitch
                     IsChecked="{Binding Data.ConfigEntry.GravityConeRelayAutoUpdate}"
-                    VerticalAlignment="Center" />
-                <Label
-                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayAutoUpdate}}"
-                    FontSize="13"
-                    Foreground="{DynamicResource InnerForegroundColor}"
-                    Padding="0"
+                    OffContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayAutoUpdate}}"
+                    OnContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayAutoUpdate}}"
                     VerticalAlignment="Center" />
             </StackPanel>
-            <TextBlock
-                FontSize="11"
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayAutoUpdateHint}}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

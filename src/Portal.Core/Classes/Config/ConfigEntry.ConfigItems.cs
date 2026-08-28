@@ -57,7 +57,6 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial int ResourceListSortIndex { get; set; }
     [ObservableProperty] public partial string DownloadLastSelectedPage { get; set; } = string.Empty;
     [ObservableProperty] public partial string MultiplayerLastSelectedPage { get; set; } = "Java";
-    [ObservableProperty] public partial string TerracottaPublicNodes { get; set; } = string.Empty;
     [ObservableProperty] public partial string RedstoneSelectedNode { get; set; } = "auto";
     [ObservableProperty] public partial string GravityConeRelaySources { get; set; } =
         Module.Multiplayer.GravityConeRelayClient.DefaultRelaySourceUrl;

@@ -43,23 +43,38 @@ public static class GravityConeInstaller
     {
         var rid = GetRid();
         var state = ReadInstallationState();
-        var gravityConeVersion = state is { Rid: var stateRid } && stateRid == rid
-            ? state.GravityConeVersion
-            : GravityConeVersion;
-        var easyTierVersion = state is { Rid: var easyTierRid } && easyTierRid == rid
-            ? state.EasyTierVersion
-            : EasyTierVersion;
-        var cliName = state is { Rid: var executableRid } && executableRid == rid
-            ? state.CliExecutable
-            : GetCliName(rid);
-        var cli = Path.Combine(Root, "GravityCone", gravityConeVersion, cliName);
-        var easyTier = Path.Combine(Root, "EasyTier", easyTierVersion, rid);
         var suffix = OperatingSystem.IsWindows() ? ".exe" : string.Empty;
-        return File.Exists(cli) &&
-               File.Exists(Path.Combine(easyTier, "easytier-core" + suffix)) &&
-               File.Exists(Path.Combine(easyTier, "easytier-cli" + suffix))
-            ? new GravityConeInstallation(cli, easyTier)
-            : null;
+        if (state is { Rid: var stateRid } && stateRid == rid)
+        {
+            var cliName = string.IsNullOrWhiteSpace(state.CliExecutable) ? GetCliName(rid) : state.CliExecutable;
+            var cli = Path.Combine(Root, "GravityCone", state.GravityConeVersion, cliName);
+            var easyTier = Path.Combine(Root, "EasyTier", state.EasyTierVersion, rid);
+            if (IsValidInstallation(cli, easyTier, suffix)) return new GravityConeInstallation(cli, easyTier);
+        }
+        var gravityRoot = Path.Combine(Root, "GravityCone");
+        var easyTierRoot = Path.Combine(Root, "EasyTier");
+        if (!Directory.Exists(gravityRoot) || !Directory.Exists(easyTierRoot)) return null;
+        foreach (var gravityDirectory in Directory.EnumerateDirectories(gravityRoot).OrderByDescending(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
+        {
+            var cli = FindCliExecutable(gravityDirectory, rid);
+            if (cli is null) continue;
+            foreach (var easyDirectory in Directory.EnumerateDirectories(easyTierRoot).OrderByDescending(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
+            {
+                var easyTier = Path.Combine(easyDirectory, rid);
+                if (IsValidInstallation(cli, easyTier, suffix)) return new GravityConeInstallation(cli, easyTier);
+            }
+        }
+        return null;
+    }
+
+    private static bool IsValidInstallation(string cli, string easyTier, string suffix) =>
+        File.Exists(cli) && File.Exists(Path.Combine(easyTier, "easytier-core" + suffix)) && File.Exists(Path.Combine(easyTier, "easytier-cli" + suffix));
+
+    private static string? FindCliExecutable(string directory, string rid)
+    {
+        var preferred = Path.Combine(directory, GetCliName(rid));
+        if (File.Exists(preferred)) return preferred;
+        return Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly).FirstOrDefault(path => Path.GetFileName(path).Contains("gravitycone", StringComparison.OrdinalIgnoreCase));
     }
 
     public static async Task<GravityConeInstallation> EnsureInstalledAsync(
@@ -120,7 +135,9 @@ public static class GravityConeInstaller
     {
         var rid = GetRid();
         var state = ReadInstallationState();
-        return state is { Rid: var stateRid } && stateRid == rid ? state.GravityConeVersion : null;
+        if (state is { Rid: var stateRid } && stateRid == rid && FindInstalled() is not null) return state.GravityConeVersion;
+        var installation = FindInstalled();
+        return installation is null ? null : Path.GetFileName(Path.GetDirectoryName(installation.CliPath));
     }
 
     public static async Task<ComponentUpdateStatus> GetUpdateStatusAsync(CancellationToken cancellationToken)
