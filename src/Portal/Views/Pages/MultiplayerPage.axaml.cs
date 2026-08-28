@@ -576,7 +576,7 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
         StatusText = CommonLanguageManager.Instance.multiplayer_downloadingComponent.CurrentValue();
         var task = TaskManager.Instance.CreateTask(new TaskOptions
         {
-            Name = CommonLanguageManager.Instance.multiplayer_downloadComponent.CurrentValue(),
+            Name = CommonLanguageManager.Instance.multiplayer_downloadingComponent.CurrentValue(),
             Description = CommonLanguageManager.Instance.multiplayer_preparingDownload.CurrentValue(),
             Progress = 0,
             Actions =
@@ -597,11 +597,55 @@ public partial class MultiplayerPageViewModel : ObservableObject, IAsyncDisposab
             ]
         }, async context =>
         {
-            var progress = new Progress<(double? Progress, string Message)>(item => Dispatcher.UIThread.Post(() =>
+            ManagedTask?[] children = new ManagedTask?[2];
+            TaskExecutionContext?[] childContexts = new TaskExecutionContext?[2];
+            var childCompletions = new[] { new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously), new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously) };
+            for (var i = 0; i < 2; i++)
+            {
+                var index = i;
+                children[index] = context.CreateChild(new TaskOptions
+                {
+                    Name = index == 0 ? "GravityCone" : "EasyTier",
+                    Description = CommonLanguageManager.Instance.multiplayer_preparingDownload.CurrentValue(),
+                    Progress = 0,
+                    Actions = []
+                }, async childContext =>
+                {
+                    childContexts[index] = childContext;
+                    await Task.WhenAny(childCompletions[index].Task,
+                        Task.Delay(Timeout.InfiniteTimeSpan, childContext.CancellationToken));
+                    childContext.CancellationToken.ThrowIfCancellationRequested();
+                });
+                children[index].Start();
+            }
+            var progress = new Progress<(int? Index, double? Progress, string Message, string? Detail)>(item => Dispatcher.UIThread.Post(() =>
             {
                 if (context.Task.IsTerminal || context.Task.IsCancellationRequested) return;
-                context.ReportProgress(item.Progress);
-                context.SetDescription(item.Message);
+                if (item.Index is null)
+                {
+                    context.ReportProgress(item.Progress);
+                    context.SetDescription(CommonLanguageManager.Instance.multiplayer_downloadingComponents.CurrentValue());
+                    return;
+                }
+
+                var index = item.Index.Value;
+                var child = children[index]!;
+                if (child.IsTerminal || child.IsCancellationRequested) return;
+                try
+                {
+                    var childContext = childContexts[index];
+                    if (childContext is null) return;
+                    var percentage = item.Progress is { } p ? $"{p:P0}" : string.Empty;
+                    childContext.ReportProgress(item.Progress);
+                    childContext.SetDescription(string.IsNullOrEmpty(item.Detail)
+                        ? item.Message
+                        : $"{percentage}，{item.Detail}");
+                    if (item.Progress >= 1) childCompletions[index].TrySetResult();
+                }
+                catch (InvalidOperationException) when (child.IsTerminal || child.IsCancellationRequested)
+                {
+                    // A queued UI progress update can race with task cancellation/completion.
+                }
             }));
             var installation = await GravityConeInstaller.EnsureInstalledAsync(progress, context.CancellationToken,
                 IsComponentOutdated || IsComponentUnverifiable);

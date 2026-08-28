@@ -63,12 +63,12 @@ public static class GravityConeInstaller
     }
 
     public static async Task<GravityConeInstallation> EnsureInstalledAsync(
-        IProgress<(double? Progress, string Message)>? progress, CancellationToken cancellationToken,
+        IProgress<(int? Index, double? Progress, string Message, string? Detail)>? progress, CancellationToken cancellationToken,
         bool forceUpdate = false)
     {
         if (!forceUpdate && FindInstalled() is { } installed) return installed;
 
-        progress?.Report((null, CommonLanguageManager.Instance.multiplayer_fetchingManifest.CurrentValue()));
+        progress?.Report((null, null, CommonLanguageManager.Instance.multiplayer_fetchingManifest.CurrentValue(), null));
         await using var manifestStream = await Client.GetStreamAsync(ManifestUrl, cancellationToken);
         var manifest = await JsonSerializer.DeserializeAsync<GravityConeManifest>(manifestStream,
             cancellationToken: cancellationToken) ?? throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_manifestEmpty.CurrentValue());
@@ -96,7 +96,7 @@ public static class GravityConeInstaller
 
         await Task.WhenAll(gcTask, etTask);
 
-        progress?.Report((null, CommonLanguageManager.Instance.multiplayer_verifyingComponents.CurrentValue()));
+        progress?.Report((null, null, CommonLanguageManager.Instance.multiplayer_verifyingComponents.CurrentValue(), null));
 
         var cliName = gcPackage.Executable ?? GetCliName(rid);
         var cliPath = Path.Combine(gcDirectory, cliName);
@@ -111,7 +111,7 @@ public static class GravityConeInstaller
         Directory.CreateDirectory(Root);
         await File.WriteAllTextAsync(InstallationStatePath, JsonSerializer.Serialize(new InstallationState(
             manifest.GravityCone.Version, manifest.EasyTier.Version, rid, cliName)), cancellationToken);
-        progress?.Report((1, CommonLanguageManager.Instance.multiplayer_installComplete.CurrentValue()));
+        progress?.Report((null, 1, CommonLanguageManager.Instance.multiplayer_installComplete.CurrentValue(), null));
         CleanupOldGravityConeVersions(manifest.GravityCone.Version);
         return new GravityConeInstallation(cliPath, etDirectory);
     }
@@ -216,7 +216,7 @@ public static class GravityConeInstaller
             var downloadUrl = GithubMirror.Apply(package.Url);
             var total = package.Size;
 
-            context.ReportDownloadProgress(0, total, string.Format(CommonLanguageManager.Instance.multiplayer_downloading.CurrentValue(), package.FileName));
+            context.ReportDownloadProgress(0, total);
 
             var supportsRange = total > 0 && await ValidateRangeSupportAsync(downloadUrl, cancellationToken);
 
@@ -234,7 +234,7 @@ public static class GravityConeInstaller
                     throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.multiplayer_sha256VerificationFailed.CurrentValue(), package.FileName));
             }
 
-            context.ReportMessage(string.Format(CommonLanguageManager.Instance.multiplayer_extracting.CurrentValue(), package.FileName));
+            context.ReportMessage(CommonLanguageManager.Instance.multiplayer_extracting.CurrentValue());
             if (package.ArchiveType.Equals("zip", StringComparison.OrdinalIgnoreCase))
             {
                 ZipFile.ExtractToDirectory(archive, extracted);
@@ -294,7 +294,7 @@ public static class GravityConeInstaller
             await DownloadRangeAsync(url, path, start, end, bytes =>
             {
                 var current = Interlocked.Add(ref downloaded, bytes);
-                context.ReportDownloadProgress(current, total, string.Format(CommonLanguageManager.Instance.multiplayer_downloading.CurrentValue(), context.Package.FileName));
+                context.ReportDownloadProgress(current, total);
             }, cancellationToken);
         });
         await Task.WhenAll(downloads);
@@ -336,7 +336,7 @@ public static class GravityConeInstaller
             if (read == 0) break;
             await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
             downloaded += read;
-            context.ReportDownloadProgress(downloaded, total, string.Format(CommonLanguageManager.Instance.multiplayer_downloading.CurrentValue(), context.Package.FileName));
+            context.ReportDownloadProgress(downloaded, total);
         }
     }
 
@@ -398,9 +398,9 @@ public static class GravityConeInstaller
 
         public ParallelDownloadProgress? ProgressState { get; set; }
 
-        public void ReportDownloadProgress(long downloaded, long total, string message)
+        public void ReportDownloadProgress(long downloaded, long total)
         {
-            ProgressState?.ReportDownloadProgress(Index, downloaded, total, message);
+            ProgressState?.ReportDownloadProgress(Index, downloaded, total, ComponentName);
         }
 
         public void ReportMessage(string message)
@@ -412,6 +412,8 @@ public static class GravityConeInstaller
         {
             ProgressState?.MarkCompleted(Index);
         }
+
+        public string ComponentName => Index == 0 ? "GravityCone" : "EasyTier";
     }
 
     private sealed class ParallelDownloadProgress
@@ -423,12 +425,15 @@ public static class GravityConeInstaller
         private readonly int _count;
         private readonly long[] _downloadedBytes;
         private readonly string[] _messages;
-        private readonly IProgress<(double? Progress, string Message)>? _progress;
+        private readonly IProgress<(int? Index, double? Progress, string Message, string? Detail)>? _progress;
+        private readonly DateTime[] _lastReport;
+        private readonly long[] _lastBytes;
+        private readonly long[] _speeds;
         private readonly int[] _states;
         private readonly long[] _totalBytes;
         private int _started;
 
-        public ParallelDownloadProgress(int count, IProgress<(double? Progress, string Message)>? progress)
+        public ParallelDownloadProgress(int count, IProgress<(int? Index, double? Progress, string Message, string? Detail)>? progress)
         {
             _count = count;
             _progress = progress;
@@ -436,6 +441,9 @@ public static class GravityConeInstaller
             _totalBytes = new long[count];
             _messages = new string[count];
             _states = new int[count];
+            _lastReport = new DateTime[count];
+            _lastBytes = new long[count];
+            _speeds = new long[count];
         }
 
         public void Start()
@@ -444,11 +452,17 @@ public static class GravityConeInstaller
             Report();
         }
 
-        public void ReportDownloadProgress(int index, long downloaded, long total, string message)
+        public void ReportDownloadProgress(int index, long downloaded, long total, string component)
         {
             Interlocked.Exchange(ref _downloadedBytes[index], downloaded);
             Interlocked.Exchange(ref _totalBytes[index], total);
-            _messages[index] = message;
+            _messages[index] = string.Format(CommonLanguageManager.Instance.multiplayer_downloading.CurrentValue(), component);
+            var now = DateTime.UtcNow;
+            var elapsed = now - _lastReport[index];
+            var speed = elapsed.TotalSeconds > 0 ? (long)Math.Max(0, (downloaded - _lastBytes[index]) / elapsed.TotalSeconds) : 0;
+            _lastReport[index] = now;
+            _lastBytes[index] = downloaded;
+            _speeds[index] = speed;
             Interlocked.CompareExchange(ref _states[index], StateDownloading, StateIdle);
             Report();
         }
@@ -472,7 +486,6 @@ public static class GravityConeInstaller
 
             long totalSum = 0;
             long downloadedSum = 0;
-            var messages = new List<string>();
             var completedCount = 0;
 
             for (var i = 0; i < _count; i++)
@@ -486,17 +499,19 @@ public static class GravityConeInstaller
                 if (state == StateCompleted) completedCount++;
 
                 if (!string.IsNullOrEmpty(_messages[i]))
-                    messages.Add(_messages[i]);
+                    _progress?.Report((i, state == StateDownloading && total > 0 ? (double)downloaded / total : state == StateCompleted ? 1 : null, _messages[i], state == StateDownloading ? FormatSpeed(_speeds[i]) : null));
             }
 
-            double? progress = totalSum > 0 ? (double)downloadedSum / totalSum : null;
-            var message = completedCount == _count
-                ? CommonLanguageManager.Instance.multiplayer_downloadComplete.CurrentValue()
-                : messages.Count > 0
-                    ? string.Join("，", messages)
-                    : CommonLanguageManager.Instance.multiplayer_downloadingComponents.CurrentValue();
-
-            _progress?.Report((progress, message));
+            if (completedCount == _count)
+                _progress?.Report((null, 1, CommonLanguageManager.Instance.multiplayer_downloadComplete.CurrentValue(), null));
         }
+
+        private static string FormatSpeed(long bytesPerSecond) => string.Format(
+            CommonLanguageManager.Instance.download_speed.CurrentValue(), bytesPerSecond switch
+        {
+            >= 1024 * 1024 => $"{bytesPerSecond / 1024d / 1024d:0.0} MB/s",
+            >= 1024 => $"{bytesPerSecond / 1024d:0.0} KB/s",
+            _ => $"{bytesPerSecond} B/s"
+        });
     }
 }
