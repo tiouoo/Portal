@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Portal.Core.Classes.Entries;
 using Portal.Core.Minecraft;
@@ -24,6 +25,9 @@ public partial class LaunchButtonWidget : IWidgetContent, IWidgetPersistenceAwar
         Size = new WidgetCellSize(2, 1);
         InitializeComponent();
         InstanceItems.ItemsSource = _instanceChoices;
+        if (LaunchButton.Parent is InputElement buttonArea)
+            buttonArea.AddHandler(InputElement.PointerWheelChangedEvent, OnButtonAreaPointerWheelChanged,
+                RoutingStrategies.Bubble, true);
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -107,8 +111,7 @@ public partial class LaunchButtonWidget : IWidgetContent, IWidgetPersistenceAwar
     private void RebuildInstanceChoices()
     {
         _instanceChoices.Clear();
-        foreach (var instance in InstanceManager.Instance.Instances
-                     .OrderBy(instance => instance.InstanceName, StringComparer.CurrentCultureIgnoreCase))
+        foreach (var instance in GetOrderedInstances())
         {
             _instanceChoices.Add(new LaunchInstanceChoice(instance,
                 _instance != null && SamePath(_instance.InstanceFolderPath, instance.InstanceFolderPath)));
@@ -119,13 +122,39 @@ public partial class LaunchButtonWidget : IWidgetContent, IWidgetPersistenceAwar
         EmptyState.IsVisible = !hasInstances;
     }
 
+    private void OnButtonAreaPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        if (e.Delta.Y == 0)
+            return;
+
+        var instances = GetOrderedInstances();
+        if (instances.Count == 0)
+            return;
+
+        var currentIndex = _instance == null
+            ? -1
+            : instances.FindIndex(instance => SamePath(instance.InstanceFolderPath, _instance.InstanceFolderPath));
+        var step = e.Delta.Y > 0 ? -1 : 1;
+        var nextIndex = currentIndex < 0
+            ? step > 0 ? 0 : instances.Count - 1
+            : (currentIndex + step + instances.Count) % instances.Count;
+
+        if (currentIndex != nextIndex)
+        {
+            PinInstance(instances[nextIndex], false);
+            RebuildInstanceChoices();
+        }
+
+        e.Handled = true;
+    }
+
     private void InstanceChoice_OnClick(object? sender, RoutedEventArgs e)
     {
         if (sender is Control { Tag: LaunchInstanceChoice choice })
             PinInstance(choice.Instance);
     }
 
-    private void PinInstance(MinecraftInstance? instance)
+    private void PinInstance(MinecraftInstance? instance, bool hideFlyout = true)
     {
         if (_layout?.Data is not LaunchButtonWidgetData data)
             return;
@@ -134,8 +163,14 @@ public partial class LaunchButtonWidget : IWidgetContent, IWidgetPersistenceAwar
         _instance = instance;
         RefreshDisplay();
         _saveLayout?.Invoke();
-        MenuButton.Flyout?.Hide();
+        if (hideFlyout)
+            MenuButton.Flyout?.Hide();
     }
+
+    private static List<MinecraftInstance> GetOrderedInstances() =>
+        InstanceManager.Instance.Instances
+            .OrderBy(instance => instance.InstanceName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
 
     private static bool SamePath(string left, string right) =>
         string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
