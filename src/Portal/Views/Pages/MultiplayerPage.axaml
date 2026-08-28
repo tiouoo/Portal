@@ -6,6 +6,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:controls="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -34,7 +35,7 @@
                             Text="&#xe677;" />
                     </tio:NavMenuItem.Icon>
                     <tio:NavMenuItem
-                        Header="Java版"
+                        Header="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_javaEdition}}"
                         Name="JavaNavItem"
                         Tag="Java">
                         <tio:NavMenuItem.Icon>
@@ -47,7 +48,7 @@
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
                     <tio:NavMenuItem
-                        Header="基岩版"
+                        Header="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_bedrockEdition}}"
                         Name="BedrockNavItem"
                         Tag="Bedrock">
                         <tio:NavMenuItem.Icon>
@@ -61,7 +62,7 @@
                     </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem
-                    Header="陶瓦联机"
+                    Header="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_terracottaMultiplayer}}"
                     Name="TerracottaNavItem"
                     Tag="Terracotta">
                     <tio:NavMenuItem.Icon>
@@ -75,12 +76,13 @@
                     </tio:NavMenuItem.Icon>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem
-                    Header="红石联机"
+                    Header="{Translate {x:Static loc:CommonLanguageManager+Keys.multiplayer_redstoneMultiplayer}}"
                     Name="RedstoneNavItem"
                     Tag="Redstone">
                     <tio:NavMenuItem.Icon>
                         <Image
                             Height="20"
+                            Margin="0,-2"
                             Name="RedstoneNavIcon"
                             RenderOptions.BitmapInterpolationMode="HighQuality"
                             Stretch="Uniform"
@@ -103,15 +105,14 @@
                     VerticalAlignment="Center"
                     Width="26" />
                 <Image
-                    Height="20"
+                    Height="28"
                     HorizontalAlignment="Center"
                     IsVisible="False"
-                    Margin="0,-2"
                     Name="HeaderImage"
                     RenderOptions.BitmapInterpolationMode="HighQuality"
                     Stretch="Uniform"
                     VerticalAlignment="Center"
-                    Width="26" />
+                    Width="28" />
                 <TextBlock
                     FontSize="26"
                     FontWeight="Thin"
@@ -123,7 +124,7 @@
                     Background="{DynamicResource TranslucentBackgroundColor}"
                     BorderBrush="{DynamicResource TranslucentBorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="8"
+                    CornerRadius="12"
                     Grid.Column="2"
                     HorizontalAlignment="Right"
                     IsVisible="False"

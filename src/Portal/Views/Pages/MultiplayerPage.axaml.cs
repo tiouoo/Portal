@@ -38,6 +38,8 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     private readonly Dictionary<MinecraftEdition, MultiplayerPageViewModel> _viewModels = new();
     private Bitmap? _redstoneIcon;
     private Bitmap? _terracottaIcon;
+    private Bitmap? _redstoneBigIcon;
+    private Bitmap? _terracottaBigIcon;
     private MultiplayerPageViewModel? _currentViewModel;
     private bool _isSelectingSection;
     private bool _hasLoaded;
@@ -58,6 +60,9 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         TerracottaNavIcon.Source = _terracottaIcon;
         _redstoneIcon = DecodeNavigationIcon("avares://Portal/Assets/Multiplayer/redstone.png");
         RedstoneNavIcon.Source = _redstoneIcon;
+        _redstoneBigIcon = DecodeNavigationIcon("avares://Portal/Assets/Multiplayer/redstone.png", 28);
+        _terracottaBigIcon = DecodeNavigationIcon("avares://Portal/Assets/Multiplayer/terracotta.png", 28);
+        
         _selectedSection = section;
         Loaded += OnLoaded;
         Loaded += (_, _) =>
@@ -87,8 +92,12 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         RedstoneNavIcon.Source = null;
         _terracottaIcon?.Dispose();
         _terracottaIcon = null;
+        _terracottaBigIcon?.Dispose();
         _redstoneIcon?.Dispose();
+        _redstoneBigIcon?.Dispose();
         _redstoneIcon = null;
+        _terracottaBigIcon = null;
+        _redstoneBigIcon = null;
         Frame.Content = null;
         foreach (var viewModel in _viewModels.Values)
         {
@@ -102,10 +111,10 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
         _initializedEditions.Clear();
     }
 
-    private static Bitmap DecodeNavigationIcon(string uri)
+    private static Bitmap DecodeNavigationIcon(string uri, int size = 20)
     {
         using var stream = AssetLoader.Open(new Uri(uri));
-        return Bitmap.DecodeToWidth(stream, 20, BitmapInterpolationMode.HighQuality);
+        return Bitmap.DecodeToWidth(stream, size, BitmapInterpolationMode.HighQuality);
     }
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
@@ -176,7 +185,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
             _selectedSection = section;
             Data.ConfigEntry.MultiplayerLastSelectedPage = section.ToString();
             foreach (var existingViewModel in _viewModels.Values) existingViewModel.Deactivate();
-            _currentViewModel = null;
+        _currentViewModel = null;
 
             if (section is MultiplayerSection.Java or MultiplayerSection.Bedrock)
                 SelectGravityConeEdition(section == MultiplayerSection.Java
@@ -220,7 +229,7 @@ public partial class MultiplayerPage : UserControl, ITioTabPage
     private void SelectPlaceholder(MultiplayerSection section)
     {
         var selectedItem = section == MultiplayerSection.Terracotta ? TerracottaNavItem : RedstoneNavItem;
-        var bitmap = section == MultiplayerSection.Terracotta ? _terracottaIcon : _redstoneIcon;
+        var bitmap = section == MultiplayerSection.Terracotta ? _terracottaBigIcon : _redstoneBigIcon;
         NavMenu.SelectedItem = selectedItem;
         HeaderTitle.Text = selectedItem.Header?.ToString() ?? string.Empty;
         HeaderIcon.IsVisible = false;

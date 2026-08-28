@@ -60,7 +60,18 @@
     "channelDailyBuild": "Daily Build",
     "channelCommitBuild": "Commit Build",
     "cnbChannelHint": " *The CNB channel only provides release builds",
-    "thirdPartyComponentLibraries": "Third-Party Libraries"
+    "thirdPartyComponentLibraries": "Third-Party Libraries",
+    "projectWebsite": "Project Website",
+    "githubSourceCode": "GitHub Source Code",
+    "issueFeedback": "Feedback",
+    "officialQqGroup": "Official QQ Group",
+    "sponsorProject": "Sponsor the Project",
+    "qqGroupCopied": "QQ group number copied to clipboard",
+    "sourceCode": "Source Code:",
+    "license": "License:",
+    "frontendFramework": "Frontend Framework:",
+    "iconLibrary": "Icon Library:",
+    "controlLibrary": "Control Library:"
   },
   "account": {
     "title": "Account Profile",

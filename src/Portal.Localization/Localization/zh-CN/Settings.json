@@ -60,7 +60,18 @@
     "channelDailyBuild": "每日构建版本",
     "channelCommitBuild": "commit 版本",
     "cnbChannelHint": " * Cnb 通道仅提供正式版",
-    "thirdPartyComponentLibraries": "第三方组件库"
+    "thirdPartyComponentLibraries": "第三方组件库",
+    "projectWebsite": "项目网站",
+    "githubSourceCode": "GitHub 源代码",
+    "issueFeedback": "问题反馈",
+    "officialQqGroup": "官方 QQ 群",
+    "sponsorProject": "赞助项目",
+    "qqGroupCopied": "群号已复制到剪贴板",
+    "sourceCode": "源代码：",
+    "license": "许可证：",
+    "frontendFramework": "前端框架：",
+    "iconLibrary": "图标库：",
+    "controlLibrary": "控件库："
   },
   "account": {
     "title": "账户档案",

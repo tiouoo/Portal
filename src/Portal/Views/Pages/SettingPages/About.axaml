@@ -139,7 +139,7 @@
                         FontSize="15"
                         FontWeight="SemiBold"
                         Grid.Column="1"
-                        Text="项目网站"
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_projectWebsite}}"
                         VerticalAlignment="Center" />
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -175,7 +175,7 @@
                         <TextBlock
                             FontSize="15"
                             FontWeight="SemiBold"
-                            Text="GitHub 源代码" />
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_githubSourceCode}}" />
                     </StackPanel>
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -211,7 +211,7 @@
                         <TextBlock
                             FontSize="15"
                             FontWeight="SemiBold"
-                            Text="问题反馈" />
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_issueFeedback}}" />
                     </StackPanel>
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -247,7 +247,7 @@
                         <TextBlock
                             FontSize="15"
                             FontWeight="SemiBold"
-                            Text="官方 QQ 群" />
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_officialQqGroup}}" />
                         <TextBlock
                             FontSize="12"
                             Foreground="{DynamicResource InnerForegroundColor}"
@@ -290,7 +290,7 @@
                             FontSize="15"
                             FontWeight="SemiBold"
                             Foreground="#946ce6"
-                            Text="赞助项目" />
+                            Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_sponsorProject}}" />
                     </StackPanel>
                     <TextBlock
                         FontFamily="{StaticResource IconFont}"
@@ -306,13 +306,13 @@
 
         <StackPanel Margin="5,0,0,0" Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Source Code:" />
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_sourceCode}}" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://github.com/tiouoo/Portal"
                     Content="tiouoo/Portal"
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
-                <TextBlock Text=" License:" />
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_license}}" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://www.gnu.org/licenses/agpl-3.0.html"
@@ -320,7 +320,7 @@
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Frontend Framework:" />
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_frontendFramework}}" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://avaloniaui.net/"
@@ -328,7 +328,7 @@
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Icon Library:" />
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_iconLibrary}}" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://fontawesome.com/"
@@ -336,7 +336,7 @@
                     Theme="{StaticResource UnderlineHyperlinkButton}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Control Library:" />
+                <TextBlock Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.about_controlLibrary}}" />
                 <HyperlinkButton
                     Click="OpenLink_OnClick"
                     CommandParameter="https://github.com/tiouoo/TioUi.Avalonia"

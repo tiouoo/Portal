@@ -131,7 +131,7 @@ public partial class About : Dsc
         if (topLevel?.Clipboard is not { } clipboard) return;
 
         await clipboard.SetTextAsync("475032328");
-        topLevel.Notice("群号已复制到剪贴板", NotificationType.Success);
+        topLevel.Notice(SettingsLanguageManager.Instance.about_qqGroupCopied.CurrentValue(), NotificationType.Success);
     }
 }
 

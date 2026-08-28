@@ -6,293 +6,294 @@
     x:DataType="pages:MultiplayerPageViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:multiplayer="clr-namespace:Portal.Core.Module.Multiplayer;assembly=Portal.Core"
     xmlns:pages="clr-namespace:Portal.Views.Pages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="using:Portal.Localization">
-        <StackPanel Spacing="15">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="15">
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            IsVisible="{Binding IsComponentBannerVisible}"
+            Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock
+                    FontSize="17"
+                    FontWeight="SemiBold"
+                    Text="{Binding ComponentTitle}" />
+                <Button
+                    Command="{Binding InstallCommand}"
+                    Content="{Binding InstallActionText}"
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding IsNotBusy}" />
+            </StackPanel>
+        </Border>
+
+        <StackPanel IsVisible="{Binding !IsComponentBannerVisible}" Spacing="15">
             <Border
                 Background="{DynamicResource TranslucentBackgroundColor}"
                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="10"
-                IsVisible="{Binding IsComponentBannerVisible}"
+                CornerRadius="12"
                 Padding="15">
                 <StackPanel Spacing="10">
                     <TextBlock
                         FontSize="17"
                         FontWeight="SemiBold"
-                        Text="{Binding ComponentTitle}" />
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_identityAndNetworkSectionTitle}}" />
+                    <Label
+                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNameLabel}}"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding IsNotInRoom}" />
+                    <TextBox
+                        IsVisible="{Binding IsNotInRoom}"
+                        Margin="0,-4,0,0"
+                        PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNamePlaceholder}}"
+                        Text="{Binding PlayerName}" />
+                    <Label
+                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_natTypeLabel}}"
+                        FontSize="13"
+                        Foreground="{DynamicResource InnerForegroundColor}" />
                     <Button
-                        Command="{Binding InstallCommand}"
-                        Content="{Binding InstallActionText}"
+                        Background="Transparent"
+                        Command="{Binding ProbeNatCommand}"
                         HorizontalAlignment="Left"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        IsVisible="{Binding !HasNatSummary}"
+                        Margin="0,-6,0,0"
+                        Theme="{StaticResource TransparentButton}">
+                        <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Binding NatProbeButtonText}" />
+                    </Button>
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding HasNatSummary}"
+                        Margin="0,-6,0,0"
+                        Text="{Binding NatSummary}" />
                 </StackPanel>
             </Border>
 
-            <StackPanel IsVisible="{Binding !IsComponentBannerVisible}" Spacing="15">
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    Padding="15">
-                    <StackPanel Spacing="10">
-                        <TextBlock
-                            FontSize="17"
-                            FontWeight="SemiBold"
-                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_identityAndNetworkSectionTitle}}" />
-                        <Label
-                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNameLabel}}"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            IsVisible="{Binding IsNotInRoom}" />
-                        <TextBox
-                            IsVisible="{Binding IsNotInRoom}"
-                            Margin="0,-4,0,0"
-                            PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_playerNamePlaceholder}}"
-                            Text="{Binding PlayerName}" />
-                        <Label
-                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_natTypeLabel}}"
-                            FontSize="13"
-                            Foreground="{DynamicResource InnerForegroundColor}" />
-                        <Button
-                            Background="Transparent"
-                            Command="{Binding ProbeNatCommand}"
-                            HorizontalAlignment="Left"
-                            IsVisible="{Binding !HasNatSummary}"
-                            Margin="0,-6,0,0"
-                            Theme="{StaticResource TransparentButton}">
-                            <TextBlock Foreground="{DynamicResource SystemAccentColor}" Text="{Binding NatProbeButtonText}" />
-                        </Button>
-                        <TextBlock
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            IsVisible="{Binding HasNatSummary}"
-                            Margin="0,-6,0,0"
-                            Text="{Binding NatSummary}" />
-                    </StackPanel>
-                </Border>
-
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    IsVisible="{Binding ShowJavaRoomActions}"
-                    Padding="15">
-                    <StackPanel Spacing="10">
-                        <StackPanel Spacing="12">
-                            <DockPanel>
-                                <TextBlock
-                                    FontSize="17"
-                                    FontWeight="SemiBold"
-                                    Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_createRoomSectionTitle}}" />
-                                <TextBlock
-                                    FontSize="12"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Margin="8,0,0,1"
-                                    Text="{Binding LanServerCountText}"
-                                    VerticalAlignment="Bottom" />
-                            </DockPanel>
-                            <DockPanel>
-                                <StackPanel
-                                    DockPanel.Dock="Right"
-                                    HorizontalAlignment="Right"
-                                    Orientation="Horizontal"
-                                    Spacing="8">
-                                    <Button
-                                        Click="EnterJavaPort_OnClick"
-                                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_manualPortButton}}"
-                                        HorizontalAlignment="Left"
-                                        Margin="8,0,0,0" />
-                                    <Button
-                                        Command="{Binding DiscoverJavaServersCommand}"
-                                        Content="{Binding JavaDiscoveryButtonText}"
-                                        IsEnabled="{Binding !IsDiscoveringJavaServers}" />
-                                    <Button
-                                        Command="{Binding CreateRoomCommand}"
-                                        Content="{Binding CreateRoomButtonText}"
-                                        IsEnabled="{Binding CanCreateRoom}" />
-                                    <Button
-                                        Command="{Binding CancelRoomOperationCommand}"
-                                        Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_cancelButton}}"
-                                        IsVisible="{Binding IsRoomOperationInProgress}" />
-                                </StackPanel>
-                                <ComboBox
-                                    HorizontalAlignment="Stretch"
-                                    ItemsSource="{Binding LanServers}"
-                                    PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_lanServerComboBoxPlaceholder}}"
-                                    SelectedItem="{Binding SelectedLanServer}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate DataType="multiplayer:LanServerEntry">
-                                            <TextBlock Text="{Binding Display}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </DockPanel>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    IsVisible="{Binding ShowBedrockRoomActions}"
-                    Padding="15">
-                    <StackPanel Spacing="10">
-                        <TextBlock
-                            FontSize="17"
-                            FontWeight="SemiBold"
-                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_createRoomSectionTitle}}" />
-                        <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_bedrockCreateRoomTip}}" />
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button
-                                Command="{Binding CreateRoomCommand}"
-                                Content="{Binding CreateRoomButtonText}"
-                                IsEnabled="{Binding CanCreateRoom}" />
-                            <Button
-                                Command="{Binding CancelRoomOperationCommand}"
-                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_cancelButton}}"
-                                IsVisible="{Binding IsRoomOperationInProgress}" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    IsVisible="{Binding IsNotInRoom}"
-                    Padding="15">
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="{Binding ShowJavaRoomActions}"
+                Padding="15">
+                <StackPanel Spacing="10">
                     <StackPanel Spacing="12">
-                        <TextBlock
-                            FontSize="17"
-                            FontWeight="SemiBold"
-                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_joinRoomSectionTitle}}" />
-                        <TextBlock
-                            Foreground="{DynamicResource InnerForegroundColor}"
-                            IsVisible="{Binding ShowBedrockRoomActions}"
-                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_joinRoomTip}}" />
-                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
-                            <Button
-                                Command="{Binding ClearJoinCodeCommand}"
-                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_clearJoinCodeButton}}"
-                                Grid.Column="0" />
-                            <Button
-                                Click="PasteJoinCode_OnClick"
-                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_pasteJoinCodeButton}}"
-                                Grid.Column="1"
-                                Margin="8,0,8,0" />
-                            <TextBox
-                                Grid.Column="2"
-                                Margin="0,0,10,0"
-                                PlaceholderText="{Binding JoinCodePlaceholder}"
-                                Text="{Binding JoinCode}" />
-                            <Button
-                                Command="{Binding JoinRoomCommand}"
-                                Content="{Binding JoinRoomButtonText}"
-                                Grid.Column="3"
-                                IsEnabled="{Binding CanOperate}" />
-                            <Button
-                                Command="{Binding CancelRoomOperationCommand}"
-                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_cancelButton}}"
-                                Grid.Column="4"
-                                IsVisible="{Binding IsRoomOperationInProgress}"
-                                Margin="8,0,0,0" />
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    IsVisible="{Binding IsInRoom}"
-                    Padding="15">
-                    <StackPanel Spacing="10">
-                        <TextBlock
-                            FontSize="17"
-                            FontWeight="SemiBold"
-                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_currentRoomSectionTitle}}" />
-                        <DockPanel>
-                            <StackPanel DockPanel.Dock="Top">
-                                <TextBlock
-                                    FontSize="12"
-                                    Foreground="{DynamicResource InnerForegroundColor}"
-                                    Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_currentRoomCodeLabel}}" />
-                                <TextBlock FontSize="20" Text="{Binding CurrentRoomCode}" />
-                            </StackPanel>
-                            <StackPanel
-                                DockPanel.Dock="Bottom"
-                                Margin="0,10,0,0"
-                                Orientation="Horizontal"
-                                Spacing="8">
-                                <Button Click="CopyRoomCode_OnClick" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_copyRoomCodeButton}}" />
-                                <Button
-                                    Command="{Binding LeaveRoomCommand}"
-                                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_leaveRoomButton}}"
-                                    IsEnabled="{Binding CanOperate}" />
-                                <Button
-                                    Command="{Binding ConfirmMinecraftEndedCommand}"
-                                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_confirmMinecraftEndedButton}}"
-                                    HorizontalAlignment="Left"
-                                    IsVisible="{Binding IsBedrockPortBusy}" />
-                            </StackPanel>
-                        </DockPanel>
-                    </StackPanel>
-                </Border>
-
-                <Border
-                    Background="{DynamicResource TranslucentBackgroundColor}"
-                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    IsVisible="{Binding IsInRoom}"
-                    Padding="15">
-                    <StackPanel Spacing="10">
                         <DockPanel>
                             <TextBlock
                                 FontSize="17"
                                 FontWeight="SemiBold"
-                                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_roomMembersSectionTitle}}" />
+                                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_createRoomSectionTitle}}" />
                             <TextBlock
-                                DockPanel.Dock="Right"
+                                FontSize="12"
                                 Foreground="{DynamicResource InnerForegroundColor}"
                                 Margin="8,0,0,1"
-                                Text="{Binding MemberCountText}"
+                                Text="{Binding LanServerCountText}"
                                 VerticalAlignment="Bottom" />
                         </DockPanel>
-                        <ItemsControl ItemsSource="{Binding Members}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="8" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="multiplayer:OnlineMember">
-                                    <Border
-                                        BorderBrush="{DynamicResource TranslucentBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
-                                        Padding="10">
-                                        <StackPanel>
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                                            <TextBlock
-                                                FontSize="12"
-                                                Foreground="{DynamicResource InnerForegroundColor}"
-                                                Text="{Binding Detail}" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <DockPanel>
+                            <StackPanel
+                                DockPanel.Dock="Right"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <Button
+                                    Click="EnterJavaPort_OnClick"
+                                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_manualPortButton}}"
+                                    HorizontalAlignment="Left"
+                                    Margin="8,0,0,0" />
+                                <Button
+                                    Command="{Binding DiscoverJavaServersCommand}"
+                                    Content="{Binding JavaDiscoveryButtonText}"
+                                    IsEnabled="{Binding !IsDiscoveringJavaServers}" />
+                                <Button
+                                    Command="{Binding CreateRoomCommand}"
+                                    Content="{Binding CreateRoomButtonText}"
+                                    IsEnabled="{Binding CanCreateRoom}" />
+                                <Button
+                                    Command="{Binding CancelRoomOperationCommand}"
+                                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_cancelButton}}"
+                                    IsVisible="{Binding IsRoomOperationInProgress}" />
+                            </StackPanel>
+                            <ComboBox
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding LanServers}"
+                                PlaceholderText="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_lanServerComboBoxPlaceholder}}"
+                                SelectedItem="{Binding SelectedLanServer}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="multiplayer:LanServerEntry">
+                                        <TextBlock Text="{Binding Display}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </DockPanel>
                     </StackPanel>
-                </Border>
-            </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="{Binding ShowBedrockRoomActions}"
+                Padding="15">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_createRoomSectionTitle}}" />
+                    <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_bedrockCreateRoomTip}}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button
+                            Command="{Binding CreateRoomCommand}"
+                            Content="{Binding CreateRoomButtonText}"
+                            IsEnabled="{Binding CanCreateRoom}" />
+                        <Button
+                            Command="{Binding CancelRoomOperationCommand}"
+                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_cancelButton}}"
+                            IsVisible="{Binding IsRoomOperationInProgress}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="{Binding IsNotInRoom}"
+                Padding="15">
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_joinRoomSectionTitle}}" />
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        IsVisible="{Binding ShowBedrockRoomActions}"
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_joinRoomTip}}" />
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                        <Button
+                            Command="{Binding ClearJoinCodeCommand}"
+                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_clearJoinCodeButton}}"
+                            Grid.Column="0" />
+                        <Button
+                            Click="PasteJoinCode_OnClick"
+                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_pasteJoinCodeButton}}"
+                            Grid.Column="1"
+                            Margin="8,0,8,0" />
+                        <TextBox
+                            Grid.Column="2"
+                            Margin="0,0,10,0"
+                            PlaceholderText="{Binding JoinCodePlaceholder}"
+                            Text="{Binding JoinCode}" />
+                        <Button
+                            Command="{Binding JoinRoomCommand}"
+                            Content="{Binding JoinRoomButtonText}"
+                            Grid.Column="3"
+                            IsEnabled="{Binding CanOperate}" />
+                        <Button
+                            Command="{Binding CancelRoomOperationCommand}"
+                            Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_cancelButton}}"
+                            Grid.Column="4"
+                            IsVisible="{Binding IsRoomOperationInProgress}"
+                            Margin="8,0,0,0" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="{Binding IsInRoom}"
+                Padding="15">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_currentRoomSectionTitle}}" />
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_currentRoomCodeLabel}}" />
+                            <TextBlock FontSize="20" Text="{Binding CurrentRoomCode}" />
+                        </StackPanel>
+                        <StackPanel
+                            DockPanel.Dock="Bottom"
+                            Margin="0,10,0,0"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Button Click="CopyRoomCode_OnClick" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_copyRoomCodeButton}}" />
+                            <Button
+                                Command="{Binding LeaveRoomCommand}"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_leaveRoomButton}}"
+                                IsEnabled="{Binding CanOperate}" />
+                            <Button
+                                Command="{Binding ConfirmMinecraftEndedCommand}"
+                                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_confirmMinecraftEndedButton}}"
+                                HorizontalAlignment="Left"
+                                IsVisible="{Binding IsBedrockPortBusy}" />
+                        </StackPanel>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{DynamicResource TranslucentBackgroundColor}"
+                BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                IsVisible="{Binding IsInRoom}"
+                Padding="15">
+                <StackPanel Spacing="10">
+                    <DockPanel>
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Text="{Translate {x:Static loc:ComponentsLanguageManager+Keys.multiplayercontentpage_roomMembersSectionTitle}}" />
+                        <TextBlock
+                            DockPanel.Dock="Right"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            Margin="8,0,0,1"
+                            Text="{Binding MemberCountText}"
+                            VerticalAlignment="Bottom" />
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding Members}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="multiplayer:OnlineMember">
+                                <Border
+                                    BorderBrush="{DynamicResource TranslucentBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="10">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource InnerForegroundColor}"
+                                            Text="{Binding Detail}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
         </StackPanel>
+    </StackPanel>
 </UserControl>
