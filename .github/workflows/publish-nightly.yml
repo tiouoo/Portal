@@ -115,9 +115,9 @@ jobs:
       GRAVITYCONE_UPTIME_API_KEY: ${{ secrets.GRAVITYCONE_UPTIME_API_KEY }}
       CNB_UPDATE_TOKEN: ${{ secrets.CNB_UPDATE_TOKEN }}
       PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
-          REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
-          PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
-          PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
+      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
+      PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
+      PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
