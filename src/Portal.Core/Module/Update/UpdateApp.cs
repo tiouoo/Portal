@@ -53,7 +53,9 @@ public static class UpdateApp
             }
             if (_activeSelection == selection) return;
 
-            prepareReplacement = ReadyUpdate is not null || _preparationTask is { IsCompleted: false };
+            // A channel/source change must check the newly selected feed even when no
+            // previous preparation task exists.
+            prepareReplacement = true;
             replacementIsSilent = ReadyUpdate is not null
                 ? !Data.UiProperty.IsManualUpdateRequested
                 : _preparationIsSilent;

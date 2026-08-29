@@ -17,7 +17,8 @@ namespace Portal.Core.Module.Update;
 
 public sealed record UpdateAsset(string Name, string DownloadUrl, long Size, string? Sha256);
 
-public sealed record UpdateRelease(string Title, long Sequence, IReadOnlyList<UpdateAsset> Assets);
+public sealed record UpdateRelease(string Title, long Sequence, IReadOnlyList<UpdateAsset> Assets,
+    string Channel = "release");
 
 public static class UpdateChecker
 {
@@ -79,6 +80,8 @@ public static class UpdateChecker
 
     public static bool IsNewer(UpdateRelease release)
     {
+        var currentChannel = NormalizeInstalledChannel(AppVersionService.Instance.Version.Type);
+        if (!currentChannel.Equals(release.Channel, StringComparison.Ordinal)) return true;
         if (release.Title.Equals(AppVersionService.Instance.Version.VersionTitle.Trim(), StringComparison.Ordinal))
             return false;
         if (!long.TryParse(AppVersionService.Instance.Version.Action, NumberStyles.None, CultureInfo.InvariantCulture,
@@ -101,7 +104,7 @@ public static class UpdateChecker
             ? LatestStableRelease(document.RootElement)
             : document.RootElement;
 
-        return CreateRelease(release, asset => IsHttpsUrl(GetString(asset, "browser_download_url"))
+        return CreateRelease(release, channel, asset => IsHttpsUrl(GetString(asset, "browser_download_url"))
                                                && IsGithubUrl(GetString(asset, "browser_download_url")!),
             asset => new UpdateAsset(
                 GetString(asset, "name") ?? string.Empty,
@@ -124,7 +127,7 @@ public static class UpdateChecker
             .GetStringAsync();
         using var document = JsonDocument.Parse(text);
         var release = LatestStableRelease(document.RootElement);
-        return CreateRelease(release, asset => IsHttpsUrl(GetString(asset, "browser_download_url")),
+        return CreateRelease(release, "release", asset => IsHttpsUrl(GetString(asset, "browser_download_url")),
             asset => new UpdateAsset(
                 GetString(asset, "name") ?? string.Empty,
                 GetString(asset, "browser_download_url") ?? string.Empty,
@@ -132,7 +135,7 @@ public static class UpdateChecker
                 ParseSha256(GetString(asset, "hash_algo"), GetString(asset, "hash_value"))));
     }
 
-    private static UpdateRelease CreateRelease(JsonElement release, Func<JsonElement, bool> assetFilter,
+    private static UpdateRelease CreateRelease(JsonElement release, string channel, Func<JsonElement, bool> assetFilter,
         Func<JsonElement, UpdateAsset> toAsset)
     {
         var title = GetString(release, "name")?.Trim();
@@ -146,7 +149,18 @@ public static class UpdateChecker
                 .Where(asset => !string.IsNullOrWhiteSpace(asset.Name))
                 .ToArray()
             : [];
-        return new UpdateRelease(title, ParseSequence(title), assets);
+        return new UpdateRelease(title, ParseSequence(title), assets, channel);
+    }
+
+    private static string NormalizeInstalledChannel(string type)
+    {
+        return type.Trim().ToLowerInvariant() switch
+        {
+            "release" or "stable" => "release",
+            "nightly" => "nightly",
+            "commit" or "dev" => "commit",
+            _ => "unknown"
+        };
     }
 
     private static JsonElement LatestStableRelease(JsonElement releases)
