@@ -766,7 +766,8 @@ public static class UpdateApp
         var installer = Directory.GetFiles(extracted, "*.exe", SearchOption.AllDirectories).SingleOrDefault()
                         ?? throw new InvalidDataException(CommonLanguageManager.Instance.update_installerMustHaveOneExe.CurrentValue());
         var startInfo = new ProcessStartInfo(installer) { UseShellExecute = true };
-        startInfo.ArgumentList.Add("/VERYSILENT");
+        // Keep installation unattended while leaving Inno Setup's progress window visible.
+        startInfo.ArgumentList.Add("/SILENT");
         startInfo.ArgumentList.Add("/SUPPRESSMSGBOXES");
         startInfo.ArgumentList.Add("/NORESTART");
         startInfo.ArgumentList.Add("/SP-");
