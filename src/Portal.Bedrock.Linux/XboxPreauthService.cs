@@ -54,7 +54,7 @@ internal sealed class XboxPreauthService
             Properties = new
             {
                 AuthMethod = "RPS", SiteName = "user.auth.xboxlive.com",
-                RpsTicket = $"d={account.AccessToken}"
+                RpsTicket = $"t={account.AccessToken}"
             }
         }, key, cancellationToken);
         var userToken = RequiredString(user, "Token");

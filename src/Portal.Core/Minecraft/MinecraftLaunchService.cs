@@ -112,8 +112,14 @@ public static class MinecraftLaunchService
                     {
                         process = launchedProcess;
                         launchCompleted = true;
-                        context.SetDescription(CommonLanguageManager.Instance.launch_rootCompleted.CurrentValue());
-                        task!.RefreshActions();
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            if (task!.IsTerminal || task.IsCancellationRequested)
+                                return;
+
+                            context.SetDescription(CommonLanguageManager.Instance.launch_rootCompleted.CurrentValue());
+                            task.RefreshActions();
+                        });
                     });
                 await processExit.Task;
             }
