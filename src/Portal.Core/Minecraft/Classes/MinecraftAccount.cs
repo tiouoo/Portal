@@ -18,6 +18,7 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
     private Bitmap? _body;
     private Bitmap? _cover;
     private Bitmap? _head;
+    private Bitmap? _bigHead;
 
     [ObservableProperty] public partial DateTime CreateAt { get; set; } = DateTime.Now;
 
@@ -113,6 +114,12 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
     {
         get { return _head ??= HandleHeadSkin(); }
     }
+    
+    [JsonIgnore]
+    public Bitmap BigHead
+    {
+        get { return _bigHead ??= HandleHeadSkin(68); }
+    }
 
     [JsonIgnore]
     public Bitmap Body
@@ -179,12 +186,12 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
         return body.ToBitmap();
     }
 
-    private Bitmap HandleHeadSkin()
+    private Bitmap HandleHeadSkin(int size = 36)
     {
         var imageBytes = Convert.FromBase64String(Skin);
         using var skin = SKBitmap.Decode(imageBytes);
         using var head = HeadCapturer.Default.Capture(skin);
-        return head.ToBitmap(36);
+        return head.ToBitmap(size);
     }
 
     public static Guid GetMinecraftOfflineUuid(string name)

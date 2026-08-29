@@ -1917,6 +1917,16 @@
     "addServer": "添加服务器",
     "emptyList": "添加实例、世界存档或服务器，快速开始下一次游戏"
   },
+  "launchPage": {
+    "pageTitle": "启动",
+    "launch": "启动游戏",
+    "switchAccount": "切换账号",
+    "instanceSettings": "实例设置",
+    "selectInstance": "选择实例",
+    "noInstances": "没有可启动的 Java 实例",
+    "noInstanceSelected": "尚未选择实例",
+    "noAccount": "尚未选择账号"
+  },
   "notification": {
     "test": "通知测试"
   },
@@ -2242,6 +2252,8 @@
     "downloadPath": "下载",
     "home": "主页",
     "homePath": "主页",
+    "launch": "启动",
+    "launchPath": "启动",
     "instances": "实例",
     "instancesPath": "实例",
     "multiplayer": "联机",

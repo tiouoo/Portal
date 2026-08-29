@@ -1,0 +1,188 @@
+<UserControl
+    d:DesignHeight="720"
+    d:DesignWidth="1200"
+    mc:Ignorable="d"
+    x:Class="Portal.Views.Pages.LaunchPage"
+    x:DataType="pages:LaunchPageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="clr-namespace:Portal.Views.Pages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Styles>
+        <Style Selector="Button.InstanceChoice">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="10,8" />
+        </Style>
+        <Style Selector="Button.InstanceChoice.selected">
+            <Setter Property="Background" Value="{DynamicResource SelectionNormal}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="300,*" Margin="12,2,0,12">
+        <Border
+            Background="{DynamicResource TranslucentBackgroundColor}"
+            BorderBrush="{DynamicResource TranslucentBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+            <Grid Grid.Column="0" RowDefinitions="*,Auto,Auto,20">
+                <Grid
+                    Background="Transparent"
+                    Grid.Row="0"
+                    Margin="20,40,20,0"
+                    Name="AccountArea">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding HasCurrentAccount}"
+                        Spacing="12"
+                        VerticalAlignment="Center">
+                        <Grid
+                            Background="Transparent"
+                            ContextRequested="AccountArea_OnContextRequested"
+                            Height="68"
+                            Width="68">
+                            <Border Background="{DynamicResource SystemAccentColor}" Opacity="0.45">
+                                <Border.Effect>
+                                    <BlurEffect Radius="22" />
+                                </Border.Effect>
+                                <Border.OpacityMask>
+                                    <ImageBrush Source="{Binding CurrentAccount.BigHead}" Stretch="Uniform" />
+                                </Border.OpacityMask>
+                            </Border>
+                            <Border
+                                ClipToBounds="True"
+                                Height="68"
+                                Width="68">
+                                <Image
+                                    Height="68"
+                                    RenderOptions.BitmapInterpolationMode="None"
+                                    Source="{Binding CurrentAccount.BigHead}"
+                                    Stretch="Uniform"
+                                    Width="68" />
+                            </Border>
+                        </Grid>
+                        <TextBlock
+                            FontSize="16"
+                            HorizontalAlignment="Center"
+                            Margin="0,5,0,0"
+                            MaxWidth="260"
+                            Text="{Binding CurrentAccount.Name}"
+                            TextAlignment="Center"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <TextBlock
+                        Foreground="{DynamicResource InnerForegroundColor}"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding !HasCurrentAccount}"
+                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.launchPage_noAccount}}"
+                        VerticalAlignment="Center" />
+                </Grid>
+
+                <Button
+                    Click="LaunchButton_OnClick"
+                    Grid.Row="1"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding CanLaunch}"
+                    Margin="20,0"
+                    Padding="20,12">
+                    <StackPanel HorizontalAlignment="Center" Spacing="4">
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="Thin"
+                            Foreground="{DynamicResource SystemAccentColor}"
+                            HorizontalAlignment="Center"
+                            Text="{Translate {x:Static loc:CommonLanguageManager+Keys.launchPage_launch}}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource InnerForegroundColor}"
+                            HorizontalAlignment="Center"
+                            MaxWidth="230"
+                            Text="{Binding SelectedInstanceName}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
+                </Button>
+
+                <Grid
+                    ColumnDefinitions="*,*"
+                    ColumnSpacing="10"
+                    Grid.Row="2"
+                    Margin="20,10,20,0">
+                    <Button
+                        Click="SelectInstance_OnClick"
+                        Grid.Column="0"
+                        Height="40"
+                        HorizontalAlignment="Stretch"
+                        Padding="12,7"
+                        x:Name="SelectInstanceButton">
+                        <Button.Flyout>
+                            <Flyout
+                                Opening="InstanceFlyout_OnOpening"
+                                Placement="TopEdgeAlignedLeft"
+                                VerticalOffset="-6">
+                                <Grid Width="300">
+                                    <ScrollViewer
+                                        HorizontalScrollBarVisibility="Disabled"
+                                        MaxHeight="455"
+                                        VerticalScrollBarVisibility="Hidden">
+                                        <ItemsRepeater ItemsSource="{Binding InstanceChoices}">
+                                            <ItemsRepeater.Layout>
+                                                <StackLayout Spacing="4" />
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="pages:LaunchPageInstanceChoice">
+                                                    <Button
+                                                        Classes.InstanceChoice="True"
+                                                        Classes.selected="{Binding IsSelected}"
+                                                        Click="InstanceChoice_OnClick"
+                                                        Tag="{Binding}">
+                                                        <StackPanel Spacing="2">
+                                                            <TextBlock
+                                                                MaxLines="1"
+                                                                Text="{Binding Instance.InstanceName}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock
+                                                                FontSize="12"
+                                                                Foreground="{DynamicResource InnerForegroundColor}"
+                                                                MaxLines="1"
+                                                                Text="{Binding Instance.ShortDisplay}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </ScrollViewer>
+                                    <TextBlock
+                                        Foreground="{DynamicResource InnerForegroundColor}"
+                                        HorizontalAlignment="Center"
+                                        IsVisible="{Binding !HasInstances}"
+                                        Margin="24,30"
+                                        Text="{Translate {x:Static loc:CommonLanguageManager+Keys.launchPage_noInstances}}"
+                                        VerticalAlignment="Center" />
+                                </Grid>
+                            </Flyout>
+                        </Button.Flyout>
+                        <TextBlock Text="{Translate {x:Static loc:CommonLanguageManager+Keys.launchPage_selectInstance}}" />
+                    </Button>
+                    <Button
+                        Click="InstanceSettings_OnClick"
+                        Grid.Column="1"
+                        Height="40"
+                        HorizontalAlignment="Stretch"
+                        IsEnabled="{Binding HasSelectedInstance}"
+                        Padding="12,7">
+                        <TextBlock Text="{Translate {x:Static loc:CommonLanguageManager+Keys.launchPage_instanceSettings}}" />
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

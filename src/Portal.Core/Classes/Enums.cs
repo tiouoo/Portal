@@ -39,7 +39,8 @@ public enum NewTabContent
     NewTabPage,
     StartPage,
     Widget,
-    HomePage
+    HomePage,
+    LaunchPage
 }
 
 public enum NewTabLayout

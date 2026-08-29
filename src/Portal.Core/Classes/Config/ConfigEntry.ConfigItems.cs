@@ -112,6 +112,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool HasTabWindowSize { get; set; }
     [ObservableProperty] public partial List<WidgetLayoutData> WidgetLayout { get; set; } = [];
     [ObservableProperty] public partial List<GameListWidgetEntry> HomePageItems { get; set; } = [];
+    [ObservableProperty] public partial string? LaunchPageInstanceFolderPath { get; set; }
     [ObservableProperty] public partial MinecraftAccount? UsingMinecraftMinecraftAccount { get; set; }
     [ObservableProperty] public partial BedrockAccount? UsingBedrockAccount { get; set; }
     [ObservableProperty] public partial MinecraftFolderEntry? DefaultMinecraftFolder { get; set; }

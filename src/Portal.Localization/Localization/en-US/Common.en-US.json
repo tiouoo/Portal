@@ -1505,7 +1505,7 @@
     "pinging": "Pinging",
     "cannotConnect": "Cannot connect",
     "cannotConnectDescription": "Unable to connect to the server. Check the address or try again later",
-    "online": "Online",
+    "online": "Microsoft",
     "players": "{0} / {1} players",
     "noDescription": "No description"
   },
@@ -1917,6 +1917,16 @@
     "addServer": "Add Server",
     "emptyList": "Add an instance, world save, or server to quickly start your next game"
   },
+  "launchPage": {
+    "pageTitle": "Launch",
+    "launch": "Launch Game",
+    "switchAccount": "Switch Account",
+    "instanceSettings": "Instance Settings",
+    "selectInstance": "Select Instance",
+    "noInstances": "No launchable Java instances",
+    "noInstanceSelected": "No instance selected",
+    "noAccount": "No account selected"
+  },
   "notification": {
     "test": "Notification Test"
   },
@@ -2242,6 +2252,8 @@
     "downloadPath": "Download",
     "home": "Home",
     "homePath": "Home",
+    "launch": "Launch",
+    "launchPath": "Launch",
     "instances": "Instances",
     "instancesPath": "Instances",
     "multiplayer": "Multiplayer",
