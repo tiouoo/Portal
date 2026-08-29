@@ -45,6 +45,9 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial bool ShowRecentPlays { get; set; } = true;
     [ObservableProperty] public partial bool NewTabRecentPlaysExpanded { get; set; } = true;
     [ObservableProperty] public partial bool StartPageRecentPlaysExpanded { get; set; }
+    [ObservableProperty] public partial int CustomHomepageType { get; set; }
+    [ObservableProperty] public partial int CustomHomepagePreset { get; set; }
+    [ObservableProperty] public partial string CustomHomepageUrl { get; set; } = string.Empty;
     [ObservableProperty] public partial bool DownloadJavaEditionExpanded { get; set; } = true;
     [ObservableProperty] public partial bool DownloadBedrockEditionExpanded { get; set; }
     [ObservableProperty] public partial bool DownloadOthersExpanded { get; set; }

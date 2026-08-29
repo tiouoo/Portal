@@ -156,6 +156,32 @@
     "relayNodesUpdated": "Public nodes updated",
     "relayAutoUpdate": "Auto-update public nodes",
     "relayAutoUpdateHint": " *Automatically fetches and merges public nodes from the links above when the app starts."
+    ,"customHomepageTitle": "Custom Homepage"
+    ,"customHomepageHint": "PCL-CE homepage customization with presets, a local Custom.xaml file, and online homepages. Online content is cached locally."
+    ,"customHomepageBlank": "Blank"
+    ,"customHomepagePreset": "Preset"
+    ,"customHomepageLocal": "Local file"
+    ,"customHomepageOnline": "Online"
+    ,"customHomepagePresetLabel": "Homepage preset"
+    ,"customHomepageUrl": "Download URL"
+    ,"customHomepageRefresh": "Refresh homepage"
+    ,"customHomepageOpenFile": "Open local file"
+    ,"customHomepagePresetTrivia": "Trivia"
+    ,"customHomepagePresetEchoCave": "Echo Cave (removed)"
+    ,"customHomepagePresetMcNews": "Minecraft News (Author: Nattiden)"
+    ,"customHomepagePresetDailyModpack": "Daily Modpack Recommendation (Author: wkea)"
+    ,"customHomepagePresetMcSkin": "Minecraft Skin Recommendation (Author: wkea)"
+    ,"customHomepagePresetOpenBmclapi": "OpenBMCLAPI Dashboard Lite (Authors: Silverteal, Mxmilu666)"
+    ,"customHomepagePresetPclManual": "PCL New Feature Manual (Author: WForst-Breeze)"
+    ,"customHomepagePresetMagazine": "Magazine Homepage (Author: CreeperIsASpy)"
+    ,"customHomepagePresetGithub": "PCL GitHub Dashboard (Author: Deep-Dark-Forest)"
+    ,"customHomepagePresetMcUpdate": "Minecraft Update Summary (Author: pynickle, partially AI-generated)"
+    ,"customHomepagePresetNewsToday": "News Today (Author: EYicheng)"
+    ,"customHomepagePresetKnowledge": "Minecraft Knowledge (Author: awaEric233)"
+    ,"customHomepagePresetModpack": "Modpack Recommendation Engine (Author: CHMYGZ)"
+    ,"customHomepagePresetBangumi": "Bangumi Anime (Author: wzyaeu)"
+    ,"customHomepagePresetAnnouncement": "PCL CE Announcements"
+    ,"customHomepagePresetOfficialFeed": "Minecraft Official Feed"
   },
   "download": {
     "title": "Download Settings",

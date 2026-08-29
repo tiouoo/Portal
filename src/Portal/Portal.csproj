@@ -32,6 +32,7 @@
         <PackageReference Include="Avalonia.AvaloniaEdit"/>
         <PackageReference Include="Avalonia.Controls.ItemsRepeater"/>
         <PackageReference Include="Avalonia.Fonts.Inter"/>
+        <PackageReference Include="Avalonia.Markup.Xaml.Loader" PrivateAssets="All" />
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>

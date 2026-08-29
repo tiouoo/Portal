@@ -156,6 +156,32 @@
     "relayNodesUpdated": "公共节点已更新",
     "relayAutoUpdate": "自动更新公共节点",
     "relayAutoUpdateHint": " *启动应用时自动从上方链接获取并合并公共节点。"
+    ,"customHomepageTitle": "自定义主页"
+    ,"customHomepageHint": "复刻 PCL-CE 的主页自定义功能，支持预设、本地 Custom.xaml 和联网主页。联网内容会缓存到本地。"
+    ,"customHomepageBlank": "空白"
+    ,"customHomepagePreset": "预设"
+    ,"customHomepageLocal": "本地文件"
+    ,"customHomepageOnline": "联网更新"
+    ,"customHomepagePresetLabel": "主页预设"
+    ,"customHomepageUrl": "下载地址"
+    ,"customHomepageRefresh": "刷新主页"
+    ,"customHomepageOpenFile": "打开本地文件"
+    ,"customHomepagePresetTrivia": "你知道吗？"
+    ,"customHomepagePresetEchoCave": "回声洞（已移除）"
+    ,"customHomepagePresetMcNews": "Minecraft 新闻（作者：最亮的信标）"
+    ,"customHomepagePresetDailyModpack": "每日整合包推荐（作者：wkea）"
+    ,"customHomepagePresetMcSkin": "Minecraft 皮肤推荐（作者：wkea）"
+    ,"customHomepagePresetOpenBmclapi": "OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）"
+    ,"customHomepagePresetPclManual": "PCL 新功能说明书（作者：WForst-Breeze）"
+    ,"customHomepagePresetMagazine": "杂志主页（作者：CreeperIsASpy）"
+    ,"customHomepagePresetGithub": "PCL GitHub 仪表盘（作者：Deep-Dark-Forest）"
+    ,"customHomepagePresetMcUpdate": "Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）"
+    ,"customHomepagePresetNewsToday": "今日新闻热点（作者：EYicheng）"
+    ,"customHomepagePresetKnowledge": "Minecraft 芝士站（作者：awaEric233）"
+    ,"customHomepagePresetModpack": "整合包推荐引擎（作者：CHMYGZ）"
+    ,"customHomepagePresetBangumi": "Bangumi 番剧主页（作者：wzyaeu）"
+    ,"customHomepagePresetAnnouncement": "PCL CE 公告栏"
+    ,"customHomepagePresetOfficialFeed": "Minecraft 官方信息流"
   },
   "download": {
     "title": "下载设置",

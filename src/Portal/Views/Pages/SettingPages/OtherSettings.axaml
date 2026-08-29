@@ -5,12 +5,16 @@
     x:Class="Portal.Views.Pages.SettingPages.OtherSettings"
     x:DataType="settingPages:OtherSettings"
     xmlns="https://github.com/avaloniaui"
+    xmlns:conv="clr-namespace:Portal.Module.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="using:Portal.Localization"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settingPages="clr-namespace:Portal.Views.Pages.SettingPages"
     xmlns:tio="https://github.com/tiouoo/TioUi.Avalonia"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <conv:IntCompareConverter x:Key="IntCompareConverter" />
+    </UserControl.Resources>
     <StackPanel Spacing="15">
         <StackPanel Spacing="5">
             <Label
@@ -149,6 +153,45 @@
                     OffContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayAutoUpdate}}"
                     OnContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayAutoUpdate}}"
                     VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel IsVisible="False" Spacing="5">
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepageTitle}}"
+                FontSize="13"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                Margin="0,0,0,5"
+                SelectedIndex="{Binding Data.ConfigEntry.CustomHomepageType}">
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepageBlank}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepageLocal}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepageOnline}}" />
+                <ComboBoxItem Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepagePreset}}" />
+            </ComboBox>
+            <StackPanel IsVisible="{Binding Data.ConfigEntry.CustomHomepageType, Converter={StaticResource IntCompareConverter}, ConverterParameter='== 3'}" Spacing="5">
+                <TextBlock Foreground="{DynamicResource InnerForegroundColor}" Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepagePresetLabel}}" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding HomepagePresets}"
+                    Margin="0,0,0,5"
+                    SelectedItem="{Binding SelectedHomepagePreset}" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding Data.ConfigEntry.CustomHomepageType, Converter={StaticResource IntCompareConverter}, ConverterParameter='== 2'}" Spacing="5">
+                <Label
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepageUrl}}"
+                    FontSize="13"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource InnerForegroundColor}" />
+                <TextBox
+                    Margin="0,0,0,5"
+                    PlaceholderText="https://"
+                    Text="{Binding Data.ConfigEntry.CustomHomepageUrl}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Click="RefreshHomepage_OnClick" Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepageRefresh}}" />
+                <Button Click="OpenHomepageFile_OnClick" Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_customHomepageOpenFile}}" />
             </StackPanel>
         </StackPanel>
     </StackPanel>

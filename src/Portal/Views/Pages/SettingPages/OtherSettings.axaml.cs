@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Portal.Core.Classes;
 using Portal.Core.Const;
@@ -14,6 +15,7 @@ using Portal.Module.DefaultPage;
 using Portal.ViewModels;
 using Tio.Avalonia.Standard.Modules.DiskIO;
 using Tio.Avalonia.Standard.Tab.Gateway;
+using Portal.Views.Pages;
 
 namespace Portal.Views.Pages.SettingPages;
 
@@ -26,6 +28,33 @@ public partial class OtherSettings : Dsc
     {
         InitializeComponent();
         DataContext = this;
+    }
+
+    public IReadOnlyList<string> HomepagePresets => CustomHomepageView.PresetNames;
+    public bool IsPresetHomepage => Data.ConfigEntry.CustomHomepageType == 3;
+    public bool IsOnlineHomepage => Data.ConfigEntry.CustomHomepageType == 2;
+    public string SelectedHomepagePreset
+    {
+        get => HomepagePresets.ElementAtOrDefault(Data.ConfigEntry.CustomHomepagePreset) ?? HomepagePresets[0];
+        set { var index = Array.IndexOf(HomepagePresets.ToArray(), value); if (index >= 0) Data.ConfigEntry.CustomHomepagePreset = index; }
+    }
+
+    private void RefreshHomepage_OnClick(object? sender, RoutedEventArgs e) => CustomHomepageView.RequestRefresh();
+
+    private async void OpenHomepageFile_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var path = CustomHomepageView.LocalHomepagePath;
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        if (!File.Exists(path)) await File.WriteAllTextAsync(path, "<TextBlock Text=\"Custom homepage\" />");
+        Data.ConfigEntry.CustomHomepageType = 1;
+        try
+        {
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Homepage] Failed to open local file: {exception.Message}");
+        }
     }
 
     public static IReadOnlyList<DefaultPageRegistry.DefaultPageEntry> DefaultPages => DefaultPageRegistry.Pages;

@@ -26,7 +26,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="300,*" Margin="12,2,0,12">
+    <Grid ColumnDefinitions="300,*" Margin="12,2,0,12" ColumnSpacing="12">
         <Border
             Background="{DynamicResource TranslucentBackgroundColor}"
             BorderBrush="{DynamicResource TranslucentBorderBrush}"
@@ -184,5 +184,6 @@
                 </Grid>
             </Grid>
         </Border>
+        <pages:CustomHomepageView Grid.Column="1" />
     </Grid>
 </UserControl>
