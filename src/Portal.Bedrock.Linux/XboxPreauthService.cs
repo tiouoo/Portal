@@ -91,6 +91,10 @@ internal sealed class XboxPreauthService
             ["xbl_gamertag"] = OptionalString(profileClaims, "gtg") ?? account.Gamertag,
             ["xbl_age_group"] = OptionalString(profileClaims, "agg"),
             ["xbl_uhs"] = OptionalString(profileClaims, "uhs"),
+            ["xbl_modern_gamertag"] = OptionalString(profileClaims, "mgt"),
+            ["xbl_modern_gamertag_suffix"] = OptionalString(profileClaims, "mgs"),
+            ["xbl_unique_modern_gamertag"] = OptionalString(profileClaims, "umg"),
+            ["xbl_privileges"] = OptionalString(profileClaims, "prv"),
             ["achievements_token"] = RequiredString(achievements, "Token"),
             ["achievements_uhs"] = GetUserHash(achievements),
             ["achievements_expiry"] = OptionalString(achievements, "NotAfter"),
@@ -100,6 +104,13 @@ internal sealed class XboxPreauthService
         AddSisu(payload, "mp", "https://multiplayer.minecraft.net/", multiplayer);
         AddSisu(payload, "realms", "https://pocket.realms.minecraft.net/", realms);
         AddSisu(payload, "lic", "http://licensing.xboxlive.com", licensing);
+        AddExpiryEpoch(payload, "user_token_expiry");
+        AddExpiryEpoch(payload, "xbl_token_expiry");
+        AddExpiryEpoch(payload, "achievements_expiry");
+        AddExpiryEpoch(payload, "sisu_expiry");
+        AddExpiryEpoch(payload, "mp_expiry");
+        AddExpiryEpoch(payload, "realms_expiry");
+        AddExpiryEpoch(payload, "lic_expiry");
 
         var temporaryPath = _devicePath + ".tmp";
         await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(payload,
@@ -205,6 +216,15 @@ internal sealed class XboxPreauthService
         payload[$"{prefix}_rp"] = relyingParty;
         payload[$"{prefix}_uhs"] = GetUserHash(token);
         payload[$"{prefix}_expiry"] = OptionalString(token, "NotAfter");
+    }
+
+    private static void AddExpiryEpoch(IDictionary<string, object?> payload, string isoField)
+    {
+        if (payload.TryGetValue(isoField, out var value) && value is string iso &&
+            DateTimeOffset.TryParse(iso, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal, out var time))
+            payload[$"{isoField}_epoch"] = time.ToUnixTimeSeconds()
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static string? GetUserHash(JsonElement token)

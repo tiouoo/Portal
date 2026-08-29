@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Formats.Tar;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Security.Cryptography;
 using Portal.Bedrock.Standard.Interface;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Localization;
@@ -36,7 +38,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
             UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_statusFormat.CurrentValue(), runtimeProgress.Message), runtimeProgress.TotalBytes > 0
                 ? runtimeProgress.Percentage
                 : null);
-        }, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken, requireXUserRuntime: Authentication != null).ConfigureAwait(false);
         string? preauthDevice = null;
         if (Authentication != null)
         {
@@ -51,6 +53,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         }
         await EnsureGameInputAsync(runtime, cancellationToken).ConfigureAwait(false);
         await EnsureGamePatchAsync(executablePath, cancellationToken).ConfigureAwait(false);
+        await EnsureOnlineLoginAsync(executablePath, runtime, cancellationToken).ConfigureAwait(false);
         LinuxBedrockDataIsolation.Prepare(_instanceConfig, (message, level) => Log(level, message));
         cancellationToken.ThrowIfCancellationRequested();
         var startInfo = new ProcessStartInfo
@@ -143,6 +146,12 @@ public sealed class BedrockLaunch : IBedrockLaunch
 
         try
         {
+            if (File.Exists(archivePath) && !IsValidZipArchive(archivePath))
+            {
+                Log(BedrockLogLevel.Warning, LogLanguageManager.Instance.bedrockLaunch_gamePatchCacheCorrupted.CurrentValue());
+                File.Delete(archivePath);
+            }
+
             if (!File.Exists(archivePath))
             {
                 Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_downloadingGamePatch.CurrentValue());
@@ -154,45 +163,51 @@ public sealed class BedrockLaunch : IBedrockLaunch
                 var totalBytes = response.Content.Headers.ContentLength ?? 0;
                 await using var input = await response.Content.ReadAsStreamAsync(cancellationToken)
                     .ConfigureAwait(false);
-                await using var output = new FileStream(archivePath, FileMode.Create, FileAccess.Write,
-                    FileShare.None, 1024 * 64, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                var buffer = new byte[1024 * 64];
-                long downloadedBytes = 0;
-                var stopwatch = Stopwatch.StartNew();
-                var lastReport = TimeSpan.Zero;
-                var lastLoggedPercentage = -1;
-                int read;
-                while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+                var temporaryArchivePath = archivePath + ".download";
                 {
-                    await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
-                    downloadedBytes += read;
-                    if (stopwatch.Elapsed - lastReport < TimeSpan.FromMilliseconds(250) &&
-                        !(totalBytes > 0 && downloadedBytes == totalBytes)) continue;
-
-                    var speed = stopwatch.Elapsed.TotalSeconds > 0
-                        ? downloadedBytes / stopwatch.Elapsed.TotalSeconds
-                        : 0;
-                    var percentage = totalBytes > 0
-                        ? downloadedBytes * 100d / totalBytes
-                        : (double?)null;
-                    TimeSpan? remaining = speed > 0 && totalBytes > 0
-                        ? TimeSpan.FromSeconds(Math.Max(0, totalBytes - downloadedBytes) / speed)
-                        : null;
-                    var text = totalBytes > 0
-                        ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingPatchWithProgress.CurrentValue(),
-                              percentage, FormatBytes(downloadedBytes), FormatBytes(totalBytes), FormatBytes(speed)) +
-                          (remaining is { } time ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_remainingSuffix.CurrentValue(), FormatDuration(time)) : string.Empty)
-                        : string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingPatchNoProgress.CurrentValue(), FormatBytes(downloadedBytes), FormatBytes(speed));
-                    UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_statusFormat.CurrentValue(), text), percentage);
-                    var integerPercentage = totalBytes > 0 ? (int)percentage!.Value : -1;
-                    if (integerPercentage != lastLoggedPercentage)
+                    await using var output = new FileStream(temporaryArchivePath, FileMode.Create, FileAccess.Write,
+                        FileShare.None, 1024 * 64, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                    var buffer = new byte[1024 * 64];
+                    long downloadedBytes = 0;
+                    var stopwatch = Stopwatch.StartNew();
+                    var lastReport = TimeSpan.Zero;
+                    var lastLoggedPercentage = -1;
+                    int read;
+                    while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
                     {
-                        Log(BedrockLogLevel.Information, text);
-                        lastLoggedPercentage = integerPercentage;
+                        await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                        downloadedBytes += read;
+                        if (stopwatch.Elapsed - lastReport < TimeSpan.FromMilliseconds(250) &&
+                            !(totalBytes > 0 && downloadedBytes == totalBytes)) continue;
+
+                        var speed = stopwatch.Elapsed.TotalSeconds > 0
+                            ? downloadedBytes / stopwatch.Elapsed.TotalSeconds
+                            : 0;
+                        var percentage = totalBytes > 0
+                            ? downloadedBytes * 100d / totalBytes
+                            : (double?)null;
+                        TimeSpan? remaining = speed > 0 && totalBytes > 0
+                            ? TimeSpan.FromSeconds(Math.Max(0, totalBytes - downloadedBytes) / speed)
+                            : null;
+                        var text = totalBytes > 0
+                            ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingPatchWithProgress.CurrentValue(),
+                                  percentage, FormatBytes(downloadedBytes), FormatBytes(totalBytes), FormatBytes(speed)) +
+                              (remaining is { } time ? string.Format(CommonLanguageManager.Instance.bedrockLaunch_remainingSuffix.CurrentValue(), FormatDuration(time)) : string.Empty)
+                            : string.Format(CommonLanguageManager.Instance.bedrockLaunch_downloadingPatchNoProgress.CurrentValue(), FormatBytes(downloadedBytes), FormatBytes(speed));
+                        UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_statusFormat.CurrentValue(), text), percentage);
+                        var integerPercentage = totalBytes > 0 ? (int)percentage!.Value : -1;
+                        if (integerPercentage != lastLoggedPercentage)
+                        {
+                            Log(BedrockLogLevel.Information, text);
+                            lastLoggedPercentage = integerPercentage;
+                        }
+                        lastReport = stopwatch.Elapsed;
                     }
-                    lastReport = stopwatch.Elapsed;
                 }
                 UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_gamePatchDownloadComplete.CurrentValue(), 100);
+                if (!IsValidZipArchive(temporaryArchivePath))
+                    throw new InvalidDataException(LogLanguageManager.Instance.bedrockLaunch_gamePatchCacheCorrupted.CurrentValue());
+                File.Move(temporaryArchivePath, archivePath, true);
             }
 
             using var archive = ZipFile.OpenRead(archivePath);
@@ -215,6 +230,204 @@ public sealed class BedrockLaunch : IBedrockLaunch
         catch (Exception exception)
         {
             Log(BedrockLogLevel.Warning, string.Format(LogLanguageManager.Instance.bedrockLaunch_gamePatchUnavailable.CurrentValue(), exception.Message));
+        }
+    }
+
+    private static bool IsValidZipArchive(string path)
+    {
+        try
+        {
+            using var _ = ZipFile.OpenRead(path);
+            return true;
+        }
+        catch (Exception exception) when (exception is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private const string CacertUrl = "https://curl.se/ca/cacert.pem";
+    private const string HttpClientUrl = "https://github.com/minecraft-linux/mcpelauncher-gdk-dependencies/releases/download/v0.0.0/libHttpClient.GDK.dll";
+    private const string XcurlSetUrl = "https://github.com/Wyze3306/BedrockOnLinux/releases/download/xcurl-504bb166e4e7/openssl-xcurl-set-504bb166e4e7.tar.gz";
+    private const string XcurlSetRevision = "504bb166e4e7";
+    private static readonly byte[] XcurlSetSha256 = Convert.FromHexString("504bb166e4e737ad81c3ac8e7a917740b28478f69acd89e538c3bf921c29523f");
+
+    private async Task EnsureOnlineLoginAsync(string executablePath, LinuxBedrockRuntime runtime,
+        CancellationToken cancellationToken)
+    {
+        var gameDir = Path.GetDirectoryName(executablePath)!;
+        try
+        {
+            var cacheRoot = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
+            if (string.IsNullOrWhiteSpace(cacheRoot))
+                cacheRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
+            cacheRoot = Path.Combine(cacheRoot, "Portal", "Bedrock");
+            Directory.CreateDirectory(cacheRoot);
+
+            Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_preparingOnlineLogin.CurrentValue());
+
+            var cacertPath = Path.Combine(cacheRoot, "cacert.pem");
+            if (!File.Exists(cacertPath))
+            {
+                Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_downloadingCertificates.CurrentValue());
+                await DownloadComponentAsync(CacertUrl, cacertPath, null,
+                    LogLanguageManager.Instance.bedrockLaunch_downloadingCertificates.CurrentValue(),
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            foreach (var baseDir in new[] { gameDir, Path.GetDirectoryName(gameDir)! })
+            {
+                var bundle = Path.Combine(baseDir, "etc", "ssl", "certs", "ca-bundle.crt");
+                Directory.CreateDirectory(Path.GetDirectoryName(bundle)!);
+                File.Copy(cacertPath, bundle, true);
+            }
+            File.Copy(cacertPath, Path.Combine(gameDir, "cacert.pem"), true);
+
+            var httpClientPath = Path.Combine(cacheRoot, "libHttpClient.GDK.dll");
+            if (!File.Exists(httpClientPath))
+                await DownloadComponentAsync(LinuxBedrockRuntimeResolver.ApplyGithubMirror(HttpClientUrl), httpClientPath, null,
+                    LogLanguageManager.Instance.bedrockLaunch_downloadingHttpClient.CurrentValue(),
+                    cancellationToken).ConfigureAwait(false);
+            var targetHttpClient = Path.Combine(gameDir, "libHttpClient.GDK.dll");
+            if (File.Exists(targetHttpClient) && !File.Exists(targetHttpClient + ".portal-orig"))
+                File.Copy(targetHttpClient, targetHttpClient + ".portal-orig");
+            File.Copy(httpClientPath, targetHttpClient, true);
+
+            var setRoot = Path.Combine(cacheRoot, "openssl-xcurl-set");
+            var setMarker = Path.Combine(setRoot, ".rev");
+            if (!File.Exists(setMarker) || (await File.ReadAllTextAsync(setMarker, cancellationToken).ConfigureAwait(false)).Trim() != XcurlSetRevision)
+            {
+                var archivePath = Path.Combine(cacheRoot, $"openssl-xcurl-set-{XcurlSetRevision}.tar.gz");
+                if (!File.Exists(archivePath))
+                    await DownloadComponentAsync(LinuxBedrockRuntimeResolver.ApplyGithubMirror(XcurlSetUrl), archivePath, XcurlSetSha256,
+                        LogLanguageManager.Instance.bedrockLaunch_downloadingXcurlSet.CurrentValue(),
+                        cancellationToken).ConfigureAwait(false);
+                if (Directory.Exists(setRoot)) Directory.Delete(setRoot, true);
+                await using var archiveStream = File.OpenRead(archivePath);
+                await using var gzip = new GZipStream(archiveStream, CompressionMode.Decompress);
+                await TarFile.ExtractToDirectoryAsync(gzip, setRoot, false, cancellationToken).ConfigureAwait(false);
+                await File.WriteAllTextAsync(setMarker, XcurlSetRevision, cancellationToken).ConfigureAwait(false);
+            }
+
+            var shimPath = Path.Combine(setRoot, "xcurl-cashim.dll");
+            var realCurlPath = Path.Combine(setRoot, "libcurl-4.dll");
+            if (!File.Exists(shimPath) || !File.Exists(realCurlPath))
+                throw new InvalidDataException(LogLanguageManager.Instance.bedrockLaunch_xcurlSetIncomplete.CurrentValue());
+
+            foreach (var source in Directory.EnumerateFiles(setRoot, "*.dll"))
+            {
+                var name = Path.GetFileName(source);
+                if (name is "cryptbase.dll" or "xcurl-cashim.dll" || name.EndsWith(".bak") || name.EndsWith(".portal-orig"))
+                    continue;
+                File.Copy(source, Path.Combine(gameDir, name), true);
+            }
+            File.Copy(realCurlPath, Path.Combine(gameDir, "xcurl_real.dll"), true);
+            foreach (var name in new[] { "XCurl.dll", "Xcurl.dll" })
+            {
+                var target = Path.Combine(gameDir, name);
+                if (File.Exists(target) && !File.Exists(target + ".portal-orig"))
+                    File.Copy(target, target + ".portal-orig");
+                File.Copy(shimPath, target, true);
+            }
+
+            PatchHttpClientProviderGate(targetHttpClient);
+
+            var setCryptbase = Path.Combine(setRoot, "cryptbase.dll");
+            if (File.Exists(setCryptbase))
+                InstallCryptbaseFromSet(setCryptbase, runtime);
+
+            Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_onlineLoginReady.CurrentValue());
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            Log(BedrockLogLevel.Warning, string.Format(LogLanguageManager.Instance.bedrockLaunch_onlineLoginUnavailable.CurrentValue(), exception.Message));
+        }
+    }
+
+    private async Task DownloadComponentAsync(string url, string destination, byte[]? expectedSha256,
+        string label, CancellationToken cancellationToken)
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Portal-Bedrock-Linux/1.0");
+        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        var totalBytes = response.Content.Headers.ContentLength ?? 0;
+        var temporaryPath = destination + ".download";
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        {
+            await using var input = await response.Content.ReadAsStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await using var output = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write,
+                FileShare.None, 1024 * 64, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            var buffer = new byte[1024 * 64];
+            long downloadedBytes = 0;
+            int read;
+            while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+            {
+                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                downloadedBytes += read;
+                var percentage = totalBytes > 0 ? downloadedBytes * 100d / totalBytes : (double?)null;
+                UpdateProgress?.Invoke(string.Format(CommonLanguageManager.Instance.bedrockLaunch_statusFormat.CurrentValue(),
+                    $"{label} ({FormatBytes(downloadedBytes)}{(totalBytes > 0 ? $"/{FormatBytes(totalBytes)}" : string.Empty)})"), percentage);
+            }
+            if (totalBytes > 0 && downloadedBytes != totalBytes)
+                throw new EndOfStreamException(CommonLanguageManager.Instance.bedrockLaunch_downloadIncomplete.CurrentValue());
+        }
+        if (expectedSha256 is not null)
+        {
+            await using var verify = File.OpenRead(temporaryPath);
+            var hash = await SHA256.HashDataAsync(verify, cancellationToken).ConfigureAwait(false);
+            if (!hash.AsSpan().SequenceEqual(expectedSha256))
+                throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_sha256Mismatch.CurrentValue());
+        }
+        File.Move(temporaryPath, destination, true);
+    }
+
+    private void PatchHttpClientProviderGate(string dllPath)
+    {
+        var data = File.ReadAllBytes(dllPath);
+        ReadOnlySpan<byte> prefix = [0x83, 0xC0, 0xFE, 0xBA, 0x04, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x0D];
+        ReadOnlySpan<byte> suffix = [0x83, 0xF8, 0x06];
+        for (var i = 0; i + 21 <= data.Length; i++)
+        {
+            if (!data.AsSpan(i, prefix.Length).SequenceEqual(prefix) ||
+                !data.AsSpan(i + 15, suffix.Length).SequenceEqual(suffix)) continue;
+            var gate = i + 18;
+            if (data[gate] == 0x90) return;
+            if (data[gate] != 0x0F || data[gate + 1] != 0x87) continue;
+            using var stream = new FileStream(dllPath, FileMode.Open, FileAccess.ReadWrite);
+            stream.Seek(gate, SeekOrigin.Begin);
+            stream.Write(new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }, 0, 6);
+            Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_xcurlGatePatched.CurrentValue());
+            return;
+        }
+        Log(BedrockLogLevel.Warning, LogLanguageManager.Instance.bedrockLaunch_xcurlGateNotFound.CurrentValue());
+    }
+
+    private static void InstallCryptbaseFromSet(string setCryptbase, LinuxBedrockRuntime runtime)
+    {
+        try
+        {
+            var system32 = Path.Combine(runtime.PrefixPath, "pfx", "drive_c", "windows", "system32");
+            Directory.CreateDirectory(system32);
+            var destination = Path.Combine(system32, "cryptbase.dll");
+            var sourceHash = SHA256.HashData(File.ReadAllBytes(setCryptbase));
+            if (File.Exists(destination))
+            {
+                var destinationHash = SHA256.HashData(File.ReadAllBytes(destination));
+                if (destinationHash.AsSpan().SequenceEqual(sourceHash)) return;
+                if (!File.Exists(destination + ".portal-orig"))
+                    File.Copy(destination, destination + ".portal-orig");
+            }
+            File.Copy(setCryptbase, destination, true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
         }
     }
 
@@ -452,6 +665,9 @@ public sealed class BedrockLaunch : IBedrockLaunch
         startInfo.Environment["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = runtime.SteamCompatPath;
         startInfo.Environment["LD_LIBRARY_PATH"] = BuildLibraryPath(runtime.ProtonRoot);
         startInfo.Environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core,d3d9=b";
+        startInfo.Environment["MICROSOFT_WINDOWSAPPRUNTIME_BOOTSTRAP_INITIALIZE_SHOWUI"] = "0";
+        startInfo.Environment["MICROSOFT_WINDOWSAPPRUNTIME_BOOTSTRAP_INITIALIZE_FAILFAST"] = "0";
+        startInfo.Environment["MICROSOFT_WINDOWSAPPRUNTIME_DEPLOYMENT_INITIALIZE_ONERRORSHOWUI"] = "0";
     }
 
     private async Task SetRefreshTokenAsync(LinuxBedrockRuntime runtime, string refreshToken,

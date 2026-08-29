@@ -30,6 +30,7 @@ public sealed class LinuxBedrockRuntimeResolver
     private const long MinimumSegmentSize = 8L * 1024 * 1024;
     private static readonly string[] ReleaseApiUrls =
     [
+        "https://api.github.com/repos/Wyze3306/BedrockOnLinux/releases/tags/engine-wow64-archs-native17",
         "https://api.github.com/repos/Weather-OS/GDK-Proton/releases/latest",
         "https://api.github.com/repos/LukasPAH/GDK-Proton-Custom/releases/latest"
     ];
@@ -42,12 +43,12 @@ public sealed class LinuxBedrockRuntimeResolver
     public LinuxBedrockRuntime Resolve() => ResolveAsync().GetAwaiter().GetResult();
 
     public async Task<LinuxBedrockRuntime> ResolveAsync(Action<LinuxBedrockRuntimeProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, bool requireXUserRuntime = false)
     {
         EnsureSupportedPlatform();
 
         Trace.TraceInformation(LogLanguageManager.Instance.bedrockLaunch_resolvingProtonRuntime.CurrentValue());
-        var protonScript = await ResolveProtonScriptAsync(progress, cancellationToken).ConfigureAwait(false);
+        var protonScript = await ResolveProtonScriptAsync(progress, cancellationToken, requireXUserRuntime).ConfigureAwait(false);
         var protonRoot = Path.GetDirectoryName(protonScript)!;
         ApplyManagedRuntimePatch(protonRoot, progress);
         var prefixPath = ResolvePrefixPath();
@@ -82,7 +83,7 @@ public sealed class LinuxBedrockRuntimeResolver
     }
 
     private static async Task<string> ResolveProtonScriptAsync(Action<LinuxBedrockRuntimeProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool requireXUserRuntime)
     {
         var configuredPath = Environment.GetEnvironmentVariable(ProtonPathVariable);
         if (!string.IsNullOrWhiteSpace(configuredPath))
@@ -99,14 +100,14 @@ public sealed class LinuxBedrockRuntimeResolver
                 configuredScript);
         }
 
-        var discovered = FindSteamProton();
+        var discovered = FindSteamProton(requireXUserRuntime);
         if (discovered is not null)
         {
             Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_steamProtonDiscovered.CurrentValue(), discovered));
             return discovered;
         }
 
-        var installed = FindInstalledProton();
+        var installed = FindInstalledProton(requireXUserRuntime);
         if (installed is not null)
         {
             Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_usingInstalledProton.CurrentValue(), installed));
@@ -116,7 +117,7 @@ public sealed class LinuxBedrockRuntimeResolver
         await InstallLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            installed = FindInstalledProton();
+            installed = FindInstalledProton(requireXUserRuntime);
             if (installed is not null)
             {
                 Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrockLaunch_protonInstalledWhileWaiting.CurrentValue(), installed));
@@ -125,7 +126,7 @@ public sealed class LinuxBedrockRuntimeResolver
 
             try
             {
-                return await DownloadAndInstallAsync(progress, cancellationToken).ConfigureAwait(false);
+                return await DownloadAndInstallAsync(progress, cancellationToken, requireXUserRuntime).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -144,7 +145,7 @@ public sealed class LinuxBedrockRuntimeResolver
         }
     }
 
-    private static string? FindSteamProton()
+    private static string? FindSteamProton(bool requireXUserRuntime)
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var roots = new[]
@@ -158,12 +159,14 @@ public sealed class LinuxBedrockRuntimeResolver
 
         return roots.Where(Directory.Exists)
             .SelectMany(root => Directory.EnumerateFiles(root, "proton", SearchOption.AllDirectories))
-            .Where(path => IsGdkProton(path) && !IsKnownBrokenXUserRuntime(path))
-            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .Where(IsGdkProton)
+            .Where(path => !requireXUserRuntime || IsXUserRuntime(path))
+            .OrderByDescending(IsXUserRuntime)
+            .ThenByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault();
     }
 
-    private static string? FindInstalledProton()
+    private static string? FindInstalledProton(bool requireXUserRuntime)
     {
         var root = GetProtonInstallRoot();
         if (!Directory.Exists(root)) return null;
@@ -173,19 +176,21 @@ public sealed class LinuxBedrockRuntimeResolver
             .Select(FindProtonInDirectory)
             .Where(path => path is not null)
             .Select(path => path!)
-            .Where(path => IsGdkProton(path) && !IsKnownBrokenXUserRuntime(path))
-            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .Where(IsGdkProton)
+            .Where(path => !requireXUserRuntime || IsXUserRuntime(path))
+            .OrderByDescending(IsXUserRuntime)
+            .ThenByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault();
         if (proton is not null) EnsureExecutable(proton);
         return proton;
     }
 
     private static async Task<string> DownloadAndInstallAsync(Action<LinuxBedrockRuntimeProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool requireXUserRuntime)
     {
         progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_queryingGdkProtonReleaseProgress.CurrentValue()));
         Trace.TraceInformation(LogLanguageManager.Instance.bedrockLaunch_queryingGdkProtonRelease.CurrentValue());
-        var release = await GetReleaseAsync(cancellationToken).ConfigureAwait(false);
+        var release = await GetReleaseAsync(cancellationToken, requireXUserRuntime).ConfigureAwait(false);
         var tag = SafePathSegment(release.TagName);
         var installRoot = GetProtonInstallRoot();
         var destination = Path.Combine(installRoot, $"{tag}-{SafePathSegment(release.Asset.Name)}");
@@ -259,10 +264,12 @@ public sealed class LinuxBedrockRuntimeResolver
         }
     }
 
-    private static async Task<ProtonRelease> GetReleaseAsync(CancellationToken cancellationToken)
+    private static async Task<ProtonRelease> GetReleaseAsync(CancellationToken cancellationToken,
+        bool xUserOnly = false)
     {
         var errors = new List<string>();
-        foreach (var apiUrl in ReleaseApiUrls)
+        var apiUrls = xUserOnly ? ReleaseApiUrls.Take(1) : ReleaseApiUrls.AsEnumerable();
+        foreach (var apiUrl in apiUrls)
         {
             try
             {
@@ -522,7 +529,7 @@ public sealed class LinuxBedrockRuntimeResolver
         return urls.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    private static string ApplyGithubMirror(string url)
+    internal static string ApplyGithubMirror(string url)
     {
         if (!BedrockNetworkConfiguration.EnableGithubMirror ||
             string.IsNullOrWhiteSpace(BedrockNetworkConfiguration.GithubMirrorUrl)) return url;
@@ -717,7 +724,7 @@ public sealed class LinuxBedrockRuntimeResolver
         path.Contains("gdk-proton", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("protongdk", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsKnownBrokenXUserRuntime(string path) =>
+    private static bool IsXUserRuntime(string path) =>
         path.Contains("xuser", StringComparison.OrdinalIgnoreCase);
 
     private static HttpClient GetDownloadClient()
