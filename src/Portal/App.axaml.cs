@@ -10,6 +10,7 @@ using Portal.Core.Const;
 using Portal.Core.Minecraft;
 using Portal.Core.Module.Initialize;
 using Portal.Core.Module.Ipc;
+using Portal.Core.Services;
 using Portal.Localization;
 using Portal.Module;
 using Portal.Module.Initialize;
@@ -52,8 +53,26 @@ public partial class App : Application
             Initializer.App();
         else
             Initializer.BedrockPackageImport();
+        _ = SendStartupTelemetryAsync();
         AvaloniaXamlLoader.Load(this);
         Logger.Info(LogLanguageManager.Instance.app_initComplete.CurrentValue());
+    }
+
+    private static async Task SendStartupTelemetryAsync()
+    {
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        try
+        {
+            await TelemetryService.SendAppOpenAsync(cancellation.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            Logger.Warning(LogLanguageManager.Instance.telemetry_timedOut.CurrentValue());
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning(string.Format(LogLanguageManager.Instance.telemetry_failed.CurrentValue(), exception.Message));
+        }
     }
 
     public override void OnFrameworkInitializationCompleted()

@@ -537,5 +537,13 @@
   },
   "overlay": {
     "targetWindowNotFound": "无法找到目标进程的窗口"
+  },
+  "telemetry": {
+    "notConfigured": "遥测未发送：未配置端点或 API 密钥。",
+    "invalidEndpoint": "遥测未发送：端点地址无效。",
+    "sent": "遥测已发送（HTTP {0}，{1}{2}）。",
+    "httpError": "遥测请求失败（HTTP {0}，{1}{2}）：{3}",
+    "timedOut": "遥测发送超时。",
+    "failed": "遥测发送失败：{0}"
   }
 }

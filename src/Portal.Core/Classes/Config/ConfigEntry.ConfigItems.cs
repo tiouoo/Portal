@@ -13,6 +13,7 @@ namespace Portal.Core.Classes.Config;
 public partial class ConfigEntry : ObservableObject
 {
     [ObservableProperty] public partial bool IsInitialized { get; set; } = true;
+    [ObservableProperty] public partial string? TelemetryUserId { get; set; }
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
     [ObservableProperty] public partial UpdateSource UpdateSource { get; set; } = UpdateSource.Cnb;

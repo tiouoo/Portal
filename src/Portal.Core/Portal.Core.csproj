@@ -9,6 +9,8 @@
         <MicrosoftClientId>$([System.Environment]::GetEnvironmentVariable('MICROSOFT_CLIENT_ID'))</MicrosoftClientId>
         <GravityConeUptimeApiKey>$([System.Environment]::GetEnvironmentVariable('GRAVITYCONE_UPTIME_API_KEY'))</GravityConeUptimeApiKey>
         <CnbUpdateToken>$([System.Environment]::GetEnvironmentVariable('CNB_UPDATE_TOKEN'))</CnbUpdateToken>
+        <TelemetryApiKey>$([System.Environment]::GetEnvironmentVariable('PORTAL_TELEMETRY_API_KEY'))</TelemetryApiKey>
+        <TelemetryUrl>$([System.Environment]::GetEnvironmentVariable('PORTAL_TELEMETRY_URL'))</TelemetryUrl>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(CurseForgeApiKey)' != ''">
@@ -25,6 +27,14 @@
 
     <ItemGroup Condition="'$(CnbUpdateToken)' != ''">
         <AssemblyMetadata Include="Portal.CnbUpdateToken" Value="$(CnbUpdateToken)"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TelemetryApiKey)' != ''">
+        <AssemblyMetadata Include="Portal.TelemetryApiKey" Value="$(TelemetryApiKey)"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TelemetryUrl)' != ''">
+        <AssemblyMetadata Include="Portal.TelemetryUrl" Value="$(TelemetryUrl)"/>
     </ItemGroup>
 
     <ItemGroup>

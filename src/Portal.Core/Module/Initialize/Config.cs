@@ -122,6 +122,8 @@ public class Config
         Data.Instance.PackageType = string.IsNullOrWhiteSpace(result1) ? "portable" : result1.Trim().ToLowerInvariant();
         Logger.Info(string.Format(LogLanguageManager.Instance.config_packageTypeDetected.CurrentValue(), Data.Instance.PackageType));
 
+        TelemetryService.EnsureIdentity(Data.ConfigEntry);
+
         ConfigIdentifyExtension.Window(Data.ConfigEntry);
 
         ConfigSaver.SaveConfig();
