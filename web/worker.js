@@ -8,8 +8,10 @@ export default {
     responseHeaders.set('X-Content-Type-Options', 'nosniff');
     responseHeaders.set('Referrer-Policy', 'no-referrer');
 
-    if (url.pathname.startsWith('/assets/')) {
+    if (/\.(?:woff2?|ttf|otf)$/i.test(url.pathname)) {
       responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      responseHeaders.set('Cache-Control', 'no-store');
     }
 
     return new Response(response.body, {
