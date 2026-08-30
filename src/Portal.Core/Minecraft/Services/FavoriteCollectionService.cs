@@ -23,6 +23,8 @@ public class FavoriteResource
     public ModDetailsSource Source { get; set; }
     public string ProjectId { get; set; } = string.Empty;
     public List<string> Tags { get; set; } = [];
+    public string? ProjectUrl { get; set; }
+    public string? LatestVersion { get; set; }
 }
 
 public sealed class FavoriteCollection

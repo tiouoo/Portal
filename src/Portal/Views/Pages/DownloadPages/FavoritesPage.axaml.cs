@@ -270,6 +270,13 @@ public partial class FavoritesPageViewModel : ObservableObject
 
     public static void OpenDetails(TopLevel topLevel, FavoriteResource resource)
     {
+        if (resource.Kind == ResourceKind.LeviLaminaMod)
+        {
+            if (Uri.TryCreate(resource.ProjectUrl ?? $"http://{resource.ProjectId}", UriKind.Absolute,
+                    out var uri))
+                _ = topLevel.Launcher.LaunchUriAsync(uri);
+            return;
+        }
         if (resource.Kind == ResourceKind.Mod)
         {
             ResourceDetailsPage.Open(topLevel,
@@ -295,6 +302,11 @@ public partial class FavoritesPageViewModel : ObservableObject
 
     public static async Task QuickDownloadAsync(TopLevel topLevel, FavoriteResource resource)
     {
+        if (resource.Kind == ResourceKind.LeviLaminaMod)
+        {
+            await LeviLaminaDownloadService.InstallFavoriteAsync(topLevel, resource);
+            return;
+        }
         if (resource.Edition == FavoriteEdition.Bedrock)
         {
             var bedrockDefinition = resource.Kind switch
@@ -351,6 +363,8 @@ public sealed class FavoriteResourceItem : FavoriteResource
         Source = resource.Source;
         ProjectId = resource.ProjectId;
         Tags = resource.Tags ?? [];
+        ProjectUrl = resource.ProjectUrl;
+        LatestVersion = resource.LatestVersion;
     }
 
     public IAsyncImageLoader ImageLoader { get; } = new ModImageLoader();
@@ -359,7 +373,12 @@ public sealed class FavoriteResourceItem : FavoriteResource
     {
         get
         {
-            var source = Source == ModDetailsSource.CurseForge ? "CurseForge" : "Modrinth";
+            var source = Source switch
+            {
+                ModDetailsSource.CurseForge => "CurseForge",
+                ModDetailsSource.LeviLamina => "LeviLamina",
+                _ => "Modrinth"
+            };
             var edition = Edition == FavoriteEdition.Java
                 ? CommonLanguageManager.Instance.launch_javaEdition.CurrentValue()
                 : CommonLanguageManager.Instance.launch_bedrockEdition.CurrentValue();

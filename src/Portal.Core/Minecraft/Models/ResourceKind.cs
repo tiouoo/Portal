@@ -11,5 +11,6 @@ public enum ResourceKind
     BedrockBehaviorPack,
     BedrockResourcePack,
     BedrockWorld,
-    BedrockWorldTemplate
+    BedrockWorldTemplate,
+    LeviLaminaMod
 }

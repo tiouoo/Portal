@@ -87,6 +87,20 @@
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem
+                                            Click="SaveAs_OnClick"
+                                            Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_saveAs}}"
+                                            Tag="{Binding}" />
+                                        <MenuItem
+                                            Click="Favorite_OnClick"
+                                            Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_favoriteMenu}}"
+                                            IsVisible="{Binding !IsFavorite}"
+                                            Tag="{Binding}" />
+                                        <MenuItem
+                                            Click="Favorite_OnClick"
+                                            Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_unfavoriteMenu}}"
+                                            IsVisible="{Binding IsFavorite}"
+                                            Tag="{Binding}" />
+                                        <MenuItem
                                             Click="OpenProject_OnClick"
                                             Header="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_openProject}}"
                                             Tag="{Binding}">
@@ -131,6 +145,17 @@
                                             </Transitions>
                                         </Border.Transitions>
                                         <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Button
+                                                Classes="Icon"
+                                                Click="Favorite_OnClick"
+                                                Tag="{Binding}"
+                                                Theme="{StaticResource TransparentButton}"
+                                                ToolTip.Tip="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_favorite}}">
+                                                <Grid>
+                                                    <TextBlock FontFamily="{StaticResource IconFont}" FontSize="16" IsVisible="{Binding !IsFavorite}" Text="&#xe643;" />
+                                                    <TextBlock FontFamily="{StaticResource IconFont}" FontSize="16" IsVisible="{Binding IsFavorite}" Text="&#xe644;" />
+                                                </Grid>
+                                            </Button>
                                             <Button
                                                 Classes="Icon"
                                                 Click="Download_OnClick"

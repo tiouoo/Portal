@@ -24,4 +24,15 @@ public static class FavoriteResourceFactory
             ProjectId = item.Target.ProjectId, Tags = [.. item.Tags]
         };
     }
+
+    public static FavoriteResource From(LeviLaminaSearchResultItem item)
+    {
+        return new FavoriteResource
+        {
+            Name = item.Name, Summary = item.Summary, IconUrl = item.AvatarUrl,
+            Edition = FavoriteEdition.Bedrock, Kind = ResourceKind.LeviLaminaMod,
+            Source = ModDetailsSource.LeviLamina, ProjectId = item.Key, ProjectUrl = item.ProjectUrl,
+            LatestVersion = item.LatestVersion, Tags = [.. item.Tags]
+        };
+    }
 }

@@ -14,6 +14,8 @@ using MinecraftLaunch.Utilities;
 using MinecraftLaunch.Components.Downloader;
 using Portal.Core.Const;
 using Portal.Core.Minecraft.Classes;
+using Portal.Core.Minecraft.Models;
+using Portal.Core.Minecraft.Services;
 using Portal.Localization;
 using Portal.Module.Imaging;
 using Tio.Avalonia.Standard.Modules.DiskIO;
@@ -61,6 +63,27 @@ public partial class LeviLaminaSearchPage : UserControl
     {
         if ((sender as Control)?.Tag is LeviLaminaSearchResultItem item)
             await TopLevel.GetTopLevel(this)?.Launcher.LaunchUriAsync(new Uri(item.ProjectUrl));
+    }
+
+    private void Favorite_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is LeviLaminaSearchResultItem item)
+        {
+            var resource = FavoriteResourceFactory.From(item);
+            if (item.IsFavorite) FavoriteCollectionService.Instance.Remove(resource);
+            else FavoriteCollectionService.Instance.Add(resource);
+            item.IsFavorite = !item.IsFavorite;
+        }
+
+        e.Handled = true;
+    }
+
+    private async void SaveAs_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is LeviLaminaSearchResultItem item &&
+            TopLevel.GetTopLevel(this) is { } topLevel)
+            await LeviLaminaDownloadService.DownloadAsync(topLevel, item);
+        e.Handled = true;
     }
 }
 
@@ -188,12 +211,14 @@ public sealed partial class LeviLaminaSearchResultItem : ObservableObject
             ? client.Versions.Keys
             : Array.Empty<string>();
         LatestVersion = versions.OrderByDescending(VersionKey).FirstOrDefault() ?? string.Empty;
+        IsFavorite = FavoriteCollectionService.Instance.Contains(FavoriteResourceFactory.From(this));
     }
 
     public string Key { get; }
     public LiprPackage Package { get; }
     [ObservableProperty] public partial string Name { get; set; }
     [ObservableProperty] public partial string Summary { get; set; }
+    [ObservableProperty] public partial bool IsFavorite { get; set; }
     public string Metadata { get; }
     public string LatestVersion { get; }
     public string? AvatarUrl { get; }
@@ -298,6 +323,22 @@ internal static class LeviLaminaDownloadService
         }
     }
 
+    public static async Task InstallFavoriteAsync(TopLevel topLevel, FavoriteResource resource)
+    {
+        if (resource.Source != ModDetailsSource.LeviLamina || string.IsNullOrWhiteSpace(resource.ProjectId)) return;
+        var packages = await LoadLiprAsync(CancellationToken.None);
+        if (!packages.TryGetValue(resource.ProjectId, out var package))
+        {
+            var match = packages.FirstOrDefault(x =>
+                string.Equals(NormalizeKey(x.Key), NormalizeKey(resource.ProjectId), StringComparison.OrdinalIgnoreCase));
+            package = match.Value;
+        }
+
+        if (package is null) return;
+        await ShowInstallAsync(topLevel,
+            new LeviLaminaSearchResultItem(resource.ProjectId, package));
+    }
+
     private static async Task InstallAsync(TopLevel topLevel, LeviLaminaSearchResultItem item,
         LeviLaminaInstallResult result)
     {
@@ -327,13 +368,17 @@ internal static class LeviLaminaDownloadService
         foreach (var dependency in tooth.Dependencies)
         {
             var depKey = NormalizeKey(dependency.Key);
-            if (string.Equals(depKey, "github.com/LiteLDev/LeviLamina", StringComparison.OrdinalIgnoreCase) &&
-                LeviLaminaInstallState.IsLoaderInstalled(instance)) continue;
-            var depVersion = await ResolveDependencyVersionAsync(depKey, dependency.Value);
-            if (!string.IsNullOrWhiteSpace(depVersion))
-                await InstallPackageRecursiveAsync(topLevel, instance, depKey, depVersion, visited,
-                    depKey.Split('/').Last());
+            if (LeviLaminaInstallState.IsDependencyInstalled(instance, depKey, dependency.Value)) continue;
+            var packages = await LoadLiprAsync(CancellationToken.None);
+            var depVersion = await ResolveDependencyVersionAsync(depKey, dependency.Value, packages,
+                CancellationToken.None);
+            if (string.IsNullOrWhiteSpace(depVersion))
+                throw new InvalidDataException($"Unable to resolve LeviLamina dependency {depKey} ({dependency.Value}).");
+            await InstallPackageRecursiveAsync(topLevel, instance, depKey, depVersion, visited,
+                depKey.Split('/').Last());
         }
+
+        if (LeviLaminaInstallState.IsDependencyInstalled(instance, key, version)) return;
 
         var asset = SelectAsset(tooth);
         var url = ResolveUrl(asset.Url, key, version);
@@ -410,14 +455,27 @@ internal static class LeviLaminaDownloadService
 
     private static async Task<LeviTooth> LoadToothAsync(string key, string version, CancellationToken cancellationToken)
     {
-        var json = await HttpUtil.Client.GetStringAsync(
-            $"https://fastly.jsdelivr.net/gh/{ToRepoPath(key)}@v{version}/tooth.json", cancellationToken);
+        string json;
+        try
+        {
+            json = await HttpUtil.Client.GetStringAsync(
+                $"https://fastly.jsdelivr.net/gh/{ToRepoPath(key)}@v{version}/tooth.json", cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (HttpRequestException)
+        {
+            json = await HttpUtil.Client.GetStringAsync(
+                $"https://raw.githubusercontent.com/{ToRepoPath(key)}/v{version}/tooth.json", cancellationToken);
+        }
         return JsonSerializer.Deserialize<LeviTooth>(json,
                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ??
                throw new InvalidDataException("Invalid tooth.json");
     }
 
-    private static async Task<IReadOnlyDictionary<string, LiprPackage>> LoadLiprAsync(
+    internal static async Task<IReadOnlyDictionary<string, LiprPackage>> LoadLiprAsync(
         CancellationToken cancellationToken)
     {
         var json = await HttpUtil.Client.GetStringAsync("https://lipr.levimc.org/levilauncher.json", cancellationToken);
@@ -425,42 +483,106 @@ internal static class LeviLaminaDownloadService
                 throw new InvalidDataException("Invalid LIPR response.")).Packages;
     }
 
-    private static async Task<string?> ResolveDependencyVersionAsync(string key, string constraint)
+    internal static async Task<IReadOnlyList<LeviDependency>> ExpandToothDependenciesAsync(string rootKey,
+        string rootVersion, IReadOnlyDictionary<string, LiprPackage> packages, CancellationToken cancellationToken)
     {
-        var packages = await LoadLiprAsync(CancellationToken.None);
-        var package = packages.FirstOrDefault(x =>
-            string.Equals(NormalizeKey(x.Key), NormalizeKey(key), StringComparison.OrdinalIgnoreCase)).Value;
+        var result = new List<LeviDependency>();
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            $"{NormalizeKey(rootKey)}@{rootVersion}"
+        };
+        await ExpandToothDependenciesAsync(rootKey, rootVersion, 0, packages, visited, result, cancellationToken);
+        return result;
+    }
+
+    private static async Task ExpandToothDependenciesAsync(string key, string version, int level,
+        IReadOnlyDictionary<string, LiprPackage> packages, HashSet<string> visited,
+        List<LeviDependency> result, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var tooth = await LoadToothAsync(key, version, cancellationToken);
+        foreach (var dependency in tooth.Dependencies)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var dependencyKey = NormalizeKey(dependency.Key);
+            var dependencyVersion = await ResolveDependencyVersionAsync(dependencyKey, dependency.Value,
+                packages, cancellationToken);
+            if (string.IsNullOrWhiteSpace(dependencyVersion))
+                throw new InvalidDataException(
+                    $"Unable to resolve LeviLamina dependency {dependencyKey} ({dependency.Value}).");
+            if (!visited.Add($"{dependencyKey}@{dependencyVersion}")) continue;
+            result.Add(new LeviDependency(dependencyKey, dependency.Value, dependencyVersion, level));
+            await ExpandToothDependenciesAsync(dependencyKey, dependencyVersion, level + 1, packages, visited,
+                result, cancellationToken);
+        }
+    }
+
+    private static async Task<string?> ResolveDependencyVersionAsync(string key, string constraint,
+        IReadOnlyDictionary<string, LiprPackage> packages, CancellationToken cancellationToken)
+    {
+        var package = packages.FirstOrDefault(item =>
+            string.Equals(NormalizeKey(item.Key), key, StringComparison.OrdinalIgnoreCase)).Value;
         IEnumerable<string> versions = package?.Variants.TryGetValue("client", out var variant) == true
             ? variant.Versions.Keys
             : Array.Empty<string>();
-        return versions.Where(v => Satisfies(v, constraint)).OrderByDescending(ParseVersion).FirstOrDefault();
+        var resolved = versions.Where(version => Satisfies(version, constraint))
+            .OrderByDescending(ParseVersion).FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(resolved)) return resolved;
+
+        var repository = ToRepoPath(key);
+        var json = await HttpUtil.Client.GetStringAsync(
+            $"https://api.github.com/repos/{repository}/tags?per_page=100", cancellationToken);
+        var tags = JsonSerializer.Deserialize<List<GitHubTag>>(json) ?? [];
+        return tags.Select(tag => tag.Name.TrimStart('v'))
+            .Where(version => Satisfies(version, constraint))
+            .OrderByDescending(ParseVersion).FirstOrDefault();
     }
 
     private static bool Satisfies(string version, string constraint)
     {
-        var value = ParseVersion(version);
-        if (value is null) return false;
-        foreach (var token in constraint.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        foreach (var alternative in constraint.Split("||", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            var op = token.StartsWith(">=") || token.StartsWith("<=") ? token[..2] :
-                token.StartsWith('>') || token.StartsWith('<') || token.StartsWith('=') ? token[..1] : "";
-            var raw = token[op.Length..].Replace("x", "0", StringComparison.OrdinalIgnoreCase).Replace("*", "0");
-            if (!Version.TryParse(raw, out var bound)) continue;
-            var cmp = value.CompareTo(bound);
-            if (op == ">=" && cmp < 0 || op == "<=" && cmp > 0 || op == ">" && cmp <= 0 || op == "<" && cmp >= 0 ||
-                op == "=" && cmp != 0) return false;
-            if (string.IsNullOrEmpty(op) && token.Contains('*') &&
-                !version.StartsWith(token[..token.IndexOfAny(['*', 'x', 'X'])], StringComparison.OrdinalIgnoreCase))
-                return false;
+            var value = ParseVersion(version);
+            if (value is null) continue;
+            var matches = true;
+            foreach (var token in alternative.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var op = token.StartsWith(">=") || token.StartsWith("<=") ? token[..2] :
+                    token.StartsWith('>') || token.StartsWith('<') || token.StartsWith('=') ? token[..1] : "";
+                var raw = token[op.Length..];
+                if (raw.Contains('*') || raw.Contains('x', StringComparison.OrdinalIgnoreCase))
+                {
+                    var prefix = raw[..raw.IndexOfAny(['*', 'x', 'X'])];
+                    if (!version.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) matches = false;
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(op) && raw.Contains('-'))
+                {
+                    if (!string.Equals(version.TrimStart('v'), raw.TrimStart('v'),
+                            StringComparison.OrdinalIgnoreCase))
+                        matches = false;
+                    continue;
+                }
+
+                var bound = ParseVersion(raw);
+                if (bound is null) { matches = false; continue; }
+                var cmp = value.CompareTo(bound);
+                if (op == ">=" && cmp < 0 || op == "<=" && cmp > 0 || op == ">" && cmp <= 0 ||
+                    op == "<" && cmp >= 0 || op == "=" && cmp != 0 || string.IsNullOrEmpty(op) && cmp != 0)
+                    matches = false;
+            }
+
+            if (matches) return true;
         }
 
-        return true;
+        return false;
     }
 
     private static Version? ParseVersion(string value) =>
         Version.TryParse(value.Split('-', 2)[0].TrimStart('v'), out var v) ? v : null;
 
-    private static string NormalizeKey(string key) =>
+    internal static string NormalizeKey(string key) =>
         key.Split('#')[0].StartsWith("github.com/", StringComparison.OrdinalIgnoreCase)
             ? key.Split('#')[0]
             : $"github.com/{key.Split('#')[0]}";
@@ -485,6 +607,13 @@ internal static class LeviLaminaDownloadService
 
     private static string ResolveUrl(string url, string key, string version) => url.Replace("$(version)", version)
         .Replace("{{version}}", version).Replace("{{tooth}}", NormalizeKey(key));
+}
+
+internal sealed record LeviDependency(string Key, string Constraint, string? Version, int Level);
+
+internal sealed class GitHubTag
+{
+    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
 }
 
 internal sealed record LeviAsset(string Url, IReadOnlyList<LeviPlacement> Placements);
@@ -540,7 +669,7 @@ internal static class LeviLaminaInstallState
                File.Exists(Path.Combine(root, "plugins", "LeviLamina", "manifest.json"));
     }
 
-    public static bool IsDependencyInstalled(MinecraftInstance instance, string key, string _)
+    public static bool IsDependencyInstalled(MinecraftInstance instance, string key, string? _)
     {
         if (Normalize(key).Equals("github.com/LiteLDev/LeviLamina", StringComparison.OrdinalIgnoreCase))
             return IsLoaderInstalled(instance);

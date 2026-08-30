@@ -40,7 +40,13 @@
     "dependenciesHeading": "Dependencies",
     "installed": "Installed",
     "willInstall": "Will be installed",
-    "noDependencies": "This version has no additional dependencies"
+    "noDependencies": "This version has no additional dependencies",
+    "saveAs": "Save As",
+    "favorite": "Favorite",
+    "favoriteMenu": "Favorite",
+    "unfavoriteMenu": "Unfavorite",
+    "loadingDependencies": "Loading dependencies…",
+    "dependencyLoadError": "Failed to load dependencies. Check the network and try again."
   },
   "createinstancedialog": {
     "title": "Create New Instance",

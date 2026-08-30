@@ -14,10 +14,18 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Text="{Binding Item.Name}" />
-            <TextBlock
-                Foreground="{DynamicResource InnerForegroundColor}"
-                Text="{Binding Metadata}"
-                TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock
+                    FontFamily="{StaticResource IconFont}"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Margin="0,-1,0,0"
+                    Text="&#xe644;"
+                    VerticalAlignment="Center" />
+                <TextBlock
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Binding Metadata}"
+                    VerticalAlignment="Center" />
+            </StackPanel>
         </StackPanel>
         <StackPanel
             Grid.Row="1"
@@ -32,6 +40,14 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 IsVisible="{Binding HasNoDependencies}"
                 Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_noDependencies}}" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding IsLoadingDependencies}"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_loadingDependencies}}" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasDependencyLoadError}"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_dependencyLoadError}}" />
         </StackPanel>
         <StackPanel
             Grid.Row="2"
@@ -72,19 +88,21 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="local:LeviLaminaDependencyItem">
                         <Grid ColumnDefinitions="*,Auto" Margin="0,2">
-                            <StackPanel>
+                            <Grid ColumnDefinitions="*,Auto" Margin="{Binding IndentMargin}">
+                                <StackPanel>
                                 <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                 <TextBlock
                                     FontSize="11"
                                     Foreground="{DynamicResource InnerForegroundColor}"
                                     Text="{Binding Constraint}" />
-                            </StackPanel>
-                            <TextBlock
-                                FontSize="11"
-                                Foreground="{Binding StatusBrush}"
-                                Grid.Column="1"
-                                Text="{Binding StatusText}"
-                                VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{Binding StatusBrush}"
+                                    Grid.Column="1"
+                                    Text="{Binding StatusText}"
+                                    VerticalAlignment="Center" />
+                            </Grid>
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

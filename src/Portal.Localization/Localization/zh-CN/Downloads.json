@@ -40,7 +40,13 @@
     "dependenciesHeading": "依赖项",
     "installed": "已安装",
     "willInstall": "将自动安装",
-    "noDependencies": "此版本没有额外依赖"
+    "noDependencies": "此版本没有额外依赖",
+    "saveAs": "另存为",
+    "favorite": "收藏",
+    "favoriteMenu": "收藏",
+    "unfavoriteMenu": "取消收藏",
+    "loadingDependencies": "正在加载依赖项…",
+    "dependencyLoadError": "依赖项加载失败，请检查网络后重试。"
   },
   "createinstancedialog": {
     "title": "创建新实例",
