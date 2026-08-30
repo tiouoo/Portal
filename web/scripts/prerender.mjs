@@ -10,6 +10,7 @@ const distDir = path.join(root, 'dist');
 const routes = [
   { path: '/', output: 'index.html' },
   { path: '/install', output: 'install/index.html' },
+  { path: '/policy', output: 'policy/index.html' },
 ];
 
 async function prerender() {
