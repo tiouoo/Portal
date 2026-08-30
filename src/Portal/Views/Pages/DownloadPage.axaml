@@ -179,6 +179,19 @@
                                 Text="&#xe659;" />
                         </tio:NavMenuItem.Icon>
                     </tio:NavMenuItem>
+                    <tio:NavMenuItem Command="{Binding NavigateTypeCommand}" CommandParameter="{x:Type downloadPages:BedrockResourcePackSearchPage}">
+                        <controls:NavMenuItem.Header>
+                            <TextBlock Margin="0,0,-20,0" Text="LeviLamina" />
+                        </controls:NavMenuItem.Header>
+                        <tio:NavMenuItem.Icon>
+                            <TextBlock
+                                FontFamily="{StaticResource IconFont}"
+                                FontSize="16"
+                                Margin="0,-1"
+                                Padding="4,1,0,0"
+                                Text="&#xe678;" />
+                        </tio:NavMenuItem.Icon>
+                    </tio:NavMenuItem>
                 </tio:NavMenuItem>
                 <tio:NavMenuItem
                     Header="{Translate {x:Static loc:PagesLanguageManager+Keys.downloadpage_Others}}"

@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "48421874",
+      "name": "seedling",
+      "font_class": "a-FontAwesome7ProLight-Seedling",
+      "unicode": "e678",
+      "unicode_decimal": 59000
+    },
+    {
       "icon_id": "48415593",
       "name": "sparkles",
       "font_class": "a-FontAwesome7ProLight-UF890",
