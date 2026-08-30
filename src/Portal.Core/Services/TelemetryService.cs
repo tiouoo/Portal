@@ -16,6 +16,7 @@ public static class TelemetryService
 {
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(5) };
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static int _crashEventSent;
 
     public static void EnsureIdentity(ConfigEntry config)
     {
@@ -28,6 +29,49 @@ public static class TelemetryService
     }
 
     public static async Task SendAppOpenAsync(CancellationToken cancellationToken)
+    {
+        await SendEventAsync(
+            eventName: "app-open",
+            metadata: CreateSystemMetadata(),
+            properties: new Dictionary<string, object?>
+            {
+                ["package"] = GetPackageType(),
+                ["status"] = "started"
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Send a single process-crash event. Ordinary error logs are never reported.</summary>
+    public static async Task SendCrashAsync(Exception? exception, bool isTerminating, CancellationToken cancellationToken)
+    {
+        if (!isTerminating)
+            return;
+
+        if (Interlocked.Exchange(ref _crashEventSent, 1) != 0)
+            return;
+
+        var metadata = CreateSystemMetadata();
+        metadata["exceptionType"] = exception?.GetType().FullName;
+        metadata["errorCode"] = exception is null ? null : GetErrorCode(exception);
+        // Include the complete exception text and stack (including inner exceptions) so
+        // crash reports are actionable. Keep a generous bound to avoid oversized payloads.
+        metadata["stackTrace"] = exception is null ? null : Truncate(exception.ToString(), 32 * 1024);
+        metadata["stackTraceHash"] = exception is null ? null : GetStackTraceHash(exception);
+        var properties = new Dictionary<string, object?>
+        {
+            ["package"] = GetPackageType(),
+            ["status"] = "crashed",
+            ["terminating"] = true
+        };
+
+        await SendEventAsync("app-crash", metadata, properties, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task SendEventAsync(
+        string eventName,
+        IReadOnlyDictionary<string, object?> metadata,
+        IReadOnlyDictionary<string, object?> properties,
+        CancellationToken cancellationToken)
     {
         var url = CredentialsService.TelemetryUrl;
         var apiKey = CredentialsService.TelemetryApiKey;
@@ -44,16 +88,17 @@ public static class TelemetryService
             return;
         }
 
-        var payload = new AppOpenEvent(
-            "app-open",
-            Data.ConfigEntry.TelemetryUserId!,
+        var payload = new TelemetryEvent(
+            eventName,
+            GetUserId(),
             DateTimeOffset.UtcNow,
             GetOperatingSystem(),
             GetOperatingSystemVersion(),
             RuntimeInformation.FrameworkDescription,
-            AppVersionService.Instance.Version.VersionTitle,
-            new Dictionary<string, object?>(),
-            new Dictionary<string, object?> { ["package"] = GetPackageType() });
+            RuntimeInformation.ProcessArchitecture.ToString(),
+            GetAppVersion(),
+            metadata,
+            properties);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
         request.Headers.TryAddWithoutValidation("X-API-Key", apiKey);
@@ -68,6 +113,67 @@ public static class TelemetryService
         }
 
         Logger.Info(string.Format(LogLanguageManager.Instance.telemetry_sent.CurrentValue(), (int)response.StatusCode));
+    }
+
+    private static string GetErrorCode(Exception exception) =>
+        $"0x{exception.HResult:X8}";
+
+    private static string GetStackTraceHash(Exception exception) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(exception.ToString())))
+            .ToLowerInvariant();
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength];
+
+    private static string GetUserId()
+    {
+        try
+        {
+            return string.IsNullOrWhiteSpace(Data.ConfigEntry.TelemetryUserId)
+                ? "unknown"
+                : Data.ConfigEntry.TelemetryUserId!;
+        }
+        catch (InvalidOperationException)
+        {
+            return "unknown";
+        }
+    }
+
+    private static string GetAppVersion()
+    {
+        try
+        {
+            return AppVersionService.Instance.Version.VersionTitle;
+        }
+        catch
+        {
+            return "unknown";
+        }
+    }
+
+    private static Dictionary<string, object?> CreateSystemMetadata() => new()
+    {
+        ["osArchitecture"] = RuntimeInformation.OSArchitecture.ToString(),
+        ["dotnetVersion"] = Environment.Version.ToString(),
+        ["processorCount"] = Environment.ProcessorCount,
+        ["is64BitProcess"] = Environment.Is64BitProcess,
+        ["is64BitOperatingSystem"] = Environment.Is64BitOperatingSystem,
+        ["workingSetBytes"] = Environment.WorkingSet,
+        ["processUptimeSeconds"] = GetProcessUptimeSeconds()
+    };
+
+    private static double? GetProcessUptimeSeconds()
+    {
+        try
+        {
+            using var process = Process.GetCurrentProcess();
+            return Math.Max(0,
+                (DateTimeOffset.UtcNow - process.StartTime.ToUniversalTime()).TotalSeconds);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static bool IsSha256(string? value)
@@ -205,13 +311,14 @@ public static class TelemetryService
         }
     }
 
-    private sealed record AppOpenEvent(
+    private sealed record TelemetryEvent(
         [property: JsonPropertyName("eventName")] string EventName,
         [property: JsonPropertyName("userId")] string UserId,
         [property: JsonPropertyName("occurredAt")] DateTimeOffset OccurredAt,
         [property: JsonPropertyName("os")] string Os,
         [property: JsonPropertyName("osVersion")] string OsVersion,
         [property: JsonPropertyName("runtimeVersion")] string RuntimeVersion,
+        [property: JsonPropertyName("processorArchitecture")] string ProcessorArchitecture,
         [property: JsonPropertyName("appVersion")] string AppVersion,
         [property: JsonPropertyName("metadata")] IReadOnlyDictionary<string, object?> Metadata,
         [property: JsonPropertyName("properties")] IReadOnlyDictionary<string, object?> Properties);
