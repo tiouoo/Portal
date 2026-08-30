@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import logoUrl from '../assets/portal-logo.svg';
 import { RouterLink } from 'vue-router';
 </script>
@@ -18,7 +18,8 @@ import { RouterLink } from 'vue-router';
         <a href="https://github.com/tiouoo/Portal/releases" target="_blank" rel="noreferrer"
           >发行版本</a
         >
-        <a href="mailto:tiouo@qq.com">联系</a>
+        <RouterLink to="/policy">隐私协议与使用条款</RouterLink>
+        <a href="mailto:portal@tiouo.cc">联系</a>
       </div>
     </div>
     <p class="disclaimer container">
