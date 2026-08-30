@@ -1,8 +1,9 @@
 using System.Security.Cryptography;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Runtime.InteropServices;
 using Portal.Core.Classes.Config;
 using Portal.Core.Const;
 using Portal.Localization;
@@ -48,7 +49,7 @@ public static class TelemetryService
             Data.ConfigEntry.TelemetryUserId!,
             DateTimeOffset.UtcNow,
             GetOperatingSystem(),
-            Environment.OSVersion.VersionString,
+            GetOperatingSystemVersion(),
             RuntimeInformation.FrameworkDescription,
             AppVersionService.Instance.Version.VersionTitle,
             new Dictionary<string, object?>(),
@@ -59,16 +60,14 @@ public static class TelemetryService
         request.Content = new StringContent(JsonSerializer.Serialize(payload, JsonOptions), Encoding.UTF8,
             "application/json");
         using var response = await Client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
             Logger.Warning(string.Format(LogLanguageManager.Instance.telemetry_httpError.CurrentValue(),
-                (int)response.StatusCode, endpoint.Host, endpoint.AbsolutePath, responseBody));
-            response.EnsureSuccessStatusCode();
+                (int)response.StatusCode));
+            return;
         }
 
-        Logger.Info(string.Format(LogLanguageManager.Instance.telemetry_sent.CurrentValue(),
-            (int)response.StatusCode, endpoint.Host, endpoint.AbsolutePath));
+        Logger.Info(string.Format(LogLanguageManager.Instance.telemetry_sent.CurrentValue(), (int)response.StatusCode));
     }
 
     private static bool IsSha256(string? value)
@@ -90,6 +89,96 @@ public static class TelemetryService
         RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Windows" :
         RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "Linux" :
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macOS" : "Unknown";
+
+    private static string GetOperatingSystemVersion()
+    {
+        var kernelVersion = GetKernelVersion();
+        var description = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+            ? GetLinuxDistributionName() ?? RuntimeInformation.OSDescription
+            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                ? GetMacOsProductVersion() is { } macOsVersion ? $"macOS {macOsVersion}" : RuntimeInformation.OSDescription
+                : RuntimeInformation.OSDescription;
+        return string.IsNullOrWhiteSpace(kernelVersion) ? description : $"{description}; kernel {kernelVersion}";
+    }
+
+    private static string GetKernelVersion()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            try
+            {
+                var kernelVersion = File.ReadAllText("/proc/sys/kernel/osrelease").Trim();
+                if (!string.IsNullOrWhiteSpace(kernelVersion))
+                    return kernelVersion;
+            }
+            catch
+            {
+            }
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            var kernelVersion = TryReadCommandOutput("/usr/bin/uname", "-r");
+            if (!string.IsNullOrWhiteSpace(kernelVersion))
+                return kernelVersion;
+        }
+
+        return Environment.OSVersion.Version.ToString();
+    }
+
+    private static string? GetMacOsProductVersion() =>
+        TryReadCommandOutput("/usr/bin/sw_vers", "-productVersion");
+
+    private static string? TryReadCommandOutput(string fileName, string arguments)
+    {
+        try
+        {
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            if (!process.Start())
+                return null;
+            if (!process.WaitForExit(1000))
+            {
+                process.Kill();
+                return null;
+            }
+
+            return process.ExitCode == 0 ? process.StandardOutput.ReadToEnd().Trim() : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? GetLinuxDistributionName()
+    {
+        try
+        {
+            foreach (var line in File.ReadLines("/etc/os-release"))
+            {
+                if (!line.StartsWith("PRETTY_NAME=", StringComparison.Ordinal))
+                    continue;
+
+                var value = line["PRETTY_NAME=".Length..].Trim();
+                return value.Trim('"').Replace("\\\"", "\"");
+            }
+        }
+        catch
+        {
+        }
+
+        return null;
+    }
 
     private static string GetPackageType()
     {

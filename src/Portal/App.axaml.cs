@@ -69,9 +69,9 @@ public partial class App : Application
         {
             Logger.Warning(LogLanguageManager.Instance.telemetry_timedOut.CurrentValue());
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            Logger.Warning(string.Format(LogLanguageManager.Instance.telemetry_failed.CurrentValue(), exception.Message));
+            Logger.Warning(LogLanguageManager.Instance.telemetry_failed.CurrentValue());
         }
     }
 
