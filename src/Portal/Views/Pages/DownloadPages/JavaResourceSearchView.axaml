@@ -218,7 +218,7 @@
                                 Background="{DynamicResource TranslucentBackgroundColor}"
                                 BorderBrush="{DynamicResource TranslucentBorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="10"
+                                CornerRadius="12"
                                 Cursor="Hand"
                                 Name="ResourceCard"
                                 Padding="10"
