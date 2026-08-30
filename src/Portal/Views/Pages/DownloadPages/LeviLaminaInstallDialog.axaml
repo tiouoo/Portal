@@ -1,0 +1,106 @@
+<UserControl
+    x:Class="Portal.Views.Pages.DownloadPages.LeviLaminaInstallDialog"
+    x:DataType="local:LeviLaminaInstallDialogViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:loc="using:Portal.Localization"
+    xmlns:local="clr-namespace:Portal.Views.Pages.DownloadPages"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+        Width="520">
+        <StackPanel Spacing="4">
+            <TextBlock
+                FontSize="16"
+                FontWeight="SemiBold"
+                Text="{Binding Item.Name}" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                Text="{Binding Metadata}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,14,0,0"
+            Spacing="6">
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_version}}" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding Versions}"
+                SelectedItem="{Binding SelectedVersion}" />
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding HasNoDependencies}"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_noDependencies}}" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            Margin="0,14,0,0"
+            Spacing="6">
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_targetInstance}}" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                IsVisible="{Binding HasInstances}"
+                ItemsSource="{Binding Instances}"
+                Padding="10,6,6,4"
+                SelectedItem="{Binding SelectedInstance}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding InstanceName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{DynamicResource InnerForegroundColor}"
+                                Text="{Binding ShortDisplay}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock
+                Foreground="{DynamicResource InnerForegroundColor}"
+                IsVisible="{Binding !HasInstances}"
+                Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_noInstances}}" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="3"
+            IsVisible="{Binding HasDependencies}"
+            Margin="0,14,0,0"
+            Spacing="5">
+            <TextBlock Text="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_dependenciesHeading}}" />
+            <ItemsControl ItemsSource="{Binding Dependencies}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:LeviLaminaDependencyItem">
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource InnerForegroundColor}"
+                                    Text="{Binding Constraint}" />
+                            </StackPanel>
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{Binding StatusBrush}"
+                                Grid.Column="1"
+                                Text="{Binding StatusText}"
+                                VerticalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+        <StackPanel
+            Grid.Row="4"
+            HorizontalAlignment="Right"
+            Margin="0,16,0,0"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Click="Cancel_OnClick" Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_cancel}}" />
+            <Button
+                Click="Confirm_OnClick"
+                Content="{Translate {x:Static loc:DownloadsLanguageManager+Keys.levilaminasearchpage_install}}"
+                IsEnabled="{Binding CanConfirm}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -19,6 +19,29 @@
     "unfavoriteToolTip": "Unfavorite",
     "downloadToolTip": "Download"
   },
+  "levilaminasearchpage": {
+    "pageTitle": "LeviLamina Mods",
+    "searchPlaceholder": "Search LeviLamina mods",
+    "search": "Search",
+    "download": "Download",
+    "install": "Install",
+    "version": "Version",
+    "targetInstance": "Target instance",
+    "noInstances": "No Bedrock instances are available for installation",
+    "cancel": "Cancel",
+    "openProject": "Open project page",
+    "loading": "Loading LeviLamina mods…",
+    "noResults": "No matching LeviLamina mods found",
+    "resultCount": "Found {0} mods",
+    "networkError": "Unable to load the LeviLamina mod list",
+    "downloadFileName": "{0} {1}.zip",
+    "downloadTaskName": "Download LeviLamina mod {0}"
+    ,"dependencies": "Dependencies",
+    "dependenciesHeading": "Dependencies",
+    "installed": "Installed",
+    "willInstall": "Will be installed",
+    "noDependencies": "This version has no additional dependencies"
+  },
   "createinstancedialog": {
     "title": "Create New Instance",
     "changeIcon": "Change Icon",

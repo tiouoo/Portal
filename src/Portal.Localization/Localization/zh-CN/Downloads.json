@@ -19,6 +19,29 @@
     "unfavoriteToolTip": "取消收藏",
     "downloadToolTip": "下载"
   },
+  "levilaminasearchpage": {
+    "pageTitle": "LeviLamina 模组",
+    "searchPlaceholder": "搜索 LeviLamina 模组",
+    "search": "搜索",
+    "download": "下载",
+    "install": "安装",
+    "version": "版本",
+    "targetInstance": "目标实例",
+    "noInstances": "没有可安装的基岩版实例",
+    "cancel": "取消",
+    "openProject": "打开项目主页",
+    "loading": "正在加载 LeviLamina 模组…",
+    "noResults": "没有找到匹配的 LeviLamina 模组",
+    "resultCount": "找到 {0} 个模组",
+    "networkError": "无法加载 LeviLamina 模组列表",
+    "downloadFileName": "{0} {1}.zip",
+    "downloadTaskName": "下载 LeviLamina 模组 {0}"
+    ,"dependencies": "依赖项",
+    "dependenciesHeading": "依赖项",
+    "installed": "已安装",
+    "willInstall": "将自动安装",
+    "noDependencies": "此版本没有额外依赖"
+  },
   "createinstancedialog": {
     "title": "创建新实例",
     "changeIcon": "更换图标",
