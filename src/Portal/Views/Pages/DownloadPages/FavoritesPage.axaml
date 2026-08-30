@@ -132,15 +132,15 @@
                                         </Border>
                                         <StackPanel
                                             DockPanel.Dock="Top"
-                                            Margin="10,1,0,0"
-                                            VerticalAlignment="Top">
+                                            Margin="12,1,0,0"
+                                            VerticalAlignment="Center">
                                             <TextBlock
                                                 FontSize="16"
                                                 FontWeight="SemiBold"
                                                 MaxLines="1"
                                                 Text="{Binding Name}"
                                                 TextTrimming="CharacterEllipsis" />
-                                            <ItemsControl ItemsSource="{Binding DisplayTags}" Margin="0,3,0,0">
+                                            <ItemsControl ItemsSource="{Binding DisplayTags}" Margin="-2,3,0,0">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
                                                         <StackPanel Orientation="Horizontal" Spacing="5" />
