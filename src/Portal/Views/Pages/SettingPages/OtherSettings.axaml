@@ -113,6 +113,26 @@
         </StackPanel>
         <StackPanel Spacing="5">
             <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_allowTelemetry}}"
+                FontSize="13"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <ToggleSwitch IsChecked="{Binding Data.ConfigEntry.AllowTelemetry}" />
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button Click="OpenPrivacyPolicy_OnClick" Theme="{StaticResource TransparentButton}">
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource SystemAccentColor}"
+                        Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_privacyPolicy}}" />
+                </Button>
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource InnerForegroundColor}"
+                    Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_allowTelemetryHint}}"
+                    VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_logLevel}}"
                 FontSize="13"
                 Foreground="{DynamicResource InnerForegroundColor}" />

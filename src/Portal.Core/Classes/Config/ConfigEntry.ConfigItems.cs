@@ -14,6 +14,7 @@ public partial class ConfigEntry : ObservableObject
 {
     [ObservableProperty] public partial bool IsInitialized { get; set; } = true;
     [ObservableProperty] public partial string? TelemetryUserId { get; set; }
+    [ObservableProperty] public partial bool AllowTelemetry { get; set; } = true;
     [ObservableProperty] public partial bool EnableCustomForegroundColor { get; set; } = false;
     [ObservableProperty] public partial bool EnableCheckAutoUpdate { get; set; } = true;
     [ObservableProperty] public partial UpdateSource UpdateSource { get; set; } = UpdateSource.Cnb;

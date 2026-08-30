@@ -41,6 +41,19 @@ public partial class OtherSettings : Dsc
 
     private void RefreshHomepage_OnClick(object? sender, RoutedEventArgs e) => CustomHomepageView.RequestRefresh();
 
+    private async void OpenPrivacyPolicy_OnClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await TopLevel.GetTopLevel(this)?.Launcher.LaunchUriAsync(
+                new Uri("https://portal.tiouo.cc/policy"))!;
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning($"[Telemetry] Failed to open privacy policy: {exception.Message}");
+        }
+    }
+
     private async void OpenHomepageFile_OnClick(object? sender, RoutedEventArgs e)
     {
         var path = CustomHomepageView.LocalHomepagePath;

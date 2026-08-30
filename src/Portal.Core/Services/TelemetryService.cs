@@ -73,6 +73,9 @@ public static class TelemetryService
         IReadOnlyDictionary<string, object?> properties,
         CancellationToken cancellationToken)
     {
+        if (!IsTelemetryAllowed())
+            return;
+
         var url = CredentialsService.TelemetryUrl;
         var apiKey = CredentialsService.TelemetryApiKey;
         if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(apiKey))
@@ -136,6 +139,18 @@ public static class TelemetryService
         catch (InvalidOperationException)
         {
             return "unknown";
+        }
+    }
+
+    private static bool IsTelemetryAllowed()
+    {
+        try
+        {
+            return Data.ConfigEntry.AllowTelemetry;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
         }
     }
 
