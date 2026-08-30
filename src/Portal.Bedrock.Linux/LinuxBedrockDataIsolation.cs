@@ -34,6 +34,15 @@ internal static class LinuxBedrockDataIsolation
 
     private static void SyncPreloadMods(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
     {
+        var preloadFolder = Path.Combine(config.InstancePath, "preload");
+        Directory.CreateDirectory(preloadFolder);
+        var preloaderDestination = Path.Combine(preloadFolder, "PreLoader.dll");
+        var preloaderSource = BedrockModManager.PrepareLeviLaminaPreloader(config);
+        if (preloaderSource is not null)
+            File.Copy(preloaderSource, preloaderDestination, true);
+        else if (File.Exists(preloaderDestination))
+            File.Delete(preloaderDestination);
+
         var runtimeFolder = Path.Combine(config.InstancePath, "preload", "Portal");
         Directory.CreateDirectory(runtimeFolder);
         var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -55,7 +64,8 @@ internal static class LinuxBedrockDataIsolation
         foreach (var path in Directory.EnumerateFiles(runtimeFolder, "*.dll"))
             if (!activeFiles.Contains(Path.GetFileName(path)))
                 try { File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { }
-        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_foundEnabledPreloadMods.CurrentValue(), mods.Length), BedrockLogLevel.Information);
+        var preloadCount = mods.Length + (preloaderSource is null ? 0 : 1);
+        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_foundEnabledPreloadMods.CurrentValue(), preloadCount), BedrockLogLevel.Information);
     }
 
     private static void PrepareLaunchInfo(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)

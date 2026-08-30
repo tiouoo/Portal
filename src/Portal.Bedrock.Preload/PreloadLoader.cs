@@ -9,15 +9,28 @@ namespace Portal.Bedrock.Preload;
 /// <summary>按预加载清单加载 preload 目录下的第三方 DLL。</summary>
 internal static unsafe class PreloadLoader
 {
+    private const string PreLoader = "PreLoader.dll";
     private const string XUserHook = "Portal.XUserHook.dll";
+    private static int _priorityPreloaderState;
+
+    public static bool LoadPriorityPreloader()
+    {
+        if (Interlocked.CompareExchange(ref _priorityPreloaderState, 1, 0) != 0)
+            return Volatile.Read(ref _priorityPreloaderState) == 2;
+        string path = Path.Combine(Directory.GetCurrentDirectory(), "preload", PreLoader);
+        bool loaded = File.Exists(path) && Load(path);
+        Volatile.Write(ref _priorityPreloaderState, loaded ? 2 : -1);
+        return loaded;
+    }
 
     public static void Run()
     {
         string directory = Path.Combine(Directory.GetCurrentDirectory(), "preload");
         Directory.CreateDirectory(directory);
         Logger.Info("Loading DLLs from preload directory");
+        bool priorityLoaded = LoadPriorityPreloader();
 
-        int loaded = EnumerateCandidates(directory).Count(Load);
+        int loaded = EnumerateCandidates(directory).Count(Load) + (priorityLoaded ? 1 : 0);
         Logger.Success($"Successfully loaded {loaded} DLL(s)");
     }
 
@@ -36,7 +49,9 @@ internal static unsafe class PreloadLoader
 
         foreach (string file in Directory.EnumerateFiles(directory))
         {
-            if (!Path.GetFileName(file).Equals(XUserHook, StringComparison.OrdinalIgnoreCase))
+            string name = Path.GetFileName(file);
+            if (!name.Equals(XUserHook, StringComparison.OrdinalIgnoreCase) &&
+                !name.Equals(PreLoader, StringComparison.OrdinalIgnoreCase))
                 yield return file;
         }
 

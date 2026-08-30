@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 using PeNet;
 using Portal.Bedrock.Standard.Manifest;
 using Portal.Bedrock.Standard.Interface;
@@ -22,16 +24,35 @@ internal static class BedrockDataIsolation
     private const string BootstrapDllName = "Portal.Bootstrap.dll";
     private const string OriginalExecutableName = "Minecraft.Windows.portal-original.exe";
 
-    public static string Prepare(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log = null)
+    public static async Task<string> PrepareAsync(BedrockInstanceConfig config,
+        Action<string, BedrockLogLevel>? log = null, CancellationToken cancellationToken = default)
     {
         var gameExecutable = Path.Combine(config.InstancePath, "Minecraft.Windows.exe");
         if (!File.Exists(gameExecutable))
             throw new FileNotFoundException(CommonLanguageManager.Instance.bedrockLaunch_mainExecutableNotFound.CurrentValue(), gameExecutable);
 
+        cancellationToken.ThrowIfCancellationRequested();
         log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_preparingDataIsolation.CurrentValue(), gameExecutable), BedrockLogLevel.Information);
         EnsureOriginalExecutable(config.InstancePath, gameExecutable);
-        RestoreOriginalExecutable(config.InstancePath, gameExecutable);
-        RepairDuplicateImportSections(gameExecutable, log);
+        var leviLaminaPreloader = BedrockModManager.PrepareLeviLaminaPreloader(config);
+        var requiresLeviLaminaPatch = leviLaminaPreloader is not null;
+        if (leviLaminaPreloader is not null)
+        {
+            var rootPreloader = Path.Combine(config.InstancePath, "PreLoader.dll");
+            if (!string.Equals(Path.GetFullPath(leviLaminaPreloader), Path.GetFullPath(rootPreloader),
+                    StringComparison.OrdinalIgnoreCase))
+                File.Copy(leviLaminaPreloader, rootPreloader, true);
+        }
+        if (!HasImportedDll(gameExecutable, BootstrapDllName) ||
+            HasImportedDll(gameExecutable, "PreLoader.dll") != requiresLeviLaminaPatch)
+        {
+            RestoreOriginalExecutable(config.InstancePath, gameExecutable);
+            if (requiresLeviLaminaPatch)
+                await ApplyLeviLaminaPatchAsync(config, gameExecutable, log, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            AddBootstrapImport(gameExecutable);
+        }
+
         PrepareLaunchInfo(config, log);
         SyncPreloadMods(config, log);
         var preloadDllName = DeployPreloadDll(config.InstancePath);
@@ -53,23 +74,90 @@ internal static class BedrockDataIsolation
     private static void EnsureOriginalExecutable(string instancePath, string gameExecutable)
     {
         var originalPath = Path.Combine(instancePath, "config", "Portal", OriginalExecutableName);
-        if (File.Exists(originalPath) && HasPortalImportSection(gameExecutable))
+        if (File.Exists(originalPath))
             return;
         Directory.CreateDirectory(Path.GetDirectoryName(originalPath)!);
-        File.Copy(gameExecutable, originalPath, true);
+        File.Copy(gameExecutable, originalPath, false);
     }
 
-    private static bool HasPortalImportSection(string gameExecutable)
+    private static bool HasImportedDll(string gameExecutable, string dllName)
     {
         using var stream = new FileStream(gameExecutable, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var peFile = new PeFile(stream);
-        return peFile.ImageSectionHeaders?.Any(section => section.Name == ".addImp") == true;
+        return peFile.ImportedFunctions?.Any(import =>
+            string.Equals(import.DLL, dllName, StringComparison.OrdinalIgnoreCase)) == true;
     }
 
     private static void RestoreOriginalExecutable(string instancePath, string gameExecutable)
     {
         var originalPath = Path.Combine(instancePath, "config", "Portal", OriginalExecutableName);
         File.Copy(originalPath, gameExecutable, true);
+    }
+
+    private static async Task ApplyLeviLaminaPatchAsync(BedrockInstanceConfig config, string gameExecutable,
+        Action<string, BedrockLogLevel>? log, CancellationToken cancellationToken)
+    {
+        var peEditor = BedrockModManager.GetLeviLaminaPeEditor(config);
+        if (peEditor is null)
+            throw new FileNotFoundException(
+                LogLanguageManager.Instance.bedrockLaunch_leviLaminaPeEditorMissing.CurrentValue(),
+                Path.Combine(config.InstancePath, "PeEditor.exe"));
+
+        log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_applyingLeviLaminaPatch.CurrentValue(),
+            BedrockLogLevel.Information);
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = peEditor,
+                WorkingDirectory = config.InstancePath,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            }
+        };
+        process.StartInfo.ArgumentList.Add("-mb");
+        process.StartInfo.ArgumentList.Add("--exe");
+        process.StartInfo.ArgumentList.Add(Path.GetFileName(gameExecutable));
+        process.StartInfo.ArgumentList.Add("--inplace");
+
+        if (!process.Start())
+            throw new InvalidOperationException(
+                LogLanguageManager.Instance.bedrockLaunch_leviLaminaPatchStartFailed.CurrentValue());
+
+        var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                if (!process.HasExited)
+                    process.Kill(true);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            throw;
+        }
+
+        var output = (await outputTask).Trim();
+        var error = (await errorTask).Trim();
+        if (process.ExitCode != 0 || !HasImportedDll(gameExecutable, "PreLoader.dll"))
+        {
+            var details = string.Join(Environment.NewLine, new[] { output, error }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+            throw new InvalidOperationException(string.Format(
+                LogLanguageManager.Instance.bedrockLaunch_leviLaminaPatchFailed.CurrentValue(),
+                process.ExitCode, details));
+        }
+
+        log?.Invoke(LogLanguageManager.Instance.bedrockLaunch_leviLaminaPatchComplete.CurrentValue(),
+            BedrockLogLevel.Information);
     }
 
     private static void RepairDuplicateImportSections(string gameExecutable,
@@ -175,6 +263,12 @@ internal static class BedrockDataIsolation
 
     private static void SyncPreloadMods(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
     {
+        var preloadFolder = Path.Combine(config.InstancePath, "preload");
+        Directory.CreateDirectory(preloadFolder);
+        var preloaderDestination = Path.Combine(preloadFolder, "PreLoader.dll");
+        if (File.Exists(preloaderDestination))
+            File.Delete(preloaderDestination);
+
         var runtimeFolder = Path.Combine(config.InstancePath, "preload", "Portal");
         Directory.CreateDirectory(runtimeFolder);
         var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

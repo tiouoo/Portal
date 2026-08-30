@@ -7,13 +7,15 @@ namespace Portal.Bedrock.Preload;
 
 /// <summary>
 /// DLL 加载入口（等价原 C++ 的 DllMain）：DLL_PROCESS_ATTACH 时
-/// 初始化运行时即执行模块初始器，完成工作目录、控制台、文件钩子与预加载调度。
+/// 初始化运行时即执行模块初始器，完成工作目录、控制台与文件钩子；预加载由导出的 Load
+/// 在 Minecraft 入口点放行前同步启动。
 /// </summary>
 internal static unsafe class ModuleEntry
 {
     private static readonly ConfigManager Config = new();
     private static readonly nint InvalidHandle = new(-1);
     private static bool _initialized;
+    private static int _workerStarted;
 
     [ModuleInitializer]
     internal static void Initialize()
@@ -102,7 +104,12 @@ internal static unsafe class ModuleEntry
         }
 
         NativeExports.LogInjection();
+    }
 
+    internal static void StartWorker()
+    {
+        if (Interlocked.Exchange(ref _workerStarted, 1) != 0)
+            return;
         nint thread = NativeMethods.CreateThread(nint.Zero, 0,
             (nint)(delegate* unmanaged<nint, uint>)&WorkerThread, nint.Zero, 0, out _);
         if (thread != 0)

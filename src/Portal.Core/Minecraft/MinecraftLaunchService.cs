@@ -914,7 +914,7 @@ public static class MinecraftLaunchService
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (context.Task.IsTerminal)
+                if (context.Task.IsTerminal || context.Task.IsCancellationRequested)
                     return;
 
                 context.SetRunning(text);
@@ -947,25 +947,36 @@ public static class MinecraftLaunchService
         TaskCompletionSource processExit)
     {
         instance.Config.LastPlayTime = DateTime.Now;
-        context.SetRunning(CommonLanguageManager.Instance.launch_watchingProcess.CurrentValue());
+        if (!task.IsTerminal && !task.IsCancellationRequested)
+            context.SetRunning(CommonLanguageManager.Instance.launch_watchingProcess.CurrentValue());
         instance.IncrementPlaySessions();
         instance.StartPlayTimer();
 
-        process.Exited += (_, _) =>
+        var processCompleted = 0;
+        void CompleteProcess()
         {
+            if (Interlocked.Exchange(ref processCompleted, 1) != 0)
+                return;
             instance.StopPlayTimer();
             Notice(topLevel, string.Format(CommonLanguageManager.Instance.launch_processExited.CurrentValue(), instance.InstanceName), NotificationType.Success);
             if (options.GameExited != null)
                 Dispatcher.UIThread.Post(options.GameExited);
             processExit.TrySetResult();
-        };
-        process.EnableRaisingEvents = true;
+        }
+
+        process.Exited += (_, _) => CompleteProcess();
+        try
+        {
+            process.EnableRaisingEvents = true;
+        }
+        catch (InvalidOperationException) when (!IsProcessRunning(process))
+        {
+            CompleteProcess();
+            return;
+        }
 
         if (!IsProcessRunning(process))
-        {
-            instance.StopPlayTimer();
-            processExit.TrySetResult();
-        }
+            CompleteProcess();
     }
 
     private static MinecraftLogLevel GetLogLevel(string line)

@@ -457,14 +457,14 @@ internal static class LeviLaminaDownloadService
                         source = Path.GetFullPath(Path.Combine(roots[0], src));
                 }
                 var destination = Path.GetFullPath(Path.Combine(targetRoot, dest));
-                if (!source.StartsWith(Path.GetFullPath(extractRoot), StringComparison.OrdinalIgnoreCase) ||
-                    !destination.StartsWith(Path.GetFullPath(targetRoot), StringComparison.OrdinalIgnoreCase))
+                if (!IsPathWithin(source, extractRoot) || !IsPathWithin(destination, targetRoot))
                     throw new InvalidDataException("Unsafe package placement.");
                 if (Directory.Exists(source)) CopyDirectory(source, destination);
                 else if (File.Exists(source))
                 {
-                    Directory.CreateDirectory(destination);
-                    File.Copy(source, Path.Combine(destination, Path.GetFileName(source)), true);
+                    Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                    if (Directory.Exists(destination)) Directory.Delete(destination, true);
+                    File.Copy(source, destination, true);
                 }
             }
         }
@@ -489,6 +489,14 @@ internal static class LeviLaminaDownloadService
             File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), true);
         foreach (var directory in Directory.EnumerateDirectories(source))
             CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
+    }
+
+    private static bool IsPathWithin(string path, string root)
+    {
+        var relative = Path.GetRelativePath(Path.GetFullPath(root), Path.GetFullPath(path));
+        return !Path.IsPathRooted(relative) && relative != ".." &&
+               !relative.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
+               !relative.StartsWith($"..{Path.AltDirectorySeparatorChar}", StringComparison.Ordinal);
     }
 
     private static async Task<LeviTooth> LoadToothAsync(string key, string version, CancellationToken cancellationToken)
@@ -718,20 +726,33 @@ internal static class LeviLaminaInstallState
     public static bool IsLoaderInstalled(MinecraftInstance instance)
     {
         var root = instance.InstanceFolderPath;
-        return File.Exists(Path.Combine(root, "config", "BedrockBoot2", "levilamina", "preloader", "bin",
-                   "PreLoader.dll")) ||
-               File.Exists(Path.Combine(root, "plugins", "LeviLamina", "manifest.json"));
+        var hasPreloader = PackageFileExists(root, "PreLoader.dll") ||
+                           File.Exists(Path.Combine(root, "config", "BedrockBoot2", "levilamina", "preloader",
+                               "bin", "PreLoader.dll"));
+        var hasRuntimeData = PackageFileExists(root, "bedrock_runtime_data");
+        var hasLeviLamina = File.Exists(Path.Combine(root, "mods", "LeviLamina", "manifest.json")) ||
+                              File.Exists(Path.Combine(root, "plugins", "LeviLamina", "manifest.json"));
+        return hasPreloader && hasRuntimeData && hasLeviLamina;
     }
 
     public static bool IsDependencyInstalled(MinecraftInstance instance, string key, string? _)
     {
-        if (Normalize(key).Equals("github.com/LiteLDev/LeviLamina", StringComparison.OrdinalIgnoreCase))
+        var normalized = Normalize(key);
+        var instanceRoot = instance.InstanceFolderPath;
+        if (normalized.Equals("github.com/LiteLDev/LeviLamina", StringComparison.OrdinalIgnoreCase))
             return IsLoaderInstalled(instance);
+        if (normalized.Equals("github.com/LiteLDev/PreLoader", StringComparison.OrdinalIgnoreCase))
+            return PackageFileExists(instanceRoot, "PreLoader.dll");
+        if (normalized.Equals("github.com/LiteLDev/bedrock-runtime-data", StringComparison.OrdinalIgnoreCase))
+            return PackageFileExists(instanceRoot, "bedrock_runtime_data");
+        if (normalized.Equals("github.com/LiteLDev/PeEditor", StringComparison.OrdinalIgnoreCase))
+            return PackageFileExists(instanceRoot, "PeEditor.exe");
         var name = key.Split('#')[0].Split('/').Last();
         var roots = new[]
         {
-            Path.Combine(instance.InstanceFolderPath, "plugins"),
-            Path.Combine(instance.InstanceFolderPath, "config", "BedrockBoot2", "levilamina", "ll.mods")
+            Path.Combine(instanceRoot, "mods"),
+            Path.Combine(instanceRoot, "plugins"),
+            Path.Combine(instanceRoot, "config", "BedrockBoot2", "levilamina", "ll.mods")
         };
         return roots.Any(root =>
             Directory.Exists(root) && Directory.EnumerateFiles(root, "manifest.json", SearchOption.AllDirectories)
@@ -751,6 +772,10 @@ internal static class LeviLaminaInstallState
             return false;
         }
     }
+
+    private static bool PackageFileExists(string root, string fileName) =>
+        File.Exists(Path.Combine(root, fileName)) ||
+        File.Exists(Path.Combine(root, fileName, fileName));
 
     private static string Normalize(string key) =>
         key.Split('#')[0].StartsWith("github.com/", StringComparison.OrdinalIgnoreCase)

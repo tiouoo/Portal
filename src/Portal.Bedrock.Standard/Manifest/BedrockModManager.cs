@@ -31,6 +31,28 @@ public static class BedrockModManager
     public static string GetConfigPath(BedrockInstanceConfig config) =>
         Path.Combine(config.InstancePath, PortalConfigFolder, ConfigFileName);
 
+    public static string? PrepareLeviLaminaPreloader(BedrockInstanceConfig config)
+    {
+        EnsureBedrock(config);
+        RepairMisplacedPackageFile(config, "PreLoader.dll");
+        RepairMisplacedPackageFile(config, "bedrock_runtime_data");
+        RepairMisplacedPackageFile(config, "PeEditor.exe");
+        var candidates = new[]
+        {
+            Path.Combine(config.InstancePath, "PreLoader.dll"),
+            Path.Combine(config.InstancePath, "config", "BedrockBoot2", "levilamina", "preloader", "bin", "PreLoader.dll")
+        };
+        return candidates.FirstOrDefault(path => File.Exists(path) && IsX64Dll(path));
+    }
+
+    public static string? GetLeviLaminaPeEditor(BedrockInstanceConfig config)
+    {
+        EnsureBedrock(config);
+        RepairMisplacedPackageFile(config, "PeEditor.exe");
+        var path = Path.Combine(config.InstancePath, "PeEditor.exe");
+        return File.Exists(path) ? path : null;
+    }
+
     public static IReadOnlyList<BedrockModInfo> Scan(BedrockInstanceConfig config)
     {
         EnsureBedrock(config);
@@ -266,6 +288,28 @@ public static class BedrockModManager
         string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(left)),
             Path.TrimEndingDirectorySeparator(Path.GetFullPath(right)),
             OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+    private static void RepairMisplacedPackageFile(BedrockInstanceConfig config, string fileName)
+    {
+        var destination = Path.Combine(config.InstancePath, fileName);
+        if (!Directory.Exists(destination)) return;
+        var misplaced = Path.Combine(destination, fileName);
+        if (!File.Exists(misplaced)) return;
+
+        var temporaryPath = Path.Combine(config.InstancePath, $".{fileName}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            File.Copy(misplaced, temporaryPath, true);
+            Directory.Delete(destination, true);
+            File.Move(temporaryPath, destination, true);
+            Trace.TraceInformation($"Repaired misplaced LeviLamina package file: {destination}");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Trace.TraceWarning($"Unable to repair misplaced LeviLamina package file {destination}: {exception}");
+            try { File.Delete(temporaryPath); } catch { }
+        }
+    }
 
     private sealed class BedrockPackageManifest
     {

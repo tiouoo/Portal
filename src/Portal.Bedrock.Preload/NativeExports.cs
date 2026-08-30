@@ -8,7 +8,12 @@ internal static unsafe class NativeExports
     internal static void LogInjection() => Logger.Info("Portal Injecting!");
 
     [UnmanagedCallersOnly(EntryPoint = "Load")]
-    internal static void Load() => LogInjection();
+    internal static void Load()
+    {
+        PreloadLoader.LoadPriorityPreloader();
+        ModuleEntry.StartWorker();
+        LogInjection();
+    }
 
     [UnmanagedCallersOnly(EntryPoint = "GetDllVersion")]
     internal static byte* GetDllVersion() => VersionInfo.DllVersion;

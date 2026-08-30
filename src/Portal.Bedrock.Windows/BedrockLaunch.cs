@@ -29,7 +29,8 @@ public class BedrockLaunch : IBedrockLaunch
         BedrockWindowsPrerequisites.Validate(_instanceConfig);
         await BedrockWindowsPrerequisites.EnsureDependenciesAsync(_instanceConfig.InstancePath,
             _instanceConfig.BuildType, UpdateProgress, LogReceived, cancellationToken);
-        var nativeLogPath = BedrockDataIsolation.Prepare(_instanceConfig, LogReceived);
+        var nativeLogPath = await BedrockDataIsolation.PrepareAsync(_instanceConfig, LogReceived,
+            cancellationToken);
         Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_environmentReady.CurrentValue());
         Process? launchedProcess = null;
         BedrockNativeLogMonitor.Start(nativeLogPath, () => launchedProcess, LogReceived);
