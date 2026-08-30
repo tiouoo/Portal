@@ -12,7 +12,6 @@ import { RouterLink } from 'vue-router';
           >Portal</span
         ></RouterLink
       >
-      <p>Copyright © Portal 2026. 基于 AGPL-3.0-or-later 开源许可发布。</p>
       <div class="footer-links">
         <a href="https://github.com/tiouoo/Portal" target="_blank" rel="noreferrer">GitHub</a>
         <a href="https://github.com/tiouoo/Portal/releases" target="_blank" rel="noreferrer"
@@ -23,6 +22,9 @@ import { RouterLink } from 'vue-router';
       </div>
     </div>
     <p class="disclaimer container">
+      Copyright © Portal 2026. 基于 AGPL-3.0-or-later 开源许可发布。
+    </p>
+    <p class="disclaimer-text container">
       Portal 是独立开源项目，与 Mojang Studios 或 Microsoft 没有从属关系。Minecraft 是 Microsoft
       旗下商标。
     </p>
@@ -60,7 +62,7 @@ footer {
   display: flex;
   gap: 24px;
   color: #70798a;
-  font-size: 12px;
+  font-size: 14px;
 }
 .footer-links a:hover {
   color: var(--blue);
@@ -70,7 +72,13 @@ footer {
   padding-top: 18px;
   border-top: 1px solid #e0e4ea;
   color: #a0a6b1;
-  font-size: 11px;
+  font-size: 12px;
+  text-align: center;
+}
+.disclaimer-text {
+  padding-top: 10px;
+  color: #a0a6b1;
+  font-size: 12px;
   text-align: center;
 }
 
