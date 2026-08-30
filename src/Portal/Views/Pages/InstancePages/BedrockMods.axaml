@@ -107,11 +107,13 @@
                         <MenuItem
                             Classes="hide-icon"
                             Click="EnableSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_enableSelected}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_enableSelected}}"
+                            IsEnabled="{Binding HasConfigurableSelection}" />
                         <MenuItem
                             Classes="hide-icon"
                             Click="DisableSelected_OnClick"
-                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_disableSelected}}" />
+                            Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_disableSelected}}"
+                            IsEnabled="{Binding HasConfigurableSelection}" />
                         <Separator />
                         <MenuItem
                             Classes="hide-icon"
@@ -177,6 +179,7 @@
                                     <MenuItem
                                         Click="ShowDetails_OnClick"
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_showDetails}}"
+                                        IsVisible="{Binding CanConfigureLoadMode}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <TextBlock
@@ -189,7 +192,8 @@
                                     <MenuItem
                                         Click="EnableMod_OnClick"
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_enableMod}}"
-                                        IsVisible="{Binding IsDisabled}"
+                                        IsVisible="{Binding CanConfigure}"
+                                        IsEnabled="{Binding IsDisabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <TextBlock
@@ -202,7 +206,8 @@
                                     <MenuItem
                                         Click="DisableMod_OnClick"
                                         Header="{Translate {x:Static loc:InstancesLanguageManager+Keys.bedrockmods_disableMod}}"
-                                        IsVisible="{Binding IsEnabled}"
+                                        IsVisible="{Binding CanConfigure}"
+                                        IsEnabled="{Binding IsEnabled}"
                                         Tag="{Binding}">
                                         <MenuItem.Icon>
                                             <TextBlock

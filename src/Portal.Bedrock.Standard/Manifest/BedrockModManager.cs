@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 using Portal.Localization;
 
 namespace Portal.Bedrock.Standard.Manifest;
@@ -24,6 +25,9 @@ public static class BedrockModManager
     public static string GetModsFolder(BedrockInstanceConfig config) =>
         Path.Combine(config.InstancePath, PortalConfigFolder, ModsFolderName);
 
+    public static string GetInstanceModsFolder(BedrockInstanceConfig config) =>
+        Path.Combine(config.InstancePath, ModsFolderName);
+
     public static string GetConfigPath(BedrockInstanceConfig config) =>
         Path.Combine(config.InstancePath, PortalConfigFolder, ConfigFileName);
 
@@ -37,24 +41,42 @@ public static class BedrockModManager
             Directory.CreateDirectory(folder);
             var manifest = LoadCore(config);
             var configured = manifest.Mods
-                .Where(entry => entry != null && IsSafeFileName(entry.File))
-                .GroupBy(entry => entry.File, StringComparer.OrdinalIgnoreCase)
+                .Where(entry => entry != null && IsSafeConfigKey(entry.File))
+                .GroupBy(entry => NormalizeConfigKey(entry.File), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
             var result = new List<BedrockModInfo>();
-            foreach (var path in Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
-                         .Where(path => string.Equals(Path.GetExtension(path), ".dll", StringComparison.OrdinalIgnoreCase))
-                         .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+            var candidates = Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories)
+                .Where(IsDll)
+                .Select(path => (Path: path, Key: NormalizeConfigKey(Path.GetRelativePath(folder, path))))
+                .ToList();
+
+            var instanceModsFolder = GetInstanceModsFolder(config);
+            if (Directory.Exists(instanceModsFolder))
             {
+                var packageRoots = ScanPackageManifests(instanceModsFolder).PackageRoots;
+                candidates.AddRange(Directory.EnumerateFiles(instanceModsFolder, "*", SearchOption.AllDirectories)
+                    .Where(IsDll)
+                    .Where(path => packageRoots.All(root => !IsPathWithin(path, root)))
+                    .Select(path => (Path: path,
+                        Key: NormalizeConfigKey(Path.GetRelativePath(config.InstancePath, path)))));
+            }
+
+            foreach (var candidate in candidates.OrderBy(item => item.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                var path = candidate.Path;
                 if (!IsX64Dll(path))
                     continue;
 
-                var fileName = Path.GetFileName(path);
-                if (!configured.TryGetValue(fileName, out var entry))
+                if (!configured.TryGetValue(candidate.Key, out var entry))
                 {
-                    entry = new BedrockModEntry { File = fileName, DelayMs = DefaultDelayMs };
-                    configured.Add(fileName, entry);
+                    entry = new BedrockModEntry { File = candidate.Key, DelayMs = DefaultDelayMs };
+                    configured.Add(candidate.Key, entry);
                     manifest.Mods.Add(entry);
+                }
+                else
+                {
+                    entry.File = candidate.Key;
                 }
 
                 entry.DelayMs = Math.Clamp(entry.DelayMs, 0, MaximumDelayMs);
@@ -65,6 +87,15 @@ public static class BedrockModManager
             Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_dllModsScanComplete.CurrentValue(), folder, result.Count));
             return result;
         }
+    }
+
+    /// <summary>Scans LeviLamina package mods stored in the instance mods directory.</summary>
+    public static IReadOnlyList<BedrockModInfo> ScanPackages(BedrockInstanceConfig config)
+    {
+        EnsureBedrock(config);
+        var root = GetInstanceModsFolder(config);
+        if (!Directory.Exists(root)) return [];
+        return ScanPackageManifests(root).Packages;
     }
 
     public static BedrockModConfig Load(BedrockInstanceConfig config)
@@ -116,17 +147,22 @@ public static class BedrockModManager
     public static void Update(BedrockInstanceConfig config, string fileName, Action<BedrockModEntry> update)
     {
         EnsureBedrock(config);
+        var key = NormalizeConfigKey(fileName);
+        if (!IsSafeConfigKey(key))
+            throw new ArgumentException("Invalid Bedrock mod configuration key.", nameof(fileName));
         lock (GetLock(config))
         {
             var manifest = LoadCore(config);
             var entry = manifest.Mods.FirstOrDefault(item =>
-                string.Equals(item.File, fileName, StringComparison.OrdinalIgnoreCase));
+                IsSafeConfigKey(item.File) &&
+                string.Equals(NormalizeConfigKey(item.File), key, StringComparison.OrdinalIgnoreCase));
             if (entry == null)
             {
-                entry = new BedrockModEntry { File = fileName, DelayMs = DefaultDelayMs };
+                entry = new BedrockModEntry { File = key, DelayMs = DefaultDelayMs };
                 manifest.Mods.Add(entry);
             }
 
+            entry.File = key;
             update(entry);
             entry.DelayMs = Math.Clamp(entry.DelayMs, 0, MaximumDelayMs);
             SaveCore(config, manifest);
@@ -170,10 +206,78 @@ public static class BedrockModManager
         }
     }
 
-    private static bool IsSafeFileName(string fileName) =>
-        !string.IsNullOrWhiteSpace(fileName) &&
-        string.Equals(fileName, Path.GetFileName(fileName), StringComparison.Ordinal) &&
-        string.Equals(Path.GetExtension(fileName), ".dll", StringComparison.OrdinalIgnoreCase);
+    private static PackageScanResult ScanPackageManifests(string root)
+    {
+        var packageRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var packages = new List<BedrockModInfo>();
+        foreach (var manifestPath in Directory.EnumerateFiles(root, "manifest.json", SearchOption.AllDirectories))
+        {
+            var packageRoot = Path.GetFullPath(Path.GetDirectoryName(manifestPath)!);
+            packageRoots.Add(packageRoot);
+            try
+            {
+                var manifest = JsonSerializer.Deserialize<BedrockPackageManifest>(
+                    File.ReadAllText(manifestPath), JsonOptions);
+                if (manifest is null || string.IsNullOrWhiteSpace(manifest.Entry)) continue;
+                var relativeEntry = manifest.Entry.Replace('\\', Path.DirectorySeparatorChar)
+                    .Replace('/', Path.DirectorySeparatorChar);
+                var entryPath = Path.GetFullPath(Path.Combine(packageRoot, relativeEntry));
+                if (!IsPathWithin(entryPath, packageRoot) || !File.Exists(entryPath) || !IsX64Dll(entryPath))
+                    continue;
+                packages.Add(new BedrockModInfo(entryPath, new FileInfo(entryPath).Length,
+                    new BedrockModEntry { File = Path.GetFileName(entryPath) }, true,
+                    manifest.Name, manifest.Version, manifest.Description,
+                    PathsEqual(packageRoot, root) ? null : packageRoot));
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException
+                                                  or ArgumentException or NotSupportedException)
+            {
+                Trace.TraceWarning($"Unable to read Bedrock mod manifest {manifestPath}: {exception.Message}");
+            }
+        }
+
+        return new PackageScanResult(
+            packages.OrderBy(item => item.PackageName ?? item.FileName, StringComparer.OrdinalIgnoreCase).ToArray(),
+            packageRoots.ToArray());
+    }
+
+    private static bool IsDll(string path) =>
+        string.Equals(Path.GetExtension(path), ".dll", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsSafeConfigKey(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName) || Path.IsPathRooted(fileName) || !IsDll(fileName)) return false;
+        var parts = NormalizeConfigKey(fileName).Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 0 && parts.All(part => part is not "." and not "..");
+    }
+
+    private static string NormalizeConfigKey(string fileName) =>
+        fileName.Replace('\\', '/').TrimStart('/');
+
+    private static bool IsPathWithin(string path, string root)
+    {
+        var relative = Path.GetRelativePath(Path.GetFullPath(root), Path.GetFullPath(path));
+        return !Path.IsPathRooted(relative) && relative != ".." &&
+               !relative.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
+               !relative.StartsWith($"..{Path.AltDirectorySeparatorChar}", StringComparison.Ordinal);
+    }
+
+    private static bool PathsEqual(string left, string right) =>
+        string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(left)),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(right)),
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+    private sealed class BedrockPackageManifest
+    {
+        [JsonPropertyName("name")] public string? Name { get; set; }
+        [JsonPropertyName("entry")] public string? Entry { get; set; }
+        [JsonPropertyName("version")] public string? Version { get; set; }
+        [JsonPropertyName("description")] public string? Description { get; set; }
+    }
+
+    private sealed record PackageScanResult(
+        IReadOnlyList<BedrockModInfo> Packages,
+        IReadOnlyList<string> PackageRoots);
 
     private static object GetLock(BedrockInstanceConfig config) =>
         ConfigLocks.GetOrAdd(Path.GetFullPath(GetConfigPath(config)), static _ => new object());

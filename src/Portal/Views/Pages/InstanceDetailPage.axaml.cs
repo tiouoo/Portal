@@ -108,8 +108,9 @@ public partial class InstanceDetailPageViewModel : ObservableObject
 
     public bool IsJava => Instance.IsJava;
     public bool IsBedrock => Instance.IsBedrock;
-    public bool SupportsBedrockMods => OperatingSystem.IsWindows() && Instance.IsBedrock;
-    public bool IsGdkBedrock => SupportsBedrockMods;
+    public bool SupportsBedrockMods => Instance.IsBedrock &&
+                                        (OperatingSystem.IsWindows() || OperatingSystem.IsLinux());
+    public bool IsGdkBedrock => Instance.IsBedrock && OperatingSystem.IsWindows();
 
     [RelayCommand]
     public void NavigateType(object? parameter)

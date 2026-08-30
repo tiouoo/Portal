@@ -60,11 +60,12 @@ internal static class BedrockModInjector
         {
             log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_modInjectScheduled.CurrentValue(), mod.FileName, mod.Config.DelayMs),
                 BedrockLogLevel.Information);
-            _ = Task.Run(() => Inject(process, mod, log)); 
+            _ = Task.Run(() => Inject(config, process, mod, log));
         }
     }
 
-    private static void Inject(Process process, BedrockModInfo mod, Action<string, BedrockLogLevel>? log)
+    private static void Inject(BedrockInstanceConfig config, Process process, BedrockModInfo mod,
+        Action<string, BedrockLogLevel>? log)
     {
         try
         {
@@ -75,7 +76,7 @@ internal static class BedrockModInjector
             }
 
             var inject = GetInjector();
-            var runtimePath = PrepareRuntimeMod(mod);
+            var runtimePath = PrepareRuntimeMod(config, mod);
             var path = Marshal.StringToHGlobalAnsi(runtimePath);
             try
             {
@@ -104,10 +105,9 @@ internal static class BedrockModInjector
         }
     }
 
-    private static string PrepareRuntimeMod(BedrockModInfo mod)
+    private static string PrepareRuntimeMod(BedrockInstanceConfig config, BedrockModInfo mod)
     {
-        var portalFolder = Directory.GetParent(Path.GetDirectoryName(mod.FilePath)!)!.FullName;
-        var runtimeFolder = Path.Combine(portalFolder, "runtime", "mods");
+        var runtimeFolder = Path.Combine(config.InstancePath, BedrockModManager.PortalConfigFolder, "runtime", "mods");
         Trace.TraceInformation(string.Format(LogLanguageManager.Instance.bedrock_preparingModRuntimeCopy.CurrentValue(), mod.FilePath, runtimeFolder));
         Directory.CreateDirectory(runtimeFolder);
         using var stream = File.OpenRead(mod.FilePath);

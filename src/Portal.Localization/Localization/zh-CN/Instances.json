@@ -12,7 +12,7 @@
     "deleteSelected": "删除所选模组",
     "title": "模组",
     "loading": "正在读取模组...",
-    "empty": "此 GDK 实例没有可识别的 x64 DLL 模组",
+    "empty": "此实例没有可识别的 x64 DLL 模组",
     "showDetails": "查看详情",
     "enableMod": "启用模组",
     "disableMod": "禁用模组",

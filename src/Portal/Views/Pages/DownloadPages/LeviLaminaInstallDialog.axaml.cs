@@ -27,7 +27,10 @@ public partial class LeviLaminaInstallDialog : UserControl
         (DataContext as LeviLaminaInstallDialogViewModel)?.Cancel();
 }
 
-public sealed record LeviLaminaInstallResult(string Version, MinecraftInstance Instance);
+internal sealed record LeviLaminaInstallResult(
+    string Version,
+    MinecraftInstance Instance,
+    IReadOnlyList<LeviDependency> Dependencies);
 
 public sealed record LeviLaminaInstanceItem(
     MinecraftInstance Instance,
@@ -71,6 +74,8 @@ public sealed partial class LeviLaminaDependencyItem : ObservableObject
 public partial class LeviLaminaInstallDialogViewModel : ObservableObject, IDialogContext
 {
     private int _dependencyRefreshGeneration;
+    private CancellationTokenSource? _dependencyCancellation;
+    private bool _dependenciesLoaded;
 
     public LeviLaminaInstallDialogViewModel(LeviLaminaSearchResultItem item)
     {
@@ -94,12 +99,14 @@ public partial class LeviLaminaInstallDialogViewModel : ObservableObject, IDialo
     public string Metadata => Item.Metadata;
     public ObservableCollection<LeviLaminaDependencyItem> Dependencies { get; } = [];
     public bool HasDependencies => Dependencies.Count > 0;
-    public bool HasNoDependencies => !IsLoadingDependencies && !HasDependencyLoadError && Dependencies.Count == 0;
+    public bool HasNoDependencies => _dependenciesLoaded && !IsLoadingDependencies &&
+                                     !HasDependencyLoadError && Dependencies.Count == 0;
     [ObservableProperty] public partial bool HasDependencyLoadError { get; set; }
     [ObservableProperty] public partial bool IsLoadingDependencies { get; set; }
     [ObservableProperty] public partial string? SelectedVersion { get; set; }
     [ObservableProperty] public partial LeviLaminaInstanceItem? SelectedInstance { get; set; }
-    public bool CanConfirm => SelectedVersion is not null && SelectedInstance is not null;
+    public bool CanConfirm => SelectedVersion is not null && SelectedInstance is not null &&
+                              _dependenciesLoaded && !IsLoadingDependencies && !HasDependencyLoadError;
 
     partial void OnSelectedVersionChanged(string? value)
     {
@@ -116,26 +123,30 @@ public partial class LeviLaminaInstallDialogViewModel : ObservableObject, IDialo
     private async Task RefreshDependenciesAsync()
     {
         var generation = ++_dependencyRefreshGeneration;
+        _dependencyCancellation?.Cancel();
+        _dependencyCancellation?.Dispose();
+        _dependencyCancellation = new CancellationTokenSource();
+        var cancellationToken = _dependencyCancellation.Token;
         Dependencies.Clear();
+        _dependenciesLoaded = false;
         HasDependencyLoadError = false;
         IsLoadingDependencies = false;
         if (SelectedVersion is null || !Item.Package.Variants.TryGetValue("client", out var variant) ||
             !variant.Versions.TryGetValue(SelectedVersion, out var version))
         {
-            OnPropertyChanged(nameof(HasDependencies));
-            OnPropertyChanged(nameof(HasNoDependencies));
+            NotifyDependencyStateChanged();
             return;
         }
 
         try
         {
             IsLoadingDependencies = true;
-            OnPropertyChanged(nameof(HasNoDependencies));
-            var packages = await LeviLaminaDownloadService.LoadLiprAsync(CancellationToken.None);
+            NotifyDependencyStateChanged();
+            var packages = await LeviLaminaDownloadService.LoadLiprAsync(cancellationToken);
             if (generation != _dependencyRefreshGeneration) return;
 
             var dependencies = await LeviLaminaDownloadService.ExpandToothDependenciesAsync(
-                Item.Key, SelectedVersion, packages, CancellationToken.None);
+                Item.Key, SelectedVersion, packages, cancellationToken);
             if (generation != _dependencyRefreshGeneration) return;
             foreach (var dependency in dependencies)
             {
@@ -146,6 +157,11 @@ public partial class LeviLaminaInstallDialogViewModel : ObservableObject, IDialo
                 Dependencies.Add(new LeviLaminaDependencyItem(dependency.Key, dependency.Constraint,
                     dependency.Version, installed, dependency.Level));
             }
+
+            _dependenciesLoaded = true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
         }
         catch (Exception exception)
         {
@@ -156,8 +172,14 @@ public partial class LeviLaminaInstallDialogViewModel : ObservableObject, IDialo
 
         if (generation == _dependencyRefreshGeneration)
             IsLoadingDependencies = false;
+        NotifyDependencyStateChanged();
+    }
+
+    private void NotifyDependencyStateChanged()
+    {
         OnPropertyChanged(nameof(HasDependencies));
         OnPropertyChanged(nameof(HasNoDependencies));
+        OnPropertyChanged(nameof(CanConfirm));
     }
 
     public event EventHandler<object?>? RequestClose;
@@ -165,9 +187,17 @@ public partial class LeviLaminaInstallDialogViewModel : ObservableObject, IDialo
 
     public void Confirm()
     {
-        if (SelectedVersion is not null && SelectedInstance is { } selected)
-            RequestClose?.Invoke(this, new LeviLaminaInstallResult(SelectedVersion, selected.Instance));
+        if (!CanConfirm || SelectedVersion is null || SelectedInstance is not { } selected) return;
+        var dependencies = Dependencies.Select(item =>
+            new LeviDependency(item.Key, item.Constraint, item.Version, item.Level)).ToArray();
+        _dependencyCancellation?.Cancel();
+        RequestClose?.Invoke(this,
+            new LeviLaminaInstallResult(SelectedVersion, selected.Instance, dependencies));
     }
 
-    public void Cancel() => RequestClose?.Invoke(this, null);
+    public void Cancel()
+    {
+        _dependencyCancellation?.Cancel();
+        RequestClose?.Invoke(this, null);
+    }
 }

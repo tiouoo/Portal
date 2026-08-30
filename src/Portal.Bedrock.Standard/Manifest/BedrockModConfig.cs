@@ -23,7 +23,9 @@ public sealed class BedrockModEntry
     public int DelayMs { get; set; } = 5;
 }
 
-public sealed record BedrockModInfo(string FilePath, long FileSize, BedrockModEntry Config)
+public sealed record BedrockModInfo(string FilePath, long FileSize, BedrockModEntry Config,
+    bool IsPackage = false, string? PackageName = null, string? PackageVersion = null,
+    string? PackageDescription = null, string? PackageRoot = null)
 {
     public string FileName => Path.GetFileName(FilePath);
 }

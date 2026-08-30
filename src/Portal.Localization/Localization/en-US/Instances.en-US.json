@@ -12,7 +12,7 @@
     "deleteSelected": "Delete Selected Mods",
     "title": "Mods",
     "loading": "Loading mods...",
-    "empty": "This GDK instance has no recognized x64 DLL mods",
+    "empty": "This instance has no recognized x64 DLL mods",
     "showDetails": "Show Details",
     "enableMod": "Enable Mod",
     "disableMod": "Disable Mod",

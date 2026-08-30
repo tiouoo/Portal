@@ -87,6 +87,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     public string SelectedCountText =>
         string.Format(CommonLanguageManager.Instance.resourceList_batchSelected.CurrentValue(), SelectedCount);
     public bool HasSelection => SelectedCount > 0;
+    public bool HasConfigurableSelection => Items.Any(item => item.IsSelected && item.CanConfigure);
 
     private BedrockInstanceConfig? Config => _instance?.BedrockConfig;
 
@@ -138,7 +139,9 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         RaiseList();
         try
         {
-            var mods = await Task.Run(() => BedrockModManager.Scan(Config));
+            var mods = await Task.Run(() => BedrockModManager.Scan(Config)
+                .Concat(BedrockModManager.ScanPackages(Config))
+                .ToArray());
             Items.Clear();
             foreach (var mod in mods) Items.Add(new BedrockModItem(mod));
             ApplyFilter();
@@ -167,7 +170,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     {
         var query = string.IsNullOrWhiteSpace(_filter)
             ? Items
-            : Items.Where(item => item.FileName.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+            : Items.Where(item => item.DisplayName.Contains(_filter, StringComparison.OrdinalIgnoreCase));
         FilteredItems.Clear();
         foreach (var item in SortItems(query).Where(MatchesStateFilter))
             FilteredItems.Add(item);
@@ -190,7 +193,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     {
         return _sortMode switch
         {
-            ResourceSortMode.Name => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase),
+            ResourceSortMode.Name => source.OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase),
             ResourceSortMode.LastWriteTime => source.OrderByDescending(item => item.LastWriteTime),
             ResourceSortMode.FileSize => source.OrderByDescending(item => item.Info.FileSize),
             _ => source.OrderBy(item => item.FileName, StringComparer.OrdinalIgnoreCase)
@@ -211,7 +214,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     {
         if (TopLevel.GetTopLevel(this) is { } topLevel && Config != null)
             await topLevel.Launcher.LaunchDirectoryInfoAsync(
-                new DirectoryInfo(BedrockModManager.GetModsFolder(Config)));
+                new DirectoryInfo(BedrockModManager.GetInstanceModsFolder(Config)));
     }
 
     private async void Import_OnClick(object? sender, RoutedEventArgs e)
@@ -236,7 +239,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     private async Task ImportAsync(DragEventArgs? drop)
     {
         if (Config == null) return;
-        var folder = BedrockModManager.GetModsFolder(Config);
+        var folder = BedrockModManager.GetInstanceModsFolder(Config);
         if (drop == null)
             await JavaResourceImport.SelectAndImportAsync(this,
                 CommonLanguageManager.Instance.bedrockMods_selectDllMod.CurrentValue(), folder,
@@ -305,7 +308,10 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
     private async Task SetEnabledAsync(IEnumerable<BedrockModItem> items, bool enabled)
     {
         if (Config == null) return;
-        foreach (var item in items) BedrockModManager.Update(Config, item.FileName, entry => entry.Enabled = enabled);
+        var configurable = items.Where(item => item.CanConfigure).ToArray();
+        if (configurable.Length == 0) return;
+        foreach (var item in configurable)
+            BedrockModManager.Update(Config, item.Info.Config.File, entry => entry.Enabled = enabled);
         await RefreshAsync();
         ShowNotice(enabled
                 ? CommonLanguageManager.Instance.bedrockMods_enabledSelected.CurrentValue()
@@ -315,7 +321,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
 
     private async void ShowDetails_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (Item(sender) is not { } item || Config == null) return;
+        if (Item(sender) is not { CanConfigure: true } item || Config == null) return;
         var preload = new CheckBox
         {
             Content = CommonLanguageManager.Instance.bedrockMods_preloadLabel.CurrentValue(),
@@ -357,7 +363,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
                 CanResize = false
             });
         if (result != DialogResult.Yes) return;
-        BedrockModManager.Update(Config, item.FileName, entry =>
+        BedrockModManager.Update(Config, item.Info.Config.File, entry =>
         {
             entry.Preload = preload.IsChecked == true;
             entry.DelayMs = (int)(delay.Value ?? BedrockModManager.DefaultDelayMs);
@@ -397,10 +403,13 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
             });
         if (result != DialogResult.Yes) return;
         var failed = 0;
-        foreach (var item in items)
+        foreach (var item in items.OrderByDescending(item => item.Info.FilePath.Length))
             try
             {
-                File.Delete(item.Info.FilePath);
+                if (item.Info.IsPackage && item.Info.PackageRoot is { } packageRoot)
+                    Directory.Delete(packageRoot, true);
+                else
+                    File.Delete(item.Info.FilePath);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
@@ -454,6 +463,7 @@ public partial class BedrockMods : UserControl, INotifyPropertyChanged
         Raise(nameof(SelectedCount));
         Raise(nameof(SelectedCountText));
         Raise(nameof(HasSelection));
+        Raise(nameof(HasConfigurableSelection));
     }
 
     private void ShowNotice(string message, NotificationType type)
@@ -471,16 +481,21 @@ public sealed class BedrockModItem(BedrockModInfo info) : INotifyPropertyChanged
 {
     private bool _isSelected;
     public BedrockModInfo Info { get; } = info;
+    public bool CanConfigure => !Info.IsPackage;
+    public bool CanConfigureLoadMode => CanConfigure && OperatingSystem.IsWindows();
     public string FileName => Info.FileName;
+    public string DisplayName => Info.PackageName ?? FileName;
     public string FileSizeText => ResourceListUi.FormatSize(Info.FileSize);
-    public string SizeAndNameText => $"{FileSizeText}·{FileName}";
+    public string SizeAndNameText => string.IsNullOrWhiteSpace(Info.PackageVersion)
+        ? $"{FileSizeText}·{DisplayName}"
+        : $"{FileSizeText}·{DisplayName} {Info.PackageVersion}";
     public DateTime LastWriteTime => ReadLastWriteTime(Info.FilePath);
     public string LastWriteTimeText =>
         string.Format(CommonLanguageManager.Instance.bedrockMods_addedAt.CurrentValue(), LastWriteTime);
-    public bool IsEnabled => Info.Config.Enabled;
-    public bool IsDisabled => !IsEnabled;
-    public bool IsPreload => Info.Config.Preload;
-    public bool IsDelayed => IsEnabled && !IsPreload;
+    public bool IsEnabled => !CanConfigure || Info.Config.Enabled;
+    public bool IsDisabled => CanConfigure && !IsEnabled;
+    public bool IsPreload => CanConfigure && IsEnabled && (!OperatingSystem.IsWindows() || Info.Config.Preload);
+    public bool IsDelayed => CanConfigureLoadMode && IsEnabled && !IsPreload;
     public string DelayText => $"{Info.Config.DelayMs} ms";
 
     public bool IsSelected

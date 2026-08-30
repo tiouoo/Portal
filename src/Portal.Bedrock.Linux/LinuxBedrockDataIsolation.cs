@@ -25,10 +25,37 @@ internal static class LinuxBedrockDataIsolation
         else File.Copy(original, executable, true);
 
         PrepareLaunchInfo(config, log);
+        SyncPreloadMods(config, log);
         DeployResource("Portal.Preload.dll", Path.Combine(config.InstancePath, PreloadName));
         DeployResource("Portal.Bootstrap.dll", Path.Combine(config.InstancePath, BootstrapName));
         WriteConfig(config);
         AddImport(executable, BootstrapName, "Load");
+    }
+
+    private static void SyncPreloadMods(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
+    {
+        var runtimeFolder = Path.Combine(config.InstancePath, "preload", "Portal");
+        Directory.CreateDirectory(runtimeFolder);
+        var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Proton cannot use Portal's Windows process injector, so every enabled loose DLL is preloaded.
+        var mods = BedrockModManager.Scan(config).Where(mod => mod.Config.Enabled).ToArray();
+        foreach (var mod in mods)
+        {
+            using var stream = File.OpenRead(mod.FilePath);
+            var fileName = $"{Convert.ToHexString(SHA256.HashData(stream))[..16]}.dll";
+            var destination = Path.Combine(runtimeFolder, fileName);
+            activeFiles.Add(fileName);
+            if (!File.Exists(destination)) File.Copy(mod.FilePath, destination);
+        }
+
+        var manifestPath = Path.Combine(runtimeFolder, "mods.txt");
+        var temporaryPath = manifestPath + ".tmp";
+        File.WriteAllLines(temporaryPath, activeFiles.OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
+        File.Move(temporaryPath, manifestPath, true);
+        foreach (var path in Directory.EnumerateFiles(runtimeFolder, "*.dll"))
+            if (!activeFiles.Contains(Path.GetFileName(path)))
+                try { File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_foundEnabledPreloadMods.CurrentValue(), mods.Length), BedrockLogLevel.Information);
     }
 
     private static void PrepareLaunchInfo(BedrockInstanceConfig config, Action<string, BedrockLogLevel>? log)
