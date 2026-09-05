@@ -43,24 +43,29 @@ internal static class BedrockDataIsolation
                     StringComparison.OrdinalIgnoreCase))
                 File.Copy(leviLaminaPreloader, rootPreloader, true);
         }
-        if (!HasImportedDll(gameExecutable, BootstrapDllName) ||
-            HasImportedDll(gameExecutable, "PreLoader.dll") != requiresLeviLaminaPatch)
+        var hasBootstrapImport = HasImportedDll(gameExecutable, BootstrapDllName);
+        var hasPreloaderImport = HasImportedDll(gameExecutable, "PreLoader.dll");
+        if (requiresLeviLaminaPatch
+            ? !hasPreloaderImport || hasBootstrapImport
+            : !hasBootstrapImport)
         {
             RestoreOriginalExecutable(config.InstancePath, gameExecutable);
             if (requiresLeviLaminaPatch)
                 await ApplyLeviLaminaPatchAsync(config, gameExecutable, log, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            AddBootstrapImport(gameExecutable);
+            if (!requiresLeviLaminaPatch)
+                AddBootstrapImport(gameExecutable);
         }
-
         PrepareLaunchInfo(config, log);
         SyncPreloadMods(config, log);
         var preloadDllName = DeployPreloadDll(config.InstancePath);
-        DeployBootstrapDll(config.InstancePath);
+        if (!requiresLeviLaminaPatch)
+            DeployBootstrapDll(config.InstancePath);
         var nativeLogPath = WritePreloadConfiguration(config);
         try
         {
-            AddBootstrapImport(gameExecutable);
+            if (!requiresLeviLaminaPatch)
+                AddBootstrapImport(gameExecutable);
             CleanupStalePreloadArtifacts(config.InstancePath, preloadDllName, log);
         }
         catch
@@ -80,18 +85,18 @@ internal static class BedrockDataIsolation
         File.Copy(gameExecutable, originalPath, false);
     }
 
+    private static void RestoreOriginalExecutable(string instancePath, string gameExecutable)
+    {
+        var originalPath = Path.Combine(instancePath, "config", "Portal", OriginalExecutableName);
+        File.Copy(originalPath, gameExecutable, true);
+    }
+
     private static bool HasImportedDll(string gameExecutable, string dllName)
     {
         using var stream = new FileStream(gameExecutable, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var peFile = new PeFile(stream);
         return peFile.ImportedFunctions?.Any(import =>
             string.Equals(import.DLL, dllName, StringComparison.OrdinalIgnoreCase)) == true;
-    }
-
-    private static void RestoreOriginalExecutable(string instancePath, string gameExecutable)
-    {
-        var originalPath = Path.Combine(instancePath, "config", "Portal", OriginalExecutableName);
-        File.Copy(originalPath, gameExecutable, true);
     }
 
     private static async Task ApplyLeviLaminaPatchAsync(BedrockInstanceConfig config, string gameExecutable,
@@ -266,14 +271,24 @@ internal static class BedrockDataIsolation
         var preloadFolder = Path.Combine(config.InstancePath, "preload");
         Directory.CreateDirectory(preloadFolder);
         var preloaderDestination = Path.Combine(preloadFolder, "PreLoader.dll");
-        if (File.Exists(preloaderDestination))
+        var preloaderSource = BedrockModManager.PrepareLeviLaminaPreloader(config);
+        if (preloaderSource is not null)
+        {
+            File.Copy(preloaderSource, preloaderDestination, true);
+            log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_preloadModReady.CurrentValue(),
+                "PreLoader.dll"), BedrockLogLevel.Information);
+        }
+        else if (File.Exists(preloaderDestination))
+        {
             File.Delete(preloaderDestination);
+        }
 
         var runtimeFolder = Path.Combine(config.InstancePath, "preload", "Portal");
         Directory.CreateDirectory(runtimeFolder);
         var activeFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var preloadMods = BedrockModManager.Scan(config).Where(mod => mod.Config.Enabled && mod.Config.Preload).ToArray();
-        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_foundEnabledPreloadMods.CurrentValue(), preloadMods.Length), BedrockLogLevel.Information);
+        var preloadCount = preloadMods.Length + (preloaderSource is null ? 0 : 1);
+        log?.Invoke(string.Format(LogLanguageManager.Instance.bedrock_foundEnabledPreloadMods.CurrentValue(), preloadCount), BedrockLogLevel.Information);
         foreach (var mod in preloadMods)
         {
             using var stream = File.OpenRead(mod.FilePath);

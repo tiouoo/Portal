@@ -12,6 +12,8 @@ namespace
     std::uint8_t g_originalByte = 0;
     volatile LONG g_triggered = 0;
 
+    DWORD WINAPI PreloadThread(void*) noexcept;
+
     void Log(const wchar_t* state) noexcept
     {
         wchar_t modulePath[MAX_PATH]{};
@@ -90,17 +92,22 @@ namespace
 
         Log(L"hit");
 
-        HMODULE preload = GetModuleHandleW(L"Portal.Preload.dll");
-        if (preload == nullptr)
-            preload = LoadLibraryW(L"Portal.Preload.dll");
-        if (preload != nullptr)
+        HANDLE thread = CreateThread(nullptr, 0, PreloadThread, nullptr, 0, nullptr);
+        if (thread == nullptr)
         {
-            const auto load = reinterpret_cast<void (*)()>(GetProcAddress(preload, "Load"));
-            if (load != nullptr)
-            {
-                load();
+            Log(L"preload-thread-create-failed");
+        }
+        else
+        {
+            constexpr DWORD preloadTimeoutMs = 30000;
+            const DWORD waitResult = WaitForSingleObject(thread, preloadTimeoutMs);
+            if (waitResult == WAIT_OBJECT_0)
                 Log(L"preload-called");
-            }
+            else if (waitResult == WAIT_TIMEOUT)
+                Log(L"preload-timeout");
+            else
+                Log(L"preload-wait-failed");
+            CloseHandle(thread);
         }
 
         if (g_handler != nullptr)
@@ -113,6 +120,47 @@ namespace
         exception->ContextRecord->Rip = reinterpret_cast<DWORD64>(g_entryPoint);
 #endif
         return EXCEPTION_CONTINUE_EXECUTION;
+    }
+
+    DWORD WINAPI PreloadThread(void*) noexcept
+    {
+        Log(L"preload-thread-start");
+
+        HMODULE preload = GetModuleHandleW(L"Portal.Preload.dll");
+        if (preload == nullptr)
+        {
+            Log(L"preload-load-start");
+            wchar_t preloadPath[MAX_PATH]{};
+            const DWORD pathLength = GetModuleFileNameW(nullptr, preloadPath, MAX_PATH);
+            if (pathLength > 0 && pathLength < MAX_PATH)
+            {
+                for (DWORD index = pathLength; index > 0; --index)
+                {
+                    if (preloadPath[index - 1] == L'\\')
+                    {
+                        preloadPath[index] = L'\0';
+                        break;
+                    }
+                }
+                wcscat_s(preloadPath, L"Portal.Preload.dll");
+                preload = LoadLibraryW(preloadPath);
+            }
+            Log(preload == nullptr ? L"preload-load-failed" : L"preload-load-returned");
+            if (preload == nullptr)
+                return 0;
+        }
+
+        const auto load = reinterpret_cast<void (*)()>(GetProcAddress(preload, "Load"));
+        if (load == nullptr)
+        {
+            Log(L"preload-export-missing");
+            return 0;
+        }
+
+        Log(L"preload-call-start");
+        load();
+        Log(L"preload-returned");
+        return 0;
     }
 
     bool Arm() noexcept

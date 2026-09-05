@@ -17,6 +17,18 @@ internal static unsafe class PreloadLoader
     {
         if (Interlocked.CompareExchange(ref _priorityPreloaderState, 1, 0) != 0)
             return Volatile.Read(ref _priorityPreloaderState) == 2;
+
+        // LeviLamina's official client installation statically imports
+        // PreLoader.dll with PeEditor. Loading it again after the game entry
+        // point can block inside its bootstrap initialization, so treat the
+        // already-loaded module as the priority preloader.
+        if (NativeMethods.GetModuleHandleW(PreLoader) != 0)
+        {
+            Logger.Info("PreLoader.dll is already loaded by the game import table");
+            Volatile.Write(ref _priorityPreloaderState, 2);
+            return true;
+        }
+
         string path = Path.Combine(Directory.GetCurrentDirectory(), "preload", PreLoader);
         bool loaded = File.Exists(path) && Load(path);
         Volatile.Write(ref _priorityPreloaderState, loaded ? 2 : -1);

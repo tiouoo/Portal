@@ -10,7 +10,6 @@ internal static unsafe class NativeExports
     [UnmanagedCallersOnly(EntryPoint = "Load")]
     internal static void Load()
     {
-        PreloadLoader.LoadPriorityPreloader();
         ModuleEntry.StartWorker();
         LogInjection();
     }

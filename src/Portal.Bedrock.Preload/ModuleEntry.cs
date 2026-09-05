@@ -1,38 +1,23 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Portal.Bedrock.Preload;
 
 /// <summary>
-/// DLL 加载入口（等价原 C++ 的 DllMain）：DLL_PROCESS_ATTACH 时
-/// 初始化运行时即执行模块初始器，完成工作目录、控制台与文件钩子；预加载由导出的 Load
-/// 在 Minecraft 入口点放行前同步启动。
+/// DLL 加载入口。模块初始器只写入诊断标记；真正的初始化由导出的 Load
+/// 在 Bootstrap 创建的普通线程上同步执行。
 /// </summary>
 internal static unsafe class ModuleEntry
 {
     private static readonly ConfigManager Config = new();
     private static readonly nint InvalidHandle = new(-1);
-    private static bool _initialized;
     private static int _workerStarted;
 
     [ModuleInitializer]
     internal static void Initialize()
     {
-        if (_initialized)
-            return;
-        _initialized = true;
-
         WriteBootMarker("module-init-start");
-        try
-        {
-            Run();
-        }
-        catch (Exception ex)
-        {
-            Logger.Error($"Module initialization failed: {ex}");
-        }
         WriteBootMarker("module-init-done");
     }
 
@@ -110,17 +95,10 @@ internal static unsafe class ModuleEntry
     {
         if (Interlocked.Exchange(ref _workerStarted, 1) != 0)
             return;
-        nint thread = NativeMethods.CreateThread(nint.Zero, 0,
-            (nint)(delegate* unmanaged<nint, uint>)&WorkerThread, nint.Zero, 0, out _);
-        if (thread != 0)
-            NativeMethods.CloseHandle(thread);
-        else
-            Logger.Error($"CreateThread failed: {Marshal.GetLastWin32Error()}");
-    }
 
-    [UnmanagedCallersOnly]
-    private static uint WorkerThread(nint parameter)
-    {
+        // Load is invoked by Portal.Bootstrap on a regular worker thread. Keep
+        // the whole chain synchronous so the game entry point is not released
+        // before PreLoader and its delegated mods have been initialized.
         try
         {
             bool console = Config.GetConfigBool("isConsole");
@@ -133,13 +111,13 @@ internal static unsafe class ModuleEntry
                 Logger.Success("Portal is free software licensed under GPLv3");
                 Logger.Success("Submit issues and submit PR: https://github.com/tiouo/Portal");
             }
+            Run();
             PreloadLoader.Run();
         }
         catch (Exception ex)
         {
-            Logger.Error($"Preload worker thread error: {ex}");
+            Logger.Error($"Preload worker error: {ex}");
         }
-        return 0;
     }
 
     private static void UseExeDirectoryAsWorkingDirectory()
