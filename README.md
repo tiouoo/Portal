@@ -84,6 +84,8 @@
 - 管理游戏版本、世界、世界模板、行为包、资源包和皮肤包
 - 导入基岩版内容包
 
+基岩版游戏版本数据来自 [MCAPPX 版本库](https://www.mcappx.com/)，数据源使用说明见 [MCAPPX 开发文档](https://www.mcappx.com/dev-docs/data-source/)。
+
 ### 命令行调用
 
 - 支持通过命令行参数或浏览器 `portal://` 链接调用安装与启动功能
