@@ -265,7 +265,8 @@ internal sealed class WindowCompositionMaterial : IDisposable
 
     private object? CreateMicaBrush()
     {
-        var dark = _topLevel.ActualThemeVariant == ThemeVariant.Dark;
+        var theme = _topLevel.ActualThemeVariant;
+        var dark = theme == ThemeVariant.Dark || theme.InheritVariant == ThemeVariant.Dark;
         var method = _winUiUtilsType.GetMethod("CreateMicaBackdropBrush",
             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         return method?.Invoke(null, [_compositor, dark ? 32f : 242f, dark ? 0.8f : 0.6f])
