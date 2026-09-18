@@ -47,6 +47,7 @@
     "debugConsole_linuxCommand": "echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {0}; exec bash",
     "debugConsole_macosCommand": "echo 'Portal 调试终端已启动。正在等待应用日志...'; tail -n 0 -F {0}",
     "debugConsole_started": "Portal 调试终端已启动。",
+    "debugConsole_terminalTitle": "Portal 调试终端",
     "fileAssociation_appDescription": "Portal Minecraft 启动器",
     "javaFileAssociation_mrpack": "Minecraft 整合包",
     "jumpList_continueCategory": "继续游戏",

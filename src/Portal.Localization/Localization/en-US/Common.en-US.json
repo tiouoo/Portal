@@ -47,6 +47,7 @@
     "debugConsole_linuxCommand": "echo 'Portal debug console started. Waiting for app logs...'; tail -n 0 -F {0}; exec bash",
     "debugConsole_macosCommand": "echo 'Portal debug console started. Waiting for app logs...'; tail -n 0 -F {0}",
     "debugConsole_started": "Portal debug console started.",
+    "debugConsole_terminalTitle": "Portal Debug Console",
     "fileAssociation_appDescription": "Portal Minecraft Launcher",
     "javaFileAssociation_mrpack": "Minecraft Modpack",
     "jumpList_continueCategory": "Continue Playing",

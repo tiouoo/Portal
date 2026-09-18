@@ -15,6 +15,8 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (DebugConsole.TryRunTerminalHost(args)) return;
+
         App.StartupTimestamp = Stopwatch.GetTimestamp();
         Console.OutputEncoding = Encoding.UTF8;
 
@@ -22,14 +24,6 @@ internal static class Program
             Logger.MinimumLevel = Logger.LogLevel.Fatal;
 
         LocalizationInitializer.Initialize();
-
-        Logger.Info("Portal MC");
-        Logger.Info(@"  ____                   _             _     __  __    ____ ");
-        Logger.Info(@" |  _ \    ___    _ __  | |_    __ _  | |   |  \/  |  / ___|");
-        Logger.Info(@" | |_) |  / _ \  | '__| | __|  / _` | | |   | |\/| | | |    ");
-        Logger.Info(@" |  __/  | (_) | | |    | |_  | (_| | | |   | |  | | | |___ ");
-        Logger.Info(@" |_|      \___/  |_|     \__|  \__,_| |_|   |_|  |_|  \____|");
-        Logger.Info("");
 
         ExceptionHandlerSetup.Register();
 
@@ -46,6 +40,14 @@ internal static class Program
         }
 
         DebugConsole.ShowIfEnabled();
+
+        Logger.Info("Portal MC");
+        Logger.Info(@"  ____                   _             _     __  __    ____ ");
+        Logger.Info(@" |  _ \    ___    _ __  | |_    __ _  | |   |  \/  |  / ___|");
+        Logger.Info(@" | |_) |  / _ \  | '__| | __|  / _` | | |   | |\/| | | |    ");
+        Logger.Info(@" |  __/  | (_) | | |    | |_  | (_| | | |   | |  | | | |___ ");
+        Logger.Info(@" |_|      \___/  |_|     \__|  \__,_| |_|   |_|  |_|  \____|");
+        Logger.Info("");
 
         if (!SingleInstanceGuard.TryAcquire())
         {

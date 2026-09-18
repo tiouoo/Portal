@@ -9,13 +9,48 @@ namespace Portal.Desktop;
 
 internal static partial class DebugConsole
 {
+    private const string TerminalHostFlag = "--portal-debug-terminal-host";
+    private static readonly TimeSpan TerminalStartTimeout = TimeSpan.FromSeconds(5);
+
+    public static bool TryRunTerminalHost(string[] args)
+    {
+        if (!OperatingSystem.IsWindows() || args is not [TerminalHostFlag, var responsePath, var parentProcessIdText])
+            return false;
+
+        if (!uint.TryParse(parentProcessIdText, out var parentProcessId) || parentProcessId == 0)
+            return true;
+
+        if (!AttachConsole(uint.MaxValue))
+        {
+            File.WriteAllText(responsePath, "0");
+            return true;
+        }
+
+        File.WriteAllText(responsePath, Environment.ProcessId.ToString());
+        try
+        {
+            using var parentProcess = Process.GetProcessById((int)parentProcessId);
+            parentProcess.WaitForExit();
+        }
+        catch (ArgumentException)
+        {
+            // The Portal process exited before the terminal host started waiting.
+        }
+        finally
+        {
+            File.Delete(responsePath);
+        }
+
+        return true;
+    }
+
     public static void ShowIfEnabled()
     {
         if (!IsEnabled()) return;
 
         if (OperatingSystem.IsWindows())
         {
-            if (AllocConsole())
+            if (TryAttachWindowsTerminal() || AllocConsole())
                 RedirectStandardOutput();
             return;
         }
@@ -42,12 +77,84 @@ internal static partial class DebugConsole
 
     private static void RedirectStandardOutput()
     {
-        var output = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
-        var error = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+        Console.OutputEncoding = Encoding.UTF8;
+        var output = new StreamWriter(OpenConsoleOutput()) { AutoFlush = true };
+        var error = new StreamWriter(OpenConsoleOutput()) { AutoFlush = true };
         Console.SetOut(output);
         Console.SetError(error);
-        Console.OutputEncoding = Encoding.UTF8;
+        Trace.Listeners.Clear();
+        Trace.Listeners.Add(new TextWriterTraceListener(output));
+        Trace.AutoFlush = true;
         Console.WriteLine(CommonLanguageManager.Instance.desktop_debugConsole_started.CurrentValue());
+    }
+
+    private static Stream OpenConsoleOutput()
+    {
+        return OperatingSystem.IsWindows()
+            ? new FileStream("CONOUT$", FileMode.Open, FileAccess.Write, FileShare.ReadWrite)
+            : Console.OpenStandardOutput();
+    }
+
+    private static bool TryAttachWindowsTerminal()
+    {
+        string? responsePath = null;
+        try
+        {
+            var exchangeDirectory = Path.Combine(Path.GetTempPath(), "Portal", "terminal-host");
+            Directory.CreateDirectory(exchangeDirectory);
+            responsePath = Path.Combine(exchangeDirectory, $"{Guid.NewGuid():N}.response");
+            var executablePath = Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(executablePath)) return false;
+
+            var command = $"start \"\" /wait /b {QuoteForCommand(executablePath)} {TerminalHostFlag} " +
+                          $"{QuoteForCommand(responsePath)} {Environment.ProcessId}";
+            var startInfo = new ProcessStartInfo("wt.exe") { UseShellExecute = false };
+            foreach (var argument in new[]
+                     {
+                         "-w", "-1", "new-tab", "--title",
+                         CommonLanguageManager.Instance.desktop_debugConsole_terminalTitle.CurrentValue(),
+                         "--suppressApplicationTitle", "cmd.exe", "/d", "/s", "/c", command
+                     })
+                startInfo.ArgumentList.Add(argument);
+            Process.Start(startInfo);
+
+            var stopwatch = Stopwatch.StartNew();
+            while (stopwatch.Elapsed < TerminalStartTimeout)
+            {
+                if (File.Exists(responsePath) &&
+                    uint.TryParse(File.ReadAllText(responsePath), out var hostProcessId))
+                {
+                    File.Delete(responsePath);
+                    if (hostProcessId == 0) return false;
+
+                    FreeConsole();
+                    return AttachConsole(hostProcessId);
+                }
+
+                Thread.Sleep(50);
+            }
+        }
+        catch (Exception exception) when (exception is Win32Exception or IOException or UnauthorizedAccessException)
+        {
+        }
+        finally
+        {
+            if (responsePath is not null)
+                try
+                {
+                    File.Delete(responsePath);
+                }
+                catch (IOException)
+                {
+                }
+        }
+
+        return false;
+    }
+
+    private static string QuoteForCommand(string value)
+    {
+        return $"\"{value.Replace("%", "%%")}\"";
     }
 
     private static void StartLinuxTerminal()
@@ -100,4 +207,12 @@ internal static partial class DebugConsole
     [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool AllocConsole();
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool AttachConsole(uint processId);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool FreeConsole();
 }
