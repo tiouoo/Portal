@@ -18,7 +18,7 @@ internal enum WindowCompositionMaterialKind
 
 internal sealed class WindowCompositionMaterial : IDisposable
 {
-    private const string SupportedAvaloniaVersion = "12.1.1.0";
+    private const string SupportedAvaloniaVersion = "12.1.2.0";
 
     private readonly TopLevel _topLevel;
     private readonly Assembly _win32Assembly;
