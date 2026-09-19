@@ -114,11 +114,14 @@
             <hr class="divider" />
             <strong>遇到问题？</strong>
             <p>
-              如果安装过程中遇到任何问题，请访问 <a
+              如果安装过程中遇到任何问题，请访问
+              <a
                 href="https://github.com/tiouoo/Portal/issues"
                 target="_blank"
                 rel="noopener noreferrer"
-                >GitHub Issues</a> 寻求帮助，或 <a href="/#open-source">加入官方 QQ 群</a> 与其他用户交流。
+                >GitHub Issues</a
+              >
+              寻求帮助，或 <a href="/#open-source">加入官方 QQ 群</a> 与其他用户交流。
             </p>
           </aside>
         </section>
@@ -134,9 +137,11 @@
         <section class="install-content" aria-labelledby="linux-install-title">
           <h2 id="linux-install-title">选择安装方式</h2>
           <p class="section-intro">
-            Portal 为 Linux 提供了多种安装包格式，包括 AppImage、Rrm 和 Deb
+            Portal 为 Linux 提供了多种安装方式，包括 AUR、AppImage、RPM 和 Deb
             包。请根据您的发行版选择合适的安装方式。
           </p>
+
+          <AurInstallPanel />
 
           <div class="install-grid install-grid-3">
             <article style="border-radius: 16px" class="install-card">
@@ -229,7 +234,7 @@
               >sudo apt-get update && sudo apt-get install -y libfuse2 libgtk-3-0 libnotify4 libnss3
               libxss1 libxtst6 xdg-utils libatspi2.0-0 libdrm2 libgbm1 libxcb-dri3-0</code
             >
-            <p  style="border-radius: 16px;" class="note">
+            <p style="border-radius: 16px" class="note">
               <strong>提示：</strong>如果您使用的是较新的 Ubuntu 22.04+ 版本，可能只需要安装
               <code>libfuse2</code>：
             </p>
@@ -241,11 +246,14 @@
           <aside style="border-radius: 16px" class="fallback-note">
             <strong>遇到问题？</strong>
             <p>
-              如果安装过程中遇到任何问题，请访问 <a
+              如果安装过程中遇到任何问题，请访问
+              <a
                 href="https://github.com/tiouoo/Portal/issues"
                 target="_blank"
                 rel="noopener noreferrer"
-                >GitHub Issues</a> 寻求帮助，或 <a href="/#open-source">加入官方 QQ 群</a> 与其他用户交流。
+                >GitHub Issues</a
+              >
+              寻求帮助，或 <a href="/#open-source">加入官方 QQ 群</a> 与其他用户交流。
             </p>
           </aside>
         </section>
@@ -254,9 +262,10 @@
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import AurInstallPanel from '../components/AurInstallPanel.vue';
 
 const route = useRoute();
 const activeTab = ref('macos');
@@ -605,6 +614,16 @@ onMounted(() => {
   .tip-note,
   .fallback-note {
     padding: 20px;
+  }
+}
+@media (max-width: 1560px) {
+  .install-hero {
+    margin-top: -40px;
+  }
+}
+@media (max-width: 1440px) {
+  .install-hero {
+    margin-top: -50px;
   }
 }
 </style>

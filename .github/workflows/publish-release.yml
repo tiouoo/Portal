@@ -419,3 +419,26 @@ jobs:
     secrets:
       AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+
+  aur-fallback:
+    needs: [prepare, publish]
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      pkgname: portal-mc
+      tag: ${{ needs.prepare.outputs.tag }}
+      app_version: ${{ needs.prepare.outputs.version }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+
+  aur-cnb:
+    needs: [prepare, publish]
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      pkgname: portal-mc-cnb-bin
+      tag: ${{ needs.prepare.outputs.tag }}
+      app_version: ${{ needs.prepare.outputs.version }}
+      download_base: https://cnb.cool/tiouo/portal/-/releases/download/${{ needs.prepare.outputs.tag }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}

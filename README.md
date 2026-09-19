@@ -34,13 +34,14 @@
 | **macOS Apple Silicon** | [磁盘映像](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.arm64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.arm64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.arm64.app.zip) |
 | **macOS Intel**         | [磁盘映像](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.osx.mac.x64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.osx.mac.x64.app.zip) | [磁盘映像](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.dmg) / [应用包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.osx.mac.x64.app.zip) |
 | **Linux x64**           | [AppImage](https://github.com/tiouoo/Portal/releases/latest/download/Portal.linux.x64.AppImage) / [deb包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.linux.x64.deb) / [rpm包](https://github.com/tiouoo/Portal/releases/latest/download/Portal.linux.x64.rpm) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.AppImage) / [deb包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.deb) / [rpm包](https://github.com/tiouoo/Portal/releases/download/publish-commit/Portal.linux.x64.rpm) | [AppImage](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.AppImage) / [deb包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.deb) / [rpm包](https://github.com/tiouoo/Portal/releases/download/publish-nightly/Portal.linux.x64.rpm) |
-| **Arch Linux / AUR**    | [portal-mc-bin](https://aur.archlinux.org/packages/portal-mc-bin)                                    | [portal-mc-commit-bin](https://aur.archlinux.org/packages/portal-mc-commit-bin)                                    | [portal-mc-nightly-bin](https://aur.archlinux.org/packages/portal-mc-nightly-bin)                                    |
+| **Arch Linux / AUR**    | [portal-mc-bin](https://aur.archlinux.org/packages/portal-mc-bin) / [portal-mc-cnb-bin](https://aur.archlinux.org/packages/portal-mc-cnb-bin)（CNB 镜像） | [portal-mc-commit-bin](https://aur.archlinux.org/packages/portal-mc-commit-bin)                                    | [portal-mc-nightly-bin](https://aur.archlinux.org/packages/portal-mc-nightly-bin)                                    |
 
 > [!NOTE]
-> Arch Linux 用户可以通过 [aur](https://aur.archlinux.org) 安装
+> Arch Linux 用户可以通过 [AUR](https://aur.archlinux.org) 直接安装和更新。国内网络建议使用由 CNB 正式版镜像提供的 `portal-mc-cnb-bin`。
 >
 > ```bash
-> yay -S portal-mc-bin                  # 正式版
+> yay -S portal-mc-cnb-bin              # 正式版，CNB 镜像，国内推荐
+> yay -S portal-mc-bin                  # 正式版，GitHub 源
 > yay -S portal-mc-commit-bin           # commit 版本
 > yay -S portal-mc-nightly-bin          # nightly 版本
 > ```

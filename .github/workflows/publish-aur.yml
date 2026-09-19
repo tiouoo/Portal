@@ -12,6 +12,11 @@ on:
       app_version:
         required: true
         type: string
+      download_base:
+        description: "可选的 AppImage 下载基址；默认使用当前 GitHub release 标签"
+        required: false
+        type: string
+        default: ""
       moving_tag:
         description: "标记 release 标签是否为移动标签（commit/nightly），移动标签的 AppImage 校验和无法固定，使用 SKIP"
         required: false
@@ -46,10 +51,15 @@ jobs:
           AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
       - name: Download AppImage & compute sha256
+        env:
+          DOWNLOAD_BASE: ${{ inputs.download_base }}
         run: |
           cd "$GITHUB_WORKSPACE"
-          curl -fL -o Portal.AppImage \
-            "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/Portal.linux.x64.AppImage"
+          if [ -z "$DOWNLOAD_BASE" ]; then
+            DOWNLOAD_BASE="https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}"
+          fi
+          curl -fL --retry 8 --retry-delay 10 --retry-all-errors -o Portal.AppImage \
+            "$DOWNLOAD_BASE/Portal.linux.x64.AppImage"
           if [ "${{ inputs.moving_tag }}" = "false" ]; then
             echo "sha=$(sha256sum Portal.AppImage | cut -d' ' -f1)" >> $GITHUB_ENV
           else
@@ -66,9 +76,11 @@ jobs:
           git init -b master aur
           cd aur
           git remote add origin "ssh://aur@aur.archlinux.org/${{ inputs.pkgname }}.git"
-          git fetch origin
-          if git show-ref --verify --quiet refs/remotes/origin/master; then
+          if git ls-remote --exit-code origin HEAD >/dev/null 2>&1; then
+            git fetch origin
             git reset --hard origin/master
+          else
+            echo "AUR package does not exist yet; the first push will create it"
           fi
 
       - name: Render PKGBUILD

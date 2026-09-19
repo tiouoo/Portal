@@ -9,7 +9,7 @@ url="https://portal.tiouo.cc/"
 license=('GPL-3.0-or-later')
 depends=('fuse2' 'hicolor-icon-theme' 'xdg-utils')
 provides=("portal-mc=$pkgver")
-conflicts=('portal-mc' 'portal-mc-commit-bin' 'portal-mc-nightly-bin')
+conflicts=('portal-mc' 'portal-mc-cnb-bin' 'portal-mc-commit-bin' 'portal-mc-nightly-bin')
 options=('!strip' '!emptydirs')
 _appimg="Portal.AppImage"
 source_x86_64=(
