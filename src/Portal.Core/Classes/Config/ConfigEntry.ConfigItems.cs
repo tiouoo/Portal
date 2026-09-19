@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLaunch.Base.Enums;
@@ -12,6 +13,8 @@ namespace Portal.Core.Classes.Config;
 
 public partial class ConfigEntry : ObservableObject
 {
+    [JsonIgnore] public const string DefaultPageId = "pages_newTab";
+
     [ObservableProperty] public partial bool IsInitialized { get; set; } = true;
     [ObservableProperty] public partial string? TelemetryUserId { get; set; }
     [ObservableProperty] public partial bool AllowTelemetry { get; set; } = true;
@@ -72,7 +75,7 @@ public partial class ConfigEntry : ObservableObject
     [ObservableProperty] public partial string? GithubMirrorUrl { get; set; }
     [ObservableProperty] public partial string? CustomLauncherInfo { get; set; }
     [ObservableProperty] public partial string? OnlinePlayerName { get; set; }
-    [ObservableProperty] public partial string DefaultPage { get; set; } = string.Empty;
+    [ObservableProperty] public partial string DefaultPage { get; set; } = DefaultPageId;
     [ObservableProperty] public partial string? OverrideMinecraftWindowTitle { get; set; }
     [ObservableProperty] public partial string? BeforeLaunchCommand { get; set; }
     [ObservableProperty] public partial string? AfterLaunchCommand { get; set; }

@@ -141,10 +141,10 @@ public partial class TabWindow : TioTabWindowBase
         if (IsMainWindow)
         {
             IsUiLoading = true;
-            var pageType = DefaultPageRegistry.Pages
-                .FirstOrDefault(item => item.PageType.AssemblyQualifiedName == Data.ConfigEntry.DefaultPage)
-                ?.PageType;
-            var page = pageType != null && Activator.CreateInstance(pageType) is ITioTabPage tabPage
+            var defaultPage = DefaultPageRegistry.Resolve(Data.ConfigEntry.DefaultPage);
+            if (Data.ConfigEntry.DefaultPage != defaultPage.Id)
+                Data.ConfigEntry.DefaultPage = defaultPage.Id;
+            var page = Activator.CreateInstance(defaultPage.PageType) is ITioTabPage tabPage
                 ? tabPage
                 : new NewTabPage();
             var tab = new TabEntry(this, page);

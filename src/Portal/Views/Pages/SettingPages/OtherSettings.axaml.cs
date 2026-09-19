@@ -75,11 +75,11 @@ public partial class OtherSettings : Dsc
 
     public DefaultPageRegistry.DefaultPageEntry? SelectedDefaultPage
     {
-        get => DefaultPages.FirstOrDefault(page => page.PageType.AssemblyQualifiedName == Data.ConfigEntry.DefaultPage);
+        get => DefaultPageRegistry.Resolve(Data.ConfigEntry.DefaultPage);
         set
         {
             if (value != null)
-                Data.ConfigEntry.DefaultPage = value.PageType.AssemblyQualifiedName!;
+                Data.ConfigEntry.DefaultPage = value.Id;
         }
     }
 
