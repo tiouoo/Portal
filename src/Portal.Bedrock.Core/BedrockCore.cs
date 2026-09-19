@@ -16,14 +16,7 @@ public class BedrockCore
 		Directory.CreateDirectory(options.InstallDstFolder);
 		if (options.Type == MinecraftBuildTypeVersion.GDK)
 		{
-			byte[] cik = options.GameTypeVersion switch
-			{
-				MinecraftGameTypeVersion.Release => CikKeys.Release,
-				MinecraftGameTypeVersion.Preview or MinecraftGameTypeVersion.Beta => CikKeys.Preview,
-				_ => throw new InvalidOperationException($"Unsupported game type for GDK package: {options.GameTypeVersion}"),
-			};
-			if (cik.Length != 48)
-				throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_gdkCikMissing.CurrentValue());
+			byte[] cik = ParseCik(options.Cik);
 
 			await Task.Run(async delegate
 			{
@@ -37,6 +30,24 @@ public class BedrockCore
 			return new InstallResult();
 		}
 		throw new PlatformNotSupportedException(CommonLanguageManager.Instance.bedrockInstall_uwpWindowsOnly.CurrentValue());
+	}
+
+	private static byte[] ParseCik(string? value)
+	{
+		if (!string.IsNullOrEmpty(value))
+		{
+			try
+			{
+				byte[] cik = Convert.FromHexString(value.Trim().Replace("0x", "", StringComparison.OrdinalIgnoreCase)
+					.Replace(" ", "", StringComparison.Ordinal));
+				if (cik.Length == 48) return cik;
+			}
+			catch (FormatException)
+			{
+			}
+		}
+
+		throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_gdkCikMissing.CurrentValue());
 	}
 
 	public async Task<string> GetPackageUri(BuildInfo buildInfo, Architecture devicesArch)

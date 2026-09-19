@@ -19,6 +19,8 @@ public class LocalGamePackageOptions
 
 	public required MinecraftGameTypeVersion GameTypeVersion;
 
+	public string? Cik;
+
 	public BackGroundConfig? BackGroundConfig;
 
 	public string? GameName;

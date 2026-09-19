@@ -11,6 +11,8 @@
         <CnbUpdateToken>$([System.Environment]::GetEnvironmentVariable('CNB_UPDATE_TOKEN'))</CnbUpdateToken>
         <TelemetryApiKey>$([System.Environment]::GetEnvironmentVariable('PORTAL_TELEMETRY_API_KEY'))</TelemetryApiKey>
         <TelemetryUrl>$([System.Environment]::GetEnvironmentVariable('PORTAL_TELEMETRY_URL'))</TelemetryUrl>
+        <PreviewMinecraftKey>$([System.Environment]::GetEnvironmentVariable('PRE_MC_KEY'))</PreviewMinecraftKey>
+        <ReleaseMinecraftKey>$([System.Environment]::GetEnvironmentVariable('REL_MC_KEY'))</ReleaseMinecraftKey>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(CurseForgeApiKey)' != ''">
@@ -35,6 +37,14 @@
 
     <ItemGroup Condition="'$(TelemetryUrl)' != ''">
         <AssemblyMetadata Include="Portal.TelemetryUrl" Value="$(TelemetryUrl)"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(PreviewMinecraftKey)' != ''">
+        <AssemblyMetadata Include="Portal.PreviewMinecraftKey" Value="$(PreviewMinecraftKey)"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(ReleaseMinecraftKey)' != ''">
+        <AssemblyMetadata Include="Portal.ReleaseMinecraftKey" Value="$(ReleaseMinecraftKey)"/>
     </ItemGroup>
 
     <ItemGroup>

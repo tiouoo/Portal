@@ -8,13 +8,6 @@
     <NoWarn>$(NoWarn);CA1857</NoWarn>
   </PropertyGroup>
 
-  <Target Name="GenerateCikKeys" BeforeTargets="CoreCompile">
-    <Exec Command="dotnet fsi &quot;$(MSBuildThisFileDirectory)BuildChain\GenerateCikKeys.fsx&quot; --out &quot;$(BaseIntermediateOutputPath)CikKeys.g.cs&quot;" />
-    <ItemGroup>
-      <Compile Include="$(BaseIntermediateOutputPath)CikKeys.g.cs" />
-    </ItemGroup>
-  </Target>
-
   <ItemGroup>
     <ProjectReference Include="..\Portal.Localization\Portal.Localization.csproj" />
   </ItemGroup>

@@ -21,6 +21,11 @@ public static class CredentialsService
     public const string TelemetryUrlEnvironmentVariable = "PORTAL_TELEMETRY_URL";
     private const string TelemetryUrlMetadataKey = "Portal.TelemetryUrl";
 
+    public const string PreviewMinecraftKeyEnvironmentVariable = "PRE_MC_KEY";
+    private const string PreviewMinecraftKeyMetadataKey = "Portal.PreviewMinecraftKey";
+    public const string ReleaseMinecraftKeyEnvironmentVariable = "REL_MC_KEY";
+    private const string ReleaseMinecraftKeyMetadataKey = "Portal.ReleaseMinecraftKey";
+
     public static string? CurseForgeApiKey =>
         GetValue(CurseForgeApiKeyMetadataKey, CurseForgeApiKeyEnvironmentVariable);
 
@@ -35,6 +40,12 @@ public static class CredentialsService
     public static string? TelemetryApiKey => GetValue(TelemetryApiKeyMetadataKey, TelemetryApiKeyEnvironmentVariable);
 
     public static string? TelemetryUrl => GetValue(TelemetryUrlMetadataKey, TelemetryUrlEnvironmentVariable);
+
+    public static string? PreviewMinecraftKey =>
+        GetValue(PreviewMinecraftKeyMetadataKey, PreviewMinecraftKeyEnvironmentVariable);
+
+    public static string? ReleaseMinecraftKey =>
+        GetValue(ReleaseMinecraftKeyMetadataKey, ReleaseMinecraftKeyEnvironmentVariable);
 
     private static string? GetValue(string metadataKey, string environmentVariable)
     {

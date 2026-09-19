@@ -11,6 +11,9 @@ namespace Portal.Bedrock.Linux;
 
 public sealed class BedrockInstaller : IBedrockInstaller
 {
+    private readonly string? _previewCik;
+    private readonly string? _releaseCik;
+
     private const string VersionDatabaseUrl = "https://data.mcappx.com/v2/bedrock.json";
     private const int DownloadBufferSize = 1024 * 256;
     private const int RetainedPackageCount = 2;
@@ -22,6 +25,12 @@ public sealed class BedrockInstaller : IBedrockInstaller
     private static readonly Dictionary<string, int> ActivePackages =
         new(StringComparer.OrdinalIgnoreCase);
     private static readonly object PackageCleanupLock = new();
+
+    public BedrockInstaller(string? previewCik, string? releaseCik)
+    {
+        _previewCik = previewCik;
+        _releaseCik = releaseCik;
+    }
 
     public async Task<IReadOnlyList<BedrockGdkVersion>> GetGdkVersionsAsync(bool refresh,
         CancellationToken cancellationToken)
@@ -96,6 +105,7 @@ public sealed class BedrockInstaller : IBedrockInstaller
                     GameTypeVersion = request.Version.IsPreview
                         ? MinecraftGameTypeVersion.Preview
                         : MinecraftGameTypeVersion.Release,
+                    Cik = request.Version.IsPreview ? _previewCik : _releaseCik,
                     CancellationToken = request.CancellationToken,
                     InstallStates = new Progress<InstallStates>(state =>
                         progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, state.ToString()))),

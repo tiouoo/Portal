@@ -18,7 +18,7 @@ internal static class AppSetup
                 return new BedrockLaunch(config);
             };
         BedrockInstallationService.DefaultInstaller =
-            new BedrockInstaller();
+            new BedrockInstaller(CredentialsService.PreviewMinecraftKey, CredentialsService.ReleaseMinecraftKey);
         BedrockToolsService.Default =
             new BedrockWindowsToolsService();
 #elif LINUX
@@ -29,7 +29,8 @@ internal static class AppSetup
                 return new Bedrock.Linux.BedrockLaunch(config);
             };
         Bedrock.Standard.Interface.BedrockInstallationService.DefaultInstaller =
-            new Bedrock.Linux.BedrockInstaller();
+            new Bedrock.Linux.BedrockInstaller(CredentialsService.PreviewMinecraftKey,
+                CredentialsService.ReleaseMinecraftKey);
 #endif
     }
 #endif
