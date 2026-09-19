@@ -9,9 +9,26 @@
 所有用户可见文本必须使用本地化资源，不要在 XAML、C# 或其他 UI 代码中写死界面文案。新增文本要同步写入 `src/Portal.Localization/Localization/zh-CN` 和 `src/Portal.Localization/Localization/en-US` 对应资源，并通过 `Translate`、`CurrentValue()` 等现有本地化 API 使用。只有特定专有名词、产品名或中英文相同的技术标识（例如 `GravityCone`、`Java`、`NAT`、`SHA-256`）可以保留原文。
 
 ## build
-```
+Windows 构建可以直接使用系统 `dotnet`，并在 PowerShell 当前会话中设置需要的构建环境变量：
+```powershell
 dotnet build "E:\Portal\src\Portal.Desktop\Portal.Desktop.csproj" -c Debug
 ```
+
+Linux 构建前必须先确认 `dotnet` 的实际位置。不要假设它已经在 `PATH` 中；如果 SDK 安装在用户目录（例如 `/home/<user>/.dotnet/dotnet`），要把其目录加入当前 Shell 的 `PATH`，因为项目的构建目标可能会继续调用裸 `dotnet`：
+```bash
+DOTNET_BIN="$(command -v dotnet || true)"
+if [ -z "$DOTNET_BIN" ] && [ -x "$HOME/.dotnet/dotnet" ]; then
+    DOTNET_BIN="$HOME/.dotnet/dotnet"
+fi
+if [ -z "$DOTNET_BIN" ]; then
+    DOTNET_BIN="$(find "$HOME" -type f -path '*/.dotnet/dotnet' -perm -u+x -print -quit 2>/dev/null)"
+fi
+test -n "$DOTNET_BIN" || { printf '%s\n' 'dotnet SDK not found' >&2; exit 1; }
+export PATH="$(dirname "$DOTNET_BIN"):$PATH"
+
+dotnet build "src/Portal.Desktop/Portal.Desktop.csproj" -c Debug
+```
+
 主 UI：`src/Portal`（Avalonia 12）。窗口基类在 TioUi 库（`module/Tio.Avalonia.Standard/`）。改子库后重建此命令验证。
 
 ## tasks
