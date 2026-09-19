@@ -85,21 +85,30 @@ public sealed class BedrockInstaller : IBedrockInstaller
 
             request.CancellationToken.ThrowIfCancellationRequested();
             progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, InstallStates.Extracting.ToString()));
-            var installed = await core.InstallPackageAsync(new LocalGamePackageOptions
+            InstallResult? installed;
+            try
             {
-                FileFullPath = packagePath,
-                InstallDstFolder = destination,
-                Type = MinecraftBuildTypeVersion.GDK,
-                GameTypeVersion = request.Version.IsPreview
-                    ? MinecraftGameTypeVersion.Preview
-                    : MinecraftGameTypeVersion.Release,
-                CancellationToken = request.CancellationToken,
-                InstallStates = new Progress<InstallStates>(state =>
-                    progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, state.ToString()))),
-                ExtractionProgress = new Progress<DecompressProgress>(extraction =>
-                    progress?.Report(new BedrockInstallProgress(extraction.CurrentCount, extraction.TotalCount,
-                        extraction.FileName, InstallStates.Extracting.ToString())))
-            }).ConfigureAwait(false);
+                installed = await core.InstallPackageAsync(new LocalGamePackageOptions
+                {
+                    FileFullPath = packagePath,
+                    InstallDstFolder = destination,
+                    Type = MinecraftBuildTypeVersion.GDK,
+                    GameTypeVersion = request.Version.IsPreview
+                        ? MinecraftGameTypeVersion.Preview
+                        : MinecraftGameTypeVersion.Release,
+                    CancellationToken = request.CancellationToken,
+                    InstallStates = new Progress<InstallStates>(state =>
+                        progress?.Report(new BedrockInstallProgress(0, 0, string.Empty, state.ToString()))),
+                    ExtractionProgress = new Progress<DecompressProgress>(extraction =>
+                        progress?.Report(new BedrockInstallProgress(extraction.CurrentCount, extraction.TotalCount,
+                            extraction.FileName, InstallStates.Extracting.ToString())))
+                }).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                Trace.TraceError($"[BedrockInstall] Failed to extract {packagePath} to {destination}:{Environment.NewLine}{exception}");
+                throw;
+            }
 
             if (installed is null || !File.Exists(Path.Combine(destination, "Minecraft.Windows.exe")))
                 throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_gdkInstanceInvalid.CurrentValue());

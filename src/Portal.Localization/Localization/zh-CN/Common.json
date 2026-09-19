@@ -241,6 +241,7 @@
     "sourceNoRangeDownload": "下载源不支持分段下载。",
     "dependencyInstallFailedIgnored": "基岩版运行依赖安装失败（忽略，启动时会再次尝试）：{0}",
     "gdkMissingMd5": "所选 GDK x64 安装包缺少 MD5，拒绝未校验安装。",
+    "gdkCikMissing": "当前 Portal 构建缺少有效的 GDK 解密密钥。请设置 PRE_MC_KEY 和 REL_MC_KEY 后重新构建。",
     "gdkInstanceInvalid": "Portal.Bedrock.Core 未能生成有效的 GDK 实例。",
     "gdkVersionUnavailable": "所选 GDK x64 版本已不可用，请刷新列表后重试。",
     "md5VerificationFailed": "GDK 安装包 MD5 校验失败，文件已丢弃。",

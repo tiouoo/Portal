@@ -241,6 +241,7 @@
     "sourceNoRangeDownload": "The download source does not support ranged downloads.",
     "dependencyInstallFailedIgnored": "Bedrock runtime dependency installation failed (ignored, will retry on launch): {0}",
     "gdkMissingMd5": "The selected GDK x64 package is missing its MD5; refusing unverified installation.",
+    "gdkCikMissing": "This Portal build does not contain valid GDK decryption keys. Set PRE_MC_KEY and REL_MC_KEY, then rebuild Portal.",
     "gdkInstanceInvalid": "Portal.Bedrock.Core failed to produce a valid GDK instance.",
     "gdkVersionUnavailable": "The selected GDK x64 version is no longer available. Please refresh the list and try again.",
     "md5VerificationFailed": "The GDK package MD5 verification failed and the file has been discarded.",

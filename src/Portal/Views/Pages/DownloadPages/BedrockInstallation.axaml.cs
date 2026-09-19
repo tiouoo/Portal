@@ -265,6 +265,7 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
             }
             catch (Exception exception)
             {
+                Logger.Error($"[BedrockInstall] Failed to install {buildLabel} {instanceName} from the cached package to {destination}: {exception}");
                 await DeleteDirectoryAsync(destination);
 
                 if (exception is OperationCanceledException && context.CancellationToken.IsCancellationRequested)
@@ -308,6 +309,8 @@ public partial class BedrockInstallationViewModel : ObservableObject, IDisposabl
         try
         {
             await task.Completion;
+            if (task.Exception is not null)
+                Logger.Error($"[BedrockInstall] Installation task failed for {destination}: {task.Exception}");
         }
         catch (OperationCanceledException exception)
         {

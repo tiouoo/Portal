@@ -16,21 +16,17 @@ public class BedrockCore
 		Directory.CreateDirectory(options.InstallDstFolder);
 		if (options.Type == MinecraftBuildTypeVersion.GDK)
 		{
+			byte[] cik = options.GameTypeVersion switch
+			{
+				MinecraftGameTypeVersion.Release => CikKeys.Release,
+				MinecraftGameTypeVersion.Preview or MinecraftGameTypeVersion.Beta => CikKeys.Preview,
+				_ => throw new InvalidOperationException($"Unsupported game type for GDK package: {options.GameTypeVersion}"),
+			};
+			if (cik.Length != 48)
+				throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockInstall_gdkCikMissing.CurrentValue());
+
 			await Task.Run(async delegate
 			{
-				MinecraftGameTypeVersion gameTypeVersion = options.GameTypeVersion;
-				byte[] array = gameTypeVersion switch
-				{
-					MinecraftGameTypeVersion.Release => CikKeys.Release, 
-					MinecraftGameTypeVersion.Preview => CikKeys.Preview, 
-					MinecraftGameTypeVersion.Beta => CikKeys.Preview, 
-					_ => null, 
-				};
-				byte[] cik = array;
-				if (cik == null)
-				{
-					throw new InvalidOperationException($"Unsupported game type for GDK package: {options.GameTypeVersion}");
-				}
 				using MsiXVDDecoder decoder = new MsiXVDDecoder(new CikKey(cik), options.UseHardwareDecode);
 				using MsiXVDStream stream = new MsiXVDStream(options.FileFullPath);
 				stream.Parse();
