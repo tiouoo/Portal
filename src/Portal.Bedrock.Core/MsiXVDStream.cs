@@ -272,13 +272,22 @@ public class MsiXVDStream : IDisposable
 		{
 			ulong fileSize = Segments[num5].FileSize;
 			string text = _segmentPaths[num5];
-			string path = Path.Join(outputDirectory, text);
+			string relativePath = text.Replace('\\', Path.DirectorySeparatorChar)
+				.Replace('/', Path.DirectorySeparatorChar);
+			string outputRoot = Path.GetFullPath(outputDirectory);
+			string path = Path.GetFullPath(Path.Combine(outputRoot, relativePath));
+			StringComparison comparison = OperatingSystem.IsWindows()
+				? StringComparison.OrdinalIgnoreCase
+				: StringComparison.Ordinal;
+			if (path != outputRoot &&
+				!path.StartsWith(outputRoot + Path.DirectorySeparatorChar, comparison))
+				throw new InvalidDataException($"Package path escapes the extraction directory: {text}");
 			string directoryName = Path.GetDirectoryName(path);
 			if (!string.IsNullOrEmpty(directoryName))
 			{
 				Directory.CreateDirectory(directoryName);
 			}
-			using FileStream fileStream = File.OpenWrite(path);
+			using FileStream fileStream = new(path, FileMode.Create, FileAccess.Write, FileShare.None);
 			ulong num7 = fileSize;
 			do
 			{

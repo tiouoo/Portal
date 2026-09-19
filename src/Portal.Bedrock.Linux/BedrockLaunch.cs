@@ -31,6 +31,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         if (!File.Exists(executablePath))
             throw new FileNotFoundException(CommonLanguageManager.Instance.bedrockLaunch_missingMinecraftExe.CurrentValue(), executablePath);
 
+        RepairLegacyExtractedPaths(_instanceConfig.InstancePath, cancellationToken);
         var runtime = await _runtimeResolver.ResolveAsync(runtimeProgress =>
         {
             Log(BedrockLogLevel.Information, runtimeProgress.Message +
@@ -39,6 +40,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
                 ? runtimeProgress.Percentage
                 : null);
         }, cancellationToken, requireXUserRuntime: Authentication != null).ConfigureAwait(false);
+        InstallCryptbase(runtime);
         string? preauthDevice = null;
         if (Authentication != null)
         {
@@ -78,6 +80,8 @@ public sealed class BedrockLaunch : IBedrockLaunch
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, args) => ForwardLog(args.Data, BedrockLogLevel.Information);
         process.ErrorDataReceived += (_, args) => ForwardLog(args.Data, BedrockLogLevel.Error);
+        process.Exited += (_, _) => Log(BedrockLogLevel.Information,
+            string.Format(LogLanguageManager.Instance.bedrockLaunch_protonExited.CurrentValue(), process.ExitCode));
 
         Log(BedrockLogLevel.Information,
             string.Format(LogLanguageManager.Instance.bedrockLaunch_launchingWithProton.CurrentValue(), runtime.ProtonRoot, runtime.PrefixPath));
@@ -93,6 +97,29 @@ public sealed class BedrockLaunch : IBedrockLaunch
     }
 
     public override Process GetProcess() => MinecraftProcess ?? throw new InvalidOperationException(CommonLanguageManager.Instance.bedrockLaunch_gameNotStarted.CurrentValue());
+
+    private void RepairLegacyExtractedPaths(string instancePath, CancellationToken cancellationToken)
+    {
+        var malformedPaths = Directory.EnumerateFiles(instancePath, "*\\*", SearchOption.TopDirectoryOnly).ToList();
+        if (malformedPaths.Count == 0) return;
+
+        Log(BedrockLogLevel.Information,
+            string.Format(LogLanguageManager.Instance.bedrockLaunch_repairingLegacyPaths.CurrentValue(), malformedPaths.Count));
+        foreach (var source in malformedPaths)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var relativePath = Path.GetFileName(source).Replace('\\', Path.DirectorySeparatorChar);
+            var destination = Path.GetFullPath(Path.Combine(instancePath, relativePath));
+            if (!destination.StartsWith(Path.GetFullPath(instancePath) + Path.DirectorySeparatorChar,
+                    StringComparison.Ordinal))
+                throw new InvalidDataException($"Package path escapes the instance directory: {relativePath}");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.Move(source, destination, true);
+        }
+        Log(BedrockLogLevel.Information,
+            string.Format(LogLanguageManager.Instance.bedrockLaunch_legacyPathsRepaired.CurrentValue(), malformedPaths.Count));
+    }
 
     private static string BuildLibraryPath(string protonRoot)
     {
@@ -303,6 +330,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
                         LogLanguageManager.Instance.bedrockLaunch_downloadingXcurlSet.CurrentValue(),
                         cancellationToken).ConfigureAwait(false);
                 if (Directory.Exists(setRoot)) Directory.Delete(setRoot, true);
+                Directory.CreateDirectory(setRoot);
                 await using var archiveStream = File.OpenRead(archivePath);
                 await using var gzip = new GZipStream(archiveStream, CompressionMode.Decompress);
                 await TarFile.ExtractToDirectoryAsync(gzip, setRoot, false, cancellationToken).ConfigureAwait(false);
@@ -532,7 +560,6 @@ public sealed class BedrockLaunch : IBedrockLaunch
         cancellationToken.ThrowIfCancellationRequested();
         Log(BedrockLogLevel.Information, LogLanguageManager.Instance.bedrockLaunch_extractingGameInputOffline.CurrentValue());
         UpdateProgress?.Invoke(CommonLanguageManager.Instance.bedrockLaunch_statusInstallingGameInput.CurrentValue(), null);
-        InstallCryptbase(runtime);
         var cab = ExtractEmbeddedCab(installer);
         if (cab is null) throw new InvalidDataException(CommonLanguageManager.Instance.bedrockLaunch_gameInputMsiNoCab.CurrentValue());
         var extractor = Path.Combine(runtime.ProtonRoot, "protonfixes", "files", "bin", "cabextract");
@@ -664,7 +691,7 @@ public sealed class BedrockLaunch : IBedrockLaunch
         startInfo.Environment["STEAM_COMPAT_DATA_PATH"] = runtime.PrefixPath;
         startInfo.Environment["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = runtime.SteamCompatPath;
         startInfo.Environment["LD_LIBRARY_PATH"] = BuildLibraryPath(runtime.ProtonRoot);
-        startInfo.Environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core,d3d9=b";
+        startInfo.Environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core,d3d9,advapi32=b,cryptbase=b";
         startInfo.Environment["MICROSOFT_WINDOWSAPPRUNTIME_BOOTSTRAP_INITIALIZE_SHOWUI"] = "0";
         startInfo.Environment["MICROSOFT_WINDOWSAPPRUNTIME_BOOTSTRAP_INITIALIZE_FAILFAST"] = "0";
         startInfo.Environment["MICROSOFT_WINDOWSAPPRUNTIME_DEPLOYMENT_INITIALIZE_ONERRORSHOWUI"] = "0";
