@@ -24,7 +24,7 @@
     <PackageVersion Include="Irihi.Lingua" Version="1.0.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.11" />
     <PackageVersion Include="SkiaSharp" Version="4.152.1" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.151.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.152.1" />
     <PackageVersion Include="SharpCompress" Version="0.50.4" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="Tomlyn" Version="2.10.1" />
