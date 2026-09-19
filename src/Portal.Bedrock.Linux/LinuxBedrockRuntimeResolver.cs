@@ -28,6 +28,7 @@ public sealed class LinuxBedrockRuntimeResolver
     private const int DownloadBufferSize = 1024 * 256;
     private const int SourceProbeBytes = 1024 * 1024;
     private const long MinimumSegmentSize = 8L * 1024 * 1024;
+    private const string ManagedInstallVersion = "links-v1";
     private static readonly string[] ReleaseApiUrls =
     [
         "https://api.github.com/repos/Wyze3306/BedrockOnLinux/releases/tags/engine-wow64-archs-native17",
@@ -173,6 +174,8 @@ public sealed class LinuxBedrockRuntimeResolver
 
         var proton = Directory.EnumerateDirectories(root)
             .Where(directory => !Path.GetFileName(directory).StartsWith(".", StringComparison.Ordinal))
+            .Where(directory => Path.GetFileName(directory).EndsWith($"-{ManagedInstallVersion}",
+                StringComparison.Ordinal))
             .Select(FindProtonInDirectory)
             .Where(path => path is not null)
             .Select(path => path!)
@@ -193,7 +196,8 @@ public sealed class LinuxBedrockRuntimeResolver
         var release = await GetReleaseAsync(cancellationToken, requireXUserRuntime).ConfigureAwait(false);
         var tag = SafePathSegment(release.TagName);
         var installRoot = GetProtonInstallRoot();
-        var destination = Path.Combine(installRoot, $"{tag}-{SafePathSegment(release.Asset.Name)}");
+        var destination = Path.Combine(installRoot,
+            $"{tag}-{SafePathSegment(release.Asset.Name)}-{ManagedInstallVersion}");
         var existing = FindProtonInDirectory(destination);
         if (existing is not null)
         {
@@ -603,26 +607,87 @@ public sealed class LinuxBedrockRuntimeResolver
         var total = file.Length;
         await using var counting = new CountingStream(file);
         await using var gzip = new GZipStream(counting, CompressionMode.Decompress);
-        var extraction = TarFile.ExtractToDirectoryAsync(gzip, extractionRoot, false, cancellationToken);
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(200));
-        try
+        using var reader = new TarReader(gzip);
+        var links = new List<ArchiveLink>();
+        var lastReport = Stopwatch.GetTimestamp();
+        TarEntry? entry;
+        while ((entry = await reader.GetNextEntryAsync(false, cancellationToken).ConfigureAwait(false)) is not null)
         {
-            while (!extraction.IsCompleted &&
-                   await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            cancellationToken.ThrowIfCancellationRequested();
+            var type = (char)entry.EntryType;
+            if (type is 'g' or 'x') continue;
+
+            var destination = GetArchivePath(extractionRoot, entry.Name, extractionRoot);
+            switch (type)
             {
-                progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_extractingGdkProton.CurrentValue(), counting.BytesRead, total));
+                case '5':
+                    Directory.CreateDirectory(destination);
+                    break;
+                case '\0':
+                case '0':
+                case '7':
+                    Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                    await using (var output = new FileStream(destination, FileMode.CreateNew, FileAccess.Write,
+                                     FileShare.None, DownloadBufferSize, FileOptions.Asynchronous))
+                    {
+                        if (entry.DataStream is not null)
+                            await entry.DataStream.CopyToAsync(output, cancellationToken).ConfigureAwait(false);
+                    }
+                    File.SetUnixFileMode(destination, entry.Mode);
+                    break;
+                case '1':
+                case '2':
+                    links.Add(new ArchiveLink(destination, entry.LinkName!, type == '2'));
+                    break;
+                default:
+                    throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_archiveUnsupportedEntryType.CurrentValue(), entry.EntryType));
             }
 
-            await extraction.ConfigureAwait(false);
+            if (progress is not null && Stopwatch.GetElapsedTime(lastReport) >= TimeSpan.FromMilliseconds(200))
+            {
+                progress(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_extractingGdkProton.CurrentValue(), counting.BytesRead, total));
+                lastReport = Stopwatch.GetTimestamp();
+            }
         }
-        catch (OperationCanceledException)
+
+        foreach (var link in links)
         {
-            try { await extraction.ConfigureAwait(false); }
-            catch (OperationCanceledException) { }
-            throw;
+            cancellationToken.ThrowIfCancellationRequested();
+            EnsureArchivePathDoesNotTraverseLink(extractionRoot, link.Path);
+            Directory.CreateDirectory(Path.GetDirectoryName(link.Path)!);
+            if (link.IsSymbolic)
+                File.CreateSymbolicLink(link.Path, link.Target);
+            else
+                File.Copy(GetArchivePath(extractionRoot, link.Target, extractionRoot), link.Path);
         }
 
         progress?.Invoke(new LinuxBedrockRuntimeProgress(CommonLanguageManager.Instance.bedrockLaunch_extractingGdkProton.CurrentValue(), total, total));
+    }
+
+    private static string GetArchivePath(string extractionRoot, string archivePath, string relativeRoot)
+    {
+        ValidateArchivePath(extractionRoot, archivePath, relativeRoot);
+        return Path.GetFullPath(Path.Combine(relativeRoot, archivePath));
+    }
+
+    private static void EnsureArchivePathDoesNotTraverseLink(string extractionRoot, string path)
+    {
+        var root = Path.GetFullPath(extractionRoot);
+        for (var parent = Path.GetDirectoryName(path); parent is not null && parent != root;
+             parent = Path.GetDirectoryName(parent))
+        {
+            try
+            {
+                if ((File.GetAttributes(parent) & FileAttributes.ReparsePoint) != 0)
+                    throw new InvalidDataException(string.Format(CommonLanguageManager.Instance.bedrockLaunch_archivePathOutOfRoot.CurrentValue(), path));
+            }
+            catch (FileNotFoundException)
+            {
+            }
+            catch (DirectoryNotFoundException)
+            {
+            }
+        }
     }
 
     private static void ValidateArchivePath(string extractionRoot, string? archivePath, string relativeRoot)
@@ -753,6 +818,8 @@ public sealed class LinuxBedrockRuntimeResolver
     }
 
     private sealed record ProtonRelease(string TagName, GitHubAsset Asset);
+
+    private sealed record ArchiveLink(string Path, string Target, bool IsSymbolic);
     private sealed record DownloadSource(string Url, double Speed, long Total, bool SupportsRange);
 
     private sealed class GitHubRelease
