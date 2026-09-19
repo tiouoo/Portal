@@ -429,18 +429,25 @@
                                             <TextBlock FontSize="14" Text="{Binding Gamertag}" />
                                             <TextBlock FontSize="12" Text="{Binding DisplayAccountNote}" />
                                         </StackPanel>
-                                        <Button
-                                            Classes="delete-btn"
-                                            Click="DeleteBedrockAccount_Click"
-                                            CommandParameter="{Binding}"
+                                        <StackPanel
                                             Grid.Column="2"
-                                            Theme="{StaticResource TransparentButton}">
-                                            <TextBlock
-                                                FontFamily="{StaticResource IconFont}"
-                                                FontSize="14"
-                                                FontWeight="Thin"
-                                                Text="&#xe640;" />
-                                        </Button>
+                                            HorizontalAlignment="Left"
+                                            Margin="5,0"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                            <Button
+                                                Classes="delete-btn"
+                                                Click="DeleteBedrockAccount_Click"
+                                                CommandParameter="{Binding}"
+                                                Theme="{StaticResource TransparentButton}"
+                                                VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontFamily="{StaticResource IconFont}"
+                                                    FontSize="14"
+                                                    FontWeight="Thin"
+                                                    Text="&#xe640;" />
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
