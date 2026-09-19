@@ -60,18 +60,12 @@ async function prerender() {
   console.log('🎨 [4/5] Prerendering routes...');
   const ssrEntry = path.join(distDir, 'server', 'entry-server.js');
   const { render } = await import(pathToFileURL(ssrEntry).href);
+  const template = fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8');
 
   for (const route of routes) {
     process.stdout.write(`    → ${route.path} ... `);
     const appHtml = await render(route.path);
-
-    const templatePath = path.join(distDir, 'index.html');
-    let html = fs.readFileSync(templatePath, 'utf-8');
-
-    html = html.replace(
-      /<div[^>]*id="app"[^>]*>[\s\S]*?<\/div>/,
-      `<div id="app">${appHtml}</div>`
-    );
+    let html = template.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`);
 
     if (cssContent) {
       html = html.replace(
