@@ -16,6 +16,7 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
 
     private int _instanceCount;
     private bool _isRefreshing;
+    private MinecraftFolderKind _folderKind = MinecraftFolderKind.Auto;
     private string _sizeUnit = "B";
 
     public MinecraftFolderEntry()
@@ -24,7 +25,7 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
         {
             if (e.PropertyName is nameof(FolderPath) or nameof(FolderName) or nameof(FolderKind))
             {
-                if (e.PropertyName == nameof(FolderPath))
+                if (e.PropertyName is nameof(FolderPath) or nameof(FolderKind))
                 {
                     OnPropertyChanged(nameof(DetectedLayout));
                     OnPropertyChanged(nameof(FolderTypeDescription));
@@ -38,19 +39,26 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
 
     [ObservableProperty] public partial string FolderName { get; set; }
     [ObservableProperty] public partial string FolderPath { get; set; }
-    [ObservableProperty] public partial MinecraftFolderKind FolderKind { get; set; } = MinecraftFolderKind.Auto;
+
+    public MinecraftFolderKind FolderKind
+    {
+        get => _folderKind;
+        set
+        {
+            if (!CanChangeFolderType)
+                value = MinecraftFolderKind.PortalMc;
+            SetProperty(ref _folderKind, value);
+        }
+    }
+
+    public bool CanChangeFolderType => !IsBuiltInPortalMcFolder;
 
     public MinecraftFolderLayout DetectedLayout
     {
         get
         {
             var detected = MinecraftFolderLayout.Detect(FolderPath);
-            if (detected.Kind == MinecraftFolderKind.Unknown && FolderKind == MinecraftFolderKind.Standard)
-                return new MinecraftFolderLayout(MinecraftFolderKind.Standard, FolderPath, FolderPath,
-                    CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue());
-            if (FolderKind is not (MinecraftFolderKind.Auto or MinecraftFolderKind.Standard or
-                    MinecraftFolderKind.Unknown) &&
-                detected.Kind != FolderKind)
+            if (FolderKind is not (MinecraftFolderKind.Auto or MinecraftFolderKind.Unknown))
                 return MinecraftFolderLayout.FromFolderKind(FolderKind, FolderPath);
             return detected;
         }
@@ -58,6 +66,37 @@ public partial class MinecraftFolderEntry : ObservableObject, IEquatable<Minecra
 
     public string FolderTypeDescription => DetectedLayout.DisplayName;
     public bool SupportsInstallation => DetectedLayout.SupportsInstallation;
+
+    partial void OnFolderPathChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanChangeFolderType));
+        if (!CanChangeFolderType)
+            FolderKind = MinecraftFolderKind.PortalMc;
+    }
+
+    private bool IsBuiltInPortalMcFolder
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(FolderPath))
+                return false;
+
+            try
+            {
+                var builtInPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "cc.tiouo.portal.minecraft");
+                return string.Equals(
+                    Path.TrimEndingDirectorySeparator(Path.GetFullPath(FolderPath)),
+                    Path.TrimEndingDirectorySeparator(Path.GetFullPath(builtInPath)),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
 
     public string FolderSize
     {

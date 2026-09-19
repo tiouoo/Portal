@@ -193,9 +193,12 @@ public sealed record MinecraftFolderLayout(
         var selected = Path.GetFullPath(path.Trim());
         var displayName = kind switch
         {
-            MinecraftFolderKind.Modrinth or MinecraftFolderKind.ModrinthInstance => "Modrinth",
-            MinecraftFolderKind.MultiMc or MinecraftFolderKind.MultiMcInstance => GetMultiMcBrand(selected),
-            MinecraftFolderKind.CurseForge or MinecraftFolderKind.CurseForgeInstance => "CurseForge",
+            MinecraftFolderKind.Modrinth => "Modrinth",
+            MinecraftFolderKind.ModrinthInstance => CommonLanguageManager.Instance.minecraft_modrinthInstance.CurrentValue(),
+            MinecraftFolderKind.MultiMc => GetMultiMcBrand(selected),
+            MinecraftFolderKind.MultiMcInstance => GetMultiMcInstanceBrand(selected),
+            MinecraftFolderKind.CurseForge => "CurseForge",
+            MinecraftFolderKind.CurseForgeInstance => CommonLanguageManager.Instance.minecraft_curseForgeInstance.CurrentValue(),
             MinecraftFolderKind.PortalMc => "Portal MC",
             MinecraftFolderKind.Standard => CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue(),
             _ => CommonLanguageManager.Instance.minecraft_unrecognizedFolder.CurrentValue()

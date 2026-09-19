@@ -237,7 +237,8 @@ public partial class ConfigEntry : ObservableObject
 
     private void OnMinecraftFolderPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (!Data.UiProperty.ConfigLoaded || e.PropertyName != nameof(MinecraftFolderEntry.FolderPath))
+        if (!Data.UiProperty.ConfigLoaded ||
+            e.PropertyName is not (nameof(MinecraftFolderEntry.FolderPath) or nameof(MinecraftFolderEntry.FolderKind)))
             return;
         OnPropertyChanged(nameof(InstallableMinecraftFolders));
         ConfigIdentifyExtension.MinecraftFolder(this);

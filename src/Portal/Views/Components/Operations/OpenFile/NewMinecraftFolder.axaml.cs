@@ -23,11 +23,11 @@ public partial class NewMinecraftFolder : UserControl
         base.OnDataContextChanged(e);
 
         if (DataContext is not NewMinecraftFolderViewModel viewModel ||
-            ImportLauncherDropDown.Flyout is not MenuFlyout menu)
+            ImportLauncherDropDown.Flyout is not MenuFlyout importMenu ||
+            FolderTypeDropDown.Flyout is not MenuFlyout folderTypeMenu)
             return;
 
-
-        menu.Items.Clear();
+        importMenu.Items.Clear();
 
 
         foreach (var launcher in viewModel.DetectedLaunchers)
@@ -42,7 +42,20 @@ public partial class NewMinecraftFolder : UserControl
             item.Click += (_, _) => { viewModel.Import(launcher); };
 
 
-            menu.Items.Add(item);
+            importMenu.Items.Add(item);
+        }
+
+        folderTypeMenu.Items.Clear();
+        foreach (var option in NewMinecraftFolderViewModel.GetFolderTypeOptions())
+        {
+            var item = new MenuItem
+            {
+                Header = option.DisplayName,
+                Tag = option.Kind,
+                Classes = { "hide-icon" }
+            };
+            item.Click += (_, _) => viewModel.ChangeFolderType(option.Kind);
+            folderTypeMenu.Items.Add(item);
         }
     }
 }
@@ -50,6 +63,7 @@ public partial class NewMinecraftFolder : UserControl
 public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogContext
 {
     private readonly List<string> _paths;
+    private MinecraftFolderKind _folderKind = MinecraftFolderKind.Auto;
 
 
     public NewMinecraftFolderViewModel(List<string> paths)
@@ -103,6 +117,8 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
 
     public bool HasImports => DetectedLaunchers.Count > 0;
 
+    public MinecraftFolderKind FolderKind => _folderKind;
+
 
     public ICommand NextCommand { get; }
 
@@ -144,18 +160,11 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
             layout = MinecraftFolderLayout.FromFolderKind(MinecraftFolderKind.PortalMc, folderPath);
 
+        _folderKind = layout.Kind;
         FolderName = new DirectoryInfo(layout.SelectedPath).Name;
-        FolderTypeDescription = layout.DisplayName;
-        IsFolderRecognized = layout.Kind != MinecraftFolderKind.Unknown;
-
         Contain = _paths.Contains(folderPath, StringComparer.OrdinalIgnoreCase);
-
-
-        Warning = layout.Kind == MinecraftFolderKind.Standard &&
-                  !IsDirectoryEmpty(folderPath) &&
-                  !MinecraftFolderLayout.LooksLikeMinecraftRoot(folderPath);
-
         NoExist = false;
+        RefreshFolderType();
 
         ((RelayCommand)NextCommand).NotifyCanExecuteChanged();
     }
@@ -203,10 +212,11 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
     private void Next()
     {
         var folderPath = FolderPath!.Trim();
-        var layout = MinecraftFolderLayout.Detect(folderPath);
+        var folderKind = _folderKind is MinecraftFolderKind.Auto or MinecraftFolderKind.Unknown
+            ? MinecraftFolderLayout.Detect(folderPath).Kind
+            : _folderKind;
 
-
-        if (layout.Kind == MinecraftFolderKind.Standard && IsDirectoryEmpty(folderPath))
+        if (folderKind == MinecraftFolderKind.PortalMc && IsDirectoryEmpty(folderPath))
         {
             Directory.CreateDirectory(Path.Combine(folderPath, "meta"));
             Directory.CreateDirectory(Path.Combine(folderPath, "instances"));
@@ -226,11 +236,46 @@ public partial class NewMinecraftFolderViewModel : ObservableObject, IDialogCont
         RequestClose?.Invoke(
             this,
             new MinecraftFolderEntry
-            {
-                FolderName = FolderName!.Trim(),
-                FolderPath = folderPath,
-                FolderKind = layout.Kind
-            });
+                {
+                    FolderName = FolderName!.Trim(),
+                    FolderPath = folderPath,
+                    FolderKind = folderKind
+                });
+    }
+
+    public void ChangeFolderType(MinecraftFolderKind kind)
+    {
+        _folderKind = kind;
+        RefreshFolderType();
+    }
+
+    private void RefreshFolderType()
+    {
+        if (string.IsNullOrWhiteSpace(FolderPath) || !Directory.Exists(FolderPath.Trim()))
+            return;
+
+        var folderPath = FolderPath.Trim();
+        var layout = MinecraftFolderLayout.FromFolderKind(_folderKind, folderPath);
+        FolderTypeDescription = layout.DisplayName;
+        IsFolderRecognized = _folderKind != MinecraftFolderKind.Unknown;
+        Warning = _folderKind == MinecraftFolderKind.Standard &&
+                  !IsDirectoryEmpty(folderPath) &&
+                  !MinecraftFolderLayout.LooksLikeMinecraftRoot(folderPath);
+    }
+
+    public static IReadOnlyList<MinecraftFolderTypeOption> GetFolderTypeOptions()
+    {
+        return
+        [
+            new(MinecraftFolderKind.Standard, CommonLanguageManager.Instance.minecraft_traditionalFolder.CurrentValue()),
+            new(MinecraftFolderKind.PortalMc, "Portal MC"),
+            new(MinecraftFolderKind.Modrinth, "Modrinth"),
+            new(MinecraftFolderKind.ModrinthInstance, CommonLanguageManager.Instance.minecraft_modrinthInstance.CurrentValue()),
+            new(MinecraftFolderKind.MultiMc, "MultiMC / Prism Launcher / BakaXL"),
+            new(MinecraftFolderKind.MultiMcInstance, CommonLanguageManager.Instance.minecraft_multiMcInstanceDefault.CurrentValue()),
+            new(MinecraftFolderKind.CurseForge, "CurseForge"),
+            new(MinecraftFolderKind.CurseForgeInstance, CommonLanguageManager.Instance.minecraft_curseForgeInstance.CurrentValue())
+        ];
     }
 
     private static bool IsDirectoryEmpty(string path)
@@ -530,3 +575,7 @@ public sealed record DetectedLauncherFolder(
     string Name,
     string Path,
     MinecraftFolderKind Kind);
+
+public sealed record MinecraftFolderTypeOption(
+    MinecraftFolderKind Kind,
+    string DisplayName);

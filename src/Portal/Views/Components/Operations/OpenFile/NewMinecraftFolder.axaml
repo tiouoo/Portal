@@ -82,23 +82,30 @@
                 <Button Command="{Binding CancelCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_cancelButton}}" />
                 <Button Command="{Binding NextCommand}" Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_addButton}}" />
             </StackPanel>
-            <DropDownButton
-                Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_importButton}}"
-                DockPanel.Dock="Left"
-                HorizontalAlignment="Left"
-                IsVisible="{Binding HasImports}"
-                Name="ImportLauncherDropDown">
-                <DropDownButton.Styles>
-                    <Style Selector="MenuItem">
-                        <Style Selector="^ /template/ ContentPresenter#PART_Icon">
-                            <Setter Property="IsVisible" Value="False" />
+            <StackPanel DockPanel.Dock="Left" HorizontalAlignment="Left" Orientation="Horizontal" Spacing="8">
+                <DropDownButton
+                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_importButton}}"
+                    IsVisible="{Binding HasImports}"
+                    Name="ImportLauncherDropDown">
+                    <DropDownButton.Styles>
+                        <Style Selector="MenuItem">
+                            <Style Selector="^ /template/ ContentPresenter#PART_Icon">
+                                <Setter Property="IsVisible" Value="False" />
+                            </Style>
                         </Style>
-                    </Style>
-                </DropDownButton.Styles>
-                <DropDownButton.Flyout>
-                    <MenuFlyout />
-                </DropDownButton.Flyout>
-            </DropDownButton>
+                    </DropDownButton.Styles>
+                    <DropDownButton.Flyout>
+                        <MenuFlyout />
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+                <DropDownButton
+                    Content="{Translate {x:Static loc:ComponentsLanguageManager+Keys.newminecraftfolder_changeFolderTypeButton}}"
+                    Name="FolderTypeDropDown">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight" />
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+            </StackPanel>
         </DockPanel>
     </Grid>
 </UserControl>

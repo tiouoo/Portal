@@ -209,6 +209,7 @@
     "folderName": "文件夹名称",
     "removeFolder": "移除文件夹",
     "openFolder": "打开文件夹",
+    "changeFolderType": "更改文件夹类型",
     "countSuffix": "个",
     "instanceCount": "实例数量",
     "folderSize": "文件夹大小"

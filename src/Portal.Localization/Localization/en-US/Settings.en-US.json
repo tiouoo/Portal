@@ -209,6 +209,7 @@
     "folderName": "Folder Name",
     "removeFolder": "Remove Folder",
     "openFolder": "Open Folder",
+    "changeFolderType": "Change Folder Type",
     "countSuffix": "",
     "instanceCount": "Instance Count",
     "folderSize": "Folder Size"

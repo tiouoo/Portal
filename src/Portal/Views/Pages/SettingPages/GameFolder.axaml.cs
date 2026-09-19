@@ -60,4 +60,39 @@ public partial class GameFolder : Dsc
             Dispatcher.UIThread.Post(() => this.GetTopLevel().Notice(
                 CommonLanguageManager.Instance.gameFolder_keepAtLeastOne.CurrentValue(), NotificationType.Warning));
     }
+
+    private void FolderTypeButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control { DataContext: MinecraftFolderEntry folder } button)
+            return;
+
+        var menu = new MenuFlyout
+        {
+            Placement = PlacementMode.BottomEdgeAlignedRight
+        };
+        foreach (var option in NewMinecraftFolderViewModel.GetFolderTypeOptions())
+        {
+            var item = new MenuItem
+            {
+                Header = option.DisplayName,
+                Tag = option.Kind,
+                Classes = { "hide-icon" }
+            };
+            item.Click += (_, _) => ChangeFolderType(folder, option.Kind);
+            menu.Items.Add(item);
+        }
+
+        menu.ShowAt(button);
+    }
+
+    private void ChangeFolderType(MinecraftFolderEntry folder, MinecraftFolderKind kind)
+    {
+        folder.FolderKind = kind;
+        if (kind == MinecraftFolderKind.Standard &&
+            Directory.Exists(folder.FolderPath) &&
+            !MinecraftFolderLayout.LooksLikeMinecraftRoot(folder.FolderPath))
+            this.GetTopLevel().Notice(
+                ComponentsLanguageManager.Instance.newminecraftfolder_missingVersionsWarning.CurrentValue(),
+                NotificationType.Warning);
+    }
 }

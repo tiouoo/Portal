@@ -178,6 +178,7 @@
     "cancelButton": "Cancel",
     "addButton": "Add",
     "importButton": "Import",
+    "changeFolderTypeButton": "Change Folder Type",
     "folderNameLabel": "Folder Name",
     "folderPathLabel": "Folder Path"
   },
