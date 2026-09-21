@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiteSkinViewer2D;
 using LiteSkinViewer2D.Extensions;
+using Portal.Core.Services;
 using Portal.Localization;
 using SkiaSharp;
 
@@ -37,14 +38,46 @@ public partial class MinecraftAccount(AccountType accountType) : ObservableObjec
     public partial string Name { get; set; }
 
     [ObservableProperty] public partial Guid? Uuid { get; set; }
-    [ObservableProperty] public partial string? AccessToken { get; set; }
-    [ObservableProperty] public partial string? RefreshToken { get; set; }
+
+    [ObservableProperty] [JsonIgnore] public partial string? AccessToken { get; set; }
+    [JsonPropertyName("AccessToken")] public string EncryptedAccessToken
+    {
+        get => CryptoService.Encrypt(AccessToken);
+        set => AccessToken = CryptoService.Decrypt(value);
+    }
+
+    [ObservableProperty] [JsonIgnore] public partial string? RefreshToken { get; set; }
+    [JsonPropertyName("RefreshToken")] public string EncryptedRefreshToken
+    {
+        get => CryptoService.Encrypt(RefreshToken);
+        set => RefreshToken = CryptoService.Decrypt(value);
+    }
+
     [ObservableProperty] public partial DateTime? LastRefreshTime { get; set; } = DateTime.MinValue;
     public string? YggdrasilServerUrl { get; init; }
     public string? ServerNote { get; init; }
-    [ObservableProperty] public partial string? ClientToken { get; set; }
-    [ObservableProperty] public partial string? Password { get; set; }
-    [ObservableProperty] public partial string? Email { get; set; }
+
+    [ObservableProperty] [JsonIgnore] public partial string? ClientToken { get; set; }
+    [JsonPropertyName("ClientToken")] public string EncryptedClientToken
+    {
+        get => CryptoService.Encrypt(ClientToken);
+        set => ClientToken = CryptoService.Decrypt(value);
+    }
+
+    [ObservableProperty] [JsonIgnore] public partial string? Password { get; set; }
+    [JsonPropertyName("Password")] public string EncryptedPassword
+    {
+        get => CryptoService.Encrypt(Password);
+        set => Password = CryptoService.Decrypt(value);
+    }
+
+    [ObservableProperty] [JsonIgnore] public partial string? Email { get; set; }
+    [JsonPropertyName("Email")] public string EncryptedEmail
+    {
+        get => CryptoService.Encrypt(Email);
+        set => Email = CryptoService.Decrypt(value);
+    }
+
     [ObservableProperty] public partial Dictionary<string, string> MetaData { get; set; } = [];
 
     [JsonIgnore] public bool IsOffline => AccountType == AccountType.Offline;

@@ -13,6 +13,7 @@
         <TelemetryUrl>$([System.Environment]::GetEnvironmentVariable('PORTAL_TELEMETRY_URL'))</TelemetryUrl>
         <PreviewMinecraftKey>$([System.Environment]::GetEnvironmentVariable('PRE_MC_KEY'))</PreviewMinecraftKey>
         <ReleaseMinecraftKey>$([System.Environment]::GetEnvironmentVariable('REL_MC_KEY'))</ReleaseMinecraftKey>
+        <CryptoKey>$([System.Environment]::GetEnvironmentVariable('PORTAL_CRYPTO_KEY'))</CryptoKey>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(CurseForgeApiKey)' != ''">
@@ -45,6 +46,10 @@
 
     <ItemGroup Condition="'$(ReleaseMinecraftKey)' != ''">
         <AssemblyMetadata Include="Portal.ReleaseMinecraftKey" Value="$(ReleaseMinecraftKey)"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(CryptoKey)' != ''">
+        <AssemblyMetadata Include="Portal.CryptoKey" Value="$(CryptoKey)"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -26,6 +26,9 @@ public static class CredentialsService
     public const string ReleaseMinecraftKeyEnvironmentVariable = "REL_MC_KEY";
     private const string ReleaseMinecraftKeyMetadataKey = "Portal.ReleaseMinecraftKey";
 
+    public const string CryptoKeyEnvironmentVariable = "PORTAL_CRYPTO_KEY";
+    private const string CryptoKeyMetadataKey = "Portal.CryptoKey";
+
     public static string? CurseForgeApiKey =>
         GetValue(CurseForgeApiKeyMetadataKey, CurseForgeApiKeyEnvironmentVariable);
 
@@ -46,6 +49,8 @@ public static class CredentialsService
 
     public static string? ReleaseMinecraftKey =>
         GetValue(ReleaseMinecraftKeyMetadataKey, ReleaseMinecraftKeyEnvironmentVariable);
+
+    public static string? CryptoKey => GetValue(CryptoKeyMetadataKey, CryptoKeyEnvironmentVariable);
 
     private static string? GetValue(string metadataKey, string environmentVariable)
     {

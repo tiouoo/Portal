@@ -99,6 +99,7 @@ jobs:
       REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
       PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
       PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
+      PORTAL_CRYPTO_KEY: ${{ secrets.PORTAL_CRYPTO_KEY }}
     strategy:
       matrix:
         include:
@@ -155,6 +156,7 @@ jobs:
       REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
       PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
       PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
+      PORTAL_CRYPTO_KEY: ${{ secrets.PORTAL_CRYPTO_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -202,6 +204,7 @@ jobs:
       REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
       PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
       PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
+      PORTAL_CRYPTO_KEY: ${{ secrets.PORTAL_CRYPTO_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -254,6 +257,7 @@ jobs:
       REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
       PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
       PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
+      PORTAL_CRYPTO_KEY: ${{ secrets.PORTAL_CRYPTO_KEY }}
     strategy:
       matrix:
         rid: [osx-x64, osx-arm64]
