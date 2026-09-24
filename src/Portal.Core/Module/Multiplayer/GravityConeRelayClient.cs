@@ -10,11 +10,15 @@ namespace Portal.Core.Module.Multiplayer;
 public sealed class GravityConeRelayClient
 {
     public const string DefaultRelaySourceUrl = "https://portal.tiouo.cc/relays.json";
+    private const int CacheSchemaVersion = 2;
 
     private const int MaxResponseSizeBytes = 1 * 1024 * 1024;
+    private const int MaxSourceDepth = 8;
+    private const int MaxSourceCount = 128;
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(15) };
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private static readonly SemaphoreSlim UpdateLock = new(1, 1);
 
     public static readonly GravityConeRelayClient Instance = new();
     private static string CachePath => Path.Combine(ConfigPath.UserDataRootPath, "Multiplayer", "portal-relays.json");
@@ -25,11 +29,7 @@ public sealed class GravityConeRelayClient
     /// </summary>
     public static string ConfiguredSourcesText
     {
-        get
-        {
-            var text = Data.ConfigEntry.GravityConeRelaySources;
-            return string.IsNullOrWhiteSpace(text) ? DefaultRelaySourceUrl : text;
-        }
+        get => Data.ConfigEntry.GravityConeRelaySources;
         set => Data.ConfigEntry.GravityConeRelaySources = value;
     }
 
@@ -39,12 +39,7 @@ public sealed class GravityConeRelayClient
         {
             try
             {
-                var text = await UpdateRelaySourcesAsync(cancellationToken);
-                var (_, directPeers) = ParseConfiguredSources(text);
-                var updatedRelays = directPeers.Where(GravityConeNodeClient.IsValidPeer).Distinct(StringComparer.Ordinal).ToList();
-                if (updatedRelays.Count == 0)
-                    throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysNoUsableNodes.CurrentValue());
-                await SaveCacheAsync(updatedRelays, cancellationToken);
+                var updatedRelays = await UpdateRelaySourcesAsync(cancellationToken);
                 Logger.Info(string.Format(LogLanguageManager.Instance.multiplayer_relaysPrefetched.CurrentValue(), updatedRelays.Count));
                 return;
             }
@@ -59,7 +54,7 @@ public sealed class GravityConeRelayClient
             }
         }
 
-        var relays = await FetchRelaysAsync(cancellationToken);
+        var relays = await ReadRequiredCacheAsync(cancellationToken);
         Logger.Info(string.Format(LogLanguageManager.Instance.multiplayer_relaysPrefetched.CurrentValue(), relays.Count));
     }
 
@@ -68,66 +63,64 @@ public sealed class GravityConeRelayClient
     /// </summary>
     public async Task<IReadOnlyList<string>> FetchRelaysAsync(CancellationToken cancellationToken)
     {
-        var (sources, directPeers) = ParseConfiguredSources();
-        var result = new List<string>(directPeers);
-        foreach (var source in sources)
+        try
         {
-            try
-            {
-                result.AddRange(await FetchPeerListFromSourceAsync(source, cancellationToken));
-            }
-            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
-            {
-                Logger.Warning(string.Format(
-                    LogLanguageManager.Instance.multiplayer_relaySourceFailed.CurrentValue(), source,
-                    Environment.NewLine, exception));
-            }
+            return await UpdateRelaySourcesAsync(cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_fetchRelaysFailed.CurrentValue(),
+                Environment.NewLine, exception));
+            return await ReadRequiredCacheAsync(cancellationToken);
+        }
+    }
 
-        result = result.Where(GravityConeNodeClient.IsValidPeer).Distinct(StringComparer.Ordinal).ToList();
-        if (result.Count == 0)
-            throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysNoUsableNodes.CurrentValue());
+    /// <summary>
+    /// 获取所有 http/https 来源的节点列表，与用户直接填写的节点合并、去重并写入缓存。
+    /// 来源配置本身保持不变，加载结果由界面单独展示。
+    /// </summary>
+    public async Task<IReadOnlyList<string>> UpdateRelaySourcesAsync(CancellationToken cancellationToken)
+    {
+        await UpdateLock.WaitAsync(cancellationToken);
+        try
+        {
+            var (sources, directPeers) = ParseConfiguredSources();
+            var result = new List<string>(directPeers);
+            var visitedSources = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var source in sources)
+            {
+                try
+                {
+                    await ResolveSourceAsync(source, result, visitedSources, 0, cancellationToken);
+                }
+                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                {
+                    Logger.Warning(string.Format(
+                        LogLanguageManager.Instance.multiplayer_relaySourceFailed.CurrentValue(), source,
+                        Environment.NewLine, exception));
+                }
+            }
 
-        await SaveCacheAsync(result, cancellationToken);
-        return result;
+            result = result.Where(IsFinalPeer).Distinct(StringComparer.Ordinal).ToList();
+            if (result.Count == 0)
+                throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysNoUsableNodes.CurrentValue());
+
+            await SaveCacheAsync(result, cancellationToken);
+            return result;
+        }
+        finally
+        {
+            UpdateLock.Release();
+        }
     }
 
     /// <summary>Returns the shared public relay set used by all multiplayer backends.</summary>
     public async Task<IReadOnlyList<string>> GetAvailableRelaysAsync(CancellationToken cancellationToken)
-        => await TryReadCacheAsync(cancellationToken) ?? await FetchRelaysAsync(cancellationToken);
-
-    /// <summary>
-    /// 获取所有 http/https 来源的节点列表，并与用户已填写的内容合并（追加、去重），
-    /// 更新到配置输入框中，返回合并后的文本。不会覆盖用户自己填写的内容。
-    /// </summary>
-    public async Task<string> UpdateRelaySourcesAsync(CancellationToken cancellationToken)
-    {
-        var (sources, directPeers) = ParseConfiguredSources();
-        var fetched = new List<string>();
-        foreach (var source in sources)
-        {
-            try
-            {
-                fetched.AddRange(await FetchPeerListFromSourceAsync(source, cancellationToken));
-            }
-            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
-            {
-                Logger.Warning(string.Format(
-                    LogLanguageManager.Instance.multiplayer_relaySourceFailed.CurrentValue(), source,
-                    Environment.NewLine, exception));
-            }
-        }
-
-        var merged = new List<string>();
-        merged.AddRange(sources);
-        merged.AddRange(directPeers);
-        merged.AddRange(fetched);
-        merged = merged.Distinct(StringComparer.Ordinal).ToList();
-
-        var text = string.Join(Environment.NewLine, merged);
-        ConfiguredSourcesText = text;
-        return text;
-    }
+        => await FetchRelaysAsync(cancellationToken);
 
     /// <summary>
     /// 解析用户配置文本：拆分为 http/https 来源链接与直接节点地址。
@@ -153,9 +146,11 @@ public sealed class GravityConeRelayClient
         return (sources, directPeers);
     }
 
-    private static async Task<IReadOnlyList<string>> FetchPeerListFromSourceAsync(string url,
-        CancellationToken cancellationToken)
+    private static async Task ResolveSourceAsync(string url, List<string> result, HashSet<string> visitedSources,
+        int depth, CancellationToken cancellationToken)
     {
+        if (depth >= MaxSourceDepth || visitedSources.Count >= MaxSourceCount || !visitedSources.Add(url)) return;
+
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         using var response =
             await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -163,21 +158,50 @@ public sealed class GravityConeRelayClient
 
         var body = await ReadLimitedAsync(await response.Content.ReadAsStreamAsync(cancellationToken),
             cancellationToken);
-        using var document = JsonDocument.Parse(body);
-        var root = document.RootElement;
-        if (!root.TryGetProperty("peers", out var peers) || peers.ValueKind != JsonValueKind.Array)
-            throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysMissingPeers.CurrentValue());
-
-        var result = new List<string>();
-        foreach (var peer in peers.EnumerateArray())
+        foreach (var peer in ParseSourceResponse(body))
         {
-            if (peer.ValueKind != JsonValueKind.String) continue;
-            var value = peer.GetString();
-            if (!string.IsNullOrWhiteSpace(value) && GravityConeNodeClient.IsValidPeer(value))
-                result.Add(value);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Uri.TryCreate(peer, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
+            {
+                try
+                {
+                    await ResolveSourceAsync(peer, result, visitedSources, depth + 1, cancellationToken);
+                }
+                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                {
+                    Logger.Warning(string.Format(
+                        LogLanguageManager.Instance.multiplayer_relaySourceFailed.CurrentValue(), peer,
+                        Environment.NewLine, exception));
+                }
+            }
+            else if (GravityConeNodeClient.IsValidPeer(peer))
+                result.Add(peer);
         }
+    }
 
-        return result.Distinct(StringComparer.Ordinal).ToList();
+    private static IReadOnlyList<string> ParseSourceResponse(string body)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+            if (!root.TryGetProperty("peers", out var peers) || peers.ValueKind != JsonValueKind.Array)
+                throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysMissingPeers.CurrentValue());
+
+            return peers.EnumerateArray()
+                .Where(peer => peer.ValueKind == JsonValueKind.String)
+                .Select(peer => peer.GetString()?.Trim())
+                .Where(peer => !string.IsNullOrWhiteSpace(peer))
+                .Cast<string>()
+                .ToList();
+        }
+        catch (JsonException)
+        {
+            return body.Split('\n')
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0 && !line.StartsWith('#') && !line.StartsWith(';'))
+                .ToList();
+        }
     }
 
     public async Task<IReadOnlyList<string>?> TryReadCacheAsync(CancellationToken cancellationToken)
@@ -187,13 +211,43 @@ public sealed class GravityConeRelayClient
         {
             await using var stream = File.OpenRead(CachePath);
             var cache = await JsonSerializer.DeserializeAsync<RelayCache>(stream, JsonOptions, cancellationToken);
-            if (cache is not { SchemaVersion: 1 } || cache.Peers is not { Count: > 0 }) return null;
-            return cache.Peers.All(GravityConeNodeClient.IsValidPeer) ? cache.Peers : null;
+            if (cache is not { SchemaVersion: CacheSchemaVersion } || cache.Peers is not { Count: > 0 })
+            {
+                DeleteCache();
+                return null;
+            }
+
+            if (cache.Peers.All(IsFinalPeer)) return cache.Peers;
+            DeleteCache();
+            return null;
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
             Logger.Warning(string.Format(LogLanguageManager.Instance.multiplayer_readRelayCacheFailed.CurrentValue(), Environment.NewLine, ex));
             return null;
+        }
+    }
+
+    private async Task<IReadOnlyList<string>> ReadRequiredCacheAsync(CancellationToken cancellationToken)
+        => await TryReadCacheAsync(cancellationToken)
+           ?? throw new InvalidDataException(CommonLanguageManager.Instance.multiplayer_relaysNoUsableNodes.CurrentValue());
+
+    private static bool IsFinalPeer(string peer)
+        => GravityConeNodeClient.IsValidPeer(peer) &&
+           Uri.TryCreate(peer, UriKind.Absolute, out var uri) &&
+           uri.Scheme is not ("http" or "https");
+
+    private static void DeleteCache()
+    {
+        try
+        {
+            File.Delete(CachePath);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
         }
     }
 
@@ -215,13 +269,13 @@ public sealed class GravityConeRelayClient
     private static async Task SaveCacheAsync(IReadOnlyList<string> peers, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(CachePath)!);
-        var payload = JsonSerializer.Serialize(new { schemaVersion = 1, peers });
+        var payload = JsonSerializer.Serialize(new { schemaVersion = CacheSchemaVersion, peers });
         await File.WriteAllTextAsync(CachePath, payload, cancellationToken);
     }
 
     private sealed class RelayCache
     {
-        [JsonPropertyName("schemaVersion")] public int SchemaVersion { get; set; }
+            [JsonPropertyName("schemaVersion")] public int SchemaVersion { get; set; }
         [JsonPropertyName("peers")] public List<string>? Peers { get; set; }
     }
 }

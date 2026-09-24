@@ -154,11 +154,13 @@
     "debugMode": "调试模式",
     "debugModeHint": " *显示应用启动和运行日志，需要重启程序后生效。",
     "relayNodesTitle": "联机中央节点",
-    "relayNodesHint": "每行填写一个链接或节点地址。http/https 链接会在更新时获取其中的 peers 列表；tcp/udp/ws 等地址会直接作为中央节点使用。更新会将获取到的内容追加到下方，不会覆盖你已填写的内容，并自动剔除重复项。",
+    "relayNodesHint": "每行填写一个节点列表 HTTP/HTTPS 链接或中转节点服务器地址。列表中的链接会继续递归加载，最终节点会合并、去重并缓存。",
+    "relaySourcesLabel": "节点来源",
+    "relayLoadedNodesLabel": "实际加载结果",
     "updateRelayNodes": "更新节点",
     "relayNodesUpdated": "公共节点已更新",
     "relayAutoUpdate": "自动更新公共节点",
-    "relayAutoUpdateHint": " *启动应用时自动从上方链接获取并合并公共节点。"
+    "relayAutoUpdateHint": " *启动应用或修改来源时，自动获取并合并节点。"
     ,"customHomepageTitle": "自定义主页"
     ,"customHomepageHint": "复刻 PCL-CE 的主页自定义功能，支持预设、本地 Custom.xaml 和联网主页。联网内容会缓存到本地。"
     ,"customHomepageBlank": "空白"

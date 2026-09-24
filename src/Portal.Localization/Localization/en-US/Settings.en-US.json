@@ -154,11 +154,13 @@
     "debugMode": "Debug Mode",
     "debugModeHint": " *Shows application startup and runtime logs; requires restarting the program to take effect.",
     "relayNodesTitle": "Multiplayer Central Nodes",
-    "relayNodesHint": "Enter one link or node address per line. http/https links are fetched for their peers list on update; tcp/udp/ws addresses are used directly as central nodes. Updates append fetched content below without overwriting what you entered, and automatically remove duplicates.",
+    "relayNodesHint": "Enter one HTTP/HTTPS node-list URL or relay server address per line. Nested links are loaded recursively; final nodes are merged, deduplicated, and cached.",
+    "relaySourcesLabel": "Node sources",
+    "relayLoadedNodesLabel": "Loaded nodes",
     "updateRelayNodes": "Update Nodes",
     "relayNodesUpdated": "Public nodes updated",
     "relayAutoUpdate": "Auto-update public nodes",
-    "relayAutoUpdateHint": " *Automatically fetches and merges public nodes from the links above when the app starts."
+    "relayAutoUpdateHint": " *Automatically fetches and merges nodes at startup or when the sources change."
     ,"customHomepageTitle": "Custom Homepage"
     ,"customHomepageHint": "PCL-CE homepage customization with presets, a local Custom.xaml file, and online homepages. Online content is cached locally."
     ,"customHomepageBlank": "Blank"

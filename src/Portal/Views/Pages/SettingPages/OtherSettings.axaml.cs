@@ -22,12 +22,15 @@ namespace Portal.Views.Pages.SettingPages;
 [AggregatedSearchPage("pages_otherSettings", "pages_otherSettingsPath", "OtherSettings")]
 public partial class OtherSettings : Dsc
 {
-    private bool _isRelayNodesUpdating;
+    private CancellationTokenSource? _relayUpdateCts;
+    private bool _relaySettingsLoaded;
 
     public OtherSettings()
     {
         InitializeComponent();
         DataContext = this;
+        Loaded += RelaySettings_OnLoaded;
+        DetachedFromVisualTree += (_, _) => CancelRelayUpdate();
     }
 
     public IReadOnlyList<string> HomepagePresets => CustomHomepageView.PresetNames;
@@ -111,33 +114,97 @@ public partial class OtherSettings : Dsc
         }
     }
 
-    private async void UpdateRelayNodes_OnClick(object? sender, RoutedEventArgs e)
+    private async void RelaySettings_OnLoaded(object? sender, RoutedEventArgs e)
     {
-        if (_isRelayNodesUpdating) return;
-        _isRelayNodesUpdating = true;
-        if (sender is Button button) button.IsEnabled = false;
+        if (_relaySettingsLoaded) return;
+        _relaySettingsLoaded = true;
+
+        await ShowCachedRelayNodesAsync();
+
+        if (Data.ConfigEntry.GravityConeRelayAutoUpdate)
+            await StartRelayUpdateAsync(false);
+    }
+
+    private async void RelaySources_OnTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (!_relaySettingsLoaded || !Data.ConfigEntry.GravityConeRelayAutoUpdate) return;
+
+        CancelRelayUpdate();
+        var cancellation = _relayUpdateCts = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(700, cancellation.Token);
+            await UpdateRelayNodesAsync(cancellation, false);
+        }
+        catch (OperationCanceledException)
+        {
+            Interlocked.CompareExchange(ref _relayUpdateCts, null, cancellation);
+            cancellation.Dispose();
+        }
+    }
+
+    private async void UpdateRelayNodes_OnClick(object? sender, RoutedEventArgs e)
+        => await StartRelayUpdateAsync(true);
+
+    private async Task StartRelayUpdateAsync(bool showSuccess)
+    {
+        CancelRelayUpdate();
+        var cancellation = _relayUpdateCts = new CancellationTokenSource();
+        await UpdateRelayNodesAsync(cancellation, showSuccess);
+    }
+
+    private void CancelRelayUpdate()
+    {
+        var cancellation = Interlocked.Exchange(ref _relayUpdateCts, null);
+        try
+        {
+            cancellation?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The completed update won the race and already released its token source.
+        }
+    }
+
+    private async Task UpdateRelayNodesAsync(CancellationTokenSource cancellation, bool showSuccess)
+    {
+        UpdateRelayNodesButton.IsEnabled = false;
         var topLevel = TopLevel.GetTopLevel(this);
         try
         {
-            await GravityConeRelayClient.Instance.UpdateRelaySourcesAsync(CancellationToken.None);
+            var relays = await GravityConeRelayClient.Instance.UpdateRelaySourcesAsync(cancellation.Token);
+            if (!ReferenceEquals(_relayUpdateCts, cancellation)) return;
+
+            RelayNodesResultTextBox.Text = string.Join(Environment.NewLine, relays);
             ConfigSaver.SaveConfig();
-            topLevel?.Notice(
-                SettingsLanguageManager.Instance.applicationdebug_relayNodesUpdated.CurrentValue(),
-                NotificationType.Success);
+            if (showSuccess)
+                topLevel?.Notice(
+                    SettingsLanguageManager.Instance.applicationdebug_relayNodesUpdated.CurrentValue(),
+                    NotificationType.Success);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
         }
         catch (Exception exception)
         {
             Logger.Warning($"[RelayNodes] Update failed: {exception.Message}");
-            topLevel?.Notice(exception.Message, NotificationType.Error);
+            await ShowCachedRelayNodesAsync();
+            if (showSuccess)
+                topLevel?.Notice(exception.Message, NotificationType.Error);
         }
         finally
         {
-            _isRelayNodesUpdating = false;
-            if (sender is Button reloadButton) reloadButton.IsEnabled = true;
+            if (Interlocked.CompareExchange(ref _relayUpdateCts, null, cancellation) == cancellation)
+                UpdateRelayNodesButton.IsEnabled = true;
+            cancellation.Dispose();
         }
+    }
+
+    private async Task ShowCachedRelayNodesAsync()
+    {
+        var cached = await GravityConeRelayClient.Instance.TryReadCacheAsync(CancellationToken.None);
+        if (cached is not null)
+            RelayNodesResultTextBox.Text = string.Join(Environment.NewLine, cached);
     }
 }
 

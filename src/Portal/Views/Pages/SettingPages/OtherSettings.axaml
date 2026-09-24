@@ -152,22 +152,42 @@
                 Foreground="{DynamicResource InnerForegroundColor}"
                 Text="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_debugModeHint}}" />
         </StackPanel>
-        <StackPanel Spacing="5">
+        <StackPanel Spacing="10">
             <Label
                 Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayNodesTitle}}"
                 FontSize="13"
                 FontWeight="SemiBold"
                 Foreground="{DynamicResource InnerForegroundColor}" />
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relaySourcesLabel}}"
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}" />
             <TextBox
                 AcceptsReturn="True"
                 LineHeight="19"
+                Name="RelaySourcesTextBox"
                 Padding="12,6"
-                Text="{Binding Data.ConfigEntry.GravityConeRelaySources}" />
+                Text="{Binding Data.ConfigEntry.GravityConeRelaySources}"
+                TextChanged="RelaySources_OnTextChanged" />
+            <Label
+                Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayLoadedNodesLabel}}"
+                FontSize="12"
+                Foreground="{DynamicResource InnerForegroundColor}" />
+            <TextBox
+                AcceptsReturn="True"
+                IsReadOnly="True"
+                LineHeight="19"
+                MinHeight="96"
+                Name="RelayNodesResultTextBox"
+                Padding="12,6" />
             <StackPanel
                 Margin="0,5,0,0"
                 Orientation="Horizontal"
                 Spacing="16">
-                <Button Click="UpdateRelayNodes_OnClick" Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_updateRelayNodes}}" />
+                <Button
+                    Click="UpdateRelayNodes_OnClick"
+                    Content="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_updateRelayNodes}}"
+                    Name="UpdateRelayNodesButton" />
                 <ToggleSwitch
                     IsChecked="{Binding Data.ConfigEntry.GravityConeRelayAutoUpdate}"
                     OffContent="{Translate {x:Static loc:SettingsLanguageManager+Keys.applicationdebug_relayAutoUpdate}}"
