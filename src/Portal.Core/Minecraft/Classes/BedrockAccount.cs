@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Portal.Core.Services;
 using Portal.Localization;
 
 namespace Portal.Core.Minecraft.Classes;
@@ -10,8 +12,21 @@ public partial class BedrockAccount : ObservableObject
     [ObservableProperty] public partial string Xuid { get; set; } = string.Empty;
     [ObservableProperty] public partial string? AvatarUrl { get; set; }
     [ObservableProperty] public partial string? AccountNote { get; set; }
-    [ObservableProperty] public partial string AccessToken { get; set; } = string.Empty;
-    [ObservableProperty] public partial string RefreshToken { get; set; } = string.Empty;
+
+    [ObservableProperty] [JsonIgnore] public partial string AccessToken { get; set; } = string.Empty;
+    [JsonPropertyName("AccessToken")] public string EncryptedAccessToken
+    {
+        get => CryptoService.Encrypt(AccessToken);
+        set => AccessToken = CryptoService.Decrypt(value);
+    }
+
+    [ObservableProperty] [JsonIgnore] public partial string RefreshToken { get; set; } = string.Empty;
+    [JsonPropertyName("RefreshToken")] public string EncryptedRefreshToken
+    {
+        get => CryptoService.Encrypt(RefreshToken);
+        set => RefreshToken = CryptoService.Decrypt(value);
+    }
+
     [ObservableProperty] public partial DateTimeOffset ExpiresAt { get; set; }
     [ObservableProperty] public partial DateTime LastLoginTime { get; set; } = DateTime.MinValue;
 
