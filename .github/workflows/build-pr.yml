@@ -52,11 +52,6 @@ jobs:
   win-x64-build:
     runs-on: windows-latest
     needs: prepare
-    env:
-      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
-      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
-      PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
-      PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -95,11 +90,6 @@ jobs:
   linux-x64-build:
     runs-on: ubuntu-22.04
     needs: prepare
-    env:
-      PRE_MC_KEY: ${{ secrets.PRE_MC_KEY }}
-      REL_MC_KEY: ${{ secrets.REL_MC_KEY }}
-      PORTAL_TELEMETRY_API_KEY: ${{ secrets.PORTAL_TELEMETRY_API_KEY }}
-      PORTAL_TELEMETRY_URL: ${{ secrets.PORTAL_TELEMETRY_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -111,8 +101,32 @@ jobs:
           git submodule update --init --recursive
           git submodule foreach --recursive 'branch=$(git config -f "$toplevel/.gitmodules" --get "submodule.$name.branch" || echo main); git fetch origin "$branch" && git checkout -B "$branch" "origin/$branch"'
 
+      - name: Write CI Config
+        run: |
+          printf '%s\n' '${{ needs.prepare.outputs.version_json }}' > ./assets/conf/version-ci.txt
+          printf '%s\n' 'pr' > ./assets/conf/package-type.txt
+
       - name: Build Linux x64
-        run: dotnet build ./src/Portal.Desktop/Portal.Desktop.csproj -c Release -r linux-x64
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          dotnet publish ./src/Portal.Desktop/Portal.Desktop.csproj \
+            -c Release \
+            -r linux-x64 \
+            --self-contained false \
+            -p:Version=${{ needs.prepare.outputs.app_version }} \
+            -p:DebugType=none \
+            -p:DebugSymbols=false \
+            -o dist/Portal.linux-x64.PR-${{ github.event.number }}
+          tar -C dist -czf "Portal.linux-x64.PR-${{ github.event.number }}.tar.gz" \
+            "Portal.linux-x64.PR-${{ github.event.number }}"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Portal.linux-x64.PR-${{ github.event.number }}
+          path: ./Portal.linux-x64.PR-${{ github.event.number }}.tar.gz
+          retention-days: 7
 
   comment-pr:
     runs-on: ubuntu-latest
@@ -124,6 +138,6 @@ jobs:
           message: |
             PR 自动化构建已完成
 
-            win.x64 版本下载链接：
+            win.x64 下载链接：
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           comment-tag: pr_build_status_comment
