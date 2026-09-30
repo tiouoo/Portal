@@ -38,10 +38,6 @@
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi.SmoothScroll/TioUi.SmoothScroll.csproj" />
     <Project Path="module/Tio.Avalonia.Standard/module/TioUi.Avalonia/src/TioUi/TioUi.csproj" />
   </Folder>
-  <Folder Name="/Module/Wiki/">
-    <Project Path="src/Portal.Wiki/Portal.Wiki.csproj" />
-    <Project Path="src/Portal.Wiki.Demo/Portal.Wiki.Demo.csproj" />
-  </Folder>
   <Folder Name="/Solution Item/">
     <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Packages.props" />
