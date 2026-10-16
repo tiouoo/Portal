@@ -26,28 +26,12 @@ jobs:
           git submodule update --init --recursive
           git submodule foreach --recursive 'branch=$(git config -f "$toplevel/.gitmodules" --get "submodule.$name.branch" || echo main); git fetch origin "$branch" && git checkout -B "$branch" "origin/$branch"'
 
-      - name: Generate Meta and JSON
+      - name: Generate build metadata
         id: meta
-        run: |
-          BASE_VERSION=$(cat ./assets/conf/version.txt | tr -d '[:space:]')
-          Y_FULL=$(TZ='Asia/Shanghai' date +'%Y')
-          MD=$(TZ='Asia/Shanghai' date +'%m%d')
-          HM=$(TZ='Asia/Shanghai' date +'%H%M')
-          FULL_TIMESTAMP="${Y_FULL}${MD}${HM}"
-          START_EPOCH=$(TZ='Asia/Shanghai' date -d "2026-07-10 00:00:00" +%s)
-          NOW_EPOCH=$(date +%s)
-          TOTAL_MINUTES=$(( (NOW_EPOCH - START_EPOCH) / 60 ))
-          TOTAL_DAYS=$(( TOTAL_MINUTES / 1440 ))
-          ELAPSED_HOURS=$(( (TOTAL_MINUTES % 1440) / 60 ))
-          ELAPSED_MINUTES=$(( TOTAL_MINUTES % 60 ))
-          APP_VERSION="0.${TOTAL_DAYS}.${ELAPSED_HOURS}.${ELAPSED_MINUTES}"
-          COMMIT_HASH=$(git rev-parse --short=6 HEAD)
-          BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
-          VERSION_TITLE="build-commit-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
-          JSON_STRING="{\"type\":\"commit\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\",\"timestamp\":\"${FULL_TIMESTAMP}\",\"version_title\":\"${VERSION_TITLE}\"}"
-          echo "json=${JSON_STRING}" >> $GITHUB_OUTPUT
-          echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
-          echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+        uses: tiouoo/tiller/build@v1
+        with:
+          kind: commit
+          epoch: "2026-07-10 00:00:00"
 
   win-x64-build:
     runs-on: windows-latest

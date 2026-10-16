@@ -16,28 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Generate Meta and JSON
+      - name: Generate build metadata
         id: meta
-        run: |
-          BASE_VERSION=$(cat ./assets/conf/version.txt | tr -d '[:space:]')
-          Y_FULL=$(TZ='Asia/Shanghai' date +'%Y')
-          MD=$(TZ='Asia/Shanghai' date +'%m%d')
-          HM=$(TZ='Asia/Shanghai' date +'%H%M')
-          FULL_TIMESTAMP="${Y_FULL}${MD}${HM}"
-          START_EPOCH=$(TZ='Asia/Shanghai' date -d "2026-07-10 00:00:00" +%s)
-          NOW_EPOCH=$(date +%s)
-          TOTAL_MINUTES=$(( (NOW_EPOCH - START_EPOCH) / 60 ))
-          TOTAL_DAYS=$(( TOTAL_MINUTES / 1440 ))
-          ELAPSED_HOURS=$(( (TOTAL_MINUTES % 1440) / 60 ))
-          ELAPSED_MINUTES=$(( TOTAL_MINUTES % 60 ))
-          APP_VERSION="0.${TOTAL_DAYS}.${ELAPSED_HOURS}.${ELAPSED_MINUTES}"
-          COMMIT_HASH=$(git rev-parse --short=6 HEAD)
-          BUILD_TIME=$(TZ='Asia/Shanghai' date -Iseconds)
-          VERSION_TITLE="build-commit-${APP_VERSION}-${{ github.run_id }}-${COMMIT_HASH}"
-          JSON_STRING="{\"type\":\"commit\",\"build-time\":\"${BUILD_TIME}\",\"action\":\"${{ github.run_id }}\",\"commit\":\"${COMMIT_HASH}\",\"version\":\"${BASE_VERSION}\",\"timestamp\":\"${FULL_TIMESTAMP}\",\"version_title\":\"${VERSION_TITLE}\"}"
-          echo "json=${JSON_STRING}" >> $GITHUB_OUTPUT
-          echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
-          echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+        uses: tiouoo/tiller/build@v1
+        with:
+          kind: commit
+          epoch: "2026-07-10 00:00:00"
 
   linux-package:
     runs-on: ubuntu-22.04
@@ -296,13 +280,10 @@ jobs:
         run: ls -la ./Portal.Release/
 
       - name: Generate Changelog
-        run: |
-          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
-          bash .github/scripts/generate-changelog.sh "$REPO_URL" > RELEASE_CHANGELOG.md
-          if [ ! -s RELEASE_CHANGELOG.md ] || [ "$(wc -l < RELEASE_CHANGELOG.md)" -le 1 ]; then
-            echo "自上一个正式版以来没有新的提交" > RELEASE_CHANGELOG.md
-          fi
-          cat RELEASE_CHANGELOG.md
+        uses: tiouoo/tiller/changelog@v1
+        with:
+          output: RELEASE_CHANGELOG.md
+          empty-message: 自上一个正式版以来没有新的提交
 
       # publish-commit 是移动式标签：先删除旧 Release 与标签，再在当前提交上重建
       - name: Delete Previous Release
@@ -335,28 +316,28 @@ jobs:
           cat RELEASE_SYNC_BODY.md
 
       - name: Sync to CNB
-        env:
-          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
-          CNB_REPO: tiouo/portal
-          CNB_TAG: publish-commit
-          CNB_COMMIT: ${{ needs.prepare.outputs.commit }}
-          CNB_NAME: "build-commit-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
-          CNB_PRERELEASE: "true"
-          CNB_MAKE_LATEST: "false"
-          CNB_BODY_FILE: RELEASE_SYNC_BODY.md
-        run: bash .github/scripts/publish-cnb.sh
+        uses: tiouoo/tiller/cnb@v1
+        with:
+          token: ${{ secrets.CNB_TOKEN }}
+          repository: tiouo/portal
+          tag: publish-commit
+          commit: ${{ needs.prepare.outputs.commit }}
+          name: "build-commit-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
+          prerelease: "true"
+          make-latest: "false"
+          body-file: RELEASE_SYNC_BODY.md
 
       - name: Sync to GitCode
-        env:
-          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
-          GITCODE_REPO: tiouo/Portal
-          GITCODE_TAG: publish-commit
-          GITCODE_COMMIT: ${{ needs.prepare.outputs.commit }}
-          GITCODE_SKIP_TAG_PUSH: "true"
-          GITCODE_NAME: "build-commit-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
-          GITCODE_PRERELEASE: "true"
-          GITCODE_BODY_FILE: RELEASE_SYNC_BODY.md
-        run: bash .github/scripts/publish-gitcode.sh
+        uses: tiouoo/tiller/gitcode@v1
+        with:
+          token: ${{ secrets.GITCODE_TOKEN }}
+          repository: tiouo/Portal
+          tag: publish-commit
+          commit: ${{ needs.prepare.outputs.commit }}
+          skip-tag-push: "true"
+          name: "build-commit-${{ needs.prepare.outputs.app_version }}-${{ github.run_id }}-${{ needs.prepare.outputs.commit }}"
+          prerelease: "true"
+          body-file: RELEASE_SYNC_BODY.md
 
   aur:
     needs: [prepare, publish]
